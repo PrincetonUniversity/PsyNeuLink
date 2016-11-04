@@ -2,4 +2,5 @@ DDM
 ===
 
 .. automodule:: DDM
-	:members:
+   :members:
+   :exclude-members: random

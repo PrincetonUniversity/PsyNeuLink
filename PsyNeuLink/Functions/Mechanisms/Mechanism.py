@@ -610,7 +610,7 @@ class Mechanism_Base(Mechanism):
     timeScale : TimeScale : default TimeScale.TRIAL
         Determines the default TimeScale value used by the mechanism when executed.
 
-    name : str : default <Mechanism subclass>-[index]
+    name : str : default <Mechanism subclass>-<index>
         Name of the mechanism.
         Specified in the name argument of the call to create the mechanism;  if not is specified,
         a default is assigned by MechanismRegistry based on the mechanism's subclass

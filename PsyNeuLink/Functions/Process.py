@@ -418,7 +418,7 @@ def process(process_spec=None,
         dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its entry;
         values in the dictionary will override argument values.
 
-    name : str : default Process-[index]
+    name : str : default Process-<index>
         string used for the name of the process
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
@@ -682,7 +682,7 @@ class Process_Base(Process):
     timeScale : TimeScale : default TimeScale.TRIAL
         Determines the default TimeScale value used by mechanisms in the pathway.
 
-    name : str : default Process-[index]
+    name : str : default Process-<index>
         Name of the process.
         Specified in the name argument of the call to create the process;
         if not is specified, a default is assigned by ProcessRegistry
