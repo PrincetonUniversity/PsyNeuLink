@@ -166,8 +166,6 @@
   <div class="section" id="mechanisms">
 <h1>Mechanisms<a class="headerlink" href="#mechanisms" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
@@ -574,7 +572,7 @@ Converted internally to a 2d np.array.</p>
 <dt id="Mechanism.Mechanism_Base.function_params">
 <code class="descname">function_params</code><a class="headerlink" href="#Mechanism.Mechanism_Base.function_params" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[str, value]</em> &#8211; Contains one entry for each parameter of the mechanism&#8217;s function.
-The key of each entry is the name of a function parameter, and the value its value.</p>
+The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -595,7 +593,7 @@ There is always at least one entry, which contains the primary inputState
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.parameterStates">
 <code class="descname">parameterStates</code><a class="headerlink" href="#Mechanism.Mechanism_Base.parameterStates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict[str, ParameterState]</em> &#8211; Contains a dictionary of parameterStates, one for each parameater of the mechanism&#8217;s function.
+<dd><p><em>OrderedDict[str, ParameterState]</em> &#8211; Contains a dictionary of parameterStates, one for each parameter of the mechanism&#8217;s function.
 The key of each entry is the name of the parameterState, and its value is the parameterState.
 Note: mechanism&#8217;s function parameters are listed in the the <code class="docutils literal"><span class="pre">function_params</span></code> attribute).</p>
 </dd></dl>
