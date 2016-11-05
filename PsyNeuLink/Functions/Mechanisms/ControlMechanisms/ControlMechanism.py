@@ -182,15 +182,21 @@ class ControlMechanism_Base(Mechanism_Base):
     from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        FUNCTION:Linear,
-        FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
+        # ## MODIFIED 11/5/16 OLD:
+        # FUNCTION:Linear,
+        # FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
+        # ## MODIFIED 11/5/16 END
         CONTROL_SIGNAL_PROJECTIONS: None
     })
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 default_input_value=None,
+                 # MODIFIED 11/5/16 NEW:
+                 function = Linear(slope=1, intercept=0),
+                 monitored_output_states:tc.optional(list)=None,
+                 # MODIFIED 11/5/16 END
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
@@ -204,11 +210,17 @@ class ControlMechanism_Base(Mechanism_Base):
 
         self.system = None
 
+        # # MODIFIED 11/5/16 NEW:
+        # # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # params = self._assign_args_to_param_dicts(function=function,
+        #                                           params=params)
+        #  # MODIFIED 11/5/16 END
+
         super(ControlMechanism_Base, self).__init__(variable=default_input_value,
-                                                          params=params,
-                                                          name=name,
-                                                          prefs=prefs,
-                                                          context=self)
+                                                    params=params,
+                                                    name=name,
+                                                    prefs=prefs,
+                                                    context=self)
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS

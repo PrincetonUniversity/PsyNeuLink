@@ -67,16 +67,23 @@ class DefaultControlMechanism(ControlMechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
                                # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
-                               # MAKE_DEFAULT_CONTROLLER:True
+                               # MAKE_DEFAULT_CONTROLLER:True  <- NO NEED, SINCE THIS IS ALREADY THE DEFAULT
+                               # MODIFIED 11/5/16 NEW:
+                               FUNCTION:Linear,
+                               FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
+                               MONITORED_OUTPUT_STATES:None
+                               # MODIFIED 11/5/16 END
                                })
 
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 default_input_value=None,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None):
                  # context=None):
@@ -88,6 +95,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          name=name,
                                                          prefs=prefs,
                                                          context=self)
+
+
 
     def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
 
