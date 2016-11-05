@@ -24,6 +24,40 @@ ControlMechanisms can be created by using the standard Python method of calling 
 A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`).
 
 
+.. _ControlMechanism_MonitoredOutputStates:
+
+MonitoredOutputStates
+~~~~~~~~~~~~~~~~~~~~~
+
+In addition to the standard components and parameters of a :doc:`Mechanism`, ControlMechanisms have a
+:keyword:`MONITORED_OUTPUT_STATES` parameter, that specifies which outputStates to monitor of the mechanism(s) in
+the system to which the ControlMechanism belongs.  ControlMechanism subclasses determine which mechanisms and
+outputStates they monitor by default, and how the information is used (for example, the :doc:`DefaultControlMechanism`
+monitors the primary outputState of every mechanism in its system, treating each one indpendently).
+
+The ``monitored_output_states``
+xxx
+
+depends upon the ControlMechanism subclass
+By default, the primary outputState of every mechanism is the
+system is monitored.
+
+This is a list, each item of which must be an outputState object
+or the name of one, a three item tuple containing
+    + OutputState : object
+    + OutputState name (str)
+    + (Mechanism or OutputState specification, exponent, weight) (tuple):
+        + mechanism or outputState specification (Mechanism, OutputState, or str):
+            referenceto Mechanism or OutputState object or the name of one
+            if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
+        + exponent (int):  will be used to exponentiate outState.value when computing EVC
+        + weight (int): will be used to multiplicative weight outState.value when computing EVC
+    + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
+        + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
+        + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
+    + Mechanism (object): ignored (used for SystemController and System params)
+
+
 .. _ControlMechanisms_Monitored_OutputStates:
 
 Monitored OutputStates
