@@ -1006,7 +1006,7 @@ class Mechanism_Base(Mechanism):
             # MODIFIED END
             # It is a MonitoredOutputStatesOption specification
             elif isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by instantiate_monitored_output_states)
+                # Put in a list (standard format for processing by _instantiate_monitored_output_states)
                 target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
             else:
@@ -1016,7 +1016,7 @@ class Mechanism_Base(Mechanism):
                 # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanisminstantiate_monitored_output_states
+                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
                 # # Validate WEIGHTS if it is specified
                 # try:
                 #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])

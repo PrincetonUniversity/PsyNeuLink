@@ -591,7 +591,7 @@ import typecheck as tc
 # try:
 #     # It IS a MonitoredOutputStatesOption specification
 #     if isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
-#         # Put in a list (standard format for processing by instantiate_monitored_output_states)
+#         # Put in a list (standard format for processing by _instantiate_monitored_output_states)
 #         # target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
 #         print ("Assign monitored States")
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
