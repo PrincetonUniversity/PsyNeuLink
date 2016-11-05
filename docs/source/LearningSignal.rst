@@ -1,0 +1,5 @@
+LearningSignal
+==============
+
+.. automodule:: LearningSignal
+   :members:
