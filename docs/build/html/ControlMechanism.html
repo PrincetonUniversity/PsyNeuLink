@@ -95,6 +95,7 @@
 <li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVC Mechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-controlmechanism">Creating A ControlMechanism</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#monitoredoutputstates">MonitoredOutputStates</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#monitored-outputstates">Monitored OutputStates</a></li>
 </ul>
 </li>
@@ -167,15 +168,69 @@
 </div>
 <span class="target" id="module-ControlMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms and use this information to
-regulate the value of <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projections to other ProcessingMechanisms.  ControlMechanisms are
-typically associated with a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and every system is assigned a controlMechanism as a controller (see
-<span class="xref std std-ref">_System_Execution_Control</span>).</p>
+<p>ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> and use this
+information to regulate the value of <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projections to other ProcessingMechanisms in that system.  .</p>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
 <p>ControlMechanisms can be created by using the standard Python method of calling the subclass for the desired type.
-A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creating-a-system"><span class="std std-ref">Creating a System</span></a>).</p>
+A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creating-a-system"><span class="std std-ref">Creating a System</span></a>),
+and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>).</p>
+<div class="section" id="monitoredoutputstates">
+<span id="controlmechanism-monitoredoutputstates"></span><h3>MonitoredOutputStates<a class="headerlink" href="#monitoredoutputstates" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the standard components and parameters of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, ControlMechanisms have a
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> parameter that specifies which outputStates of the mechanism(s) in
+ControlMechanism&#8217;s system to monitor.  ControlMechanism subclasses determine which mechanisms and outputStates they
+monitor by default, and how that information is used (for example, the <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">Default Control Mechanism</span></a> monitors the
+primary outputState of every mechanism in its system, treating each one indpendently).  This can also be specified
+in the <code class="docutils literal"><span class="pre">monitored_output_states</span></code> argument when creating a system, or in its <code class="docutils literal"><span class="pre">params</span></code> dictionary using the
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code>.  The parameter must be a list, each item of which is one of the following:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li>a string that is the name of an outputState</li>
+<li>a parameter state, the value of which specifies the parameter&#8217;s value
+(see <a class="reference internal" href="ParameterState.html#parameterstate-creating-a-parameterstate"><span class="std std-ref">Creating a ParameterState</span></a>).</li>
+<li>a tuple with exactly two items: the parameter value and a projection type specifying either a
+<a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> or a <span class="xref doc">LearningSignal</span>
+(a <code class="xref py py-class docutils literal"><span class="pre">ParamValueProjection</span></code> namedtuple can be used for clarity).</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p class="first">the name of an existing outputState</p>
+</li>
+<li><dl class="first docutils">
+<dt>a tuple with exactly three items in the following order:</dt>
+<dd><ul class="first simple">
+<li>a mechanism or outputState specification (a Mechanism or OutputState object, or a specification dictionary</li>
+</ul>
+<p>for one); if a Mechanism is referenced, the exponent and weight items below will apply to <em>all</em> of the
+outputStates of that mechanism.
+* exponent : int</p>
+<blockquote>
+<div><p>will be used to exponentiate outState.value when computing EVC</p>
+</div></blockquote>
+<ul class="last simple">
+<li>weight : int
+will be used to multiplicatively weight outState.value when computing EVC</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)</dt>
+<dd><ul class="first last simple">
+<li>PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism</li>
+<li>ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">Mechanism (object): ignored (used for SystemController and System params)</p>
+</li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="monitored-outputstates">
 <span id="controlmechanisms-monitored-outputstates"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
@@ -228,7 +283,7 @@ if a Mechanism ref, exponent and weight will apply to all outputStates of that m
 </dl>
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base">
-<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b613378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b50d2f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for control mechanism subclasses</p>
 <blockquote>
 <div>Description:</div></blockquote>
@@ -380,7 +435,7 @@ Update self.inputState and self.inputStates</p>
 
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base.Linear">
-<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b63fa60&gt; = 1, intercept: &lt;function parameter_spec at 0x10b63fa60&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10b613378&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b533950&gt; = 1, intercept: &lt;function parameter_spec at 0x10b533950&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10b50d2f0&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -414,7 +469,7 @@ Update self.inputState and self.inputStates</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="DDM.html#DDM.DDM.variable" title="DDM.DDM.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="Transfer.html#Transfer.Transfer.variable" title="Transfer.Transfer.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 SLOPE: number - slope (default: 1)
