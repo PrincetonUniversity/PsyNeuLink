@@ -33,10 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Projections" href="Projection.html"/>
-        <link rel="next" title="Control Signal" href="ControlSignal.html"/>
-        <link rel="prev" title="Projections" href="Projection.html"/> 
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,23 +85,9 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-</ul>
-<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mapping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
 </ul>
 
@@ -136,8 +119,6 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Projection.html">Projections</a> &raquo;</li>
-      
     <li>Mapping</li>
       <li class="wy-breadcrumbs-aside">
         
@@ -156,7 +137,7 @@
 <span id="mapping"></span><h1>Mapping<a class="headerlink" href="#module-Mapping" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="Mapping.Mapping">
-<em class="property">class </em><code class="descclassname">Mapping.</code><code class="descname">Mapping</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>matrix='IdentityMatrix'</em>, <em>param_modulation_operation=&lt;function ModulationOperation.&lt;lambda&gt;&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10ad16378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Mapping.</code><code class="descname">Mapping</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>matrix='IdentityMatrix'</em>, <em>param_modulation_operation=&lt;function ModulationOperation.&lt;lambda&gt;&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b50c378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)</p>
 <blockquote>
 <div><dl class="docutils">
@@ -353,15 +334,6 @@ and then call its super().execute</div></blockquote>
            </div>
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ControlSignal.html" class="btn btn-neutral float-right" title="Control Signal" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="Projection.html" class="btn btn-neutral" title="Projections" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

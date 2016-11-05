@@ -10,20 +10,20 @@
 # *****************************************    SYSTEM MODULE    ********************************************************
 
 """
-
-Sections:
-  * :ref:`System_Overview`
-  * :ref:`System_Creating_A_System`
-  * :ref:`System_Structure`
-     * :ref:`System_Graph`
-     * :ref:`System_Mechanisms`
-  * :ref:`System_Execution`
-     * :ref:`System_Execution_Order`
-     * :ref:`System_Execution_Phase`
-     * :ref:`System_Execution_Input_And_Initialization`
-     * :ref:`System_Execution_Learning`
-     * :ref:`System_Execution_Control`
-  * :ref:`System_Class_Reference`
+..
+    Sections:
+      * :ref:`System_Overview`
+      * :ref:`System_Creating_A_System`
+      * :ref:`System_Structure`
+         * :ref:`System_Graph`
+         * :ref:`System_Mechanisms`
+      * :ref:`System_Execution`
+         * :ref:`System_Execution_Order`
+         * :ref:`System_Execution_Phase`
+         * :ref:`System_Execution_Input_And_Initialization`
+         * :ref:`System_Execution_Learning`
+         * :ref:`System_Execution_Control`
+      * :ref:`System_Class_Reference`
 
 
 .. _System_Overview:

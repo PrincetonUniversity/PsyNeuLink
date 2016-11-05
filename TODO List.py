@@ -220,7 +220,7 @@
 
 # FIX: Add error message if input.value is None on execute
 
-# FIX: RT_MEAN -> RESPONSE_TIME
+# FIX: RESPONSE_TIME -> RESPONSE_TIME
 
 # 10/29/16:
 # QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)

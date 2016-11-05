@@ -9,11 +9,12 @@
 # ***************************************************  DDM *************************************************************
 #
 """
-Sections:
-  * :ref:`DDM_Overview`
-  * :ref:`DDM_Creating_A_DDM_Mechanism`
-  * :ref:`DDM_Execution`
-  * :ref:`DDM_Class_Reference`
+..
+    Sections:
+      * :ref:`DDM_Overview`
+      * :ref:`DDM_Creating_A_DDM_Mechanism`
+      * :ref:`DDM_Execution`
+      * :ref:`DDM_Class_Reference`
 
 .. _DDM_Overview:
 
@@ -134,8 +135,8 @@ the value(s) of its outputState(s):
       of its ``outputValue`` attribute, and as the value of its :keyword:`DECISION_VARIABLE` outputState;
     ..
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
-      the value of its ``RT_MEAN`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is the mean
-      response time estimated by the analytic solution used in ``function``.
+      the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is
+      the mean response time estimated by the analytic solution used in ``function``.
       [TBI:]
       If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
       since the start of the current execution in the current phase [LINK].  If execution completes, this is the number
@@ -196,7 +197,7 @@ from PsyNeuLink.Functions.Utilities.Utility import *
 
 # DDM outputs (used to create and name outputStates):
 DECISION_VARIABLE = "DecisionVariable"
-RT_MEAN = "RT_Mean"
+RESPONSE_TIME = "RESPONSE_TIME"
 ERROR_RATE = "Error_Rate"
 PROBABILITY_UPPER_BOUND = "Probability_upperBound"
 PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
@@ -207,7 +208,7 @@ RT_CORRECT_VARIANCE = "RT_Correct_Variance"
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
-    RT_MEAN = ()
+    RESPONSE_TIME = ()
     ER_MEAN = ()
     P_UPPER_MEAN = ()
     P_LOWER_MEAN = ()
@@ -269,7 +270,7 @@ class DDM(ProcessingMechanism_Base):
                                                                   NOISE:<>
                                                                   NON_DECISION_TIME:<>},
                                           OUTPUT_STATES: [DECISION_VARIABLE,
-                                                           RT_MEAN,
+                                                           RESPONSE_TIME,
                                                            ERROR_RATE,
                                                            PROBABILITY_UPPER_BOUND,
                                                            PROBABILITY_LOWER_BOUND,
@@ -397,13 +398,13 @@ class DDM(ProcessingMechanism_Base):
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
         OUTPUT_STATES:[DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
-                        RT_MEAN,
+                        RESPONSE_TIME,
                         ERROR_RATE,
                         PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
                         PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
                         RT_CORRECT_MEAN,         # NavarroAnd Fuss only
                         RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
-        # MONITORED_OUTPUT_STATES:[ERROR_RATE,(RT_MEAN, -1, 1)]
+        # MONITORED_OUTPUT_STATES:[ERROR_RATE,(RESPONSE_TIME, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
@@ -465,7 +466,7 @@ class DDM(ProcessingMechanism_Base):
         # Assign output mappings:
         self._outputStateValueMapping = {}
         self._outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-        self._outputStateValueMapping[RT_MEAN] = DDM_Output.RT_MEAN.value
+        self._outputStateValueMapping[RESPONSE_TIME] = DDM_Output.RESPONSE_TIME.value
         self._outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
         self._outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
         self._outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
@@ -570,12 +571,12 @@ class DDM(ProcessingMechanism_Base):
             # Assign outputValue
 
             if isinstance(self.function.__self__, BogaczEtAl):
-                self.outputValue[DDM_Output.RT_MEAN.value], self.outputValue[DDM_Output.ER_MEAN.value] = result
+                self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.ER_MEAN.value] = result
                 self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.ER_MEAN.value]
                 self.outputValue[DDM_Output.P_LOWER_MEAN.value] = self.outputValue[DDM_Output.ER_MEAN.value]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-                self.outputValue[DDM_Output.RT_MEAN.value] = result[NF_Results.MEAN_DT.value]
+                self.outputValue[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
                 self.outputValue[DDM_Output.ER_MEAN.value] = 1-result[NF_Results.MEAN_ER.value]
                 self.outputValue[DDM_Output.P_UPPER_MEAN.value] = result[NF_Results.MEAN_ER.value]
                 self.outputValue[DDM_Output.P_LOWER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]

@@ -9,15 +9,15 @@
 # **********************************************  Projection ***********************************************************
 
 """
-
-Sections of this document:
-  * :ref:`Projection_Overview`
-  * :ref:`Projection_Creating_A_Projection`
-  * :ref:`Projection_Structure`
-     * :ref:`Projection_Sender`
-     * :ref:`Projection_Receiver`
-  * :ref:`Projection_Execution`
-  * :ref:`Projection_Class_Reference`
+..
+    Sections of this document:
+      * :ref:`Projection_Overview`
+      * :ref:`Projection_Creating_A_Projection`
+      * :ref:`Projection_Structure`
+         * :ref:`Projection_Sender`
+         * :ref:`Projection_Receiver`
+      * :ref:`Projection_Execution`
+      * :ref:`Projection_Class_Reference`
 
 .. _Projection_Overview:
 

@@ -2,11 +2,9 @@ Projections
 ===========
 
 .. toctree::
-	:maxdepth: 2
+   :maxdepth: 3
 
-	Mapping
-	ControlSignal
-	Learning
+   Projection
 
 .. automodule:: Projection
    :members:

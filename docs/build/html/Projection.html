@@ -34,7 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Mapping" href="Mapping.html"/>
+        <link rel="next" title="Utilities" href="Utilities.html"/>
         <link rel="prev" title="Output State" href="OutputState.html"/> 
 
   
@@ -84,19 +84,12 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-</ul>
-<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Projections</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
@@ -156,36 +149,22 @@
   <div class="section" id="projections">
 <h1>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Learning.html">Learning</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Projections</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sender">Sender</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#receiver">Receiver</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
 </ul>
 </div>
-<span class="target" id="module-Projection"></span><dl class="docutils">
-<dt>Sections of this document:</dt>
-<dd><ul class="first last">
-<li><p class="first"><a class="reference internal" href="#projection-overview"><span class="std std-ref">Overview</span></a></p>
-</li>
-<li><p class="first"><a class="reference internal" href="#projection-creating-a-projection"><span class="std std-ref">Creating a Projection</span></a></p>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="#projection-structure"><span class="std std-ref">Structure</span></a></dt>
-<dd><ul class="first last simple">
-<li><a class="reference internal" href="#projection-sender"><span class="std std-ref">Sender</span></a></li>
-<li><a class="reference internal" href="#projection-receiver"><span class="std std-ref">Receiver</span></a></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><p class="first"><a class="reference internal" href="#projection-execution"><span class="std std-ref">Execution</span></a></p>
-</li>
-<li><p class="first"><a class="reference internal" href="#projection-class-reference"><span class="std std-ref">Class Reference</span></a></p>
-</li>
-</ul>
-</dd>
-</dl>
-<div class="section" id="overview">
+<span class="target" id="module-Projection"></span><div class="section" id="overview">
 <span id="projection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
 one mechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is needed to transmit that information as the input
@@ -401,7 +380,7 @@ assigned using <code class="docutils literal"><span class="pre">classPreferences
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mapping.html" class="btn btn-neutral float-right" title="Mapping" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Utilities.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="OutputState.html" class="btn btn-neutral" title="Output State" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
