@@ -36,21 +36,26 @@ primary outputState of every mechanism in its system, treating each one indpende
 in the ``monitored_output_states`` argument when creating a system, or in its ``params`` dictionary using the
 :keyword:`MONITORED_OUTPUT_STATES`.  The parameter must be a list, each item of which is one of the following:
 
+      * a string that is the name of an outputState
+      * a parameter state, the value of which specifies the parameter's value
+        (see :ref:`ParameterState_Creating_A_ParameterState`).
+      * a tuple with exactly two items: the parameter value and a projection type specifying either a
+        :doc:`ControlSignal` or a :doc:`LearningSignal`
+        (a :class:`ParamValueProjection` namedtuple can be used for clarity).
 
-This is a list, each item of which must be an outputState object
-or the name of one, a three item tuple containing
-    + OutputState : object
-    + OutputState name (str)
-    + (Mechanism or OutputState specification, exponent, weight) (tuple):
-        + mechanism or outputState specification (Mechanism, OutputState, or str):
-            referenceto Mechanism or OutputState object or the name of one
-            if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
-        + exponent (int):  will be used to exponentiate outState.value when computing EVC
-        + weight (int): will be used to multiplicative weight outState.value when computing EVC
-    + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
+    * the name of an existing outputState
+    * a tuple with exactly three items in the following order:
+        * a mechanism or outputState specification (a Mechanism or OutputState object, or a specification dictionary
+        for one); if a Mechanism is referenced, the exponent and weight items below will apply to *all* of the
+        outputStates of that mechanism.
+        * exponent : int
+          will be used to exponentiate outState.value when computing EVC
+        * weight : int
+          will be used to multiplicatively weight outState.value when computing EVC
+    * MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
         + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
         + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
-    + Mechanism (object): ignored (used for SystemController and System params)
+    * Mechanism (object): ignored (used for SystemController and System params)
 
 
 .. _ControlMechanisms_Monitored_OutputStates:

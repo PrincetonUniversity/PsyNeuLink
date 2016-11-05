@@ -260,8 +260,8 @@ mechanism subclass, as well as those specific to a particular subclass (document
       The key of each entry must be the name of the  parameter.
       The value of each entry can be one of the following:
 
-      * simply the value of the parameter itself;
-      * a parameter state the value of which specifies the parameter's value
+      * the value of the parameter itself;
+      * a parameter state, the value of which specifies the parameter's value
         (see :ref:`ParameterState_Creating_A_ParameterState`).
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
         :doc:`ControlSignal` or a :doc:`LearningSignal`
