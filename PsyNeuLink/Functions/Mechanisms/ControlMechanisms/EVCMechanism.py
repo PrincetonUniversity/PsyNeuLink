@@ -191,8 +191,8 @@ class EVCMechanism(ControlMechanism_Base):
         - _instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
         - _instantiate_monitored_output_states(monitored_states, context):
-            parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
-        - instantiate_monitoring_input_state(output_state, context):
+            parse list of OutputState(s) and/or Mechanism(s) and call _instantiate_monitoring_input_state for each item
+        - _instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
         - instantiate_control_signal_projection(projection, context):
@@ -298,8 +298,8 @@ class EVCMechanism(ControlMechanism_Base):
         Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
 
         Assign inputState to controller for each state to be monitored;  for each item in self.monitoredOutputStates:
-        - if it is a OutputState, call instantiate_monitoring_input_state()
-        - if it is a Mechanism, call instantiate_monitoring_input_state for relevant Mechanism.outputStates
+        - if it is a OutputState, call _instantiate_monitoring_input_state()
+        - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
             (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
 
         Notes:
@@ -321,7 +321,7 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Functions.States.OutputState import OutputState
 
-        # Clear self.variable, as items will be assigned in call(s) to instantiate_monitoring_input_state()
+        # Clear self.variable, as items will be assigned in call(s) to _instantiate_monitoring_input_state()
         self.variable = None
 
         # PARSE SPECS
@@ -551,10 +551,10 @@ class EVCMechanism(ControlMechanism_Base):
         # from Functions.States.OutputState import OutputState
         for monitored_state in self.monitoredOutputStates:
             if isinstance(monitored_state, OutputState):
-                self.instantiate_monitoring_input_state(monitored_state, context=context)
+                self._instantiate_monitoring_input_state(monitored_state, context=context)
             elif isinstance(monitored_state, Mechanism):
                 for output_state in monitored_state.outputStates:
-                    self.instantiate_monitoring_input_state(output_state, context=context)
+                    self._instantiate_monitoring_input_state(output_state, context=context)
             else:
                 raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
                                "neither a OutputState nor Mechanism".format(monitored_state))
@@ -641,7 +641,7 @@ class EVCMechanism(ControlMechanism_Base):
         # MODIFIED 10/2/16 END
         self.system._instantiate_graph(context=context)
 
-    def instantiate_monitoring_input_state(self, monitored_state, context=None):
+    def _instantiate_monitoring_input_state(self, monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
         Validate specification for outputState to be monitored
