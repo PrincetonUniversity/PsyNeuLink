@@ -231,13 +231,13 @@ class EVCMechanism(ControlMechanism_Base):
     # from Functions.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
+                               MAKE_DEFAULT_CONTROLLER: True,
                                PARAMETER_STATES: False})
 
     @tc.typecheck
     def __init__(self,
                  default_input_value=NotImplemented,
                  function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
-                 make_default_controller:bool=True,
                  monitored_output_states:tc.optional(list)=None,
                  save_all_values_and_policies:bool=False,
                  cost_aggregation_function=LinearCombination(offset=0.0,
@@ -262,7 +262,6 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 make_default_controller=make_default_controller,
                                                  monitored_output_states=monitored_output_states,
                                                  save_all_values_and_policies=save_all_values_and_policies,
                                                  cost_aggregation_function=cost_aggregation_function,
