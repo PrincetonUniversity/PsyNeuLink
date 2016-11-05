@@ -213,14 +213,18 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/5/16:
+# Function -> PNL_Components or just PsyNeuLink??
+# UtilityFunction -> Function
+# Learning -> LearningSignal
+
 # 11/3/16:
 
 # Transfer Execution
 # DDM Outputs
 
+# FIX: "Learning" projection -> "LearningSignal"
 # FIX: Add error message if input.value is None on execute
-
-# FIX: RESPONSE_TIME -> RESPONSE_TIME
 
 # 10/29/16:
 # QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
@@ -251,8 +255,6 @@
 #                         defaults for instance (created and validated in Functions init)
 
 # IMPLEMENT DDM: noise function for TIME_STEP mode (to use non-Gaussian distributions), or implemente JumpDM
-
-# FIX:  search for "iter" to make sure creation is outside for or while loops
 
 # FIX: Transfer:
 # FIX:     - implement initial_state
@@ -288,8 +290,6 @@
 # IMPLEMENT: parameterizable noise value for Transfer mechanism (i.e., specify function)
 
 # FIX:  ScratchPad example
-
-# FIX: Transfer:  default_input_value=NotImplemented
 
 # FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
@@ -345,9 +345,6 @@
 # IMPLEMENT: move Run to Functions dir
 
 # IMPLEMENT: run method for process and system, and document in docstring
-
-# FIX: change pathway -> pathway
-# FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
 
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
 # FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM:

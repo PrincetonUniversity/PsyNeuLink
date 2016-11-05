@@ -2,7 +2,7 @@ Control Mechanisms
 ==================
 
 .. toctree::
-	:maxdepth:
+	:maxdepth: 2
 
 	DefaultControlMechanism
 	EVCMechanism

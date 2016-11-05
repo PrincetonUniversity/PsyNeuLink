@@ -169,66 +169,27 @@
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Mechanisms</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Transfer.html">Transfer</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#function">Function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#states">States</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#specifying-mechanism-parameters">Specifying Mechanism Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#role-in-processes-and-systems">Role in Processes and Systems</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#runtime-parameters">Runtime Parameters</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-</ul>
 </div>
 <span class="target" id="module-Mechanism"></span><div class="section" id="overview">
 <span id="mechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Mechanisms are the core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
+<p>Mechanisms are a core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
 it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:</p>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
-<dd><p class="first last">aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
-system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
-process or system.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a></dt>
-<dd><p class="first last">monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
-error signals used for learning (see <a class="reference internal" href="Learning.html"><span class="doc">Learning</span></a>).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
-<dd><p class="first last">evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
-mechanisms.</p>
-</dd>
-</dl>
-</li>
+<blockquote>
+<div><ul class="simple">
+<li><strong>ProcessingMechanisms</strong> aggregrate the input they receive from other mechanisms in a process or system,
+and/or the input to a process or system, transform it in some way, and provide the result either as input for
+other mechanisms and/or the output of a
+process or system.</li>
 </ul>
+<ul class="simple">
+<li><strong>MonitoringMechanisms</strong> monitor the output of one or more other mechanisms, receive training (target) values,
+and compare these to generate error signals used for learning (see <a class="reference internal" href="Learning.html"><span class="doc">Learning</span></a>).</li>
+</ul>
+<ul class="simple">
+<li><strong>ControlMechanisms</strong> evaluate the output of one or more other mechanisms, and use this to modify the
+parameters of those or other mechanisms.</li>
+</ul>
+</div></blockquote>
 <p>A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
 uses to represent its input, function parameters, and output</p>
 </div>

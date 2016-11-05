@@ -12,8 +12,16 @@
 Overview
 --------
 
+ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms and use this information to
+regulate the value of :doc:`ControlSignal` projections to other ProcessingMechanisms.  ControlMechanisms are
+typically associated with a :doc:`System`, and every system is assigned a controlMechanism as a controller (see
+:ref:`_System_Execution_Control`).
+
 Creating A ControlMechanism
 ---------------------------
+
+ControlMechanisms can be created by using the standard Python method of calling the subclass for the desired type.
+A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`).
 
 
 .. _ControlMechanisms_Monitored_OutputStates:

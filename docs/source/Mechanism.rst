@@ -11,8 +11,6 @@ Mechanisms
 .. toctree::
    :maxdepth: 3
 
-   Mechanism
-
 .. automodule:: Mechanism
    :members:
    :exclude-members: MechanismTuple, MechanismList, random

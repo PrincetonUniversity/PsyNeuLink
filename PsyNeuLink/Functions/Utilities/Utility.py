@@ -7,7 +7,32 @@
 #
 #
 # ***********************************************  Utility *************************************************************
-#
+
+"""
+Example function:
+  * :class:`Contradiction`
+
+Combination Functions:
+  * :class:`LinearCombination`
+
+Transfer Functions:
+  * :class:`Linear`
+  * :class:`Exponential`
+  * :class:`Logistic`
+  * :class:`SoftMax`
+  * :class:`LinearMatrix`
+
+Integrator Functions:
+  * :class:`Integrator`
+  * :class:`BogaczEtAl`
+  * :class:`NavarroAndFuss`
+
+Learning Functions:
+  * :class:`Reinforcement`
+  * :class:`BackPropagation`
+
+"""
+
 
 # __all__ = ['LinearCombination',
 #            'Linear',

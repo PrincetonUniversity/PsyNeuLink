@@ -53,6 +53,9 @@ Creating a System
 
 Systems are created by calling the ``system`` "factory" method.  If no arguments are provided, a system with a
 single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
+Whenever a system is created, a :doc:`ControlMechanism` is created for it and assigned as its controller.  The
+controller can be specified using the ``controller`` parameter, by referencing an existing ControlMechanism,
+or simply specifying its class;   if one is none specified, a :doc:`DefaultControlMechanism` is created.
 
 .. _System_Structure:
 
@@ -163,11 +166,11 @@ a value for the target attribute of the monitoring mechanism of each process in 
 
 Control
 ~~~~~~~
-Every system is associated with a single controller (by default, the ``DefaultController``).  A controller can be used
-to monitor the outputState(s) of specified mechanisms and use their values to set the parameters of those or other
-mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
-system are executed, and sets the values of any parameters that it controls, which then take effect in the next round
-of execution.
+Every system is associated with a single controller (by default, the ``DefaultController``).  The controller monitors
+the outputState(s) of specified mechanisms and uses that information to set the parameter values for the fuctions of
+those or other mechanisms in the system (see :doc:`ControlMechanism`).  The controller is executed after all other
+mechanisms in the system are executed, and sets the values of any parameters that it controls, which then take
+effect in the next round of execution.
 
 COMMENT:
    Examples

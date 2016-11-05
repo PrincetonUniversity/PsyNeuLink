@@ -703,10 +703,10 @@ class EVCMechanism(ControlMechanism_Base):
         return simulation_inputs
 
     def __execute__(self,
-                 variable=NotImplemented,
-                 time_scale=TimeScale.TRIAL,
-                 runtime_params=NotImplemented,
-                 context=None):
+                    variable=NotImplemented,
+                    time_scale=TimeScale.TRIAL,
+                    runtime_params=NotImplemented,
+                    context=None):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
         Get allocationSamples for the ControlSignal Projection for each outputState in self.outputStates
@@ -928,15 +928,20 @@ class EVCMechanism(ControlMechanism_Base):
             output_state.value = np.atleast_1d(self.EVCmaxPolicy[self._outputStateValueMapping[output_state_name]])
         # MODIFIED 10/25/16 END
 
-
+        # MODIFIED 11/4/16 NEWER:
+        EVCmaxStateValue = iter(self.EVCmaxStateValues)
+        # MODIFIED 11/4/16 END
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
             # list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
             # # MODIFIED 10/25/16 OLD:
             # next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
-            # MODIFIED 10/25/16 NEW:
-            self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # # MODIFIED 10/25/16 NEW:
+            # self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
+            # MODIFIED 11/4/16 NEWER:
+            self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(EVCmaxStateValue))
             # MODIFIED 10/25/16 END
+
 
         # Report EVC max info
 
