@@ -12,16 +12,15 @@
 Overview
 --------
 
-ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms and use this information to
-regulate the value of :doc:`ControlSignal` projections to other ProcessingMechanisms.  ControlMechanisms are
-typically associated with a :doc:`System`, and every system is assigned a controlMechanism as a controller (see
-:ref:`_System_Execution_Control`).
+ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` and use this
+information to regulate the value of :doc:`ControlSignal` projections to other ProcessingMechanisms in that system.  .
 
 Creating A ControlMechanism
 ---------------------------
 
 ControlMechanisms can be created by using the standard Python method of calling the subclass for the desired type.
-A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`).
+A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`),
+and assigned as the controller for that system (see :ref:`_System_Execution_Control`).
 
 
 .. _ControlMechanism_MonitoredOutputStates:
@@ -30,17 +29,13 @@ MonitoredOutputStates
 ~~~~~~~~~~~~~~~~~~~~~
 
 In addition to the standard components and parameters of a :doc:`Mechanism`, ControlMechanisms have a
-:keyword:`MONITORED_OUTPUT_STATES` parameter, that specifies which outputStates to monitor of the mechanism(s) in
-the system to which the ControlMechanism belongs.  ControlMechanism subclasses determine which mechanisms and
-outputStates they monitor by default, and how the information is used (for example, the :doc:`DefaultControlMechanism`
-monitors the primary outputState of every mechanism in its system, treating each one indpendently).
+:keyword:`MONITORED_OUTPUT_STATES` parameter that specifies which outputStates of the mechanism(s) in
+ControlMechanism's system to monitor.  ControlMechanism subclasses determine which mechanisms and outputStates they
+monitor by default, and how that information is used (for example, the :doc:`DefaultControlMechanism` monitors the
+primary outputState of every mechanism in its system, treating each one indpendently).  This can also be specified
+in the ``monitored_output_states`` argument when creating a system, or in its ``params`` dictionary using the
+:keyword:`MONITORED_OUTPUT_STATES`.  The parameter must be a list, each item of which is one of the following:
 
-The ``monitored_output_states``
-xxx
-
-depends upon the ControlMechanism subclass
-By default, the primary outputState of every mechanism is the
-system is monitored.
 
 This is a list, each item of which must be an outputState object
 or the name of one, a three item tuple containing
