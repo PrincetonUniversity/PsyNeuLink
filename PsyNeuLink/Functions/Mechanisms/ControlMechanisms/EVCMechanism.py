@@ -274,10 +274,12 @@ class EVCMechanism(ControlMechanism_Base):
         self.controlSignalChannels = OrderedDict()
 
         super(EVCMechanism, self).__init__(default_input_value=default_input_value,
-                                        params=params,
-                                        name=name,
-                                        prefs=prefs,
-                                        context=self)
+                                           function=function,
+                                           monitored_output_states=monitored_output_states,
+                                           params=params,
+                                           name=name,
+                                           prefs=prefs,
+                                           context=self)
 
     def _instantiate_input_states(self, context=None):
         """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
