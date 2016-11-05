@@ -1,5 +1,5 @@
-Learning
-========
+LearningSignal
+==============
 
-.. automodule:: Learning
+.. automodule:: LearningSignal
    :members:
