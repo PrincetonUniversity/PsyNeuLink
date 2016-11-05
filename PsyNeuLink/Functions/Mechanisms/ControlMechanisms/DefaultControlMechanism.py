@@ -70,13 +70,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
     from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
-                               # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
-                               # MAKE_DEFAULT_CONTROLLER:True  <- NO NEED, SINCE THIS IS ALREADY THE DEFAULT
-                               # MODIFIED 11/5/16 NEW:
+                               # MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
                                FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
                                MONITORED_OUTPUT_STATES:None
-                               # MODIFIED 11/5/16 END
                                })
 
     from PsyNeuLink.Functions.Utilities.Utility import Linear
@@ -86,7 +83,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
-                 # context=None):
 
         self.controlSignalChannels = OrderedDict()
 

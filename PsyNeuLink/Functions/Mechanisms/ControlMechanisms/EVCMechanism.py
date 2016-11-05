@@ -255,10 +255,8 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=functionType+kwInit):
 
-        # MODIFIED 9/20/16 NEW:  replaced above with None
         monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
         prediction_mechanism_params = prediction_mechanism_params or {MONITORED_OUTPUT_STATES:None}
-        # MODIFIED 9/20/16 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
