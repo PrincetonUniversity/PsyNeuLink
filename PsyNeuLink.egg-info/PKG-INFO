@@ -127,7 +127,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      ControlSignals([allocation_source, receiver, params, name, prefs])  # outputState -> parameterState
                      [TBI: - Gating()]                                                   # outputState -> inputState/outputState
                      [TBI: - Learning()]                                                 # outputState -> projection
-                 Utility_Base(variable_default, param_defaults, [name, prefs, context])
+                 Function_Base(variable_default, param_defaults, [name, prefs, context])
                      Contradiction([variable_default, param_defaults, prefs, context])    # example function
                      [TBI: Implement as abstract Type: Aggretate
                          LinearCombination([variable_default, param_defaults, prefs, context])   # combines values/vectors
@@ -171,13 +171,13 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          ControlSignal(Projection_Base)..................[PsyNeuLink.Components.Projections.ControlSignal]
         
                  Function(Component).......................................[PsyNeuLink.Components.ShellClasses]
-                     Utility_Base(Function)...............................[PsyNeuLink.Components.Functions.Function]
-                         Contradiction(Utility_Base).....................[PsyNeuLink.Components.Functions.Function]
-                         LinearCombination(Utility_Base)........................[PsyNeuLink.Components.Functions.Function]
-                         Linear(Utility_Base)............................[PsyNeuLink.Components.Functions.Function]
-                         Exponential(Utility_Base).......................[PsyNeuLink.Components.Functions.Function]
-                         Integrator(Utility_Base)........................[PsyNeuLink.Components.Functions.Function]
-                         LinearMatrix(Utility_Base)......................[PsyNeuLink.Components.Functions.Function]
+                     Function_Base(Function)...............................[PsyNeuLink.Components.Functions.Function]
+                         Contradiction(Function_Base).....................[PsyNeuLink.Components.Functions.Function]
+                         LinearCombination(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+                         Linear(Function_Base)............................[PsyNeuLink.Components.Functions.Function]
+                         Exponential(Function_Base).......................[PsyNeuLink.Components.Functions.Function]
+                         Integrator(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+                         LinearMatrix(Function_Base)......................[PsyNeuLink.Components.Functions.Function]
         
         
              Requirements:

@@ -925,7 +925,7 @@
 #
 # - iscompatible:
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
-# -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
+# -   Deal with int vs. float business in iscompatible (and Function_Base functionOutputTypeConversion)
 # -   Fix: Allow it to allow numbers and strings (as well as lists) by default
 #     and then relax constraint to be numeric for InputState, OutputState and ParameterState
 #     in Mechanism._validate_params

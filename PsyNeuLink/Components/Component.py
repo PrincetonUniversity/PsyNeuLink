@@ -120,7 +120,7 @@ class FunctionLog(IntEnum):
     DEFAULTS = NONE
 
 
-class FunctionError(Exception):
+class ComponentError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
 
@@ -318,7 +318,7 @@ class Component(object):
             try:
                 self.__class__.__bases__[0].registry
             except AttributeError:
-                raise FunctionError("{0} is a category class and so must implement a registry".
+                raise ComponentError("{0} is a category class and so must implement a registry".
                                     format(self.__class__.__bases__[0].__name__))
         #endregion
 
@@ -375,9 +375,9 @@ class Component(object):
         # Do this here, as _validate_variable might be overridden by subclass
         try:
             if self.variableClassDefault is NotImplemented:
-                raise FunctionError("variableClassDefault must be given a value for {0}".format(self.functionName))
+                raise ComponentError("variableClassDefault must be given a value for {0}".format(self.functionName))
         except AttributeError:
-            raise FunctionError("variableClassDefault must be defined for {0} or its base class".
+            raise ComponentError("variableClassDefault must be defined for {0} or its base class".
                                 format(self.functionName))
         #endregion
 
@@ -394,10 +394,10 @@ class Component(object):
             import PsyNeuLink.Components.Functions.Function
             if kwUtilityFunctionCategory in type_requirements:
                type_requirements[type_requirements.index(kwUtilityFunctionCategory)] = \
-                   type(PsyNeuLink.Components.Functions.Function.Utility_Base)
+                   type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
-                raise FunctionError("Param {0} must be in paramClassDefaults for {1}".
+                raise ComponentError("Param {0} must be in paramClassDefaults for {1}".
                                     format(required_param, self.name))
 
             # If the param does not match any of the types specified for it in type_requirements
@@ -410,7 +410,7 @@ class Component(object):
                     OK = (any(isinstance(required_param_value, type_spec) for type_spec in type_requirements))
                 if not OK:
                     type_names = format(" or ".join("{!s}".format(type.__name__) for (type) in type_requirements))
-                    raise FunctionError("Value ({0}) of param {1} is not appropriate for {2};"
+                    raise ComponentError("Value ({0}) of param {1} is not appropriate for {2};"
                                         "  requires one of the following types: {3}".
                                         format(required_param_value.__name__, required_param, self.name, type_names))
             except TypeError:
@@ -716,28 +716,28 @@ class Component(object):
         # Make sure all args are legal
         if not variable is NotImplemented:
             if isinstance(variable,dict):
-                raise FunctionError("Dictionary passed as variable; probably trying to use param set as first argument")
+                raise ComponentError("Dictionary passed as variable; probably trying to use param set as first argument")
         if request_set and not request_set is NotImplemented:
             if not isinstance(request_set, dict):
-                raise FunctionError("requested parameter set must be a dictionary")
+                raise ComponentError("requested parameter set must be a dictionary")
         if not target_set is NotImplemented:
             if not isinstance(target_set, dict):
-                raise FunctionError("target parameter set must be a dictionary")
+                raise ComponentError("target parameter set must be a dictionary")
         if not default_set is NotImplemented:
             if not isinstance(default_set, dict):
-                raise FunctionError("default parameter set must be a dictionary")
+                raise ComponentError("default parameter set must be a dictionary")
 
         # IMPLEMENTATION NOTE:  REMOVE
         # # Enforce implementation of variableEncodingDim and valueEncodingDim:
         # try:
         #     self.variableEncodingDim
         # except AttributeError:
-        #     raise FunctionError("{0} or its base class must implement variableEncodingDim".
+        #     raise ComponentError("{0} or its base class must implement variableEncodingDim".
         #                         format(self.__class__.__name__))
         # try:
         #     self.valueEncodingDim
         # except AttributeError:
-        #     raise FunctionError("{0} or its base class must implement valueEncodingDim".
+        #     raise ComponentError("{0} or its base class must implement valueEncodingDim".
         #                         format(self.__class__.__name__))
 
 
@@ -763,7 +763,7 @@ class Component(object):
         if target_set is NotImplemented:
             target_set = self.paramInstanceDefaults
         if target_set is self.paramClassDefaults:
-            raise FunctionError("Altering paramClassDefaults not permitted")
+            raise ComponentError("Altering paramClassDefaults not permitted")
         if default_set is NotImplemented:
             default_set = self.paramInstanceDefaults
 
@@ -857,7 +857,7 @@ class Component(object):
         :return none:
         """
         if not isinstance(mode, ResetMode):
-            raise FunctionError("Must be called with a valid ResetMode")
+            raise ComponentError("Must be called with a valid ResetMode")
 
         if mode == ResetMode.CURRENT_TO_INSTANCE_DEFAULTS:
             self.params_current = self.paramInstanceDefaults.copy()
@@ -932,7 +932,7 @@ class Component(object):
             if not variable.dtype is self.variableClassDefault.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
                     format(self.functionName, context, pre_converted_variable_class_default.__class__.__name__)
-                raise FunctionError(message)
+                raise ComponentError(message)
 
         self.variable = variable
 
@@ -964,7 +964,7 @@ class Component(object):
             try:
                 self.paramClassDefaults[param_name]
             except KeyError:
-                raise FunctionError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
+                raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is None or NotImplemented in paramClassDefaults: suppress type checking
             # DOCUMENT:
@@ -990,9 +990,9 @@ class Component(object):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
 
-            from PsyNeuLink.Components.Functions.Function import Utility_Base
+            from PsyNeuLink.Components.Functions.Function import Function_Base
             from PsyNeuLink.Components.States.ParameterState import get_function_param
-            if isinstance(self, Utility_Base):
+            if isinstance(self, Function_Base):
                 param_value = get_function_param(param_value)
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
@@ -1016,14 +1016,14 @@ class Component(object):
                         except KeyError:
                             # If no function is specified, self.assign_default_kwFunctionParams should be True
                             # (see assign_defaults above)
-                            raise FunctionError("PROGRAM ERROR: No function params for {} so should be able to "
+                            raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
                                                 "validate {}".format(self.name, FUNCTION_PARAMS))
                         else:
                             for entry_name, entry_value in param_value.items():
                                 try:
                                     function.paramClassDefaults[entry_name]
                                 except KeyError:
-                                    raise FunctionError("{0} is not a valid entry in {1} for {2} ".
+                                    raise ComponentError("{0} is not a valid entry in {1} for {2} ".
                                                         format(entry_name, param_name, self.name))
                                 # add [entry_name] entry to [param_name] dict
                                 else:
@@ -1042,13 +1042,13 @@ class Component(object):
                             try:
                                 self.paramClassDefaults[param_name][entry_name]
                             except KeyError:
-                                raise FunctionError("{0} is not a valid entry in {1} for {2} ".
+                                raise ComponentError("{0} is not a valid entry in {1} for {2} ".
                                                     format(entry_name, param_name, self.name))
                             # TBI: (see above)
                             # if not iscompatible(entry_value,
                             #                     self.paramClassDefaults[param_name][entry_name],
                             #                     **{kwCompatibilityLength:0}):
-                            #     raise FunctionError("{0} ({1}) in {2} of {3} must be a {4}".
+                            #     raise ComponentError("{0} ({1}) in {2} of {3} must be a {4}".
                             #         format(entry_name, entry_value, param_name, self.name,
                             #                type(self.paramClassDefaults[param_name][entry_name]).__name__))
                             else:
@@ -1072,7 +1072,7 @@ class Component(object):
 
             # Parameter is not a valid type
             else:
-                raise FunctionError("Value of {0} ({1}) must be of type {2} ".
+                raise ComponentError("Value of {0} ({1}) must be of type {2} ".
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
@@ -1122,7 +1122,7 @@ class Component(object):
                 function = self.function
             except AttributeError:
                 # self.function is also missing, so raise exception
-                raise FunctionError("{} must either implement a function method, specify one as the FUNCTION param in"
+                raise ComponentError("{} must either implement a function method, specify one as the FUNCTION param in"
                                     " paramClassDefaults, or as the default for the function argument in its init".
                                     format(self.__class__.__name__, FUNCTION))
             else:
@@ -1139,7 +1139,7 @@ class Component(object):
                     return
                 # self.function is NOT OK, so raise exception
                 else:
-                    raise FunctionError("{0} not specified and {1}.function is not a Function object or class"
+                    raise ComponentError("{0} not specified and {1}.function is not a Function object or class"
                                         "or valid method in {2}".
                                         format(FUNCTION, self.__class__.__name__, self.name))
 
@@ -1163,7 +1163,7 @@ class Component(object):
                     function = self.function
                 except AttributeError:
                     # self.function is not implemented, SO raise exception
-                    raise FunctionError("{0} ({1}) is not a Function object or class or valid method, "
+                    raise ComponentError("{0} ({1}) is not a Function object or class or valid method, "
                                         "and {2}.function is not implemented for {3}".
                                         format(FUNCTION,
                                                self.paramsCurrent[FUNCTION],
@@ -1183,7 +1183,7 @@ class Component(object):
                                                  self.__class__.__name__))
                     # - NOT OK, so raise exception (FUNCTION and self.function were both no good)
                     else:
-                        raise FunctionError("Neither {0} ({1}) nor {2}.function is a Function object or class "
+                        raise ComponentError("Neither {0} ({1}) nor {2}.function is a Function object or class "
                                             "or a valid method in {3}".
                                             format(FUNCTION, self.paramsCurrent[FUNCTION],
                                                    self.__class__.__name__, self.name))
@@ -1359,7 +1359,7 @@ class Component(object):
             # If self.function is also not implemented, raise exception
             # Note: this is a "sanity check," as this should have been checked in _validate_function (above)
             except AttributeError:
-                raise FunctionError("{0} ({1}) is not a Function object or class, "
+                raise ComponentError("{0} ({1}) is not a Function object or class, "
                                     "and {2}.function is not implemented".
                                     format(FUNCTION, self.paramsCurrent[FUNCTION],
                                            self.__class__.__name__))
@@ -1384,7 +1384,7 @@ class Component(object):
         # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
         self.value = self.execute(context=context)
         if self.value is None:
-            raise FunctionError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
+            raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         self._value_template = self.value
 
         self.function_object = self.function.__self__
@@ -1394,10 +1394,10 @@ class Component(object):
         pass
 
     def initialize(self):
-        raise FunctionError("{} class does not support initialize() method".format(self.__class__.__name__))
+        raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
     def execute(self, input=None, params=None, time_scale=None, context=None):
-        raise FunctionError("{} class must implement execute".format(self.__class__.__name__))
+        raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -1443,7 +1443,7 @@ class Component(object):
                     # FIX: VALUE RETURNED SHOULD BE OK, SO ASSIGN IT INSTEAD OF ONE IN pref_set??
                     # FIX: LEVEL SHOULD BE LOWER THAN REQUESTED;  REPLACE RAISE WITH WARNING TO THIS EFFECT
         else:
-            raise FunctionError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
+            raise ComponentError("Attempt to assign non-PreferenceSet {0} to {0}.prefs".
                                 format(pref_set, self.name))
 
     @property
