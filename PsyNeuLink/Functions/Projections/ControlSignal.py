@@ -402,14 +402,14 @@ class ControlSignal(Projection_Base):
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
 # FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
-# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP instantiate_control_signal_projection FOR ControlMechanism)
+# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_signal_projection FOR ControlMechanism)
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
             from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
             if isinstance(self.sender, ControlMechanism_Base):
-                self.sender.instantiate_control_signal_projection(self, context=context)
+                self.sender._instantiate_control_signal_projection(self, context=context)
         # Call super to instantiate sender
         super(ControlSignal, self)._instantiate_sender(context=context)
 

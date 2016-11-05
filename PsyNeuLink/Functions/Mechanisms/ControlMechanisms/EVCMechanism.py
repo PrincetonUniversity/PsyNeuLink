@@ -195,7 +195,7 @@ class EVCMechanism(ControlMechanism_Base):
         - _instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
             create new inputState for outputState to be monitored, and assign Mapping Project from it to inputState
-        - instantiate_control_signal_projection(projection, context):
+        - _instantiate_control_signal_projection(projection, context):
             adds outputState, and assigns as sender of to requesting ControlSignal Projection
         - _instantiate_function(context):
             construct self.controlSignalSearchSpace from the allocationSamples for the

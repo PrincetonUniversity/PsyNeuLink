@@ -107,14 +107,14 @@ class ControlMechanism_Base(Mechanism_Base):
 
     Description:
 # DOCUMENTATION NEEDED:
-    .instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
+    ._instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
     .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
     WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
 # PROTOCOL FOR ASSIGNING DefaultController (defined in Functions.__init__.py)
 #    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Functions.__init__.py)
 #    When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-#        then its take_over_as_default_controller method is called in _instantiate_attributes_after_function()
+#        then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
 #        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 # params[kwMonitoredStates]: Determines which states will be monitored.
 #        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
@@ -152,8 +152,8 @@ class ControlMechanism_Base(Mechanism_Base):
     - validate_monitoredstates_spec(state_spec, context):
     - _instantiate_attributes_before_function(context):
     - _instantiate_attributes_after_function(context):
-    - take_over_as_default_controller(context):
-    - instantiate_control_signal_projection(projection, context):
+    - _take_over_as_default_controller(context):
+    - _instantiate_control_signal_projection(projection, context):
         adds outputState, and assigns as sender of to requesting ControlSignal Projection
     - execute(time_scale, runtime_params, context):
     - show(): prints monitored OutputStates and mechanism parameters controlled
@@ -324,7 +324,7 @@ class ControlMechanism_Base(Mechanism_Base):
         try:
             # If specified as DefaultController, reassign ControlSignal projections from DefaultController
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
-                self.take_over_as_default_controller(context=context)
+                self._take_over_as_default_controller(context=context)
         except KeyError:
             pass
 
@@ -332,11 +332,11 @@ class ControlMechanism_Base(Mechanism_Base):
         try:
             if self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS].items():
-                    self.instantiate_control_signal_projection(projection, context=self.name)
+                    self._instantiate_control_signal_projection(projection, context=self.name)
         except:
             pass
 
-    def take_over_as_default_controller(self, context=None):
+    def _take_over_as_default_controller(self, context=None):
 
         from PsyNeuLink.Functions import DefaultController
 
@@ -350,13 +350,13 @@ class ControlMechanism_Base(Mechanism_Base):
                 # Move ControlSignal projection to self (by creating new outputState)
                 # IMPLEMENTATION NOTE: Method 1 -- Move old ControlSignal Projection to self
                 #    Easier to implement
-                #    - call instantiate_control_signal_projection directly here (which takes projection as arg)
+                #    - call _instantiate_control_signal_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
                 #    - however, this bypasses call to Projection._instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(),
-                #        so need to do that in instantiate_control_signal_projection
+                #        so need to do that in _instantiate_control_signal_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                self.instantiate_control_signal_projection(projection, context=context)
+                self._instantiate_control_signal_projection(projection, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
@@ -376,7 +376,7 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def instantiate_control_signal_projection(self, projection, context=None):
+    def _instantiate_control_signal_projection(self, projection, context=None):
         """Add outputState and assign as sender to requesting controlSignal projection
 
         Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection

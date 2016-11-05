@@ -1525,7 +1525,7 @@
 #                      it is applied to just that mechanism
 #
 # IMPLEMENT: call ControlMechanism should call ControlSignal._instantiate_sender()
-#                to instantaite new outputStates and Projections in take_over_as_default_controller()
+#                to instantaite new outputStates and Projections in _take_over_as_default_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
 #                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
@@ -1548,32 +1548,32 @@
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller
 #           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
-#                then the class's take_over_as_default_controller() method
+#                then the class's _take_over_as_default_controller() method
 #                     is called in _instantiate_attributes_after_function
 # it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
-# FIX: ControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
+# FIX: ControlMechanism._take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
-# FIX: PROBLEM - ControlMechanism.take_over_as_default_controller()
+# FIX: PROBLEM - ControlMechanism._take_over_as_default_controller()
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
 # 1) CLEANER: use _instantiate_sender on ControlSignal to instantiate both outputState and projection
-# 2) EASIER: add self.sendsToProjections.append() statement in take_over_as_default_controller()
+# 2) EASIER: add self.sendsToProjections.append() statement in _take_over_as_default_controller()
 
 
 # BACKGROUND INFO:
 # _instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
-# instantiate_control_signal_projection normally called from ControlSignal in _instantiate_sender
+# _instantiate_control_signal_projection normally called from ControlSignal in _instantiate_sender
 #
 # Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
-#             instantiate_control_signal_projection() for current controller
+#             _instantiate_control_signal_projection() for current controller
 #                 instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
