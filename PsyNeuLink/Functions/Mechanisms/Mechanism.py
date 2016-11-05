@@ -8,10 +8,10 @@
 # ****************************************  MECHANISM MODULE ***********************************************************
 
 """
-Sections of this document:
-  * :ref:`Mechanism_Overview`
-  * :ref:`Mechanism_Creating_A_System`
-  * :ref:`Mechanism_Structure`
+..
+    * :ref:`Mechanism_Overview`
+    * :ref:`Mechanism_Creating_A_System`
+    * :ref:`Mechanism_Structure`
      * :ref:`Mechanism_Function`
      * :ref:`Mechanism_States`
         * :ref:`InputStates`
@@ -19,9 +19,9 @@ Sections of this document:
         * :ref:`ParameterStates`
      * :ref:`Mechanism_Specifying_Parameters`
      * :ref:`Mechanism_Role_In_Processes_And_Systems`
-  * :ref:`Mechanism_Execution`
+    * :ref:`Mechanism_Execution`
      * :ref:`Mechanism_Runtime_Parameters`
-  * :ref:`Mechanism_Class_Reference`
+    * :ref:`Mechanism_Class_Reference`
 
 
 .. _Mechanism_Overview:

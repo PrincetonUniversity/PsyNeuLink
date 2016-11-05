@@ -5,17 +5,18 @@
 # *****************************************    PROCESS CLASS    ********************************************************
 
 """
-Sections:
-  * :ref:`Process_Overview`
-  * :ref:`Process_Creating_A_Process`
-  * :ref:`Process_Structure`
-     * :ref:`Process_Pathway`
-     * :ref:`Process_Mechanisms`
-     * :ref:`Process_Projections`
-     * :ref:`Process_Input_And_Ouput`
-     * :ref:`Process_Learning`
-  * :ref:`Process_Execution`
-  * :ref:`Process_Class_Reference`
+..
+    Sections:
+      * :ref:`Process_Overview`
+      * :ref:`Process_Creating_A_Process`
+      * :ref:`Process_Structure`
+         * :ref:`Process_Pathway`
+         * :ref:`Process_Mechanisms`
+         * :ref:`Process_Projections`
+         * :ref:`Process_Input_And_Ouput`
+         * :ref:`Process_Learning`
+      * :ref:`Process_Execution`
+      * :ref:`Process_Class_Reference`
 
 
 .. _Process_Overview:

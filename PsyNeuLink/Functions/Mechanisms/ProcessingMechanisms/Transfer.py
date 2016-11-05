@@ -9,12 +9,12 @@
 # *********************************************  Transfer *******************************************************
 
 """
-
-Sections:
-  * :ref:`Transfer_Overview`
-  * :ref:`Transfer_Creating_A_Transfer_Mechanism`
-  * :ref:`Transfer_Execution`
-  * :ref:`Transfer_Class_Reference`
+..
+    Sections:
+      * :ref:`Transfer_Overview`
+      * :ref:`Transfer_Creating_A_Transfer_Mechanism`
+      * :ref:`Transfer_Execution`
+      * :ref:`Transfer_Class_Reference`
 
 .. _Transfer_Overview:
 
