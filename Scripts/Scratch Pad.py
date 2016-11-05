@@ -1731,7 +1731,7 @@ import typecheck as tc
 #                         xxx
 #                     except AttributeError:
 # # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN FUNCTION;  EXCEPT IF ATTRIBUTE ERROR
-#                         raise FunctionError("Either {0} must be specified in paramClassDefaults or"
+#                         raise ComponentError("Either {0} must be specified in paramClassDefaults or"
 #                                             " <class.function> must be implemented for {1}".
 #                                             format(required_param, self.name))
 #                     else:

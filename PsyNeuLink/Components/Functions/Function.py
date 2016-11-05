@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ***********************************************  Function *************************************************************
+# ***********************************************  Function ************************************************************
 
 """
 Example function:
@@ -43,8 +43,8 @@ Learning Components:
 #            'LinearMatrix',
 #            'ReinforcementLearning',
 #            'BackPropagation',
-#            'UtilityError',
-#            "UtilityFunctionOutputType"]
+#            'FunctionError',
+#            "FunctionOutputType"]
 
 from functools import reduce
 from operator import *
@@ -58,10 +58,10 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
 
-UtilityRegistry = {}
+FunctionRegistry = {}
 
 
-class UtilityError(Exception):
+class FunctionError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
 
@@ -69,7 +69,7 @@ class UtilityError(Exception):
          return repr(self.error_value)
 
 
-class UtilityFunctionOutputType(IntEnum):
+class FunctionOutputType(IntEnum):
     RAW_NUMBER = 0
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
@@ -79,7 +79,7 @@ class UtilityFunctionOutputType(IntEnum):
 def get_param_value_for_keyword(owner, keyword):
     try:
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
-    except UtilityError as e:
+    except FunctionError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
         return None
@@ -91,7 +91,7 @@ def get_param_value_for_keyword(owner, keyword):
 def get_param_value_for_function(owner, function):
     try:
         return owner.paramsCurrent[FUNCTION].param_function(owner, function)
-    except UtilityError as e:
+    except FunctionError as e:
         if owner.prefs.verbosePref:
             print ("{} of {}".format(e, owner.name))
         return None
@@ -114,7 +114,7 @@ def parameter_spec(param):
     return False
 
 
-class Utility_Base(Function):
+class Function_Base(Function):
     """Implement abstract class for Function category of Function class
 
     Description:
@@ -132,7 +132,7 @@ class Utility_Base(Function):
                     they rely on Function.execute which passes on the return value of .function 
 
     Instantiation:
-        A utility function can be instantiated in one of several ways:
+        A function can be instantiated in one of several ways:
 IMPLEMENTATION NOTE:  *** DOCUMENTATION
 
     Variable and Parameters:
@@ -149,15 +149,15 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         The functionOutputType can be used to specify type conversion for single-item return values:
         - it can only be used for numbers or a single-number list; other values will generate an exception
         - if self.functionOutputType is set to:
-            UtilityFunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
-            UtilityFunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
-            UtilityFunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
+            FunctionOutputType.RAW_NUMBER, return value is "exposed" as a number
+            FunctionOutputType.NP_1D_ARRAY, return value is 1d np.array
+            FunctionOutputType.NP_2D_ARRAY, return value is 2d np.array
         - it must be enabled for a subclass by setting params[kwFunctionOutputTypeConversion] = True
         - it must be implemented in the execute method of the subclass
         - see Linear for an example
 
     MechanismRegistry:
-        All Function functions are registered in UtilityRegistry, which maintains a dict for each subclass,
+        All Function functions are registered in FunctionRegistry, which maintains a dict for each subclass,
           a count for all instances of that type, and a dictionary of those instances
 
     Naming:
@@ -167,7 +167,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         + functionCategory: kwUtilityeFunctionCategory
         + className (str): kwMechanismFunctionCategory
         + suffix (str): " <className>"
-        + registry (dict): UtilityRegistry
+        + registry (dict): FunctionRegistry
         + classPreference (PreferenceSet): UtilityPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: False}
@@ -197,7 +197,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     className = functionCategory
     suffix = " " + className
 
-    registry = UtilityRegistry
+    registry = FunctionRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
@@ -216,7 +216,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                  params,
                  name=None,
                  prefs=None,
-                 context='Utility_Base Init'):
+                 context='Function_Base Init'):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
@@ -235,15 +235,15 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         # self.name = self.functionName
 
         register_category(entry=self,
-                          base_class=Utility_Base,
-                          registry=UtilityRegistry,
+                          base_class=Function_Base,
+                          registry=FunctionRegistry,
                           name=name,
                           context=context)
 
         # This is assigned by owner in Function._instantiate_function()
         self.owner = None
 
-        super(Utility_Base, self).__init__(variable_default=variable_default,
+        super(Function_Base, self).__init__(variable_default=variable_default,
                                            param_defaults=params,
                                            name=name,
                                            prefs=prefs,
@@ -263,17 +263,17 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 
         # Attempt to set outputType but conversion not enabled
         if value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
-            raise UtilityError("output conversion is not enabled for {0}".format(self.__class__.__name__))
+            raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
 
         # Bad outputType specification
-        if value and not isinstance(value, UtilityFunctionOutputType):
-            raise UtilityError("value ({0}) of functionOutputType attribute must be UtilityFunctionOutputType for {1}".
+        if value and not isinstance(value, FunctionOutputType):
+            raise FunctionError("value ({0}) of functionOutputType attribute must be FunctionOutputType for {1}".
                                format(self.functionOutputType, self.__class__.__name__))
 
         # Can't convert from arrays of length > 1 to number
-        # if (self.variable.size  > 1 and (self.functionOutputType is UtilityFunctionOutputType.RAW_NUMBER)):
-        if (len(self.variable)  > 1 and (self.functionOutputType is UtilityFunctionOutputType.RAW_NUMBER)):
-            raise UtilityError("{0} can't be set to return a single number since its variable has more than one number".
+        # if (self.variable.size  > 1 and (self.functionOutputType is FunctionOutputType.RAW_NUMBER)):
+        if (len(self.variable)  > 1 and (self.functionOutputType is FunctionOutputType.RAW_NUMBER)):
+            raise FunctionError("{0} can't be set to return a single number since its variable has more than one number".
                                format(self.__class__.__name__))
         self._functionOutputType = value
 
@@ -281,7 +281,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
 
-class Contradiction(Utility_Base): # Example
+class Contradiction(Function_Base): # Example
     """Example function for use as template for function construction
 
     Iniialization arguments:
@@ -312,7 +312,7 @@ class Contradiction(Utility_Base): # Example
     #  in the initialization call or later (using either assign_defaults or during a function call)
     kwPropensity = "PROPENSITY"
     kwPertinacity = "PERTINACITY"
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwPropensity: Manner.CONTRARIAN,
                           kwPertinacity:  10,
                           })
@@ -368,7 +368,7 @@ class Contradiction(Utility_Base): # Example
             return whim > pertinacity
 
         else:
-            raise UtilityError("This should not happen if parameter_validation == True;  check its value")
+            raise FunctionError("This should not happen if parameter_validation == True;  check its value")
 
     def _validate_variable(self, variable, context=None):
         """Validates variable and assigns validated values to self.variable
@@ -386,7 +386,7 @@ class Contradiction(Utility_Base): # Example
                 (isinstance(variable, numbers.Number) and  isinstance(self.variableClassDefault, numbers.Number)):
             self.variable = variable
         else:
-            raise UtilityError("Variable must be {0}".format(type(self.variableClassDefault)))
+            raise FunctionError("Variable must be {0}".format(type(self.variableClassDefault)))
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Validates variable and /or params and assigns to targets
@@ -427,18 +427,18 @@ class Contradiction(Utility_Base): # Example
                 continue
 
         if message:
-            raise UtilityError(message)
+            raise FunctionError(message)
 
         super(Contradiction, self)._validate_params(request_set, target_set, context)
 
 
-#region ***********************************   UTILITY FUNCTIONS   ******************************************************
+#region ****************************************   FUNCTIONS   *********************************************************
 #endregion
 
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
 
-class CombinationFunction(Utility_Base):
+class CombinationFunction(Function_Base):
     functionType = kwCombinationFunction
 
 kwLinearCombinationInitializer = "Initializer"
@@ -495,7 +495,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -539,7 +539,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
             variable:
             context:
         """
-        super(Utility_Base, self)._validate_variable(variable=variable,
+        super(Function_Base, self)._validate_variable(variable=variable,
                                                     context=context)
 # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
 # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
@@ -558,7 +558,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 else:
                     new_length = len(variable[i])
                 if old_length != new_length:
-                    raise UtilityError("Length of all arrays in variable {0} for {1} must be the same".
+                    raise FunctionError("Length of all arrays in variable {0} for {1} must be the same".
                                        format(variable, self.__class__.__name__))
 
 
@@ -576,7 +576,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
 
-        super(Utility_Base, self)._validate_params(request_set=request_set,
+        super(Function_Base, self)._validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
 
@@ -593,7 +593,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
 #                 target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
 #             else:
-#                 raise UtilityError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
+#                 raise FunctionError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
 #                                format(exponents, self.name))
 #
 #         # Make sure weights is a list of numbers or an np.ndarray
@@ -603,7 +603,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
 #                 target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 #             else:
-#                 raise UtilityError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
+#                 raise FunctionError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
 #                                format(weights, self.name))
 
         if not target_set[EXPONENTS] is None:
@@ -612,9 +612,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 
         # if not operation:
-        #     raise UtilityError("Operation param missing")
+        #     raise FunctionError("Operation param missing")
         # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
-        #     raise UtilityError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
+        #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
 # MODIFIED 6/12/16 END
 
     def function(self,
@@ -675,7 +675,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         # Apply exponents if they were specified
         if not exponents is None and not exponents is NotImplemented:
             if len(exponents) != len(self.variable):
-                raise UtilityError("Number of exponents ({0}) does not equal number of items in variable ({1})".
+                raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
             #    make sure there no zeros for an element that is assigned a negative exponent
@@ -687,7 +687,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         # Apply weights if they were specified
         if not weights is None and not weights is NotImplemented:
             if len(weights) != len(self.variable):
-                raise UtilityError("Number of weights ({0}) is not equal to number of items in variable ({1})".
+                raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))
             else:
                 self.variable = self.variable * weights
@@ -698,7 +698,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         elif operation is PRODUCT:
             result = reduce(mul, self.variable, 1)
         else:
-            raise UtilityError("Unrecognized operator ({0}) for LinearCombination function".
+            raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                format(self.paramsCurrent[OPERATION].self.Operation.SUM))
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
@@ -707,7 +707,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #region ***********************************  TRANSFER FUNCTIONS  *******************************************************
 #endregion
 
-class TransferFunction(Utility_Base):
+class TransferFunction(Function_Base):
     functionType = kwTransferFunction
 
 
@@ -727,7 +727,7 @@ class Linear(TransferFunction): # ----------------------------------------------
 
     variableClassDefault = [0]
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
                                kwFunctionOutputTypeConversion: True})
 
@@ -777,43 +777,43 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         #region Type conversion (specified by outputType):
         # Convert to 2D array, irrespective of variable type:
-        if outputType is UtilityFunctionOutputType.NP_2D_ARRAY:
+        if outputType is FunctionOutputType.NP_2D_ARRAY:
             result = np.atleast2d(result)
 
         # Convert to 1D array, irrespective of variable type:
         # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception
-        elif outputType is UtilityFunctionOutputType.NP_1D_ARRAY:
+        elif outputType is FunctionOutputType.NP_1D_ARRAY:
             # If variable is 2D
             if self.variable.ndim == 2:
                 # If there is only one item:
                 if len(self.variable) == 1:
                     result = result[0]
                 else:
-                    raise UtilityError("Can't convert result ({0}: 2D np.ndarray object with more than one array)"
+                    raise FunctionError("Can't convert result ({0}: 2D np.ndarray object with more than one array)"
                                        " to 1D array".format(result))
             elif len(self.variable) == 1:
                 result = result
             elif len(self.variable) == 0:
                 result = np.atleast_1d(result)
             else:
-                raise UtilityError("Can't convert result ({0} to 1D array".format(result))
+                raise FunctionError("Can't convert result ({0} to 1D array".format(result))
 
         # Convert to raw number, irrespective of variable type:
         # Note: if 2D or 1D array has more than two items, generate exception
-        elif outputType is UtilityFunctionOutputType.RAW_NUMBER:
+        elif outputType is FunctionOutputType.RAW_NUMBER:
             # If variable is 2D
             if self.variable.ndim == 2:
                 # If there is only one item:
                 if len(self.variable) == 1 and len(self.variable[0]) == 1:
                     result = result[0][0]
                 else:
-                    raise UtilityError("Can't convert result ({0}) with more than a single number to a raw number".
+                    raise FunctionError("Can't convert result ({0}) with more than a single number to a raw number".
                                        format(result))
             elif len(self.variable) == 1:
                 if len(self.variable) == 1:
                     result = result[0]
                 else:
-                    raise UtilityError("Can't convert result ({0}) with more than a single number to a raw number".
+                    raise FunctionError("Can't convert result ({0}) with more than a single number to a raw number".
                                        format(result))
             else:
                 return result
@@ -826,7 +826,7 @@ class Linear(TransferFunction): # ----------------------------------------------
         """
         # FIX: ??CORRECT:
         return self.slope
-        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+        # raise FunctionError("Derivative not yet implemented for {}".format(self.functionName))
 
 
 class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
@@ -850,7 +850,7 @@ class Exponential(TransferFunction): # -----------------------------------------
 
     variableClassDefault = 0
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -899,7 +899,7 @@ class Exponential(TransferFunction): # -----------------------------------------
         """
         # FIX: ??CORRECT:
         return output
-        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+        # raise FunctionError("Derivative not yet implemented for {}".format(self.functionName))
 
 
 class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
@@ -919,7 +919,7 @@ class Logistic(TransferFunction): # --------------------------------------------
 
     variableClassDefault = 0
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -990,7 +990,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
 
     variableClassDefault = 0
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1068,7 +1068,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         # FIX: ??CORRECT:
         indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
-        # raise UtilityError("Derivative not yet implemented for {}".format(self.functionName))
+        # raise FunctionError("Derivative not yet implemented for {}".format(self.functionName))
 
 
 def matrix_spec(m):
@@ -1127,7 +1127,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     variableClassDefault = [DEFAULT_FILLER_VALUE]  # Sender vector
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1171,18 +1171,18 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :param context:
         :return:
         """
-        super(Utility_Base, self)._validate_variable(variable, context)
+        super(Function_Base, self)._validate_variable(variable, context)
 
         # Check that self.variable == 1D
         try:
             is_not_1D = not self.variable.ndim is 1
 
         except AttributeError:
-            raise UtilityError("PROGRAM ACTIVATION_ERROR: variable ({0}) for {1} should be an np.ndarray".
+            raise FunctionError("PROGRAM ACTIVATION_ERROR: variable ({0}) for {1} should be an np.ndarray".
                                format(self.variable, self.__class__.__name__))
         else:
             if is_not_1D:
-                raise UtilityError("variable ({0}) for {1} must be a 1D np.ndarray".
+                raise FunctionError("variable ({0}) for {1} must be a 1D np.ndarray".
                                    format(self.variable, self.__class__.__name__))
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
@@ -1213,7 +1213,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     isinstance(self.receiver, np.ndarray)):
                 self.receiver = np.atleast_1d(self.receiver)
             else:
-                raise UtilityError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
+                raise FunctionError("receiver param ({0}) for {1} must be a list of numbers or an np.array".
                                    format(self.receiver, self.name))
         # No receiver, so use sender as template (assuming square -- e.g., identity -- matrix)
         else:
@@ -1253,14 +1253,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     weight_matrix = np.matrix(param_value)
                     if 'U' in repr(weight_matrix.dtype):
-                        raise UtilityError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
+                        raise FunctionError("Non-numeric entry in MATRIX specification ({0})".format(param_value))
 
                     matrix_rows = weight_matrix.shape[0]
                     matrix_cols = weight_matrix.shape[1]
 
                     # Check that number of rows equals length of sender vector (variable)
                     if matrix_rows != sender_len:
-                        raise UtilityError("The number of rows ({0}) of the matrix provided does not equal the "
+                        raise FunctionError("The number of rows ({0}) of the matrix provided does not equal the "
                                             "length ({1}) of the sender vector (variable)".
                                             format(matrix_rows, sender_len))
                     # MODIFIED 9/21/16:
@@ -1268,7 +1268,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     #  SINCE _instantiate_function() IS GENERALLY CALLED BEFORE _instantiate_receiver()
                     # # Check that number of columns equals length of specified receiver vector (kwReceiver)
                     # if matrix_cols != receiver_len:
-                    #     raise UtilityError("The number of columns ({}) of the matrix provided for {} "
+                    #     raise FunctionError("The number of columns ({}) of the matrix provided for {} "
                     #                        "does not equal the length ({}) of the reciever vector (kwReceiver param)".
                     #                         format(matrix_cols, self.name, receiver_len))
 
@@ -1287,7 +1287,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                         #            format(receiver_len, sender_len))
                         # # Set receiver to sender
                         # param_set[kwReceiver] = sender
-                        raise UtilityError("Identity matrix requested, but length of receiver ({0})"
+                        raise FunctionError("Identity matrix requested, but length of receiver ({0})"
                                            " does not match length of sender ({1})".format(receiver_len, sender_len))
                     continue
 
@@ -1296,7 +1296,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     try:
                         param_value = np.atleast_2d(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        raise UtilityError("Error in list specification ({0}) of matrix for {1}: {2})".
+                        raise FunctionError("Error in list specification ({0}) of matrix for {1}: {2})".
                                            format(param_value, self.__class__.__name__, error_msg))
 
                 # string used to describe matrix, so convert to np.matrix and pass to validation of matrix below
@@ -1304,7 +1304,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     try:
                         param_value = np.matrix(param_value)
                     except (ValueError, TypeError) as error_msg:
-                        raise UtilityError("Error in string specification ({0}) of matrix for {1}: {2})".
+                        raise FunctionError("Error in string specification ({0}) of matrix for {1}: {2})".
                                            format(param_value, self.__class__.__name__, error_msg))
 
                 
@@ -1316,12 +1316,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 elif isinstance(param_value, function_type):
                     test = param_value(1,1)
                     if not isinstance(test, (np.ndarray, np.matrix)):
-                        raise UtilityError("A function is specified for matrix for {1}: {2}) "
+                        raise FunctionError("A function is specified for matrix for {1}: {2}) "
                                            "that returns a value ({}) that is neither a matrix nor array ".
                                format(param_value, self.__class__.__name__, test))
 
                 else:
-                    raise UtilityError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
+                    raise FunctionError("Value of {0} param ({1}) must be a matrix, a number (for filler), "
                                        "or a matrix keyword ({2}, {3})".
                                         format(param_name, param_value, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX))
             else:
@@ -1329,7 +1329,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 continue
 
         if message:
-            raise UtilityError(message)
+            raise FunctionError(message)
 
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -1357,7 +1357,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         try:
             receiver = self.receiver
         except:
-            raise UtilityError("Can't instantiate matrix specification ({}) for {} "
+            raise FunctionError("Can't instantiate matrix specification ({}) for {} "
                                "since its receiver has not been specified".
                                format(specification, self.__class__.__name__))
             # receiver = sender
@@ -1367,7 +1367,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # This should never happen (should have been picked up in validate_param or above)
         if matrix is None:
-            raise UtilityError("MATRIX param ({0}) must be a matrix, a function that returns one, "
+            raise FunctionError("MATRIX param ({0}) must be a matrix, a function that returns one, "
                                "a matrix specification keyword, or a number (filler)".
                                 format(specification))
         else:
@@ -1410,7 +1410,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # MODIFIED 10/29/16 END
 
         if matrix is None:
-            raise UtilityError("Unrecognized keyword ({}) specified for LinearMatrix Function Function".format(keyword))
+            raise FunctionError("Unrecognized keyword ({}) specified for LinearMatrix Function Function".format(keyword))
         else:
             return matrix
 
@@ -1447,7 +1447,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         elif specification.ndim < 2:
             return np.atleast_2d(specification)
         else:
-            raise UtilityError("Specification of np.array for matrix ({}) in {} was more than 2d".
+            raise FunctionError("Specification of np.array for matrix ({}) in {} was more than 2d".
                                format(specification,self.name))
 
     if specification is AUTO_ASSIGN_MATRIX:
@@ -1461,7 +1461,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     if specification == IDENTITY_MATRIX:
         if rows != cols:
-            raise UtilityError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
+            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use identity matrix".
                                  format(rows, cols))
         return np.identity(rows)
 
@@ -1485,7 +1485,7 @@ def random_matrix(sender, receiver, range=1, offset=0):
 #  DDM_BogaczEtAl
 #  DDM_NavarroAndFuss
 
-class IntegratorFunction(Utility_Base):
+class IntegratorFunction(Function_Base):
     functionType = kwIntegratorFunction
 
 
@@ -1517,7 +1517,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     variableClassDefault = [[0]]
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwInitializer: variableClassDefault})
 
 
@@ -1547,12 +1547,12 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self.oldValue = self.paramsCurrent[kwInitializer]
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        super(Utility_Base, self)._validate_params(request_set=request_set,
+        super(Function_Base, self)._validate_params(request_set=request_set,
                                                   target_set=target_set,
                                                   context=context)
         try:
             if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
-                raise UtilityError("kwInitializer param {0} for {1} must be same type as variable {2}".
+                raise FunctionError("kwInitializer param {0} for {1} must be same type as variable {2}".
                                    format(target_set[kwInitializer],
                                           self.__class__.__name__,
                                           self.variable))
@@ -1661,7 +1661,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
     variableClassDefault = [[0]]
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1801,7 +1801,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
     variableClassDefault = [[0]]
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1876,7 +1876,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 #region **************************************   LEARNING FUNCTIONS ****************************************************
 
 
-class LearningFunction(Utility_Base):
+class LearningFunction(Function_Base):
     functionType = kwLearningFunction
 
 
@@ -1912,7 +1912,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
     variableClassDefault = [[0],[0],[0]]
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
                  variable_default=variableClassDefault,
@@ -1939,18 +1939,18 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
-            raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
+            raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
 
         # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
         if not kwInit in context:
             if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
-                raise FunctionError("First item ({}) of variable for {} must be an array with a single non-zero value "
+                raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
                                     format(self.variable[ACTIVATION_OUTPUT], self.functionName))
             if len(self.variable[ACTIVATION_ERROR]) != 1:
-                raise FunctionError("Error term ({}) for {} must be an array with a single element or a scalar value "
+                raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
                                     "(variable of Comparator mechanism may need to be specified as an array of length 1)".
                                     format(self.name, self.variable[ACTIVATION_ERROR]))
 
@@ -2020,7 +2020,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     variableClassDefault = [[0],[0],[0]]
 
-    paramClassDefaults = Utility_Base.paramClassDefaults.copy()
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -2048,10 +2048,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
         super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
-            raise FunctionError("Variable for {} ({}) must have three items (input, output and error arrays)".
+            raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
         if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
-            raise FunctionError("Length of error term ({}) for {} must match length of the output array ({})".
+            raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
                                 format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
 

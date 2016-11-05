@@ -9,10 +9,10 @@
 # # *******************************   get_param_value_for_keyword ******************************************************
 # #
 # def get_param_value_for_keyword(owner, keyword):
-#     from PsyNeuLink.Components.Functions.Function import UtilityError
+#     from PsyNeuLink.Components.Functions.Function import FunctionError
 #     try:
 #         return owner.paramsCurrent[FUNCTION].keyword(keyword)
-#     except UtilityError as e:
+#     except FunctionError as e:
 #         if owner.prefs.verbosePref:
 #             print ("{} of {}".format(e, owner.name))
 #         return None
@@ -172,7 +172,7 @@ kwProcessFunctionCategory = "Process_Base"
 kwMechanismFunctionCategory = "Mechanism_Base"
 kwStateFunctionCategory = "State_Base"
 kwProjectionFunctionCategory = "Projection_Base"
-kwUtilityFunctionCategory = "Utility_Base"
+kwUtilityFunctionCategory = "Function_Base"
 
 # Function TYPES  -----------------
 
