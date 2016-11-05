@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Mechanisms" href="Mechanism.html"/>
-        <link rel="next" title="Monitoring Mechanisms" href="MonitoringMechanism.html"/>
+        <link rel="next" title="Default Control Mechanism" href="DefaultControlMechanism.html"/>
         <link rel="prev" title="Transfer" href="Transfer.html"/> 
 
   
@@ -91,6 +91,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Control Mechanisms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="DefaultControlMechanism.html">Default Control Mechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVC Mechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-controlmechanism">Creating A ControlMechanism</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#monitored-outputstates">Monitored OutputStates</a></li>
@@ -157,11 +159,23 @@
             
   <div class="section" id="control-mechanisms">
 <h1>Control Mechanisms<a class="headerlink" href="#control-mechanisms" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="DefaultControlMechanism.html">Default Control Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="EVCMechanism.html">EVC Mechanism</a></li>
+</ul>
+</div>
 <span class="target" id="module-ControlMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms and use this information to
+regulate the value of <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projections to other ProcessingMechanisms.  ControlMechanisms are
+typically associated with a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and every system is assigned a controlMechanism as a controller (see
+<span class="xref std std-ref">_System_Execution_Control</span>).</p>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
+<p>ControlMechanisms can be created by using the standard Python method of calling the subclass for the desired type.
+A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creating-a-system"><span class="std std-ref">Creating a System</span></a>).</p>
 <div class="section" id="monitored-outputstates">
 <span id="controlmechanisms-monitored-outputstates"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <dl class="docutils">
@@ -214,7 +228,7 @@ if a Mechanism ref, exponent and weight will apply to all outputStates of that m
 </dl>
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base">
-<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b50c378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b613378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for control mechanism subclasses</p>
 <blockquote>
 <div>Description:</div></blockquote>
@@ -366,7 +380,7 @@ Update self.inputState and self.inputStates</p>
 
 <dl class="class">
 <dt id="ControlMechanism.ControlMechanism_Base.Linear">
-<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b53f9d8&gt; = 1, intercept: &lt;function parameter_spec at 0x10b53f9d8&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10b50c378&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10b63fa60&gt; = 1, intercept: &lt;function parameter_spec at 0x10b63fa60&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10b613378&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -432,7 +446,7 @@ INTERCEPT: number - intercept (default: 0)</td>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MonitoringMechanism.html" class="btn btn-neutral float-right" title="Monitoring Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DefaultControlMechanism.html" class="btn btn-neutral float-right" title="Default Control Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Transfer.html" class="btn btn-neutral" title="Transfer" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

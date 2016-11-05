@@ -209,7 +209,10 @@ as their output.</p>
 <div class="section" id="creating-a-system">
 <span id="system-creating-a-system"></span><h2>Creating a System<a class="headerlink" href="#creating-a-system" title="Permalink to this headline">¶</a></h2>
 <p>Systems are created by calling the <code class="docutils literal"><span class="pre">system</span></code> &#8220;factory&#8221; method.  If no arguments are provided, a system with a
-single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).</p>
+single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
+Whenever a system is created, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> is created for it and assigned as its controller.  The
+controller can be specified using the <code class="docutils literal"><span class="pre">controller</span></code> parameter, by referencing an existing ControlMechanism,
+or simply specifying its class;   if one is none specified, a <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">Default Control Mechanism</span></a> is created.</p>
 </div>
 <div class="section" id="structure">
 <span id="system-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -292,11 +295,11 @@ a value for the target attribute of the monitoring mechanism of each process in 
 </div>
 <div class="section" id="control">
 <span id="system-execution-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
-<p>Every system is associated with a single controller (by default, the <code class="docutils literal"><span class="pre">DefaultController</span></code>).  A controller can be used
-to monitor the outputState(s) of specified mechanisms and use their values to set the parameters of those or other
-mechanisms in the system (see ControlMechanism).  The controller is executed after all other mechanisms in the
-system are executed, and sets the values of any parameters that it controls, which then take effect in the next round
-of execution.</p>
+<p>Every system is associated with a single controller (by default, the <code class="docutils literal"><span class="pre">DefaultController</span></code>).  The controller monitors
+the outputState(s) of specified mechanisms and uses that information to set the parameter values for the fuctions of
+those or other mechanisms in the system (see <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>).  The controller is executed after all other
+mechanisms in the system are executed, and sets the values of any parameters that it controls, which then take
+effect in the next round of execution.</p>
 </div>
 </div>
 <div class="section" id="class-reference">

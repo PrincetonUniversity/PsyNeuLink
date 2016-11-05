@@ -29,21 +29,33 @@
 Overview
 --------
 
-Mechanisms are the core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
+Mechanisms are a core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
 it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:
 
-* :doc:`ProcessingMechanism`
-    aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
-    system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
-    process or system.
+    * **ProcessingMechanisms** aggregrate the input they receive from other mechanisms in a process or system,
+      and/or the input to a process or system, transform it in some way, and provide the result either as input for
+      other mechanisms and/or the output of a
+      process or system.
+    ..
+    * **MonitoringMechanisms** monitor the output of one or more other mechanisms, receive training (target) values,
+      and compare these to generate error signals used for learning (see :doc:`Learning`).
+    ..
+    * **ControlMechanisms** evaluate the output of one or more other mechanisms, and use this to modify the
+      parameters of those or other mechanisms.
 
-* :doc:`MonitoringMechanism`
-    monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
-    error signals used for learning (see :doc:`Learning`).
+..
+    * :doc:`ProcessingMechanism`
+        aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
+        system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
+        process or system.
 
-* :doc:`ControlMechanism`
-    evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
-    mechanisms.
+    * :doc:`MonitoringMechanism`
+        monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
+        error signals used for learning (see :doc:`Learning`).
+
+    * :doc:`ControlMechanism`
+        evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
+        mechanisms.
 
 
 COMMENT:
