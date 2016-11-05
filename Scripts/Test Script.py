@@ -1,5 +1,5 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
 # x = Process_Base()
@@ -43,7 +43,7 @@ my_DDM.prefs = DDM_prefs
 my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
 # my_DDM.prefs.verbosePref = PreferenceLevel.SYSTEM
-# from Functions.Projections.ControlSignal import LogEntry
+# from Components.Projections.ControlSignal import LogEntry
 # my_DDM.prefs.logPref = LogEntry.TIME_STAMP
 
 # FIX: SHOULDN'T BE ABLE TO ASSIGN enum TO PREF THAT DOESN'T REQUIRE ONE:
@@ -106,7 +106,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 #
 # # process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 # #                                        verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM))
-# from Functions.Utility import LinearCombination
+# from Components.Function import LinearCombination
 # y = Process_Base(params={PATHWAY:[(myMechanism,
 #                                            {
 #                                                # INPUT_STATE_PARAMS:{},

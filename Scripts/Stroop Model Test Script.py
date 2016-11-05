@@ -1,6 +1,6 @@
-from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.System import *
+from PsyNeuLink.Components.Functions.Function import Linear, Logistic
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
 
 process_prefs = {REPORT_OPUTPUT_PREF: True,

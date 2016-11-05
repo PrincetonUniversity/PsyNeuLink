@@ -9,7 +9,7 @@
 # # *******************************   get_param_value_for_keyword ******************************************************
 # #
 # def get_param_value_for_keyword(owner, keyword):
-#     from PsyNeuLink.Functions.Utilities.Utility import UtilityError
+#     from PsyNeuLink.Components.Functions.Function import UtilityError
 #     try:
 #         return owner.paramsCurrent[FUNCTION].keyword(keyword)
 #     except UtilityError as e:
@@ -160,7 +160,7 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
 kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
-kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
+kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
@@ -191,7 +191,7 @@ MAPPING = "Mapping"
 CONTROL_SIGNAL = "ControlSignal"
 LEARNING_SIGNAL = "LearningSignal"
 
-# Utility:
+# Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
 kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
@@ -215,7 +215,7 @@ kwLinearMechanism = "LinearMechanism"
 kwSigmoidLayer = "SigmoidLayer"
 kwAdaptiveIntegrator = "AdaptiveIntegrator"
 
-# Utility:
+# Function:
 kwContradiction = "Contradiction"
 kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"

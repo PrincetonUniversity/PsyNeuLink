@@ -8,9 +8,9 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
-# from PsyNeuLink.Functions.Utilities.Utility import Linear
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Process import process
+# from PsyNeuLink.Components.Functions.Function import Linear
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Process import process
 #
 # linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
 # linear_transfer_process = process(pathway = [linear_transfer_mechanism])
@@ -21,8 +21,8 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-# from Functions.Utility import Integrator
+# from Components.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+# from Components.Function import Integrator
 #
 # a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
 #
@@ -41,8 +41,8 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.System import System_Base
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.System import System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 
 mech = DDM()
 mech.execute([0])
@@ -54,8 +54,8 @@ mech.execute([0])
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-# from PsyNeuLink.Functions.States.InputState import InputState
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Components.States.InputState import InputState
 #
 # x = Transfer([0,0,0],
 #              name='x')
@@ -74,9 +74,9 @@ mech.execute([0])
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-# from PsyNeuLink.Functions.Process import process
-# from PsyNeuLink.Functions.System import system
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.System import system
 #
 #
 # # UNEQUAL INPUT LENGTHS:
@@ -114,10 +114,10 @@ mech.execute([0])
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.System import system
-# from PsyNeuLink.Functions.Process import process
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Process import Mapping
+# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Process import Mapping
 #
 # a = Transfer(name='a')
 # b = Transfer(name='b')
@@ -141,8 +141,8 @@ mech.execute([0])
 
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-# from Functions.Mechanisms.DDM import DDM
+# from Components.Mechanisms.Mechanism import Mechanism, mechanism
+# from Components.Mechanisms.DDM import DDM
 
 # x = Mechanism(context=kwValidate)
 # test = isinstance(x,Mechanism)
@@ -152,9 +152,9 @@ mech.execute([0])
 
 #region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # #
-# from Functions.Process import *
-# # from Functions.Mechanisms.DDM import DDM
-# from Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from Components.Process import *
+# # from Components.Mechanisms.DDM import DDM
+# from Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 #
 # my_transfer = Transfer()
 #
@@ -167,7 +167,7 @@ mech.execute([0])
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Utility import *
+# from Components.Function import *
 # #
 # x = LinearCombination()
 # print (x.execute(([1, 1],[2, 2])))
@@ -176,7 +176,7 @@ mech.execute([0])
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Utilities.Utility import *
+# from PsyNeuLink.Components.Functions.Function import *
 #
 # rl = Reinforcement([[0,0,0], [0,0,0], [0]])
 # print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
@@ -186,7 +186,7 @@ mech.execute([0])
 
 #region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Utilities.Utility import *
+# from PsyNeuLink.Components.Functions.Function import *
 # #
 # x = SoftMax(output=SoftMax.PROB)
 # y = x.execute([-11, 2, 3])
@@ -202,7 +202,7 @@ mech.execute([0])
 
 #region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Utility import *
+# from Components.Function import *
 #
 # x = BackPropagation()
 # print (x.execute(variable=[[1, 2],[0.5, 0],[5, 6]]))
@@ -215,9 +215,9 @@ mech.execute([0])
 
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Process import *
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Components.Process import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Functions.Function import Linear
 #
 # my_mech = Transfer(function=Linear())
 #
@@ -236,10 +236,10 @@ mech.execute([0])
 
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Process import *
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Utilities.Utility import Linear
-# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Process import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Functions.Function import Linear
+# from PsyNeuLink.Components.Projections.Mapping import Mapping
 #
 # my_mech = Transfer(function=Linear())
 # my_mech2 = Transfer(function=Linear())
@@ -274,10 +274,10 @@ mech.execute([0])
 
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.Process import *
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
-# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Process import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Functions.Function import Linear, Logistic
+# from PsyNeuLink.Components.Projections.Mapping import Mapping
 #
 # color_naming = Transfer(default_input_value=[0,0],
 #                         function=Linear,
@@ -1431,8 +1431,8 @@ import typecheck as tc
 
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Mechanisms.DDM import DDM
-# from Functions.States.ParameterState import ParameterState
+# from Components.Mechanisms.DDM import DDM
+# from Components.States.ParameterState import ParameterState
 #
 # x = DDM()
 # state = x.instantiate_state(state_type=ParameterState,
@@ -1651,7 +1651,7 @@ import typecheck as tc
 # print (a.q)
 
 
-# from Functions.States.InputState import InputState
+# from Components.States.InputState import InputState
 #
 # test = InputState(value=1)
 # x = 1
@@ -1862,7 +1862,7 @@ import typecheck as tc
 
 # ***************************************** OLD TEST SCRIPT ************************************************************
 
-# from Functions.Projections.ControlSignal import *
+# from Components.Projections.ControlSignal import *
 #
 # # Initialize controlSignal with some settings
 # settings = ControlSignalSettings.DEFAULTS | \

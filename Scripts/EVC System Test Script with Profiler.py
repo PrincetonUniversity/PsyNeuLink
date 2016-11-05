@@ -1,11 +1,11 @@
 import profile
 
-from PsyNeuLink.Functions.Mechanisms.AdaptiveIntegrator import *
-from PsyNeuLink.Functions.Mechanisms.LinearMechanism import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Components.Mechanisms.LinearMechanism import *
 
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import Process_Base
+from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
 
 

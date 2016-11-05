@@ -118,7 +118,7 @@ class FunctionPreferenceSet(PreferenceSet):
                 Mechanism.classPreferences
                 State.classPreferences
                 Projection.classPreferences
-                Utility.classPreferences
+                Function.classPreferences
             - TYPE: type-level default settings (if one exists for the category, else category-level settings are used):
                 MechanismTypes:
                     ControlMechanism.classPreferences
@@ -254,12 +254,12 @@ class FunctionPreferenceSet(PreferenceSet):
 
         # If baseClass has not been assigned, do so here:
         if self.baseClass is NotImplemented:
-            from PsyNeuLink.Functions.Function import Function
-            self.baseClass = Function
+            from PsyNeuLink.Components.Component import Component
+            self.baseClass = Component
 
         # If owner is not specified, assign DefaultProcessingMechanism_Base as default owner
         if owner is NotImplemented:
-            from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
+            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
             DefaultPreferenceSetOwner = DefaultProcessingMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner
 
