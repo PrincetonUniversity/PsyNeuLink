@@ -164,7 +164,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         Function functions are named by their functionName attribute (usually = functionType)
 
     Class attributes:
-        + functionCategory: kwUtilityeFunctionCategory
+        + functionCategory: kwFunctionCategory
         + className (str): kwMechanismFunctionCategory
         + suffix (str): " <className>"
         + registry (dict): FunctionRegistry
@@ -193,7 +193,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         - [_validate_params(request_set, target_set, context)]
     """
 
-    functionCategory = kwUtilityFunctionCategory
+    functionCategory = kwFunctionCategory
     className = functionCategory
     suffix = " " + className
 

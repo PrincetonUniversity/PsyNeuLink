@@ -112,7 +112,7 @@ class Projection(ShellClass):
         raise ShellClassError("Must implement _validate_params in {0}".format(self.__class__.__name__))
 
 
-# ******************************************** UTILITY *****************************************************************
+# *********************************************  FUNCTION  *************************************************************
 
 
 class Function(ShellClass):

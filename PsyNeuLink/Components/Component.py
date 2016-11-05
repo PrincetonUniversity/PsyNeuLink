@@ -263,7 +263,7 @@ class Component(object):
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
-    # * kwUtilityFunctionCategory (below) is used as placemarker for Function.Function class; replaced in __init__ below
+    # * kwFunctionCategory (below) is used as placemarker for Function.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
     paramClassDefaults = {}
@@ -390,10 +390,10 @@ class Component(object):
             # # Replace 'Function' placemarker with class reference:
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
-            # get type for kwUtilityFunctionCategory specification
+            # get type for kwFunctionCategory specification
             import PsyNeuLink.Components.Functions.Function
-            if kwUtilityFunctionCategory in type_requirements:
-               type_requirements[type_requirements.index(kwUtilityFunctionCategory)] = \
+            if kwFunctionCategory in type_requirements:
+               type_requirements[type_requirements.index(kwFunctionCategory)] = \
                    type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():

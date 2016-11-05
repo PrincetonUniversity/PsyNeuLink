@@ -619,7 +619,7 @@
 #            can also be called after _deferred_init
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 #                (currently it is an additoinal input field in execute (relative to instantiation)
-# IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
+# IMPLEMENT .keyword() FOR ALL FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
 # IMPLEMENT: _instantiate_pathway:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
 #                                 self._assign_process_input_projections(mechanism)
@@ -1110,7 +1110,7 @@
 #               this assymetry might be confusing, and thus neither is allowed
 #           However, if projection is listed in pathway, it is not necessary to specify its sender or receiver
 
-# DOCUMENT: UTILITY FUNCTIONS:
+# DOCUMENT: FUNCTIONS:
 #           To use keywords for params, Function Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Function Function must implement .lambda method that resolves it to value
 
@@ -1306,7 +1306,7 @@
 # DOCUMENT: Finish documenting def __init__'s
 # DOCUMENT: (In Function):
                         #     Instantiation:
-                        #         A utility function can be instantiated in one of several ways:
+                        #         A function can be instantiated in one of several ways:
                         # IMPLEMENTATION NOTE:  *** DOCUMENTATION
                         # IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
 # DOCUMENT Runtime Params:
@@ -1773,7 +1773,7 @@
             #    - add once paramClassDefaults includes type lists (as per requiredClassParams)
 # Implement categories of Function functions using ABC:
 # - put checks for constraints on them (e.g., input format = output format)
-# - associate projection and state categories with utility function categories:
+# - associate projection and state categories with function categories:
 #    e.g.:  mapping = transform;  input & output states = aggregate
 #
 #endregion
@@ -2188,7 +2188,7 @@
 #
 #endregion
 
-#region UTILITY: -------------------------------------------------------------------------------------------------------------
+#region FUNCTION: ------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
 # Implement abstract Types (aggregate, transfer, tranform, objective)
