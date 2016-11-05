@@ -6,7 +6,7 @@ Projections
 
    Mapping
    ControlSignal
-   Learning
+   LearningSignal
 
 .. automodule:: Projection
    :members:
