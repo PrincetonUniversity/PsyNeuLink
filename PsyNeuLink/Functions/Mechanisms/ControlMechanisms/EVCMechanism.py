@@ -190,7 +190,7 @@ class EVCMechanism(ControlMechanism_Base):
             validate that all specifications for a monitored state are either a Mechanism or OutputState
         - _instantiate_attributes_before_function(context):
             assign self.system and monitoring states (inputStates) specified in MONITORED_OUTPUT_STATES
-        - instantiate_monitored_output_states(monitored_states, context):
+        - _instantiate_monitored_output_states(monitored_states, context):
             parse list of OutputState(s) and/or Mechanism(s) and call instantiate_monitoring_input_state for each item
         - instantiate_monitoring_input_state(output_state, context):
             extend self.variable to accomodate new inputState
@@ -238,8 +238,8 @@ class EVCMechanism(ControlMechanism_Base):
                  default_input_value=NotImplemented,
                  function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
                  make_default_controller:bool=True,
-                 save_all_values_and_policies:bool=False,
                  monitored_output_states:tc.optional(list)=None,
+                 save_all_values_and_policies:bool=False,
                  cost_aggregation_function=LinearCombination(offset=0.0,
                                                              scale=1.0,
                                                              operation=SUM,
@@ -263,8 +263,8 @@ class EVCMechanism(ControlMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                  make_default_controller=make_default_controller,
-                                                 save_all_values_and_policies=save_all_values_and_policies,
                                                  monitored_output_states=monitored_output_states,
+                                                 save_all_values_and_policies=save_all_values_and_policies,
                                                  cost_aggregation_function=cost_aggregation_function,
                                                  cost_application_function=cost_application_function,
                                                  prediction_mechanism_type=prediction_mechanism_type,
@@ -658,7 +658,7 @@ class EVCMechanism(ControlMechanism_Base):
         state_name = monitored_state.name + '_Monitor'
 
         # Instantiate inputState
-        input_state = self.instantiate_control_mechanism_input_state(state_name, monitored_state.value, context=context)
+        input_state = self._instantiate_control_mechanism_input_state(state_name, monitored_state.value, context=context)
 
         # Instantiate Mapping Projection from monitored_state to new input_state
         from PsyNeuLink.Functions.Projections.Mapping import Mapping
@@ -1020,9 +1020,9 @@ class EVCMechanism(ControlMechanism_Base):
         """
         states_spec = list(states_spec)
         self._validate_monitored_state_spec(states_spec, context=context)
-        # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  instantiate_monitored_output_states
+        # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  _instantiate_monitored_output_states
         #                         SO AS TO CALL _instantiate_input_states()
-        self.instantiate_monitored_output_states(states_spec, context=context)
+        self._instantiate_monitored_output_states(states_spec, context=context)
 
 def compute_EVC(args):
     """compute EVC for a specified allocation policy

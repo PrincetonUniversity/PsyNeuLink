@@ -268,12 +268,12 @@ class ControlMechanism_Base(Mechanism_Base):
         self.system = self.paramsCurrent[SYSTEM]
         super()._instantiate_attributes_before_function(context=context)
 
-    def instantiate_monitored_output_states(self, context=None):
-        raise ControlMechanismError("{0} (subclass of {1}) must implement instantiate_monitored_output_states".
+    def _instantiate_monitored_output_states(self, context=None):
+        raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
-    def instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
+    def _instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism
 
         Extend self.variable by one item to accommodate new inputState

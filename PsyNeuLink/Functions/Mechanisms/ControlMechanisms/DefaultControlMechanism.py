@@ -148,4 +148,4 @@ class DefaultControlMechanism(ControlMechanism_Base):
         """
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
 
-        self.instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
+        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
