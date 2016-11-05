@@ -316,7 +316,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         """
 
-        self.instantiate_prediction_mechanisms(context=context)
+        self._instantiate_prediction_mechanisms(context=context)
 
         from PsyNeuLink.Functions.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Functions.States.OutputState import OutputState
@@ -573,7 +573,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.inputStates
 
-    def instantiate_prediction_mechanisms(self, context=None):
+    def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System
 
         Args:
@@ -609,7 +609,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                             context=context)
 
             # Assign list of processes for which prediction_mechanism will provide input during the simulation
-            # - used in get_simulation_system_inputs()
+            # - used in _get_simulation_system_inputs()
             # - assign copy, since don't want to include the prediction process itself assigned to mech.processes below
             prediction_mechanism.use_for_processes = list(mech.processes.copy())
 
@@ -677,7 +677,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         self.outputValue = [None] * len(self._outputStateValueMapping)
 
-    def get_simulation_system_inputs(self, phase):
+    def _get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
 
         Returns: 2D np.array
@@ -1006,7 +1006,7 @@ class EVCMechanism(ControlMechanism_Base):
     #
     #     super()._update_output_states(time_scale= time_scale, context=context)
 
-    def add_monitored_states(self, states_spec, context=None):
+    def _add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
 
         Use by other objects to add a state or list of states to be monitored by EVC
@@ -1057,7 +1057,7 @@ def compute_EVC(args):
     time_step_buffer = CentralClock.time_step
     for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
-        simulation_inputs = ctlr.get_simulation_system_inputs(phase=i)
+        simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
         ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
     CentralClock.time_step = time_step_buffer
 
