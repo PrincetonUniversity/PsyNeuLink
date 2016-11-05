@@ -1,5 +1,0 @@
-Learning
-========
-
-.. automodule:: Learning
-	:members:

@@ -1,5 +1,0 @@
-System
-======
-
-.. automodule:: System
-	:members:
