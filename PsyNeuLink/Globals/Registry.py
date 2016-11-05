@@ -8,7 +8,7 @@
 #
 # ***********************************************  Registry ************************************************************
 #
-import PsyNeuLink.Functions.Function
+import PsyNeuLink.Components.Component
 from collections import namedtuple
 from inspect import isclass
 
@@ -233,7 +233,7 @@ def register_instance(entry, name, base_class, registry, sub_dict):
 #             MechanismRegistry[mechanism_subclass.functionType]._replace(default=True)
 
 #     # Assign to DefaultMechanism
-#     Functions.DefaultMechanism = MechanismRegistry[mechanism_subclass.name].mechanismSubclass
+#     Components.DefaultMechanism = MechanismRegistry[mechanism_subclass.name].mechanismSubclass
 # mechanism_subclass
 #     # Issue warning
 #     if self.prefs.verbosePref:

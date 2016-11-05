@@ -1,10 +1,10 @@
 
 
-from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import Comparator
-from PsyNeuLink.Functions.Process import Process_Base
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
-# from Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 # sample_mech = Transfer(name='Sample',
 #                        params={FUNCTION:kwLogistic},
 #                        default_input_value = [0,0])

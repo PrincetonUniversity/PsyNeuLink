@@ -1276,7 +1276,7 @@ B:  INTERNAL
 C:  INTERNAL
 D:  TERMINAL
 *****************************************************************************
-WARNING:  Process (p2-2) being instantiated in context ( INITIALIZING p2-2: Process.__init__ INITIALIZING : Function.__init__) other than a System
+WARNING:  Process (p2-2) being instantiated in context ( INITIALIZING p2-2: Process.__init__ INITIALIZING : Component.__init__) other than a System
 
 ---------------------------------------------------------
 

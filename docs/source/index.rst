@@ -22,7 +22,7 @@ Welcome to PsyNeuLink's documentation!
 
       State
       Projection
-      Utilities
+      Functions
 
 
 .. toctree::
@@ -33,7 +33,7 @@ Welcome to PsyNeuLink's documentation!
    Mechanism
    State
    Projection
-   Utilities
+   Functions
 
 
 Indices and tables

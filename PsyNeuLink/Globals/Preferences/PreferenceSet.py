@@ -48,8 +48,8 @@ class PreferenceSet(object):
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Function hierarchy is assigned a PreferenceLevel:
             - System:  reserved for the Function class
-            - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Utility)
-            - Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Utility subclasses)
+            - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
+            - Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Function subclasses)
             - Instance: an instance of an object of any class
         Each class level in a hierarchy should be assigned a PreferenceSet object as a class attribute,
             that specifies default settings at that class-level for objects in that class and its subclasses
@@ -736,13 +736,13 @@ class PreferenceSet(object):
             # If requested level is higher than current one:
             if requested_level > self.owner.classPreferenceLevel:
                 # Call class at next level
-                from PsyNeuLink.Functions.Function import Function
+                from PsyNeuLink.Components.Component import Component
                 # THis is needed to skip ShellClass, which has no classPreferences, to get to Function (System) level
                 if 'ShellClass' in repr(self.owner.__bases__[0]):
                     try:
                         # Store current class pref set (in case class at next level doesn't have the preference)
                         self.previous_level_pref_set = self.owner.classPreferences
-                        return_val = Function.classPreferences.get_pref_setting_for_level(pref_ivar_name,
+                        return_val = Component.classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                     requested_level)
                         return return_val[0], return_val[1]
                     # Pref not found at current level, so use pref from previous level (and report error)

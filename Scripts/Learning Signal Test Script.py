@@ -1,8 +1,8 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
@@ -52,7 +52,7 @@ z = process(name="TEST LEARNER",
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
 # Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
 # Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],

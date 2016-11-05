@@ -1,10 +1,10 @@
-Utility Functions
+Function Components
 =================
 
 .. toctree::
    :maxdepth: 3
 
-.. automodule:: Utility
+.. automodule:: Function
 	:members: Contradiction,
 	          LinearCombination,
 	          Linear,

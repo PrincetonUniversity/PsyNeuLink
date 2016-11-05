@@ -3,15 +3,15 @@
 #
 
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Globals.Run import run
 
-from PsyNeuLink.Functions.Utilities.Utility import *
+from PsyNeuLink.Components.Functions.Function import *
 
 #region PROCESS EXAMPLES ********************************************************************
 

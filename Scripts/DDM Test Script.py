@@ -1,5 +1,5 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
 DDM_prefs = FunctionPreferenceSet(
