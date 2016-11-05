@@ -67,19 +67,22 @@ class DefaultControlMechanism(ControlMechanism_Base):
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
     variableClassDefault = [defaultControlAllocation]
 
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({SYSTEM: None,
-                               # # Assigns DefaultControlMechanism, when instantiated, as the DefaultController
-                               # MAKE_DEFAULT_CONTROLLER:True
+                               # MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
+                               FUNCTION:Linear,
+                               FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
+                               MONITORED_OUTPUT_STATES:None
                                })
 
+    from PsyNeuLink.Functions.Utilities.Utility import Linear
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 default_input_value=None,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None):
-                 # context=None):
 
         self.controlSignalChannels = OrderedDict()
 
@@ -88,6 +91,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          name=name,
                                                          prefs=prefs,
                                                          context=self)
+
+
 
     def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
 
@@ -115,7 +120,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # # MODIFIED 9/15/16 END
 
 
-    def instantiate_control_signal_projection(self, projection, context=None):
+    def _instantiate_control_signal_projection(self, projection, context=None):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
         """
 
@@ -131,7 +136,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         self.instantiate_control_signal_channel(projection=projection, context=context)
 
         # Call super to instantiate outputStates
-        super().instantiate_control_signal_projection(projection=projection,
+        super()._instantiate_control_signal_projection(projection=projection,
                                                       context=context)
 
     def instantiate_control_signal_channel(self, projection, context=None):
@@ -148,4 +153,4 @@ class DefaultControlMechanism(ControlMechanism_Base):
         """
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
 
-        self.instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
+        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)

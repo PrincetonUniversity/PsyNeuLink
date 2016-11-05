@@ -2,4 +2,4 @@ Learning
 ========
 
 .. automodule:: Learning
-	:members:
+   :members:
