@@ -185,10 +185,10 @@ class EVCMechanism(ControlMechanism_Base):
        # # Mechanism class used for prediction mechanism(s)
        # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
        # #       and assigned an outputState named based on the same
-       # kwPredictionMechanismType:AdaptiveIntegratorMechanism,
+       # PREDICTION_MECHANISM_TYPE:AdaptiveIntegratorMechanism,
        # # Params passed to PredictionMechanismType on instantiation
        # # Note: same set will be passed to all PredictionMechanisms
-       # kwPredictionMechanismParams:{MONITORED_OUTPUT_STATES:None}
+       # PREDICTION_MECHANISM_PARAMS:{MONITORED_OUTPUT_STATES:None}
 
 
     # NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
@@ -667,7 +667,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Get any params specified for predictionMechanism(s) by EVCMechanism
             try:
-                prediction_mechanism_params = self.paramsCurrent[kwPredictionMechanismParams]
+                prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
             except KeyError:
                 prediction_mechanism_params = {}
 
@@ -677,7 +677,7 @@ class EVCMechanism(ControlMechanism_Base):
             prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
 
             # Instantiate predictionMechanism
-            prediction_mechanism = self.paramsCurrent[kwPredictionMechanismType](
+            prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                                                             name=mech.name + "_" + kwPredictionMechanism,
                                                             params = prediction_mechanism_params,
                                                             context=context)
