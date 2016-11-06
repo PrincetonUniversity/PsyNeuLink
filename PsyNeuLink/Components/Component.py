@@ -38,8 +38,6 @@ class ResetMode(Enum):
     INSTANCE_TO_CLASS = 1
     ALL_TO_CLASS_DEFAULTS = 2
 
-# functionSystemDefaultPreferencesDict = ComponentPreferenceSet()
-
 # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
 # Prototype for implementing params as objects rather than dicts
 # class Params(object):
@@ -83,7 +81,7 @@ class ParamsDict(UserDict):
     #     self.data[key] = item
 # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
-# Used as templates for requiredParamClassDefaultTypes for FUNCTION:
+# Used as templates for requiredParamClassDefaultTypes for COMPONENT:
 class Params(object):
     def __init__(self, **kwargs):
         for arg in kwargs:
@@ -98,7 +96,7 @@ def dummy_function():
 method_type = type(dummy_class().dummy_method)
 function_type = type(dummy_function)
 
-class FunctionLog(IntEnum):
+class ComponentLog(IntEnum):
     NONE            = 0
     ALL = 0
     DEFAULTS = NONE
@@ -112,14 +110,14 @@ class ComponentError(Exception):
          return repr(self.error_value)
 
 
-# *****************************************   FUNCTION CLASS    ********************************************************
+# *****************************************   COMPONENT CLASS  ********************************************************
 
 
 class Component(object):
-    """Implement parent class for functions used by Process, Mechanism, State, and Projection class categories
+    """Implement parent class for Components used by Process, Mechanism, State, and Projection class categories
 
         Every component is associated with:
-         - child class functionName
+         - child class componentName
          - type
          - input (self.variable)
          - execute (method): called to execute it;  it in turn calls self.function
@@ -129,9 +127,9 @@ class Component(object):
          - output (value: self.value)
          - class and instance variable defaults
          - class and instance param defaults
-        The function's execute method (<subclass>.execute is the function's primary method
+        The components's execute method (<subclass>.execute is the component's primary method
             (e.g., it is the one called when process, mechanism, state and projections objects are updated);
-            the following attributes for or associated with the method are defined for every function object:
+            the following attributes for or associated with the method are defined for every component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
             the latter is used for typing and/or templating other variables (e.g., self.variable):
@@ -141,33 +139,33 @@ class Component(object):
                     if the template has only numbers, then the candidate must as well
 
 
-        The function itself can be called without any arguments (in which case it uses its instance defaults) or
+        The component itself can be called without any arguments (in which case it uses its instance defaults) or
             one or more variables (as defined by the subclass) followed by an optional params dictionary
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
             however:  it must be "wrapped" as an item in a list, so that it is not called before being passed
                       it must of course return a variable of the type expected for the variable
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
-            + function subclasses can define the param FUNCTION:<method or Function class>
-        The function can be called with a params argument, which should contain entries for one or more of its params;
+            + component subclasses can define the param FUNCTION:<method or Function class>
+        The component can be called with a params argument, which should contain entries for one or more of its params;
             - those values will be assigned to paramsCurrent at run time (overriding previous values in paramsCurrent)
-            - if the function is called without a variable and/or params argument, it uses paramInstanceDefaults
+            - if the component is called without a variable and/or params argument, it uses paramInstanceDefaults
         The instance defaults can be assigned at initialization or using the assign_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
         Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
             - for all classes, by listing the name and type in requiredParamClassDefaultTypes dict of the Function class
             - in subclasses, by inclusion in requiredParamClassDefaultTypes (via copy and update) in class definition
             * NOTE: inclusion in requiredParamClasssDefault simply acts as a template;  it does NOT implement the param
-        Each function child class must initialize itself by calling super(childfunctionName).__init__()
+        Each component child class must initialize itself by calling super(childComponentName).__init__()
             with a default value for its variable, and optionally an instance default paramList.
 
         A subclass MUST either:
             - implement a <class>.function method OR
-            - specify paramClassDefaults[FUNCTION:<Function Function>];
-            - this is checked in Function._instantiate_function()
+            - specify paramClassDefaults[FUNCTION:<Function>];
+            - this is checked in Component._instantiate_function()
             - if params[FUNCTION] is NOT specified, it is assigned to self.function (so that it can be referenced)
             - if params[FUNCTION] IS specified, it assigns it's value to self.function (superceding existing value):
-                self.function is aliased to it (in Function._instantiate_function):
+                self.function is aliased to it (in Component._instantiate_function):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
@@ -177,7 +175,7 @@ class Component(object):
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
-        - self.value is determined for self.execute which calls self.function in Function._instantiate_function
+        - self.value is determined for self.execute which calls self.function in Component._instantiate_function
 
         NOTES:
             * In the current implementation, validation is:
@@ -190,9 +188,11 @@ class Component(object):
     Class attributes:
         + className
         + suffix - " " + className (used to create subclass and instance names)
-        + functionCategory - category of component (i.e., process, mechanism, projection, learning, function)
-        + componentType - type of function within a category (e.g., transfer, distribution, mapping, controlSignal, etc.)
-        + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
+        + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
+        + componentType - type of component within a category (e.g., transfer, distribution, mapping, controlSignal,
+        etc.)
+        + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Component must
+        implement;
 
     Class methods:
         - _validate_variable(variable)
@@ -204,7 +204,7 @@ class Component(object):
 
     Instance attributes:
         + name
-        + functionName - name of particular function (linear, exponential, integral, etc.)
+        + componentName - name of particular Function (linear, exponential, integral, etc.)
         + variableClassDefault (value)
         + variableClassDefault_np_info (ndArrayInfo)
         + variableInstanceDefault (value)
@@ -226,10 +226,10 @@ class Component(object):
     """
 
     #region CLASS ATTRIBUTES
-    className = "FUNCTION"
+    className = "COMPONENT"
     suffix = " " + className
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
-    functionCategory = None
+    componentCategory = None
     componentType = None
 
     initMethod = INIT_FULL_EXECUTE_METHOD
@@ -238,7 +238,7 @@ class Component(object):
     # Any preferences specified below will override those specified in SystemDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to SYSTEM automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'FunctionCustomClassPreferences',
+    #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
     # Determines whether variableClassDefault can be changed (to match an variable in __init__ method)
@@ -247,7 +247,7 @@ class Component(object):
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
-    # * kwFunctionCategory (below) is used as placemarker for Function.Function class; replaced in __init__ below
+    # * kwComponentCategory (below) is used as placemarker for Comopnent.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
     paramClassDefaults = {}
@@ -268,8 +268,8 @@ class Component(object):
 
         :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
         :param param_defaults: (dict) - params to be assigned to paramInstanceDefaults
-        :param log: (FunctionLog enum) - log entry types set in self.functionLog
-        :param name: (string) - optional, overrides assignment of default (functionName of subclass)
+        :param log: (ComponentLog enum) - log entry types set in self.componentLog
+        :param name: (string) - optional, overrides assignment of default (componentName of subclass)
         :return:
         """
 
@@ -293,7 +293,7 @@ class Component(object):
         self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
-        self.functionName = self.componentType
+        self.componentName = self.componentType
 
         #endregion
 
@@ -359,10 +359,10 @@ class Component(object):
         # Do this here, as _validate_variable might be overridden by subclass
         try:
             if self.variableClassDefault is NotImplemented:
-                raise ComponentError("variableClassDefault must be given a value for {0}".format(self.functionName))
+                raise ComponentError("variableClassDefault must be given a value for {0}".format(self.componentName))
         except AttributeError:
             raise ComponentError("variableClassDefault must be defined for {0} or its base class".
-                                format(self.functionName))
+                                format(self.componentName))
         #endregion
 
         #region CHECK FOR REQUIRED PARAMS
@@ -374,10 +374,10 @@ class Component(object):
             # # Replace 'Function' placemarker with class reference:
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
-            # get type for kwFunctionCategory specification
+            # get type for kwComponentCategory specification
             import PsyNeuLink.Components.Functions.Function
-            if kwFunctionCategory in type_requirements:
-               type_requirements[type_requirements.index(kwFunctionCategory)] = \
+            if kwComponentCategory in type_requirements:
+               type_requirements[type_requirements.index(kwComponentCategory)] = \
                    type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
@@ -915,7 +915,7 @@ class Component(object):
             #              isinstance(self.variableClassDefault, numbers.Number))):
             if not variable.dtype is self.variableClassDefault.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
-                    format(self.functionName, context, pre_converted_variable_class_default.__class__.__name__)
+                    format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)
                 raise ComponentError(message)
 
         self.variable = variable
@@ -1321,7 +1321,7 @@ class Component(object):
                     except AttributeError:
                         pass
                     warnings.warn("{0} assigned as function for {1}".
-                                  format(self.paramsCurrent[FUNCTION].__self__.functionName,
+                                  format(self.paramsCurrent[FUNCTION].__self__.componentName,
                                          object_name))
 
             # If FUNCTION is NOT a Function class reference:
@@ -1353,7 +1353,7 @@ class Component(object):
                     warnings.warn("{0} ({1}) is not a Function object or a specification for one; "
                                   "{1}.function ({}) will be used instead".
                                   format(FUNCTION,
-                                         self.paramsCurrent[FUNCTION].__self__.functionName,
+                                         self.paramsCurrent[FUNCTION].__self__.componentName,
                                          self.name,
                                          self.function.__self__.name))
 

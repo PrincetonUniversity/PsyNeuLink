@@ -133,7 +133,7 @@ class State_Base(State):
 
 
     Class attributes:
-        + functionCategory = kwStateFunctionCategory
+        + componentCategory = kwStateFunctionCategory
         + className = kwState
         + suffix
         + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
@@ -172,7 +172,7 @@ class State_Base(State):
     #region CLASS ATTRIBUTES
 
     kpState = "State"
-    functionCategory = kwStateFunctionCategory
+    componentCategory = kwStateFunctionCategory
     className = kwState
     suffix = " " + className
     paramsType = None
@@ -267,7 +267,7 @@ class State_Base(State):
                                       format(", ".join("{!s}".format(key) for (key) in StateRegistry.keys())))
 
         # FROM MECHANISM:
-        # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
+        # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
 
         # VALIDATE owner
         if isinstance(owner, (Mechanism, Projection)):
@@ -432,7 +432,7 @@ class State_Base(State):
                                       " must be the same format as its input ({6}: {7})".
                                       format(type(self.value).__name__,
                                              self.value,
-                                             self.function.__self__.functionName,
+                                             self.function.__self__.componentName,
                                              self.name,
                                              self.__class__.__name__,
                                              self.owner.name,

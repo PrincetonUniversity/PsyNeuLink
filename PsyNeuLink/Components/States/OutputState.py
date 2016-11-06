@@ -87,7 +87,7 @@ class OutputState(State_Base):
     """Implement subclass type of State, that represents output of its owner
 
     Description:
-        The OutputState class is a componentType in the State category of Function,
+        The OutputState class is a type in the State category of Component,
         It is used primarily as the sender for Mapping projections
         Its FUNCTION updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
@@ -134,7 +134,7 @@ class OutputState(State_Base):
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
         + params (dict) - set currently in effect
         + paramNames (list) - list of keys for the params dictionary
-        + owner (Function object)
+        + owner (Mechanism)
         + value (value)
         + projections (list)
         + params (dict)
@@ -184,7 +184,7 @@ reference_value is component of owner.variable that corresponds to the current S
         #        (in the call to instantiate_state)
         #    - otherwise, should ignore
 
-        :param owner: (Function object)
+        :param owner: (Mechanism object)
         :param reference_value: (value)
         :param value: (value)
         :param params: (dict)

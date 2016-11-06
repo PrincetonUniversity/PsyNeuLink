@@ -505,8 +505,8 @@ class Mechanism_Base(Mechanism):
 
         Class attributes
         ----------------
-            + functionCategory = kwMechanismFunctionCategory
-            + className = functionCategory
+            + componentCategory = kwMechanismFunctionCategory
+            + className = componentCategory
             + suffix = " <className>"
             + className (str): kwMechanismFunctionCategory
             + suffix (str): " <className>"
@@ -645,8 +645,8 @@ class Mechanism_Base(Mechanism):
     """
 
     #region CLASS ATTRIBUTES
-    functionCategory = kwMechanismFunctionCategory
-    className = functionCategory
+    componentCategory = kwMechanismFunctionCategory
+    className = componentCategory
     suffix = " " + className
 
     registry = MechanismRegistry
@@ -943,7 +943,7 @@ class Mechanism_Base(Mechanism):
                               "projection, ParamValueProjection, or value; default value ({4}) will be used".
                               format(param_name,
                                      param_value,
-                                     self.execute.__self__.functionName,
+                                     self.execute.__self__.componentName,
                                      self.__class__.__name__,
                                      default_value))
         #endregion

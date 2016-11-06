@@ -31,7 +31,7 @@ RegistryVerbosePrefs = {
     kwProjectionFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     CONTROL_SIGNAL: DEFAULT_REGISTRY_VERBOSITY,
     MAPPING: DEFAULT_REGISTRY_VERBOSITY,
-    kwFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
+    kwComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
 }
 
 RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCount, default')

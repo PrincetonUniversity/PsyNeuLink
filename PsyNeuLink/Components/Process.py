@@ -515,7 +515,7 @@ class Process_Base(Process):
 
         Class attributes
         ----------------
-        functionCategory : str : default kwProcessFunctionCategory
+        componentCategory : str : default kwProcessFunctionCategory
         className : str : default kwProcessFunctionCategory
         suffix : str : default "<kwMechanismFunctionCategory>"
         registry : dict : default ProcessRegistry
@@ -698,8 +698,8 @@ class Process_Base(Process):
 
     """
 
-    functionCategory = kwProcessFunctionCategory
-    className = functionCategory
+    componentCategory = kwProcessFunctionCategory
+    className = componentCategory
     suffix = " " + className
     componentType = "Process"
 

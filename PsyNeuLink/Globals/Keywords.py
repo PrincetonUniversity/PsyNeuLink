@@ -172,7 +172,7 @@ kwProcessFunctionCategory = "Process_Base"
 kwMechanismFunctionCategory = "Mechanism_Base"
 kwStateFunctionCategory = "State_Base"
 kwProjectionFunctionCategory = "Projection_Base"
-kwFunctionCategory = "Function_Base"
+kwComponentCategory = "Function_Base"
 
 # Function TYPES  -----------------
 

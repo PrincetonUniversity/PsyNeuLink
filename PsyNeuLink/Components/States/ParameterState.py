@@ -221,7 +221,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
+        # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              value=value,
                                              params=params,
@@ -255,7 +255,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # Insure that function is LinearCombination
         if not isinstance(self.function.__self__, (LinearCombination)):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
-                                 format(self.function.__self__.functionName, FUNCTION, self.name))
+                                 format(self.function.__self__.componentName, FUNCTION, self.name))
 
         # # Insure that output of function (self.value) is compatible with relevant parameter value
         if not iscompatible(self.value, self.reference_value):

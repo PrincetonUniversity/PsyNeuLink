@@ -166,7 +166,7 @@ class Comparator(MonitoringMechanism_Base):
             self.name = self.componentType
         else:
             self.name = name
-        self.functionName = self.componentType
+        self.componentName = self.componentType
 
         if default_sample_and_target is NotImplemented:
             default_sample_and_target = self.variableClassDefault

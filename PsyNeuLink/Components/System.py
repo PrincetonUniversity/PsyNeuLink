@@ -386,12 +386,12 @@ class System_Base(System):
     COMMENT:
         Description
         -----------
-            System is a Category of the Function class.
+            System is a Category of the Component class.
             It implements a System that is used to execute a collection of processes.
 
        Class attributes
        ----------------
-        + functionCategory (str): kwProcessFunctionCategory
+        + componentCategory (str): kwProcessFunctionCategory
         + className (str): kwProcessFunctionCategory
         + suffix (str): " <kwMechanismFunctionCategory>"
         + registry (dict): ProcessRegistry
@@ -553,8 +553,8 @@ class System_Base(System):
 
     """
 
-    functionCategory = kwProcessFunctionCategory
-    className = functionCategory
+    componentCategory = kwProcessFunctionCategory
+    className = componentCategory
     suffix = " " + className
     componentType = "System"
 
