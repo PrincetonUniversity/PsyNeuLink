@@ -6,15 +6,15 @@ from PsyNeuLink.Globals.Keywords import *
 # x.execute(10.0)
 
 
-# DDM_prefs = FunctionPreferenceSet(
+# DDM_prefs = ComponentPreferenceSet(
 #                 owner=DDM,
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 functionRuntimeParams_pref=PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY),
 #                 name='Reassigned'
 
-DDM_prefs = FunctionPreferenceSet(
-# FIX: AttributeError: 'FunctionPreferenceSet' object has no attribute '_verbose_pref'
+DDM_prefs = ComponentPreferenceSet(
+# FIX: AttributeError: 'ComponentPreferenceSet' object has no attribute '_verbose_pref'
 #                 owner=DDM,
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
@@ -31,7 +31,7 @@ DDM_prefs.verbosePref = PreferenceEntry(True,PreferenceLevel.INSTANCE)
 
 DDM.classPreferences = DDM_prefs
 
-DDM_prefs2 = FunctionPreferenceSet(
+DDM_prefs2 = ComponentPreferenceSet(
                 owner=DDM,
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
@@ -104,7 +104,7 @@ myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
 # #                      name='My_DDM'
 # #                      )
 #
-# # process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
+# # process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 # #                                        verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM))
 # from Components.Function import LinearCombination
 # y = Process_Base(params={PATHWAY:[(myMechanism,

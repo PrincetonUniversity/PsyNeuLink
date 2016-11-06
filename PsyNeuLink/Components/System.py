@@ -334,7 +334,7 @@ def system(default_input_value=None,
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        preference set for system (see FunctionPreferenceSet module for specification of PreferenceSet)
+        preference set for system (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None

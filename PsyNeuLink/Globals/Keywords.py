@@ -113,7 +113,7 @@ kwTimeScale = "Time Scale"
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 kwPreferenceSet = 'PreferenceSet'
-kwFunctionPreferenceSet = 'PreferenceSet'
+kwComponentPreferenceSet = 'PreferenceSet'
 #endregion
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
@@ -360,7 +360,7 @@ MONITOR_FOR_LEARNING = 'MonitorForLearning'
 
 #endregion
 
-#region ----------------------------------------------    UTILITY  -----------------------------------------------------
+#region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 kwInitializer = 'initializer'
 WEIGHTS = "weights"

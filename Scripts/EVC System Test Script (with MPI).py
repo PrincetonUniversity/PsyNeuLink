@@ -15,12 +15,12 @@ if MPI_IMPLEMENTATION:
     Comm.Barrier()
 
 #region Preferences
-DDM_prefs = FunctionPreferenceSet(
+DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
-process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #endregion
 

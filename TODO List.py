@@ -74,7 +74,7 @@
 # PEP8
 #     Rename packages lowercase, Components -> functions
 #     Mechanism_Base -> MechanismBase
-#     Method names, e.g. verbosePref -> verbose_pref in FunctionPreferenceSet
+#     Method names, e.g. verbosePref -> verbose_pref in ComponentPreferenceSet
 #     Aim for methods that fit on a single screen, e.g. Function.__init__ is about 150 lines,
 #         but you want something like 50 lines for a method for it to be comprehensible.
 #     Along the same lines, too many #regions, and too much SHOUTING. Breaks up the reader’s flow.
@@ -107,7 +107,7 @@
 #
 # ACTION ITEMS:
 #
-# Flatten params (and add kwArgs handling) to UtilityFunctions
+# Flatten params (and add kwArgs handling) to Functions
 # - function -> function
 # - functionParams -> args and/or params dict inside Function specification
 # - if functionParams are now all handled inside specification of a Function for function param:
@@ -212,11 +212,6 @@
 #endregion
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
-
-# 11/5/16:
-# Function -> PNL_Components or just PsyNeuLink??
-# UtilityFunction -> Function
-# Learning -> LearningSignal
 
 # 11/3/16:
 
@@ -472,7 +467,7 @@
 
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
-#                         ONES IN FunctionPreferenceSet
+#                         ONES IN ComponentPreferenceSet
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
 #
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
@@ -673,7 +668,7 @@
 #       USE EVC System Test Script and delete CONTROL_SIGNAL for drift_rate param in DDM.__init__()
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
-# FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
+# FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
 # FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
 # FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
 # FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningSignal
@@ -870,9 +865,6 @@
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
-#   Change Function Function "LinearCombination" -> "LinearCombination"
-#   ??Change Function to UtilityFunction
-#         UtilityFunction seems a bit redundant (since Function is a subclass of Function), but it is more descriptive
 #   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
 #   NotImplemented -> None (and adjust tests accordingly)
 #
@@ -1341,7 +1333,7 @@
 #     (this is not a problem for objects, since they use the @setter to reassign ownership)
 # - another side effect of the problem is:
 #   The following works, but changing the last line to "PreferenceLevel.CATEGORY" causes an error
-#     DDM_prefs = FunctionPreferenceSet(
+#     DDM_prefs = ComponentPreferenceSet(
 #                     # owner=DDM,
 #                     prefs = {
 #                         kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),

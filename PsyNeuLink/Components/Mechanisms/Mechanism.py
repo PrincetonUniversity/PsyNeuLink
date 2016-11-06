@@ -120,7 +120,7 @@ Function
 
 The core of every mechanism is its function, which transforms its input and generates its output.  The function is
 specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
-and generally these are from the :doc:`UtilityFunction` class provided by PsyNeuLink.  Components are specified
+and generally these are from the :doc:`Function` class provided by PsyNeuLink.  Components are specified
 in the same form that an object is instantiated in Python (by calling its __init__ method), and thus can be used to
 specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
 and bias parameters can also be specified as shown in the following example::

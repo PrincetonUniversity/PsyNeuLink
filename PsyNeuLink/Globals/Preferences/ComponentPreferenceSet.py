@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ******************************************** FunctionPreferenceSet ***************************************************
+# ******************************************** ComponentPreferenceSet ***************************************************
 #
 #
 from PsyNeuLink.Globals.Log import *
@@ -29,7 +29,7 @@ kwInstanceDefaultPreferences = 'InstanceDefaultPreferences'
 
 # Level default preferences dicts:
 
-FunctionPreferenceSetPrefs = {
+ComponentPreferenceSetPrefs = {
     kpVerbosePref,
     kpParamValidationPref,
     kpReportOutputPref,
@@ -86,20 +86,20 @@ FunctionDefaultPrefDicts = {
     PreferenceLevel.INSTANCE: InstanceDefaultPreferencesDict}
 
 def is_pref(pref):
-    return pref in FunctionPreferenceSetPrefs
+    return pref in ComponentPreferenceSetPrefs
 
 def is_pref_set(pref):
     if pref is None:
         return True
-    if isinstance(pref, (FunctionPreferenceSet, type(NotImplemented))):
+    if isinstance(pref, (ComponentPreferenceSet, type(NotImplemented))):
         return True
     if isinstance(pref, dict):
-        if all(key in FunctionPreferenceSetPrefs for key in pref):
+        if all(key in ComponentPreferenceSetPrefs for key in pref):
             return True
     return False
 
 
-class FunctionPreferenceSet(PreferenceSet):
+class ComponentPreferenceSet(PreferenceSet):
     # DOCUMENT: FOR EACH pref TO BE ACCESSIBLE DIRECTLY AS AN ATTRIBUTE OF AN OBJECT,
     #           MUST IMPLEMENT IT AS PROPERTY (WITH GETTER AND SETTER METHODS) IN FUNCTION MODULE
 
@@ -199,7 +199,7 @@ class FunctionPreferenceSet(PreferenceSet):
     # - a template for the type of each preference (used for validation)
     # - a default set of preferences (where defaults are not otherwise specified)
     defaultPreferencesDict = {
-            kwPreferenceSetName: 'FunctionPreferenceSetDefaults',
+            kwPreferenceSetName: 'ComponentPreferenceSetDefaults',
             kpVerbosePref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
             kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
@@ -271,11 +271,11 @@ class FunctionPreferenceSet(PreferenceSet):
 
         # If classPreferences have not be instantiated for owner's class, do so here:
         try:
-            # If classPreferences are still a dict, they need to be instantiated as a FunctionPreferenceSet
+            # If classPreferences are still a dict, they need to be instantiated as a ComponentPreferenceSet
             if isinstance(owner_class.classPreferences, dict):
                 raise AttributeError
         except AttributeError:
-            super(FunctionPreferenceSet, self).__init__(
+            super(ComponentPreferenceSet, self).__init__(
                 owner=owner_class,
                 level=owner_class.classPreferenceLevel,
                 prefs=FunctionDefaultPrefDicts[owner_class.classPreferenceLevel],
@@ -283,7 +283,7 @@ class FunctionPreferenceSet(PreferenceSet):
                 context=self)
 
         # Instantiate PreferenceSet
-        super(FunctionPreferenceSet, self).__init__(owner=owner,
+        super(ComponentPreferenceSet, self).__init__(owner=owner,
                                                     level=owner_class.classPreferenceLevel,
                                                     prefs=prefs,
                                                     name=name,

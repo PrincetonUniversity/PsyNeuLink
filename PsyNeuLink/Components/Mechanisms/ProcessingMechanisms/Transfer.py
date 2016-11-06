@@ -23,7 +23,7 @@ Overview
 
 Transfer mechanisms transform their input using a simple mathematical function.  The input can be a single scalar
 value or an an array (list or 1d np.array).  The following standard functions are provided:
-:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`UtilityFunction`).  Custom functions can
+:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`Function`).  Custom functions can
 also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
 
 
@@ -222,7 +222,7 @@ class Transfer(ProcessingMechanism_Base):
     variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
         Input to mechanism's function.
 
-    function : UtilityFunction :  default Linear
+    function : Function :  default Linear
         Function used to transform the input.
 
     value : List[value]

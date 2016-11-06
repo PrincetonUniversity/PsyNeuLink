@@ -424,7 +424,7 @@ def process(process_spec=None,
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        preference set for process (see FunctionPreferenceSet module for specification of PreferenceSet)
+        preference set for process (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default ''None''
