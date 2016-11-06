@@ -187,8 +187,8 @@ COMMENT
 
 .. _System_Class_Reference:
 
-system()
---------
+Class Reference
+---------------
 
 """
 

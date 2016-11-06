@@ -283,8 +283,8 @@ COMMENT
 
 .. _Process_Class_Reference:
 
-process()
----------
+Class Reference
+---------------
 
 """
 

@@ -8,4 +8,4 @@ Process
 
 .. automodule:: Process
    :members:
-   :exclude-members: ProcessTuple, ProcessList, ProcessInputState, random, Process_Base
+   :exclude-members: ProcessTuple, ProcessList, ProcessInputState, random
