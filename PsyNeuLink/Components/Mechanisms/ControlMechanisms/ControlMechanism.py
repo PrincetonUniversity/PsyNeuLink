@@ -12,10 +12,10 @@
 Overview
 --------
 
-TEST
-
 ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` and use this
 information to regulate the value of :doc:`ControlSignal` projections to other ProcessingMechanisms in that system.  .
+
+.. _ControlMechanism_Creating_A_ControlMechanism:
 
 Creating A ControlMechanism
 ---------------------------
@@ -24,66 +24,44 @@ ControlMechanisms can be created by using the standard Python method of calling 
 A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`),
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`).
 
-
 .. _ControlMechanism_MonitoredOutputStates:
 
 MonitoredOutputStates
 ~~~~~~~~~~~~~~~~~~~~~
 
-In addition to the standard components and parameters of a :doc:`Mechanism`, ControlMechanisms have a
-:keyword:`MONITORED_OUTPUT_STATES` parameter that specifies which outputStates of the mechanism(s) in
-ControlMechanism's system to monitor.  ControlMechanism subclasses determine which mechanisms and outputStates they
-monitor by default, and how that information is used (for example, the :doc:`DefaultControlMechanism` monitors the
-primary outputState of every mechanism in its system, treating each one indpendently).  This can also be specified
-in the ``monitored_output_states`` argument when creating a system, or in its ``params`` dictionary using the
-:keyword:`MONITORED_OUTPUT_STATES`.  The parameter must be a list, each item of which is one of the following:
+The outputStates monitored by a ControlMechanism can be specified in its ``monitored_output_states`` argument when it
+is created, or in it its ``params`` dictionary using the :keyword:`MONITORED_OUTPUT_STATES`.  The parameter must be
+a list, each item of which is one of the following:
+    * the name of an existing **outputState**;
+    ..
+    * a **tuple** with three items, in the order listed below:
 
-      * a string that is the name of an outputState
-      * a parameter state, the value of which specifies the parameter's value
-        (see :ref:`ParameterState_Creating_A_ParameterState`).
-      * a tuple with exactly two items: the parameter value and a projection type specifying either a
-        :doc:`ControlSignal` or a :doc:`LearningSignal`
-        (a :class:`ParamValueProjection` namedtuple can be used for clarity).
+        * mechanism, outputState or specification dictionary for one;
+        * exponent (int), used to exponentiate the outputState's value when using it to determine ControlSignal values;
+        * weight (int), used to multiply the outState's value when using it to determine ControlSignal values;
+    ..
+    * a :class:`MonitoredOutputStatesOption` (enum) value, which specifies monitoring of all of the mechanisms in the
+      system, using either their :keyword:`PRIMARY_OUTPUT_STATES` or :keyword:`ALL_OUTPUT_STATES`.
+COMMENT:
+    * a mechanism: ignored (used for SystemController and System params)
+COMMENT
 
-    * the name of an existing outputState
-    * a tuple with exactly three items in the following order:
-        * a mechanism or outputState specification (a Mechanism or OutputState object, or a specification dictionary
-        for one); if a Mechanism is referenced, the exponent and weight items below will apply to *all* of the
-        outputStates of that mechanism.
-        * exponent : int
-          will be used to exponentiate outState.value when computing EVC
-        * weight : int
-          will be used to multiplicatively weight outState.value when computing EVC
-    * MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
-        + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
-        + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
-    * Mechanism (object): ignored (used for SystemController and System params)
+.. _ControlMechanism_Execution:
 
+Execution
+---------
 
-.. _ControlMechanisms_Monitored_OutputStates:
+The ControlMechanism of a system is always the last to be executed (see System :ref:`System_Execution_Control`).  A
+ControlMechanism's ``function`` takes as its input the values of the outputStates specified in its
+:keyword:`MONITORED_OUTPUT_STATES` parameter, and uses those to determine the value of its :doc:`ControlSignal`
+projections. In the next round of execution, each ControlSignal's value is used by the :doc:`ParameterState` to which it
+projects, to update the corresponding parameter of the recieving mechanism's function.
 
-Monitored OutputStates
-~~~~~~~~~~~~~~~~~~~~~~
-
-MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
-    specifies the outputStates of the mechanism to be monitored by ControlMechanism of the System(s)
-        to which the Mechanism belongs.
-    This specification overrides (for this mechanism) any in the ControlMechanism or System params[];
-    This is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself.
-    Each item must be one of the following:
-        + OutputState (object)
-        + OutputState name (str)
-        + (Mechanism or OutputState specification, exponent, weight) (tuple):
-            + mechanism or outputState specification (Mechanism, OutputState, or str):
-                referenceto Mechanism or OutputState object or the name of one
-                if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
-            + exponent (int):  will be used to exponentiate outState.value when computing EVC
-            + weight (int): will be used to multiplicative weight outState.value when computing EVC
-        + MonitoredOutputStatesOption (AutoNumber enum): (note: ignored if one of the above is specified)
-            + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
-            + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
-        + Mechanism (object): ignored (used for SystemController and System params)
-
+.. note::
+   A :doc:`ParameterState` that receives a :doc:`ControlSignal` projection does not update its value until its owner
+   mechanism executes (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).  This means that even if a
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
+   receiver mechanism has executed.
 
 """
 
@@ -105,64 +83,67 @@ class ControlMechanismError(Exception):
 
 
 class ControlMechanism_Base(Mechanism_Base):
-    """Abstract class for control mechanism subclasses
+    """Abstract class for ControlMechanism subclasses
 
-    Description:
-# DOCUMENTATION NEEDED:
-    ._instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE INSTANCE
-    .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
-    WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
+    COMMENT:
+        Description:
+            # DOCUMENTATION NEEDED:
+              ._instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
+             INSTANCE
+            .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
+            WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
 
-# PROTOCOL FOR ASSIGNING DefaultController (defined in Components.__init__.py)
-#    Initial assignment is to SystemDefaultCcontroller (instantiated and assigned in Components.__init__.py)
-#    When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-#        then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
-#        which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
-# params[kwMonitoredStates]: Determines which states will be monitored.
-#        can be a list of Mechanisms, OutputStates, a MonitoredOutputStatesOption, or a combination
-#        if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from system.executionGraph by default
-#        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applied to just that mechanism
-        + MONITORED_OUTPUT_STATES (list): (default: PRIMARY_OUTPUT_STATES)
-            specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
-            this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
-            each item must be one of the following:
-                + Mechanism or OutputState (object)
-                + Mechanism or OutputState name (str)
-                + (Mechanism or OutputState specification, exponent, weight) (tuple):
-                    + mechanism or outputState specification (Mechanism, OutputState, or str):
-                        referenceto Mechanism or OutputState object or the name of one
-                        if a Mechanism ref, exponent and weight will apply to all outputStates of that mechanism
-                    + exponent (int):  will be used to exponentiate outState.value when computing EVC
-                    + weight (int): will be used to multiplicative weight outState.value when computing EVC
-                + MonitoredOutputStatesOption (AutoNumber enum):
-                    + PRIMARY_OUTPUT_STATES:  monitor only the primary (first) outputState of the Mechanism
-                    + ALL_OUTPUT_STATES:  monitor all of the outputStates of the Mechanism
-                    Notes:
-                    * this option applies to any mechanisms specified in the list for which no outputStates are listed;
-                    * it is overridden for any mechanism for which outputStates are explicitly listed
+            Protocol for assigning DefaultController:
+               Initial assignment is to SystemDefaultController (instantiated and assigned in Components.__init__.py)
+               When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
+                   then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
+                   which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 
-    Class attributes:
-        + componentType (str): System Default Mechanism
-        + paramClassDefaults (dict):
-            # + kwInputStateValue: [0]
-            # + kwOutputStateValue: [1]
-            + FUNCTION: Linear
-            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
+            MONITORED_OUTPUT_STATES param determines which states will be monitored.
+                specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
+                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+                ?? if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
+                    system.executionGraph by default
+                if MonitoredOutputStatesOption is used, it applies to any mechanisms specified in the list for which
+                    no outputStates are listed; it is overridden for any mechanism for which outputStates are
+                    explicitly listed
+                TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
+                    just that mechanism
 
-    Instance methods:
-    - _validate_params(request_set, target_set, context):
-    - validate_monitoredstates_spec(state_spec, context):
-    - _instantiate_attributes_before_function(context):
-    - _instantiate_attributes_after_function(context):
-    - _take_over_as_default_controller(context):
-    - _instantiate_control_signal_projection(projection, context):
-        adds outputState, and assigns as sender of to requesting ControlSignal Projection
-    - execute(time_scale, runtime_params, context):
-    - show(): prints monitored OutputStates and mechanism parameters controlled
+        Class attributes:
+            + componentType (str): System Default Mechanism
+            + paramClassDefaults (dict):
+                + FUNCTION: Linear
+                + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
+                + MONITORED_OUTPUT_STATES: List[]
+    COMMENT
 
-    Instance attributes:
-    - allocationPolicy (np.arry): controlSignal intensity for controlSignals associated with each outputState
-    - controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
+    Arguments
+    ---------
+
+    default_input_value : value, list or np.ndarray : defaultControlAllocation [LINK]
+
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored output states.
+
+    monitored_output_states : List[] : default None
+        specifies set of outputStates to monitor (see :ref:`ControlMechanism_MonitoredOutputStates` for
+        specification format).
+
+    params : Optional[Dict[param keyword, param value]]
+        Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+
+    name : str : default Transfer-<index>
+        String used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        Preference set for process.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     """
 
     componentType = "ControlMechanism"
@@ -194,13 +175,6 @@ class ControlMechanism_Base(Mechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """Abstract class for system control mechanisms
-
-        :param default_input_value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
-        """
 
         self.system = None
 

@@ -46,12 +46,12 @@ it as an output that can be used for some purpose  There are three types of mech
 ..
     * :doc:`ProcessingMechanism`
         aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
-        system, transform it in some way, and provide the result either as input for other mechanisms and/or the output of a
-        process or system.
+        system, transform it in some way, and provide the result either as input for other mechanisms and/or the
+        output of a process or system.
 
     * :doc:`MonitoringMechanism`
-        monitor the output of one or more other mechanisms, receive training (target) values, and compare these to generate
-        error signals used for learning (see :doc:`Learning`).
+        monitor the output of one or more other mechanisms, receive training (target) values, and compare these to
+        generate error signals used for learning (see :doc:`Learning`).
 
     * :doc:`ControlMechanism`
         evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
@@ -353,8 +353,8 @@ entries for the values of the runtime parameters for a state, its function, or i
 
 .. _Mechanism_Class_Reference:
 
-Class Reference
----------------
+mechanism()
+-----------
 
 """
 
@@ -486,9 +486,9 @@ class Mechanism_Base(Mechanism):
                 the value of each is passed to corresponding mapping projections for which the mechanism is a sender
                 * Notes:
                     by default, a Mechanism has only one outputState, assigned to <mechanism>.outputState;  however:
-                      if params[OUTPUT_STATES] is a list (of names) or specification dict (of MechanismOuput State specs),
-                      <mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
-                      the first of which points to <mechanism>.outputState (note singular)
+                    if params[OUTPUT_STATES] is a list (of names) or specification dict (of MechanismOuput State
+                    specs), <mechanism>.outputStates (note plural) is created and contains a dict of outputStates,
+                    the first of which points to <mechanism>.outputState (note singular)
                 [TBI * each outputState maintains a list of projections for which it serves as the sender]
 
         Constraints
@@ -863,8 +863,9 @@ class Mechanism_Base(Mechanism):
         #region VALIDATE INPUT STATE(S)
 
         # MODIFIED 6/10/16
-        # FIX: SHOULD CHECK LENGTH OF INPUT_STATES PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF self.variable 2D ARRAY
-        # FIX:                AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF self.variable 2D ARRAY
+        # FIX: SHOULD CHECK LENGTH OF INPUT_STATES PARAM (LIST OF NAMES OR SPECIFICATION DICT) AGAINST LENGTH OF
+        # FIX: self.variable 2D ARRAY AND COMPARE variable SPECS, IF PROVIDED, WITH CORRESPONDING ELEMENTS OF
+        # FIX: self.variable 2D ARRAY
         try:
             param_value = params[INPUT_STATES]
 

@@ -168,9 +168,6 @@ form suitable as input to its ``receiver``.
 
 .. _Projection_Class_Reference:
 
-Class Reference
----------------
-
 """
 
 

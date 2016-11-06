@@ -8,4 +8,5 @@ Control Mechanisms
 	EVCMechanism
 
 .. automodule:: ControlMechanism
-	:members:
+   :members:
+   :exclude-members: Linear, random, ControlMechanism_Base
