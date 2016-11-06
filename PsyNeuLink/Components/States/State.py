@@ -340,7 +340,7 @@ class State_Base(State):
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """validate projection specification(s)
 
-        Call super (Function._validate_params()
+        Call super (Component._validate_params()
         Validate following params:
             + STATE_PROJECTIONS:  <entry or list of entries>; each entry must be one of the following:
                 + Projection object
