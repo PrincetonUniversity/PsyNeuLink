@@ -248,7 +248,7 @@ class Component(object):
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
-    # * kwComponentCategory (below) is used as placemarker for Comopnent.Function class; replaced in __init__ below
+    # * kwComponentCategory (below) is used as placemarker for Component.Function class; replaced in __init__ below
     #              (can't reference own class directly class block)
     requiredParamClassDefaultTypes = {}
     paramClassDefaults = {}
@@ -265,7 +265,7 @@ class Component(object):
         Initialization arguments:
         - variable_default (anything): establishes type for the variable, used for validation
         - params_default (dict): assigned as paramInstanceDefaults
-        Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
+        Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
         :param param_defaults: (dict) - params to be assigned to paramInstanceDefaults
