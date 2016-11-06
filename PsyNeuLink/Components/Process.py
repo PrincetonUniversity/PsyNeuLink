@@ -190,11 +190,14 @@ projections), the input is not presented again.  However, the input can be "clam
 of execute() or run().  After the :keyword:`ORIGIN` mechanism is executed, each subsequent mechanism in the pathway
 is executed in sequence (irrespective of any phase specification).  If a mechanism is specified in the pathway in a
 (mechanisms, runtime_params, phase) tuple, then the runtime parameters are applied and the mechanism is executed using
-them (see Mechanism for parameter specification).  Finally the output of the :keyword:`TERMINAL` mechanism (last one in
-the pathway) is assigned as the output of the process.  If learning has been specified for the process or any of the
-projections among the mechanisms in its pathway, then the relevant learning mechanims are executed.  These calculate
-changes that will be made to the corresponding projections (note: these changes are not applied until the mechanisms
-that receive those projections are next executed; see Projection for an explanation of lazy updating of projections).
+them (see :doc:`Mechanism` for parameter specification).  Finally the output of the :keyword:`TERMINAL` mechanism (last
+one in the pathway) is assigned as the output of the process.  If learning has been specified for the process or any
+of the projections among the mechanisms in its pathway, then the relevant learning mechanims are executed.  These
+calculate changes that will be made to the corresponding projections.
+
+.. note::
+   The changes to a projection induced by learning are not applied until the mechanisms that receive those
+   projections are next executed; see Lazy_Evaluation for an explanation of "lazy" updating).
 
 Examples
 --------
@@ -280,8 +283,8 @@ COMMENT
 
 .. _Process_Class_Reference:
 
-Class Reference
----------------
+process()
+---------
 
 """
 

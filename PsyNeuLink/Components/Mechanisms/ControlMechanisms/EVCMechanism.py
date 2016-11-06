@@ -25,9 +25,6 @@ if MPI_IMPLEMENTATION:
     from mpi4py import MPI
 
 
-ControlSignalChannel = namedtuple('ControlSignalChannel',
-                                  'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
-
 OBJECT = 0
 EXPONENT = 1
 WEIGHT = 2
@@ -792,7 +789,7 @@ class EVCMechanism(ControlMechanism_Base):
         #        preserved here for possible future restoration
         if PY_MULTIPROCESSING:
             EVC_pool = Pool()
-            results = EVC_pool.map(compute_EVC, [(self, arg, runtime_params, time_scale, context)
+            results = EVC_pool.map(_compute_EVC, [(self, arg, runtime_params, time_scale, context)
                                                  for arg in self.controlSignalSearchSpace])
 
         else:
@@ -846,7 +843,7 @@ class EVCMechanism(ControlMechanism_Base):
                 sample +=1
 
                 # Calculate EVC for specified allocation policy
-                result_tuple = compute_EVC(args=(self, allocation_vector, runtime_params, time_scale, context))
+                result_tuple = _compute_EVC(args=(self, allocation_vector, runtime_params, time_scale, context))
                 EVC, value, cost = result_tuple
 
                 EVC_max = max(EVC, EVC_max)
@@ -1023,7 +1020,7 @@ class EVCMechanism(ControlMechanism_Base):
         #                         SO AS TO CALL _instantiate_input_states()
         self._instantiate_monitored_output_states(states_spec, context=context)
 
-def compute_EVC(args):
+def _compute_EVC(args):
     """compute EVC for a specified allocation policy
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool

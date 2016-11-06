@@ -9,5 +9,7 @@ Projections
    LearningSignal
 
 .. automodule:: Projection
+
+..
    :members:
-   :exclude-members: _is_projection_spec, random
+   :exclude-members: Projection_Base, _is_projection_spec, random

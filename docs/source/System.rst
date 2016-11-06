@@ -8,4 +8,4 @@ System
 
 .. automodule:: System
    :members:
-   :exclude-members: random
+   :exclude-members: System_Base, random

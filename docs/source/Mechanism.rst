@@ -13,5 +13,5 @@ Mechanisms
 
 .. automodule:: Mechanism
    :members:
-   :exclude-members: MechanismTuple, MechanismList, random
+   :exclude-members: Mechanism_Base, MechanismTuple, MechanismList, random
 

@@ -2,4 +2,5 @@ EVC Mechanism
 =============
 
 .. automodule:: EVCMechanism
-	:members:
+   :members:
+   :exclude-members: random

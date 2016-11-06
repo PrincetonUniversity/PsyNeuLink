@@ -2,4 +2,5 @@ Mapping
 =======
 
 .. automodule:: Mapping
-	:members:
+   :members:
+   :exclude-members: random
