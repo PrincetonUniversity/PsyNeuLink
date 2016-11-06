@@ -25,7 +25,7 @@ Creating an EVCMechanism
 ------------------------
 
 An EVCMechanism can be instantiated directly by calling the class.  However, more commonly it is created
-automatically when a system is created if an EVCMechanism is specified as its ``controller`` (see
+automatically when a system is created if an EVCMechanism is specified as its ``controller`` (see System
 :ref:`System_Class_Reference`).
 
   COMMENT:
@@ -59,14 +59,13 @@ automatically when a system is created if an EVCMechanism is specified as its ``
 
   COMMENT
 
-The parameters of an EVCMechanism created automatically with a system
-can be set by assigning the their values to the corresponding attributes of the system's ``controller``,
-or by assigning a parameter specification dictionary to the params attribute of its ``controller`` using the
-following entries (see :ref:'Mechanism_Specifying_Parameters' for details of parameter specification):
+The parameters of an automatically created EVCMechanism  can be set by assigning the their values to the
+corresponding attributes of the system's ``controller``, or by assigning a parameter specification dictionary to the
+params attribute of its ``controller`` using the following entries (see :ref:`Mechanism_Specifying_Parameters` for
+details of parameter specification):
 
-    * :keyword:`MONITORED_OUTPUT_STATES` - specifies which outputStates to evaluate in the EVC calculation (see
-      :doc:`ControlMechanisms` for additional details about specifying the monitored_output_states parameter of a
-      ControlMechanism);
+    * :keyword:`MONITORED_OUTPUT_STATES` - specifies which outputStates of mechanisms in the system to evaluate in the
+      EVC calculation (see :ref:`ControlMechanism_MonitoredOutputStates` for additional details);
         COMMENT:
             ADD TO ARG AND/OR ATTRIBUTE DESCRIPTION BELOW
             # # Can be replaced with a list of OutputStates or Mechanisms
@@ -85,9 +84,8 @@ following entries (see :ref:'Mechanism_Specifying_Parameters' for details of par
 
         COMMENT
     ..
-    * :keyword:`FUNCTION` - specifies how the values of the outputStates specified by
-      :keyword:`MONITORED_OUTPUT_STATES` are combined to generate an aggregate value for each control allocation
-      policy.
+    * :keyword:`FUNCTION` - specifies how the values of the outputStates are combined to generate an aggregate **value**
+      for each *control allocation policy*.
         COMMENT:
             # NOTE: self.function serves as kwValueAggregationFunction
             # ALTERNATIVE:  IMPLEMENT FOLLOWING IN paramClassDefaults:
@@ -100,7 +98,7 @@ following entries (see :ref:'Mechanism_Specifying_Parameters' for details of par
         COMMENT
     ..
     * :keyword:`COST_AGGREGATION_FUNCTION` - specifies how costs are combined across ControlSignals to generate an
-      aggregate cost for each control allocation policy.
+      aggregate **cost** for each *control allocation policy*.
         COMMENT:
            ADD TO ARG AND/OR ATTRIBUTE DESCRIPTION BELOW
            # # kwWeight can be added, in which case it should be equal in length
@@ -108,10 +106,10 @@ following entries (see :ref:'Mechanism_Specifying_Parameters' for details of par
         COMMENT
     ..
     * :keyword:`COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined with the aggregated value
-      (i.e., the output of the ``function``) to determine the EVC for each control allocation policy.
+      (i.e., the output of the ``function``) to determine the **EVC** for each control allocation policy.
     ..
     * :keyword:`PREDICTION_MECHANISM_TYPE` - specifies the type of prediction mechanism used to generate the input
-      to the system for each simulation run by the EVCMechanism (see :ref:`EVCMechanism_Execution).
+      to the system for each simulation run by the EVCMechanism (see :ref:`EVCMechanism_Execution`).
         COMMENT:
            ADD TO ARG AND/OR ATTRIBUTE DESCRIPTION BELOW
            # # Mechanism class used for prediction mechanism(s)
@@ -127,7 +125,7 @@ following entries (see :ref:'Mechanism_Specifying_Parameters' for details of par
         COMMENT
     ..
     * :keyword:`SAVE_ALL_VALUES_AND_POLICIES` - specifies whether to save the results of the full EVC evaluation
-      (see '`EVCvalues`` and ``EVCpolicies`` attributes in :ref:`EVC_Mechanism_Class_Reference`)
+      (see ``EVCvalues`` and ``EVCpolicies`` attributes in :ref:`EVCMechanism_Class_Reference`)
         COMMENT:
            ADD TO ARG AND/OR ATTRIBUTE DESCRIPTION BELOW
            # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
