@@ -161,7 +161,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
           a count for all instances of that type, and a dictionary of those instances
 
     Naming:
-        Function functions are named by their functionName attribute (usually = functionType)
+        Function functions are named by their functionName attribute (usually = componentType)
 
     Class attributes:
         + functionCategory: kwFunctionCategory
@@ -176,7 +176,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         none
 
     Instance attributes:
-        + functionType (str):  assigned by subclasses
+        + componentType (str):  assigned by subclasses
         + functionName (str):   assigned by subclasses
         + variable (value) - used as input to function's execute method
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
@@ -295,7 +295,7 @@ class Contradiction(Function_Base): # Example
 
     # Function functionName and type (defined at top of module)
     functionName = kwContradiction
-    functionType = kwExampleFunction
+    componentType = kwExampleFunction
 
     # Variable class default
     # This is used both to type-cast the variable, and to initialize variableInstanceDefault
@@ -439,7 +439,7 @@ class Contradiction(Function_Base): # Example
 #endregion
 
 class CombinationFunction(Function_Base):
-    functionType = kwCombinationFunction
+    componentType = kwCombinationFunction
 
 kwLinearCombinationInitializer = "Initializer"
 
@@ -708,7 +708,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #endregion
 
 class TransferFunction(Function_Base):
-    functionType = kwTransferFunction
+    componentType = kwTransferFunction
 
 
 class Linear(TransferFunction): # --------------------------------------------------------------------------------------
@@ -1486,7 +1486,7 @@ def random_matrix(sender, receiver, range=1, offset=0):
 #  DDM_NavarroAndFuss
 
 class IntegratorFunction(Function_Base):
-    functionType = kwIntegratorFunction
+    componentType = kwIntegratorFunction
 
 
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
@@ -1877,7 +1877,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 class LearningFunction(Function_Base):
-    functionType = kwLearningFunction
+    componentType = kwLearningFunction
 
 
 LEARNING_RATE = "learning_rate"
@@ -1920,7 +1920,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                  learning_rate:parameter_spec=1,
                  params=None,
                  prefs:is_pref_set=None,
-                 context='Function Init'):
+                 context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_function=activation_function,
@@ -2029,7 +2029,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  learning_rate:parameter_spec=1,
                  params=None,
                  prefs:is_pref_set=None,
-                 context='Function Init'):
+                 context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_function=activation_function,

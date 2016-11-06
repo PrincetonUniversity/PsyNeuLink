@@ -55,7 +55,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                    param_defaults={OFFSET:0,
                                                                    SCALE:1,
                                                                    OPERATION:LinearCombination.Operation.SUM},
-                                                   context=functionType+kwValueAggregationFunction),
+                                                   context=componentType+kwValueAggregationFunction),
         # INSTANTIATION:
         # - specification of system:  required param: SYSTEM
         # - kwDefaultController:  True =>
@@ -98,14 +98,14 @@ class EVCMechanism(ControlMechanism_Base):
                                #                 LinearCombination(offset=0.0,
                                #                                   scale=1.0,
                                #                                   operation=LinearCombination.Operation.SUM,
-                               #                                   context=functionType+kwCostAggregationFunction),
+                               #                                   context=componentType+kwCostAggregationFunction),
                                # # CostApplicationFunction specifies how aggregated cost is combined with
                                # #     aggegated value computed by function to determine EVC
                                # kwCostApplicationFunction:
                                #                  LinearCombination(offset=0.0,
                                #                                    scale=1,
                                #                                    operation=LinearCombination.Operation.SUM,
-                               #                                    context=functionType+kwCostApplicationFunction),
+                               #                                    context=componentType+kwCostApplicationFunction),
                                # # Mechanism class used for prediction mechanism(s)
                                # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
                                # #       and assigned an outputState named based on the same
@@ -158,7 +158,7 @@ class EVCMechanism(ControlMechanism_Base):
         # - compute evaluation function, and keep track of performance outcomes
 
     Class attributes:
-        + functionType (str): System Default Mechanism
+        + componentType (str): System Default Mechanism
         + paramClassDefaults (dict):
             + SYSTEM (System)
             + MONITORED_OUTPUT_STATES (list of Mechanisms and/or OutputStates)
@@ -214,7 +214,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     """
 
-    functionType = "EVCMechanism"
+    componentType = "EVCMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
@@ -243,17 +243,17 @@ class EVCMechanism(ControlMechanism_Base):
                  cost_aggregation_function=LinearCombination(offset=0.0,
                                                              scale=1.0,
                                                              operation=SUM,
-                                                             context=functionType+kwCostAggregationFunction),
+                                                             context=componentType+kwCostAggregationFunction),
                  cost_application_function=LinearCombination(offset=0.0,
                                                              scale=1,
                                                              operation=SUM,
-                                                             context=functionType+kwCostApplicationFunction),
+                                                             context=componentType+kwCostApplicationFunction),
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=functionType+kwInit):
+                 context=componentType+kwInit):
 
         monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
         prediction_mechanism_params = prediction_mechanism_params or {MONITORED_OUTPUT_STATES:None}

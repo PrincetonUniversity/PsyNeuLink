@@ -81,7 +81,7 @@ class Comparator(MonitoringMechanism_Base):
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
-        + functionType (str): Comparator
+        + componentType (str): Comparator
         + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
@@ -109,7 +109,7 @@ class Comparator(MonitoringMechanism_Base):
 
     """
 
-    functionType = "Comparator"
+    componentType = "Comparator"
     # onlyFunctionOnInit = True
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
@@ -160,13 +160,13 @@ class Comparator(MonitoringMechanism_Base):
         params = self._assign_args_to_param_dicts(comparison_operation=comparison_operation,
                                                  params=params)
 
-        # Assign functionType to self.name as default;
+        # Assign componentType to self.name as default;
         #  will be overridden with instance-indexed name in call to super
         if not name:
-            self.name = self.functionType
+            self.name = self.componentType
         else:
             self.name = name
-        self.functionName = self.functionType
+        self.functionName = self.componentType
 
         if default_sample_and_target is NotImplemented:
             default_sample_and_target = self.variableClassDefault

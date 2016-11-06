@@ -71,7 +71,7 @@ class State_Base(State):
 
     Subclasses:
         Must implement:
-            functionType
+            componentType
             ParamClassDefaults with:
                 + FUNCTION (or <subclass>.function
                 + FUNCTION_PARAMS (optional)

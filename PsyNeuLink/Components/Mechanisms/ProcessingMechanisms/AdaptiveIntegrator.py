@@ -47,7 +47,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         If this argument is omitted, it will be assigned "SigmoidLayer" with a hyphenated, indexed suffix ('SigmoidLayer-n')
 
     Class attributes:
-        + functionType (str): SigmoidLayer
+        + componentType (str): SigmoidLayer
         + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
@@ -70,7 +70,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     Instance methods:
     """
 
-    functionType = "SigmoidLayer"
+    componentType = "SigmoidLayer"
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences

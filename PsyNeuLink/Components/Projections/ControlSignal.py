@@ -83,7 +83,7 @@ class ControlSignal(Projection_Base):
     """Implement projection that controls a parameter value (default: IdentityMapping)
 
     Description:
-        The ControlSignal class is a functionType in the Projection category of Function,
+        The ControlSignal class is a componentType in the Projection category of Function,
         It:
            - takes an allocation (scalar) as its input (self.variable)
            - uses self.function (params[FUNCTION]) to compute intensity based on allocation from self.sender,
@@ -209,8 +209,8 @@ class ControlSignal(Projection_Base):
 
     color = 0
 
-    functionType = CONTROL_SIGNAL
-    className = functionType
+    componentType = CONTROL_SIGNAL
+    className = componentType
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE

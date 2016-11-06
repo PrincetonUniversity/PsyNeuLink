@@ -6,16 +6,16 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ***********************************************  Function ************************************************************
+# ********************************************** Component  ************************************************************
 #
 
-"""  FUNCTION MODULE
+"""  COMPONENT MODULE
 
-This module defines the Function abstract class
+This module defines the Component abstract class
 
 It also contains:
 
-- arg_name definitions for primary function categories:
+- arg_name definitions for primary component categories:
     Process
     Mechanism
         types:
@@ -25,24 +25,8 @@ It also contains:
         types:
             Mapping
             ControlSignal
-    [Learning]
-        types:
-            Vectorial
-            Reinforcement
+            LearningSignal
     Function
-
-- Definitions for a set of standard Function function types:
-    Example
-        Contradiction
-    Combination:
-        LinearCombination
-        [Polynomial]
-    Transfer:
-        Linear
-        Exponential
-        Integrator
-        LinearMatrix
-    [Distribution]
 
 """
 
@@ -207,7 +191,7 @@ class Component(object):
         + className
         + suffix - " " + className (used to create subclass and instance names)
         + functionCategory - category of component (i.e., process, mechanism, projection, learning, function)
-        + functionType - type of function within a category (e.g., transfer, distribution, mapping, controlSignal, etc.)
+        + componentType - type of function within a category (e.g., transfer, distribution, mapping, controlSignal, etc.)
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
 
     Class methods:
@@ -246,7 +230,7 @@ class Component(object):
     suffix = " " + className
 # IMPLEMENTATION NOTE:  *** CHECK THAT THIS DOES NOT CAUSE ANY CHANGES AT SUBORDNIATE LEVELS TO PROPOGATE EVERYWHERE
     functionCategory = None
-    functionType = None
+    componentType = None
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
@@ -309,7 +293,7 @@ class Component(object):
         self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
-        self.functionName = self.functionType
+        self.functionName = self.componentType
 
         #endregion
 

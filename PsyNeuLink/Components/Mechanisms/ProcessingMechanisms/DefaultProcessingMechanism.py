@@ -22,7 +22,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         Implements "dummy" mechanism used to implement default input, control signals, and outputs to other mechanisms
 
     Class attributes:
-        + functionType (str): System Default Mechanism
+        + componentType (str): System Default Mechanism
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
@@ -30,7 +30,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
             + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
-    functionType = "DefaultProcessingMechanism"
+    componentType = "DefaultProcessingMechanism"
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE

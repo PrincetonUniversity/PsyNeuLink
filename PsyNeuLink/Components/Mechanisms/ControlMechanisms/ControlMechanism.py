@@ -142,7 +142,7 @@ class ControlMechanism_Base(Mechanism_Base):
                     * it is overridden for any mechanism for which outputStates are explicitly listed
 
     Class attributes:
-        + functionType (str): System Default Mechanism
+        + componentType (str): System Default Mechanism
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
@@ -165,7 +165,7 @@ class ControlMechanism_Base(Mechanism_Base):
     - controlSignalCosts (np.array):  current cost for controlSignals associated with each outputState
     """
 
-    functionType = "ControlMechanism"
+    componentType = "ControlMechanism"
 
     initMethod = INIT_FUNCTION_METHOD_ONLY
 

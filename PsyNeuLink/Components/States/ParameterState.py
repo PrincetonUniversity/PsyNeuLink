@@ -78,10 +78,10 @@ class ParameterStateError(Exception):
 class ParameterState(State_Base):
     """Implement subclass type of State that represents parameter value for function of a Mechanism
 
-    Definition for ParameterState functionType in State category of Function class
+    Definition for ParameterState componentType in State category of Function class
 
     Description:
-        The ParameterState class is a functionType in the State category of Function,
+        The ParameterState class is a componentType in the State category of Function,
         Its FUNCTION executes the projections that it receives and updates the ParameterState's value
 
     Instantiation:
@@ -124,7 +124,7 @@ class ParameterState(State_Base):
             - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
     Class attributes:
-        + functionType (str) = kwMechanisParameterState
+        + componentType (str) = kwMechanisParameterState
         + classPreferences
         + classPreferenceLevel (PreferenceLevel.Type)
         + paramClassDefaults (dict)
@@ -156,7 +156,7 @@ class ParameterState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    functionType = kwParameterState
+    componentType = kwParameterState
     paramsType = PARAMETER_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE

@@ -79,7 +79,7 @@ class WeightedError(MonitoringMechanism_Base):
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
-        + functionType (str): WeightedError
+        + componentType (str): WeightedError
         + classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (1D np.array):
@@ -102,7 +102,7 @@ class WeightedError(MonitoringMechanism_Base):
             calculates and returns weighted error array (in self.value and values of self.outputStates)
     """
 
-    functionType = "WeightedError"
+    componentType = "WeightedError"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences

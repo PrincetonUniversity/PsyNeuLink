@@ -111,7 +111,7 @@ class InputState(State_Base):
     """Implement subclass type of State that calculates and represents the input of a Function object
 
     Description:
-        The InputState class is a functionType in the State category of Function,
+        The InputState class is a componentType in the State category of Function,
         Its FUNCTION executes the projections that it receives and updates the InputState's value
 
     Instantiation:
@@ -150,7 +150,7 @@ class InputState(State_Base):
 
 
     Class attributes:
-        + functionType (str) = kwInputState
+        + componentType (str) = kwInputState
         + paramClassDefaults (dict)
             + FUNCTION (LinearCombination, Operation.SUM)
             + FUNCTION_PARAMS (dict)
@@ -181,7 +181,7 @@ class InputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    functionType = kwInputState
+    componentType = kwInputState
     paramsType = INPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE

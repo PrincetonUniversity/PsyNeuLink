@@ -441,7 +441,7 @@
 # IMPLEMENT: option to overrided "lazy updating" of parameterStates (and, in particular, weight matrix)
 #            -> useful for debugging;  confusing to have updates not appear until next trial
 
-# IMPLEMENT: is_<FunctionType> typespec annotation (for Function Function, Mechanism, State and Projection)
+# IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
 #               IS PROBABILITY_UPPER_BOUND THE CORRECT PARAM IN EVC System Laming Validation Test Script??

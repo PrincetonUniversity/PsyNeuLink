@@ -21,7 +21,7 @@ class Mapping(Projection_Base):
     """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
 
     Description:
-        The Mapping class is a functionType in the Projection category of Function,
+        The Mapping class is a componentType in the Projection category of Function,
         It's function conveys (and possibly transforms) the OutputState.value of a sender
             to the InputState.value of a receiver
 
@@ -82,7 +82,7 @@ class Mapping(Projection_Base):
 
     Class attributes:
         + className = MAPPING
-        + functionType = PROJECTION
+        + componentType = PROJECTION
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict)
@@ -117,8 +117,8 @@ class Mapping(Projection_Base):
         none
     """
 
-    functionType = MAPPING
-    className = functionType
+    componentType = MAPPING
+    className = componentType
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE

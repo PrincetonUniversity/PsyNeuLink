@@ -556,7 +556,7 @@ class System_Base(System):
     functionCategory = kwProcessFunctionCategory
     className = functionCategory
     suffix = " " + className
-    functionType = "System"
+    componentType = "System"
 
     registry = SystemRegistry
 

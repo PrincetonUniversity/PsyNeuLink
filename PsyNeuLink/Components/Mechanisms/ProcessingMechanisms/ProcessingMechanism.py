@@ -28,7 +28,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
     """Abstract class for processing mechanism subclasses
    """
 
-    functionType = "ProcessingMechanism"
+    componentType = "ProcessingMechanism"
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
