@@ -243,7 +243,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         # This is assigned by owner in Function._instantiate_function()
         self.owner = None
 
-        super(Function_Base, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                            param_defaults=params,
                                            name=name,
                                            prefs=prefs,
@@ -539,8 +539,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
             variable:
             context:
         """
-        super(Function_Base, self)._validate_variable(variable=variable,
-                                                    context=context)
+        super()._validate_variable(variable=variable, context=context)
 # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
 # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
 # FIX; PUT THIS IN DOCUMENTATION
@@ -576,9 +575,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
 # FIX: MAKE SURE THAT IF OPERATION IS SUBTRACT OR DIVIDE, THERE ARE ONLY TWO VECTORS
 
-        super(Function_Base, self)._validate_params(request_set=request_set,
-                                                  target_set=target_set,
-                                                  context=context)
+        super()._validate_params(request_set=request_set,
+                              target_set=target_set,
+                              context=context)
 
         # exponents = target_set[EXPONENTS]
         # weights = target_set[WEIGHTS]
@@ -1171,7 +1170,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :param context:
         :return:
         """
-        super(Function_Base, self)._validate_variable(variable, context)
+        super()._validate_variable(variable, context)
 
         # Check that self.variable == 1D
         try:
@@ -1547,9 +1546,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self.oldValue = self.paramsCurrent[kwInitializer]
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        super(Function_Base, self)._validate_params(request_set=request_set,
-                                                  target_set=target_set,
-                                                  context=context)
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
         try:
             if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
                 raise FunctionError("kwInitializer param {0} for {1} must be same type as variable {2}".
