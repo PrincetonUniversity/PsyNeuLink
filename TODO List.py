@@ -131,6 +131,14 @@
 #                 protocol (see docs for DDM)
 #              What is RT relative to time_step and ms??
 #              What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
+# QUESTION:  EVC:  Names of functions:
+#                     FUNCTION - specifies how the values of the outputStates are combined
+#                                 to generate an aggregate value for each control allocation
+#                     COST_AGGREGATION_FUNCTION` - specifies how costs are combined across ControlSignals
+#                                 to generate an aggregate cost for each control allocation policy.
+#                     COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined
+#                                 with the aggregated value (i.e., the output of the ``function``)
+#                                 to determine the EVC for each control allocation policy.
 
 #
 # -------------------
