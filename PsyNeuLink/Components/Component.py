@@ -244,6 +244,7 @@ class Component(object):
     # Determines whether variableClassDefault can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
 
+
     # Names and types of params required to be implemented in all subclass paramClassDefaults:
     # Notes:
     # *  entry values here do NOT implement the param; they are simply used as type specs for checking (in __init__)
@@ -1179,14 +1180,14 @@ class Component(object):
         function = getattr(self, param_set)[FUNCTION]
         # If it is a Function object, OK so return
 
-        if (isinstance(function, FUNCTION_BASE_CLASS) or
+        if (isinstance(function, COMPONENT_BASE_CLASS) or
                 isinstance(function, function_type) or
                 isinstance(function, method_type)):
             return function
         # Try as a Function class reference
         else:
             try:
-                is_subclass = issubclass(self.paramsCurrent[FUNCTION], FUNCTION_BASE_CLASS)
+                is_subclass = issubclass(self.paramsCurrent[FUNCTION], COMPONENT_BASE_CLASS)
             # It is not a class reference, so return None
             except TypeError:
                 return None
@@ -1244,7 +1245,7 @@ class Component(object):
         else:
             # If FUNCTION is an already instantiated method:
             if isinstance(function, method_type):
-                if issubclass(type(function.__self__), FUNCTION_BASE_CLASS):
+                if issubclass(type(function.__self__), COMPONENT_BASE_CLASS):
                     pass
                 # If it is NOT a subclass of Function,
                 # - issue warning if in VERBOSE mode
@@ -1258,7 +1259,7 @@ class Component(object):
                     function = None
 
             # If FUNCTION is a Function object, assign it to self.function (overrides hard-coded implementation)
-            elif isinstance(function, FUNCTION_BASE_CLASS):
+            elif isinstance(function, COMPONENT_BASE_CLASS):
                 self.function = function
 
             # If FUNCTION is a Function class:
@@ -1267,7 +1268,7 @@ class Component(object):
             #    - params[FUNCTION_PARAMS] (if specified)
             # - issue warning if in VERBOSE mode
             # - assign to self.function and params[FUNCTION]
-            elif inspect.isclass(function) and issubclass(function, FUNCTION_BASE_CLASS):
+            elif inspect.isclass(function) and issubclass(function, COMPONENT_BASE_CLASS):
                 #  Check if params[FUNCTION_PARAMS] is specified
                 try:
                     function_param_specs = self.paramsCurrent[FUNCTION_PARAMS].copy()
@@ -1502,7 +1503,7 @@ class Component(object):
         self.params.functionRuntimeParamsPref = setting
 
 
-FUNCTION_BASE_CLASS = Component
+COMPONENT_BASE_CLASS = Component
 
 def get_function_param(param):
     """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
