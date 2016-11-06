@@ -353,8 +353,8 @@ entries for the values of the runtime parameters for a state, its function, or i
 
 .. _Mechanism_Class_Reference:
 
-mechanism()
------------
+Class Reference
+---------------
 
 """
 

@@ -7,7 +7,84 @@
 #
 #
 # *************************************************  EVCMechanism ******************************************************
-#
+
+# *********************************************  Transfer *******************************************************
+
+"""
+..
+    Sections:
+      * :ref:`Transfer_Overview`
+      * :ref:`Transfer_Creating_A_Transfer_Mechanism`
+      * :ref:`Transfer_Execution`
+      * :ref:`Transfer_Class_Reference`
+
+.. _Transfer_Overview:
+
+Overview
+--------
+
+An EVCMechanism optimizes the expected value of control (EVC) of the System to which it belongs, by determining the
+values of its ControlSignals that maximize the values of the outputStates specified in its ``monitored_output_states``
+parameter.  It does this using the objective function specified in its ``function`` parameter. This implements a form
+of the EVC Theory described in Shenhav et al. (2013).
+
+.. _EVCMechanism_Creating_An_EVCMechanism:
+
+Creating an EVCMechanism
+------------------------
+
+An EVCMechanism can be instantiated directly by calling the class.  However, more commonly, it is created
+automatically when creating a system, and specifying an EVCMechanism as its ``controller``.
+
+Its function is specified in the ``function``
+argument, which can be simply the name of the class (first example below), or a call to the class which can
+include arguments specifying the function's parameters (second example)::
+
+    my_linear_transfer_mechanism = Transfer(function=Linear)
+    my_logistic_transfer_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4)
+
+In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
+
+.. _Transfer_Execution:
+
+Execution
+---------
+
+When a Transfer mechanism is executed, it transforms its input using the specified function and the following
+parameters (in addition to those specified for the function):
+
+If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
+If the ``rate`` parameter is specified and ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the input is
+exponentially time-averaged before transforming it (higher value specifies faster rate); if ``time_scale`` is
+:keyword:`TimeScale.TIME_STEP` the ``rate`` parameter is ignored.
+If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
+the range.
+After each execution of the mechanism:
+    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`RESULT` outputState,
+      and to the 1st item of the mechanism's ``outputValue`` attribute;
+    ..
+    * **mean** of the result is assigned to the value of the mechanism's :keyword:`RESULT_MEAN` outputState,
+      and to the 2nd item of the mechanism's ``outputValue`` attribute;
+    ..
+    * **variance** of the result is assigned to the value of the mechanism's :keyword:`RESULT_VARIANCE` outputState,
+      and to the 3rd item of the mechanism's ``outputValue`` attribute.
+
+
+COMMENT:
+    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
+    Notes:
+    * Transfer handles "runtime" parameters (specified in call to function) differently than standard functions:
+        any specified params are kept separate from paramsCurrent (Which are not overridden)
+        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
+            corresponding ParameterState;  that is, they are combined additively with controlSignal output
+COMMENT
+
+.. _Transfer_Class_Reference:
+
+Class Reference
+---------------
+
+"""
 
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
@@ -39,8 +116,22 @@ class EVCError(Exception):
 
 
 class EVCMechanism(ControlMechanism_Base):
-    """Maximize EVC over specified set of control signals for values of monitored states
+    """EVCMechanism(                                                                 \
+    default_input_value=None,                                                        \
+    function=LinearCombination(offset=0,scale=1,operation=PRODUCT),                  \
+    monitored_output_states=None,                                                    \
+    save_all_values_and_policies:bool=False,                                         \
+    cost_aggregation_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM), \
+    cost_application_function=LinearCombination(offset=0.0,scale=1,operation=SUM),   \
+    prediction_mechanism_type=AdaptiveIntegratorMechanism,                           \
+    prediction_mechanism_params=None,                                                \
+    params=None,                                                                     \
+    name=None,                                                                       \
+    prefs=None)
 
+    Optimizes the ControlSignals for a System.
+
+    COMMENT:
     Description:
         + Implements EVC maximization (Shenhav et al. 2013)
         [DOCUMENATION HERE:]
@@ -62,97 +153,95 @@ class EVCMechanism(ControlMechanism_Base):
         #         list of projections to add (and for which outputStates should be added)
         # - inputStates: one for each performance/environment variable monitiored
 
-# DOCUMENT:
-# 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
-#        and a Process for each pair: [origin, IDENTITY_MATRIX, prediction]
-# 2) Implement self.simulatedSystem that, for each originMechanism
-#        replaces Process.inputState with predictionMechanism.value
-# 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
-#    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
-#                (e.g., when learning is implemented)
-# 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
+    # DOCUMENT:
+    # 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
+    #        and a Process for each pair: [origin, IDENTITY_MATRIX, prediction]
+    # 2) Implement self.simulatedSystem that, for each originMechanism
+    #        replaces Process.inputState with predictionMechanism.value
+    # 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
+    #    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
+    #                (e.g., when learning is implemented)
+    # 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
 
 
-# ARGS/ PARAMS:
-                               # # Assigns EVCMechanism, when instantiated, as the DefaultController
-                               # MAKE_DEFAULT_CONTROLLER:True,
-                               # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
-                               # kwSaveAllValuesAndPolicies: False,
-                               # # Can be replaced with a list of OutputStates or Mechanisms
-                               # #     the values of which are to be monitored
-                               # MONITORED_OUTPUT_STATES: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-                               # # function and params specifies value aggregation function
-                               # FUNCTION: LinearCombination,
-                               # FUNCTION_PARAMS: {OFFSET: 0,
-                               #                    SCALE: 1,
-                               #                    # Must be a vector with length = length of MONITORED_OUTPUT_STATES
-                               #                    # WEIGHTS: [1],
-                               #                    OPERATION: LinearCombination.Operation.PRODUCT},
-                               # # CostAggregationFunction specifies how costs are combined across ControlSignals
-                               # # kwWeight can be added, in which case it should be equal in length
-                               # #     to the number of outputStates (= ControlSignal Projections)
-                               # kwCostAggregationFunction:
-                               #                 LinearCombination(offset=0.0,
-                               #                                   scale=1.0,
-                               #                                   operation=LinearCombination.Operation.SUM,
-                               #                                   context=componentType+kwCostAggregationFunction),
-                               # # CostApplicationFunction specifies how aggregated cost is combined with
-                               # #     aggegated value computed by function to determine EVC
-                               # kwCostApplicationFunction:
-                               #                  LinearCombination(offset=0.0,
-                               #                                    scale=1,
-                               #                                    operation=LinearCombination.Operation.SUM,
-                               #                                    context=componentType+kwCostApplicationFunction),
-                               # # Mechanism class used for prediction mechanism(s)
-                               # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
-                               # #       and assigned an outputState named based on the same
-                               # kwPredictionMechanismType:AdaptiveIntegratorMechanism,
-                               # # Params passed to PredictionMechanismType on instantiation
-                               # # Note: same set will be passed to all PredictionMechanisms
-                               # kwPredictionMechanismParams:{MONITORED_OUTPUT_STATES:None}
+    # ARGS/ PARAMS:
+       # # Assigns EVCMechanism, when instantiated, as the DefaultController
+       # MAKE_DEFAULT_CONTROLLER:True,
+       # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
+       # kwSaveAllValuesAndPolicies: False,
+       # # Can be replaced with a list of OutputStates or Mechanisms
+       # #     the values of which are to be monitored
+       # MONITORED_OUTPUT_STATES: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+       # # function and params specifies value aggregation function
+       # FUNCTION: LinearCombination,
+       # FUNCTION_PARAMS: {OFFSET: 0,
+       #                    SCALE: 1,
+       #                    # Must be a vector with length = length of MONITORED_OUTPUT_STATES
+       #                    # WEIGHTS: [1],
+       #                    OPERATION: LinearCombination.Operation.PRODUCT},
+       # # CostAggregationFunction specifies how costs are combined across ControlSignals
+       # # kwWeight can be added, in which case it should be equal in length
+       # #     to the number of outputStates (= ControlSignal Projections)
+       # kwCostAggregationFunction:
+       #                 LinearCombination(offset=0.0,
+       #                                   scale=1.0,
+       #                                   operation=LinearCombination.Operation.SUM,
+       #                                   context=componentType+kwCostAggregationFunction),
+       # # CostApplicationFunction specifies how aggregated cost is combined with
+       # #     aggegated value computed by function to determine EVC
+       # kwCostApplicationFunction:
+       #                  LinearCombination(offset=0.0,
+       #                                    scale=1,
+       #                                    operation=LinearCombination.Operation.SUM,
+       #                                    context=componentType+kwCostApplicationFunction),
+       # # Mechanism class used for prediction mechanism(s)
+       # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
+       # #       and assigned an outputState named based on the same
+       # kwPredictionMechanismType:AdaptiveIntegratorMechanism,
+       # # Params passed to PredictionMechanismType on instantiation
+       # # Note: same set will be passed to all PredictionMechanisms
+       # kwPredictionMechanismParams:{MONITORED_OUTPUT_STATES:None}
 
 
+    # NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
 
+    # DESCRIBE USE OF MonitoredOutputStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR STATES
+    # CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ STATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
+    #              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
 
-# NOTE THAT EXCECUTE METHOD ~ ValueAggregationFunction (i.e,. analogous to CostAggregationFunction
+    # GET FROM System AND/OR Mechanism
+    #     MONITORED_OUTPUT_STATES must be list of Mechanisms or OutputStates in Mechanisms that are in SYSTEM
+    #     if Mechanism is specified in MONITORED_OUTPUT_STATES, all of its outputStates are used
+    #     MONITORED_OUTPUT_STATES assigns a Mapping Projection from each outputState to a new inputState in self.inputStates
+    #     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC and
+    #     then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
+                    this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
 
-# DESCRIBE USE OF MonitoredOutputStatesOptions VS. EXPLICIT SPECIFICADTION OF MECHANISM AND/OR STATES
-# CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ STATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST = #STATES SPECIFIED
-#              OTHEREWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
+            #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
+            #        this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
+            #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
+            # - specification of function: default is default allocation policy (BADGER/GUMBY)
+            #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+            #                  and names in list in kwMonitor must match those in INPUT_STATES
 
-# GET FROM System AND/OR Mechanism
-#     MONITORED_OUTPUT_STATES must be list of Mechanisms or OutputStates in Mechanisms that are in SYSTEM
-#     if Mechanism is specified in MONITORED_OUTPUT_STATES, all of its outputStates are used
-#     MONITORED_OUTPUT_STATES assigns a Mapping Projection from each outputState to a new inputState in self.inputStates
-#     function uses LinearCombination to apply a set of weights to the value of each monitored state to compute EVC and
-#     then searches space of control signals (using allocationSamples for each) to find combiantion that maxmizes EVC
-                this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
+    #      OBJECTIVE FUNCTION FOR exeuteMethod:
+    #      Applies linear combination to values of monitored states (self.inputStates)
+    #      function is LinearCombination, with weights = linear terms
+    #      FUNCTION_PARAMS = WEIGHTS
+    #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
+                currently, it is specified as an instantiated function rather than a reference to a class
+    #      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
+     (          default: LinearCombination)
+                currently, it is specified as an instantiated function rather than a reference to a class
 
-        #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
-        #        this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
-        #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
-        # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
-        #                  and names in list in kwMonitor must match those in INPUT_STATES
-
-#      OBJECTIVE FUNCTION FOR exeuteMethod:
-#      Applies linear combination to values of monitored states (self.inputStates)
-#      function is LinearCombination, with weights = linear terms
-#      FUNCTION_PARAMS = WEIGHTS
-#      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
-            currently, it is specified as an instantiated function rather than a reference to a class
-#      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
- (          default: LinearCombination)
-            currently, it is specified as an instantiated function rather than a reference to a class
-
-        # EVALUATION:
-        # - function with one variable item (1D array) for each inputState
-        # - mapping projections from monitored states to inputStates
-        # - control signal projections established automatically by system implementation (using kwConrolSignal)
-        #
-        # EXECUTION:
-        # - call system.execute for each point in search space
-        # - compute evaluation function, and keep track of performance outcomes
+            # EVALUATION:
+            # - function with one variable item (1D array) for each inputState
+            # - mapping projections from monitored states to inputStates
+            # - control signal projections established automatically by system implementation (using kwConrolSignal)
+            #
+            # EXECUTION:
+            # - call system.execute for each point in search space
+            # - compute evaluation function, and keep track of performance outcomes
 
     Class attributes:
         + componentType (str): System Default Mechanism
@@ -208,6 +297,7 @@ class EVCMechanism(ControlMechanism_Base):
              validates state as Mechanism or OutputState specification;
              adds inputState to self.inputStates with Mapping Projection from state
              Note:  used by other objects to add outputState(s) to be monitored by EVC
+    COMMENT
 
     """
 
@@ -233,7 +323,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
                  monitored_output_states:tc.optional(list)=None,
                  save_all_values_and_policies:bool=False,
