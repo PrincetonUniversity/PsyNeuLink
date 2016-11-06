@@ -11,21 +11,13 @@
 # *********************************************  Transfer *******************************************************
 
 """
-..
-    Sections:
-      * :ref:`Transfer_Overview`
-      * :ref:`Transfer_Creating_A_Transfer_Mechanism`
-      * :ref:`Transfer_Execution`
-      * :ref:`Transfer_Class_Reference`
-
-.. _Transfer_Overview:
-
 Overview
 --------
 
-An EVCMechanism optimizes the expected value of control (EVC) of the System to which it belongs, by determining the
-values of its ControlSignals that maximize the values of the outputStates specified in its ``monitored_output_states``
-parameter.  It does this using the objective function specified in its ``function`` parameter. This implements a form
+An EVCMechanism optimizes the expected value of control (EVC) of the System to which it belongs.  It does this by
+sampling combinations of ControlSignal values — each of which is called a "control allocation policy" — and selecting
+the combination that yields the greatest value over the outputStates it monitors (``monitored_output_states``
+parameter), as determined by its objective function (``function`` parameter).  This implements a form
 of the EVC Theory described in Shenhav et al. (2013).
 
 .. _EVCMechanism_Creating_An_EVCMechanism:
@@ -33,53 +25,49 @@ of the EVC Theory described in Shenhav et al. (2013).
 Creating an EVCMechanism
 ------------------------
 
-An EVCMechanism can be instantiated directly by calling the class.  However, more commonly, it is created
-automatically when creating a system, and specifying an EVCMechanism as its ``controller``.
+An EVCMechanism can be instantiated directly by calling the class.  However, more commonly it is created
+automatically when a system is created, and an EVCMechanism is specified as its ``controller`` (see
+:ref:`System_Class_Reference`).  The parameters of an EVCMechanism created automatically with a system
+are set by assigning the their values to the corresponding attributes of the system's ``controller``,
+or by assigning a specification dictionary to the params attribute of the system's ``controller`` (see example
+below), using the following entries:
 
-Its function is specified in the ``function``
-argument, which can be simply the name of the class (first example below), or a call to the class which can
-include arguments specifying the function's parameters (second example)::
-
-    my_linear_transfer_mechanism = Transfer(function=Linear)
-    my_logistic_transfer_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4)
-
-In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
-
-.. _Transfer_Execution:
-
-Execution
----------
-
-When a Transfer mechanism is executed, it transforms its input using the specified function and the following
-parameters (in addition to those specified for the function):
-
-If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
-If the ``rate`` parameter is specified and ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, the input is
-exponentially time-averaged before transforming it (higher value specifies faster rate); if ``time_scale`` is
-:keyword:`TimeScale.TIME_STEP` the ``rate`` parameter is ignored.
-If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
-the range.
-After each execution of the mechanism:
-    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`RESULT` outputState,
-      and to the 1st item of the mechanism's ``outputValue`` attribute;
+    * :keyword:`MONITORED_OUTPUT_STATES` - specifies which outputStates to evaluate in the EVC calculation (see
+      :doc:`ControlMechanisms` for additional details about specifying the monitored_output_states parameter of a
+      ControlMechanism);
     ..
-    * **mean** of the result is assigned to the value of the mechanism's :keyword:`RESULT_MEAN` outputState,
-      and to the 2nd item of the mechanism's ``outputValue`` attribute;
+    * :keyword:`FUNCTION` - specifies the objective function to use in calculating the EVC (see below);
     ..
-    * **variance** of the result is assigned to the value of the mechanism's :keyword:`RESULT_VARIANCE` outputState,
-      and to the 3rd item of the mechanism's ``outputValue`` attribute.
+    * :keyword:`SAVE_ALL_VALUES_AND_POLICIES` - specifies whether to save the results of the full EVC evaluation
+      (see '`EVCvalues`` and ``EVCpolicies`` attributes of EVC in :ref:`EVC_Mechanism_Class_Reference`)
+    ..
+    * :keyword:`COST_AGGREGATION_FUNCTION` - specifies the objective function to use in calculating the EVC (see below).
+    ..
+    * :keyword:`COST_APPLICATION_FUNCTION` - specifies the objective function to use in calculating the EVC (see below).
 
+EXAMPLE HERE
 
-COMMENT:
-    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
-    Notes:
-    * Transfer handles "runtime" parameters (specified in call to function) differently than standard functions:
-        any specified params are kept separate from paramsCurrent (Which are not overridden)
-        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-            corresponding ParameterState;  that is, they are combined additively with controlSignal output
-COMMENT
+outputStates to
+use in evaluating
+ControlSignals, and the
+allocations,
+the EVC ``function``,
+the parameters of the
 
-.. _Transfer_Class_Reference:
+Allocations and allocation range
+Setting control signals:  assign ControlSignal to mechanism params
+Objective function
+simulation
+
+.. _EVCMechanism_Structure:
+
+Function
+--------
+
+Objective function and how it is handled
+Returns:
+
+.. _EVCMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -168,7 +156,7 @@ class EVCMechanism(ControlMechanism_Base):
        # # Assigns EVCMechanism, when instantiated, as the DefaultController
        # MAKE_DEFAULT_CONTROLLER:True,
        # # Saves all ControlAllocationPolicies and associated EVC values (in addition to max)
-       # kwSaveAllValuesAndPolicies: False,
+       # SAVE_ALL_VALUES_AND_POLICIES: False,
        # # Can be replaced with a list of OutputStates or Mechanisms
        # #     the values of which are to be monitored
        # MONITORED_OUTPUT_STATES: [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
@@ -182,18 +170,18 @@ class EVCMechanism(ControlMechanism_Base):
        # # CostAggregationFunction specifies how costs are combined across ControlSignals
        # # kwWeight can be added, in which case it should be equal in length
        # #     to the number of outputStates (= ControlSignal Projections)
-       # kwCostAggregationFunction:
+       # COST_AGGREGATION_FUNCTION:
        #                 LinearCombination(offset=0.0,
        #                                   scale=1.0,
        #                                   operation=LinearCombination.Operation.SUM,
-       #                                   context=componentType+kwCostAggregationFunction),
+       #                                   context=componentType+COST_AGGREGATION_FUNCTION),
        # # CostApplicationFunction specifies how aggregated cost is combined with
        # #     aggegated value computed by function to determine EVC
-       # kwCostApplicationFunction:
+       # COST_APPLICATION_FUNCTION:
        #                  LinearCombination(offset=0.0,
        #                                    scale=1,
        #                                    operation=LinearCombination.Operation.SUM,
-       #                                    context=componentType+kwCostApplicationFunction),
+       #                                    context=componentType+COST_APPLICATION_FUNCTION),
        # # Mechanism class used for prediction mechanism(s)
        # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
        # #       and assigned an outputState named based on the same
@@ -228,9 +216,9 @@ class EVCMechanism(ControlMechanism_Base):
     #      Applies linear combination to values of monitored states (self.inputStates)
     #      function is LinearCombination, with weights = linear terms
     #      FUNCTION_PARAMS = WEIGHTS
-    #      Cost is aggregated over controlSignal costs using kwCostAggregationFunction (default: LinearCombination)
+    #      Cost is aggregated over controlSignal costs using COST_AGGREGATION_FUNCTION (default: LinearCombination)
                 currently, it is specified as an instantiated function rather than a reference to a class
-    #      Cost is combined with values (aggregated by function) using kwCostApplicationFunction
+    #      Cost is combined with values (aggregated by function) using COST_APPLICATION_FUNCTION
      (          default: LinearCombination)
                 currently, it is specified as an instantiated function rather than a reference to a class
 
@@ -330,11 +318,11 @@ class EVCMechanism(ControlMechanism_Base):
                  cost_aggregation_function=LinearCombination(offset=0.0,
                                                              scale=1.0,
                                                              operation=SUM,
-                                                             context=componentType+kwCostAggregationFunction),
+                                                             context=componentType+COST_AGGREGATION_FUNCTION),
                  cost_application_function=LinearCombination(offset=0.0,
                                                              scale=1,
                                                              operation=SUM,
-                                                             context=componentType+kwCostApplicationFunction),
+                                                             context=componentType+COST_APPLICATION_FUNCTION),
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  params=None,
@@ -940,7 +928,7 @@ class EVCMechanism(ControlMechanism_Base):
                 # max_result([t1, t2], key=lambda x: x1)
 
                 # Add to list of EVC values and allocation policies if save option is set
-                if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
+                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
                     EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
                     # Save policy associated with EVC for each process, as order of chunks
@@ -976,14 +964,14 @@ class EVCMechanism(ControlMechanism_Base):
                 self.EVCmaxStateValues = max_of_max_tuples[1]
                 self.EVCmaxPolicy = max_of_max_tuples[2]
 
-                if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
+                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     self.EVCvalues = np.concatenate(Comm.allgather(EVC_values), axis=0)
                     self.EVCpolicies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
             else:
                 self.EVCmax = EVC_max
                 self.EVCmaxStateValues = EVC_max_state_values
                 self.EVCmaxPolicy = EVC_max_policy
-                if self.paramsCurrent[kwSaveAllValuesAndPolicies]:
+                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
             # TEST PRINT:
@@ -1160,7 +1148,7 @@ def _compute_EVC(args):
             ctlr.controlSignalCosts[j] = np.atleast_2d(projection.cost)
             j += 1
 
-    total_current_control_cost = ctlr.paramsCurrent[kwCostAggregationFunction].function(ctlr.controlSignalCosts)
+    total_current_control_cost = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(ctlr.controlSignalCosts)
 
     # Get value of current policy = weighted sum of values of monitored states
     # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
@@ -1171,7 +1159,7 @@ def _compute_EVC(args):
                                        context=context)
 
     # Calculate EVC for the result (default: total value - total cost)
-    EVC_current = ctlr.paramsCurrent[kwCostApplicationFunction].function([total_current_value,
+    EVC_current = ctlr.paramsCurrent[COST_APPLICATION_FUNCTION].function([total_current_value,
                                                                           -total_current_control_cost])
 
     # #TEST PRINT:
