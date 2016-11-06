@@ -25,33 +25,38 @@ Creating an EVCMechanism
 ------------------------
 
 An EVCMechanism can be instantiated directly by calling the class.  However, more commonly it is created
-automatically when a system is created if an EVCMechanism is specified as its ``controller`` (see System
-:ref:`System_Class_Reference`).
+automatically when a system is created that has an EVCMechanism specified as its ``controller`` (see System
+:ref:`System_Class_Reference`).  When this occurs, PsyNeuLink configures the EVCMechanism as follows:
+
+  * For each outputState listed in its ``monitoredOutputStates`` attribute, an inputState is added to the
+    EVCMechanism, and a :doc:`Mapping` projection is assigned from that outputState to the inputState created
+    for the EVCMechanism.  These projections allow the EVCMechanism to monitor the value of the outputstates in its
+    ``monitoredOutputStates`` list.
+
+  * For each :keyword:`ORIGIN` (input) mechanism in the system, a new *prediction mechanism* is created,
+    it is assigned a Mapping projection from the :keyword:`ORIGIN` mechanism, and the pair are placed in their own
+    *prediction process* (these are stored in the ``predictionMechanisms`` and ``predictionProcesses`` attributes of
+    the system, respectively; see :ref:`EVCMechanism_Execution` for how the prediction mechanism is used).
+
+  * Finally, any existing :doc:`ControlSignal` projections in the system are transfered to the EVCMechanism:  for each
+    parameter specified for control (see [LINK]), an outputState is added to the EVCMechanism, and a ControlSignal
+    projection is assigned from that outputState to the parameterState associated with the parameter.
 
   COMMENT:
-    When EVCMechanism is created, PsyNeuLink also
-
-    # 1) Add a predictionMechanism for each origin (input) Mechanism in self.system,
-    #        and a Process for each pair: [origin, IDENTITY_MATRIX, prediction]
-    # 2) Implement self.simulatedSystem that, for each originMechanism
-    #        replaces Process.inputState with predictionMechanism.value
-    # 3) Modify EVCMechanism.update() to execute self.simulatedSystem rather than self.system
-    #    CONFIRM: EVCMechanism.system is never modified in a way that is not reflected in EVCMechanism.simulatedSystem
-    #                (e.g., when learning is implemented)
-    # 4) Implement controlSignal allocations for optimal allocation policy in EVCMechanism.system
-
     # - specification of system:  required param: SYSTEM
     # - kwDefaultController:  True =>
     #         takes over all projections from default Controller;
     #         does not take monitored states (those are created de-novo)
     # TBI: - CONTROL_SIGNAL_PROJECTIONS:
     #         list of projections to add (and for which outputStates should be added)
+
     # - inputStates: one for each performance/environment variable monitiored
 
     ControlSignal Specification:
     #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
     #        this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
     #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
+
     # - specification of function: default is default allocation policy (BADGER/GUMBY)
     #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
     #                  and names in list in kwMonitor must match those in INPUT_STATES
@@ -59,10 +64,10 @@ automatically when a system is created if an EVCMechanism is specified as its ``
 
   COMMENT
 
-The parameters of an automatically created EVCMechanism  can be set by assigning the their values to the
-corresponding attributes of the system's ``controller``, or by assigning a parameter specification dictionary to the
-params attribute of its ``controller`` using the following entries (see :ref:`Mechanism_Specifying_Parameters` for
-details of parameter specification):
+The parameters of an EVCMechanism created for a system can be set by assigning the their values to the corresponding
+attributes of the system's ``controller``, or by assigning a parameter specification dictionary to the params
+attribute of its ``controller`` using the following keys for its entries (see :ref:`Mechanism_Specifying_Parameters`
+for details of parameter specification):
 
     * :keyword:`MONITORED_OUTPUT_STATES` - specifies which outputStates of mechanisms in the system to evaluate in the
       EVC calculation (see :ref:`ControlMechanism_MonitoredOutputStates` for additional details);

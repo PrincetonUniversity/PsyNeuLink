@@ -221,6 +221,9 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/6/16:
+# IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
+
 # 11/3/16:
 
 # Transfer Execution
