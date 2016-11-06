@@ -230,7 +230,7 @@ COMMENT
 
 import numpy as np
 from collections import Iterable
-from PsyNeuLink.Globals.Main import *
+from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Process import Process

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# **************************************************  Main *************************************************************
+# *************************************************  Utilities *********************************************************
 #
 #
 
@@ -17,7 +17,7 @@
     mpi4py.py  - Parallelization using MPI
     wfpt.py - Wald first passage times for DDM
 
-**************************************************** MAIN *************************************************************
+************************************************* UTILITIES ************************************************************
 
 CONTENTS:
 
@@ -59,7 +59,7 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.TimeScale import *
 
 
-class MainError(Exception):
+class UtilitiesError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -190,7 +190,7 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
             #     but in the future will perform elementwise comparison
             pass
         except ValueError:
-            # raise MainError("Could not compare {0} and {1}".format(candidate, reference))
+            # raise UtilitiesError("Could not compare {0} and {1}".format(candidate, reference))
             # IMPLEMENTATION NOTE: np.array generates the following error:
             # ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
             pass
@@ -346,7 +346,7 @@ def merge_param_dicts(source, specific, general):
     if source is None or source is NotImplemented:
         return
     if not isinstance(source, dict):
-        raise MainError("merge_param_dicts: source {0} must be a dict".format(source))
+        raise UtilitiesError("merge_param_dicts: source {0} must be a dict".format(source))
 
     # Get specific and make sure it is a dict
     if isinstance(specific, str):
@@ -355,7 +355,7 @@ def merge_param_dicts(source, specific, general):
         except (KeyError, TypeError):
             specific = {}
     if not isinstance(specific, dict):
-        raise MainError("merge_param_dicts: specific {0} must be dict or the name of one in {1}".
+        raise UtilitiesError("merge_param_dicts: specific {0} must be dict or the name of one in {1}".
                         format(specific, source))
 
     # Get general and make sure it is a dict
@@ -365,7 +365,7 @@ def merge_param_dicts(source, specific, general):
         except (KeyError, TypeError):
             general = {}
     if not isinstance(general, dict):
-        raise MainError("merge_param_dicts: general {0} must be dict or the name of one in {1}".
+        raise UtilitiesError("merge_param_dicts: general {0} must be dict or the name of one in {1}".
                         format(general, source))
 
 # FIX: SHOULD THIS BE specific, NOT source???
@@ -410,7 +410,7 @@ def multi_getattr(obj, attr, default = None):
 
 def np_array_less_than_2d(array):
     if not isinstance(array, np.ndarray):
-        raise MainError("Argument to np_array_less_than_2d() ({0}) must be an np.ndarray".format(array))
+        raise UtilitiesError("Argument to np_array_less_than_2d() ({0}) must be an np.ndarray".format(array))
     if array.ndim <= 1:
         return True
     else:
@@ -435,9 +435,9 @@ def convert_to_np_array(value, dimension):
         else:
             value = np.atleast_2d(value)
     else:
-        raise MainError("dimensions param ({0}) must be 1 or 2".format(dimension))
+        raise UtilitiesError("dimensions param ({0}) must be 1 or 2".format(dimension))
     if 'U' in repr(value.dtype):
-        raise MainError("{0} has non-numeric entries".format(value))
+        raise UtilitiesError("{0} has non-numeric entries".format(value))
     return value
 
 def get_value_from_array(array):

@@ -1904,9 +1904,9 @@ import typecheck as tc
 # print("Initial Intensity: ", x.intensity)
 #
 # # Add KVO:
-# #  Main will observe ControlSignal.kpIntensity;
-# #  the observe_value_at_keypath method in Main will be called each time ControlSignal.kpIntensity changes
-# x.add_observer_for_keypath(Main,kpIntensity)
+# #  Utilities will observe ControlSignal.kpIntensity;
+# #  the observe_value_at_keypath method in Utilities will be called each time ControlSignal.kpIntensity changes
+# x.add_observer_for_keypath(Utilities,kpIntensity)
 #
 #
 # # Assign testFunction to be a linear function, that returns the current value of an object property (intensity_cost)
@@ -1927,7 +1927,7 @@ import typecheck as tc
 # # Initial allocation value
 # z = 3
 #
-# Main.CentralClock.time_step = 0
+# Utilities.CentralClock.time_step = 0
 # x.update_control_signal(z)
 # getVersion = testFunction_getVersion.function()
 # print("{0}: {1}\n".format(label, getVersion))
@@ -1935,7 +1935,7 @@ import typecheck as tc
 # print("{0}: {1}\n".format(label, lambdaVersion))
 #
 # #Update control signal with new allocation value
-# Main.CentralClock.time_step = 1
+# Utilities.CentralClock.time_step = 1
 # x.update_control_signal(z+1)
 # getVersion = testFunction_getVersion.function()
 # print("{0}: {1}\n".format(label, getVersion))
@@ -1944,7 +1944,7 @@ import typecheck as tc
 #
 #
 # #Update control signal with new allocation value
-# Main.CentralClock.time_step = 2
+# Utilities.CentralClock.time_step = 2
 # x.update_control_signal(z-2)
 # getVersion = testFunction_getVersion.function()
 # print("{0}: {1}\n".format(label, getVersion))

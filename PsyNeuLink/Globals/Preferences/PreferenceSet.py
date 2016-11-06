@@ -13,7 +13,7 @@ from collections import namedtuple
 from enum import Enum, IntEnum
 
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Main import iscompatible, kwCompatibilityType
+from PsyNeuLink.Globals.Utilities import iscompatible, kwCompatibilityType
 
 # from Globals.Defaults import *
 
@@ -749,7 +749,7 @@ class PreferenceSet(object):
                     except AttributeError:
                         pref_value = getattr(self.previous_level_pref_set, pref_ivar_name).setting
 # FIX:  replace level setting??
-#                         from Main import get_modulationOperation_name
+#                         from Utilities import get_modulationOperation_name
                         err_msg = ("{0} not found at {1}; replaced with value ({2}) from next lower level ({3})".
                                    format(pref_ivar_name,
                                           requested_level.__class__.__name__+'.'+requested_level.name,
@@ -791,7 +791,7 @@ class PreferenceSet(object):
         for pref_name in pref_names_sorted:
             if '_pref' in pref_name:
 
-                from PsyNeuLink.Globals.Main import get_modulationOperation_name
+                from PsyNeuLink.Globals.Utilities import get_modulationOperation_name
 
                 # GET TABLE INFO
                 # Get base_value of pref

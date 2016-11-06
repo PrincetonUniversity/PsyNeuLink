@@ -10,7 +10,7 @@
 #
 #
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-from PsyNeuLink.Globals.Main import ModulationOperation
+from PsyNeuLink.Globals.Utilities import ModulationOperation
 from PsyNeuLink.Globals.Preferences import *
 
 # Keypaths for preferences:

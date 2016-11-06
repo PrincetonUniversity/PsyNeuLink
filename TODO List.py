@@ -798,7 +798,7 @@
 # TEST: TRY Process with variableClassDefault = 0 and [0]
 
 # FIX: 6.10.16
-#     X Main.convert_to_np_array
+#     X Utilities.convert_to_np_array
 #     * self.variable assignments in Mechanism (2D), States and Projection (1D)
 #     * Mechanism needs to override _validate_variable to parse and assign multi-value variable to 2D ARRAY:
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
@@ -906,7 +906,7 @@
 # - IMPLEMENT switch in __init__.py to suppress processing for scratch pad, etc.
 #
 # - IMPLEMENT Testing:
-#     use instantiation sequence (in Main) to create test for each step
+#     use instantiation sequence (in Utilities) to create test for each step
 #
 # - Fully implement logging
 #    For both of the above:
@@ -933,7 +933,7 @@
 #   why are SLOPE and INTERCEPT in same registry as Statess and Parameters?
 #   IMPLEMENT: Registry class, and make <*>Registry dicts instances of it, and include prefs attribute
 #
-# IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
+# IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Utilities):  (str, object)
 #
 #endregion
 
@@ -1428,7 +1428,7 @@
 
 #region FULL SIMULATION RUN --------------------------------------------------------------------------------------------
 #
-# IMPLEMENT run Function (in Main.py):
+# IMPLEMENT run Function (in Utilities.py):
 #    1) Execute system and generate output
 #    2) Call stimulus estimation/expectation mechanism update method to generate guess for next stimulus
 #    3) Call EVC update estimation/expectation mechanism's guess as the System's input (self.variable),
