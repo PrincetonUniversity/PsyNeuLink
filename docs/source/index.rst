@@ -33,7 +33,7 @@ Welcome to PsyNeuLink's documentation!
    Mechanism
    State
    Projection
-   Functions
+   Function
 
 
 Indices and tables

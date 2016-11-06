@@ -1,5 +1,5 @@
-Function Components
-=================
+Functions
+=========
 
 .. toctree::
    :maxdepth: 3
