@@ -142,7 +142,7 @@ class Transfer(ProcessingMechanism_Base):
 
         Class attributes
         ----------------
-            + functionType (str): Transfer
+            + componentType (str): Transfer
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Transfer_DEFAULT_BIAS
@@ -207,7 +207,7 @@ class Transfer(ProcessingMechanism_Base):
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
-    .. context=functionType+kwInit):
+    .. context=componentType+kwInit):
             context : str : default ''None''
                    string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
@@ -242,7 +242,7 @@ class Transfer(ProcessingMechanism_Base):
 
     """
 
-    functionType = "Transfer"
+    componentType = "Transfer"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -277,7 +277,7 @@ class Transfer(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=functionType+kwInit):
+                 context=componentType+kwInit):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
@@ -325,7 +325,7 @@ class Transfer(ProcessingMechanism_Base):
             transfer_function_name = transfer_function.__name__
 
         # Validate FUNCTION
-        if not transfer_function_class.functionType is kwTransferFunction:
+        if not transfer_function_class.componentType is kwTransferFunction:
             raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
                                 format(transfer_function_name, self.name, kwTransferFunction))
 

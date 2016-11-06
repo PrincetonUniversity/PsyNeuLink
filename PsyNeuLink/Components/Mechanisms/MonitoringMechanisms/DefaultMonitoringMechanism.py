@@ -78,7 +78,7 @@ class Comparator(MonitoringMechanism_Base):
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
-        + functionType (str): Comparator
+        + componentType (str): Comparator
         + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
@@ -106,7 +106,7 @@ class Comparator(MonitoringMechanism_Base):
 
     """
 
-    functionType = "Comparator"
+    componentType = "Comparator"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences

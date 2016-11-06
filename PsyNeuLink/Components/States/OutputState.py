@@ -87,7 +87,7 @@ class OutputState(State_Base):
     """Implement subclass type of State, that represents output of its owner
 
     Description:
-        The OutputState class is a functionType in the State category of Function,
+        The OutputState class is a componentType in the State category of Function,
         It is used primarily as the sender for Mapping projections
         Its FUNCTION updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
@@ -121,7 +121,7 @@ class OutputState(State_Base):
             - at run time, which changes their values for just for that call (self.execute(sender, params)
 
     Class attributes:
-        + functionType (str) = OUTPUT_STATES
+        + componentType (str) = OUTPUT_STATES
         + paramClassDefaults (dict)
             + FUNCTION (LinearCombination)
             + FUNCTION_PARAMS   (Operation.PRODUCT)
@@ -147,7 +147,7 @@ class OutputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    functionType = OUTPUT_STATES
+    componentType = OUTPUT_STATES
     paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE

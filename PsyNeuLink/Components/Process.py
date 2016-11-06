@@ -375,7 +375,7 @@ def process(process_spec=None,
         parameter (these values will be used to instantiate the process, and will override any values assigned
         to the arguments in the call to ``process``).
         Note: if a name is not specified, the nth instance created will be named by using the process'
-        ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
+        ``componentType`` attribute as the base and adding an indexed suffix:  componentType-n.
 
     default_input_value : List[values] or ndarray :  default default input value of :keyword:`ORIGIN` mechanism
         use as the input to the process if none is provided in a call to the ``execute`` method or ``run`` function.
@@ -701,7 +701,7 @@ class Process_Base(Process):
     functionCategory = kwProcessFunctionCategory
     className = functionCategory
     suffix = " " + className
-    functionType = "Process"
+    componentType = "Process"
 
     registry = ProcessRegistry
 

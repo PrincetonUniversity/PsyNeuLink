@@ -53,7 +53,7 @@ class LearningSignal(Projection_Base):
     """Implements projection that modifies the matrix param of a Mapping projection
 
     Description:
-        The LearningSignal class is a functionType in the Projection category of Function,
+        The LearningSignal class is a componentType in the Projection category of Function,
         It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
             the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
             weight changes for the Mapping Projection's matrix parameter
@@ -93,7 +93,7 @@ class LearningSignal(Projection_Base):
 
     Class attributes:
         + className = LEARNING_SIGNAL
-        + functionType = PROJECTION
+        + componentType = PROJECTION
         # + defaultSender (State)
         # + defaultReceiver (State)
         + paramClassDefaults (dict):
@@ -124,8 +124,8 @@ class LearningSignal(Projection_Base):
         none
     """
 
-    functionType = LEARNING_SIGNAL
-    className = functionType
+    componentType = LEARNING_SIGNAL
+    className = componentType
     suffix = " " + className
 
     classPreferenceLevel = PreferenceLevel.TYPE

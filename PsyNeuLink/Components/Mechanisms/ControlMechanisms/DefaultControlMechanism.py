@@ -44,14 +44,14 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
     Class attributes:
-        + functionType (str): System Default Mechanism
+        + componentType (str): System Default Mechanism
         + paramClassDefaults (dict):
             # + kwInputStateValue: [0]
             # + kwOutputStateValue: [1]
             + FUNCTION: Linear
     """
 
-    functionType = "DefaultControlMechanism"
+    componentType = "DefaultControlMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE

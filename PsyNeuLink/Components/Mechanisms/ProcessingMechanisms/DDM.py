@@ -258,7 +258,7 @@ class DDM(ProcessingMechanism_Base):
 
         Class attributes
         ----------------
-            + functionType (str): DDM
+            + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + variableClassDefault (value):  DDM_Defaults.starting_point
@@ -319,7 +319,7 @@ class DDM(ProcessingMechanism_Base):
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
-    .. context=functionType+kwInit):
+    .. context=componentType+kwInit):
             context : str : default ''None''
                    string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
@@ -381,7 +381,7 @@ class DDM(ProcessingMechanism_Base):
 
     """
 
-    functionType = "DDM"
+    componentType = "DDM"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in SubtypeDefaultPreferences
@@ -425,7 +425,7 @@ class DDM(ProcessingMechanism_Base):
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
                  # context=None):
-                 context=functionType+kwInit):
+                 context=componentType+kwInit):
         """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
 
         """

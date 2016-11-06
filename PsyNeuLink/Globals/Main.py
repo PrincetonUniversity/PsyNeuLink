@@ -453,7 +453,7 @@ def underscore_to_camelCase(item):
 
 def append_type_to_name(object, type=None):
     name = object.name
-    # type = type or object.functionType
+    # type = type or object.componentType
     type = type or object.__class__.__base__.__base__.__base__.__name__
     if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
         string = name

@@ -78,7 +78,7 @@ InstanceDefaultPreferencesDict = {
     kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE, PreferenceLevel.INSTANCE)}
 
 # Dict of default dicts
-FunctionDefaultPrefDicts = {
+ComponentDefaultPrefDicts = {
     PreferenceLevel.SYSTEM: SystemDefaultPreferencesDict,
     PreferenceLevel.CATEGORY: CategoryDefaultPreferencesDict,
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,
@@ -219,7 +219,7 @@ class ComponentPreferenceSet(PreferenceSet):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class
 
         If owner is a class, instantiate its classPreferences attribute if that does not already exist,
-            using its classPreferenceLevel attribute, and the corresponding preference dict in FunctionDefaultPrefDicts
+            using its classPreferenceLevel attribute, and the corresponding preference dict in ComponentDefaultPrefDicts
         If owner is an object:
         - if the owner's classPreferences do not yet exist, instantiate it (as described above)
         - use the owner's <class>.classPreferenceLevel to create a base set of preferences from its classPreferences
@@ -278,7 +278,7 @@ class ComponentPreferenceSet(PreferenceSet):
             super(ComponentPreferenceSet, self).__init__(
                 owner=owner_class,
                 level=owner_class.classPreferenceLevel,
-                prefs=FunctionDefaultPrefDicts[owner_class.classPreferenceLevel],
+                prefs=ComponentDefaultPrefDicts[owner_class.classPreferenceLevel],
                 name=name,
                 context=self)
 

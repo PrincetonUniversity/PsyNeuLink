@@ -397,7 +397,7 @@ def mechanism(mech_spec=None, params=None, context=None):
         otherwise the string is used to name an instance of the default mechanism;
         if it is a dict, it must be a mechanism specification dict (see :ref:`Mechanism_Creating_A_Mechanism`).
         Note: if a name is not specified, the nth instance created will be named by using the mechanism's
-        ``functionType`` attribute as the base and adding an indexed suffix:  functionType-n.
+        ``componentType`` attribute as the base and adding an indexed suffix:  componentType-n.
 
     params : Optional[Dict[param keyword, param value]]
         passed to the relevant subclass to instantiate the mechanism.
