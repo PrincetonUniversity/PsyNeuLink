@@ -422,7 +422,7 @@ class DDM(ProcessingMechanism_Base):
                                      t0=.200),
                  params=None,
                  name=None,
-                 # prefs:tc.optional(FunctionPreferenceSet)=None,
+                 # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
                  # context=None):
                  context=functionType+kwInit):

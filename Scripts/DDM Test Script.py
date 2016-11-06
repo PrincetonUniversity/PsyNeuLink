@@ -2,7 +2,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
-DDM_prefs = FunctionPreferenceSet(
+DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
@@ -41,7 +41,7 @@ myMechanism_3 = DDM(function=BogaczEtAl(drift_rate=3.0,
                     name='My_DDM_3'
                     )
 
-process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
+process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 process_prefs.show()

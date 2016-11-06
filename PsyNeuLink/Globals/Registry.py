@@ -20,7 +20,7 @@ DEFAULT_REGISTRY_VERBOSITY = False
 from PsyNeuLink.Globals.Keywords import *
 RegistryVerbosePrefs = {
     kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
-    kwFunctionPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
+    kwComponentPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
     kwProcessFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwStateFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,

@@ -22,7 +22,7 @@ from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
 
 __all__ = ['System',
            'process',

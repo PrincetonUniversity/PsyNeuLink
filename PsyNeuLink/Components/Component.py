@@ -47,14 +47,14 @@ It also contains:
 """
 
 from PsyNeuLink.Globals.Main import *
-from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
 class ResetMode(Enum):
     CURRENT_TO_INSTANCE_DEFAULTS = 0
     INSTANCE_TO_CLASS = 1
     ALL_TO_CLASS_DEFAULTS = 2
 
-# functionSystemDefaultPreferencesDict = FunctionPreferenceSet()
+# functionSystemDefaultPreferencesDict = ComponentPreferenceSet()
 
 # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  START
 # Prototype for implementing params as objects rather than dicts
@@ -134,7 +134,7 @@ class ComponentError(Exception):
 class Component(object):
     """Implement parent class for functions used by Process, Mechanism, State, and Projection class categories
 
-        Every function is associated with:
+        Every component is associated with:
          - child class functionName
          - type
          - input (self.variable)
@@ -206,7 +206,7 @@ class Component(object):
     Class attributes:
         + className
         + suffix - " " + className (used to create subclass and instance names)
-        + functionCategory - category of function (i.e., process, mechanism, projection, learning, utility)
+        + functionCategory - category of component (i.e., process, mechanism, projection, learning, function)
         + functionType - type of function within a category (e.g., transfer, distribution, mapping, controlSignal, etc.)
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Function must implement;
 
@@ -330,7 +330,7 @@ class Component(object):
             # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
         # Otherwise, if prefs is a specification dict instantiate it, or if it is NotImplemented assign defaults
         else:
-            self.prefs = FunctionPreferenceSet(owner=self, prefs=prefs, context=context)
+            self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
         #endregion
 
         # MODIFIED 9/11/16 NEW:

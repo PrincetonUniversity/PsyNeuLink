@@ -1759,7 +1759,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - value of specified State was incompatible with constraint_value
     # - owner of State was not owner and user chose to implement default
     # IMPLEMENTATION NOTE:
-    # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from FunctionPreferenceSet)
+    # - setting prefs=NotImplemented causes TypeDefaultPreferences to be assigned (from ComponentPreferenceSet)
     # - alternative would be prefs=owner.prefs, causing state to inherit the prefs of its owner;
 
     #  Convert constraint_value to np.array to match state_value (which, as output of function, will be np.array)

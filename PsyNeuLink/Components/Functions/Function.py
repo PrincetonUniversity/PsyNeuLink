@@ -168,7 +168,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         + className (str): kwMechanismFunctionCategory
         + suffix (str): " <className>"
         + registry (dict): FunctionRegistry
-        + classPreference (PreferenceSet): UtilityPreferenceSet, instantiated in __init__()
+        + classPreference (PreferenceSet): FunctionPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: False}
 
@@ -183,7 +183,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         + paramsCurrent (dict) - set currently in effect
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying UtilityPreferenceSet
+        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying FunctionPreferenceSet
 
     Instance methods:
         The following method MUST be overridden by an implementation in the subclass:

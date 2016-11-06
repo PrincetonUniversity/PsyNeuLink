@@ -85,7 +85,7 @@ Accepts inputs from projections, combines them, and provides them as an item in 
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.Functions.Function import *
 
-# InputStatePreferenceSet = FunctionPreferenceSet(log_pref=logPrefTypeDefault,
+# InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
 #                                                          verbose_pref=verbosePrefTypeDefault,
 #                                                          param_validation_pref=paramValidationTypeDefault,

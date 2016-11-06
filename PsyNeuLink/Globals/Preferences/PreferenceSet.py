@@ -599,7 +599,7 @@ class PreferenceSet(object):
         :param reference_setting:
         :return:
         """
-        # from Globals.Preferences.FunctionPreferenceSet import kpLogPref
+        # from Globals.Preferences.ComponentPreferenceSet import kpLogPref
         # if pref_ivar_name is kpLogPref:
         #     self.validate_log(candidate_setting, self)
 
@@ -702,8 +702,8 @@ class PreferenceSet(object):
                     next_level.classPreferences
                 except AttributeError:
                     # If classPreferences for level have not been assigned, assign them
-                    from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
-                    FunctionPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                    from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+                    ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                     requested_level)
                 return return_val[0],return_val[1]

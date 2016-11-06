@@ -1079,7 +1079,7 @@ import typecheck as tc
 # # x = DDM()
 # # x.prefs.show()
 #
-# DDM_prefs = FunctionPreferenceSet(
+# DDM_prefs = ComponentPreferenceSet(
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
@@ -1577,12 +1577,12 @@ import typecheck as tc
 
 #
 # from Globals.Preferences.PreferenceSet import *
-# from Globals.Preferences.FunctionPreferenceSet import *
+# from Globals.Preferences.ComponentPreferenceSet import *
 #
 # class a(object):
 #     prefs = None
 #     def __init__(self):
-#         a.prefs = FunctionPreferenceSet(owner=a,
+#         a.prefs = ComponentPreferenceSet(owner=a,
 #                                         log_pref=PreferenceEntry(1,PreferenceLevel.SYSTEM),
 #                                         level=PreferenceLevel.SYSTEM)
 #
@@ -1590,7 +1590,7 @@ import typecheck as tc
 #     prefs = None
 #     def __init__(self):
 #         super(b, self).__init__()
-#         b.prefs = FunctionPreferenceSet(owner=b,
+#         b.prefs = ComponentPreferenceSet(owner=b,
 #                                         log_pref=PreferenceEntry(5,PreferenceLevel.CATEGORY),
 #                                         level=PreferenceLevel.CATEGORY)
 #
@@ -1598,7 +1598,7 @@ import typecheck as tc
 #     prefs = None
 #     def __init__(self):
 #         super(c, self).__init__()
-#         c.prefs = FunctionPreferenceSet(owner=self,
+#         c.prefs = ComponentPreferenceSet(owner=self,
 #                                         log_pref=PreferenceEntry(3,PreferenceLevel.INSTANCE),
 #                                         level=PreferenceLevel.INSTANCE)
 #         self.prefs = c.prefs
