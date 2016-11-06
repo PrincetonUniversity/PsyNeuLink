@@ -115,7 +115,7 @@ def parameter_spec(param):
 
 
 class Function_Base(Function):
-    """Implement abstract class for Function category of Function class
+    """Implement abstract class for Component category of Function class
 
     Description:
         Function functions are ones used by other function categories;
@@ -161,14 +161,14 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
           a count for all instances of that type, and a dictionary of those instances
 
     Naming:
-        Function functions are named by their functionName attribute (usually = componentType)
+        Function functions are named by their componentName attribute (usually = componentType)
 
     Class attributes:
-        + functionCategory: kwFunctionCategory
+        + componentCategory: kwComponentCategory
         + className (str): kwMechanismFunctionCategory
         + suffix (str): " <className>"
         + registry (dict): FunctionRegistry
-        + classPreference (PreferenceSet): FunctionPreferenceSet, instantiated in __init__()
+        + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: False}
 
@@ -177,13 +177,13 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 
     Instance attributes:
         + componentType (str):  assigned by subclasses
-        + functionName (str):   assigned by subclasses
+        + componentName (str):   assigned by subclasses
         + variable (value) - used as input to function's execute method
         + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
         + paramsCurrent (dict) - set currently in effect
         + value (value) - output of execute method
         + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying FunctionPreferenceSet
+        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ComponentPreferenceSet
 
     Instance methods:
         The following method MUST be overridden by an implementation in the subclass:
@@ -193,8 +193,8 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         - [_validate_params(request_set, target_set, context)]
     """
 
-    functionCategory = kwFunctionCategory
-    className = functionCategory
+    componentCategory = kwComponentCategory
+    className = componentCategory
     suffix = " " + className
 
     registry = FunctionRegistry
@@ -226,13 +226,13 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
 
         :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
         :param params: (dict) - params to be assigned to paramInstanceDefaults
-        :param log: (FunctionLog enum) - log entry types set in self.functionLog
-        :param name: (string) - optional, overrides assignment of default (functionName of subclass)
+        :param log: (ComponentLog enum) - log entry types set in self.componentLog
+        :param name: (string) - optional, overrides assignment of default (componentName of subclass)
         :return:
         """
 
         self._functionOutputType = None
-        # self.name = self.functionName
+        # self.name = self.componentName
 
         register_category(entry=self,
                           base_class=Function_Base,
@@ -293,8 +293,8 @@ class Contradiction(Function_Base): # Example
     Contradiction.function returns True or False
     """
 
-    # Function functionName and type (defined at top of module)
-    functionName = kwContradiction
+    # Function componentName and type (defined at top of module)
+    componentName = kwContradiction
     componentType = kwExampleFunction
 
     # Variable class default
@@ -321,7 +321,7 @@ class Contradiction(Function_Base): # Example
                  variable_default=variableClassDefault,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=functionName+kwInit):
+                 context=componentName+kwInit):
         # This validates variable and/or params_list if assigned (using _validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
@@ -483,7 +483,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
     - 1D np.array if variable was a single np.variable or np.ndarray
     """
 
-    functionName = kwLinearCombination
+    componentName = kwLinearCombination
 
     # # Operation indicators
     # class Operation(Enum):
@@ -510,7 +510,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=functionName+kwInit):
+                 context=componentName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
@@ -723,7 +723,7 @@ class Linear(TransferFunction): # ----------------------------------------------
     Linear.execute returns scalar result
     """
 
-    functionName = kwLinear
+    componentName = kwLinear
 
     variableClassDefault = [0]
 
@@ -738,7 +738,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  intercept:parameter_spec=0,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=functionName+kwInit):
+                 context=componentName+kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(slope=slope,
@@ -826,7 +826,7 @@ class Linear(TransferFunction): # ----------------------------------------------
         """
         # FIX: ??CORRECT:
         return self.slope
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.functionName))
+        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
 
 
 class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
@@ -842,7 +842,7 @@ class Exponential(TransferFunction): # -----------------------------------------
     Exponential.execute returns scalar result
     """
 
-    functionName = kwExponential
+    componentName = kwExponential
 
     # # Params
     # RATE = "rate"
@@ -859,7 +859,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  scale:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=functionName + kwInit):
+                 context=componentName + kwInit):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -899,7 +899,7 @@ class Exponential(TransferFunction): # -----------------------------------------
         """
         # FIX: ??CORRECT:
         return output
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.functionName))
+        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
 
 
 class Logistic(TransferFunction): # ------------------------------------------------------------------------------------
@@ -915,7 +915,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     Logistic.execute returns scalar result
     """
 
-    functionName = kwLogistic
+    componentName = kwLogistic
 
     variableClassDefault = 0
 
@@ -986,7 +986,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     SoftMax.execute returns scalar result
     """
 
-    functionName = kwSoftMax
+    componentName = kwSoftMax
 
     variableClassDefault = 0
 
@@ -1068,7 +1068,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
         # FIX: ??CORRECT:
         indicator = self.function(input, params={MAX_VAL:True})
         return output - indicator
-        # raise FunctionError("Derivative not yet implemented for {}".format(self.functionName))
+        # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
 
 
 def matrix_spec(m):
@@ -1121,7 +1121,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Returns sender 2D array linearly transformed by self.matrix
     """
 
-    functionName = kwLinearMatrix
+    componentName = kwLinearMatrix
 
     DEFAULT_FILLER_VALUE = 0
 
@@ -1135,7 +1135,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix:matrix_spec=None,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=functionName + kwInit):
+                 context=componentName + kwInit):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
 
         Variable = sender vector (list of numbers)
@@ -1325,7 +1325,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                        "or a matrix keyword ({2}, {3})".
                                         format(param_name, param_value, IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX))
             else:
-                message += "Param {0} not recognized by {1} function".format(param_name, self.functionName)
+                message += "Param {0} not recognized by {1} function".format(param_name, self.componentName)
                 continue
 
         if message:
@@ -1513,7 +1513,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Integrator.execute returns scalar result
     """
 
-    functionName = kwIntegrator
+    componentName = kwIntegrator
 
     variableClassDefault = [[0]]
 
@@ -1657,7 +1657,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             - correct mean ER (float) - Navarro and Fuss only
     """
 
-    functionName = kwBogaczEtAl
+    componentName = kwBogaczEtAl
 
     variableClassDefault = [[0]]
 
@@ -1797,7 +1797,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
             - correct mean ER (float) - Navarro and Fuss only
     """
 
-    functionName = kwNavarrosAndFuss
+    componentName = kwNavarrosAndFuss
 
     variableClassDefault = [[0]]
 
@@ -1908,7 +1908,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
          + LEARNING_RATE: (float) - learning rate (default: 1.0)
     """
 
-    functionName = kwRL
+    componentName = kwRL
 
     variableClassDefault = [[0],[0],[0]]
 
@@ -1948,7 +1948,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
-                                    format(self.variable[ACTIVATION_OUTPUT], self.functionName))
+                                    format(self.variable[ACTIVATION_OUTPUT], self.componentName))
             if len(self.variable[ACTIVATION_ERROR]) != 1:
                 raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
                                     "(variable of Comparator mechanism may need to be specified as an array of length 1)".
@@ -2016,7 +2016,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
          + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
     """
 
-    functionName = kwBackProp
+    componentName = kwBackProp
 
     variableClassDefault = [[0],[0],[0]]
 

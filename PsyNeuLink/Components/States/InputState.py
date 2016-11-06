@@ -111,7 +111,7 @@ class InputState(State_Base):
     """Implement subclass type of State that calculates and represents the input of a Function object
 
     Description:
-        The InputState class is a componentType in the State category of Function,
+        The InputState class is a Component type in the State category of Function,
         Its FUNCTION executes the projections that it receives and updates the InputState's value
 
     Instantiation:
@@ -232,7 +232,7 @@ reference_value is component of owner.variable that corresponds to the current S
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        # Note: pass name of owner (to override assignment of functionName in super.__init__)
+        # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
                                                   value=value,
                                                   params=params,
@@ -267,7 +267,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                       format(FUNCTION,
                                              self.name,
                                              self.owner.name,
-                                             self.function.__self__.functionName, ))
+                                             self.function.__self__.componentName, ))
 
         # Insure that self.value is compatible with (relevant item of) self.owner.variable
         if not iscompatible(self.value, self.reference_value):

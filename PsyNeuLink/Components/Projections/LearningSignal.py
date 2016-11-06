@@ -430,10 +430,10 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
         if kwDeferredDefaultName in self.name:
-            self.name = self.mappingProjection.name + ' ' + self.functionName
+            self.name = self.mappingProjection.name + ' ' + self.componentName
             # self.name = self.mappingProjection.name + \
             #             self.mappingProjection.parameterStates[MATRIX].name + \
-            #             ' ' + self.functionName
+            #             ' ' + self.componentName
 
         # Assign errorSource as the MappingProjection's receiver mechanism
         self.errorSource = self.mappingProjection.receiver.owner
@@ -631,10 +631,10 @@ FROM TODO:
                     # # MODIFIED 9/4/16 OLD:
                     # output_signal = np.zeros_like(self.errorSource.outputState.value)
                     # MODIFIED 9/4/16 NEW:
-                    if self.function.functionName is kwBackProp:
+                    if self.function.componentName is kwBackProp:
                         output_signal = np.zeros_like(self.errorSource.outputState.value)
                     # Force smaple and target of Comparartor to be scalars for RL
-                    elif self.function.functionName is kwRL:
+                    elif self.function.componentName is kwRL:
                         output_signal = np.array([0])
                     else:
                         raise LearningSignalError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
@@ -651,10 +651,10 @@ FROM TODO:
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
-                    if self.function.functionName is kwBackProp:
+                    if self.function.componentName is kwBackProp:
                         matrix = IDENTITY_MATRIX
                     # Force sample and target of Comparator to be scalars for RL
-                    elif self.function.functionName is kwRL:
+                    elif self.function.componentName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
                                                          receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
@@ -687,14 +687,14 @@ FROM TODO:
         """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
         """
 
-        if self.function.functionName is kwRL:
+        if self.function.componentName is kwRL:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
             #     (since error signal is a scalar for RL)
             if len(error_signal) != 1:
                 raise LearningSignalError("Length of error signal ({}) received by {} from {}"
                                           " must be 1 since {} uses {} as its learning function".
                                           format(len(error_signal), self.name, self.sender.owner.name, self.name, kwRL))
-        if self.function.functionName is kwBackProp:
+        if self.function.componentName is kwBackProp:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
             #     same as the width (# columns) of the Mapping projection's weight matrix (# of receivers)
             if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:

@@ -243,11 +243,11 @@ class Projection_Base(Projection):
 
     COMMENT:
         Description:
-            Projection category of Function class (default type:  Mapping)
+            Projection category of Component class (default type:  Mapping)
 
         Class attributes
         ----------------
-            + functionCategory (str): kwProjectionFunctionCategory
+            + componentCategory (str): kwProjectionFunctionCategory
             + className (str): kwProjectionFunctionCategory
             + suffix (str): " <className>"
             + registry (dict): ProjectionRegistry
@@ -326,8 +326,8 @@ class Projection_Base(Projection):
 
     color = 0
 
-    functionCategory = kwProjectionFunctionCategory
-    className = functionCategory
+    componentCategory = kwProjectionFunctionCategory
+    className = componentCategory
     suffix = " " + className
 
     registry = ProjectionRegistry
@@ -448,7 +448,7 @@ class Projection_Base(Projection):
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
-        # Note: pass name of mechanism (to override assignment of functionName in super.__init__)
+        # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(variable_default=variable,
                                               param_defaults=params,
                                               name=self.name,

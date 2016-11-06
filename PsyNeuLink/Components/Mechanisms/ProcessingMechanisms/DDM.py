@@ -452,7 +452,7 @@ class DDM(ProcessingMechanism_Base):
 
         functions = {BogaczEtAl, NavarroAndFuss}
         if not target_set[FUNCTION] in functions:
-            function_names = list(function.functionName for function in functions)
+            function_names = list(function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
                            format(self.name, function_names))
 
