@@ -30,7 +30,7 @@ It also contains:
 
 """
 
-from PsyNeuLink.Globals.Main import *
+from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 
 class ResetMode(Enum):
@@ -133,7 +133,7 @@ class Component(object):
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
             the latter is used for typing and/or templating other variables (e.g., self.variable):
-                type checking is generally done using Main.iscompatible(); for iterables (lists, tuples, dicts):
+                type checking is generally done using Utilities.iscompatible(); for iterables (lists, tuples, dicts):
                     if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
                     if the template is empty (e.g., [], {}, or ()), length will not be checked
                     if the template has only numbers, then the candidate must as well

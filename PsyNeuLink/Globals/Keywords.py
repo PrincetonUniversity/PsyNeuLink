@@ -123,7 +123,7 @@ kwContext = 'Context'
 kwValue = 'Value'
 #endregion
 
-#region -----------------------------------------------    MAIN    ---------------------------------------------------
+#region -----------------------------------------------  UTILITIES  ----------------------------------------------------
 
 kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
 kpMechanismInputLogEntry = "Mechanism Input"
