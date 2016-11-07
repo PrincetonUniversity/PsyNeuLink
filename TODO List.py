@@ -222,6 +222,12 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
+#                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
+#                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
+#                    ARE DISCUSSED.
+# DOCUMENTATION: ControlMechanism -> controlMechanism or control mechanism (in appropriate places)
+
 # 11/6/16:
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
 # FIX: implement System argument for EVCMechanism

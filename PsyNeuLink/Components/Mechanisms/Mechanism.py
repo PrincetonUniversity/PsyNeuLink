@@ -1041,7 +1041,7 @@ class Mechanism_Base(Mechanism):
 # FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITORED_OUTPUT_STATES param
 
     def _validate_monitored_state(self, state_spec, context=None):
-        """Validate specification is a Mechanism or OutputState object or the name of one
+        """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
 
         Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
