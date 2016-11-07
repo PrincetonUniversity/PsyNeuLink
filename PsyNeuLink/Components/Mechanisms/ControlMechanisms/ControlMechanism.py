@@ -29,25 +29,26 @@ and assigned as the controller for that system (see :ref:`_System_Execution_Cont
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
-The outputStates monitored by a ControlMechanism can be specified in the following places:
-its ``monitored_output_states`` argument when it
-is created, or in its ``params`` dictionary in an entry with the key :keyword:`MONITORED_OUTPUT_STATES`.  It can also be
-specified in the ``monitored_output_states`` parameter of a system [LINK]; in the
-:keyword:`MONITORED_OUTPUT_STATES` entry of a ``params`` dictionary for a mechanism that owns the outputState to be
-monitored; or an outputState itself.
-COMMENT
+The outputState(s) to be monitored by a ControlMechanism can be specified in any of the places listed below.  The
+list also describes the order of precedence of specifications, when more than pertains to the same outputState(s).
+In all case, the specification can be a references to an outputState object, or a string that is the name of one (see
+:ref:ControlMechanism_Examples' below).  In the case of
+Specifications can be in:
 
-The outputState(s) to be monitored by a ControlMechanism can be specified in any of the places listed below,
-with the order of precedence as indicated.  In each case, references to an outputState can be an object,
-or a string that is the name of an outputState (see :ref:ControlMechanism_Examples' below).  Specifications can be in:
+OutputStates to be monitored by a ControlMechanism can be specified in:
 
-* an **outputState** to be monitored -- specification must be within the outputState's ``params`` dict, in an entry
-  with the  key :keyword:`MONITORED_OUTPUT_STATES`, and must be a value of :class:`MonitoredOutputStatesOption`,
+??-> CAN ANYTHING OTHER THAN ``NONE`` BE SPECIFIED HERE??  SPECIFICALLY, CAN IT BE MARKED FOR MONITORING (RATHER
+ THAN JUST EXCLUDED??)
+* the **outputState** to be monitored -- the specification must be within its ``params`` dict, in an entry
+  with the  key :keyword:`MONITORED_OUTPUT_STATES`;  the value must be a value of :class:`MonitoredOutputStatesOption`,
   or ``None``.  This specification takes precedence over any of the other types listed below;  in particular,
   specifying ``None`` will suppress monitoring that outputState, irrespective of any other specifications that might
   otherwise apply to that outputState.
 ..
+
+-> ANY OF THE FOLLOWING CAN ALSO TAKE A TUPLE:
+-> HOW DO THESE RELATE TO TERMINAL MECHANISM STATUS??
+
 * the mechanism to which the outputState(s) belong(s) -- specification must be within the mechanism's ``params`` dict,
   in an entry with the  key :keyword:`MONITORED_OUTPUT_STATES`, and must be either a list containing the
   outputState(s) and/or their name(s), a :class:`MonitoredOutputStatesOption` value, or ``None``. This specification takes
