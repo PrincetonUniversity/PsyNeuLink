@@ -42,7 +42,6 @@ Where there are multiple specifications that pertain to a given outputState, the
 * then the controlMechanism for the system
 * then the system itself
 
-
 The parameter must be a list, each item of which is one of the following:
     * a string that is the **name** of an outputState
 
