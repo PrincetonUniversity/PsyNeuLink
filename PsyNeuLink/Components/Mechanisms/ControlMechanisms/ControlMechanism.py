@@ -37,14 +37,20 @@ a list, each item of which is one of the following:
     * a **tuple** with three items, in the order listed below:
 
         * mechanism, outputState or specification dictionary for one;
+        ..
         * exponent (int), used to exponentiate the outputState's value when using it to determine ControlSignal values;
+        ..
         * weight (int), used to multiply the outState's value when using it to determine ControlSignal values;
     ..
     * a :class:`MonitoredOutputStatesOption` (enum) value, which specifies monitoring of all of the mechanisms in the
-      system, using either their :keyword:`PRIMARY_OUTPUT_STATES` or :keyword:`ALL_OUTPUT_STATES`.
+      system, using either the :keyword:`PRIMARY_OUTPUT_STATES` or :keyword:`ALL_OUTPUT_STATES` for each.
+
 COMMENT:
-    * a mechanism: ignored (used for SystemController and System params)
+Function
+~~~~~~~~
+EXPLAIN HOW IT IS USED
 COMMENT
+
 
 .. _ControlMechanism_Execution:
 
@@ -121,14 +127,14 @@ class ControlMechanism_Base(Mechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : defaultControlAllocation [LINK]
+    default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
+
+    monitored_output_states : List[OutputState specification] : default None
+        specifies set of outputStates to monitor (see :ref:`ControlMechanism_MonitoredOutputStates` for
+        specification options).
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored output states.
-
-    monitored_output_states : List[] : default None
-        specifies set of outputStates to monitor (see :ref:`ControlMechanism_MonitoredOutputStates` for
-        specification format).
 
     params : Optional[Dict[param keyword, param value]]
         Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
@@ -169,8 +175,8 @@ class ControlMechanism_Base(Mechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 function = Linear(slope=1, intercept=0),
                  monitored_output_states:tc.optional(list)=None,
+                 function = Linear(slope=1, intercept=0),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -180,8 +186,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # MODIFIED 11/5/16 NEW:
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  monitored_output_states=monitored_output_states,
+        params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
+                                                  function=function,
                                                   params=params)
          # MODIFIED 11/5/16 END
 

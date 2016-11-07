@@ -139,7 +139,8 @@
 #                     COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined
 #                                 with the aggregated value (i.e., the output of the ``function``)
 #                                 to determine the EVC for each control allocation policy.
-
+# QUESTION: Where should detailed info about paramters/attributes be put:
+#                     Module docstring, under Arguments for __init__, or under Attributes for class?
 #
 # -------------------
 #
@@ -223,6 +224,8 @@
 
 # 11/6/16:
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
+# FIX: implement System argument for EVCMechanism
+# FIX: Should __init__ for ControlMechanism and EVCMechanism have default_input_value argument?
 
 # 11/3/16:
 
