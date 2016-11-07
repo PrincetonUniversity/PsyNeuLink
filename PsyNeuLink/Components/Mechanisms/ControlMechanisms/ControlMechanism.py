@@ -30,20 +30,57 @@ MonitoredOutputStates
 ~~~~~~~~~~~~~~~~~~~~~
 
 The outputStates monitored by a ControlMechanism can be specified in its ``monitored_output_states`` argument when it
-is created, or in it its ``params`` dictionary using the :keyword:`MONITORED_OUTPUT_STATES`.  The parameter must be
+is created, or in it its ``params`` dictionary using the :keyword:`MONITORED_OUTPUT_STATES`.  It can also be
+specified in the ``monitored_output_states`` parameter of a system [LINK], for the mechanism that is the owner of the
+outputState(s), or for an outputState itself [**??HOW DOES THIS GET DONE??]
+
+The parameter must be
 a list, each item of which is one of the following:
-    * the name of an existing **outputState**;
+    * a string that is the **name** of an outputState
+
+    * an **outputState** or **mechanism** object
     ..
     * a **tuple** with three items, in the order listed below:
 
-        * mechanism, outputState or specification dictionary for one;
+        * the name of an outputState, an outputState or mechanism object, or a specification dictionary for one;
         ..
-        * exponent (int), used to exponentiate the outputState's value when using it to determine ControlSignal values;
+        * an exponent (int) - exponentiates the value of the outputState;
         ..
-        * weight (int), used to multiply the outState's value when using it to determine ControlSignal values;
+        * a weight (int) - multiplies the value of the outState;
     ..
-    * a :class:`MonitoredOutputStatesOption` (enum) value, which specifies monitoring of all of the mechanisms in the
-      system, using either the :keyword:`PRIMARY_OUTPUT_STATES` or :keyword:`ALL_OUTPUT_STATES` for each.
+    * a :class:`MonitoredOutputStatesOption` (enum) value, which specifies monitoring all of the
+    :keyword:`TERMINAL` mechanisms of the system, using either the :keyword:`PRIMARY_OUTPUT_STATES` or
+    :keyword:`ALL_OUTPUT_STATES` for each.
+
+COMMENT:
+   FROM System:
+    NOTE:  IT CAN BE SPECIFIED FOR A SYSTEM, CONTROL_MECHANISM, MECHANISM, OR AN OUTPUTSTATE ITSELF
+
+    It is overridden by the :keyword:`MONITORED_OUTPUT_STATES` parameter of the controller or individual mechanisms,
+    or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
+    following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
+    c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
+    one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
+    mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
+    int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
+    value (:keyword:`PRIMARY_OUTPUT_STATES`:  monitor only the primary outputState of the mechanism;
+    :keyword:`ALL_OUTPUT_STATES`: monitor all of the outputStates of the mechanism (this option applies to any
+    mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
+    outputStates are explicitly listed).
+
+    FROM BELOW:
+    MONITORED_OUTPUT_STATES param determines which states will be monitored.
+        specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
+        this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+        ?? if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
+            system.executionGraph by default
+        if MonitoredOutputStatesOption is used, it applies to any mechanisms specified in the list for which
+            no outputStates are listed; it is overridden for any mechanism for which outputStates are
+            explicitly listed
+        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
+            just that mechanism
+
+COMMENT
 
 COMMENT:
 Function

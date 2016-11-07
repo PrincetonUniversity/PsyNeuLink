@@ -306,24 +306,15 @@ def system(default_input_value=None,
         compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
-        monitors outputState(s) of mechanisms specified in monitored_outputStates, controls assigned controlProjections.
+        monitors the value of the outputState(s) for mechanisms specified in monitored_output_states, and uses those
+        to specify the value of the ControlSignal projections for the :doc:`ControlMechanism`.
 
     enable_controller :  bool : default False
         determines whether the controller is called during system execution.
 
     monitored_output_states : list of OutputState objects or specifications : default None
-        specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller.
-        It is overridden by the :keyword:`MONITORED_OUTPUT_STATES` parameter of the controller or individual mechanisms,
-        or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
-        following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
-        c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
-        one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
-        mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
-        int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
-        value (:keyword:`PRIMARY_OUTPUT_STATES`:  monitor only the primary outputState of the mechanism;
-        :keyword:`ALL_OUTPUT_STATES`: monitor all of the outputStates of the mechanism (this option applies to any
-        mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
-        outputStates are explicitly listed).
+        specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller (see
+        :ref:`ControlMechanism_MonitoredOutputStates` for specifying the ``monitored_output_states`` parameter.
 
     params : dict : default None
         dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
