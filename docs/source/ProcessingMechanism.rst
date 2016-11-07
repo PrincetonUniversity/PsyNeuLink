@@ -8,5 +8,7 @@ Processing Mechanisms
 	DDM
 	Transfer
 	
-.. automodule:: ProcessingMechanism
-	:members:
+..
+    .. automodule:: ProcessingMechanism
+        :members:
+        :exclude-members: MechanismTuple, MechanismList, random

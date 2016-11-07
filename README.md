@@ -58,22 +58,22 @@ See the License for the specific language governing permissions and limitations 
          Set of (potentially interacting) processes, that can be managed by a “budget” of control
 
          - Process 
-             Function that takes an input, processes it through an ordered list of mechanisms (and projections)
+             Component that takes an input, processes it through an ordered list of mechanisms (and projections)
              and generates an output
     
              - Mechanism 
-                 Function that converts an input state representation into an output state representation
+                 Component that converts an input state representation into an output state representation
                  Parameters determine its operation, under the influence of projections
                  
                  + ProcessingMechanism
-                     Function that takes a
+                     Component that takes a
                  
                  + ControlMechanism
                  
                  + MonitoringMechanism
     
              - Projection 
-                 Function that takes a source of in, possibly transforms it, and uses it to
+                 Component that takes a source of in, possibly transforms it, and uses it to
                  determine the operation of a mechanism;  three primary types:
     
                  + Mapping
