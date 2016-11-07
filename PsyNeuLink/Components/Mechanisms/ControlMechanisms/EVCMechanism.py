@@ -25,17 +25,14 @@ Creating an EVCMechanism
 ------------------------
 
 An EVCMechanism can be instantiated using the standard Python method of calling its class.  However, more commonly
-it is generated automatically when a system is created that has an EVCMechanism specified as its ``controller`` (see
+it is generated automatically when a system is created and an EVCMechanism is specified as its ``controller`` (see
 System :ref:`System_Class_Reference`).  When this occurs, PsyNeuLink configures the EVCMechanism as follows:
 
   * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
     EVCMechanism.  Their values are used by the objective function to determine the EVC for each control allocation
     policy.  An inputState is added to the EVCMechanism for each outputState specified in its
     ``monitored_output_states`` parameter, and a :doc:`Mapping` projection is created that projects from that
-    outputState to the EVCMechanism's inputState.
-  COMMENT:
-     DEFAULT: PRIMARY_OUTPUT_STATES of TERMINAL MECHANISMS
-  COMMENT
+    outputState to the EVCMechanism's inputState (see [LINK] for specifying :keyword:`MONITORED_OUTPUT_STATES`.
   ..
   * **Prediction Mechanisms** -- these are used to generate the input for each simulation of the system run by the
     EVCMechanism (see :ref:`EVCMechanism_Execution`).  A prediction mechanism is created for each :keyword:`ORIGIN` (
@@ -49,6 +46,10 @@ System :ref:`System_Class_Reference`).  When this occurs, PsyNeuLink configures 
     those parameters.  For each such parameter, an outputState is added to the EVCMechanism, and a ControlSignal
     projection is assigned from that outputState to the parameterState associated with the parameter to be controlled.
 
+.. _EVCMechanism_Parameters:
+
+EVC Mechanism Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 The parameters of an EVCMechanism created for a system can be set by assigning their values to the corresponding
 attributes of the system's ``controller``, or by assigning a parameter specification dictionary to the params
@@ -56,26 +57,48 @@ attribute of the ``controller`` using the following keys for its entries (see :r
 for details of parameter specification, and :ref:`EVCMechanism_Class_Reference` for details concerning specific
 parameters):
 
-    * :keyword:`MONITORED_OUTPUT_STATES` - the outputStates of the system's mechanisms to use in the EVC calculation;
+    * :keyword:`MONITORED_OUTPUT_STATES` - the outputStates of the system's mechanisms used in the EVC calculation
+      (see :ref:`ControlMechanism_MonitoredOutputStates` for specifying monitored outputStates).  The default for an
+      EVCMechanism is: :keyword:`MonitoredOutputStateOption.PRIMARY_OUTPUT_STATES`,  which uses the primary
+      outputState of every :keyword:`TERMINAL` mechanism in the system ([LINK]).  Individual outputStates can be
+      parameterized to contribute differentially to the EVC calculation (see
+      :ref:`EVCMechanism_Parameterizing_EVC_Objective_Function`).
     ..
     * :keyword:`FUNCTION` - combines the values of the outputStates specified in ``monitored_output_states``
-      for a given *control allocation policy* to generate an aggregate **value** for that policy;
+      for a given *control allocation policy* to generate an aggregate **value** for that policy.  The default is
+      the :class:`LinearCombination` function that computes an elementwise (Hadamard) product of the
+      outputState values.  Each element can be exponentiated and weighted using the :keyword:`MONITORED_OUTPUT_STATES`
+      parameter (see :ref:`EVCMechanism_Parameterizing_EVC_Objective_Function`).
     ..
     * :keyword:`COST_AGGREGATION_FUNCTION` - combines the costs of the ControlSignals for a given *control
-      allocation policy* to generate an aggregate **cost** for that policy;
+      allocation policy* to generate an aggregate **cost** for that policy.  The default is the
+      :class:`LinearCombination` function that sums the costs.
     ..
     * :keyword:`COST_APPLICATION_FUNCTION` - combines the aggregated cost with the aggregated value for a given
-      *control allocation policy* to determine the **EVC** for that policy;
+      *control allocation policy* to determine the **EVC** for that policy.  The default is the
+      :class:`LinearCombination` function, that subtracts the aggregated cost from the aggregate value.
     ..
     * :keyword:`PREDICTION_MECHANISM_TYPE` - the type of prediction mechanism to use for generating the input
-      to the system for each simulation run (see :ref:`EVCMechanism_Execution`);
+      to the system for each simulation run (see :ref:`EVCMechanism_Execution`).  The default is a
+      :class:`AdaptiveIntegratorMechanism`, which exponentially time-averages its inputs.
     ..
-    * :keyword:`PREDICTION_MECHANISM_PARAMS` - parameters to use for the prediction mechanism;
+    * :keyword:`PREDICTION_MECHANISM_PARAMS` - parameters to use for the prediction mechanism.
     ..
     * :keyword:`SAVE_ALL_VALUES_AND_POLICIES` - specifies whether to save the results of the full EVC evaluation
       for each simulation run (see ``EVCvalues`` and ``EVCpolicies`` attributes in :ref:`EVCMechanism_Class_Reference`).
 
-EXAMPLE HERE
+
+.. _EVCMechanism_Parameterizing_EVC_Objective_Function:
+
+Parameterizing the EVC objective function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The tuples format for specifying :keyword:`MONITORED_OUTPUT_STATES` (see :ref:`ControlMechanism_MonitoredOutputStates`)
+can be used to parameterize the contribution that each outputState makes to the computation of the EVC.  Each can be
+exponentiated (e.g.,  to make it a divisor) and/or weighted, before the outputStates are combined by the
+EVCMechanism's ``function``. OutputStates specified on their own (i.e., not in a tuple) are assigned an exponent
+and weight of 1 (see :ref:`EVC_Mechanism_Examples`). The ``function`` parameter itself can also be specified,
+to further customize the EVC objective function.
 
 .. _EVCMechanism_Execution:
 
@@ -107,7 +130,6 @@ Once the all combinations of ControlSignal values have been evaluated, the polic
 implemented, by assigning the specified value to each ControlSignal.  These are used by the parameterStates to which
 they project in the next execution of the system.
 
-
 COMMENT:
 
     #      OBJECTIVE FUNCTION FOR exeuteMethod:
@@ -129,6 +151,30 @@ COMMENT:
             # - call system.execute for each point in search space
             # - compute evaluation function, and keep track of performance outcomes
 COMMENT
+
+.. _EVCMechanism_Examples
+
+Examples
+--------
+
+The following example implements a system with an EVCMechanism (and two processes not shown)::
+
+    mySystem = system(processes=[myRewardProcess, myDecisionProcess],
+                      controller=EVCMechanism,
+                      monitored_output_states=[Reward, DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
+
+It uses the system's ``monitored_output_states`` argument to assign three outputStates to be monitored (belonging
+to mechanisms not show here).  The first one references a mechanism (belonging to a mechanism not shown;  its
+primary outputState will be used by default).  The second and third uses keywords that are the names of
+outputStates (in this case, for a :doc:`DDM` ProcessingMechanism).  The last one (RESPONSE_TIME) is assgined an
+exponent of -1 and weight of 1. As a result, each calculation of the EVC computation will multiply the value of the
+primary outputState of the Reward mechanism by the value of the DECISION_VARIABLE outputState of the DDM mechanism,
+and then divide that by the value of the RESPONSE_TIME outputState of the DDM mechanism.
+
+COMMENT:
+This example specifies the EVCMechanism on its own, and then uses it for a system.
+COMMENT
+
 
 .. _EVCMechanism_Class_Reference:
 
@@ -229,6 +275,8 @@ class EVCMechanism(ControlMechanism_Base):
     COMMENT:
        **********************************************************************************************
 
+       PUT SOME OF THIS STUFF IN ATTRIBUTES, BUT USE DEFAULTS HERE
+
         # - specification of system:  required param: SYSTEM
         # - kwDefaultController:  True =>
         #         takes over all projections from default Controller;
@@ -297,33 +345,13 @@ class EVCMechanism(ControlMechanism_Base):
     default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
     COMMENT
 
-    monitored_output_states : List[outputState specification] : default
-    :keyword:`MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES` for :keyword:`TERMINAL` mechanisms
-        specifies set of outputStates to monitor (see :ref:`ControlMechanism_MonitoredOutputStates` for
-        specification options).
+    monitored_output_states : List[outputState specification] : \
+    default :keyword:`MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES` for :keyword:`TERMINAL` mechanisms
+        specifies set of outputStates to monitor; see :ref:`ControlMechanism_MonitoredOutputStates` for specification
+        options, and :ref:`EVCMechanism_Creating_An_EVCMechanism for their use in parameterizing the EVC objective
+        function.
 
-    COMMENT:
-     DEFAULT: PRIMARY_OUTPUT_STATES of TERMINAL MECHANISMS
-        * a mechanism: ignored (used for SystemController and System params)
-
-        # DESCRIBE USE OF MonitoredOutputStatesOptions VS. EXPLICIT SPECIFICATION OF MECHANISM AND/OR STATES
-        # CAN SPECIFIY WEIGHTS IF LIST OF MECHANISMS/ STATES IS PROVIDED, IN WHICH CASE #WEIGHTS MUST =
-        #              STATES SPECIFIED
-        # OTHERWISE (IF MonitoredOutputStatesOptions OR DEFAULT IS USED, WEIGHTS ARE IGNORED
-
-        #     MONITORED_OUTPUT_STATES must be list of Mechanisms or OutputStates in Mechanisms that are in SYSTEM
-        #     if Mechanism is specified in MONITORED_OUTPUT_STATES, all of its outputStates are used
-        #     MONITORED_OUTPUT_STATES assigns a Mapping Projection from each outputState to a new inputState in
-        #               self.inputStates
-        #     function uses LinearCombination to apply a set of weights to the value of each monitored state to
-        #                compute EVC and
-        #     then searches space of control signals (using allocationSamples for each) to find combiantion that
-        #                maxmizes EVC
-                    this is overridden if None is specified for MONITORED_OUTPUT_STATES in the outputState itself
-    COMMENT
-
-
-    prediction_mechanism_type=AdaptiveIntegratorMechanism
+    prediction_mechanism_type : CombinationFunction: default AdaptiveIntegratorMechanism
         COMMENT:
            ADD TO ARG AND/OR ATTRIBUTE DESCRIPTION BELOW
            # # Mechanism class used for prediction mechanism(s)
