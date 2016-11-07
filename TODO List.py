@@ -122,15 +122,23 @@
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
+#    NO
 # QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
-# QUESTION:  Add function params to mechanism (e.g.: function_param[<PARAM>] to self.<param>??)
+#   CALL THE "CONSTRUCTOR"
+# QUESTION:  Add function params to mechanism (e.g.: self.function_param[<PARAM>] to self.<param>??)
+# FIX: MAKE SURE THAT REASSIGNMENT OF FUNCTION UPDATES FUNCTION_PARAMS ATTRIBUTE
+#
 # QUESTION:  DDM:
 #              How to handle function arg of DDM when time_scale == TIME_STEP:
 #                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
-#              Handling of PROB_UPPER_BOUND <-> Acurracy;  PROB_LOWER_BOUND <-> ER and relationshp to interrogation
+#              Handling of PROB_UPPER_BOUND <-> Acurracy;  PROB_LOWER_BOUND <-> ER and relationship to interrogation
 #                 protocol (see docs for DDM)
-#              What is RT relative to time_step and ms??
+#              How does RT relate to time_step and ms??
 #              What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
+# FIX:  THRESHOLD MUST BE POSITIVE
+# FIX:  ELMINATE ANY REFERENCE TO "CORRECT RESPONSE", AND ONLY REFER TO PROB_XXX_BOUND
+# FIX:  BOGACZ & NAVARRO GIVE RT AND TO IN MS (OR SECONDS? IF SO, NEED TO ADJUST T0 DEFAULT AND TYPE)
+# FIX:  TIME_STEP SHOUDL HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
 # QUESTION:  EVC:  Names of functions:
 #                     FUNCTION - specifies how the values of the outputStates are combined
 #                                 to generate an aggregate value for each control allocation
@@ -139,6 +147,8 @@
 #                     COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined
 #                                 with the aggregated value (i.e., the output of the ``function``)
 #                                 to determine the EVC for each control allocation policy.
+# SOLUTION:  COST_APPLICATION_FUNCTION -> FUNCTION;
+#            FUNCTION -> OUTCOME_AGGREGATION_FUNCTION
 # QUESTION: Where should detailed info about paramters/attributes be put:
 #                     Module docstring, under Arguments for __init__, or under Attributes for class?
 #
