@@ -9,8 +9,8 @@
 # ******************************************** MechanismPreferenceSet **************************************************
 #
 #
-from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import *
-from PsyNeuLink.Globals.Main import ModulationOperation
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+from PsyNeuLink.Globals.Utilities import ModulationOperation
 from PsyNeuLink.Globals.Preferences import *
 
 # Keypaths for preferences:
@@ -27,8 +27,8 @@ functionRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.O
                                                                 PreferenceLevel.CATEGORY)
 
 
-class MechanismPreferenceSet(FunctionPreferenceSet):
-    """Extends FunctionPreferenceSet to include Mechanism-specific preferences
+class MechanismPreferenceSet(ComponentPreferenceSet):
+    """Extends ComponentPreferenceSet to include Mechanism-specific preferences
      
     Description:
         Implements the following preference:

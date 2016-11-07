@@ -72,9 +72,9 @@
 #     calling super().__init__.
 # Automated type checking (like typecheck-decorator) would reduce code size noticeably.
 # PEP8
-#     Rename packages lowercase, Functions -> functions
+#     Rename packages lowercase, Components -> functions
 #     Mechanism_Base -> MechanismBase
-#     Method names, e.g. verbosePref -> verbose_pref in FunctionPreferenceSet
+#     Method names, e.g. verbosePref -> verbose_pref in ComponentPreferenceSet
 #     Aim for methods that fit on a single screen, e.g. Function.__init__ is about 150 lines,
 #         but you want something like 50 lines for a method for it to be comprehensible.
 #     Along the same lines, too many #regions, and too much SHOUTING. Breaks up the reader’s flow.
@@ -107,7 +107,7 @@
 #
 # ACTION ITEMS:
 #
-# Flatten params (and add kwArgs handling) to UtilityFunctions
+# Flatten params (and add kwArgs handling) to Functions
 # - function -> function
 # - functionParams -> args and/or params dict inside Function specification
 # - if functionParams are now all handled inside specification of a Function for function param:
@@ -121,8 +121,26 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
-# QUESTION:  Should process.execute use phases or not?
-# ANSWER: yes, for realtime mode;  so, it should check phase
+# QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
+# QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
+# QUESTION:  Add function params to mechanism (e.g.: function_param[<PARAM>] to self.<param>??)
+# QUESTION:  DDM:
+#              How to handle function arg of DDM when time_scale == TIME_STEP:
+#                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
+#              Handling of PROB_UPPER_BOUND <-> Acurracy;  PROB_LOWER_BOUND <-> ER and relationshp to interrogation
+#                 protocol (see docs for DDM)
+#              What is RT relative to time_step and ms??
+#              What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
+# QUESTION:  EVC:  Names of functions:
+#                     FUNCTION - specifies how the values of the outputStates are combined
+#                                 to generate an aggregate value for each control allocation
+#                     COST_AGGREGATION_FUNCTION` - specifies how costs are combined across ControlSignals
+#                                 to generate an aggregate cost for each control allocation policy.
+#                     COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined
+#                                 with the aggregated value (i.e., the output of the ``function``)
+#                                 to determine the EVC for each control allocation policy.
+# QUESTION: Where should detailed info about paramters/attributes be put:
+#                     Module docstring, under Arguments for __init__, or under Attributes for class?
 #
 # -------------------
 #
@@ -204,18 +222,35 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/6/16:
+# IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
+# FIX: implement System argument for EVCMechanism
+# FIX: Should __init__ for ControlMechanism and EVCMechanism have default_input_value argument?
+
+# 11/3/16:
+
+# Transfer Execution
+# DDM Outputs
+
+# FIX: "Learning" projection -> "LearningSignal"
+# FIX: Add error message if input.value is None on execute
+
 # 10/29/16:
 # QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
 # QUESTION: is self.value re-initialized prior to every system execution? process execution?
 # QUESTION: is it possible to specify a function param in a params dict if the arguments appear in the __init__
 #           method?  And, in either case, does specifying function params in a params dict overrided the value
 #           assigned in an explicit instantation of the function in function arg of the __init__ method?
+# QUESTION: does a parameter dict have to put projection params in a PROJECTION_PARAMS subdictionary, or can it
+#           it simply include entries for the params along with (i.e., at the same level as) the PROJECTION_TYPE entry
 #
 # IMPLEMENT Ted's toposort
 # IMPLEMENT OrderedSet for toposort execution sets
 # IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
 #
-# DOCUMENTATION: add the following to attributes of class:
+#  DOCUMENTATION: Learning -> LearningSignal (name of doc)
+#
+#  DOCUMENTATION: add the following to attributes of class:
 #                object-specific params to list of
 #                function_params
 #                consider adding the following (paralleling Projection):
@@ -226,9 +261,9 @@
 #                         current value of all params for instance
 #
 #                     paramInstanceDefaults : Dict[param arg, parm value]
-#                         defaults for instance (created and validated in Functions init)
+#                         defaults for instance (created and validated in Components init)
 
-# FIX:  search for "iter" to make sure creation is outside for or while loops
+# IMPLEMENT DDM: noise function for TIME_STEP mode (to use non-Gaussian distributions), or implemente JumpDM
 
 # FIX: Transfer:
 # FIX:     - implement initial_state
@@ -238,6 +273,9 @@
 
 # 10/21/16:
 
+# QUESTION:  Should process.execute use phases or not?
+# ANSWER: yes, for realtime mode;  so, it should check phase
+#
 # QUESTION:  WHERE DOES THIS BELONG (WHERE IS InputState USED AS VARIABLE OR ASSIGNMENT SPECIFICATION)??
 #            (WAS IN Initialization arguments: UNDER __init_ FOR Mechanism_Base)
 #             - variable : value, InputState or specification dict for one
@@ -261,8 +299,6 @@
 # IMPLEMENT: parameterizable noise value for Transfer mechanism (i.e., specify function)
 
 # FIX:  ScratchPad example
-
-# FIX: Transfer:  default_input_value=NotImplemented
 
 # FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
@@ -315,12 +351,9 @@
 #         Allow it to use prior values between runs/executions (modulo no reset of CentralClock)
 #         Allow it to be specified as a parameter
 
-# IMPLEMENT: move Run to Functions dir
+# IMPLEMENT: move Run to Components dir
 
 # IMPLEMENT: run method for process and system, and document in docstring
-
-# FIX: change pathway -> pathway
-# FIX: replace ^^^^ and VVVVV with .. FOR COMMENTS in DOCSTRINGS
 
 # FIX: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:  AUTOMATICALLY ASSIGN IT TO BE SAME
 # FIX:     FORMAT AS OUTPUT OF TERMINAL MECHANISM:
@@ -422,7 +455,7 @@
 # IMPLEMENT: option to overrided "lazy updating" of parameterStates (and, in particular, weight matrix)
 #            -> useful for debugging;  confusing to have updates not appear until next trial
 
-# IMPLEMENT: is_<FunctionType> typespec annotation (for Utility Function, Mechanism, State and Projection)
+# IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
 #               IS PROBABILITY_UPPER_BOUND THE CORRECT PARAM IN EVC System Laming Validation Test Script??
@@ -448,7 +481,7 @@
 
 # QUESTION:  WHAT IS THE RELATIONSHIP BETWEEN:
 #                         CLASS PREFERENCES IN .__init__.py  (OMITTING THIS ALLOWS INSTANCE TO BE SPECIFIED DIRECTLY)
-#                         ONES IN FunctionPreferenceSet
+#                         ONES IN ComponentPreferenceSet
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
 #
 # FIX: MAKE SURE REORDERING OF TESTING OF MATRIX SPEC IN LinearMatrix._validate_params IS OK
@@ -463,7 +496,7 @@
 # FIX: Get rid of NotImplemented in:
 #      prefs must be a specification dict or NotImplemented or None
 
-# IMPLEMENT:  Add owner to all error messages in Utilities
+# IMPLEMENT:  Add owner to all error messages in Functions
 
 # 8/25/16:
 
@@ -472,11 +505,11 @@
                 # FIX: ?? SHOULD THIS USE assign_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
-# IMPLEMENT: Change "Function" to Component, and Utility to Function
+# IMPLEMENT: Change "Function" to Component, and Function to Function
 
 # PROCESS:
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
-# FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Utility LinearCombination
+# FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Function LinearCombination
 # IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in Mapping?
 #                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy _is_mechanism_spec in validation contexts generally
@@ -512,7 +545,7 @@
 # IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection pathway) xxx
 #
 # IMPLEMENT: FUNCTION
-#            Move .function -> __function__ and make .function the Utility Function object itself
+#            Move .function -> __function__ and make .function the Function Function object itself
 #                                                                              (or use .function.function to execute?)
 #            Rename Function -> Block (or Component or Module or Structure)
 
@@ -581,7 +614,7 @@
 #                 one in which the reward goes to infinity (how do to that?)
 #                 one in which probability of softmax is learned - but isn’t that what is happening here?
 #
-# IMPLEMENT: Change the name of Utility to Operation (or Function once that = Component) and restructure into Types
+# IMPLEMENT: Change the name of Function to Operation (or Function once that = Component) and restructure into Types
 # IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
 #            - do pass after _deferred_init to add MonitoringMechanism(s) to mechanisms_list
 #              (or do so in _deferred_init pass)
@@ -595,7 +628,7 @@
 #            can also be called after _deferred_init
 # IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
 #                (currently it is an additoinal input field in execute (relative to instantiation)
-# IMPLEMENT .keyword() FOR ALL UTILITY FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
+# IMPLEMENT .keyword() FOR ALL FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
 # IMPLEMENT: _instantiate_pathway:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
 #                                 self._assign_process_input_projections(mechanism)
@@ -603,10 +636,10 @@
 #      i.e., one that simply passes its input through to the output unchanged
 #      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
 #      currently use LinearCombination with identityMatrix, but for a matrix this reduces it to a vector
-# IMPLEMENT: Add Integrator as Type of Utility and move Integrator class from Transfer to Integrator Type
+# IMPLEMENT: Add Integrator as Type of Function and move Integrator class from Transfer to Integrator Type
 # IMPLEMENT: Comparator Processing Mechanism TYPE, Comparator SUBTYPE
 # IMPLEMENT: PreferenceLevel SUBTYPE
-#            For Utility Functions:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
+#            For Function Components:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
 # IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
 #
 # IMPLEMENT: Process factory method:
@@ -627,7 +660,7 @@
 # PROBLEM: By allowing specification of an arg to be an object,
 #              but using it as a template (to recreate another instance that will actually be used)
 #              preclude being able to specify a particular object.
-#          This is not a problem for Utility Functions, for which specific instances are not needed
+#          This is not a problem for Function Components, for which specific instances are not needed
 #              (although is inefficient: have to instantiate each twice -- particularly salient for Matlab-based ones)
 #              but what about other object types (e.g., projections), that might be explicitly instantiated for
 #              use in one or more places, or created in one place and used in another (e.g., projections for a Process);
@@ -649,7 +682,7 @@
 #       USE EVC System Test Script and delete CONTROL_SIGNAL for drift_rate param in DDM.__init__()
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
-# FIX:       EITHER USE TYPE CONVERSION IN BP UTILITY FUNCTION,
+# FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
 # FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
 # FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
 # FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningSignal
@@ -710,7 +743,7 @@
 # FIX: MAKE MONITORED_OUTPUT_STATES A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
 # FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
-# FIX: CALL instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
+# FIX: CALL _instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 # FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITORED_OUTPUT_STATES default: System,Mechanism or ConrolMechanism?
 #
 # 7/13/16:
@@ -723,7 +756,7 @@
 # 7/9/16
 #
 # FIX: ERROR in "Sigmoid" script:
-# Functions.Projections.Projection.ProjectionError:
+# Components.Projections.Projection.ProjectionError:
 #  'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
 #       PROBLEM: Mapping._instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
 #                                                     with length of receiver, which for DDM is just a single inputState
@@ -779,7 +812,7 @@
 # TEST: TRY Process with variableClassDefault = 0 and [0]
 
 # FIX: 6.10.16
-#     X Main.convert_to_np_array
+#     X Utilities.convert_to_np_array
 #     * self.variable assignments in Mechanism (2D), States and Projection (1D)
 #     * Mechanism needs to override _validate_variable to parse and assign multi-value variable to 2D ARRAY:
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
@@ -846,9 +879,6 @@
 #   Projections: sendsTo and sendsFrom
 #   "or isinstance(" -> use tuple
 #   Change "baseValue" -> "instanceValue" for prefs
-#   Change Utility Function "LinearCombination" -> "LinearCombination"
-#   ??Change Utility to UtilityFunction
-#         UtilityFunction seems a bit redundant (since Utility is a subclass of Function), but it is more descriptive
 #   super(<class name>, self) -> super() [CHECK FUNCTIONALITY IN EACH CASE]
 #   NotImplemented -> None (and adjust tests accordingly)
 #
@@ -890,7 +920,7 @@
 # - IMPLEMENT switch in __init__.py to suppress processing for scratch pad, etc.
 #
 # - IMPLEMENT Testing:
-#     use instantiation sequence (in Main) to create test for each step
+#     use instantiation sequence (in Utilities) to create test for each step
 #
 # - Fully implement logging
 #    For both of the above:
@@ -901,7 +931,7 @@
 #
 # - iscompatible:
 # -   # MAKE SURE / i IN iscompatible THAT IF THE REFERENCE HAS ONLY NUMBERS, THEN numbers_only SHOULD BE SET
-# -   Deal with int vs. float business in iscompatible (and Utility_Base functionOutputTypeConversion)
+# -   Deal with int vs. float business in iscompatible (and Function_Base functionOutputTypeConversion)
 # -   Fix: Allow it to allow numbers and strings (as well as lists) by default
 #     and then relax constraint to be numeric for InputState, OutputState and ParameterState
 #     in Mechanism._validate_params
@@ -912,12 +942,12 @@
 # MAKE CONSISTENT:  variable, value, and input
 #
 # - Registry:
-#   why is LinearCombination Utility Functions registering an instanceCount of 12 but only 2 entries?
+#   why is LinearCombination Function Components registering an instanceCount of 12 but only 2 entries?
 #   why is DDM registering as subclass w/o any instances?
 #   why are SLOPE and INTERCEPT in same registry as Statess and Parameters?
 #   IMPLEMENT: Registry class, and make <*>Registry dicts instances of it, and include prefs attribute
 #
-# IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Main):  (str, object)
+# IMPLEMENT: change context to Context namedtuple (declared in Globals.Keywords or Utilities):  (str, object)
 #
 #endregion
 
@@ -943,14 +973,34 @@
 #                    COMMENT
 #
 # Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
-#
-# Arguments
+
+# Tokens:
+# ======
+
+# None:
+#    :keyword:`None`
+
+# Keywords:
+#   :keyword:`<KEYWORD>`
+
+# Arguments, parameters, attributes, methods and functions:
+#   ``argument``, ``parameter``, ``attribute``, ``method``, or ``function``
+
+# Section reference:
+#    _<DOCUMENT>_<SECTION>_<SUBSECTION>:
+
+
+# Headings:
+# ========
+
+# Arguments [SECTION]
 # ---------
+
 # <argument> : <type> : default <default>
 #    description.  <- Note, first line of description is not capitalized (since it is prepended with hyphenation)
 #    More description.
 
-# Attributes
+# Attributes [SECTION]
 # ----------
 # <attribute> : <type> : default <default>
 #    Description. <- Note, first line of description IS capitalized (since it is NOT prepended with hyphenation)
@@ -960,6 +1010,15 @@
 #           Description.
 #           More description.
 
+
+# ?? ADD TO FUNCTION OR GENERAL DESCRIPTOIN SOMEWHERE:
+
+    # Notes:
+    # *  params can be set in the standard way for any Function subclass:
+    #     - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
+    #          and used for paramsCurrent unless and until the latter are changed in a function call
+    #     - paramInstanceDefaults can be later modified using assign_defaults
+    #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
 # FIX:
 
@@ -990,6 +1049,13 @@
 #     Systematize #D vs. #d
 
 # ***********************************************************************
+
+# DOCUMENT:
+# "lazy evaluation" (or call-by-need) (see https://en.wikipedia.org/wiki/Lazy_evaluation)[LINK].
+# :ref:"Lazy_Evaluation": for execution, this means that objects are updated by
+# calling items from which they receive input;  for implementation, this means that objects can create objects
+# from which they expect input, but cannot "impose" the creation of "downstream" objects.
+
 
 
 # DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
@@ -1022,7 +1088,7 @@
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
-#              Utility, Mapping, ControlSignal, and DDM documentation:
+#              Function, Mapping, ControlSignal, and DDM documentation:
 
 # DOCUMENT: SYSTEM:
 #           ORIGIN: origin mechanism of a process in a system that does not receive projections from any other mechanisms
@@ -1050,12 +1116,12 @@
 #               this assymetry might be confusing, and thus neither is allowed
 #           However, if projection is listed in pathway, it is not necessary to specify its sender or receiver
 
-# DOCUMENT: UTILITY FUNCTIONS:
-#           To use keywords for params, Utility Function must implement .keyword method that resolves it to value
-#           To use lambda functions for params, Utility Function must implement .lambda method that resolves it to value
+# DOCUMENT: FUNCTIONS:
+#           To use keywords for params, Function Function must implement .keyword method that resolves it to value
+#           To use lambda functions for params, Function Function must implement .lambda method that resolves it to value
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
-#            (in Mapping _instantiate_receiver and Utility LinearCombination)
+#            (in Mapping _instantiate_receiver and Function LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
 
@@ -1098,7 +1164,7 @@
 #                          (since some might be inappropriate for some functions)
 #                     - they should be declared inside the definition of the function in the function arg
 #
-# DOCUMENT: Utility Functions don't use functionParams (i.e., they are the end of the recursive line)
+# DOCUMENT: Function Components don't use functionParams (i.e., they are the end of the recursive line)
 
 # DOCUMENT: function, execute & update
 #            .execute should be called to execute all object classes (except States):
@@ -1114,7 +1180,7 @@
 #                        full subclass.__execute__ and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
-#                - generally it is a Utility Function
+#                - generally it is a Function Function
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
@@ -1166,7 +1232,7 @@
 # DOCUMENT: If _validate_params is overridden:
 #               before call to super()._validate_params(), params specified by user are in request_set
 #               after call to super()._validate_params(), params specified by user are in target_set
-# DOCUMENT: Function subclasses must be explicitly registered in Functions.__init__.py
+# DOCUMENT: Function subclasses must be explicitly registered in Components.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any FUNCTION params
 #                unless suppressed by params[FUNCTION_PARAMS][PARAMETER_STATES] = None
 #           Currently, ControlSignal and LearningSignal projections suppress parameterStates
@@ -1176,9 +1242,9 @@
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
 # DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
-# DOCUMENT:  kwPredictionMechanismType IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
+# DOCUMENT:  PREDICTION_MECHANISM_TYPE IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
 #                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  kwPredictionMechanismParams, AND THUS MONITORED_OUTPUT_STATES APPLIES TO ALL predictionMechanisms
+# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITORED_OUTPUT_STATES APPLIES TO ALL predictionMechanisms
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
@@ -1244,9 +1310,9 @@
 #             ADD CALL TO Mechanism._update_value SEQUENCE LIST
 # DOCUMENT: DefaultController
 # DOCUMENT: Finish documenting def __init__'s
-# DOCUMENT: (In Utility):
+# DOCUMENT: (In Function):
                         #     Instantiation:
-                        #         A utility function can be instantiated in one of several ways:
+                        #         A function can be instantiated in one of several ways:
                         # IMPLEMENTATION NOTE:  *** DOCUMENTATION
                         # IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
 # DOCUMENT Runtime Params:
@@ -1281,7 +1347,7 @@
 #     (this is not a problem for objects, since they use the @setter to reassign ownership)
 # - another side effect of the problem is:
 #   The following works, but changing the last line to "PreferenceLevel.CATEGORY" causes an error
-#     DDM_prefs = FunctionPreferenceSet(
+#     DDM_prefs = ComponentPreferenceSet(
 #                     # owner=DDM,
 #                     prefs = {
 #                         kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
@@ -1367,8 +1433,8 @@
 #      In projection() and Function:
 #          DefaultProjection
 #      In Process_Base:
-#          kwProcessDefaultProjection: Functions.Projections.Mapping
-#          kwProcessDefaultProjectionFunction: Functions.Utility.LinearMatrix
+#          kwProcessDefaultProjection: Components.Projections.Mapping
+#          kwProcessDefaultProjectionFunction: Components.Function.LinearMatrix
 #  DefaultMechanism is now being assigned in Process;
 #  -  need to re-instate some form of set_default_mechanism() in Mechanism
 #
@@ -1376,7 +1442,7 @@
 
 #region FULL SIMULATION RUN --------------------------------------------------------------------------------------------
 #
-# IMPLEMENT run Function (in Main.py):
+# IMPLEMENT run Function (in Utilities.py):
 #    1) Execute system and generate output
 #    2) Call stimulus estimation/expectation mechanism update method to generate guess for next stimulus
 #    3) Call EVC update estimation/expectation mechanism's guess as the System's input (self.variable),
@@ -1425,7 +1491,7 @@
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:
 # params={
-#     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[DDM_RT]],
+#     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[_ddm_rt]],
 #     FUNCTION_PARAMS:{OPERATION:LinearCombination.Operation.PRODUCT,
 #                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
@@ -1465,7 +1531,7 @@
 #                      it is applied to just that mechanism
 #
 # IMPLEMENT: call ControlMechanism should call ControlSignal._instantiate_sender()
-#                to instantaite new outputStates and Projections in take_over_as_default_controller()
+#                to instantaite new outputStates and Projections in _take_over_as_default_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
 #                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
@@ -1477,7 +1543,7 @@
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
 # FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
-# FIX:  CURRENTLY, kwCostAggregationFunction and kwCostApplicationFunction ARE SPECIFIED AS INSTANTIATED FUNCTIONS
+# FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
 #           COULD SWITCH TO SPECIFICATION BY CLASS REFERENCE, BUT THEN WOULD NEED
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)
@@ -1488,32 +1554,32 @@
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller
 #           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
-#                then the class's take_over_as_default_controller() method
+#                then the class's _take_over_as_default_controller() method
 #                     is called in _instantiate_attributes_after_function
 # it moves all ControlSignal Projections from DefaultController to itself
 #
 # FIX: IN ControlSignal._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
-# FIX: ControlMechanism.take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
+# FIX: ControlMechanism._take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
 #
-# FIX: PROBLEM - ControlMechanism.take_over_as_default_controller()
+# FIX: PROBLEM - ControlMechanism._take_over_as_default_controller()
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
 # 1) CLEANER: use _instantiate_sender on ControlSignal to instantiate both outputState and projection
-# 2) EASIER: add self.sendsToProjections.append() statement in take_over_as_default_controller()
+# 2) EASIER: add self.sendsToProjections.append() statement in _take_over_as_default_controller()
 
 
 # BACKGROUND INFO:
 # _instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
-# instantiate_control_signal_projection normally called from ControlSignal in _instantiate_sender
+# _instantiate_control_signal_projection normally called from ControlSignal in _instantiate_sender
 #
 # Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
-#             instantiate_control_signal_projection() for current controller
+#             _instantiate_control_signal_projection() for current controller
 #                 instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
@@ -1621,7 +1687,7 @@
 #                the fraction of the outputvalue used as the input to any projections on each (and every) time_step
 #            values to the right of the decimal point specify the time_step (phase) at which updating begins
 # QUESTION: SHOULD OFF PHASE INPUT VALUES BE SET TO EMPTY OR NONE INSTEAD OF 0?
-#           IN SCRIPTS AND EVCMechanism.get_simulation_system_inputs()
+#           IN SCRIPTS AND EVCMechanism._get_simulation_system_inputs()
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
@@ -1700,7 +1766,7 @@
 #            SOLUTION:
 #                - FUNCTION_PARAMS: {kwParameterState: None}}:  suppresses ParameterStates
 #                - handled in Mechanism.instantiate_parameter_states()
-#                - add DOCUMENTATION in Functions and/or Mechanisms or ParameterStates;
+#                - add DOCUMENTATION in Components and/or Mechanisms or ParameterStates;
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
 #                      there are just not any parameterStates instantiated for them
 #                          (i.e., can't be controlled by projections, etc.)
@@ -1711,9 +1777,9 @@
             # IMPLEMENTATION NOTE:
             #    - currently no checking of compatibility for entries in embedded dicts
             #    - add once paramClassDefaults includes type lists (as per requiredClassParams)
-# Implement categories of Utility functions using ABC:
+# Implement categories of Function functions using ABC:
 # - put checks for constraints on them (e.g., input format = output format)
-# - associate projection and state categories with utility function categories:
+# - associate projection and state categories with function categories:
 #    e.g.:  mapping = transform;  input & output states = aggregate
 #
 #endregion
@@ -1879,7 +1945,7 @@
 #
 ## ******* MOVE THIS TO State
 #                 try:
-#                     from Functions.Projections.Projection import ProjectionRegistry
+#                     from Components.Projections.Projection import ProjectionRegistry
 #                     projection_type = ProjectionRegistry[param_value.projection].subclass
 #                 except ValueError:
 #                     raise MechanismError("{0} not recognized as reference to a projection or projection type".
@@ -2109,6 +2175,7 @@
 
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
+# - FIX: CLEAN UP PROBABILITY_UPPER_BOUND ETC.
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
 # - Fix:  move kwDDM_AnalyticSolution back to FUNCTION_PARAMS and adjust validation to allow non-numeric value
 # - implement: add options to multiply or fully override parameterState.values
@@ -2121,10 +2188,13 @@
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+# IMPLEMENT: customizable noise distribution for TIME_STEP mode??
+# IMPLEMENT: interrogation protocol:  ER (mass of distribution to left and right of decision variable)
+# IMPLEMENT: compute variance of path in time_step mode and report in RT_CORRECT_VARIANCE?? (but not just correct?)
 #
 #endregion
 
-#region UTILITY: -------------------------------------------------------------------------------------------------------------
+#region FUNCTION: ------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
 # Implement abstract Types (aggregate, transfer, tranform, objective)

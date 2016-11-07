@@ -230,11 +230,11 @@ COMMENT
 
 import numpy as np
 from collections import Iterable
-from PsyNeuLink.Globals.Main import *
-from PsyNeuLink.Functions.Function import function_type
-from PsyNeuLink.Functions.System import System
-from PsyNeuLink.Functions.Process import Process
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Globals.Utilities import *
+from PsyNeuLink.Components.Component import function_type
+from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.Process import Process
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 
 class RunError(Exception):
      def __init__(object, error_value):

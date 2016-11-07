@@ -47,15 +47,15 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  time_step (“realtime”) = cascaded
         
              - Process 
-                 Function that takes an input, processes it through an ordered list of mechanisms (and projections)
+                 Component that takes an input, processes it through an ordered list of mechanisms (and projections)
                  and generates an output
         
                  - Mechanism 
-                     Function that converts an input state representation into an output state representation
+                     Component that converts an input state representation into an output state representation
                      Parameters that determine its operation, under the influence of projections
         
                  - Projection 
-                     Function that takes a source, possibly transforms it, and uses it to
+                     Component that takes a source, possibly transforms it, and uses it to
                      determine the operation of a mechanism;  three primary types:
         
                      + Mapping
@@ -71,7 +71,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          modulate the input and/or output state of a mechanism
         
                      + Learning
-                         Takes an input from objection function (Utility)
+                         Takes an input from objection function (Function)
                          and modulates params (e.g., weights) of projection execute method
                          + Vectorial: modifies mapping projections
                          + Evaluative: modifies control projections
@@ -92,12 +92,12 @@ Description: Princeton University licenses this file to You under the Apache Lic
              - Class(required_arg, [optional_args]) # comment
         
              Hierarchy:
-             - Function: abstract class - cannont be instantiated directly
+             - Component: abstract class - cannont be instantiated directly
                  - Category: abstract classes - cannont be instantiated directly
                      - Type: can be instantiated
                          <instances>
         
-             Function(variable, params, name, prefs, context)
+             Component(variable, params, name, prefs, context)
                  Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
                  Mechanism_Base([variable,                                   # default: DDM
                                  params,
@@ -127,7 +127,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      ControlSignals([allocation_source, receiver, params, name, prefs])  # outputState -> parameterState
                      [TBI: - Gating()]                                                   # outputState -> inputState/outputState
                      [TBI: - Learning()]                                                 # outputState -> projection
-                 Utility_Base(variable_default, param_defaults, [name, prefs, context])
+                 Function_Base(variable_default, param_defaults, [name, prefs, context])
                      Contradiction([variable_default, param_defaults, prefs, context])    # example function
                      [TBI: Implement as abstract Type: Aggretate
                          LinearCombination([variable_default, param_defaults, prefs, context])   # combines values/vectors
@@ -145,46 +145,46 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
                          CLASS:                                               MODULE:
         
-             Function(Object)............................................[PsyNeuLink.Functions.Function]
+             Component(Object)............................................[PsyNeuLink.Components.Component]
         
-                 System(Function)........................................[PsyNeuLink.Functions.ShellClassses]
-                     System_Base(System).................................[PsyNeuLink.Functions.System]
+                 System(Component)........................................[PsyNeuLink.Components.ShellClassses]
+                     System_Base(System).................................[PsyNeuLink.Components.System]
         
-                 Process(Function).......................................[PsyNeuLink.Functions.ShellClassses]
-                     Process_Base(Process)...............................[PsyNeuLink.Functions.Process]
+                 Process(Component).......................................[PsyNeuLink.Components.ShellClassses]
+                     Process_Base(Process)...............................[PsyNeuLink.Components.Process]
         
-                 Mechanism(Function).....................................[PsyNeuLink.Functions.ShellClasses]
-                     Mechanism_Base(Mechanism)...........................[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                         DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                         DDM(Mechanism_Base).............................[PsyNeuLink.Functions.Mechanisms.DDM]
-                         DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Functions.Mechanisms.Mechanism]
+                 Mechanism(Component).....................................[PsyNeuLink.Components.ShellClasses]
+                     Mechanism_Base(Mechanism)...........................[PsyNeuLink.Components.Mechanisms.Mechanism]
+                         DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Components.Mechanisms.Mechanism]
+                         DDM(Mechanism_Base).............................[PsyNeuLink.Components.Mechanisms.DDM]
+                         DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Components.Mechanisms.Mechanism]
         
-                 State(Function)................................[PsyNeuLink.Functions.ShellClasses]
-                     State_Base(State).................[PsyNeuLink.Functions.States.State]
-                         InputState(State_Base)........[PsyNeuLink.Functions.States.InputState]
-                         OutputState(State_Base).......[PsyNeuLink.Functions.States.OutputState]
-                         ParameterState(State_Base)....[PsyNeuLink.Functions.States.ParameterState]
+                 State(Component)................................[PsyNeuLink.Components.ShellClasses]
+                     State_Base(State).................[PsyNeuLink.Components.States.State]
+                         InputState(State_Base)........[PsyNeuLink.Components.States.InputState]
+                         OutputState(State_Base).......[PsyNeuLink.Components.States.OutputState]
+                         ParameterState(State_Base)....[PsyNeuLink.Components.States.ParameterState]
         
-                 Projection(Function)....................................[PsyNeuLink.Functions.ShellClasses]
-                     Projection_Base(Projection).........................[PsyNeuLink.Functions.Projections.Projection]
-                         Mapping(Projection_Base)........................[PsyNeuLink.Functions.Projections.Mapping]
-                         ControlSignal(Projection_Base)..................[PsyNeuLink.Functions.Projections.ControlSignal]
+                 Projection(Component)....................................[PsyNeuLink.Components.ShellClasses]
+                     Projection_Base(Projection).........................[PsyNeuLink.Components.Projections.Projection]
+                         Mapping(Projection_Base)........................[PsyNeuLink.Components.Projections.Mapping]
+                         ControlSignal(Projection_Base)..................[PsyNeuLink.Components.Projections.ControlSignal]
         
-                 Utility(Function).......................................[PsyNeuLink.Functions.ShellClasses]
-                     Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utilities.Utility]
-                         Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utilities.Utility]
-                         LinearCombination(Utility_Base)........................[PsyNeuLink.Functions.Utilities.Utility]
-                         Linear(Utility_Base)............................[PsyNeuLink.Functions.Utilities.Utility]
-                         Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utilities.Utility]
-                         Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utilities.Utility]
-                         LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utilities.Utility]
+                 Function(Component).......................................[PsyNeuLink.Components.ShellClasses]
+                     Function_Base(Function)...............................[PsyNeuLink.Components.Functions.Function]
+                         Contradiction(Function_Base).....................[PsyNeuLink.Components.Functions.Function]
+                         LinearCombination(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+                         Linear(Function_Base)............................[PsyNeuLink.Components.Functions.Function]
+                         Exponential(Function_Base).......................[PsyNeuLink.Components.Functions.Function]
+                         Integrator(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+                         LinearMatrix(Function_Base)......................[PsyNeuLink.Components.Functions.Function]
         
         
              Requirements:
         
              - Projection subclasses must see (particular) State subclasses in order to assign kwProjectionSender
              - State subclasses must see (particular) Projection subclasses in order to assign PROJECTION_TYPE
-             - Process must see Mechanism subclasses to assign PsyNeuLink.Functions.DefaultMechanism
+             - Process must see Mechanism subclasses to assign PsyNeuLink.Components.DefaultMechanism
              - Would like Mechanism, Projection (and possible State) classes to be extensible:
                  developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
         
@@ -236,7 +236,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
         ## DESIGN PATTERNS / PRINCIPLES
         
-        ### Functions:
+        ### Components:
              Everything is a function
              Every call (for both initialization and execution) has five standard arguments
              - variable (value):
@@ -378,7 +378,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
              paramClassDefaults:
         
-                 - Dictionary used to provide defaults for params of Function class and all of its subclasses
+                 - Dictionary used to provide defaults for params of Component class and all of its subclasses
                  - Subclasses should inherit super's paramClassDefaults, and their own
                  - Entries added by one subclass should subclass-specific (i.e., not represented in sibling classes)
                  - Subclasses should implement their copy of paramClassDefaults as follows:
@@ -404,7 +404,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      requiredParamClassDefaultTypes.update({<required entries>})
         
              Parameter specification:
-                 - All Function objects have three sets of parameter values that determine how their execute method operates:
+                 - All Component objects have three sets of parameter values that determine how their execute method operates:
                       + defaults defined for all parameters of the object's class, stored in paramClassDefaults (see above)
                       + instance-specific values, stored in paramInstanceDefaults (if specified override paramClassDefaults)
                       + current parameter values, stored in paramsCurrent, that are in effect for the current call to the object
@@ -449,7 +449,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
              Note: methods not implemented by subclass are shown in brackets (to see place in sequence)
         
-             A) Function:
+             A) Component:
                  1) Assign name
                  2) Assign prefs
                  3) Assign log
@@ -642,7 +642,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                        - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
                        - assign its outputState.value as self.variable
                    otherwise, if self.receiver.owner has an receiverError attribute, as that as self.variable
-                       (error signal for hidden units by BackPropagation Function)
+                       (error signal for hidden units by BackPropagation Component)
                    [TBI: otherwise, implement default MonitoringMechanism]
                    otherwise, raise exception
                                  
@@ -693,25 +693,25 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  - PreferenceSets:
                      Each object has a prefs attribute that is assigned a PreferenceSet object specifying its preferences
                      Preference objects have a set of preference attributes, one for each preference
-                     In addition to objects, every class in the Function hierarchy is assigned a:
+                     In addition to objects, every class in the Component hierarchy is assigned a:
                      + PreferenceLevel: used to specify preferences for objects at that class level and below
                      + PreferenceSet: preference settings for the corresponding level of specification (see PreferenceLevels below)
         
              - Standard preferences:
-                 Function objects and Mechanism subclass objects have the following preferences:
+                 Component objects and Mechanism subclass objects have the following preferences:
                  Format:  pref_name (type): [Class]
                  * note: "Class" refers to the class (and all subclasses) for which the preference is defined
         
-                 + verbose_pref (bool):  [Function]
+                 + verbose_pref (bool):  [Component]
                      determines whether non-execute-related actions (e.g., initialization) and non-fatal warnings are reported
         
-                 + paramValidation_pref (bool):  [Function]
+                 + paramValidation_pref (bool):  [Component]
                      determines whether the parameters of an object's execute method are validated prior to execution
         
-                 + reportOutput_pref (bool):  [Function]
+                 + reportOutput_pref (bool):  [Component]
                      determines whether output of execute-related actions is reported to the console (see Process and Mechanism)
         
-                 + log_pref (LogPreferences): [Function]
+                 + log_pref (LogPreferences): [Component]
                      determines whether activity of the object is recorded in its log (see Logging)
         
                  + functionRuntimeParams_pref (ModulationOperation): [Mechanism]
@@ -727,10 +727,10 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      when a request is made for the value of the preference for that PreferenceSet
         
              - PreferenceLevels:
-                 There are four PreferenceLevels defined for the Function hierarchy:
-                 + System:  reserved for the Function class
-                 + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Utility)
-                 + Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Utility subclasses)
+                 There are four PreferenceLevels defined for the Component hierarchy:
+                 + System:  reserved for the Component class
+                 + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
+                 + Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Function subclasses)
                  + Instance: an instance of an object of any class
         
              - Setting preferences:

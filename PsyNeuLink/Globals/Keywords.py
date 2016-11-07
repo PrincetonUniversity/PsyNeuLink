@@ -9,10 +9,10 @@
 # # *******************************   get_param_value_for_keyword ******************************************************
 # #
 # def get_param_value_for_keyword(owner, keyword):
-#     from PsyNeuLink.Functions.Utilities.Utility import UtilityError
+#     from PsyNeuLink.Components.Functions.Function import FunctionError
 #     try:
 #         return owner.paramsCurrent[FUNCTION].keyword(keyword)
-#     except UtilityError as e:
+#     except FunctionError as e:
 #         if owner.prefs.verbosePref:
 #             print ("{} of {}".format(e, owner.name))
 #         return None
@@ -113,7 +113,7 @@ kwTimeScale = "Time Scale"
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 kwPreferenceSet = 'PreferenceSet'
-kwFunctionPreferenceSet = 'PreferenceSet'
+kwComponentPreferenceSet = 'PreferenceSet'
 #endregion
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
@@ -123,7 +123,7 @@ kwContext = 'Context'
 kwValue = 'Value'
 #endregion
 
-#region -----------------------------------------------    MAIN    ---------------------------------------------------
+#region -----------------------------------------------  UTILITIES  ----------------------------------------------------
 
 kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
 kpMechanismInputLogEntry = "Mechanism Input"
@@ -160,7 +160,7 @@ kwParamsCurrent = "paramsCurrent"                  # Params currently in effect 
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
 kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
-kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Utility Functions to set output type
+kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
@@ -172,7 +172,7 @@ kwProcessFunctionCategory = "Process_Base"
 kwMechanismFunctionCategory = "Mechanism_Base"
 kwStateFunctionCategory = "State_Base"
 kwProjectionFunctionCategory = "Projection_Base"
-kwUtilityFunctionCategory = "Utility_Base"
+kwComponentCategory = "Function_Base"
 
 # Function TYPES  -----------------
 
@@ -191,7 +191,7 @@ MAPPING = "Mapping"
 CONTROL_SIGNAL = "ControlSignal"
 LEARNING_SIGNAL = "LearningSignal"
 
-# Utility:
+# Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
 kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
@@ -215,7 +215,7 @@ kwLinearMechanism = "LinearMechanism"
 kwSigmoidLayer = "SigmoidLayer"
 kwAdaptiveIntegrator = "AdaptiveIntegrator"
 
-# Utility:
+# Function:
 kwContradiction = "Contradiction"
 kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
@@ -306,15 +306,15 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITORED_OUTPUT_STATES = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
-kwPredictionMechanismType = "prediction_mechanism_type"
-kwPredictionMechanismParams = "prediction_mechanism_params"
+PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
+PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_SIGNAL_PROJECTIONS = 'ControlSignalProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
-kwCostAggregationFunction = 'cost_aggregation_function'
-kwCostApplicationFunction = 'cost_application_function'
-kwSaveAllValuesAndPolicies = 'save_all_values_and_policies'
+COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
+COST_APPLICATION_FUNCTION = 'cost_application_function'
+SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
 kwEVCSimulation = 'SIMULATING'
 
@@ -360,7 +360,7 @@ MONITOR_FOR_LEARNING = 'MonitorForLearning'
 
 #endregion
 
-#region ----------------------------------------------    UTILITY  -----------------------------------------------------
+#region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 kwInitializer = 'initializer'
 WEIGHTS = "weights"

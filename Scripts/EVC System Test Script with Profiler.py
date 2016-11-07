@@ -1,11 +1,11 @@
 import profile
 
-from PsyNeuLink.Functions.Mechanisms.AdaptiveIntegrator import *
-from PsyNeuLink.Functions.Mechanisms.LinearMechanism import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Components.Mechanisms.LinearMechanism import *
 
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import Process_Base
+from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
 
 
@@ -13,12 +13,12 @@ def run():
 
 
     #region Preferences
-    DDM_prefs = FunctionPreferenceSet(
+    DDM_prefs = ComponentPreferenceSet(
                     prefs = {
                         kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                         kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
-    process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+    process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                           verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
     #endregion
 
@@ -50,7 +50,7 @@ def run():
 
     #region System
     mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                                   MONITORED_OUTPUT_STATES:[Reward, ERROR_RATE,(RT_MEAN, -1, 1)]},
+                                   MONITORED_OUTPUT_STATES:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
                            name='EVC Test System')
     #endregion
 

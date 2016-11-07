@@ -1,21 +1,21 @@
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
-from PsyNeuLink.Functions.System import system
-from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Run import run, _construct_inputs
 
 
 # Preferences:
-DDM_prefs = FunctionPreferenceSet(
+DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
-process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Mechanisms:
@@ -46,8 +46,8 @@ RewardProcess = process(
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RT_MEAN, -1, 1)],
-                  # monitored_output_states=[Reward, DECISION_VARIABLE,(RT_MEAN, -1, 1)],
+                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RESPONSE_TIME, -1, 1)],
+                  # monitored_output_states=[Reward, DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
                   name='EVC Test System')
 
 # Show characteristics of system:
