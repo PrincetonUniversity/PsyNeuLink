@@ -29,13 +29,21 @@ and assigned as the controller for that system (see :ref:`_System_Execution_Cont
 MonitoredOutputStates
 ~~~~~~~~~~~~~~~~~~~~~
 
-The outputStates monitored by a ControlMechanism can be specified in its ``monitored_output_states`` argument when it
-is created, or in it its ``params`` dictionary using the :keyword:`MONITORED_OUTPUT_STATES`.  It can also be
-specified in the ``monitored_output_states`` parameter of a system [LINK], for the mechanism that is the owner of the
-outputState(s), or for an outputState itself [**??HOW DOES THIS GET DONE??]
+The outputStates monitored by a ControlMechanism can be specified in the following places:
+its ``monitored_output_states`` argument when it
+is created, or in its ``params`` dictionary in an entry with the key :keyword:`MONITORED_OUTPUT_STATES`.  It can also be
+specified in the ``monitored_output_states`` parameter of a system [LINK]; in the
+:keyword:`MONITORED_OUTPUT_STATES` entry of a ``params`` dictionary for a mechanism that owns the outputState to be
+monitored; or an outputState itself.
 
-The parameter must be
-a list, each item of which is one of the following:
+Where there are multiple specifications that pertain to a given outputState, the order of precedence is as  follows:
+* specification(s) in the outputState itself;
+* then the mechanism to which it belongs;
+* then the controlMechanism for the system
+* then the system itself
+
+
+The parameter must be a list, each item of which is one of the following:
     * a string that is the **name** of an outputState
 
     * an **outputState** or **mechanism** object
