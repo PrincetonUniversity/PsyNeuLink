@@ -629,7 +629,11 @@ class System_Base(System):
         # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
+            # MODIFIED 11/6/16 OLD:
             self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
+            # # MODIFIED 11/6/16 NEW:
+            # self.controller = self.paramsCurrent[kwController](system=self)
+            # MODIFIED 11/6/16 END
 
         # Check whether controller has inputs, and if not then disable
         try:
