@@ -5,25 +5,35 @@
 
 Welcome to PsyNeuLink's documentation!
 ======================================
+..
+   .. toctree::
+      :maxdepth: 1
+
+      System
+      Process
+
+   .. toctree::
+      :maxdepth: 3
+
+      Mechanism
+
+   .. toctree::
+      :maxdepth: 2
+
+      State
+      Projection
+      Functions
+
 
 .. toctree::
-   :maxdepth: 1
+   :hidden:
 
    System
    Process
-
-.. toctree::
-   :maxdepth: 3
-
    Mechanism
-
-.. toctree::
-   :maxdepth: 2
-
    State
    Projection
-   Utilities
-
+   Function
 
 
 Indices and tables

@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Projections" href="Projection.html"/>
-        <link rel="next" title="Utilities" href="Utilities.html"/>
+        <link rel="next" title="Functions" href="Function.html"/>
         <link rel="prev" title="Control Signal" href="ControlSignal.html"/> 
 
   
@@ -98,10 +98,9 @@
 <li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -138,7 +137,7 @@
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/Learning.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/LearningSignal.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -152,11 +151,11 @@
 <span id="learningsignal"></span><h1>LearningSignal<a class="headerlink" href="#module-LearningSignal" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="LearningSignal.LearningSignal">
-<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b50f2f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b625268&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements projection that modifies the matrix param of a Mapping projection</p>
 <dl class="docutils">
 <dt>Description:</dt>
-<dd><p class="first">The LearningSignal class is a functionType in the Projection category of Function,
+<dd><p class="first">The LearningSignal class is a componentType in the Projection category of Function,
 It&#8217;s execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of</p>
 <blockquote class="last">
 <div>the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
@@ -181,7 +180,7 @@ weight changes for the Mapping Projection&#8217;s matrix parameter</div></blockq
 <li><dl class="first docutils">
 <dt>params (dict) - dictionary of projection params:</dt>
 <dd><ul class="first last">
-<li><p class="first">FUNCTION (Utility): (default: BP)</p>
+<li><p class="first">FUNCTION (Function): (default: BP)</p>
 </li>
 <li><dl class="first docutils">
 <dt>FUNCTION_PARAMS (dict):</dt>
@@ -238,14 +237,14 @@ it will be assigned &#8220;LearningSignal&#8221; with a hyphenated, indexed suff
 <dt>Class attributes:</dt>
 <dd><ul class="first simple">
 <li>className = LEARNING_SIGNAL</li>
-<li>functionType = PROJECTION</li>
+<li>componentType = PROJECTION</li>
 </ul>
 <p># + defaultSender (State)
 # + defaultReceiver (State)
 + paramClassDefaults (dict):</p>
 <blockquote>
 <div><ul>
-<li><p class="first">FUNCTION (Utility): (default: BP)</p>
+<li><p class="first">FUNCTION (Function): (default: BP)</p>
 </li>
 <li><dl class="first docutils">
 <dt>FUNCTION_PARAMS:</dt>
@@ -269,7 +268,7 @@ it will be assigned &#8220;LearningSignal&#8221; with a hyphenated, indexed suff
 <dd><ul class="first last simple">
 <li>sender (MonitoringMechanism)</li>
 <li>receiver (Mapping)</li>
-<li>paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)</li>
+<li>paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)</li>
 <li>paramsCurrent (dict) - set currently in effect</li>
 <li>variable (value) - used as input to projection&#8217;s function</li>
 <li>value (value) - output of function</li>
@@ -359,11 +358,6 @@ for logistic activation function: transferDerivative = sample * (1-sample)</dd>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="LearningSignal.random">
-<code class="descclassname">LearningSignal.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#LearningSignal.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </div>
 
 
@@ -373,7 +367,7 @@ for logistic activation function: transferDerivative = sample * (1-sample)</dd>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Utilities.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Function.html" class="btn btn-neutral float-right" title="Functions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ControlSignal.html" class="btn btn-neutral" title="Control Signal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

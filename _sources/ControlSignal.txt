@@ -2,4 +2,5 @@ Control Signal
 ==============
 
 .. automodule:: ControlSignal
-	:members:
+   :members:
+   :exclude-members: ControlSignalValuesTuple, ControlSignalChannel, random

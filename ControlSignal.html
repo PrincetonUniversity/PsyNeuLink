@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Projections" href="Projection.html"/>
-        <link rel="next" title="Learning" href="Learning.html"/>
+        <link rel="next" title="LearningSignal" href="LearningSignal.html"/>
         <link rel="prev" title="Mapping" href="Mapping.html"/> 
 
   
@@ -85,22 +85,22 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-</ul>
-<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -151,12 +151,12 @@
 <span id="control-signal"></span><h1>Control Signal<a class="headerlink" href="#module-ControlSignal" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="ControlSignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Functions.Utilities.Utility.Linear object&gt;</em>, <em>allocation_samples=array([ 0.1</em>, <em>0.2</em>, <em>0.3</em>, <em>0.4</em>, <em>0.5</em>, <em>0.6</em>, <em>0.7</em>, <em>0.8</em>, <em>0.9</em>, <em>1. ])</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bc0d510&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.Linear object&gt;</em>, <em>allocation_samples=array([ 0.1</em>, <em>0.2</em>, <em>0.3</em>, <em>0.4</em>, <em>0.5</em>, <em>0.6</em>, <em>0.7</em>, <em>0.8</em>, <em>0.9</em>, <em>1. ])</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b625268&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement projection that controls a parameter value (default: IdentityMapping)</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>Description:</dt>
-<dd><p class="first">The ControlSignal class is a functionType in the Projection category of Function,
+<dd><p class="first">The ControlSignal class is a type in the Projection category of Component,
 It:</p>
 <blockquote class="last">
 <div><ul>
@@ -208,7 +208,7 @@ It:</p>
 <dt># IMPLEMENTATION NOTE: WHY ISN&#8217;T kwProjectionSenderValue HERE AS FOR Mapping??</dt>
 <dd><ul class="first last">
 <li><dl class="first docutils">
-<dt>FUNCTION (Utility): (default: Linear):</dt>
+<dt>FUNCTION (Function): (default: Linear):</dt>
 <dd><p class="first last">determines how allocation (variable) is translated into the output</p>
 </dd>
 </dl>
@@ -228,7 +228,7 @@ It:</p>
 <dd><p class="first">determine how costs are computed
 the key for each entry must be the name of a control signal cost function (see below) and
 the value must be a function initialization call (with optional variable and params dict args)
-Format: {&lt;kwControlSignalCostFunctionName:&lt;functionName(variable, params, &lt;other args&gt;)}</p>
+Format: {&lt;kwControlSignalCostFunctionName:&lt;componentName(variable, params, &lt;other args&gt;)}</p>
 <blockquote class="last">
 <div><ul class="simple">
 <li>kwControlSignalIntensityCostFunction: (default: Exponential)</li>
@@ -323,7 +323,7 @@ generated from DEFAULT_SAMPLE_VALUES)</div></blockquote>
 <li>last_intensity</li>
 </ul>
 </dd>
-<dt>Cost Functions &#8211; used to compute cost:</dt>
+<dt>Cost Components &#8211; used to compute cost:</dt>
 <dd><ul class="first simple">
 <li>FUNCTION - converts allocation into intensity that is provided as output to receiver of projection</li>
 <li>IntensityCostFunction &#8211;&nbsp;converts intensity into its contribution to the cost</li>
@@ -438,120 +438,7 @@ pass allocation (input to controlSignal) along as its output</p>
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="ControlSignal.ControlSignal.instantiate_receiver">
-<code class="descname">instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.instantiate_receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handle situation in which self.receiver was specified as a Mechanism (rather than State)</p>
-<dl class="docutils">
-<dt>Overrides Projection.instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:</dt>
-<dd>the receiver Mechanism must have one and only one ParameterState;
-otherwise, passes control to Projection.instantiate_receiver for validation</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
-
-<dl class="method">
-<dt id="ControlSignal.ControlSignal.instantiate_sender">
-<code class="descname">instantiate_sender</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.instantiate_sender" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check if DefaultController is being assigned and if so configures it for the requested ControlSignal</p>
-<p>If self.sender is a Mechanism, re-assign to &lt;Mechanism&gt;.outputState
-Insure that sender.value = self.variable</p>
-<dl class="docutils">
-<dt>This method overrides the corresponding method of Projection, before calling it, to check if the</dt>
-<dd>DefaultController is being assigned as sender and, if so:
-- creates projection-dedicated inputState, outputState and ControlSignalChannel in DefaultController
-- puts them in DefaultController&#8217;s inputStates, outputStates, and ControlSignalChannels attributes
-- lengthens variable of DefaultController to accommodate the ControlSignal channel
-- updates value of DefaultController (in resposne to new variable)</dd>
-</dl>
-<p>Note: the default execute method of DefaultController simply maps the inputState value to the outputState</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ControlSignal.ControlSignalChannel">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalChannel</code><span class="sig-paren">(</span><em>inputState</em>, <em>variableIndex</em>, <em>variableValue</em>, <em>outputState</em>, <em>outputIndex</em>, <em>outputValue</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalChannel" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.inputState">
-<code class="descname">inputState</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.inputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.outputIndex">
-<code class="descname">outputIndex</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 4</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.outputState">
-<code class="descname">outputState</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 3</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.outputValue">
-<code class="descname">outputValue</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.outputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 5</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.variableIndex">
-<code class="descname">variableIndex</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.variableIndex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalChannel.variableValue">
-<code class="descname">variableValue</code><a class="headerlink" href="#ControlSignal.ControlSignalChannel.variableValue" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="ControlSignal.ControlSignalCosts">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalCosts</code><a class="headerlink" href="#ControlSignal.ControlSignalCosts" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="ControlSignal.ControlSignalValuesTuple">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalValuesTuple</code><span class="sig-paren">(</span><em>intensity</em>, <em>cost</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="ControlSignal.ControlSignalValuesTuple.cost">
-<code class="descname">cost</code><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.cost" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignalValuesTuple.intensity">
-<code class="descname">intensity</code><a class="headerlink" href="#ControlSignal.ControlSignalValuesTuple.intensity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="ControlSignal.random">
-<code class="descclassname">ControlSignal.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#ControlSignal.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 
@@ -562,7 +449,7 @@ Insure that sender.value = self.variable</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Learning.html" class="btn btn-neutral float-right" title="Learning" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="LearningSignal.html" class="btn btn-neutral float-right" title="LearningSignal" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Mapping.html" class="btn btn-neutral" title="Mapping" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

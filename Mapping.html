@@ -85,22 +85,22 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-</ul>
-<ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-</ul>
-<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Learning.html">Learning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 
             
@@ -151,12 +151,12 @@
 <span id="mapping"></span><h1>Mapping<a class="headerlink" href="#module-Mapping" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="Mapping.Mapping">
-<em class="property">class </em><code class="descclassname">Mapping.</code><code class="descname">Mapping</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>matrix='IdentityMatrix'</em>, <em>param_modulation_operation=&lt;function ModulationOperation.&lt;lambda&gt;&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bc0d510&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Mapping.</code><code class="descname">Mapping</code><span class="sig-paren">(</span><em>sender=NotImplemented</em>, <em>receiver=NotImplemented</em>, <em>matrix='IdentityMatrix'</em>, <em>param_modulation_operation=&lt;function ModulationOperation.&lt;lambda&gt;&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b625268&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>Description:</dt>
-<dd><p class="first">The Mapping class is a functionType in the Projection category of Function,
+<dd><p class="first">The Mapping class is a type in the Projection category of Component,
 It&#8217;s function conveys (and possibly transforms) the OutputState.value of a sender</p>
 <blockquote class="last">
 <div>to the InputState.value of a receiver</div></blockquote>
@@ -213,7 +213,7 @@ otherwise, the preceding mechanism in the list will be used as the sender</p>
 <dt># IMPLEMENTTION NOTE: ISN&#8217;T kwProjectionSenderValue REDUNDANT WITH sender and receiver??</dt>
 <dd><ul class="first last simple">
 <li>kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??</li>
-<li>FUNCTION (Utility): (default: LinearMatrix)</li>
+<li>FUNCTION (Function): (default: LinearMatrix)</li>
 <li>FUNCTION_PARAMS (dict): (default: {MATRIX: IDENTITY_MATRIX})</li>
 </ul>
 </dd>
@@ -237,7 +237,7 @@ dict entries must have a preference keyPath as their key, and a PreferenceEntry 
 #                (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESONDING RECEIVER INPUT STATE
 #                              USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
 #                OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
-#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN instantiate_sender and instantiate_receiver</p>
+#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN _instantiate_sender and _instantiate_receiver</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>Parameters:</dt>
@@ -274,7 +274,7 @@ it will be assigned &#8220;Mapping&#8221; with a hyphenated, indexed suffix (&#8
 <dt>Class attributes:</dt>
 <dd><ul class="first simple">
 <li>className = MAPPING</li>
-<li>functionType = PROJECTION</li>
+<li>componentType = PROJECTION</li>
 </ul>
 <p># + defaultSender (State)
 # + defaultReceiver (State)
@@ -306,7 +306,7 @@ kwProjectionSenderValue: [1],
 <dd><ul class="first last simple">
 <li>sender (State)</li>
 <li>receiver (State)</li>
-<li>paramInstanceDefaults (dict) - defaults for instance (created and validated in Functions init)</li>
+<li>paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)</li>
 <li>paramsCurrent (dict) - set currently in effect</li>
 <li>variable (value) - used as input to projection&#8217;s function</li>
 <li>value (value) - output of function</li>
@@ -335,22 +335,7 @@ and then call its super().execute</div></blockquote>
 </dl>
 </dd></dl>
 
-<dl class="method">
-<dt id="Mapping.Mapping.instantiate_receiver">
-<code class="descname">instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping.instantiate_receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handle situation in which self.receiver was specified as a Mechanism (rather than State)</p>
-<p>If receiver is specified as a Mechanism, it is reassigned to the (primary) inputState for that Mechanism
-If the Mechanism has more than one inputState, assignment to other inputStates must be done explicitly</p>
-<blockquote>
-<div>(i.e., by: instantiate_receiver(State)</div></blockquote>
 </dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="Mapping.random">
-<code class="descclassname">Mapping.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Mapping.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 
