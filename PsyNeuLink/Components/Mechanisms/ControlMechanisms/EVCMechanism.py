@@ -51,11 +51,13 @@ System :ref:`System_Class_Reference`).  When this occurs, PsyNeuLink configures 
 EVC Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The parameters of an EVCMechanism created for a system can be set by assigning their values to the corresponding
-attributes of the system's ``controller``, or by assigning a parameter specification dictionary to the params
-attribute of the ``controller`` using the following keys for its entries (see :ref:`Mechanism_Specifying_Parameters`
-for details of parameter specification, and :ref:`EVCMechanism_Class_Reference` for details concerning specific
-parameters):
+EXPLAIN  EVCMechanism objective function is acutally comprised of three constituent functions:
+``OUTCOME_AGGREGATION_FUNCTION``, ``COST_AGGREGATION_FUNCTION`` and the EVC's ``function``.  These functions,
+as well as their parameters, and the other parameters that govern the operation of the EVCMechanism can be set by
+assigning their values to the corresponding attributes of the system's ``controller``, or by assigning a parameter
+specification dictionary to the params attribute of the ``controller`` using the following keys for its entries (see
+:ref:`Mechanism_Specifying_Parameters` for details of parameter specification, and :ref:`EVCMechanism_Class_Reference`
+for details concerning specific parameters):
 
     * :keyword:`MONITORED_OUTPUT_STATES` - the outputStates of the system's mechanisms used in the EVC calculation
       (see :ref:`ControlMechanism_MonitoredOutputStates` for specifying monitored outputStates).  The default for an
@@ -97,9 +99,9 @@ Parameterizing the EVC objective function
 The tuples format for specifying :keyword:`MONITORED_OUTPUT_STATES` (see :ref:`ControlMechanism_MonitoredOutputStates`)
 can be used to parameterize the contribution that each outputState makes to the computation of the EVC.  Each can be
 exponentiated (e.g.,  to make it a divisor) and/or weighted, before the outputStates are combined by the
-EVCMechanism's ``function``. OutputStates specified on their own (i.e., not in a tuple) are assigned an exponent
-and weight of 1 (see :ref:`EVC_Mechanism_Examples`). The ``function`` parameter itself can also be specified,
-to further customize the EVC objective function.
+EVCMechanism's ``OUTCOME_AGGREGATION_FUNCTION``. OutputStates specified on their own (i.e., not in a tuple) are
+assigned an exponent and weight of 1 (see :ref:`EVC_Mechanism_Examples`). Each of the constituent functions can also
+be specified, to further customize the EVC objective function.
 
 .. _EVCMechanism_Execution:
 
@@ -800,9 +802,6 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
 
-        # self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = exponents
-        # self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = weights
-
         self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents = exponents
         self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights = weights
 
@@ -825,14 +824,10 @@ class EVCMechanism(ControlMechanism_Base):
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
-                # exponent = \
-                #     self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][self.monitoredOutputStates.index(state)]
-                # weight = \
-                #     self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][self.monitoredOutputStates.index(state)]
-                exponent = \
-                    self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights[self.monitoredOutputStates.index(state)]
-                weight = \
-                    self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents[self.monitoredOutputStates.index(state)]
+                exponent =  np.ndarray.item(self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights[
+                                                self.monitoredOutputStates.index(state)])
+                weight = np.ndarray.item(self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents[
+                                             self.monitoredOutputStates.index(state)])
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         self.inputValue = self.variable.copy() * 0.0
@@ -895,9 +890,6 @@ class EVCMechanism(ControlMechanism_Base):
             self.system.params[kwProcesses].append((prediction_process, None))
             # Add the process to the controller's list of prediction processes
             self.predictionProcesses.append(prediction_process)
-            # # # # MODIFIED 10/2/16 NEW:
-            # inputs.extend(None)
-            # # # MODIFIED 10/2/16 END
 
         # Re-instantiate system with predictionMechanism Process(es) added
         # MODIFIED 10/2/16 OLD:
