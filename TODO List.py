@@ -121,37 +121,6 @@
 
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
-# QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
-#    NO
-# QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
-#   CALL THE "CONSTRUCTOR"
-# QUESTION:  Add function params to mechanism (e.g.: self.function_param[<PARAM>] to self.<param>??)
-# FIX: MAKE SURE THAT REASSIGNMENT OF FUNCTION UPDATES FUNCTION_PARAMS ATTRIBUTE
-#
-# QUESTION:  DDM:
-#              How to handle function arg of DDM when time_scale == TIME_STEP:
-#                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
-#              Handling of PROB_UPPER_BOUND <-> Acurracy;  PROB_LOWER_BOUND <-> ER and relationship to interrogation
-#                 protocol (see docs for DDM)
-#              How does RT relate to time_step and ms??
-#              What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
-# FIX:  THRESHOLD MUST BE POSITIVE
-# FIX:  ELMINATE ANY REFERENCE TO "CORRECT RESPONSE", AND ONLY REFER TO PROB_XXX_BOUND
-# FIX:  BOGACZ & NAVARRO GIVE RT AND TO IN MS (OR SECONDS? IF SO, NEED TO ADJUST T0 DEFAULT AND TYPE)
-# FIX:  TIME_STEP SHOUDL HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
-# QUESTION:  EVC:  Names of functions:
-#                     FUNCTION - specifies how the values of the outputStates are combined
-#                                 to generate an aggregate value for each control allocation
-#                     COST_AGGREGATION_FUNCTION` - specifies how costs are combined across ControlSignals
-#                                 to generate an aggregate cost for each control allocation policy.
-#                     COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined
-#                                 with the aggregated value (i.e., the output of the ``function``)
-#                                 to determine the EVC for each control allocation policy.
-# SOLUTION:  COST_APPLICATION_FUNCTION -> FUNCTION;
-#            FUNCTION -> OUTCOME_AGGREGATION_FUNCTION
-# QUESTION: Where should detailed info about paramters/attributes be put:
-#                     Module docstring, under Arguments for __init__, or under Attributes for class?
-#
 # -------------------
 #
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
@@ -232,11 +201,33 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/7/16:
+
+# FROM EVC MEETING:
+# FIX: MAKE SURE THAT REASSIGNMENT OF FUNCTION UPDATES FUNCTION_PARAMS ATTRIBUTE
+# FIX:  DDM:
+# FIX:     THRESHOLD MUST BE POSITIVE
+# FIX:     ELMINATE ANY REFERENCE TO "CORRECT RESPONSE", AND ONLY REFER TO PROB_XXX_BOUND
+# FIX:     BOGACZ & NAVARRO GIVE RT AND tO IN MS (OR SECONDS? IF SO, NEED TO ADJUST T0 DEFAULT AND TYPE)
+# FIX:  TIME_STEP SHOULD HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
+
+# FIX:  EVC:
+# FIX:      Names of functions:
+#                     FUNCTION -> OUTCOME_AGGREGATION_FUNCTION
+#                                 specifies how the values of the outputStates are combined
+#                                 to generate an aggregate value for each control allocation
+#                     COST_APPLICATION_FUNCTION -> FUNCTION
+#                                 specifies how the aggregated cost is combined
+#                                 with the aggregated value (i.e., the output of the ``function``)
+#                                 to determine the EVC for each control allocation policy.
+
+
 # DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
 #                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
 #                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
 #                    ARE DISCUSSED.
 # DOCUMENTATION: ControlMechanism -> controlMechanism or control mechanism (in appropriate places)
+# DOCUMENTATION: Call subclass -> "Constructor"
 
 # 11/6/16:
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
@@ -987,8 +978,10 @@
 # EXCLUDE FROM DOCS: COMMENT:
 #                    Text to be excluded
 #                    COMMENT
-#
+
 # Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
+
+# Main documentation of params/attributes should be in module docstring;  Arguments and Attributes should refer to that
 
 # Tokens:
 # ======
