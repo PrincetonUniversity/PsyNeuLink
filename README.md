@@ -44,33 +44,22 @@ that is modular, customizable and extensible.  It does this in a manner that:
 
 - **System** - Set of (potentially interacting) processes, that can be managed by a “budget” of control
 
-  - **Process** - Function that takes an input, processes it through an ordered list of mechanisms (and projections)
-             and generates an output
+  - **Process** - Function that takes an input, processes it through an ordered list of mechanisms (and projections)and generates an output.
     
-    - **Mechanism** - 
-                 Function that converts an input state representation into an output state representation
-                 Parameters determine its operation, under the influence of projections
+    - **Mechanism** - Function that converts an input state representation into an output state representation. Parameters determine its operation, under the influence of projections.
                  
-      + **Processing Mechanism** - 
-                     Function that takes a
+      + **Processing Mechanism** - Function that takes a
                  
       + **Control Mechanism** - 
                  
       + **Monitoring Mechanism** - 
     
-    - **Projection**
-                 Function that takes a source of in, possibly transforms it, and uses it to
-                 determine the operation of a mechanism;  three primary types:
+    - **Projection** - Function that takes a source of in, possibly transforms it, and uses it to determine the operation of a mechanism;  three primary types:
     
-      + **Mapping**
-                     Takes the output of sender mechanism, possibly transforms it,
-                         and provides it as the input to a receiver mechanism
+      + **Mapping** - Takes the output of sender mechanism, possibly transforms it, and provides it as the input to a receiver mechanism
     
-      + **Control Signal** - Takes an allocation (scalar), possibly transforms it,
-                     and uses it to modulate the parameter(s) of a mechanism's function
+      + **Control Signal** - Takes an allocation (scalar), possibly transforms it, and uses it to modulate the parameter(s) of a mechanism's function
     
-      + **Learning** - Takes an error signal (scalar or vector), possibly transforms it,
-                      and uses it to modulate the parameter of a projection function
+      + **Learning** - Takes an error signal (scalar or vector), possibly transforms it,and uses it to modulate the parameter of a projection function
                      
-      + **Gating Signal** — *Not yet implemented* - Takes a source, possibly transforms it, and uses it to
-                     modulate the input or output state of a mechanism
+      + [*Not yet implemented*] **Gating Signal** - Takes a source, possibly transforms it, and uses it to modulate the input or output state of a mechanism
