@@ -47,16 +47,16 @@ that is modular, customizable and extensible.  It does this in a manner that:
   - **Process** - Function that takes an input, processes it through an ordered list of mechanisms (and projections)
              and generates an output
     
-    - **Mechanism** 
+    - **Mechanism** - 
                  Function that converts an input state representation into an output state representation
                  Parameters determine its operation, under the influence of projections
                  
-      + **ProcessingMechanism**
+      + **Processing Mechanism** - 
                      Function that takes a
                  
-      + **ControlMechanism**
+      + **Control Mechanism** - 
                  
-      + **MonitoringMechanism**
+      + **Monitoring Mechanism** - 
     
     - **Projection**
                  Function that takes a source of in, possibly transforms it, and uses it to
@@ -66,11 +66,11 @@ that is modular, customizable and extensible.  It does this in a manner that:
                      Takes the output of sender mechanism, possibly transforms it,
                          and provides it as the input to a receiver mechanism
     
-      + **ControlSignal** - Takes an allocation (scalar), possibly transforms it,
+      + **Control Signal** - Takes an allocation (scalar), possibly transforms it,
                      and uses it to modulate the parameter(s) of a mechanism's function
     
       + **Learning** - Takes an error signal (scalar or vector), possibly transforms it,
                       and uses it to modulate the parameter of a projection function
                      
-      + **GatingSignal** — *Not yet implemented* - Takes a source, possibly transforms it, and uses it to
+      + **Gating Signal** — *Not yet implemented* - Takes a source, possibly transforms it, and uses it to
                      modulate the input or output state of a mechanism
