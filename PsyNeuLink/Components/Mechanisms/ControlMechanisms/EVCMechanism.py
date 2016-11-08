@@ -64,7 +64,8 @@ parameters):
       parameterized to contribute differentially to the EVC calculation (see
       :ref:`EVCMechanism_Parameterizing_EVC_Objective_Function`).
     ..
-    * :keyword:`FUNCTION` - combines the values of the outputStates specified in ``monitored_output_states``
+    * :keyword:`OUTCOME_AGGREGATION_FUNCTION` - combines the values of the outputStates specified in
+    ``monitored_output_states``
       for a given *control allocation policy* to generate an aggregate **value** for that policy.  The default is
       the :class:`LinearCombination` function that computes an elementwise (Hadamard) product of the
       outputState values.  Each element can be exponentiated and weighted using the :keyword:`MONITORED_OUTPUT_STATES`
@@ -74,7 +75,7 @@ parameters):
       allocation policy* to generate an aggregate **cost** for that policy.  The default is the
       :class:`LinearCombination` function that sums the costs.
     ..
-    * :keyword:`COST_APPLICATION_FUNCTION` - combines the aggregated cost with the aggregated value for a given
+    * :keyword:`FUNCTION` - combines the aggregated cost with the aggregated value for a given
       *control allocation policy* to determine the **EVC** for that policy.  The default is the
       :class:`LinearCombination` function, that subtracts the aggregated cost from the aggregate value.
     ..
@@ -123,7 +124,7 @@ for the next execution of the System.  This procedure for each sample is as foll
       outputStates listed in the EVCMechanism's ``monitoredOutputStates`` attribute;
     * determine the **cost** of the policy by using the EVCMechanism's ``costAggregationFunction`` to aggregate the
       cost associated with each ControlSignal (see [LINK]).
-    * determine the **EVC** using the the ``costApplicationFunction`` to discount the value of the
+    * determine the **EVC** using the the ``function`` to discount the value of the
       ``monitoredOutputStates`` by the ControlSignal costs.
 
 Once the all combinations of ControlSignal values have been evaluated, the policy generating the maximum EVC is
@@ -138,7 +139,7 @@ COMMENT:
     #      FUNCTION_PARAMS = WEIGHTS
     #      Cost is aggregated over controlSignal costs using COST_AGGREGATION_FUNCTION (default: LinearCombination)
                 currently, it is specified as an instantiated function rather than a reference to a class
-    #      Cost is combined with values (aggregated by function) using COST_APPLICATION_FUNCTION
+    #      Cost is combined with values (aggregated by function) using FUNCTION
      (          default: LinearCombination)
                 currently, it is specified as an instantiated function rather than a reference to a class
 
@@ -218,9 +219,9 @@ class EVCMechanism(ControlMechanism_Base):
     monitored_output_states=None,                                                    \
     prediction_mechanism_type=AdaptiveIntegratorMechanism,                           \
     prediction_mechanism_params=None,                                                \
-    function=LinearCombination(offset=0,scale=1,operation=PRODUCT),                  \
+    outcome_aggregation_function=LinearCombination(offset=0,scale=1,operation=PRODUCT),                  \
     cost_aggregation_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM), \
-    cost_application_function=LinearCombination(offset=0.0,scale=1,operation=SUM),   \
+    function=LinearCombination(offset=0.0,scale=1,operation=SUM),   \
     save_all_values_and_policies:bool=False,                                         \
     params=None,                                                                     \
     name=None,                                                                       \
@@ -319,13 +320,13 @@ class EVCMechanism(ControlMechanism_Base):
            #                                   scale=1.0,
            #                                   operation=LinearCombination.Operation.SUM,
            #                                   context=componentType+COST_AGGREGATION_FUNCTION),
-       # COST_APPLICATION_FUNCTION:
-           # # CostApplicationFunction specifies how aggregated cost is combined with
+       # FUNCTION:
+           # # Function specifies how aggregated cost is combined with
            # #     aggegated value computed by function to determine EVC
            #                  LinearCombination(offset=0.0,
            #                                    scale=1,
            #                                    operation=LinearCombination.Operation.SUM,
-           #                                    context=componentType+COST_APPLICATION_FUNCTION),
+           #                                    context=componentType+FUNCTION),
        # PREDICTION_MECHANISM_TYPE:AdaptiveIntegratorMechanism,
            # # Mechanism class used for prediction mechanism(s)
            # # Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
@@ -388,7 +389,7 @@ class EVCMechanism(ControlMechanism_Base):
            # #     to the number of outputStates (= ControlSignal Projections)
         COMMENT
 
-    cost_application_function=LinearCombination(offset=0.0,scale=1,operation=SUM)
+    function=LinearCombination(offset=0.0,scale=1,operation=SUM)
 
     save_all_values_and_policies : bool : default False
         COMMENT:
@@ -432,7 +433,7 @@ class EVCMechanism(ControlMechanism_Base):
            # #     to the number of outputStates (= ControlSignal Projections)
         COMMENT
 
-    cost_application_function=LinearCombination(offset=0.0,scale=1,operation=SUM)
+    function=LinearCombination(offset=0.0,scale=1,operation=SUM)
 
     controlSignalSearchSpace (list of np.ndarrays):
         list of all combinations of all allocationSamples for all ControlSignal Projections
@@ -497,15 +498,17 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitored_output_states:tc.optional(list)=None,
-                 function=LinearCombination(offset=0, scale=1, operation=PRODUCT),
+                 function=LinearCombination(offset=0.0,
+                                            scale=1,
+                                            operation=SUM,
+                                            context=componentType+FUNCTION),
+                 outcome_aggregation_function=LinearCombination(offset=0,
+                                                                scale=1,
+                                                                operation=PRODUCT),
                  cost_aggregation_function=LinearCombination(offset=0.0,
                                                              scale=1.0,
                                                              operation=SUM,
                                                              context=componentType+COST_AGGREGATION_FUNCTION),
-                 cost_application_function=LinearCombination(offset=0.0,
-                                                             scale=1,
-                                                             operation=SUM,
-                                                             context=componentType+COST_APPLICATION_FUNCTION),
                  save_all_values_and_policies:bool=False,
                  params=None,
                  name=None,
@@ -521,8 +524,8 @@ class EVCMechanism(ControlMechanism_Base):
                                                   prediction_mechanism_params=prediction_mechanism_params,
                                                   monitored_output_states=monitored_output_states,
                                                   function=function,
+                                                  outcome_aggregation_function=outcome_aggregation_function,
                                                   cost_aggregation_function=cost_aggregation_function,
-                                                  cost_application_function=cost_application_function,
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
@@ -797,8 +800,10 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
 
-        self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = exponents
-        self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = weights
+        # self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = exponents
+        # self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = weights
+        self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents = exponents
+        self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights = weights
 
 
         # INSTANTIATE INPUT STATES
@@ -819,10 +824,14 @@ class EVCMechanism(ControlMechanism_Base):
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
+                # exponent = \
+                #     self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][self.monitoredOutputStates.index(state)]
+                # weight = \
+                #     self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][self.monitoredOutputStates.index(state)]
                 exponent = \
-                    self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights[self.monitoredOutputStates.index(state)]
                 weight = \
-                    self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS][self.monitoredOutputStates.index(state)]
+                    self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents[self.monitoredOutputStates.index(state)]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
 
         self.inputValue = self.variable.copy() * 0.0
@@ -1339,14 +1348,14 @@ def _compute_EVC(args):
     # Get value of current policy = weighted sum of values of monitored states
     # Note:  ctlr.inputValue = value of monitored states (self.inputStates) = self.variable
     ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-    total_current_value = ctlr.function(variable=ctlr.inputValue,
-                                       params=runtime_params,
-                                       time_scale=time_scale,
-                                       context=context)
+    total_current_value = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=ctlr.inputValue,
+                                                                                    params=runtime_params,
+                                                                                    time_scale=time_scale,
+                                                                                    context=context)
 
     # Calculate EVC for the result (default: total value - total cost)
-    EVC_current = ctlr.paramsCurrent[COST_APPLICATION_FUNCTION].function([total_current_value,
-                                                                          -total_current_control_cost])
+    EVC_current = ctlr.function([total_current_value,
+                                 -total_current_control_cost])
 
     # #TEST PRINT:
     # print("allocation_vector: {}".format(allocation_vector))
