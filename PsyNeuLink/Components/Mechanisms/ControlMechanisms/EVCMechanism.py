@@ -784,7 +784,7 @@ class EVCMechanism(ControlMechanism_Base):
         # ASSIGN WEIGHTS AND EXPONENTS
 
         num_monitored_output_states = len(self.monitoredOutputStates)
-        exponents = np.ones(num_monitored_output_states)
+        exponents = np.ones((num_monitored_output_states,1))
         weights = np.ones_like(exponents)
 
         # Get and assign specification of exponents and weights for mechanisms or outputStates specified in tuples
@@ -802,6 +802,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # self.paramsCurrent[FUNCTION_PARAMS][EXPONENTS] = exponents
         # self.paramsCurrent[FUNCTION_PARAMS][WEIGHTS] = weights
+
         self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents = exponents
         self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights = weights
 
