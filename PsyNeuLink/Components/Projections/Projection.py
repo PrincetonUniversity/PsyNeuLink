@@ -54,7 +54,7 @@ Creating a Projection
 ---------------------
 
 Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
-subclass for the desired type of projection.  However, projections can also be specified "in context," for example
+constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the ``pathway`` attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
 This can be done using a call to the projection subclass, or one of the following ways:
 
@@ -234,8 +234,8 @@ class Projection_Base(Projection):
 
     .. note::
        Projections should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated by calling the desired subclass or the other methods for specifying a projection
-       (see [LINK]).
+       They should be instantiated by calling the constructor for the desired subclass or by using the other methods
+       for specifying a projection (see [LINK]).
 
 
     COMMENT:

@@ -314,7 +314,7 @@ def system(default_input_value=None,
 
     monitored_output_states : list of OutputState objects or specifications : default None
         specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller (see
-        :ref:`ControlMechanism_MonitoredOutputStates` for specifying the ``monitored_output_states`` parameter.
+        :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitored_output_states`` parameter.
 
     params : dict : default None
         dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry

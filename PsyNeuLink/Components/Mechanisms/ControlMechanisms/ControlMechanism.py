@@ -4,8 +4,8 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # **************************************  ControlMechanism ************************************************
 
 """
@@ -20,11 +20,11 @@ information to regulate the value of :doc:`ControlSignal` projections to other P
 Creating A ControlMechanism
 ---------------------------
 
-ControlMechanisms can be created by using the standard Python method of calling the subclass for the desired type.
+ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`),
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`).
 
-.. _ControlMechanism_MonitoredOutputStates:
+.. _ControlMechanism_Monitored_OutputStates:
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -207,7 +207,7 @@ class ControlMechanism_Base(Mechanism_Base):
     default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
 
     monitored_output_states : List[OutputState specification] : default None
-        specifies set of outputStates to monitor (see :ref:`ControlMechanism_MonitoredOutputStates` for
+        specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
         specification options).
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
@@ -226,6 +226,19 @@ class ControlMechanism_Base(Mechanism_Base):
         Preference set for process.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
+
+    Attributes
+    ----------
+
+    controlSignals : List[ControlSignal]
+        List of :class:`ControlSignal` projections managed by the ControlMechanism.
+
+    controlSignalCosts : 2d np.array
+        Array of costs associated with each of the control signals in the ``controlSignals`` attribute.
+
+    allocationPolicy : 2d np.array
+        Array of values currently assigned to each control signal in the ``controlSignals`` attribute.
+
 
     """
 
@@ -291,10 +304,16 @@ class ControlMechanism_Base(Mechanism_Base):
             pass
 
         # For all other ControlMechanisms, validate System specification
-        elif not isinstance(request_set[SYSTEM], System):
-            raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
-                                              format(self.name))
-        self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+        else:
+            try:
+                if not isinstance(request_set[SYSTEM], System):
+                    raise KeyError
+            except KeyError:
+                raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
+                                                  format(self.name))
+            else:
+                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
+        # MODIFIED 11/10/16 END
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
@@ -500,6 +519,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Add projection to list of outgoing projections
         state.sendsToProjections.append(projection)
+
+        # Add projection to list of controlSignals
+        try:
+            self.controlSignals.append(projection)
+        except AttributeError:
+            self.controlSignals = []
 
         # Update controlSignalCosts to accommodate instantiated projection
         try:

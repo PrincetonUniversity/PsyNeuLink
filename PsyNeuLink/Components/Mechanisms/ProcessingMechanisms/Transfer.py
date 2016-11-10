@@ -32,7 +32,7 @@ also be specified so long as they return a numeric value or list or np.ndarray o
 Creating a Transfer Mechanism
 -----------------------------
 
-A Transfer Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
+A Transfer Mechanism can be instantiated either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying Transfer as its ``mech_spec`` argument.  Its function is specified in the ``function``
 argument, which can be simply the name of the class (first example below), or a call to the class which can
 include arguments specifying the function's parameters (second example)::

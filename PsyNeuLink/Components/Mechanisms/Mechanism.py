@@ -14,9 +14,9 @@
     * :ref:`Mechanism_Structure`
      * :ref:`Mechanism_Function`
      * :ref:`Mechanism_States`
-        * :ref:`InputStates`
-        * :ref:`OutputStates`
-        * :ref:`ParameterStates`
+        * :ref:`Mechanism_InputStates`
+        * :ref:`Mechanism_ParameterStates`
+        * :ref:`Mechanism_OutputStates`
      * :ref:`Mechanism_Specifying_Parameters`
      * :ref:`Mechanism_Role_In_Processes_And_Systems`
     * :ref:`Mechanism_Execution`
@@ -74,9 +74,9 @@ Creating a Mechanism
 --------------------
 
 Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
-subclass for the desired type of mechanism.  In addition, PsyNeuLink provides a  ``mechanism`` [LINK] "factory"  method
-that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).  Mechanisms can
-also be specified "in context," for example in the ``pathway`` attribute of a process.  This can be done
+constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a  ``mechanism`` [LINK] "factory"
+method that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).
+Mechanisms can also be specified "in context," for example in the ``pathway`` attribute of a process.  This can be done
 in either of the ways mentioned above, or one of the following ways:
 
   * name of an **existing mechanism**;
@@ -121,7 +121,7 @@ Function
 The core of every mechanism is its function, which transforms its input and generates its output.  The function is
 specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
 and generally these are from the :doc:`Function` class provided by PsyNeuLink.  Components are specified
-in the same form that an object is instantiated in Python (by calling its __init__ method), and thus can be used to
+in the same form that an object is instantiated in Python (by calling its constructor), and thus can be used to
 specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
 and bias parameters can also be specified as shown in the following example::
 
@@ -156,7 +156,7 @@ Every mechanism has three types of states (shown schematically in the figure bel
 
    Schematic of a mechanism showing its three types of states (input, parameter and output).
 
-.. _InputStates:
+.. _Mechanism_InputStates:
 
 InputStates
 ^^^^^^^^^^^
@@ -185,18 +185,21 @@ COMMENT:
   • Define ``inputValue`` attribute??
 COMMENT
 
-.. _ParameterStates:
+.. _Mechanism_ParameterStates:
 
 ParameterStates
 ^^^^^^^^^^^^^^^
 
 These represent the parameters of a mechanism's function.  PsyNeuLink assigns one parameterState for each parameter
-of the function (which correspond to the arguments in the call to instantiate it; i.e., its ``__init__`` method).
-Like other states, parameterStates can receive projections. Typically these are from :doc:`ControlSignal` projections
-from a :doc:`ControlMechanism` that is used to modify the function's parameter value in response to the outcome(s)
-of processing.  The parameter of a function can also be modified by a specification of runtime parameters with the
-mechanism.  The figure below shows how these factors are combined by the parameterState to determine the parameter
-of a function.
+of the function (which correspond to the arguments in its constructor method). Like other states, parameterStates can
+receive projections. Typically these are from :doc:`ControlSignal` projections from a :doc:`ControlMechanism` that
+is used to modify the function's parameter value in response to the outcome(s) of processing. A control signal can
+be assigned to a parameter, wherever the parameter value is specified, by using a tuple with two items:  the first item
+is the value of the parameter, and the second item is either :keyword:`CONTROL_SIGNAL`, the name of the ControlSignal
+class, or a call to its constructor.  The value of function parameters can also be modified using a runtime parameters
+dict where a mechanism is specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's
+``execute`` or ``run`` methods (see :ref:`Mechanism_Runtime_Parameters`).  The figure below shows how these factors are
+combined by the parameterState to determine the paramter value for a function.
 
     **Role of ParameterStates in Controlling the Parameter Value of a Function**
 
@@ -220,7 +223,7 @@ of a function.
        | Blue (E)     | parameterState function combines controlSignals                  |
        +--------------+------------------------------------------------------------------+
 
-.. _OutputStates:
+.. _Mechanism_OutputStates:
 
 OutputStates
 ^^^^^^^^^^^^
@@ -459,8 +462,8 @@ class Mechanism_Base(Mechanism):
     .. note::
        Mechanisms should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
-       by calling the desired subclass, or using other methods for specifying a mechanism in context
-       (see [LINK]).
+       by calling the constructor for the desired subclass, or using other methods for specifying a mechanism in
+       context (see [LINK]).
 
     COMMENT:
         Description

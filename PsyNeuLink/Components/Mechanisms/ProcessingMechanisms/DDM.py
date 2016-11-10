@@ -36,10 +36,10 @@ analytic solutions (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`) that ca
 Creating a DDM Mechanism
 -----------------------------
 
-A DDM Mechanism can be instantiated directly by calling the class, or by using the PsyNeuLink :class:`mechanism`[LINK]
-function and specifying DDM as its ``mech_spec`` argument.  The analytic solution used in :keyword:`TRIAL` mode is
-selected using the ``function`` argument.  The ``function`` argument can be simply the name of a DDM function
-(first example below), or a call to the function with arguments specifying its parameters
+A DDM Mechanism can be instantiated directly by calling its constructor, or by using the PsyNeuLink
+:class:`mechanism`[LINK] function and specifying DDM as its ``mech_spec`` argument.  The analytic solution used in
+:keyword:`TRIAL` mode is selected using the ``function`` argument.  The ``function`` argument can be simply the name
+of a DDM function (first example below), or a call to the function with arguments specifying its parameters
 (see :ref:`DDM_Execution` below for a description of DDM function parameters) and, optionally, a :doc:`ControlSignal`
 (second example)::
 

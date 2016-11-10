@@ -201,25 +201,19 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/10/16:
+# FIX: ALLOW ControlMechahnism.system ASSIGNMENT TO BE DEFERRED (CHECK ONLY ON EXECUTION?)
+#      THEN TEST EVC System Laming Validation Test with weights assigned to EVC
+
 # 11/7/16:
 
 # FROM EVC MEETING:
-# FIX: MAKE SURE THAT REASSIGNMENT OF FUNCTION UPDATES FUNCTION_PARAMS ATTRIBUTE
+# FIX: MAKE SURE THAT, IF function IS REASSIGNED, function_params IS UPDATED
 # FIX:  DDM:
 # FIX:     THRESHOLD MUST BE POSITIVE
 # FIX:     ELMINATE ANY REFERENCE TO "CORRECT RESPONSE", AND ONLY REFER TO PROB_XXX_BOUND
 # FIX:     BOGACZ & NAVARRO GIVE RT AND tO IN MS (OR SECONDS? IF SO, NEED TO ADJUST T0 DEFAULT AND TYPE)
 # FIX:  TIME_STEP SHOULD HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
-
-# FIX:  EVC:
-# FIX:      Names of functions:
-#                     FUNCTION -> OUTCOME_AGGREGATION_FUNCTION
-#                                 specifies how the values of the outputStates are combined
-#                                 to generate an aggregate value for each control allocation
-#                     COST_APPLICATION_FUNCTION -> FUNCTION
-#                                 specifies how the aggregated cost is combined
-#                                 with the aggregated value (i.e., the output of the ``function``)
-#                                 to determine the EVC for each control allocation policy.
 
 
 # DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
@@ -972,19 +966,19 @@
 
 # SPHINX / RST ***********************************************************
 
-# SECTION: -------
-# SUB SECTION: ~~~~~~~
-# SUB SUB SECTION: ..........
-# EXCLUDE FROM DOCS: COMMENT:
-#                    Text to be excluded
-#                    COMMENT
+# Convention for names of arguments, attributes, methods and keywords:
+=====================================================================
 
-# Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
+# argument_attribute -> user-accessible attribute derived from a constructor argument
+# nonArgumentAttribue -> user-accesible attribute that is not an argument in the constructor
+# _internal_atttribute or _method -> not user accessible, and not to be included in rst docs
+# KEY_OR_KEYWORD -> name of a str used as a key for a dict or as a PsyNeuLink keyword
 
 # Main documentation of params/attributes should be in module docstring;  Arguments and Attributes should refer to that
 
-# Tokens:
-# ======
+
+# rST formatting for tokens:
+# =========================
 
 # None:
 #    :keyword:`None`
@@ -999,8 +993,15 @@
 #    _<DOCUMENT>_<SECTION>_<SUBSECTION>:
 
 
-# Headings:
-# ========
+# rST formatting for Headings:
+# ===========================
+
+# SECTION: -------
+# SUB SECTION: ~~~~~~~
+# SUB SUB SECTION: ..........
+# EXCLUDE FROM DOCS: COMMENT:
+#                    Text to be excluded
+#                    COMMENT
 
 # Arguments [SECTION]
 # ---------
@@ -1020,7 +1021,7 @@
 #           More description.
 
 
-# ?? ADD TO FUNCTION OR GENERAL DESCRIPTOIN SOMEWHERE:
+# ?? ADD TO FUNCTION OR GENERAL DESCRIPTION SOMEWHERE:
 
     # Notes:
     # *  params can be set in the standard way for any Function subclass:
@@ -1044,14 +1045,16 @@
 # Line spacing between lines in a list
 
 # Dereference variable values
+#   Example (line 295 in DDM):
+#      default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
 # Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
 # How to underline?
-# Why does adding ": default _______ " to parmater specification suppress italicization??
+# Why does adding ": default _______ " to parameter specification suppress italicization??
 
 # ADDITIONAL QUESTIONS / ISSUES:
-# Why are some parameter type specifications (in parens) italicied and others not?
+# Why are some parameter type specifications (in parens) italicized and others not?
 # Why do some underlines work and not others (e.g., Examples in Process)
-# Defintion of a Python keyword
+# Definition of a Python keyword
 # Why does Process_Base get referenced as Process, but System_Base as such?
 
 # US:
@@ -1065,8 +1068,8 @@
 # calling items from which they receive input;  for implementation, this means that objects can create objects
 # from which they expect input, but cannot "impose" the creation of "downstream" objects.
 
-
-
+# DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
+#                     OVERALL STRUCTURE, INCLUDING:  COMPONENTS MADE UP OF VARIABLE, FUNCTION AND OUTPUT
 # DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
 #                novices (students, non-modelers)
 #                "sketch pad", mock-up of models
@@ -1515,6 +1518,12 @@
 # - FIX: ?? For ControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[INPUT_STATES] IS SPECIFIED IN __init__()
+#
+# - IMPLEMENT: controlSignals attribute:  list of control signals for mechanism
+#                                        (get from outputStates.sendsToProjections)
+# - IMPLEMENT: controlSignalSearchSpace argument in constructor, that can be:
+#                   - 2d array (each item of which is validated for length = len(self.controlSignals
+#                   - function that returns a 2d array, validate per above.
 #
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
