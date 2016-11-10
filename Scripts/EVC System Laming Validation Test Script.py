@@ -42,6 +42,7 @@ RewardProcess = process(
     prefs = process_prefs,
     name = 'RewardProcess')
 
+
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,

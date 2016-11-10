@@ -314,7 +314,6 @@ CONTROL_SIGNAL_PROJECTIONS = 'ControlSignalProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
 COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
-COST_APPLICATION_FUNCTION = 'cost_application_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
 kwEVCSimulation = 'SIMULATING'
