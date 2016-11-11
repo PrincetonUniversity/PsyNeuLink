@@ -967,7 +967,7 @@
 # SPHINX / RST ***********************************************************
 
 # Convention for names of arguments, attributes, methods and keywords:
-=====================================================================
+# =====================================================================
 
 # argument_attribute -> user-accessible attribute derived from a constructor argument
 # nonArgumentAttribue -> user-accesible attribute that is not an argument in the constructor

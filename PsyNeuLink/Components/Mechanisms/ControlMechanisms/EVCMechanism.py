@@ -263,12 +263,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         Class methods:
             None
-    COMMENT
 
-    Arguments
-    ---------
-
-    COMMENT:
        **********************************************************************************************
 
        PUT SOME OF THIS STUFF IN ATTRIBUTES, BUT USE DEFAULTS HERE
@@ -284,11 +279,11 @@ class EVCMechanism(ControlMechanism_Base):
 
         ControlSignal Specification:
         #    - wherever a ControlSignal projection is specified, using kwEVC instead of CONTROL_SIGNAL
-        #        this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
+        #     this should override the default sender kwSystemDefaultController in ControlSignal._instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #     constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
+        #   constraint:  if specified, number of items in variable must match number of inputStates in INPUT_STATES
         #                  and names in list in kwMonitor must match those in INPUT_STATES
 
        **********************************************************************************************
@@ -302,13 +297,17 @@ class EVCMechanism(ControlMechanism_Base):
 
     COMMENT
 
+
+    Arguments
+    ---------
+
     prediction_mechanism_type : CombinationFunction: default AdaptiveIntegratorMechanism
         mechanism class used for prediction mechanism(s).
-        Each instance is named using the name of the :keyword:ORIGIN mechanism + PREDICTION_MECHANISM
+        Each instance is named using the name of the :keyword:`ORIGIN` mechanism + PREDICTION_MECHANISM
         and assigned an outputState named based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        parameter dictionary passed to PredictionMechanismType constructor.
+        parameter dictionary passed to ``prediction_mechanism_type`` constructor.
         The same set is passed to all PredictionMechanisms.
 
     monitored_output_states : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
@@ -323,13 +322,13 @@ class EVCMechanism(ControlMechanism_Base):
 
     outcome_aggregation_function : CombinationFunction : LinearCombination(offset=0,scale=,operation=PRODUCT)
         specifies the function used to aggregate the value of the outputStates in ``monitoredOutputStates``.
-        The ``weight`` and/or the ``exponent arguments can be used to parameterize the contribution that each
+        The ``weight`` and/or the ``exponent`` arguments can be used to parameterize the contribution that each
         outputState makes to the aggregated value;  the length of each argument must equal the number of outputStates
         in ``monitoredOutputStates``.
 
     cost_aggregation_function : CombinationFunction : LinearCombination(offset=0.0,scale=1.0,operation=SUM)
         specifies the function used to aggregate the cost of the EVCMechanism's control signals.
-        The ``weight`` and/or the ``exponent arguments can be used to parameterize the contribution that each
+        The ``weight`` and/or the ``exponent`` arguments can be used to parameterize the contribution that each
         control signal makes to the aggregated value;  the length of each argument must equal the number of
         control signals in ``controlSignals``.
 
@@ -346,7 +345,7 @@ class EVCMechanism(ControlMechanism_Base):
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
         Preference set for process.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
