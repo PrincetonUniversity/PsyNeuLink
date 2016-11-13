@@ -20,9 +20,11 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = Transfer(name='Input',
-                 # params={MONITORED_OUTPUT_STATES:[MonitoredOutputStatesOption.ALL_OUTPUT_STATES]}
+                 # params={MONITORED_OUTPUT_STATES:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
-Reward = Transfer(name='Reward')
+Reward = Transfer(name='Reward',
+                 # params={MONITORED_OUTPUT_STATES:[PROBABILITY_UPPER_BOUND,(RESPONSE_TIME, -1, 1)]}
+                  )
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
                                    threshold=(1.0, ControlSignal(function=Linear)),
                                    noise=(0.5),
