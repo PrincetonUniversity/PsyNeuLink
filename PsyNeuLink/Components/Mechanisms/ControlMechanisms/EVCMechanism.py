@@ -714,7 +714,6 @@ class EVCMechanism(ControlMechanism_Base):
                 # if option_spec is MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES:
                 #     continue
 
-# FIX: SEPARATE OUT TRULY LOCAL (E.G, MECH_SPEC) FROM OTHERS
                 # If:
                 #   mechanism is named or referenced in any specification
                 #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a mechanism)

@@ -67,8 +67,6 @@ The specification of whether an outputState is monitored by a ControlMechanism c
   :class:`MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
 
   COMMENT:
-     CHECK: if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
-        system.executionGraph by default
      [TBI:] if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
         just that mechanism
   COMMENT

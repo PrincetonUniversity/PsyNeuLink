@@ -201,8 +201,11 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/13/16:
+# FIX: GET RID OF MonitoredOutputStatesOption; just use keywords (also in documentation)
+
 # 11/10/16:
-# FIX: ALLOW ControlMechahnism.system ASSIGNMENT TO BE DEFERRED (CHECK ONLY ON EXECUTION?)
+# FIX: ALLOW ControlMechanism.system ASSIGNMENT TO BE DEFERRED (CHECK ONLY ON EXECUTION?)
 #      THEN TEST EVC System Laming Validation Test with weights assigned to EVC
 
 # 11/7/16:
