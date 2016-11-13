@@ -203,6 +203,8 @@
 
 # 11/13/16:
 # FIX: GET RID OF MonitoredOutputStatesOption; just use keywords (also in documentation)
+# IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
+#                   (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
 
 # 11/10/16:
 # FIX: ALLOW ControlMechanism.system ASSIGNMENT TO BE DEFERRED (CHECK ONLY ON EXECUTION?)
