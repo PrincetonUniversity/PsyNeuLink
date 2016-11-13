@@ -503,6 +503,8 @@ class EVCMechanism(ControlMechanism_Base):
         - if it is a OutputState, call _instantiate_monitoring_input_state()
         - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
             (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
+        - each inputState is assigned a name with the following format:
+            '<name of mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
