@@ -20,7 +20,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = Transfer(name='Input',
-                 # params={MONITORED_OUTPUT_STATES:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
+                 # params={MONITORED_OUTPUT_STATES:[MonitoredOutputStatesOption.ALL_OUTPUT_STATES]}
                  )
 Reward = Transfer(name='Reward')
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
@@ -48,9 +48,9 @@ RewardProcess = process(
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  # monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RESPONSE_TIME, -1, 1)],
+                  monitored_output_states=[Reward, PROBABILITY_UPPER_BOUND,(RESPONSE_TIME, -1, 1)],
                   # monitored_output_states=[Input, PROBABILITY_UPPER_BOUND,(RESPONSE_TIME, -1, 1)],
-                  monitored_output_states=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
+                  # monitored_output_states=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
 
 # Show characteristics of system:
