@@ -714,6 +714,9 @@ class EVCMechanism(ControlMechanism_Base):
                 # if option_spec is MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES:
                 #     continue
 
+# FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
+# THE LIST NOR IS IT A TERMINAL MECHANISM
+
                 # If:
                 #   mechanism is named or referenced in any specification
                 #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a mechanism)
@@ -723,6 +726,11 @@ class EVCMechanism(ControlMechanism_Base):
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
                               # MODIFIED 11/13/16 END
                               mech in self.system.terminalMechanisms.mechanisms):
+                    #
+                    if (not (mech.name in local_specs or mech in local_specs) and
+                            not mech in self.system.terminalMechanisms.mechanisms):
+                        continue
+
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it 
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
                         if output_state is mech.outputState:
