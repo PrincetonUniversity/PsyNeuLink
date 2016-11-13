@@ -516,7 +516,7 @@ class EVCMechanism(ControlMechanism_Base):
         * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
         * self.inputStates is the usual ordered dict of states,
-            each of which receives a projection from a corresponding item in self.monitoredOutputStates
+            each of which receives a projection from a corresponding outputState in self.monitoredOutputStates
 
         """
 
@@ -706,11 +706,15 @@ class EVCMechanism(ControlMechanism_Base):
                     self.monitoredOutputStates.append(output_state)
                     continue
 
-                if option_spec is None:
-                    continue
+                # # MODIFIED 11/13/16 OLD: PREVENTS MECH OR MECH NAME SPEC FROM BEING RECOGNIZED
+                # if option_spec is None:
+                #     continue
+                # MODIFIED 11/13/16 NEW:
+                # MODIFIED 11/13/16 END
                 # if option_spec is MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES:
                 #     continue
 
+# FIX: SEPARATE OUT TRULY LOCAL (E.G, MECH_SPEC) FROM OTHERS
                 # If:
                 #   mechanism is named or referenced in any specification
                 #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a mechanism)
@@ -728,6 +732,14 @@ class EVCMechanism(ControlMechanism_Base):
                     # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
                     elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
                         self.monitoredOutputStates.append(output_state)
+                    elif mech.name in local_specs or mech in local_specs:
+                        if output_state is mech.outputState:
+                            self.monitoredOutputStates.append(output_state)
+                            continue
+                    # # MODIFIED 11/13/16 NEW:
+                    elif option_spec is None:
+                        continue
+                    # # MODIFIED 11/13/16 END
                     else:
                         raise EVCError("PROGRAM ERROR: unrecognized specification of MONITORED_OUTPUT_STATES for "
                                        "{0} of {1}".
@@ -766,7 +778,6 @@ class EVCMechanism(ControlMechanism_Base):
         # from Components.States.OutputState import OutputState
         for monitored_state in self.monitoredOutputStates:
             if isinstance(monitored_state, OutputState):
-                # FIX: NEED TO RENAME INPUT STATE TO INCLUDE NAME OF MECHANISM FOR OUTPUT STATE
                 self._instantiate_monitoring_input_state(monitored_state, context=context)
             elif isinstance(monitored_state, Mechanism):
                 for output_state in monitored_state.outputStates:
