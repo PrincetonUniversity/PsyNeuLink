@@ -459,7 +459,6 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+kwInit):
 
-        monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
         prediction_mechanism_params = prediction_mechanism_params or {MONITORED_OUTPUT_STATES:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
@@ -536,21 +535,23 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Get controller's MONITORED_OUTPUT_STATES specifications (optional, so need to try)
         try:
-            controller_specs = self.paramsCurrent[MONITORED_OUTPUT_STATES]
+            controller_specs = self.paramsCurrent[MONITORED_OUTPUT_STATES] or []
         except KeyError:
-            pass
+            controller_specs = []
 
         # Get system's MONITORED_OUTPUT_STATES specifications (specified in paramClassDefaults, so must be there)
         system_specs = self.system.paramsCurrent[MONITORED_OUTPUT_STATES]
 
-        # If controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
-        if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
-            option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
-            if not option_item is None:
-                del system_specs[option_item]
+        # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        if controller_specs:
+            if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
+                option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
+                if not option_item is None:
+                    del system_specs[option_item]
 
         # Combine controller and system specs
-        all_specs = controller_specs + system_specs
+        # If there are none, assign PRIMARY_OUTPUT_STATES as default
+        all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Extract references to mechanisms and/or outputStates from any tuples
         # Note: leave tuples in all_specs for use in generating exponent and weight arrays below
@@ -585,7 +586,7 @@ class EVCMechanism(ControlMechanism_Base):
         
         # Notes:
         # * Use all_specs to accumulate specs from all mechanisms and their outputStates
-        #     for use in generating exponents and weights below)
+        #     (for use in generating exponents and weights below)
         # * Use local_specs to combine *only current* mechanism's specs with those from controller and system specs;
         #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
@@ -708,8 +709,14 @@ class EVCMechanism(ControlMechanism_Base):
                 # if option_spec is MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES:
                 #     continue
 
-                # If mechanism is named or referenced in any specification or it is a terminal mechanism
+                # If:
+                #   mechanism is named or referenced in any specification
+                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a mechanism)
+                #   or it is a terminal mechanism
                 elif (mech.name in local_specs or mech in local_specs or
+                              # MODIFIED 11/13/16 NEW
+                              any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
+                              # MODIFIED 11/13/16 END
                               mech in self.system.terminalMechanisms.mechanisms):
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it 
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
@@ -757,6 +764,7 @@ class EVCMechanism(ControlMechanism_Base):
         # from Components.States.OutputState import OutputState
         for monitored_state in self.monitoredOutputStates:
             if isinstance(monitored_state, OutputState):
+                # FIX: NEED TO RENAME INPUT STATE TO INCLUDE NAME OF MECHANISM FOR OUTPUT STATE
                 self._instantiate_monitoring_input_state(monitored_state, context=context)
             elif isinstance(monitored_state, Mechanism):
                 for output_state in monitored_state.outputStates:
@@ -858,7 +866,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         self._validate_monitored_state_spec(monitored_state, context=context)
 
-        state_name = monitored_state.name + '_Monitor'
+        state_name = monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
 
         # Instantiate inputState
         input_state = self._instantiate_control_mechanism_input_state(state_name,

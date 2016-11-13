@@ -12,8 +12,9 @@
 Overview
 --------
 
-ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` and use this
-information to regulate the value of :doc:`ControlSignal` projections to other ProcessingMechanisms in that system.  .
+ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` to assess the
+outcome of processing by those mechanisms, and use this to regulate the value of :doc:`ControlSignal` projections to
+other ProcessingMechanisms in the system for which the ControlMechanism is a ``controller``.
 
 .. _ControlMechanism_Creating_A_ControlMechanism:
 
@@ -29,105 +30,68 @@ and assigned as the controller for that system (see :ref:`_System_Execution_Cont
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The outputState(s) to be monitored by a ControlMechanism can be specified in any of the places listed below.  The
-list also describes the order of precedence of specifications, when more than pertains to the same outputState(s).
-In all case, the specification can be a references to an outputState object, or a string that is the name of one (see
-:ref:ControlMechanism_Examples' below).  In the case of
-Specifications can be in:
+The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
+list also describes the order of precedence when more than one specification pertains to the same
+outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
+name of one (see :ref:ControlMechanism_Examples' below).
 
-OutputStates to be monitored by a ControlMechanism can be specified in:
+The specification of whether an outputState is monitored by a ControlMechanism can be done in the following ways:
 
-??-> CAN ANYTHING OTHER THAN ``NONE`` BE SPECIFIED HERE??  SPECIFICALLY, CAN IT BE MARKED FOR MONITORING (RATHER
- THAN JUST EXCLUDED??)
-* the **outputState** to be monitored -- the specification must be within its ``params`` dict, in an entry
-  with the  key :keyword:`MONITORED_OUTPUT_STATES`;  the value must be a value of :class:`MonitoredOutputStatesOption`,
-  or ``None``.  This specification takes precedence over any of the other types listed below;  in particular,
-  specifying ``None`` will suppress monitoring that outputState, irrespective of any other specifications that might
-  otherwise apply to that outputState.
+* An **outputState** can be *excluded* from being monitored by assigning ``None`` as the value of the
+  :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in the outputState's ``params``
+  argument.  This specification takes precedence over any others;  that is, specifying ``None`` will suppress
+  monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
+  outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
+  based on one of the other specification methods below.
 ..
-
--> ANY OF THE FOLLOWING CAN ALSO TAKE A TUPLE:
--> HOW DO THESE RELATE TO TERMINAL MECHANISM STATUS??
-
-* the mechanism to which the outputState(s) belong(s) -- specification must be within the mechanism's ``params`` dict,
-  in an entry with the  key :keyword:`MONITORED_OUTPUT_STATES`, and must be either a list containing the
-  outputState(s) and/or their name(s), a :class:`MonitoredOutputStatesOption` value, or ``None``. This specification takes
-  precedence of any of the other types listed below;  if it is ``None``, then none of that mechanism's outputStates
-  will be monitored (unless they are explicitly specifed as above).  The values of :class:`MonitoredOutputStatesOption` are
-  treated as follows:
+* The outputState of a particular **mechanism** can be designated to be monitored, by specifying it in the
+  :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in the mechanism's ``params``
+  argument.  The value of the entry must be either a list containing the outputState(s) and/or their name(s),
+  a :ref:`monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a :class:`MonitoredOutputStatesOption`
+  value, or ``None``. The values of :class:`MonitoredOutputStatesOption` are treated as follows:
     * :keyword:`PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism will be monitored;
-    * :keyword:`ALL_OUTPUT_STATES`:  all of the mechanism's outputStates will be monitored
+    * :keyword:`ALL_OUTPUT_STATES`:  all of the mechanism's outputStates will be monitored.
+  This specification takes precedence of any of the other types listed below:  if it is ``None``, then none of that
+  mechanism's outputStates will be monitored;   if it specifies outputState to be monitored, those will be monitored
+  even if the mechanism is not a :keyword:`TERMINAL` mechanism (see below).
 ..
-* the **ControlMechanism** that will be doing the monitoring, or the system for which that ControlMechanism is the
-``controller`` (see :ref:`System_Execution_Control`) -- specification can be in the
-  controlMechanism or system's ``monitored_output_states``, or its ``params`` dictionary in an entry with the key
-  :keyword:`MONITORED_OUTPUT_STATES`.  In either case, it must be either: a list containing outputStates,
-  their names, and/or the mechanism(s) to which they belong; a three-item tuple (see below) a
-  :class:`MonitoredOutputStatesOption` value; or ``None``. The specifications in a ControlMechanism take precedence over any
-  in the system;  however, both are superceded by any within affected mechanisms or outputStates.
+* OutputStates to be monitored can be specified in the **ControlMechanism** responsible for the monitoring, or in the
+  **system** for which that ControlMechanism is the controller`` (see :ref:`System_Execution_Control`).  Specification
+  can be in the controlMechanism or system's ``monitored_output_states`` argument, or in the
+  :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in its ``params``
+  argument.  In either case, the value must be a list, each item of which must be one of the following:
+  an  outputState or the name of one, a mechanism or the name of one, a :ref:`monitoredOutputState tuple
+  <ControlMechanism_OutputState_Tuple>`, a :class:`MonitoredOutputStatesOption` value, or ``None``.  If a value of
+  :class:MonitoredOutputStatesOption is in the list, it applies to any mechanisms that also appear in the list, so
+  long as they do not have their own ``monitored_output_states`` specification.  If a value of
+  :class:`MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
 
-  A tuple can be used to specify outputStates to configue how their valuesa are combined by the
-  ControlMechanism's ``function`` when computing the EVC;  each tuple must have three items, in the following order:
+  COMMENT:
+     CHECK: if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
+        system.executionGraph by default
+     [TBI:] if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
+        just that mechanism
+  COMMENT
 
-    * a **tuple** with three items, in the following order:
+    * :keyword:`PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the :keyword:`TERMINAL` mechanism(s)
+      in the system for which the ControlMechanism is the ``controller``.
+    * :keyword:`ALL_OUTPUT_STATES`:  all of the outputStates of the :keyword:`TERMINAL` mechanism(s)
+      in the system for which the ControlMechanism is the ``controller``.
+  Specifications in a ControlMechanism take precedence over any in the system; both are superceded by any of the
+  specifications above (i.e., within a specific outputState or mechanism).
 
-        * the name of an outputState, an outputState or mechanism object, or a specification dictionary for one;
-        ..
-        * an exponent (int) - exponentiates the value of the outputState;
-        ..
-        * a weight (int) - multiplies the value of the outState;
-    ..
+.. _ControlMechanism_OutputState_Tuple:
 
-  Use of a :class:`MonitoredOutputStatesOption` value can also be used to the specify the outputStates to be monitored by a
-  ControlMechanism;  its values are treated as follows:
-xxxx SEE NOTES BELOW
-    * :keyword:`PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism will be monitored;
-    * :keyword:`ALL_OUTPUT_STATES`:  all of the mechanism's outputStates will be monitored
+**MonitoredOutputState Tuple**
 
-COMMENT:
-Where there are multiple specifications that pertain to a given outputState, the order of precedence is as follows:
-* outputState itself, takes precedence over
-* mechanism to which the outputState belongs, which takes precedence over
-* the controlMechanism for the system, which takes precedence over
-* the system
-COMMENT
-
-
-COMMENT:
-   FROM System:
-    NOTE:  IT CAN BE SPECIFIED FOR A SYSTEM, CONTROL_MECHANISM, MECHANISM, OR AN OUTPUTSTATE ITSELF
-
-    It is overridden by the :keyword:`MONITORED_OUTPUT_STATES` parameter of the controller or individual mechanisms,
-    or if the parameter is set to None for the referenced outputState itself.  Each item in the list must be one of the
-    following:  a) a mechanism or outputState; b) a string that is the name of an instance of mechanism or outputState;
-    c) a tuple (object spec, exponent, weight), in which the object spec is a mechanism or outputState or the name of
-    one (if it is a mechanism, then the exponent and weight will apply to all outputStates of that
-    mechanism), the exponent is an int used by the controller to exponentiate the outState.value, and the weight is an
-    int used by the controller to multiplicatively weight the outState.value;  or d) a MonitoredOutputStatesOption enum
-    value (:keyword:`PRIMARY_OUTPUT_STATES`:  monitor only the primary outputState of the mechanism;
-    :keyword:`ALL_OUTPUT_STATES`: monitor all of the outputStates of the mechanism (this option applies to any
-    mechanisms in the list for which no outputStates are listed; it is overridden for any mechanism for which
-    outputStates are explicitly listed).
-
-    FROM BELOW:
-    MONITORED_OUTPUT_STATES param determines which states will be monitored.
-        specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
-        this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
-        ?? if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
-            system.executionGraph by default
-        if MonitoredOutputStatesOption is used, it applies to any mechanisms specified in the list for which
-            no outputStates are listed; it is overridden for any mechanism for which outputStates are
-            explicitly listed
-        TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
-            just that mechanism
-
-COMMENT
-
-COMMENT:
-Function
-~~~~~~~~
-EXPLAIN HOW IT IS USED
-COMMENT
+A tuple can be used wherever an outputState can be specified, to configure how its value is combined with others by the
+ControlMechanism's primary ``function`` and/or any others it may use to compute the outcome of processing. Each tuple
+must have the three following items in the order listed:
+  * an outputState or mechanism, the name of one, or a specification dictionary for one;
+  ..
+  * an exponent (int) - exponentiates the value of the outputState;
+  ..
+  * a weight (int) - multiplies the value of the outState.
 
 .. _ControlMechanism_Execution:
 
