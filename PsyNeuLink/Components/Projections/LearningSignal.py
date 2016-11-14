@@ -133,7 +133,7 @@ class LearningSignal(Projection_Base):
     # variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
+    paramClassDefaults.update({PROJECTION_SENDER: MonitoringMechanism_Base,
                                PARAMETER_STATES: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
@@ -190,7 +190,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
-        Validate send in params[kwProjectionSender] or, if not specified, sender arg:
+        Validate send in params[PROJECTION_SENDER] or, if not specified, sender arg:
         - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
@@ -199,7 +199,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
          """
 
-        # Parse params[kwProjectionSender] if specified, and assign self.sender
+        # Parse params[PROJECTION_SENDER] if specified, and assign self.sender
         super()._validate_params(request_set, target_set, context)
 
         # VALIDATE SENDER
@@ -254,7 +254,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         else:
             raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
                                       "the outputState of one, or a reference to the class"
-                                      .format(kwProjectionSender, sender, self.name, ))
+                                      .format(PROJECTION_SENDER, sender, self.name, ))
 
     def validate_receiver(self, receiver):
         """Make sure receiver is a Mapping projection or the parameterState of one
@@ -479,7 +479,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         Call this after _instantiate_receiver, as that is needed to determine the sender (i.e., source of errorSignal)
 
-        If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
+        If sender arg or PROJECTION_SENDER was specified, it has been assigned to self.sender
             and has been validated as a MonitoringMechanism, so:
             - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
             - assign its outputState.value as self.variable

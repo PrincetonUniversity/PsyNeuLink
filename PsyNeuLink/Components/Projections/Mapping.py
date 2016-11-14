@@ -42,8 +42,8 @@ class Mapping(Projection_Base):
             if it is a Mechanism, and has >1 inputStates, projection will be mapped to the first inputState
 # IMPLEMENTATION NOTE:  ABOVE WILL CHANGE IF SENDER IS ALLOWED TO BE A MECHANISM (SEE FIX ABOVE)
         - params (dict) - dictionary of projection params:
-# IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
-            + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
+# IMPLEMENTTION NOTE: ISN'T PROJECTION_SENDERValue REDUNDANT WITH sender and receiver??
+            + PROJECTION_SENDERValue (list): (default: [1]) ?? OVERRIDES sender ARG??
             + FUNCTION (Function): (default: LinearMatrix)
             + FUNCTION_PARAMS (dict): (default: {MATRIX: IDENTITY_MATRIX})
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
@@ -91,8 +91,8 @@ class Mapping(Projection_Base):
                                FUNCTION_PARAMS: {
                                    # LinearMatrix.kwReceiver: receiver.value,
                                    LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
-                               kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
-                               kwProjectionSenderValue: [1],
+                               PROJECTION_SENDER: kwInputState, # Assigned to class ref in __init__ module
+                               PROJECTION_SENDERValue: [1],
                                })
         + paramNames (dict)
         # + senderDefault (State) - set to Process inputState
@@ -125,8 +125,8 @@ class Mapping(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LinearMatrix,
-                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
-                               kwProjectionSenderValue: [1],
+                               PROJECTION_SENDER: kwOutputState, # Assigned to class ref in __init__.py module
+                               PROJECTION_SENDERValue: [1],
                                })
     @tc.typecheck
     def __init__(self,

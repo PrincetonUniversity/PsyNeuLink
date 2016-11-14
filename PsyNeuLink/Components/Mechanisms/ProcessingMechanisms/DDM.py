@@ -133,7 +133,7 @@ the value(s) of its outputState(s):
     ..
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
       the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is
-      the mean response time estimated by the analytic solution used in ``function``.
+      the mean response time (in milliseconds) estimated by the analytic solution used in ``function``.
       COMMENT:
         [TBI:]
         If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
@@ -175,10 +175,10 @@ the value(s) of its outputState(s):
       COMMENT:
     ..
     * **mean correct response time** is assigned to the 5th item of the mechanism's ``outputValue`` attribute and as
-      the value of its ``RT_CORRECT_MEAN`` outputState.  This is only assigned if the :keyword:`NavarroAndFuss``
-      function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise, neither the ``outputValue`` nor
-      the ``outputState`` attribute have a 6th item (if another function is assigned) or they are asssigned
-      :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+      the value of its ``RT_CORRECT_MEAN`` outputState.  It is reported as milliseconds.  This is only assigned if the
+      :keyword:`NavarroAndFuss`` function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
+      neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
+      or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
     ..
     * **variance of correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute
       and as the value of its ``RT_CORRECT_VARIANCE`` outputState and .  This is only assigned if the

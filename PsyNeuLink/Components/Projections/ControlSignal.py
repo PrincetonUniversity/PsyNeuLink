@@ -101,7 +101,7 @@ class ControlSignal(Projection_Base):
         - allocation (number) - source of allocation value (default: DEFAULT_ALLOCATION) [TBI: DefaultController]
         - receiver (State) - associated with parameter of mechanism to be modulated by ControlSignal
         - params (dict):
-# IMPLEMENTATION NOTE: WHY ISN'T kwProjectionSenderValue HERE AS FOR Mapping??
+# IMPLEMENTATION NOTE: WHY ISN'T PROJECTION_SENDERValue HERE AS FOR Mapping??
             + FUNCTION (Function): (default: Linear):
                 determines how allocation (variable) is translated into the output
             + FUNCTION_PARAMS (dict): (default: {SLOPE: 1, INTERCEPT: 0}) - Note: implements identity function
@@ -140,8 +140,8 @@ class ControlSignal(Projection_Base):
         + paramClassDefaults:
             FUNCTION:Linear,
             FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-            kwProjectionSender: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
-            kwProjectionSenderValue: [defaultControlAllocation],
+            PROJECTION_SENDER: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
+            PROJECTION_SENDERValue: [defaultControlAllocation],
             kwControlSignalIdentity: NotImplemented,
             kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
             kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
@@ -220,8 +220,8 @@ class ControlSignal(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # FUNCTION_PARAMS:{PARAMETER_STATES: None}, # This suppresses parameterStates
-        kwProjectionSender: DefaultController,
-        kwProjectionSenderValue: [defaultControlAllocation],
+        PROJECTION_SENDER: DefaultController,
+        PROJECTION_SENDERValue: [defaultControlAllocation],
         kwControlSignalIdentity: NotImplemented,
         kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
         kwControlSignalCostFunctions: {
@@ -395,9 +395,9 @@ class ControlSignal(Projection_Base):
         # - assume it is Mechanism or State class ref (as validated in _validate_params)
         # - implement default sender of the corresponding type
         if inspect.isclass(self.sender):
-            # self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
+            # self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDERValue])
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
-            self.sender = self.sender(self.paramsCurrent[kwProjectionSenderValue])
+            self.sender = self.sender(self.paramsCurrent[PROJECTION_SENDERValue])
 
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)

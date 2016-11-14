@@ -836,7 +836,7 @@ class Mechanism_Base(Mechanism):
 
         TBI - Generalize to go through all params, reading from each its type (from a registry),
                                    and calling on corresponding subclass to get default values (if param not found)
-                                   (as PROJECTION_TYPE and kwProjectionSender are currently handled)
+                                   (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
 
         :param request_set: (dict)
         :param target_set: (dict)
