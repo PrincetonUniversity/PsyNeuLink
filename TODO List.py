@@ -127,6 +127,7 @@
 #            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
 #            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
 #            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
+#            IS t0 MS OR SECONDS?
 
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 #           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
@@ -220,9 +221,7 @@
 # FROM EVC MEETING:
 # FIX: MAKE SURE THAT, IF function IS REASSIGNED, function_params IS UPDATED
 # FIX:  DDM:
-# FIX:     ELMINATE ANY REFERENCE TO "CORRECT RESPONSE", AND ONLY REFER TO PROB_XXX_BOUND
-# FIX:     BOGACZ & NAVARRO GIVE RT AND tO IN MS (OR SECONDS? IF SO, NEED TO ADJUST T0 DEFAULT AND TYPE)
-# FIX:  TIME_STEP SHOULD HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
+# FIX:     BOGACZ & NAVARRO GIVE RT AND t0 IN MS (OR SECONDS? IF SO, NEED TO ADJUST t0 DEFAULT AND TYPE)
 
 
 # DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
@@ -310,7 +309,6 @@
 
 # FIX:  ScratchPad example
 
-# FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
@@ -1568,7 +1566,7 @@
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
-# FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
+# FIX:                   ControlSignal.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
@@ -1610,6 +1608,13 @@
 #                 instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
+
+#endregion
+
+#region TIMESCALE ------------------------------------------------------------------------------------------------------
+
+# FIX:  TIME_STEP SHOULD HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
+# FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
 #endregion
 
@@ -1739,7 +1744,8 @@
 #
 #endregion
 
-#region FUNCTIONS: -----------------------------------------------------------------------------------------------------------
+#region COMPONENTS:
+# -----------------------------------------------------------------------------------------------------------
 #
 #  _validate_function:
 #
@@ -1911,7 +1917,7 @@
 # - replace "state" with "mechanism_state"
 # - Generalize _validate_params to go through all params, reading from each its type (from a registry),
 #                            and calling on corresponding subclass to get default values (if param not found)
-#                            (as PROJECTION_TYPE and kwProjectionSender are currently handled)
+#                            (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
 # IN MECHANISMS _validate_function:
 #   ENFORCEMENT OF CONSTRAINTS
 #
@@ -2048,7 +2054,7 @@
 #
 #      controlModulatedParamValues
 #
-# 0) MAKE SURE THAT kwProjectionSenderValue IS NOT PARSED AS PARAMS
+# 0) MAKE SURE THAT PROJECTION_SENDERValue IS NOT PARSED AS PARAMS
 #      NEEDING THEIR OWN PROJECTIONS (HOW ARE THEY HANDLED IN PROJECTIONS?) -- ARE THEWE EVEN USED??
 #      IF NOT, WHERE ARE DEFAULTS SET??
 # 2) Handle assignment of default ControlSignal sender (DefaultController)
@@ -2221,7 +2227,8 @@
 #
 #endregion
 
-#region FUNCTION: ------------------------------------------------------------------------------------------------------
+#region COMPONENT:
+# ------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
 # Implement abstract Types (aggregate, transfer, tranform, objective)

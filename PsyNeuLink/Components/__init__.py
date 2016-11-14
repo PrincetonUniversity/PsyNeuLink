@@ -91,7 +91,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 # Note: this must be an instantiated object
 DefaultMonitoringMechanism = Comparator(name=kwDefaultMonitoringMechanism)
 
-# Use as kwProjectionSender (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
+# Use as PROJECTION_SENDER (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 
 # Instantiates DefaultController (ControlMechanism):
 # - automatically assigned as the sender of default ControlSignal Projections (that use the CONTROL_SIGNAL keyword)
@@ -257,11 +257,11 @@ for projection_type in ProjectionRegistry:
     # Get paramClassDefaults for projection_type subclass
     projection_params = ProjectionRegistry[projection_type].subclass.paramClassDefaults
 
-    # Find kwProjectionSender, and raise exception if absent
+    # Find PROJECTION_SENDER, and raise exception if absent
     try:
-        projection_sender = projection_params[kwProjectionSender]
+        projection_sender = projection_params[PROJECTION_SENDER]
     except KeyError:
-        raise InitError("{0} must define paramClassDefaults[kwProjectionSender]".format(projection_type.__name__))
+        raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type.__name__))
 
     # If it is a subclass of Mechanism or State, leave it alone
     if (inspect.isclass(projection_sender) and
@@ -277,7 +277,7 @@ for projection_type in ProjectionRegistry:
             # Look it up in Mechanism Registry;
             # FIX 5/24/16
             # projection_sender = MechanismRegistry[projection_sender].subclass
-            projection_params[kwProjectionSender] = MechanismRegistry[projection_sender].subclass
+            projection_params[PROJECTION_SENDER] = MechanismRegistry[projection_sender].subclass
             # print("Looking for default sender ({0}) for {1} in MechanismRegistry...".
             #       format(projection_sender,projection_type.__name__))
         except KeyError:
@@ -286,16 +286,16 @@ for projection_type in ProjectionRegistry:
             # Look it up in State Registry;  if that fails, raise an exception
             # FIX 5/24/16
             # projection_sender = StateRegistry[projection_sender].subclass
-            projection_params[kwProjectionSender] = StateRegistry[projection_sender].subclass
+            projection_params[PROJECTION_SENDER] = StateRegistry[projection_sender].subclass
 
         except KeyError:
             raise InitError("{0} param ({1}) for {2} not found in Mechanism or State registries".
-                            format(kwProjectionSender, projection_sender, projection_type))
+                            format(PROJECTION_SENDER, projection_sender, projection_type))
         else:
             continue
 
     raise InitError("{0} param ({1}) for {2} must be a Mechanism or State subclass or instance of one".
-                    format(kwProjectionSender, projection_sender, projection_type))
+                    format(PROJECTION_SENDER, projection_sender, projection_type))
 
 #endregion
 
@@ -376,27 +376,27 @@ Function.classPreferences = ComponentPreferenceSet(owner=Function,
 #
 #     try:
 #         # First try to get spec from StateRegistry
-#         projection_params[kwProjectionSender] = StateRegistry[projection_params[kwProjectionSender]].subclass
+#         projection_params[PROJECTION_SENDER] = StateRegistry[projection_params[PROJECTION_SENDER]].subclass
 #     except AttributeError:
-#         # No kwProjectionSender spec found for for projection class
-#         raise InitError("paramClassDefaults[kwProjectionSender] not defined for".format(projection))
+#         # No PROJECTION_SENDER spec found for for projection class
+#         raise InitError("paramClassDefaults[PROJECTION_SENDER] not defined for".format(projection))
 #     except (KeyError, NameError):
-#         # kwProjectionSender spec not found in StateRegistry;  try next
+#         # PROJECTION_SENDER spec not found in StateRegistry;  try next
 #         pass
 #
 #     try:
 #         # First try to get spec from StateRegistry
-#         projection_params[kwProjectionSender] = MechanismRegistry[projection_params[kwProjectionSender]].subclass
+#         projection_params[PROJECTION_SENDER] = MechanismRegistry[projection_params[PROJECTION_SENDER]].subclass
 #     except (KeyError, NameError):
-#         # kwProjectionSender spec not found in StateRegistry;  try next
+#         # PROJECTION_SENDER spec not found in StateRegistry;  try next
 # xxx
-#         # raise InitError("{0} not found in StateRegistry".format(projection_params[kwProjectionSender]))
+#         # raise InitError("{0} not found in StateRegistry".format(projection_params[PROJECTION_SENDER]))
 #     else:
-#         if not ((inspect.isclass(projection_params[kwProjectionSender]) and
-#                      issubclass(projection_params[kwProjectionSender], State_Base)) or
-#                     (isinstance(projection_params[kwProjectionSender], State_Base))):
-#             raise InitError("paramClassDefaults[kwProjectionSender] for {0} ({1}) must be a type of State".
-#                             format(projection, projection_params[kwProjectionSender]))
+#         if not ((inspect.isclass(projection_params[PROJECTION_SENDER]) and
+#                      issubclass(projection_params[PROJECTION_SENDER], State_Base)) or
+#                     (isinstance(projection_params[PROJECTION_SENDER], State_Base))):
+#             raise InitError("paramClassDefaults[PROJECTION_SENDER] for {0} ({1}) must be a type of State".
+#                             format(projection, projection_params[PROJECTION_SENDER]))
 
 # Initialize ShellClass registries with subclasses listed above, and set their default values
 #endregion
