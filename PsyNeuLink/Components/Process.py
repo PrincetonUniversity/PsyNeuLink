@@ -102,14 +102,15 @@ and can be accessed in the process' ``mechanisms`` attribute.)
 Projections
 ~~~~~~~~~~~
 
-Projections between mechanisms in the process are specified in one of three ways:
+Projections between mechanisms in the ``pathway`` of a process are specified in one of three ways:
 
 * Inline specification
-    Projection specifications can be interposed between any two mechanisms in the pathway list.  This creates
+    Projection specifications can be interposed between any two mechanisms in the ``pathway`` list.  This creates
     a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
-    can be an instance of a Mapping projection, the class name Mapping, a keyword for a type of Mapping projection
-    (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`, :keyword:`RANDOM_CONNECTIVITY_MATRIX`),
-    or a dictionary with specifications for the projection (see Projection for details of how to specify projections).
+    can be an instance of a :doc:`Mapping` projection, the class name Mapping, a :ref:`keyword <Matrix_Keywords>`
+    for a type of Mapping projection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
+    :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
+    (see :ref:`Projection <Projection_Creating_A_Projection>` for details of how to specify projections).
 
 * Stand-alone projection
     When a projection is created on its own, it can be assigned a sender and receiver mechanism (see Projection).
@@ -123,8 +124,12 @@ Projections between mechanisms in the process are specified in one of three ways
     For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
     the methods above), a Mapping projection is automatically created from the mechanism that precedes it in the
     pathway.  If the format of the preceding mechanism's output matches that of the next mechanism, then
-    IDENTITY_MATRIX is used for the projection;  if the formats do not match, or learning has been specified either
-    for the projection or the process, then ''FULL_CONNECTIVITY_MATRIX'' is used (see Projection).
+    :keyword:`IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or learning has been specified
+    either for the projection or the process, then :keyword:`FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is
+    the :keyword:`ORIGIN` mechanism (i.e., first in the ``pathway``), a
+    :ref:`ProcessInputState <Process_Input_And_Ouput>` will be used as the sender (see below),
+    and :keyword:`IDENTITY_MATRIX` is used for the projection.
+
 
 .. _Process_Input_And_Ouput:
 
@@ -1343,7 +1348,7 @@ class Process_Base(Process):
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
-                                if sender_arg is NotImplemented:
+                                if sender_arg in {None, NotImplemented}:
                                     item.init_args[kwSenderArg] = sender_mech
                                 elif sender_arg is not sender_mech:
                                     raise ProcessError("Sender of projection ({}) specified in item {} of"
@@ -1364,7 +1369,7 @@ class Process_Base(Process):
                             else:
                                 # If receiver is not specified for the projection,
                                 #    assign mechanism that follows it in the pathway
-                                if receiver_arg is NotImplemented:
+                                if receiver_arg in {None, NotImplemented}:
                                     item.init_args[kwReceiverArg] = receiver_mech
                                 elif receiver_arg is not receiver_mech:
                                     raise ProcessError("Receiver of projection ({}) specified in item {} of"

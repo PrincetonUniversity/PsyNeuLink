@@ -3,4 +3,4 @@ Mapping
 
 .. automodule:: Mapping
    :members:
-   :exclude-members: random
+   :exclude-members: random, execute

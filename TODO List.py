@@ -207,6 +207,11 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/14/16:
+# DOCUMENTATION: MOVE DESCRIOPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
+#                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
+#                   (see :doc:`Mechanism` for specification of a parms dict)
+
 # 11/13/16:
 # FIX: GET RID OF MonitoredOutputStatesOption; just use keywords (also in documentation)
 # IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
@@ -2054,7 +2059,7 @@
 #
 #      controlModulatedParamValues
 #
-# 0) MAKE SURE THAT PROJECTION_SENDERValue IS NOT PARSED AS PARAMS
+# 0) MAKE SURE THAT PROJECTION_SENDER_VALUE IS NOT PARSED AS PARAMS
 #      NEEDING THEIR OWN PROJECTIONS (HOW ARE THEY HANDLED IN PROJECTIONS?) -- ARE THEWE EVEN USED??
 #      IF NOT, WHERE ARE DEFAULTS SET??
 # 2) Handle assignment of default ControlSignal sender (DefaultController)

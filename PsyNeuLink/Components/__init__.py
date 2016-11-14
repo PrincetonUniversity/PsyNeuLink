@@ -171,7 +171,7 @@ register_category(entry=OutputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# kwOutputState = OutputState.__name__
+# OUTPUT_STATE = OutputState.__name__
 
 # ParameterState
 from PsyNeuLink.Components.States.ParameterState import ParameterState

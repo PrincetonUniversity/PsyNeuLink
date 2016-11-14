@@ -57,6 +57,7 @@ import typecheck as tc
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Utilities import random_matrix
 
 FunctionRegistry = {}
 
@@ -1473,9 +1474,6 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
-
-def random_matrix(sender, receiver, range=1, offset=0):
-    return (range * np.random.rand(sender, receiver)) + offset
 
 
 #region ***********************************  INTEGRATOR FUNCTIONS ******************************************************
