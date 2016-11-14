@@ -4,10 +4,96 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # **********************************************  Mapping **************************************************************
-#
+
+"""
+.. _Mapping_Overview:
+
+Overview
+--------
+
+Mapping projections transmit value from an outputState of one ProcessingMechanism to the inputState of another.  Its
+default ``function`` is :class:`LinearMatrix`, which uses the projection's ``matrix`` parameter to transform an
+array received from its ``sender``, and transmit this to its ``receiver``.
+
+.. _Mapping_Creating_A_Mapping_Projection:
+
+Creating a Mapping Projection
+-----------------------------
+
+A mapping projection can be created in any of the ways that can be used for a projection (see
+:ref:`projection <_Projection_Creating_A_Projection>). Mapping projections are also automatically created by
+PsyNeuLink in a number of circumstances, using the type of matrix indicated below (these are described in
+:ref:`Mapping_Structure):
+
+* in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned (see [LINK]);
+  a :keyword:`DEFAULT_PROJECTION_MATRIX` will be used.
+..
+* by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
+  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creating_A_ControlMechanism`);  a
+  :keyword:`IDENTITY_MATRIX` will be used.
+
+* by a **LearningSignal**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
+  that is used to evaluate that error and generate a learning signal from it (see [LINK]);  a
+  :keyword:`IDENTITY_MATRIX` will be used.
+
+When a mapping projection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
+or they can be assigned by default (see below).
+
+.. _Mapping_Structure:
+
+Structure
+---------
+
+In addition to its ``function``, the primary elements of a mapping projection are its ``matrix`` and
+``param_modulation_operation`` parameters.
+
+* The ``matrix`` parameter is used to by ``function`` to execute a matrix transformation of its input.  It can be
+  assigned a list of arrays, np.ndarray, np.matrix, a function that resolves to one of these, or one of the
+  following keywords:
+
+  * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
+    values are the same.
+  * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
+    and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
+  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
+    and a number of columns equal to the length of the receiver's value, all the elements of which are filled with
+    random values uniformly distributed between 0 and 1.
+  * :keyword:`DEFAULT_PROJECTION_MATRIX` - this is used for
+
+PsyNeuLink also offers a convenience function — ``random_matrix()`` — that ....
+
+If the matrix of mapping projection is not specified, PsyNeuLink will assign a default based on the
+projection's sender and receiver, and the context in which it is being used, as follows:
+
+process
+controlMechanism
+learning
+
+  xxx MODIFICATION BY LEARNING SIGNALS (ASSIGNED TO ITS MATRIX PARAMETER STATE)
+
+* The ``parameter_modulaton_operation`` attribute is used by the parmaterState assigned to the ``matrix`` parameter
+
+
+
+
+.. _Projection_Execution:
+
+Execution
+---------
+
+its ``function`` uses the projection's ``matrix`` attribute to execute a matrix transformation of
+the array in its sender's value, and assign this to it's receiver's variable.
+
+TALK ABOUT LEARNING AND LAZY UPDATING
+
+
+
+.. _Projection_Class_Reference:
+
+"""
 
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *

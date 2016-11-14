@@ -4,8 +4,8 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # **********************************************  Projection ***********************************************************
 
 """
@@ -93,7 +93,7 @@ This can be done using a call to the projection subclass, or one of the followin
 Structure
 ---------
 
-In addition to its ``function``, a projections has two core components:
+In addition to its ``function``, a projection has two core components:
 
 .. _Projection_Sender:
 
