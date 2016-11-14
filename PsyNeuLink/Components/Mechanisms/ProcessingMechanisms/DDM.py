@@ -90,9 +90,7 @@ The parameters for the DDM are:
 * :keyword:`THRESHOLD` (default 1.0)
   - specifies the stopping value for the decision process.  When ``time_scale`` is :keyword:`TIME_STEP`, the
   integration process is terminated when the absolute value of the decision variable equals the absolute value
-  of threshold.  The sign of the ``threshold`` parameter is used to determine the "correct response" and error rate:
-  if the value of the decision variable equals the value of the threshold, the result is coded as a correct response;
-  if the value of the decision  variable equals the negative of the threshold, the result is coded as an error.
+  of threshold.  The ``threshold`` parameter must be greater than or equal to zero.
 ..
 * :keyword:`NOISE` (default 0.5)
   - specifies the variance of the stochastic ("diffusion") component of the decision process.  If ``time_scale``
@@ -136,43 +134,53 @@ the value(s) of its outputState(s):
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
       the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is
       the mean response time estimated by the analytic solution used in ``function``.
-      [TBI:]
-      If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
-      since the start of the current execution in the current phase [LINK].  If execution completes, this is the number
-      of time_steps it took for the decision variable to reach the (positive or negative) value of the ``threshold``
-      parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds to the time_step at
-      which the interruption occurred.
+      COMMENT:
+        [TBI:]
+        If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
+        since the start of the current execution in the current phase [LINK].  If execution completes, this is the
+        number of time_steps it took for the decision variable to reach the (positive or negative) value of the
+        ``threshold`` parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds
+        to the time_step at which the interruption occurred.
+      COMMENT
     ..
-    # The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
-    # corresponding attributes is :keyword:`None`.
+    The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
+    corresponding attributes is :keyword:`None`.
 
-    * **error rate** is assigned to the 3rd item of the mechanism's ``outputValue`` attribute and as the value of its
-      :keyword:`ERROR_RATE` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
-      the value is the probability (calculated by the analytic solution used in ``function``) that the value of the
-      decision variable reached the incorrect threshold (that is, a value equal but opposite in sign to the value
-      specified as the ``threshold`` parameter).
+    * **probability of reaching the upper threshold** is assigned to the 3rd item of the mechanism's ``outputValue``
+      attribute, and as the value of its ``PROBABILITY_UPPER_THRESHOLD`` outputState.  If ``time_scale`` is
+      :keyword:`TimeScale.TRIAL`, the value is the probability (calculated by the analytic solution used in
+      ``function``) that the value of the decision variable reached the upper (positive) threshold.  Often, by
+      convention, the upper threshold is associated with the ccorrect response, in which case
+      ``PROBABILITY_LOWER_THRESHOLD`` corresponds to the accuracy of the decision process.
+      COMMENT:
       [TBI:]
-      If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
-      indicating whether the response was incorrect (i.e, whether the threshold reached has the same or opposite sign
-      to the one specified by ``threshold``).  A 1 indicates an error, and a 0 indicates a correct response.
-      If execution was interrupted (using  ``terminate_function``, sometimes referred to as the
-      "interrogation protocol"[LINK]), then the value corresponds to the current likelihood that an incorrect response
-      would be generated.
+          If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
+          indicating whether the decision process reached the upper (positive) threshold. If execution was interrupted
+          (using ``terminate_function``, sometimes referred to as the "interrogation protocol"[LINK]), then the value
+          corresponds to the current likelihood that the upper threshold would have been reached.
+      COMMENT
     ..
-    * **probability of correct response** is assigned to the 4th item of the mechanism's ``outputValue`` attribute
-      and as the value of its ``PROBABILITY_UPPER_BOUND`` outputState. The value is 1-:keyword:`ERROR_RATE` (see above).
+    * **probability of reaching the lower threshold** is assigned to the 4th item of the mechanism's ``outputValue``
+      attribute and as the value of its ``PROBABILITY_LOWER_THRESHOLD`` outputState.  If ``time_scale`` is
+      :keyword:`TimeScale.TRIAL`, the value is the probability (calculated by the analytic solution used in
+      ``function``) that the value of the decision variable reached the lower (negative) threshold.  Often, by
+      convention, the lower threshold is associated with the inccorrect response, in which case
+      ``PROBABILITY_LOWER_THRESHOLD`` corresponds to the error rate of the decision process.
+      COMMENT:
+          [TBI:]
+          If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
+          indicating whether the decision process reached the lower (negative) threshold. If execution was interrupted
+          (using ``terminate_function``, sometimes referred to as the "interrogation protocol"[LINK]), then the value
+          corresponds to the current likelihood that the lower threshold would have been reached.
+      COMMENT:
     ..
-    * **probability of a incorrect response** is assigned to the 5th item of the mechanism's ``outputValue``
-      attribute and as the value of its ``PROBABILITY_LOWER_BOUND`` outputState.  This is equivalent to the
-      :keyword:`ERROR_RATE` (see above).
-    ..
-    * **mean correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute and as
-      the value of its ``RT_CORRECT_MEAN`` outputState.  This is only assigned if the :keyword:`NavarroAndFuss
+    * **mean correct response time** is assigned to the 5th item of the mechanism's ``outputValue`` attribute and as
+      the value of its ``RT_CORRECT_MEAN`` outputState.  This is only assigned if the :keyword:`NavarroAndFuss``
       function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise, neither the ``outputValue`` nor
       the ``outputState`` attribute have a 6th item (if another function is assigned) or they are asssigned
       :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
     ..
-    * **variance of correct response time** is assigned to the 7th item of the mechanism's ``outputValue`` attribute
+    * **variance of correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute
       and as the value of its ``RT_CORRECT_VARIANCE`` outputState and .  This is only assigned if the
       :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
       neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
@@ -197,9 +205,8 @@ from PsyNeuLink.Components.Functions.Function import *
 # DDM outputs (used to create and name outputStates):
 DECISION_VARIABLE = "DecisionVariable"
 RESPONSE_TIME = "RESPONSE_TIME"
-ERROR_RATE = "Error_Rate"
-PROBABILITY_UPPER_BOUND = "Probability_upperBound"
-PROBABILITY_LOWER_BOUND = "Probability_lowerBound"
+PROBABILITY_UPPER_THRESHOLD = "Probability_upperBound"
+PROBABILITY_LOWER_THRESHOLD = "Probability_lowerBound"
 RT_CORRECT_MEAN = "RT_Correct_Mean"
 RT_CORRECT_VARIANCE = "RT_Correct_Variance"
 
@@ -208,7 +215,6 @@ RT_CORRECT_VARIANCE = "RT_Correct_Variance"
 class DDM_Output(AutoNumber):
     DECISION_VARIABLE = ()
     RESPONSE_TIME = ()
-    ER_MEAN = ()
     P_UPPER_MEAN = ()
     P_LOWER_MEAN = ()
     RT_CORRECT_MEAN = ()
@@ -270,9 +276,8 @@ class DDM(ProcessingMechanism_Base):
                                                                   NON_DECISION_TIME:<>},
                                           OUTPUT_STATES: [DECISION_VARIABLE,
                                                            RESPONSE_TIME,
-                                                           ERROR_RATE,
-                                                           PROBABILITY_UPPER_BOUND,
-                                                           PROBABILITY_LOWER_BOUND,
+                                                           PROBABILITY_UPPER_THRESHOLD,
+                                                           PROBABILITY_LOWER_THRESHOLD,
                                                            RT_CORRECT_MEAN,
                                                            RT_CORRECT_VARIANCE,
             + paramNames (dict): names as above
@@ -398,12 +403,11 @@ class DDM(ProcessingMechanism_Base):
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
         OUTPUT_STATES:[DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
                         RESPONSE_TIME,
-                        ERROR_RATE,
-                        PROBABILITY_UPPER_BOUND, # Probability of hitting upper bound
-                        PROBABILITY_LOWER_BOUND, # Probability of hitting lower bound
+                        PROBABILITY_UPPER_THRESHOLD, # Probability of hitting upper bound
+                        PROBABILITY_LOWER_THRESHOLD, # Probability of hitting lower bound
                         RT_CORRECT_MEAN,         # NavarroAnd Fuss only
                         RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
-        # MONITORED_OUTPUT_STATES:[ERROR_RATE,(RESPONSE_TIME, -1, 1)]
+        # MONITORED_OUTPUT_STATES:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
@@ -478,9 +482,8 @@ class DDM(ProcessingMechanism_Base):
         self._outputStateValueMapping = {}
         self._outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
         self._outputStateValueMapping[RESPONSE_TIME] = DDM_Output.RESPONSE_TIME.value
-        self._outputStateValueMapping[ERROR_RATE] = DDM_Output.ER_MEAN.value
-        self._outputStateValueMapping[PROBABILITY_UPPER_BOUND] = DDM_Output.P_UPPER_MEAN.value
-        self._outputStateValueMapping[PROBABILITY_LOWER_BOUND] = DDM_Output.P_LOWER_MEAN.value
+        self._outputStateValueMapping[PROBABILITY_UPPER_THRESHOLD] = DDM_Output.P_UPPER_MEAN.value
+        self._outputStateValueMapping[PROBABILITY_LOWER_THRESHOLD] = DDM_Output.P_LOWER_MEAN.value
 
         # If not using Navarro and Fuss, get rid of extra params:
         if self.function is BogaczEtAl:
@@ -582,21 +585,19 @@ class DDM(ProcessingMechanism_Base):
             # Assign outputValue
 
             if isinstance(self.function.__self__, BogaczEtAl):
-                self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.ER_MEAN.value] = result
-                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.ER_MEAN.value]
-                self.outputValue[DDM_Output.P_LOWER_MEAN.value] = self.outputValue[DDM_Output.ER_MEAN.value]
+                self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result
+                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.P_LOWER_MEAN.value]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
                 self.outputValue[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
-                self.outputValue[DDM_Output.ER_MEAN.value] = 1-result[NF_Results.MEAN_ER.value]
-                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = result[NF_Results.MEAN_ER.value]
-                self.outputValue[DDM_Output.P_LOWER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
+                self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
+                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
                 self.outputValue[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
                 self.outputValue[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             # Convert ER to decision variable:
-            if random() < self.outputValue[DDM_Output.ER_MEAN.value]:
+            if random() < self.outputValue[DDM_Output.P_LOWER_MEAN.value]:
                 self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
                 # # MODIFIED 10/5/16 OLD:

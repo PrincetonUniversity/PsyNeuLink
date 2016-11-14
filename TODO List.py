@@ -122,7 +122,12 @@
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # -------------------
-#
+
+# QUESTION: DDM:
+#            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
+#            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
+#            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
+
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 #           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
 
@@ -463,7 +468,7 @@
 # IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
-#               IS PROBABILITY_UPPER_BOUND THE CORRECT PARAM IN EVC System Laming Validation Test Script??
+#               IS PROBABILITY_UPPER_THRESHOLD THE CORRECT PARAM IN EVC System Laming Validation Test Script??
 # PROBLEM: IN Process, WAS ADDING +1 TO _phaseSpecMax for monitoringMechanisms (for learning)
 #                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
 #          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
@@ -2197,7 +2202,7 @@
 
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
-# - FIX: CLEAN UP PROBABILITY_UPPER_BOUND ETC.
+# - FIX: CLEAN UP PROBABILITY_UPPER_THRESHOLD ETC.
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
 # - Fix:  move kwDDM_AnalyticSolution back to FUNCTION_PARAMS and adjust validation to allow non-numeric value
 # - implement: add options to multiply or fully override parameterState.values
