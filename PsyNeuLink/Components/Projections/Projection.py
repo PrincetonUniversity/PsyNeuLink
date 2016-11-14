@@ -228,7 +228,6 @@ class Projection_Base(Projection):
     name=None,        \
     prefs=None)
 
-
     Abstract class definition for
 
     .. note::
@@ -272,22 +271,24 @@ class Projection_Base(Projection):
         Input to projection, received from outputState.value of sender.
 
     sender : State
-        State (of a mechanism) from which projection receives its input.
+        State from which projection receives its input.
 
     receiver : State
-        State (of a mechanism or projection) to which projection sends its output.
+        State (of a mechanism or projection)
+        State to which projection sends its output.
 
     value : value
         Output of projection, transmitted to inputState.variable of receiver.
 
     COMMENT:
-        params : Dict[param arg, parm value]
-            PROJECTION_SENDER:<Mechanism or State class or object>
-                This is populated by __init__ with the default sender state for each subclass.
-                It is used if sender arg is not provided.
-                If it is different than the default, it overrides the sender arg even if that is provided.
-            PROJECTION_SENDERValue:<value>
-                Use to instantiate ProjectionSender (i.e., a default sender)
+        projectionSender : Mechanism, State, or Object
+            This is assigned by __init__.py with the default sender state for each subclass.
+            It is used if sender arg is not specified in the constructor or when the projection is assigned.
+            If it is different than the default;  where it is used, it overrides the ``sender`` argument even if that is
+            provided.
+
+        projectionSender : 1d array
+            Used to instantiate projectionSender
 
         paramsCurrent : Dict[param arg, parm value]
             Current value of all params for instance.
@@ -304,7 +305,7 @@ class Projection_Base(Projection):
                       allows the same name to be used for parameterStates belonging to different projections
                       without adding index suffixes for the name across projections
                       while still indexing multiple uses of the same base name within a projection.
-    COMMENT:
+    COMMENT
 
     name : str : default <Projection subclass>-<index>
         Name of the projection.
@@ -588,7 +589,7 @@ class Projection_Base(Projection):
                 # self.paramsCurrent['function_params']['matrix']
                 # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING PROJECTION??
                 # MODIFIED 9/12/16 END
-                self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDERValue])
+                self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
                 raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
                                       format(self.sender.__class__.__name__, self.name))
@@ -844,7 +845,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     state must be a specification of an outputState
     Specification of OutputState can be any of the following:
-            - kwOutputState - assigns projection_spec to (primary) outputState
+            - OUTPUT_STATE - assigns projection_spec to (primary) outputState
             - OutputState object
             - index for Mechanism.outputStates OrderedDict
             - name of outputState (i.e., key for Mechanism.outputStates OrderedDict))
@@ -870,8 +871,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         state.instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
-    # Generic kwOutputState is specified, so use (primary) outputState
-    elif state is kwOutputState:
+    # Generic OUTPUT_STATE is specified, so use (primary) outputState
+    elif state is OUTPUT_STATE:
         sender.outputState.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 

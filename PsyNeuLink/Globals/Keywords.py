@@ -183,7 +183,7 @@ kwControlMechanism = "ControlMechanism"
 
 # States:
 kwInputState = "InputState"
-kwOutputState = "OutputState"
+OUTPUT_STATE = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
@@ -349,9 +349,9 @@ PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PARAMS = "MappingParams"
 CONTROL_SIGNAL_PARAMS = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'
-PROJECTION_SENDER = 'ProjectionSender'
+PROJECTION_SENDER = 'projectionSender'
 kwSenderArg = 'sender'
-PROJECTION_SENDERValue =  "ProjectDefaultSenderValue"
+PROJECTION_SENDER_VALUE =  "projectionSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"

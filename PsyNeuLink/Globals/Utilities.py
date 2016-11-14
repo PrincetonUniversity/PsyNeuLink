@@ -446,6 +446,9 @@ def get_value_from_array(array):
     :return:
     """
 
+def random_matrix(sender, receiver, range=1, offset=0):
+    return (range * np.random.rand(sender, receiver)) + offset
+
 def underscore_to_camelCase(item):
     item = item[1:]
     item = ''.join(x.capitalize() or '_' for x in item.split('_'))

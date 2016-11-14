@@ -619,6 +619,7 @@ FROM TODO:
                     Mapping(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
                             # name=monitoring_mechanism.name+'_'+MAPPING)
+                            matrix=IDENTITY_MATRIX,
                             name=next_level_monitoring_mechanism.name +
                                  ' to '+monitoring_mechanism.name +
                                  ' ' + MAPPING + ' Projection')

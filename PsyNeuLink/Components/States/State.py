@@ -1259,11 +1259,11 @@ def instantiate_state_list(owner,
                          if None, instantiate a default using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
         - kwInputState
-        - kwOutputState
+        - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
         - kwInputState: self.variable
-        - kwOutputState: self.value
+        - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
     - constraint_value_name (str):  passed to State.instantiate_state(), used in error messages

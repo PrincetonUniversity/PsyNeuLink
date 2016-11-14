@@ -54,6 +54,8 @@ Creating a ParameterState
                 - tuple: (value, projectionType)
                 - value: list of numbers (no projections will be assigned)
 
+parameter_modulation_operation:  ModulationOperation - list values and their meaning
+
 """
 
 from PsyNeuLink.Components.States.State import *
