@@ -895,7 +895,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Instantiate Mapping Projection from monitored_state to new input_state
         from PsyNeuLink.Components.Projections.Mapping import Mapping
-        Mapping(sender=monitored_state, receiver=input_state)
+        Mapping(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
