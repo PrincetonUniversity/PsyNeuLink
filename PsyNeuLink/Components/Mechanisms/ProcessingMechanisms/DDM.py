@@ -125,7 +125,6 @@ processes that use their own parameters, a separate DDM mechanism should explici
 COMMENT:
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
-
 COMMENT
 
 After each execution of the mechanism, the following values are assigned to the mechanism's ``outputValue`` and
@@ -454,7 +453,19 @@ class DDM(ProcessingMechanism_Base):
         if not target_set[FUNCTION] in functions:
             function_names = list(function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
-                           format(self.name, function_names))
+                           format(FUNCTION, self.name, function_names))
+
+        try:
+            threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
+        except KeyError:
+            pass
+        else:
+            if isinstance(threshold, tuple):
+                threshold = threshold[0]
+            if not threshold >= 0:
+                raise DDMError("{} param of {} ({}) must be >= zero".
+                               format(THRESHOLD, self.name, threshold))
+
 
     # def _instantiate_function(self, context=NotImplemented):
     def _instantiate_attributes_before_function(self, context=None):

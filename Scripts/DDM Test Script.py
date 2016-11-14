@@ -10,7 +10,7 @@ DDM_prefs = ComponentPreferenceSet(
 # my_DDM = DDM(name='my_DDM')
 
 my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
-                                 threshold=(10.0, CONTROL_SIGNAL),
+                                 threshold=(-10.0, CONTROL_SIGNAL),
                                  starting_point=0.0),
              name='My_DDM',
              prefs = DDM_prefs
