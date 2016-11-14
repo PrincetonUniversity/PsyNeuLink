@@ -12,34 +12,34 @@
 Overview
 --------
 
-An EVCMechanism is a :doc:`ControlMechanism` that seeks to optimize a "portfolio" of control signals
+An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that seeks to optimize a "portfolio" of control signals
 so as to maximize the performance of the system to which it belongs.  Each control signal is implemented as a
 :doc:`ControlSignal` projection, that regulates the parameter of a mechanism in the system;  collectively,
 the control signals govern the system's behavior.  A particular combination of control signal values is called a
 *control allocation policy*.  The EVCMechanism evaluates the system's performance under each control allocation policy,
 selects the one that generates the best performance, and then assigns the allocation values designated by that policy
-to  each of its control signals.  Those are then used when the System is next executed. This implements a form of the
+to  each of its control signals.  Those are then used when the system is next executed. This implements a form of the
 EVC Theory described in Shenhav et al. (2013).
 
 The set of control allocation policies that are tested is contained in the EVCMechanism's ``controlSignalSearchSpace``
 attribute (see :ref:`EVCMechanism_ControlSignalSearchSpace`. The performance of the system is tested for each
 control allocation policy in the ``controlSignalSearchSpace``, and the outcome of performance is used to calculate the
-expected value of control (EVC) is calculated for that policy.  The EVC can be thought of as the cost-benefit ratio
-for a given policy, that is calculated as the difference between the outcome of performance and the cost
-of the control signals used to generate that outcome. The outcome is assessed by aggregating the ``value`` of each
-outputState listed in the``monitoredOutputStates`` attribute.  The cost of the control signals is assessed by
-aggregating the cost associated with each ControlSignal projection (based on its ``value`` for the policy,  and c
-ontained in its ``cost`` attribute).  The policy that generates the greatest EVC is implemented, and used on the next
-round of execution.
+expected value of control (EVC) for that policy.  The EVC can be thought of as the cost-benefit ratio for a given
+policy, calculated as the difference between the outcome of performance and the cost of the control signals used to
+generate that outcome. The outcome is assessed by aggregating the ``value`` of each outputState listed in
+the ``monitoredOutputStates`` attribute.  The cost of the control signals is assessed by aggregating the cost
+associated with each ControlSignal projection (based on its ``value`` for the policy,  and contained in its
+``cost`` attribute).  The policy that generates the maximum EVC is implemented, and used on the next round of
+execution.
 
 .. _EVCMechanism_Creating_An_EVCMechanism:
 
 Creating an EVCMechanism
 ------------------------
 
-An EVCMechanism can be instantiated using the standard Python method of calling its constructor.  However,  more
-commonly, it is generated automatically when a system is created and an EVCMechanism is specified as its ``controller``
-(see System :ref:`System_Class_Reference`).  When this occurs, PsyNeuLink configures the EVCMechanism as follows:
+An EVCMechanism can be created using the standard Python method of calling its constructor.  However,  more commonly,
+it is generated automatically when a system is created and an EVCMechanism is specified as its
+:ref:`controller <System_Execution_Control>`). When this occurs, PsyNeuLink configures the EVCMechanism as follows:
 
   * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
     EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
