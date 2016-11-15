@@ -7,7 +7,135 @@
 
 
 # *********************************************  ControlSignal *********************************************************
-#
+
+"""
+.. _ControlSignal_Overview:
+
+Overview
+--------
+
+
+
+, which uses the
+projection's ``matrix``
+parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
+``receiver``.
+
+
+ControlSignal projections take a value (an *allocation*) from a ControlMechanism (its ``sender``), use this to
+compute the value of its ``intensity``.  That is used to modify the value of a parameterState (its ''receiver'')
+associated with the parameter of a function of a ProcessingMechanism.  Its ``function`` calculates the intensity
+from the allocation;  the default is the identity function (Linear(slope=1, intercept=0)), so that the allocation
+serves as the ControlSignal intensity.  A ControlSignal also has an associated ``cost``, that is calculated based on its
+intensity, and optionally the time course of its intensity.
+
+
+
+
+
+.. _ControlSignal_Creating_A_ControlSignal_Projection:
+
+Creating a ControlSignal Projection
+-----------------------------
+
+
+    Instantiation:
+        - ControlSignals can be instantiated in one of several ways:
+            - directly: requires explicit specification of the receiver
+            - as part of the instantiation of a mechanism:
+                each parameter of a mechanism will, by default, instantiate a ControlSignal projection
+                   to its State, using this as ControlSignal's receiver
+            [TBI: - in all cases, the default sender of a Control is the EVC mechanism]
+
+
+
+COMMENT:
+    ??LEGACY:
+    - as part of the instantiation of a mechanism:
+        the mechanism outputState will automatically be used as the receiver:
+            if the mechanism is being instantiated on its own, the sender must be explicity specified
+COMMENT
+
+A ControlSignal projection can be created in any of the ways that can be used for creating a
+:ref:`projection <_Projection_Creating_A_Projection>) or in specifying a projection in the
+:ref:`pathway <_Process_Projections>` of a process. ControlSignal projections are also automatically created by
+PsyNeuLink in a number of circumstances (matrix types are described in :ref:`ControlSignal_Structure):
+
+* in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
+  the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.
+..
+* by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
+  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creating_A_ControlMechanism`);  a
+  :keyword:`IDENTITY_MATRIX` will be used.
+
+* by a **LearningSignal**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
+  that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
+  depends on the ``function`` parameter of the :doc:`LearningSignal`.[LINK]
+
+When a ControlSignal projection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
+or they can be assigned by default (see below).
+
+.. _ControlSignal_Structure:
+
+Structure
+---------
+
+In addition to its ``function``, ControlSignal projections use the following two the primary parameters:
+
+``matrix``
+
+  Used by ``function`` to execute a matrix transformation of its input.  It can be assigned a list of 1d arrays,
+  an np.ndarray, np.matrix, a function that resolves to one of these, or one of the following keywords:
+
+  .. _Matrix_Keywords:
+
+  * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
+    values are the same.
+  * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
+    and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
+  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
+    and a number of columns equal to the length of the receiver's value, all the elements of which are filled with
+    random values uniformly distributed between 0 and 1.
+  * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
+    is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
+  * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
+    assigns an keyword:`IDENTITY_MATRIX`.
+  ..
+  PsyNeuLink also provides a convenience function, :class:`random_matrix`, that can be used to generate a random matrix
+  sized for a sender, receiver, with random numbers drawn from a uniform distribution within a specified range and
+  with a specified offset.
+
+
+``parameter_modulation_operation``
+
+  Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
+  influence it.  For example, this is used for a :doc:`LearningSignal` projection to apply weight changes to
+  ``matrix`` during learning.  ``parameter_modulation_operation`` must be assigned a value of
+  :class:`ModulationOperation`, and the operation is always applied in an element-wise (Hadamard[LINK]) fashion.
+  The default operation is ``ADD``.
+
+.. _Projection_Execution:
+
+Execution
+---------
+
+A ControlSignal projection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
+and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
+cause the value of any projections (e.g., a LearningSignal) it receives to be applied to the matrix. This will bring
+into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
+Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
+``matrix`` will not show the effects of projections to its parameterState until the ControlSignal projection has been
+executed).
+
+.. _Projection_Class_Reference:
+
+
+Class Reference
+---------------
+
+"""
+
+
 
 from PsyNeuLink.Components import DefaultController
 # from Globals.Defaults import *
@@ -650,6 +778,17 @@ class ControlSignal(Projection_Base):
 
     def get_costs(self):
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
+
+    @property
+    def value(self):
+        if isinstance(self._value, str):
+            return self._value
+        else:
+            return self._intensity
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
 
 
 # def RegisterControlSignal():
