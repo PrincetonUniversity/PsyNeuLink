@@ -289,22 +289,6 @@ class Projection_Base(Projection):
 
         projectionSender : 1d array
             Used to instantiate projectionSender
-
-        paramsCurrent : Dict[param arg, parm value]
-            Current value of all params for instance.
-
-        paramInstanceDefaults : Dict[param arg, parm value]
-            Defaults for instance (created and validated in Components init).
-
-        paramNames : List[str]
-            list of keys for the params in paramInstanceDefaults.
-
-            .. _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
-                an instance dict of the parameterStates and a count of them
-                Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
-                      allows the same name to be used for parameterStates belonging to different projections
-                      without adding index suffixes for the name across projections
-                      while still indexing multiple uses of the same base name within a projection.
     COMMENT
 
     name : str : default <Projection subclass>-<index>

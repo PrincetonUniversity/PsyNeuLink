@@ -169,19 +169,19 @@ class Mapping(Projection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        source of projection input.  If a mechanism is specified, its primary outputState will be used.  If it is not
+        Source of projection input.  If a mechanism is specified, its primary outputState will be used.  If it is not
         specified, it will be assigned in the context in which the projection is used.
 
     receiver: Optional[InputState or Mechanism]
-        destination of projection output.  If a mechanism is specified, its primary inputState will be used.  If it
+        Destination of projection output.  If a mechanism is specified, its primary inputState will be used.  If it
         is not specified, it will be assigned in the context in which the projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default :keyword:`DEFAULT_MATRIX`
         Matrix used by ``function`` (default: LinearCombination) to transform value of ``sender``
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
-        Operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``
-        attribute.  Most commonly used with LearningSignal projections.
+        Operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
+        Most commonly used with LearningSignal projections.
 
     params : Optional[Dict[param keyword, param value]]
         Dictionary that can be used to specify the parameters for the projection, parameters for its function,
