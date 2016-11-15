@@ -14,71 +14,45 @@
 Overview
 --------
 
-
-
-, which uses the
-projection's ``matrix``
-parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
-``receiver``.
-
-
-ControlSignal projections take a value (an *allocation*) from a ControlMechanism (its ``sender``), use this to
-compute the value of its ``intensity``.  That is used to modify the value of a parameterState (its ''receiver'')
-associated with the parameter of a function of a ProcessingMechanism.  Its ``function`` calculates the intensity
-from the allocation;  the default is the identity function (Linear(slope=1, intercept=0)), so that the allocation
-serves as the ControlSignal intensity.  A ControlSignal also has an associated ``cost``, that is calculated based on its
-intensity, and optionally the time course of its intensity.
-
-
-
-
+A ControlSignal projection takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to
+compute its ``intensity`` that is assigned as the ControlSignal's value.  Its value is used to modify the value of a
+parameterState (its ''receiver'') associated with the parameter of a function of a ProcessingMechanism.  A
+ControlSignal also has an associated ``cost``, that is calculated based on its intensity, and optionally the time
+course of its intensity.
 
 .. _ControlSignal_Creating_A_ControlSignal_Projection:
 
 Creating a ControlSignal Projection
------------------------------
+-----------------------------------
 
-
-    Instantiation:
-        - ControlSignals can be instantiated in one of several ways:
-            - directly: requires explicit specification of the receiver
-            - as part of the instantiation of a mechanism:
-                each parameter of a mechanism will, by default, instantiate a ControlSignal projection
-                   to its State, using this as ControlSignal's receiver
-            [TBI: - in all cases, the default sender of a Control is the EVC mechanism]
-
-
-
-COMMENT:
-    ??LEGACY:
-    - as part of the instantiation of a mechanism:
-        the mechanism outputState will automatically be used as the receiver:
-            if the mechanism is being instantiated on its own, the sender must be explicity specified
-COMMENT
-
-A ControlSignal projection can be created in any of the ways that can be used for creating a
-:ref:`projection <_Projection_Creating_A_Projection>) or in specifying a projection in the
-:ref:`pathway <_Process_Projections>` of a process. ControlSignal projections are also automatically created by
-PsyNeuLink in a number of circumstances (matrix types are described in :ref:`ControlSignal_Structure):
-
-* in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
-  the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.
-..
-* by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
-  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creating_A_ControlMechanism`);  a
-  :keyword:`IDENTITY_MATRIX` will be used.
-
-* by a **LearningSignal**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
-  that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
-  depends on the ``function`` parameter of the :doc:`LearningSignal`.[LINK]
-
-When a ControlSignal projection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
-or they can be assigned by default (see below).
+A ControlSignal projection can be created in any of the ways that can be used to
+:ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification for the
+:ref:`parameter of a mechanism's function <Mechanism_Assigning_A_Control_Signal>`.  If the constructor is used,
+the ``receiver`` argument must be specified.  If it is included in a parameter specification, its receiver will be
+assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
+the ControlSignal's receiver.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal's
+``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
+Otherwise, the ControlSignal's ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
 .. _ControlSignal_Structure:
 
 Structure
 ---------
+
+The ControlSignal's ``function`` calculates its intensity from its allocation.  The default is an identity function
+(Linear(slope=1, intercept=0)), and the ControlSignal's intensity is equal to its allocation.  However, this can be
+assigned to any :class:`TransferFunction`.  In addition, there are three functions that determine how the
+ControlSignal computes its cost:
+
+*
+
+kwControlSignalIntensityCostFunction = "Control Signal Intensity Cost Function"
+kwControlSignalDurationCostFunction = "Control Signal Duration Cost Function"
+kwControlSignalTotalCostFunction = "Control Signal Total Cost Function"
+
+
+[FUNCTIONS HERE]
+
 
 In addition to its ``function``, ControlSignal projections use the following two the primary parameters:
 
@@ -164,7 +138,6 @@ kwControlSignalIntensityCostFunction = "Control Signal Intensity Cost Function"
 kwControlSignalAdjustmentCostFunction = "Control Signal Adjustment Cost Function"
 kwControlSignalDurationCostFunction = "Control Signal Duration Cost Function"
 kwControlSignalTotalCostFunction = "Control Signal Total Cost Function"
-kwControlSignalModulationFunction = "Control Signal Modulation Function"
 
 # Attributes / KVO keypaths
 # kpLog = "Control Signal Log"
@@ -362,8 +335,8 @@ class ControlSignal(Projection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 sender=NotImplemented,
-                 receiver=NotImplemented,
+                 sender=None,
+                 receiver=None,
                  function=Linear(slope=1, intercept=0),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
@@ -386,7 +359,8 @@ class ControlSignal(Projection_Base):
                                                  allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if receiver is NotImplemented:
+        # if receiver is NotImplemented:
+        if not receiver:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self

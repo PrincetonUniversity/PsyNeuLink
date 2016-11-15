@@ -211,6 +211,9 @@
 # DOCUMENTATION: MOVE DESCRIOPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
 #                   (see :doc:`Mechanism` for specification of a parms dict)
+# FIX: if mechanism is specified as receiver for ControlSignal, re-assign it to the mechanism's parameterState
+# FIX:      (if there is only one), or throw and exception.
+# FIX: Get rid of NotImplemented in ControlSignal arguments
 
 # 11/13/16:
 # FIX: GET RID OF MonitoredOutputStatesOption; just use keywords (also in documentation)

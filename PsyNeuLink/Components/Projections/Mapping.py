@@ -31,10 +31,10 @@ COMMENT:
             if the mechanism is being instantiated on its own, the sender must be explicity specified
 COMMENT
 
-A mapping projection can be created in any of the ways that can be used for creating a
-:ref:`projection <_Projection_Creating_A_Projection>) or in specifying a projection in the
-:ref:`pathway <_Process_Projections>` of a process. Mapping projections are also automatically created by
-PsyNeuLink in a number of circumstances (matrix types are described in :ref:`Mapping_Structure):
+A mapping projection can be created in any of the ways that can be used to create a
+:ref:`projection <_Projection_Creating_A_Projection>) or by specifying it in the:ref:`pathway <_Process_Projections>`
+of a process. Mapping projections are also generated automatically by PsyNeuLink in a number of circumstances,
+using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
 
 * in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
   the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.

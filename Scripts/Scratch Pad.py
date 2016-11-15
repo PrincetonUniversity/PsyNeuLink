@@ -43,8 +43,13 @@ class ScratchPadError(Exception):
 #
 # from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
 
 mech = DDM()
+
+mcs = ControlSignal(receiver=mech)
+
+
 mech.execute([0])
 
 # a = System_Base()
