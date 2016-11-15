@@ -191,16 +191,32 @@ COMMENT
 ParameterStates
 ^^^^^^^^^^^^^^^
 
-These represent the parameters of a mechanism's function.  PsyNeuLink assigns one parameterState for each parameter
-of the function (which correspond to the arguments in its constructor method). Like other states, parameterStates can
-receive projections. Typically these are from :doc:`ControlSignal` projections from a :doc:`ControlMechanism` that
-is used to modify the function's parameter value in response to the outcome(s) of processing. A control signal can
-be assigned to a parameter, wherever the parameter value is specified, by using a tuple with two items:  the first item
-is the value of the parameter, and the second item is either :keyword:`CONTROL_SIGNAL`, the name of the ControlSignal
-class, or a call to its constructor.  The value of function parameters can also be modified using a runtime parameters
-dict where a mechanism is specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's
-``execute`` or ``run`` methods (see :ref:`Mechanism_Runtime_Parameters`).  The figure below shows how these factors are
-combined by the parameterState to determine the paramter value for a function.
+These represent the parameters of a mechanism's function, and used to control the parameters of its ``function``.
+PsyNeuLink assigns one parameterState for each parameter of the mechanism's ``function`` (which correspond to the
+arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
+from the :doc:`ControlSignal` projection(s) of a :doc:`ControlMechanism<ControlMechanism>`, that is used to modify the
+function's parameter value in response to the outcome(s) of processing.
+
+  .. _Mechanism_Assigining_A_Control_Signal:
+
+  *Assigning a Control Signal*
+
+  A control signal can be assigned to a parameter, wherever the parameter value is specified, by using a tuple with
+  two items. The first item is the value of the parameter, and the second item is either :keyword:`CONTROL_SIGNAL`,
+  the name of the ControlSignal class, or a call to its constructor.  In the following example, a mechanism is
+  created with a function that has three parameters::
+
+    my_mechanism = SomeMechanism(function=SomeFunction(param_1=1.0,
+                                                       param_2=(0.5, ControlSignal))
+                                                       param_3=(36, ControlSignal(function=Logistic)))
+
+  The first parameter of the mechanism's function is assigned a value directly, the second parameter is assigned a
+  ControlSignal, and the third is assigned a :ref:`ControlSignal with a specified function <ControlSignal_Structure>`.
+
+The value of function parameters can also be modified using a runtime parameters dictionary where a mechanism is
+specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's ``execute`` or ``run``
+methods (see :ref:`Mechanism_Runtime_Parameters`).  The figure below shows how these factors are combined by the
+parameterState to determine the paramter value for a function.
 
     **Role of ParameterStates in Controlling the Parameter Value of a Function**
 
