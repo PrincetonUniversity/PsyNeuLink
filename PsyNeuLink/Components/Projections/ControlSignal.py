@@ -17,7 +17,7 @@ Overview
 A ControlSignal projection takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to
 compute its ``intensity`` that is assigned as the ControlSignal's value.  Its value is used to modify the value of a
 parameterState (its ''receiver'') associated with the parameter of a function of a ProcessingMechanism.  A
-ControlSignal also has an associated ``cost``, that is calculated based on its intensity, and optionally the time
+ControlSignal also has an associated ``cost`` that is calculated based on its intensity, and optionally the time
 course of its intensity.
 
 .. _ControlSignal_Creating_A_ControlSignal_Projection:
@@ -34,6 +34,9 @@ the ControlSignal's receiver.  If the receiver belongs to a mechanism that is pa
 ``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
 Otherwise, the ControlSignal's ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
+XXX DESCRIBE HOW TO SPECIFY WHICH COSTS ARE USED??
+XXX DESCRIPT ALLOCATION_SAMPLES ARGUMENT
+
 .. _ControlSignal_Structure:
 
 Structure
@@ -41,20 +44,31 @@ Structure
 
 The ControlSignal's ``function`` calculates its intensity from its allocation.  The default is an identity function
 (Linear(slope=1, intercept=0)), and the ControlSignal's intensity is equal to its allocation.  However, this can be
-assigned to any :class:`TransferFunction`.  In addition, there are three functions that determine how the
+assigned to any :class:`TransferFunction`.  In addition, there are four functions that determine how the
 ControlSignal computes its cost:
 
-*
+* :keyword:`kwControlSignalIntensityCostFunction` - calculates the contribution of the ControlSignal's current
+  intensity to its ``cost``.  The default is :class:`Exponential`.
 
-kwControlSignalIntensityCostFunction = "Control Signal Intensity Cost Function"
-kwControlSignalDurationCostFunction = "Control Signal Duration Cost Function"
-kwControlSignalTotalCostFunction = "Control Signal Total Cost Function"
+COMMENT:
+   HOW IS DURATION MEASURED??  TIME_STEPS??
+COMMENT
+* :keyword:`kwControlSignalAdjustmentCostFunction` - calculates the contribution of the ControlSignal's duration
+  to its ``cost``.  The default is :class:`Linear`.
 
+COMMENT:
+   HOW IS ADJUSTMENT MEASURED??  TIME_STEPS??
+COMMENT
+* :keyword:`kwControlSignalDurationCostFunction` - calculates the contribution that changes in the ControlSignal's
+  intensity makes to its ``cost``.  The default is :class:`Linear`.
 
-[FUNCTIONS HERE]
+* :keyword:`kwControlSignalTotalCostFunction` - combines the intensity, adjustment, and duration contributions to
+  determine the ControlSigna's current total ``cost``.  The default is :class:`LinearCombination`.
 
+In addition to its functions, a ControlSignal projection uses the following parameters:
 
-In addition to its ``function``, ControlSignal projections use the following two the primary parameters:
+allocation_samples
+
 
 ``matrix``
 
@@ -359,7 +373,6 @@ class ControlSignal(Projection_Base):
                                                  allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        # if receiver is NotImplemented:
         if not receiver:
             # Store args for deferred initialization
             self.init_args = locals().copy()
@@ -516,6 +529,7 @@ class ControlSignal(Projection_Base):
         super(ControlSignal, self)._instantiate_sender(context=context)
 
     def _instantiate_receiver(self, context=None):
+        # FIX: THIS NEEDS TO BE PUT BEFORE _instantate_function SINCE THAT USES self.receiver
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
 
         Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:
@@ -606,7 +620,8 @@ class ControlSignal(Projection_Base):
         # compute cost(s)
         new_cost = 0
         if self.controlSignalCosts & ControlSignalCosts.INTENSITY_COST:
-            new_cost = self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
+            new_cost = self.intensityCost = \
+                self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
         if self.controlSignalCosts & ControlSignalCosts.ADJUSTMENT_COST:
@@ -617,8 +632,8 @@ class ControlSignal(Projection_Base):
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
         if self.controlSignalCosts & ControlSignalCosts.DURATION_COST:
-            self.durationCost = self.costFunctions[kwControlSignalDurationCostFunction].function([self.last_duration_cost,
-                                                                                             new_cost])
+            self.durationCost = \
+                self.costFunctions[kwControlSignalDurationCostFunction].function([self.last_duration_cost, new_cost])
             new_cost += self.durationCost
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
