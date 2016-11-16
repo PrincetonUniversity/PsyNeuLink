@@ -327,7 +327,7 @@ class ControlSignal(Projection_Base):
                  sender=None,
                  receiver=None,
                  function=Linear(slope=1, intercept=0),
-                 intensity_cost_function:tc.optional(is_Function)=Exponential,
+                 intensity_cost_function:(is_Function)=Exponential,
                  adjustment_cost_function:tc.optional(is_Function)=Linear,
                  duration_cost_function:tc.optional(is_Function)=Linear,
                  total_cost_function:tc.optional(is_Function)=LinearCombination,
@@ -432,10 +432,11 @@ class ControlSignal(Projection_Base):
         super()._instantiate_attributes_before_function(context=context)
 
         for cost_function_name in costFunctionNames:
-            if isinstance(self.paramsCurrent[cost_function_name], Function):
-                cost_function = self.paramsCurrent[cost_function_name]
-            else:
-                cost_function = self.paramsCurrent[cost_function_name]()
+            cost_function = self.paramsCurrent[cost_function_name]
+            # if not cost_function:
+            #     # FIX: SET OPTION HERE: set_<COST_FUCNTION_NAME> TO OFF;  THEN, IN SETTERS, NEVER LET IT BE ON
+            if not isinstance(cost_function, Function):
+                cost_function = cost_function()
             setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function.function)
             cost_function.owner = self
 

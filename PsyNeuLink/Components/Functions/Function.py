@@ -78,7 +78,9 @@ class FunctionOutputType(IntEnum):
 
 # TYPE_CHECK for Function Instance or Class
 def is_Function(x):
-    if isinstance(x, Function):
+    if not x:
+        return False
+    elif isinstance(x, Function):
         return True
     elif issubclass(x, Function):
         return True
