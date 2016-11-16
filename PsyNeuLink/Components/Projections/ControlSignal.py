@@ -422,6 +422,8 @@ class ControlSignal(Projection_Base):
         # ControlSignal Cost Functions
         for cost_function_name in costFunctionNames:
             cost_function = target_set[cost_function_name]
+            if not cost_function:
+                continue
             if not isinstance(cost_function, Function) and not issubclass(cost_function, Function):
                 raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
