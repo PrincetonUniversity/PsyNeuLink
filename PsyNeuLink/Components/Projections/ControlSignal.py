@@ -30,10 +30,12 @@ A ControlSignal projection can be created in any of the ways that can be used to
 :ref:`parameter of a mechanism's function <Mechanism_Assigning_A_Control_Signal>`.  If the constructor is used,
 the ``receiver`` argument must be specified.  If it is included in a parameter specification, its receiver will be
 assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
-the ControlSignal's receiver.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal's
+the receiver.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal's
 ``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
-Otherwise, the ControlSignal's ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
+Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
+The cost of a ControlSignal is calculated, based on its intensity, by two functions that can be specified in the
+ControlSignal's parameter specification dictionary.
 XXX DESCRIBE HOW TO SPECIFY WHICH COSTS ARE USED??
 XXX DESCRIPT ALLOCATION_SAMPLES ARGUMENT
 
@@ -476,8 +478,6 @@ class ControlSignal(Projection_Base):
             self.ignoreIntensityFunction = True
         else:
             self.ignoreIntensityFunction = False
-
-
 
     def _instantiate_attributes_after_function(self, context=None):
 
