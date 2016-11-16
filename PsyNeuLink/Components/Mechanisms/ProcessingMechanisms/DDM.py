@@ -292,7 +292,6 @@ class DDM(ProcessingMechanism_Base):
               a count for all instances of it, and a dictionary of those instances
     COMMENT
 
-
     Arguments
     ---------
 

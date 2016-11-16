@@ -36,21 +36,20 @@ Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultContr
 
 The cost of a ControlSignal is calculated from its intensity, using four
 :ref:`cost functions <ControlSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
-or in a params dictionary[LINK].  The cost functions can be enabled or disabled using set xx?? methods...
-(see below [LINK]).
+or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
+so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  A cost function can
+be permanently disabled for its  ControlSignal by assigning ``None`` to the argument for that function in its
+constructor (or the appropriate entry in its params dictionary).
 
-Can be disabled either by setting to None in constructor (permanently disables function for that ControlSignal)
-     or by using the togggle_cost_function method to turn it :keyword:`OFF`.
-Can be manually enabled by using toggle_cost_function method to turn it :keyword:`ON`.
-
-XXX DESCRIBE HOW TO SPECIFY WHICH COSTS ARE USED??
-XXX DESCRIPT ALLOCATION_SAMPLES ARGUMENT
+A ControlSignal projection takes an allocation_samples specification as its input.  This must be an array that
+specifies the allocation values that will be sampled by ControlMechanisms that adaptively adjust ControlSignal
+allocations (e.g., :doc:`EVCMechanism`[LINK]).  The default is an array of values from 0.1 to 1.0 with a step size of
+0.1.
 
 .. _ControlSignal_Structure:
 
 Structure
 ---------
-
 
 The ControlSignal's ``function`` calculates its intensity from its allocation.  The default is an identity function
 (Linear(slope=1, intercept=0)), and the ControlSignal's intensity is equal to its allocation.  However, this can be
@@ -59,83 +58,67 @@ ControlSignal computes its cost:
 
 .. _ControlSignal_Cost_Functions:
 
-* :keyword:`kwControlSignalIntensityCostFunction` - calculates the contribution of the ControlSignal's current
-  intensity to its ``cost``.  The default is :class:`Exponential`.
+* ``INTENSTITY_COST_FUNCTION`` - calculates the contribution of the ControlSignal's current
+  intensity to its ``cost``.  This must be a function that takes and returns a scalar value. If it is a
+  PsyNeuLink :doc:`Function`, it must be from the subclass :class:`TransferFunction`.  The default is
+  :class:`Exponential`.
 
 COMMENT:
    HOW IS DURATION MEASURED??  TIME_STEPS??
 COMMENT
-* :keyword:`kwControlSignalAdjustmentCostFunction` - calculates the contribution of the ControlSignal's duration
-  to its ``cost``.  The default is :class:`Linear`.
+* ``ADJUSTMENT_COST_FUNCTION`` - calculates the contribution of the ControlSignal's duration
+  to its ``cost``.  This must be a function that takes and returns a scalar value. If it is a
+  PsyNeuLink :doc:`Function`, it must be from the subclass :class:`TransferFunction`.  The default is :class:`Linear`.
 
 COMMENT:
    HOW IS ADJUSTMENT MEASURED??  TIME_STEPS??
 COMMENT
-* :keyword:`kwControlSignalDurationCostFunction` - calculates the contribution that changes in the ControlSignal's
-  intensity makes to its ``cost``.  The default is :class:`Linear`.
+* ``DURATION_COST_FUNCTION`` - calculates the contribution that changes in the ControlSignal's
+  intensity makes to its ``cost``.  This must be a function that takes and returns a scalar value. If it is a
+  PsyNeuLink :doc:`Function`, it must be from the subclass :class:`TransferFunction`.  The default is :class:`Linear`.
 
-* :keyword:`kwControlSignalTotalCostFunction` - combines the intensity, adjustment, and duration contributions to
-  determine the ControlSigna's current total ``cost``.  The default is :class:`LinearCombination`.
+* ``TOTAL_COST_FUNCTION`` - combines the intensity, adjustment, and duration contributions to
+  determine the ControlSigna's current total ``cost``. This must be a function that takes an array and returns a scalar
+  value. If it is a PsyNeuLink :doc:`Function`, it must be from the subclass :class:`CombinationFunction`.  The
+  default is :class:`LinearCombination`.
 
-In addition to its functions, a ControlSignal projection uses the following parameters:
+A cost function (other than the TOTAL_COST_FUNTION can be permanently disabled for a ControlSignal by assigning
+``None`` to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
+It can also be "manually" disabled using the ``toggle_cost_function method to turn it :keyword:`OFF`, and manually
+re-enabled to turn it :keyword:`ON`.  Note, however, that a cost function that has been permanently disabled (by
+assigning ``None`` in the constructor) can not be enabled using ``toggle_cost_function``.
 
-allocation_samples
+In addition to its functions, a ControlSignal projection has an ``allocation_samples`` array attribute.  This is used by
+:ref:`ControlMechanisms <ControlMechanism> that sample different allocation values in order to adaptively adjust the
+function of mechanisms in their systems (e.g., :doc:`EVCMechanism`).  The default value is an array that ranges from
+0.1 to 1 in step sizes of 0.1.
 
+An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
+the total cost (``cost``), and the resulting intensity (``intensity``).  In addition, the ``last_allocation`` and
+``last_intensity`` attributes store the values associated with the previous execution of the projection.
 
-``matrix``
-
-  Used by ``function`` to execute a matrix transformation of its input.  It can be assigned a list of 1d arrays,
-  an np.ndarray, np.matrix, a function that resolves to one of these, or one of the following keywords:
-
-  .. _Matrix_Keywords:
-
-  * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
-    values are the same.
-  * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
-    and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
-  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
-    and a number of columns equal to the length of the receiver's value, all the elements of which are filled with
-    random values uniformly distributed between 0 and 1.
-  * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
-    is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
-  * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
-    assigns an keyword:`IDENTITY_MATRIX`.
-  ..
-  PsyNeuLink also provides a convenience function, :class:`random_matrix`, that can be used to generate a random matrix
-  sized for a sender, receiver, with random numbers drawn from a uniform distribution within a specified range and
-  with a specified offset.
-
-
-``parameter_modulation_operation``
-
-  Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
-  influence it.  For example, this is used for a :doc:`LearningSignal` projection to apply weight changes to
-  ``matrix`` during learning.  ``parameter_modulation_operation`` must be assigned a value of
-  :class:`ModulationOperation`, and the operation is always applied in an element-wise (Hadamard[LINK]) fashion.
-  The default operation is ``ADD``.
-
-.. _Projection_Execution:
+.. _ControlSignal_Execution:
 
 Execution
 ---------
 
-A ControlSignal projection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
-and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
-cause the value of any projections (e.g., a LearningSignal) it receives to be applied to the matrix. This will bring
-into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
-Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
-``matrix`` will not show the effects of projections to its parameterState until the ControlSignal projection has been
-executed).
+A ControlSignal projection uses its ``function`` to compute the intensity (value) of the ControlSignal, and its
+cost functions [LINK] use this to compute the total ``cost`` associated with the current ``intensity``.  The
+intensity is then assigned as the projection's ``value``, and used by the parmaterState to which it projects to
+modify the corresponding parameter of the owner mechanism's function.
 
-.. _Projection_Class_Reference:
+.. note::
+   The changes in a parameter in response to the execution of a ControlSignal projection are not applied until the
+   mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of "lazy"
+   updating).
+
+.. _ControlSignal_Class_Reference:
 
 
 Class Reference
 ---------------
 
 """
-
-
 
 from PsyNeuLink.Components import DefaultController
 # from Globals.Defaults import *
@@ -206,114 +189,161 @@ class ControlSignalError(Exception):
 
 # class ControlSignal_Base(Projection_Base):
 class ControlSignal(Projection_Base):
-    """Implement projection that controls a parameter value (default: IdentityMapping)
+    """
+    ControlSignal(                                   \
+     sender=None,                                    \
+     receiver=None,                                  \
+     function=Linear                                 \
+     intensity_cost_function=Exponential,            \
+     adjustment_cost_function=Linear,                \
+     duration_cost_function=Linear,                  \
+     total_cost_function=LinearCombination,          \
+     allocation_samples=DEFAULT_ALLOCATION_SAMPLES,  \
+     params=None,                                    \
+     name=None,                                      \
+     prefs=None)
 
-    Description:
-        The ControlSignal class is a type in the Projection category of Component,
-        It:
-           - takes an allocation (scalar) as its input (self.variable)
-           - uses self.function (params[FUNCTION]) to compute intensity based on allocation from self.sender,
-               used by self.receiver.owner to modify a parameter of self.receiver.owner.function
+    Implements a projection that controls the parameter of a mechanism function.
 
-    Instantiation:
-        - ControlSignals can be instantiated in one of several ways:
-            - directly: requires explicit specification of the receiver
-            - as part of the instantiation of a mechanism:
-                each parameter of a mechanism will, by default, instantiate a ControlSignal projection
-                   to its State, using this as ControlSignal's receiver
-            [TBI: - in all cases, the default sender of a Control is the EVC mechanism]
+    COMMENT:
+        Description:
+            The ControlSignal class is a type in the Projection category of Component,
+            It:
+               - takes an allocation (scalar) as its input (self.variable)
+               - uses self.function (params[FUNCTION]) to compute intensity based on allocation from self.sender,
+                   used by self.receiver.owner to modify a parameter of self.receiver.owner.function
 
-    Initialization arguments:
-        - allocation (number) - source of allocation value (default: DEFAULT_ALLOCATION) [TBI: DefaultController]
-        - receiver (State) - associated with parameter of mechanism to be modulated by ControlSignal
-        - params (dict):
-# IMPLEMENTATION NOTE: WHY ISN'T PROJECTION_SENDER_VALUE HERE AS FOR Mapping??
-            + FUNCTION (Function): (default: Linear):
-                determines how allocation (variable) is translated into the output
-            + FUNCTION_PARAMS (dict): (default: {SLOPE: 1, INTERCEPT: 0}) - Note: implements identity function
-            + ALLOCATION_SAMPLES (list):
-                list of allocation values to be sampled for ControlSignal (default: DEFAULT_ALLOCATION_SAMPLES)
+        ** MOVE:
+        ProjectionRegistry:
+            All ControlSignal projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
+              a count for all instances of it, and a dictionary of those instances
 
-# IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
-        # - name (str) - must be name of subclass;  otherwise raises an exception for direct call
-        - name (str) - name of control signal (default: kwControlSignalDefaultName)
-        - [TBI: prefs (dict)]
-        # - logProfile (LogProfile enum): controls logging behavior (default: LogProfile.DEFAULTS)
-        - context (str) - optional (default: NotImplemented)
+        Class attributes:
+            + color (value): for use in interface design
+            + classPreference (PreferenceSet): ControlSignalPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
+            + paramClassDefaults:
+                FUNCTION:Linear,
+                FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
+                PROJECTION_SENDER: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
+                PROJECTION_SENDER_VALUE: [defaultControlAllocation],
+                CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
+                kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
+                ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
+            + paramNames = paramClassDefaults.keys()
+            + costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
+    COMMENT
 
-    ProjectionRegistry:
-        All ControlSignal projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+    Arguments
+    ---------
 
-    Naming:
-        ControlSignal projections can be named explicitly (using the name='<name>' argument).  If this argument
-           is omitted, it will be assigned "ControlSignal" with a hyphenated, indexed suffix ('ControlSignal-n')
+    sender : Optional[Mechanism or OutputState]
+        Source of the allocation for the ControlSignal;  usually an outputState of a :doc:`ControlMechanism`.
+        If it is not specified, the :doc:`DefaultControlMechanism` for the system to which the receiver belongs
+        will be assigned.
 
-    Class attributes:
-        + color (value): for use in interface design
-        + classPreference (PreferenceSet): ControlSignalPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-        + paramClassDefaults:
-            FUNCTION:Linear,
-            FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-            PROJECTION_SENDER: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
-            PROJECTION_SENDER_VALUE: [defaultControlAllocation],
-            CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
-            kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
-            ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
-        + paramNames = paramClassDefaults.keys()
-        + costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
+    receiver : Optional[Mechanism or ParameterState]
+        The parameterState associated with the parameter of a function to be controlled.  This must be specified,
+        or be able to be determined by the context in which the ControlSignal is created or assigned.
 
+    function : TransferFunction : default Linear
+        Converts allocation into intensity of the ControlSignal.
 
-    Instance attributes:
-        General attributes
-        + variable (value) - used as input to projection's execute method
-        + allocationSamples - either the keyword AUTO (the default; samples are computed automatically);
-                            a list specifying the samples to be evaluated;
-                            or DEFAULT or NotImplemented (in which it uses a list
-                            generated from DEFAULT_SAMPLE_VALUES)
-        State attributes:
-            - intensity -- value used to determine controlled parameter of task
-            - intensityCost -- cost associated with current intensity
-            - adjustmentCost -- cost associated with last change to intensity
-            - durationCost - cost associated with temporal integral of intensity
-            - cost -- curent value of total cost
-        History attributes -- used to compute costs of changes to control signal:
-            + last_allocation
-            + last_intensity
-        Cost Components -- used to compute cost:
-            + FUNCTION - converts allocation into intensity that is provided as output to receiver of projection
-            + IntensityCostFunction -- converts intensity into its contribution to the cost
-            + AdjustmentCostFunction -- converts change in intensity into its contribution to the cost
-            + DurationCostFunction -- converts duration of control signal into its contribution to the cost
-            + TotalCostFunction -- combines intensity and adjustment costs into reported cost
-            NOTE:  there are class variables for each type of function that list the functions allowable for each type
+    intensity_cost_function : Optional[TransferFuntion] : default Exponential
+        Converts intensity into its contribution to the cost.
+        It can be disabled permanently for the ControlSignal by assigning ``None``.
 
-        + value (value) - output of execute method
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying ControlSignalPreferenceSet
+    adjustment_cost_function : Optiona[TransferFunction] : default Linear
+        Converts changes in intensity into a contribution to the cost.
+        It can be disabled permanently for the ControlSignal by assigning ``None``.
 
-    Instance methods:
-        - update_control_signal(allocation) -- computes new intensity and cost attributes from allocation
-                                          - returns ControlSignalValuesTuple (intensity, totalCost)
-        - _compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
-            - computes the current cost by combining intensityCost and adjustmentCost, using function specified by
-              total_cost_function (should be of Function type; default: LinearCombination)
-            - returns totalCost
-        - log_all_entries - logs the entries specified in the log_profile attribute
-        - assign_function(self, control_function_type, function_name, variables params)
-            - (re-)assigns a specified function, including an optional parameter list
-        - set_log - enables/disables automated logging
-        - set_log_profile - assigns settings specified in the logProfile param (an instance of LogProfile)
-        - set_allocation_samples
-        - get_ignoreIntensityFunction
-        - set_intensity_cost - enables/disables use of the intensity cost
-        - get_intensity_cost
-        - set_adjustment_cost - enables/disables use of the adjustment cost
-        - get_adjust
-        - set_duration_cost - enables/disables use of the duration cost
-        - get_duration_cost
-        - get_costs - returns three-element list with intensityCost, adjustmentCost and durationCost
+    duration_cost_function : Optional[TransferFunction] : default Linear
+        Converts duration of control signal into a contribution to the cost.
+        It can be disabled permanently for the ControlSignal by assigning ``None``.
+
+    total_cost_function : CombinationFunction : default LinearCombination
+        Combines intensity and adjustment costs into reported cost.
+
+    allocation_samples : list : default DEFAULT_ALLOCATION_SAMPLES
+        Set of values used by ControlMechanisms that sample different allocation values in order to adaptively adjust
+        the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in step
+        sizes of 0.1.
+
+    params : Optional[Dict[param keyword, param value]]
+        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
+        By default, it contains an entry for the projection's default ``function`` and cost function assignments.
+
+    name : str : default Transfer-<index>
+        String used for the name of the ControlSignal projection.
+        If not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        Preference set for the ControlSignal projection.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
+    Attributes
+    ----------
+
+    .. _ControlSignal_General_Attributes:
+
+    allocation : float : default: defaultControlAllocation
+        value used as variable for projection's ``function`` to determine ``intensity``.
+
+    allocationSamples : list : DEFAULT_SAMPLE_VALUES
+        set of values used by ControlMechanisms that sample different allocation values in order to
+        adaptively adjust the function of mechanisms in their systems.
+
+    .. _ControlSignal_Function_Attributes:
+
+    function : TransferFunction :  default Linear
+        converts allocation into intensity that is provided as output to receiver of projection.
+
+    intensityCostFunction : TransferFunction : default Exponential
+        converts intensity into its contribution to the cost
+
+    adjustmentCostFunction : TransferFunction : default Linear
+        converts changes in intensity into a contribution to the cost.
+
+    durationCostFunction : TransferFunction : default Linear
+        converts duration of control signal into its contribution to the cost.
+
+    totalCostFunction : TransferFunction : default Linear
+        combines intensity and adjustment costs into reported cost
+
+    .. _ControlSignal_State_Attributes:
+
+    value : float
+        during initialization, assigned keyword string (either kwInit or kwDeferredInit);
+        during execution, returns value of ``intensity``.
+
+    intensity : float
+        output of ``function``, used to determine controlled parameter of task.
+
+    intensityCost : float
+        cost associated with current intensity.
+
+    adjustmentCost : float
+        cost associated with last change to intensity.
+
+    durationCost
+        cost associated with temporal integral of intensity.
+
+    cost : float
+        current value of total cost.
+
+    .. _ControlSignal_History_Attributes:
+
+    last_allocation : float
+        allocation for last execution of the projection.
+
+    last_intensity : float
+        intensity calculated for last execution of the projection.
+
+    .. _ControlSignal_Cost_Functions:
+
     """
 
     color = 0
@@ -346,16 +376,6 @@ class ControlSignal(Projection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-
-        :param sender: (list)
-        :param receiver: (list)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (dict)
-        :param context: (str)
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -628,17 +648,24 @@ class ControlSignal(Projection_Base):
     def _compute_cost(self, intensity_cost, adjustment_cost, total_cost_function):
         """Compute the current cost for the control signal, based on allocation and most recent adjustment
 
-            :parameter intensity_cost
-            :parameter adjustment_cost:
-            :parameter total_cost_function: (should be of Function type)
-            :returns cost:
-            :rtype: scalar:
+        Computes the current cost by combining intensityCost and adjustmentCost, using the function specified by
+              total_cost_function (should be of Function type; default: LinearCombination)
+        Returns totalCost
+
+        :parameter intensity_cost
+        :parameter adjustment_cost:
+        :parameter total_cost_function: (should be of Function type)
+        :returns cost:
+        :rtype: scalar:
         """
 
         return total_cost_function([intensity_cost, adjustment_cost])
 
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
+
+        Computes new intensity and cost attributes from allocation
+        Returns ControlSignalValuesTuple (intensity, totalCost)
 
         Use self.function to assign intensity
             - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
@@ -694,8 +721,7 @@ class ControlSignal(Projection_Base):
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
         if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
-            self.durationCost = \
-                self.durationCostFunction([self.last_duration_cost, new_cost])
+            self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
             new_cost += self.durationCost
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
@@ -769,7 +795,7 @@ class ControlSignal(Projection_Base):
             sample_range = samples
         elif samples == AUTO:
             # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-            raise ControlSignalError("AUTO not yet support for {} param of ControlSignal; default will be used".
+            raise ControlSignalError("AUTO not yet supported for {} param of ControlSignal; default will be used".
                                      format(ALLOCATION_SAMPLES))
         else:
             sample_range = DEFAULT_ALLOCATION_SAMPLES
@@ -795,6 +821,9 @@ class ControlSignal(Projection_Base):
         #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
     def toggle_cost_function(self, cost_function_name, assignment=ON):
+        """Enables/disables use of a cost function
+        """
+
         if cost_function_name == INTENSITY_COST_FUNCTION:
             cost_option = ControlSignalCostOptions.INTENSITY_COST
         elif cost_function_name == DURATION_COST_FUNCTION:
@@ -833,6 +862,8 @@ class ControlSignal(Projection_Base):
     #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
     #
     def get_costs(self):
+        """Return three-element list with intensityCost, adjustmentCost and durationCost
+        """
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
 
     @property

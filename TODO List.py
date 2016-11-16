@@ -119,6 +119,14 @@
 
 #endregion
 
+#region DEVELOPMENT
+
+# time_step DDM integration
+# learning working in a system
+# system.graph -> NetworkX
+
+#endregion
+
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # -------------------
@@ -979,6 +987,8 @@
 # endregion
 
 #region DOCUMENTATION: ------------------------------------------------------------------------------------------------------
+
+# QUESTION: should attributes that are common to different subclasses be documented there, or only in the base classes?
 
 # SPHINX / RST ***********************************************************
 
