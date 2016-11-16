@@ -86,7 +86,7 @@ kwReceiver = "receiver"
 kwValidate = 'Validate'
 VALIDATE = kwValidate
 kwParams = 'params'
-kwAllocationSamples = "allocation_samples"
+ALLOCATION_SAMPLES = "allocation_samples"
 
 #endregion
 
