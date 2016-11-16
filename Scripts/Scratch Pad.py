@@ -1887,23 +1887,6 @@ import typecheck as tc
 # # Can also change settings on the fly (note:  ControlSignal.OFF is just an enum defined in the ControlSignal module)
 # x.set_adjustment_cost(OFF)
 #
-# # Assign transfer_functions for cost functions
-# x.assign_function(kwControlSignalIntensityFunction,
-#                   Function.Linear(NotImplemented,
-#                                   {SLOPE : 1,
-#                                    INTERCEPT : 0})
-#                   )
-# x.assign_function(kwControlSignalIntensityCostFunction,
-#                   Function.Linear(NotImplemented,
-#                                   {SLOPE : 1,
-#                                    INTERCEPT : 1})
-#                   )
-# x.assign_function(kwControlSignalDurationCostFunction,
-#                   Function.Integrator(NotImplemented,
-#                                       {Function.Integrator.RATE : 0.5,
-#                                        Function.Integrator.WEIGHTING : Function.Integrator.Weightings.SCALED})
-#                   )
-#
 # # Display some values in controlSignal (just to be sure it is set up OK)
 # print("Intensity Function: ", x.functions[kwControlSignalIntensityFunction].name)
 # print("Initial Intensity: ", x.intensity)
