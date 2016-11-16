@@ -985,7 +985,7 @@
 # Convention for names of arguments, attributes, methods and keywords:
 # =====================================================================
 
-# argument_attribute -> user-accessible attribute derived from a constructor argument
+# argument_attribute -> argument and user-accessible attribute derived from a constructor argument
 # nonArgumentAttribue -> user-accesible attribute that is not an argument in the constructor
 # _internal_atttribute or _method -> not user accessible, and not to be included in rst docs
 # KEY_OR_KEYWORD -> name of a str used as a key for a dict or as a PsyNeuLink keyword
@@ -1077,6 +1077,9 @@
 #     Systematize #D vs. #d
 
 # ***********************************************************************
+
+# DOCUMENT: constructor_arguments get instantiated (if ncessary) and assigned to objectAttributes
+#           members of params dicts get turned into object_attributes but remain in original state
 
 # DOCUMENT:
 # "lazy evaluation" (or call-by-need) (see https://en.wikipedia.org/wiki/Lazy_evaluation)[LINK].

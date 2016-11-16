@@ -34,8 +34,15 @@ the receiver.  If the receiver belongs to a mechanism that is part of a system, 
 ``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
 Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
-The cost of a ControlSignal is calculated, based on its intensity, by two functions that can be specified in the
-ControlSignal's parameter specification dictionary.
+The cost of a ControlSignal is calculated from its intensity, using four
+:ref:`cost functions <ControlSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
+or in a params dictionary[LINK].  The cost functions can be enabled or disabled using set xx?? methods...
+(see below [LINK]).
+
+Can be disabled either by setting to None in constructor (permanently disables function for that ControlSignal)
+     or by using the togggle_cost_function method to turn it :keyword:`OFF`.
+Can be manually enabled by using toggle_cost_function method to turn it :keyword:`ON`.
+
 XXX DESCRIBE HOW TO SPECIFY WHICH COSTS ARE USED??
 XXX DESCRIPT ALLOCATION_SAMPLES ARGUMENT
 
@@ -44,10 +51,13 @@ XXX DESCRIPT ALLOCATION_SAMPLES ARGUMENT
 Structure
 ---------
 
+
 The ControlSignal's ``function`` calculates its intensity from its allocation.  The default is an identity function
 (Linear(slope=1, intercept=0)), and the ControlSignal's intensity is equal to its allocation.  However, this can be
 assigned to any :class:`TransferFunction`.  In addition, there are four functions that determine how the
 ControlSignal computes its cost:
+
+.. _ControlSignal_Cost_Functions:
 
 * :keyword:`kwControlSignalIntensityCostFunction` - calculates the contribution of the ControlSignal's current
   intensity to its ``cost``.  The default is :class:`Exponential`.
@@ -286,7 +296,7 @@ class ControlSignal(Projection_Base):
     Instance methods:
         - update_control_signal(allocation) -- computes new intensity and cost attributes from allocation
                                           - returns ControlSignalValuesTuple (intensity, totalCost)
-        - compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
+        - _compute_cost(self, intensity_cost, adjustment_cost, total_cost_function)
             - computes the current cost by combining intensityCost and adjustmentCost, using function specified by
               total_cost_function (should be of Function type; default: LinearCombination)
             - returns totalCost
@@ -327,10 +337,10 @@ class ControlSignal(Projection_Base):
                  sender=None,
                  receiver=None,
                  function=Linear(slope=1, intercept=0),
-                 intensity_cost_function:(is_Function)=Exponential,
-                 adjustment_cost_function:tc.optional(is_Function)=Linear,
-                 duration_cost_function:tc.optional(is_Function)=Linear,
-                 total_cost_function:tc.optional(is_Function)=LinearCombination,
+                 intensity_cost_function:(is_function_type)=Exponential,
+                 adjustment_cost_function:tc.optional(is_function_type)=Linear,
+                 duration_cost_function:tc.optional(is_function_type)=Linear,
+                 total_cost_function:tc.optional(is_function_type)=LinearCombination,
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
@@ -386,6 +396,7 @@ class ControlSignal(Projection_Base):
         """validate allocation_samples and controlSignal cost functions
 
         Checks if:
+        - cost functions are all appropriate
         - allocation_samples is a list with 2 numbers
         - all cost functions are references to valid ControlSignal costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
@@ -395,6 +406,53 @@ class ControlSignal(Projection_Base):
         :param context:
         :return:
         """
+
+        # Validate cost functions:
+        for cost_function_name in costFunctionNames:
+            cost_function = request_set[cost_function_name]
+
+            # cost function assigned None: OK
+            if not cost_function:
+                continue
+
+            # cost_function is Function class specification:
+            #    instantiate it and test below
+            if inspect.isclass(cost_function) and issubclass(cost_function, Function):
+                cost_function = cost_function()
+
+            # cost_function is Function object:
+            #     TOTAL_COST_FUNCTION must be CombinationFunction
+            #     others must be TransferFunction
+            if isinstance(cost_function, Function):
+                if cost_function_name == TOTAL_COST_FUNCTION:
+                    if not isinstance(cost_function, CombinationFunction):
+                        raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
+                                                 format(TOTAL_COST_FUNCTION, cost_function))
+                elif not isinstance(cost_function, TransferFunction):
+                    raise ControlSignalError("Assignment of Function to {} ({}) must be a TransferFunction".
+                                             format(cost_function_name, cost_function))
+
+            # cost_function is custom-specified function
+            #     TOTAL_COST_FUNCTION must accept an array
+            #     others must accept a scalar
+            #     all must return a scalar
+            elif isinstance(cost_function, function_type):
+                if cost_function_name == TOTAL_COST_FUNCTION:
+                    test_value = [1, 1]
+                else:
+                    test_value = 1
+                try:
+                    if not is_numerical(cost_function()):
+                        raise ControlSignalError("Function assigned to {} ({}) must return a scalar".
+                                                 format(cost_function_name, cost_function))
+                except:
+                    raise ControlSignalError("Function assigned to {} ({}) must accept {}".
+                                             format(cost_function_name, cost_function, type(test_value)))
+
+            # Unrecognized function assignment
+            else:
+                raise ControlSignalError("Unrecognized function ({}) assigned to {}".
+                                         format(cost_function, cost_function_name))
 
         # Validate allocation samples list:
         # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
@@ -431,18 +489,31 @@ class ControlSignal(Projection_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
+        # Instantiate cost functions (if necessary) and assign to attributes
         for cost_function_name in costFunctionNames:
             cost_function = self.paramsCurrent[cost_function_name]
-
-            # if not cost_function:
-            #     # FIX: SET OPTION HERE: set_<COST_FUCNTION_NAME> TO OFF;  THEN, IN SETTERS, NEVER LET IT BE ON
-
-            if not isinstance(cost_function, Function):
+            # cost function assigned None
+            if not cost_function:
+                self.toggle_cost_function(cost_function_name, OFF)
+                continue
+            # cost_function is Function class specification
+            if inspect.isclass(cost_function) and issubclass(cost_function, Function):
                 cost_function = cost_function()
-            setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function.function)
-            cost_function.owner = self
+            # cost_function is Function object
+            if isinstance(cost_function, Function):
+                cost_function.owner = self
+                cost_function = cost_function.function
+            # cost_function is custom-specified function
+            elif isinstance(cost_function, function_type):
+                pass
+            # safeguard/sanity check (should never happen if validation is working properly)
+            else:
+                raise ControlSignalError("{} is not a valid cost function for {}".
+                                         format(cost_function, cost_function_name))
 
-        self.ControlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
+            setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
+
+        self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
         # Assign instance attributes
         self.allocationSamples = self.paramsCurrent[ALLOCATION_SAMPLES]
@@ -554,7 +625,7 @@ class ControlSignal(Projection_Base):
         # else:
         super(ControlSignal, self)._instantiate_receiver(context=context)
 
-    def compute_cost(self, intensity_cost, adjustment_cost, total_cost_function):
+    def _compute_cost(self, intensity_cost, adjustment_cost, total_cost_function):
         """Compute the current cost for the control signal, based on allocation and most recent adjustment
 
             :parameter intensity_cost
@@ -611,18 +682,18 @@ class ControlSignal(Projection_Base):
 
         # compute cost(s)
         new_cost = 0
-        if self.ControlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+        if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
             new_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
-        if self.ControlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+        if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
             self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
-            new_cost = self.compute_cost(self.intensityCost,
+            new_cost = self._compute_cost(self.intensityCost,
                                          self.adjustmentCost,
                                          self.totalCostFunction)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
-        if self.ControlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
+        if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
             self.durationCost = \
                 self.durationCostFunction([self.last_duration_cost, new_cost])
             new_cost += self.durationCost
@@ -708,7 +779,6 @@ class ControlSignal(Projection_Base):
             self._allocation_samples.append(i)
             i += sample_range[2]
 
-
     @property
     def intensity(self):
         return self._intensity
@@ -724,24 +794,44 @@ class ControlSignal(Projection_Base):
         #     for observer in self.observers[kpIntensity]:
         #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
-    def set_intensity_cost(self, assignment=ON):
-        if assignment:
-            self.ControlSignalCostOptions |= ControlSignalCostOptions.INTENSITY_COST
+    def toggle_cost_function(self, cost_function_name, assignment=ON):
+        if cost_function_name == INTENSITY_COST_FUNCTION:
+            cost_option = ControlSignalCostOptions.INTENSITY_COST
+        elif cost_function_name == DURATION_COST_FUNCTION:
+            cost_option = ControlSignalCostOptions.DURATION_COST
+        elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
+            cost_option = ControlSignalCostOptions.ADJUSTMENT_COST
+        elif cost_function_name == TOTAL_COST_FUNCTION:
+            raise ControlSignalError("{} cannot be disabled".format(TOTAL_COST_FUNCTION))
         else:
-            self.ControlSignalCostOptions &= ~ControlSignalCostOptions.INTENSITY_COST
+            raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
 
-    def set_adjustment_cost(self, assignment=ON):
         if assignment:
-            self.ControlSignalCostOptions |= ControlSignalCostOptions.ADJUSTMENT_COST
+            if not self.paramsCurrent[cost_function_name]:
+                raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
+                                         format(cost_function_name))
+            self.controlSignalCostOptions |= cost_option
         else:
-            self.ControlSignalCostOptions &= ~ControlSignalCostOptions.ADJUSTMENT_COST
+            self.controlSignalCostOptions &= ~cost_option
 
-    def set_duration_cost(self, assignment=ON):
-        if assignment:
-            self.ControlSignalCostOptions |= ControlSignalCostOptions.DURATION_COST
-        else:
-            self.ControlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
-
+    # def set_intensity_cost(self, assignment=ON):
+    #     if assignment:
+    #         self.controlSignalCostOptions |= ControlSignalCostOptions.INTENSITY_COST
+    #     else:
+    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.INTENSITY_COST
+    #
+    # def set_adjustment_cost(self, assignment=ON):
+    #     if assignment:
+    #         self.controlSignalCostOptions |= ControlSignalCostOptions.ADJUSTMENT_COST
+    #     else:
+    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.ADJUSTMENT_COST
+    #
+    # def set_duration_cost(self, assignment=ON):
+    #     if assignment:
+    #         self.controlSignalCostOptions |= ControlSignalCostOptions.DURATION_COST
+    #     else:
+    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
+    #
     def get_costs(self):
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
 

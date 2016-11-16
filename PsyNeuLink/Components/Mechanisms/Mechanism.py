@@ -197,7 +197,7 @@ arguments in its constructor method). Like other states, parameterStates can rec
 from the :doc:`ControlSignal` projection(s) of a :doc:`ControlMechanism<ControlMechanism>`, that is used to modify the
 function's parameter value in response to the outcome(s) of processing.
 
-  .. _Mechanism_Assigining_A_Control_Signal:
+  .. _Mechanism_Assigning_A_Control_Signal:
 
   *Assigning a Control Signal*
 

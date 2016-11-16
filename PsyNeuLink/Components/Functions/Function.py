@@ -87,6 +87,16 @@ def is_Function(x):
     else:
         return False
 
+def is_function_type(x):
+    if not x:
+        return False
+    elif isinstance(x, function_type):
+        return True
+    elif issubclass(x, Function):
+        return True
+    else:
+        return False
+
 # *******************************   get_param_value_for_keyword ********************************************************
 
 def get_param_value_for_keyword(owner, keyword):
