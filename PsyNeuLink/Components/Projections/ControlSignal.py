@@ -223,7 +223,7 @@ class ControlSignal(Projection_Base):
                 determines how allocation (variable) is translated into the output
             + FUNCTION_PARAMS (dict): (default: {SLOPE: 1, INTERCEPT: 0}) - Note: implements identity function
             + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
-            + kwAllocationSamples (list):
+            + ALLOCATION_SAMPLES (list):
                 list of allocation values to be sampled for ControlSignal (default: DEFAULT_ALLOCATION_SAMPLES)
             + kwControlSignalCostFunctions (dict): (default: NotImplemented - uses refs in paramClassDefaults)
                 determine how costs are computed
@@ -262,7 +262,7 @@ class ControlSignal(Projection_Base):
             kwControlSignalIdentity: NotImplemented,
             kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
             kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
-            kwAllocationSamples: DEFAULT_ALLOCATION_SAMPLES,
+            ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
             kwControlSignalCostFunctions: {
                            kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
                            kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
@@ -347,13 +347,16 @@ class ControlSignal(Projection_Base):
                        kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
                        kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
                                    }})
-    costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
 
     @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
                  function=Linear(slope=1, intercept=0),
+                 intensity_cost_function=Exponential,
+                 adjustment_cost_function=Linear,
+                 duration_cost_function=Linear,
+                 total_cost_function=LinearCombination,
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
@@ -372,7 +375,11 @@ class ControlSignal(Projection_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 allocation_samples=allocation_samples)
+                                                  intensity_cost_function=intensity_cost_function,
+                                                  adjustment_cost_function=adjustment_cost_function,
+                                                  duration_cost_function=duration_cost_function,
+                                                  total_cost_function=total_cost_function,
+                                                  allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if not receiver:
@@ -380,8 +387,9 @@ class ControlSignal(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
-            # Delete this as it has been moved to params dict (and will not be recognized by Projection.__init__)
-            del self.init_args[kwAllocationSamples]
+            # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
+            del self.init_args[ALLOCATION_SAMPLES]
+            del self.init_args[ALLOCATION_SAMPLES]
 
             # Flag for deferred initialization
             self.value = kwDeferredInit
@@ -415,14 +423,14 @@ class ControlSignal(Projection_Base):
         # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
-        allocation_samples = request_set[kwAllocationSamples]
+        allocation_samples = request_set[ALLOCATION_SAMPLES]
         if isinstance(allocation_samples, list):
             if iscompatible(allocation_samples, **{kwCompatibilityType: list,
                                                        kwCompatibilityNumeric: True,
                                                        kwCompatibilityLength: False,
                                                        }):
                 # Convert to np.array to be compatible with default value
-                request_set[kwAllocationSamples] = np.array(allocation_samples)
+                request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
         elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
             pass
         else:
@@ -452,7 +460,7 @@ class ControlSignal(Projection_Base):
 
         # Assign instance attributes
         self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
-        self.allocationSamples = self.paramsCurrent[kwAllocationSamples]
+        self.allocationSamples = self.paramsCurrent[ALLOCATION_SAMPLES]
         self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
         # Default intensity params
@@ -722,7 +730,7 @@ class ControlSignal(Projection_Base):
         elif samples == AUTO:
             # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
             raise ControlSignalError("AUTO not yet support for {} param of ControlSignal; default will be used".
-                                     format(kwAllocationSamples))
+                                     format(ALLOCATION_SAMPLES))
         else:
             sample_range = DEFAULT_ALLOCATION_SAMPLES
         self._allocation_samples = []
