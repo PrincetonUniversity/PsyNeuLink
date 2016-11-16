@@ -433,8 +433,10 @@ class ControlSignal(Projection_Base):
 
         for cost_function_name in costFunctionNames:
             cost_function = self.paramsCurrent[cost_function_name]
+
             # if not cost_function:
             #     # FIX: SET OPTION HERE: set_<COST_FUCNTION_NAME> TO OFF;  THEN, IN SETTERS, NEVER LET IT BE ON
+
             if not isinstance(cost_function, Function):
                 cost_function = cost_function()
             setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function.function)
