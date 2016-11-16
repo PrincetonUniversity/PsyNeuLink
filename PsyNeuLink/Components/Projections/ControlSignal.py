@@ -138,22 +138,21 @@ from PsyNeuLink.Components.Functions.Function import *
 #     BADGER_MODE = 1.0
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-# Params:
-kwControlSignalIdentity = "Control Signal Identity"
-# kwControlSignalLogProfile = "Control Signal Log Profile"
-kwControlSignalCostFunctions = "Control Signal Cost Components"
-
 # ControlSignal Function Names
-kwControlSignalCosts = 'ControlSignalCosts'
-kwControlSignalIntensityCostFunction = "Control Signal Intensity Cost Function"
-kwControlSignalAdjustmentCostFunction = "Control Signal Adjustment Cost Function"
-kwControlSignalDurationCostFunction = "Control Signal Duration Cost Function"
-kwControlSignalTotalCostFunction = "Control Signal Total Cost Function"
+CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
+
+INTENSITY_COST_FUNCTION = 'intensity_cost_function'
+ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
+DURATION_COST_FUNCTION = 'duration_cost_function'
+TOTAL_COST_FUNCTION = 'total_cost_function'
+costFunctionNames = [INTENSITY_COST_FUNCTION,
+                     ADJUSTMENT_COST_FUNCTION,
+                     DURATION_COST_FUNCTION,
+                     TOTAL_COST_FUNCTION]
 
 # Attributes / KVO keypaths
 # kpLog = "Control Signal Log"
@@ -165,7 +164,7 @@ kpAdjustmentCost = "Control Signal Adjustment Cost"
 kpDurationCost = "Control Signal DurationCost"
 kpCost = "Control Signal Cost"
 
-class ControlSignalCosts(IntEnum):
+class ControlSignalCostOptions(IntEnum):
     NONE               = 0
     INTENSITY_COST     = 1 << 1
     ADJUSTMENT_COST    = 1 << 2
@@ -222,18 +221,8 @@ class ControlSignal(Projection_Base):
             + FUNCTION (Function): (default: Linear):
                 determines how allocation (variable) is translated into the output
             + FUNCTION_PARAMS (dict): (default: {SLOPE: 1, INTERCEPT: 0}) - Note: implements identity function
-            + kwControlSignalIdentity (list): vector that uniquely identifies the signal (default: NotImplemented)
             + ALLOCATION_SAMPLES (list):
                 list of allocation values to be sampled for ControlSignal (default: DEFAULT_ALLOCATION_SAMPLES)
-            + kwControlSignalCostFunctions (dict): (default: NotImplemented - uses refs in paramClassDefaults)
-                determine how costs are computed
-                the key for each entry must be the name of a control signal cost function (see below) and
-                the value must be a function initialization call (with optional variable and params dict args)
-                Format: {<kwControlSignalCostFunctionName:<componentName(variable, params, <other args>)}
-                    + kwControlSignalIntensityCostFunction: (default: Exponential)
-                    + kwControlSignalAdjustmentCostFunction: (default: Linear) 
-                    + kwControlSignalDurationCostFunction: (default: Linear)  
-                    + kwControlSignalTotalCostFunction: (default: LinearCombination)
 
 # IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
         # - name (str) - must be name of subclass;  otherwise raises an exception for direct call
@@ -259,16 +248,9 @@ class ControlSignal(Projection_Base):
             FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
             PROJECTION_SENDER: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
             PROJECTION_SENDER_VALUE: [defaultControlAllocation],
-            kwControlSignalIdentity: NotImplemented,
-            kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
+            CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
             kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
             ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
-            kwControlSignalCostFunctions: {
-                           kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
-                           kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
-                           kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
-                           kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
-                                       }})
         + paramNames = paramClassDefaults.keys()
         + costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
 
@@ -336,27 +318,19 @@ class ControlSignal(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # FUNCTION_PARAMS:{PARAMETER_STATES: None}, # This suppresses parameterStates
         PROJECTION_SENDER: DefaultController,
         PROJECTION_SENDER_VALUE: [defaultControlAllocation],
-        kwControlSignalIdentity: NotImplemented,
-        kwControlSignalCosts:ControlSignalCosts.DEFAULTS,
-        kwControlSignalCostFunctions: {
-                       kwControlSignalIntensityCostFunction: Exponential(context="ControlSignalIntensityCostFunction"),
-                       kwControlSignalAdjustmentCostFunction: Linear(context="ControlSignalAjdustmentCostFunction"),
-                       kwControlSignalDurationCostFunction: Linear(context="ControlSignalDurationCostFunction"),
-                       kwControlSignalTotalCostFunction: LinearCombination(context="ControlSignalTotalCostFunction")
-                                   }})
+        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS})
 
     @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
                  function=Linear(slope=1, intercept=0),
-                 intensity_cost_function=Exponential,
-                 adjustment_cost_function=Linear,
-                 duration_cost_function=Linear,
-                 total_cost_function=LinearCombination,
+                 intensity_cost_function:tc.optional(is_Function)=Exponential,
+                 adjustment_cost_function:tc.optional(is_Function)=Linear,
+                 duration_cost_function:tc.optional(is_Function)=Linear,
+                 total_cost_function:tc.optional(is_Function)=LinearCombination,
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
@@ -387,9 +361,12 @@ class ControlSignal(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
-            # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
+            # Delete these as they have been moved to params dict (and so will not be recognized by Projection.__init__)
             del self.init_args[ALLOCATION_SAMPLES]
-            del self.init_args[ALLOCATION_SAMPLES]
+            del self.init_args[INTENSITY_COST_FUNCTION]
+            del self.init_args[ADJUSTMENT_COST_FUNCTION]
+            del self.init_args[DURATION_COST_FUNCTION]
+            del self.init_args[TOTAL_COST_FUNCTION]
 
             # Flag for deferred initialization
             self.value = kwDeferredInit
@@ -442,26 +419,28 @@ class ControlSignal(Projection_Base):
                                                    target_set=target_set,
                                                    context=context)
 
-        # ControlSignal Cost Components
-        if target_set[kwControlSignalCostFunctions]:
-            for function_name, function in request_set[kwControlSignalCostFunctions].items():
-                # self.assign_function(function_name,function)
-                if not issubclass(type(function), Component):
-                    raise ControlSignalError("{0} not a valid Function".format(function))
+        # ControlSignal Cost Functions
+        for cost_function_name in costFunctionNames:
+            cost_function = target_set[cost_function_name]
+            if not isinstance(cost_function, Function) and not issubclass(cost_function, Function):
+                raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
     def _instantiate_attributes_before_function(self, context=None):
 
         super()._instantiate_attributes_before_function(context=context)
 
-        for function in self.paramsCurrent[kwControlSignalCostFunctions].values():
-            function.owner = self
+        for cost_function_name in costFunctionNames:
+            if isinstance(self.paramsCurrent[cost_function_name], Function):
+                cost_function = self.paramsCurrent[cost_function_name]
+            else:
+                cost_function = self.paramsCurrent[cost_function_name]()
+            setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function.function)
+            cost_function.owner = self
 
-        self.controlSignalCosts = self.paramsCurrent[kwControlSignalCosts]
+        self.ControlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
         # Assign instance attributes
-        self.controlIdentity = self.paramsCurrent[kwControlSignalIdentity]
         self.allocationSamples = self.paramsCurrent[ALLOCATION_SAMPLES]
-        self.costFunctions = self.paramsCurrent[kwControlSignalCostFunctions]
 
         # Default intensity params
         self.default_allocation = defaultControlAllocation
@@ -470,7 +449,7 @@ class ControlSignal(Projection_Base):
         self.intensity = self.allocation
 
         # Default cost params
-        self.intensityCost = self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
+        self.intensityCost = self.intensityCostFunction(self.intensity)
         self.adjustmentCost = 0
         self.durationCost = 0
         self.last_duration_cost = self.durationCost
@@ -580,7 +559,7 @@ class ControlSignal(Projection_Base):
             :rtype: scalar:
         """
 
-        return total_cost_function.function([intensity_cost, adjustment_cost])
+        return total_cost_function([intensity_cost, adjustment_cost])
 
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
@@ -627,21 +606,20 @@ class ControlSignal(Projection_Base):
 
         # compute cost(s)
         new_cost = 0
-        if self.controlSignalCosts & ControlSignalCosts.INTENSITY_COST:
-            new_cost = self.intensityCost = \
-                self.costFunctions[kwControlSignalIntensityCostFunction].function(self.intensity)
+        if self.ControlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+            new_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
-        if self.controlSignalCosts & ControlSignalCosts.ADJUSTMENT_COST:
-            self.adjustmentCost = self.costFunctions[kwControlSignalAdjustmentCostFunction].function(intensity_change)
+        if self.ControlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+            self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
             new_cost = self.compute_cost(self.intensityCost,
                                          self.adjustmentCost,
-                                         self.costFunctions[kwControlSignalTotalCostFunction])
+                                         self.totalCostFunction)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
-        if self.controlSignalCosts & ControlSignalCosts.DURATION_COST:
+        if self.ControlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
             self.durationCost = \
-                self.costFunctions[kwControlSignalDurationCostFunction].function([self.last_duration_cost, new_cost])
+                self.durationCostFunction([self.last_duration_cost, new_cost])
             new_cost += self.durationCost
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
@@ -701,20 +679,6 @@ class ControlSignal(Projection_Base):
 
         return self.intensity
 
-# IMPLEMENTATION NOTE:  *** SHOULDN'T THIS JUST USE ASSIGN_DEFAULT (OR ADJUST) PROPERTY OF FUNCTION?? x
-
-    def assign_function(self, control_signal_function_name, function):
-        # ADD DESCDRIPTION HERE:  NOTE THAT function_type MUST BE A REFERENCE TO AN INSTANCE OF A FUNCTION
-
-        if not issubclass(type(function), Component):
-            raise ControlSignalError("{0} not a valid Function".format(function))
-        else:
-            self.paramsCurrent[kwControlSignalCostFunctions][control_signal_function_name] = function
-            self.costFunctions[control_signal_function_name] = function
-
-# Fix: rewrite this all with @property
-    # Setters and getters
-
     @property
     def allocationSamples(self):
         return self._allocation_samples
@@ -757,21 +721,21 @@ class ControlSignal(Projection_Base):
 
     def set_intensity_cost(self, assignment=ON):
         if assignment:
-            self.controlSignalCosts |= ControlSignalCosts.INTENSITY_COST
+            self.ControlSignalCostOptions |= ControlSignalCostOptions.INTENSITY_COST
         else:
-            self.controlSignalCosts &= ~ControlSignalCosts.INTENSITY_COST
+            self.ControlSignalCostOptions &= ~ControlSignalCostOptions.INTENSITY_COST
 
     def set_adjustment_cost(self, assignment=ON):
         if assignment:
-            self.controlSignalCosts |= ControlSignalCosts.ADJUSTMENT_COST
+            self.ControlSignalCostOptions |= ControlSignalCostOptions.ADJUSTMENT_COST
         else:
-            self.controlSignalCosts &= ~ControlSignalCosts.ADJUSTMENT_COST
+            self.ControlSignalCostOptions &= ~ControlSignalCostOptions.ADJUSTMENT_COST
 
     def set_duration_cost(self, assignment=ON):
         if assignment:
-            self.controlSignalCosts |= ControlSignalCosts.DURATION_COST
+            self.ControlSignalCostOptions |= ControlSignalCostOptions.DURATION_COST
         else:
-            self.controlSignalCosts &= ~ControlSignalCosts.DURATION_COST
+            self.ControlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
 
     def get_costs(self):
         return [self.intensityCost, self.adjustmentCost, self.durationCost]

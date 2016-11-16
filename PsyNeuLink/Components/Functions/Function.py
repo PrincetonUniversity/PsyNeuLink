@@ -75,6 +75,16 @@ class FunctionOutputType(IntEnum):
     NP_1D_ARRAY = 1
     NP_2D_ARRAY = 2
 
+
+# TYPE_CHECK for Function Instance or Class
+def is_Function(x):
+    if isinstance(x, Function):
+        return True
+    elif issubclass(x, Function):
+        return True
+    else:
+        return False
+
 # *******************************   get_param_value_for_keyword ********************************************************
 
 def get_param_value_for_keyword(owner, keyword):
