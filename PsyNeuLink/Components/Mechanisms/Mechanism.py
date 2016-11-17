@@ -769,9 +769,9 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         if not context or isinstance(context, object) or inspect.isclass(context):
-            context = kwInit + self.name + kwSeparatorBar + self.__class__.__name__
+            context = INITIALIZING + self.name + kwSeparatorBar + self.__class__.__name__
         else:
-            context = context + kwSeparatorBar + kwInit + self.name
+            context = context + kwSeparatorBar + INITIALIZING + self.name
 
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
@@ -1255,7 +1255,7 @@ class Mechanism_Base(Mechanism):
         #             self.functionsDict[func]()
 
         # Limit init to scope specified by context
-        if kwInit in context:
+        if INITIALIZING in context:
             if kwProcessInit in context or kwSystemInit in context:
                 # Run full execute method for init of Process and System
                 pass

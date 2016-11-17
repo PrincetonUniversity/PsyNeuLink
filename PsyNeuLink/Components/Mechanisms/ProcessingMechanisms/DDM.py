@@ -322,7 +322,7 @@ class DDM(ProcessingMechanism_Base):
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
-    .. context=componentType+kwInit):
+    .. context=componentType+INITIALIZING):
             context : str : default ''None''
                    string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
@@ -427,7 +427,7 @@ class DDM(ProcessingMechanism_Base):
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
                  # context=None):
-                 context=componentType+kwInit):
+                 context=componentType+INITIALIZING):
         """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
 
         """

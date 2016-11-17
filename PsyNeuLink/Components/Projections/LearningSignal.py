@@ -173,7 +173,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.init_args['name'] = name
 
         # Flag for deferred initialization
-        self.value = kwDeferredInit
+        self.value = DEFERRED_INITIALIZATION
 
         # # MODIFIED 8/14/16 NEW:
         # # PROBLEM: variable has different name for different classes; need to standardize across classes
@@ -803,7 +803,7 @@ FROM TODO:
         :return: (2D np.array) self.weightChangeMatrix
         """
         # Pass during initialization (since has not yet been fully initialized
-        if self.value is kwDeferredInit:
+        if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
         # GET INPUT TO Projection to Error Source:
@@ -824,7 +824,7 @@ FROM TODO:
         # rows:  sender errors;  columns:  receiver errors
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
 
-        if not kwInit in context and self.reportOutputPref:
+        if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.weightChangeMatrix

@@ -1215,7 +1215,7 @@
 #                Subclasses of mechanism implement __execute__ that is called by Mechanism
 #                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
 #                    - if a subclass does not implement __execute__, calling it will call .function directly
-#                    -  if kwInit is in context for call to execute, initMethod is checked to determine whether:
+#                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
 #                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
 #                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
 #                        full subclass.__execute__ and Mechanism.execute method are run
@@ -1225,7 +1225,7 @@
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
-# 1) Function implements _deferred_init(), which checks whether self.value is kwDeferredInit;
+# 1) Function implements _deferred_init(), which checks whether self.value is DEFERRED_INITIALIZATION;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
 #     <subclass> is the class implementing deferred initialization
 #     <**self.init_args> is the set of args passed to the __init__() method of the subclass
@@ -1235,15 +1235,15 @@
 #         self.init_args['context'] = self
 #         self.init_args['name'] = name
 #         del self.init_args['self']
-#     - set self.value = kwDeferredInit
+#     - set self.value = DEFERRED_INITIALIZATION
 # 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
 # 4) When a process is instantiated, the last thing it does is call _deferred_init
 #    for all of the projections associated with the mechanism in its pathway,
 #    beginning with the last and moving backward though the pathway
 # 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
 #          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
-# 6) update() method should test for self.value and if it is kwDeferredInit it should return self.value
-# 7) Objects that call execute method of ones with deferred init should test for return value of kwDeferredInit
+# 6) update() method should test for self.value and if it is DEFERRED_INITIALIZATION it should return self.value
+# 7) Objects that call execute method of ones with deferred init should test for return value of DEFERRED_INITIALIZATION
 #     and handle appropriately
 
 

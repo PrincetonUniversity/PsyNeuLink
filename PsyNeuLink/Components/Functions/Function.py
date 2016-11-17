@@ -344,7 +344,7 @@ class Contradiction(Function_Base): # Example
                  variable_default=variableClassDefault,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=componentName+kwInit):
+                 context=componentName+INITIALIZING):
         # This validates variable and/or params_list if assigned (using _validate_params method below),
         #    and assigns them to paramsCurrent and paramInstanceDefaults;
         #    otherwise, assigns paramClassDefaults to paramsCurrent and paramInstanceDefaults
@@ -533,7 +533,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=componentName+kwInit):
+                 context=componentName+INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
@@ -701,7 +701,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
             #    make sure there no zeros for an element that is assigned a negative exponent
-            if kwInit in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
+            if INITIALIZING in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
                 self.variable = np.ones_like(self.variable)
             else:
                 self.variable = self.variable ** exponents
@@ -760,7 +760,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                  intercept:parameter_spec=0,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=componentName+kwInit):
+                 context=componentName+INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(slope=slope,
@@ -881,7 +881,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                  scale:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=componentName + kwInit):
+                 context=componentName + INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -1157,7 +1157,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix:matrix_spec=None,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=componentName + kwInit):
+                 context=componentName + INITIALIZING):
         """Transforms variable (sender vector) using matrix specified by params, and returns receiver vector
 
         Variable = sender vector (list of numbers)
@@ -1962,7 +1962,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                 format(self.name, self.variable))
 
         # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
-        if not kwInit in context:
+        if not INITIALIZING in context:
             if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"

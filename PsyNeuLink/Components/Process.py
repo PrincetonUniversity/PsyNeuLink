@@ -779,7 +779,7 @@ class Process_Base(Process):
 
         if not context:
             # context = self.__class__.__name__
-            context = kwInit + self.name + kwSeparator + kwProcessInit
+            context = INITIALIZING + self.name + kwSeparator + kwProcessInit
 
         super(Process_Base, self).__init__(variable_default=default_input_value,
                                            param_defaults=params,
@@ -1334,17 +1334,17 @@ class Process_Base(Process):
                         # MODIFIED 9/12/16 NEW:
                         # If initialization of mapping projection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
-                        if item.value is kwDeferredInit:
+                        if item.value is DEFERRED_INITIALIZATION:
                             # Check sender arg
                             try:
                                 sender_arg = item.init_args[kwSenderArg]
                             except AttributeError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
-                                                   format(item, kwDeferredInit))
+                                                   format(item, DEFERRED_INITIALIZATION))
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[kwNameArg], kwDeferredInit, kwSenderArg))
+                                                   format(item.init_args[kwNameArg], DEFERRED_INITIALIZATION, kwSenderArg))
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
@@ -1361,11 +1361,11 @@ class Process_Base(Process):
                                 receiver_arg = item.init_args[kwReceiverArg]
                             except AttributeError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
-                                                   format(item, kwDeferredInit))
+                                                   format(item, DEFERRED_INITIALIZATION))
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[kwNameArg], kwDeferredInit, kwReceiverArg))
+                                                   format(item.init_args[kwNameArg], DEFERRED_INITIALIZATION, kwReceiverArg))
                             else:
                                 # If receiver is not specified for the projection,
                                 #    assign mechanism that follows it in the pathway

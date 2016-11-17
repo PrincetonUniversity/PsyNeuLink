@@ -600,8 +600,8 @@ class System_Base(System):
                           context=context)
 
         if not context:
-            # context = kwInit + self.name
-            context = kwInit + self.name + kwSeparator + kwSystemInit
+            # context = INITIALIZING + self.name
+            context = INITIALIZING + self.name + kwSeparator + kwSystemInit
 
         super().__init__(variable_default=default_input_value,
                          param_defaults=params,
