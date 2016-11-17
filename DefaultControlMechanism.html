@@ -93,9 +93,17 @@
 <li class="toctree-l2 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Default Control Mechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVC Mechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
@@ -149,8 +157,181 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="default-control-mechanism">
-<h1>Default Control Mechanism<a class="headerlink" href="#default-control-mechanism" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-DefaultControlMechanism">
+<span id="default-control-mechanism"></span><h1>Default Control Mechanism<a class="headerlink" href="#module-DefaultControlMechanism" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="DefaultControlMechanism.ControlSignalChannel">
+<em class="property">class </em><code class="descclassname">DefaultControlMechanism.</code><code class="descname">ControlSignalChannel</code><span class="sig-paren">(</span><em>inputState</em>, <em>variableIndex</em>, <em>variableValue</em>, <em>outputState</em>, <em>outputIndex</em>, <em>outputValue</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="DefaultControlMechanism.ControlSignalChannel.inputState">
+<code class="descname">inputState</code><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel.inputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DefaultControlMechanism.ControlSignalChannel.outputIndex">
+<code class="descname">outputIndex</code><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel.outputIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DefaultControlMechanism.ControlSignalChannel.outputState">
+<code class="descname">outputState</code><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel.outputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DefaultControlMechanism.ControlSignalChannel.outputValue">
+<code class="descname">outputValue</code><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel.outputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 5</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DefaultControlMechanism.ControlSignalChannel.variableIndex">
+<code class="descname">variableIndex</code><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel.variableIndex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DefaultControlMechanism.ControlSignalChannel.variableValue">
+<code class="descname">variableValue</code><a class="headerlink" href="#DefaultControlMechanism.ControlSignalChannel.variableValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="DefaultControlMechanism.DefaultControlMechanism">
+<em class="property">class </em><code class="descclassname">DefaultControlMechanism.</code><code class="descname">DefaultControlMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bcad488&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement default control mechanism</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Description:</dt>
+<dd>Implement default source of control signals, with one inputState and outputState for each
+Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and controlSignal(s)</dd>
+</dl>
+</div></blockquote>
+<dl class="docutils">
+<dt># DOCUMENTATION NEEDED</dt>
+<dd><ul class="first">
+<li><dl class="first docutils">
+<dt>EXPLAIN WHAT ControlSignalChannel IS:</dt>
+<dd><blockquote class="first">
+<div><p>A ControlSignalChannel is instantiated for each ControlSignal projection assigned to DefaultController</p>
+</div></blockquote>
+<p class="last">It simply passes the defaultControlAllocation value to the ControlSignal projection</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER</p>
+</li>
+<li><p class="first">AN OUTPUT STATE SHOULD BE CREATED FOR EACH OF THOSE SENDERS</p>
+</li>
+<li><p class="first">AN INPUT STATE SHOULD BE CREATED FOR EACH OUTPUTSTATE</p>
+</li>
+<li><p class="first">THE EXECUTE METHOD SHOULD SIMPLY MAP THE INPUT STATE TO THE OUTPUT STATE</p>
+</li>
+<li><dl class="first docutils">
+<dt>EVC CAN THEN BE A SUBCLASS THAT OVERRIDES EXECUTE METHOD AND DOES SOMETHING MORE SOPHISTICATED</dt>
+<dd><p class="first last">(E.G,. KEEPS TRACK OF IT&#8217;S SENDER PROJECTIONS AND THEIR COSTS, ETC.)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul class="simple">
+<li>MAY NEED TO AUGMENT OUTPUT STATES TO KNOW ABOUT THEIR SENDERS</li>
+<li>MAY NEED TO ADD NEW CONSTRAINT ON ASSIGNING A STATE AS A SENDER:  IT HAS TO BE AN OUTPUTSTATE</li>
+</ul>
+<dl class="last docutils">
+<dt>Class attributes:</dt>
+<dd><ul class="first last">
+<li><p class="first">componentType (str): System Default Mechanism</p>
+</li>
+<li><dl class="first docutils">
+<dt>paramClassDefaults (dict):</dt>
+<dd><p class="first last"># + kwInputStateValue: [0]
+# + kwOutputStateValue: [1]
++ FUNCTION: Linear</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="method">
+<dt id="DefaultControlMechanism.DefaultControlMechanism.instantiate_control_signal_channel">
+<code class="descname">instantiate_control_signal_channel</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.instantiate_control_signal_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate inputState that passes defaultControlAllocation to ControlSignal projection</p>
+<p>Instantiate an inputState with defaultControlAllocation as its value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>projection</strong> &#8211; </li>
+<li><strong>context</strong> &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="DefaultControlMechanism.DefaultControlMechanism.Linear">
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10bcc6d08&gt; = 1, intercept: &lt;function parameter_spec at 0x10bcc6d08&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10bcad488&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.Linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
+<dl class="docutils">
+<dt>Initialization arguments:</dt>
+<dd><ul class="first last">
+<li><p class="first">variable (number): transformed by linear function: slope * variable + intercept</p>
+</li>
+<li><dl class="first docutils">
+<dt>params (dict): specifies</dt>
+<dd><ul class="first last simple">
+<li>slope (SLOPE: value) - slope (default: 1)</li>
+<li>intercept (INTERCEPT: value) - intercept (defaul: 0)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>Linear.function returns scalar result</p>
+<dl class="method">
+<dt id="DefaultControlMechanism.DefaultControlMechanism.Linear.derivative">
+<code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.Linear.derivative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derivative of the softMax sigmoid function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DefaultControlMechanism.DefaultControlMechanism.Linear.function">
+<code class="descname">function</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.Linear.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate single value (defined by slope and intercept)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="Transfer.html#Transfer.Transfer.variable" title="Transfer.Transfer.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
+SLOPE: number - slope (default: 1)
+INTERCEPT: number - intercept (default: 0)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return number:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
 </div>
 
 

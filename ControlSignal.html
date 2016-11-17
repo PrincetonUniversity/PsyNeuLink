@@ -92,8 +92,19 @@
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Control Signal</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Control Signal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-controlsignal-projection">Creating a ControlSignal Projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -143,8 +154,263 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="control-signal">
-<h1>Control Signal<a class="headerlink" href="#control-signal" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-ControlSignal">
+<span id="control-signal"></span><h1>Control Signal<a class="headerlink" href="#module-ControlSignal" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="controlsignal-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A ControlSignal projection takes a value (an <em>allocation</em>) from a ControlMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and uses this to
+compute its <code class="docutils literal"><span class="pre">intensity</span></code> that is assigned as the ControlSignal&#8217;s value.  Its value is used to modify the value of a
+parameterState (its &#8216;&#8217;receiver&#8217;&#8216;) associated with the parameter of a function of a ProcessingMechanism.  A
+ControlSignal also has an associated <code class="docutils literal"><span class="pre">cost</span></code> that is calculated based on its intensity and/or its time course, and
+used by a ControlMechanism to adapt the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">allocation</span></code>.[LINK]</p>
+</div>
+<div class="section" id="creating-a-controlsignal-projection">
+<span id="controlsignal-creating-a-controlsignal-projection"></span><h2>Creating a ControlSignal Projection<a class="headerlink" href="#creating-a-controlsignal-projection" title="Permalink to this headline">¶</a></h2>
+<p>A ControlSignal projection can be created in any of the ways that can be used to
+<a class="reference internal" href="Projection.html#projection-creating-a-projection"><span class="std std-ref">create a projection</span></a>, or by including it in the specification for the
+<a class="reference internal" href="Mechanism.html#mechanism-assigning-a-control-signal"><span class="std std-ref">parameter of a mechanism&#8217;s function</span></a>.  If the constructor is used,
+the <code class="docutils literal"><span class="pre">receiver</span></code> argument must be specified.  If it is included in a parameter specification, its <code class="docutils literal"><span class="pre">receiver</span></code> will be
+assigned to the parameterState for the parameter.  If its <code class="docutils literal"><span class="pre">sender</span></code> is not specified, its assignment depends on
+the <code class="docutils literal"><span class="pre">receiver</span></code>.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal&#8217;s
+<code class="docutils literal"><span class="pre">sender</span></code> is assigned to an outputState of the system&#8217;s <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>.
+Otherwise, the <code class="docutils literal"><span class="pre">sender</span></code> is assigned to the outputState of a <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">Default Control Mechanism</span></a>.</p>
+<p>The cost of a ControlSignal is calculated from its <code class="docutils literal"><span class="pre">intensity</span></code>, using four
+<span class="xref std std-ref">cost functions</span> that can be specified  either in arguments to its constructor,
+or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
+so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost
+functions can be <a class="reference internal" href="#controlsignal-toggle-costs"><span class="std std-ref">enabled or disabled</span></a>, to select which make contributions to the
+ControlSignal&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.  A cost function can also be permanently disabled for its ControlSignal by assigning
+<code class="docutils literal"><span class="pre">None</span></code> to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
+Cost functions that are permanently disabled in this way cannot be re-enabled.</p>
+<p>A ControlSignal projection takes an <code class="docutils literal"><span class="pre">allocation_samples</span></code> specification as its input.  This must be an array that
+specifies the values of its <code class="docutils literal"><span class="pre">allocation</span></code> that will be sampled by ControlMechanisms that adaptively adjust
+ControlSignal allocations (e.g., <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVC Mechanism</span></a>).  The default is an array of values from 0.1 to 1.0
+in steps of 0.1.</p>
+</div>
+<div class="section" id="structure">
+<span id="controlsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p><em>Intensity</em>. The ControlSignal&#8217;s <code class="docutils literal"><span class="pre">function</span></code> uses its <code class="docutils literal"><span class="pre">allocation</span></code> to calculate an <code class="docutils literal"><span class="pre">intensity</span></code>.  The default is an
+identity function (Linear(slope=1, intercept=0)), in which case the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">intensity</span></code> is equal to its
+<code class="docutils literal"><span class="pre">allocation</span></code>. The <code class="docutils literal"><span class="pre">function</span></code> can be assigned another <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes
+and returns a scalar value.</p>
+<p><em>Costs</em>. A ControlSignal has four cost functions that determine how the ControlSignal computes its cost, all of which
+can be customized, and the first three of which can be enabled or disabled:</p>
+<ul id="controlsignal-cost-functions">
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">INTENSTITY_COST_FUNCTION</span></code></dt>
+<dd><p class="first last">Calculates a cost based on the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">intensity</span></code>.
+It can be any <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function  that takes and returns a scalar value.
+The default is <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">ADJUSTMENT_COST_FUNCTION</span></code></dt>
+<dd><p class="first last">Calculates a cost based on a change in the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">intensity</span></code> from its last value.
+It can be any <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and returns a scalar value.
+The default is <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">DURATION_COST_FUNCTION</span></code></dt>
+<dd><p class="first last">Calculates an integral of the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.
+It can be any <code class="xref py py-class docutils literal"><span class="pre">IntegratorFunction</span></code>, or any other function  that takes a list or array of two values and
+returns a scalar value. The default is <code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">COST_COMBINATION_FUNCTION</span></code></dt>
+<dd><p class="first last">Combines the results of any cost functions that are enabled, and assigns the result as the ControlSignal&#8217;s
+<code class="docutils literal"><span class="pre">cost</span></code>.  It can be any function that takes an array and returns a scalar value.  The default is <code class="xref py py-class docutils literal"><span class="pre">Reduce</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>An attribute is assigned for each component of the cost (<code class="docutils literal"><span class="pre">intensityCost</span></code>, <code class="docutils literal"><span class="pre">adjustmentCost</span></code>, and <code class="docutils literal"><span class="pre">durationCost</span></code>),
+the total cost (<code class="docutils literal"><span class="pre">cost</span></code>).</p>
+<p id="controlsignal-toggle-costs"><em>Toggling Cost Functions</em>.  Any of the cost functions (except the <code class="xref std std-keyword docutils literal"><span class="pre">COST_COMBINATION_FUNCTION</span></code>) can be
+enabled or disabled using the <code class="docutils literal"><span class="pre">toggle_cost_function</span></code> method to turn it <code class="xref std std-keyword docutils literal"><span class="pre">ON</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">OFF</span></code>.  If it is
+disabled, that component of the cost is not included in the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">cost</span></code> attribute. A cost function  can
+also be permanently disabled for the ControlSignal by assigning <code class="docutils literal"><span class="pre">None</span></code> to its argument in the constructor (or the
+corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlSignal,
+it cannot be re-enabled using <code class="docutils literal"><span class="pre">toggle_cost_function</span></code>.</p>
+<p><em>Additional Attributes</em>.  In addition to the <code class="docutils literal"><span class="pre">intensity</span></code> and cost attributes described above, a ControlSignal has
+<code class="docutils literal"><span class="pre">last_allocation</span></code> and <code class="docutils literal"><span class="pre">last_intensity</span></code> attributes that store the values associated with its previous execution.
+Finally, it has an <code class="docutils literal"><span class="pre">allocation_samples</span></code> attribute, that is a  list of used by
+<span class="xref std std-ref">ControlMechanisms</span> for sampling different values of <code class="docutils literal"><span class="pre">allocation</span></code> for the ControlSignal,
+in order to adaptively adjust the parameters that it controls (e.g., <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVC Mechanism</span></a>). The default value is an
+array that ranges from 0.1 to 1.0 in steps of 0.1.</p>
+</div>
+<div class="section" id="execution">
+<span id="controlsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A ControlSignal projection uses its <code class="docutils literal"><span class="pre">function</span></code> to compute its <code class="docutils literal"><span class="pre">intensity</span></code>, and its <span class="xref std std-ref">cost functions
+&lt;ControlSignal_Cost_Functions&gt; use the ``intensity`</span> to compute the its <code class="docutils literal"><span class="pre">cost</span></code>.  The <code class="docutils literal"><span class="pre">intensity</span></code> is assigned as
+the ControlSignal projection&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, which is used by the parmaterState to which it projects to modify the
+corresponding parameter of the owner mechanism&#8217;s function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The changes in a parameter in response to the execution of a ControlSignal projection are not applied until the
+mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of &#8220;lazy&#8221;
+updating).</p>
+</div>
+</div>
+<div class="section" id="class-reference">
+<span id="controlsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ControlSignal.ControlSignalCostOptions">
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignalCostOptions</code><a class="headerlink" href="#ControlSignal.ControlSignalCostOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ControlSignal.ControlSignal">
+<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear                                       intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a projection that controls the parameter of a mechanism function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sender</strong> (<em>Optional[Mechanism or OutputState]</em>) &#8211; Source of the allocation for the ControlSignal;  usually an outputState of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>.
+If it is not specified, the <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">Default Control Mechanism</span></a> for the system to which the receiver belongs
+will be assigned.</li>
+<li><strong>receiver</strong> (<em>Optional[Mechanism or ParameterState]</em>) &#8211; The parameterState associated with the parameter of a function to be controlled.  This must be specified,
+or be able to be determined by the context in which the ControlSignal is created or assigned.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; Converts the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">allocation</span></code> into its <code class="docutils literal"><span class="pre">intensity</span></code> (equal to its <code class="docutils literal"><span class="pre">value</span></code>).</li>
+<li><strong>intensity_cost_function</strong> (<em>Optional[TransferFuntion] : default Exponential</em>) &#8211; Calculates a cost based on the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">intensity</span></code>.
+It can be disabled permanently for the ControlSignal by assigning <code class="docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>adjustment_cost_function</strong> (<em>Optiona[TransferFunction] : default Linear</em>) &#8211; Calculates a cost based on a change in the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">intensity</span></code> from its last value.
+It can be disabled permanently for the ControlSignal by assigning <code class="docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>duration_cost_function</strong> (<em>Optional[TransferFunction] : default Linear</em>) &#8211; Calculates an integral of the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.
+It can be disabled permanently for the ControlSignal by assigning <code class="docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>cost_combination_function</strong> (<em>function : default Reduce(operation=SUM)</em>) &#8211; Combines the results of any cost functions that are enabled, and assigns the result to <code class="docutils literal"><span class="pre">cost</span></code>.</li>
+<li><strong>allocation_samples</strong> (list : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_ALLOCATION_SAMPLES</span></code>) &#8211; Set of values used by ControlMechanisms that sample different allocation values in order to adaptively adjust
+the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in steps
+of 0.1.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).[LINK]
+By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> and cost function assignments.</li>
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; String used for the name of the ControlSignal projection.
+If not is specified, a default is assigned by ProjectionRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; Preference set for the ControlSignal projection.
+If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.allocation">
+<code class="descname">allocation</code><a class="headerlink" href="#ControlSignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default: defaultControlAllocation</em> &#8211; value used as <code class="docutils literal"><span class="pre">variable</span></code> for projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to determine <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.allocationSamples">
+<code class="descname">allocationSamples</code><a class="headerlink" href="#ControlSignal.ControlSignal.allocationSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list : DEFAULT_SAMPLE_VALUES</em> &#8211; set of values used by ControlMechanisms that sample different allocation values in order to
+adaptively adjust the function of mechanisms in their systems.</p>
+<span class="target" id="controlsignal-function-attributes"></span></dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.function">
+<code class="descname">function</code><a class="headerlink" href="#ControlSignal.ControlSignal.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction :  default Linear</em> &#8211; converts <code class="docutils literal"><span class="pre">allocation</span></code> into <code class="docutils literal"><span class="pre">intensity</span></code> that is provided as output to receiver of projection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.intensityCostFunction">
+<code class="descname">intensityCostFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.intensityCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction : default Exponential</em> &#8211; calculates &#8220;intensityCost`` from the curent value of <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.adjustmentCostFunction">
+<code class="descname">adjustmentCostFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.adjustmentCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction : default Linear</em> &#8211; calculates <code class="docutils literal"><span class="pre">adjustmentCost</span></code> based on the change in <code class="docutils literal"><span class="pre">intensity</span></code> from its last value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.durationCostFunction">
+<code class="descname">durationCostFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.durationCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IntegratorFunction : default Linear</em> &#8211; calculates an integral of the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.costCombinationFunction">
+<code class="descname">costCombinationFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.costCombinationFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function : default Reduce(operation=SUM)</em> &#8211; combines the results of any cost functions that are enabled, and assigns the result to <code class="docutils literal"><span class="pre">cost</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.value">
+<code class="descname">value</code><a class="headerlink" href="#ControlSignal.ControlSignal.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; during initialization, assigned keyword string (either INITIALIZING or DEFERRED_INITIALIZATION);
+during execution, returns value of <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.intensity">
+<code class="descname">intensity</code><a class="headerlink" href="#ControlSignal.ControlSignal.intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>, used to determine controlled parameter of task.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.intensityCost">
+<code class="descname">intensityCost</code><a class="headerlink" href="#ControlSignal.ControlSignal.intensityCost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; cost associated with current <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.adjustmentCost">
+<code class="descname">adjustmentCost</code><a class="headerlink" href="#ControlSignal.ControlSignal.adjustmentCost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; cost associated with last change to <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.durationCost">
+<code class="descname">durationCost</code><a class="headerlink" href="#ControlSignal.ControlSignal.durationCost" title="Permalink to this definition">¶</a></dt>
+<dd><p>intregral of <code class="docutils literal"><span class="pre">cost</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.cost">
+<code class="descname">cost</code><a class="headerlink" href="#ControlSignal.ControlSignal.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; current value of ControlSignal&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>;  combined result of all cost functions that are enabled.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.last_allocation">
+<code class="descname">last_allocation</code><a class="headerlink" href="#ControlSignal.ControlSignal.last_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; <code class="docutils literal"><span class="pre">allocation</span></code> for last execution of the ControlSignal.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.last_intensity">
+<code class="descname">last_intensity</code><a class="headerlink" href="#ControlSignal.ControlSignal.last_intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; <code class="docutils literal"><span class="pre">intensity</span></code> for last execution of the ControlSignal.</p>
+<span class="target" id="id1"></span></dd></dl>
+
+<dl class="method">
+<dt id="ControlSignal.ControlSignal.toggle_cost_function">
+<code class="descname">toggle_cost_function</code><span class="sig-paren">(</span><em>cost_function_name</em>, <em>assignment=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.toggle_cost_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables/disables use of a cost function.</p>
+<p><code class="docutils literal"><span class="pre">cost_function_name</span></code> should be a keyword (list under <a class="reference internal" href="#controlsignal-structure"><span class="std std-ref">Structure</span></a>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlSignal.ControlSignal.get_costs">
+<code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.get_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensityCost</span></code>, <code class="docutils literal"><span class="pre">adjustmentCost</span></code> and <code class="docutils literal"><span class="pre">durationCost</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 

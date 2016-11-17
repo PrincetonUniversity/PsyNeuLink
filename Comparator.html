@@ -133,8 +133,183 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="comparator">
-<h1>Comparator<a class="headerlink" href="#comparator" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-Comparator">
+<span id="comparator"></span><h1>Comparator<a class="headerlink" href="#module-Comparator" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Comparator.Comparator">
+<em class="property">class </em><code class="descclassname">Comparator.</code><code class="descname">Comparator</code><span class="sig-paren">(</span><em>default_sample_and_target=NotImplemented</em>, <em>comparison_operation: &lt;typecheck.tc_predicates.enum object at 0x106a3cb38&gt; = 'subtraction'</em>, <em>comparison_type='vector'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bcad488&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement Comparator subclass</p>
+<dl class="docutils">
+<dt>Description:</dt>
+<dd><p class="first">Comparator is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
+It&#8217;s function uses the LinearCombination Function Function to compare two input variables
+COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
+The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,</p>
+<blockquote class="last">
+<div>as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array</div></blockquote>
+</dd>
+<dt>Instantiation:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>A Comparator Mechanism can be instantiated in several ways:</dt>
+<dd><ul class="first last simple">
+<li>directly, by calling Comparator()</li>
+<li>as the default mechanism (by calling mechanism())</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>Initialization arguments:</dt>
+<dd><p class="first">In addition to standard arguments params (see Mechanism), Comparator also implements the following params:
+- variable (2D np.array): [[comparatorSample], [comparatorTarget]]
+- params (dict):</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>COMPARATOR_SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)</dt>
+<dd><p class="first last">specifies inputState to be used for comparator sample</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>COMPARATOR_TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)</dt>
+<dd><p class="first last">specifies inputState to be used for comparator target</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">FUNCTION (Function of method):  (default: LinearCombination)</p>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS (dict):</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>COMPARISON_OPERATION (str): (default: SUBTRACTION)</dt>
+<dd><p class="first last">specifies operation used to compare COMPARATOR_SAMPLE with COMPARATOR_TARGET;
+SUBTRACTION:  output = target-sample
+DIVISION:  output = target/sample</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Notes:
+*  params can be set in the standard way for any Function subclass:</p>
+<blockquote class="last">
+<div><ul>
+<li><dl class="first docutils">
+<dt>params provided in param_defaults at initialization will be assigned as paramInstanceDefaults</dt>
+<dd><p class="first last">and used for paramsCurrent unless and until the latter are changed in a function call</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">paramInstanceDefaults can be later modified using assign_defaults</p>
+</li>
+<li><p class="first">params provided in a function call (to execute or adjust) will be assigned to paramsCurrent</p>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>MechanismRegistry:</dt>
+<dd><dl class="first last docutils">
+<dt>All instances of Comparator are registered in MechanismRegistry, which maintains an entry for the subclass,</dt>
+<dd>a count for all instances of it, and a dictionary of those instances</dd>
+</dl>
+</dd>
+<dt>Naming:</dt>
+<dd>Instances of Comparator can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).
+If this argument is omitted, it will be assigned &#8220;Comparator&#8221; with a hyphenated, indexed suffix (&#8216;Comparator-n&#8217;)</dd>
+<dt>Execution:</dt>
+<dd><ul class="first">
+<li><dl class="first docutils">
+<dt>Computes comparison of two inputStates of equal length and generates array of same length,</dt>
+<dd><p class="first last">as well as summary statistics (sum, sum of squares, and variance of comparison array values)</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">self.execute returns self.value</p>
+</li>
+</ul>
+<p>Notes:
+* Comparator handles &#8220;runtime&#8221; parameters (specified in call to execute method) differently than std Components:</p>
+<blockquote class="last">
+<div><p>any specified params are kept separate from paramsCurrent (Which are not overridden)
+if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the</p>
+<blockquote>
+<div>corresponding ParameterState;  that is, they are combined additively with controlSignal output</div></blockquote>
+</div></blockquote>
+</dd>
+<dt>Class attributes:</dt>
+<dd><ul class="first last">
+<li><p class="first">componentType (str): Comparator</p>
+</li>
+<li><p class="first">classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()</p>
+</li>
+<li><p class="first">classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE</p>
+</li>
+<li><p class="first">variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here</p>
+</li>
+<li><dl class="first docutils">
+<dt>paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,</dt>
+<dd><p class="first last">FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">paramNames (dict): names as above</p>
+</li>
+</ul>
+</dd>
+<dt>Class methods:</dt>
+<dd>None</dd>
+<dt>Instance attributes: none</dt>
+<dd><ul class="first last simple">
+<li>variable (value): input to mechanism&#8217;s execute method (default:  Comparator_DEFAULT_STARTING_POINT)</li>
+<li>value (value): output of execute method</li>
+<li>sample (1D np.array): reference to inputState[COMPARATOR_SAMPLE].value</li>
+<li>target (1D np.array): reference to inputState[COMPARATOR_TARGET].value</li>
+<li>comparisonFunction (Function): Function Function used to compare sample and test</li>
+<li>name (str): if it is not specified as an arg, a default based on the class is assigned in register_category</li>
+<li>prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet</li>
+</ul>
+</dd>
+<dt>Instance methods:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>_instantiate_function(context)</dt>
+<dd><p class="first last">deletes params not in use, in order to restrict outputStates to those that are computed for specified params</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>execute(variable, time_scale, params, context)</dt>
+<dd><p class="first last">executes COMPARISON_OPERATION and returns outcome values (in self.value and values of self.outputStates)</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="Comparator.Comparator.terminate_function">
+<code class="descname">terminate_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator.terminate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminate the process</p>
+<p>called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+returns output</p>
+<p>:rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="Comparator.random">
+<code class="descclassname">Comparator.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Comparator.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
