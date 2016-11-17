@@ -25,91 +25,78 @@ MonitoringMechanisms.
 Creating a LearningSignal Projection
 ------------------------------------
 
+???INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
+
+
 A LearningSignal projection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
-:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <>` of a process.
+:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <>` of a process.  Its
+``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver`` must be the
+parameterState of a Mapping projection.  When a LearningSignal is created, its full initialization is deferred [LINK]
+until its ``sender`` and ``receiver`` have been fully specified.  This means that it is possible to create a
+LearningSignal using its constructor without specifying either its ``sender`` or its ``receiver``.
 
+COMMENT:
+   CURRENT
+COMMENT
+It is not necessary to assign a ``sender``;  if none is specified when it is initialized, a MonitoringMechanism of
+the appropriate type will be created (see :ref:`Structure <LearningSignal_Structure>` below).  However,
+a LearningSignal's ``receiver`` must be specified.  One that is done, for the LearningSignal to be operational,
+initializaton must be completed by calling its ``deferred_init`` method.  This is not necessary if the LearningSignal
+is specified as part of a system, process, or a projection in the pathway of a process -- in those cases,
+initialization is completed automatically.
 
-If it is
-created with its constructor, its ``sender`` and/or ``receiver`` do not need to be specified
-
-A LearningSignal can be created with its constructor before assigning the MonitoringMechanism from which it receives
-an error signal (its ``sender``) and/or the Mapping projection to which it projects (its ``receiver``); this is
-referred to as *deferred initialization* [LINK].  However, once these have been assigned,
- to a
-specific projection
-
-XXXX
-Sender must be a MonitoringMechanism or ProcessingMechanism
-xxxx
-??TRUE:
-If the constructor is used, the ``receiver`` argument must be specified.  If it is included in a parameter
-specification, its ``receiver`` will be
-assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
-the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the LearningSignal's
-``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
-Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
-
-
-
-
-A LearningSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
-specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
-LearningSignal allocations (e.g., :doc:`EVCMechanism`).  The default is an array of values from 0.1 to 1.0
-in steps of 0.1.
+COMMENT:
+   REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
+    Initialization will
+    be  completed as soon as the LearningSignal has been assigned as the projection *from* a MonitoringMechanism (i.e.,
+    it's ``sender`` has been specified) and as the projection *to* the parameterState of a Mapping projection (i.e.,
+    its ``receiver`` has been specified).  This is handled automatically when the LearningSignal is specified as part of
+    a system, process, or projection in the pathway of a process.
+COMMENT
 
 .. _LearningSignal_Structure:
 
 Structure
 ---------
 
-*Intensity*. The LearningSignal's ``function`` uses its ``allocation`` to calculate an ``intensity``.  The default is an
-identity function (Linear(slope=1, intercept=0)), in which case the LearningSignal's ``intensity`` is equal to its
-``allocation``. The ``function`` can be assigned another :class:`TransferFunction`, or any other function that takes
-and returns a scalar value.
+POINT TO FIGURE IN PROCESS
 
-*Costs*. A LearningSignal has four cost functions that determine how the LearningSignal computes its cost, all of which
-can be customized, and the first three of which can be enabled or disabled:
+*Error Signal*.  The ``variable`` for a LearningSignal is used as its ``errorSignal``.  It uses this to compute the
+changes to the ``matrix`` parameter of the Mapping projection for which it is responsible (i.e., to which it
+projects).  The error signal comes from the LearningSignal's ``sender``, which is a MonitoringMechanism that
+evaluates the output of the ProcessingMechanism that receives the Mapping projection being trained (see :ref:`figure
+<Process_Learning_Figure>`).
 
-.. _LearningSignal_Cost_Functions:
 
-* :keyword:`INTENSTITY_COST_FUNCTION`
-    Calculates a cost based on the LearningSignal's ``intensity``.
-    It can be any :class:`TransferFunction`, or any other function  that takes and returns a scalar value.
-    The default is :class:`Exponential`.
+and is used
+an error signal
+, when it is executed, must have three components
 
-* :keyword:`ADJUSTMENT_COST_FUNCTION`
-    Calculates a cost based on a change in the LearningSignal's ``intensity`` from its last value.
-    It can be any :class:`TransferFunction`, or any other function that takes and returns a scalar value.
-    The default is :class:`Linear`.
+# DOCUMENT: self.variable has 3 items:
+#   input: <Mapping projection>.sender.value
+#              (output of the Mechanism that is the sender of the Mapping projection)
+#   output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
+#              (output of the Mechanism that is the receiver of the Mapping projection)
+#   error_signal: <Mapping projection>.receiver.owner.parameterState[MATRIX].receivesFromProjections[0].sender.value ==
+#                 self.errorSource.monitoringMechanism.value
+#                 (output of the MonitoringMechanism that is the sender of the LearningSignal
+#                  for the next Mapping projection in the Process)
 
-* :keyword:`DURATION_COST_FUNCTION`
-    Calculates an integral of the LearningSignal's ``cost``.
-    It can be any :class:`IntegratorFunction`, or any other function  that takes a list or array of two values and
-    returns a scalar value. The default is :class:`Integrator`.
+*Function*.
 
-* :keyword:`COST_COMBINATION_FUNCTION`
-    Combines the results of any cost functions that are enabled, and assigns the result as the LearningSignal's
-    ``cost``.  It can be any function that takes an array and returns a scalar value.  The default is :class:`Reduce`.
+# The default for FUNCTION is BackPropagation;  also Reinforcement -- each requires a specific types of
+ProcessingMechanisms and configuration of its MOnitoringMechanisms
 
-An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
-the total cost (``cost``).
+*Monitoring Mechanism*.  -> error source
 
-.. _LearningSignal_Toggle_Costs:
+Primary (Comparator) vs. seconadry (WeightedError)
 
-*Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
-enabled or disabled using the ``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is
-disabled, that component of the cost is not included in the LearningSignal's ``cost`` attribute. A cost function  can
-also be permanently disabled for the LearningSignal by assigning ``None`` to its argument in the constructor (or the
-corresponding entry in its params dictionary).  If a cost function is permanently disabled for a LearningSignal,
-it cannot be re-enabled using ``toggle_cost_function``.
+# DOCUMENT: if it instantiates a DefaultTrainingSignal:
+#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
+#               otherwise, use error_source.outputState (i.e., error source's primary outputState)
 
-*Additional Attributes*.  In addition to the ``intensity`` and cost attributes described above, a LearningSignal has
-``last_allocation`` and ``last_intensity`` attributes that store the values associated with its previous execution.
-Finally, it has an ``allocation_samples`` attribute, that is a  list of used by
-:ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of ``allocation`` for the LearningSignal,
-in order to adaptively adjust the parameters that it controls (e.g., :doc:`EVCMechanism`). The default value is an
-array that ranges from 0.1 to 1.0 in steps of 0.1.
+
 
 .. _LearningSignal_Execution:
 
@@ -163,92 +150,61 @@ class LearningSignalError(Exception):
 
 
 class LearningSignal(Projection_Base):
-# DOCUMENT: USES DEFERRED INITIALIZATION
-# DOCUMENT: self.variable has 3 items:
-#   input: <Mapping projection>.sender.value
-#              (output of the Mechanism that is the sender of the Mapping projection)
-#   output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
-#              (output of the Mechanism that is the receiver of the Mapping projection)
-#   error_signal: <Mapping projection>.receiver.owner.parameterState[MATRIX].receivesFromProjections[0].sender.value ==
-#                 self.errorSource.monitoringMechanism.value
-#                 (output of the MonitoringMechanism that is the sender of the LearningSignal 
-#                  for the next Mapping projection in the Process)
-# DOCUMENT: if it instantiates a DefaultTrainingSignal:
-#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
-#               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
-
     """Implements projection that modifies the matrix param of a Mapping projection
 
-    Description:
-        The LearningSignal class is a componentType in the Projection category of Function,
-        It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
-            the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
-            weight changes for the Mapping Projection's matrix parameter
+    COMMENT:
+        Description:
+            The LearningSignal class is a componentType in the Projection category of Function,
+            It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
+                the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
+                weight changes for the Mapping Projection's matrix parameter
 
-    Instantiation:
-        LearningSignal Projections are instantiated:
-            - directly by specifying a MonitoringMechanism sender and a Mapping receiver
-            - automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
+        Class attributes:
+            + className = LEARNING_SIGNAL
+            + componentType = PROJECTION
+            # + defaultSender (State)
+            # + defaultReceiver (State)
+            + paramClassDefaults (dict):
+                + FUNCTION (Function): (default: BP)
+                + FUNCTION_PARAMS:
+                    + LEARNING_RATE (value): (default: 1)
+            + paramNames (dict)
+            + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
-    Initialization arguments:
-        - sender (MonitoringMechanism) - source of projection input (default: TBI)
-        - receiver: (Mapping Projection) - destination of projection output (default: TBI)
-        - params (dict) - dictionary of projection params:
-            + FUNCTION (Function): (default: BP)
-            + FUNCTION_PARAMS (dict):
-                + LEARNING_RATE (value): (default: 1)
-        - name (str) - if it is not specified, a default based on the class is assigned in register_category
-        - prefs (PreferenceSet or specification dict):
-             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-             (see Description under PreferenceSet for details)
+        Class methods:
+            function (computes function specified in params[FUNCTION]
+    COMMENT
 
-    Parameters:
-        The default for FUNCTION is BackPropagation:
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
+    Arguments
+    ---------
+    - sender (MonitoringMechanism) - source of projection input (default: TBI)
+    - receiver: (Mapping Projection) - destination of projection output (default: TBI)
+    - params (dict) - dictionary of projection params:
+        + FUNCTION (Function): (default: BP)
+        + FUNCTION_PARAMS (dict):
+            + LEARNING_RATE (value): (default: 1)
+    - name (str) - if it is not specified, a default based on the class is assigned in register_category
+    - prefs (PreferenceSet or specification dict):
+         if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
+         dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+         (see Description under PreferenceSet for details)
 
-    ProjectionRegistry:
-        All LearningSignal projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
 
-    Naming:
-        LearningSignal projections can be named explicitly (using the name argument).  If this argument is omitted,
-        it will be assigned "LearningSignal" with a hyphenated, indexed suffix ('LearningSignal-n')
+    Attributes
+    ----------
+    + sender (MonitoringMechanism)
+    + receiver (Mapping)
+    + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
+    + paramsCurrent (dict) - set currently in effect
+    + variable (value) - used as input to projection's function
+    + value (value) - output of function
+    + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[FUNCTION_PARAMS][MATRIX]
+    + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
+    + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
+    + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
+    + prefs (PreferenceSet) - if not specified as an arg, default is created by copying LearningSignalPreferenceSet
 
-    Class attributes:
-        + className = LEARNING_SIGNAL
-        + componentType = PROJECTION
-        # + defaultSender (State)
-        # + defaultReceiver (State)
-        + paramClassDefaults (dict):
-            + FUNCTION (Function): (default: BP)
-            + FUNCTION_PARAMS:
-                + LEARNING_RATE (value): (default: 1)
-        + paramNames (dict)
-        + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-
-    Class methods:
-        function (computes function specified in params[FUNCTION]
-
-    Instance attributes:
-        + sender (MonitoringMechanism)
-        + receiver (Mapping)
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's function
-        + value (value) - output of function
-        + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[FUNCTION_PARAMS][MATRIX]
-        + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
-        + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying LearningSignalPreferenceSet
-
-    Instance methods:
-        none
     """
 
     componentType = LEARNING_SIGNAL
