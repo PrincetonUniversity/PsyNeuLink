@@ -44,18 +44,20 @@ Cost functions that are permanently disabled in this way cannot be re-enabled.
 
 A ControlSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
 specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
-ControlSignal allocations (e.g., :doc:`EVCMechanism`[LINK]).  The default is an array of values from 0.1 to 1.0 in
-steps of 0.1.
+ControlSignal allocations (e.g., :doc:`EVCMechanism`).  The default is an array of values from 0.1 to 1.0
+in steps of 0.1.
 
 .. _ControlSignal_Structure:
 
 Structure
 ---------
 
-The ControlSignal's ``function`` calculates its ``intensity`` from its ``allocation``.  The default is an identity
-function (Linear(slope=1, intercept=0)), and the ControlSignal's ``intensity`` is equal to its ``allocation``.  The
-``function`` can assigned another :class:`TransferFunction`, or any other function that takes and returns a scalar
-value.  In addition, there are four functions that determine how the ControlSignal computes its cost, all of which
+*Intensity*. The ControlSignal's ``function`` uses its ``allocation`` to calculate an ``intensity``.  The default is an
+identity function (Linear(slope=1, intercept=0)), in which case the ControlSignal's ``intensity`` is equal to its
+``allocation``. The ``function`` can be assigned another :class:`TransferFunction`, or any other function that takes
+and returns a scalar value.
+
+*Costs*. A ControlSignal has four cost functions that determine how the ControlSignal computes its cost, all of which
 can be customized, and the first three of which can be enabled or disabled:
 
 .. _ControlSignal_Cost_Functions:
@@ -77,25 +79,26 @@ can be customized, and the first three of which can be enabled or disabled:
 
 * :keyword:`COST_COMBINATION_FUNCTION`
     Combines the results of any cost functions that are enabled, and assigns the result as the ControlSignal's
-    ``cost``.  It can be any function that takes an array and returns a scalar value.  The default is Reduce.
+    ``cost``.  It can be any function that takes an array and returns a scalar value.  The default is :class:`Reduce`.
+
+An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
+the total cost (``cost``).
 
 .. _ControlSignal_Toggle_Costs:
 
-Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be enabled or disabled using the
-``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is disabled, that component of the
-cost is not included in the ControlSignal's ``cost`` attribute. A cost function  can also be permanently disabled for
-the ControlSignal by assigning ``None`` to its argument in the constructor (or the corresponding entry in its params
-dictionary).  If a cost function is permanently disabled for a ControlSignal, it cannot be re-enabled using
-``toggle_cost_function``.
+*Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
+enabled or disabled using the ``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is
+disabled, that component of the cost is not included in the ControlSignal's ``cost`` attribute. A cost function  can
+also be permanently disabled for the ControlSignal by assigning ``None`` to its argument in the constructor (or the
+corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlSignal,
+it cannot be re-enabled using ``toggle_cost_function``.
 
-In addition to its functions, a ControlSignal projection has an ``allocation_samples`` attribute.  This is a list
-by :ref:`ControlMechanisms <ControlMechanism> that sample different values of ``allocation`` in order to adaptively
-adjust the function of mechanisms in their systems (e.g., :doc:`EVCMechanism`).  The default value is an array that
-ranges from 0.1 to 1 in steps of 0.1.
-
-An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
-the total cost (``cost``), and the resulting intensity (``intensity``).  In addition, the ``last_allocation`` and
-``last_intensity`` attributes store the values associated with the previous execution of the projection.
+*Additional Attributes*.  In addition to the ``intensity`` and cost attributes described above, a ControlSignal has
+``last_allocation`` and ``last_intensity`` attributes that store the values associated with its previous execution.
+Finally, it has an ``allocation_samples`` attribute, that is a  list of used by
+:ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of ``allocation`` for the ControlSignal,
+in order to adaptively adjust the parameters that it controls (e.g., :doc:`EVCMechanism`). The default value is an
+array that ranges from 0.1 to 1.0 in steps of 0.1.
 
 .. _ControlSignal_Execution:
 
