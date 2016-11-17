@@ -350,14 +350,14 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # If specified as a MonitoringMechanism, reassign to its outputState
         if isinstance(sender, MonitoringMechanism_Base):
-            self.sender = sender.outputState
+            sender = self.sender = sender.outputState
 
         # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
         if isinstance(sender, OutputState):
-            if not isinstance(sender.value, (list, np.array)):
+            if not isinstance(sender.value, (list, np.ndarray)):
                 raise LearningSignalError("Sender for {} (outputState of MonitoringMechanism {}) "
                                           "must be a list or 1D np.array".format(self.name, sender))
-            if not np.array.ndim == 1:
+            if not np.array(sender.value).ndim == 1:
                 raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
                                           format(sender, self.name))
 
