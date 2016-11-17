@@ -57,10 +57,13 @@ Structure
 
 In addition to its ``function``, mapping projections use the following two the primary parameters:
 
+.. _Mapping_Matrix:
+
 ``matrix``
 
-  Used by ``function`` to execute a matrix transformation of its input.  It can be assigned a list of 1d arrays,
-  an np.ndarray, np.matrix, a function that resolves to one of these, or one of the following keywords:
+  Used by the Mapping projection's ``function`` to execute a matrix transformation of its input.
+  It can be assigned a list of 1d arrays, an np.ndarray, np.matrix, a function that resolves to one of these,
+  or one of the following keywords:
 
   .. _Matrix_Keywords:
 
