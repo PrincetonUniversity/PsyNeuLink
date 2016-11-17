@@ -217,6 +217,7 @@ kwAdaptiveIntegrator = "AdaptiveIntegrator"
 
 # Function:
 kwContradiction = "Contradiction"
+kwReduce = "Reduce"
 kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
 kwExponential = "Exponential"
