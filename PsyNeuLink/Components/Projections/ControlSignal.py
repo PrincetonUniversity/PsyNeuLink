@@ -657,22 +657,6 @@ class ControlSignal(Projection_Base):
         # else:
         super(ControlSignal, self)._instantiate_receiver(context=context)
 
-    # def _compute_cost(self, intensity_cost, adjustment_cost, cost_combination_function):
-    #     """Compute the current cost for the control signal, based on allocation and most recent adjustment
-    #
-    #     Computes the current cost by combining intensityCost and adjustmentCost, using the function specified by
-    #           cost_combination_function (should be of Function type; default: LinearCombination)
-    #     Returns totalCost
-    #
-    #     :parameter intensity_cost
-    #     :parameter adjustment_cost:
-    #     :parameter cost_combination_function: (should be of Function type)
-    #     :returns cost:
-    #     :rtype: scalar:
-    #     """
-    #
-    #     return cost_combination_function([intensity_cost, adjustment_cost])
-
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
@@ -721,29 +705,6 @@ class ControlSignal(Projection_Base):
 
 
         # compute cost(s)
-
-        # # MODIFIED 11/16/16 OLD:
-        # new_cost = 0
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
-        #     new_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
-        #     if self.prefs.verbosePref:
-        #         print("++ Used intensity cost")
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
-        #     self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
-        #     new_cost = self._compute_cost(self.intensityCost,
-        #                                  self.adjustmentCost,
-        #                                  self.costCombinationFunction)
-        #     if self.prefs.verbosePref:
-        #         print("++ Used adjustment cost")
-        # if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
-        #     self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
-        #     new_cost += self.durationCost
-        #     if self.prefs.verbosePref:
-        #         print("++ Used duration cost")
-        # if new_cost < 0:
-        #     new_cost = 0
-        # self.cost = new_cost
-
         # MODIFIED 11/16/16 NEW:
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
@@ -763,8 +724,6 @@ class ControlSignal(Projection_Base):
                 print("++ Used duration cost")
 
         new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
-        # new_cost = np.sum([float(intensity_cost), adjustment_cost, duration_cost])
-        # MODIFIED 11/16/16 END
 
         if new_cost < 0:
             new_cost = 0
