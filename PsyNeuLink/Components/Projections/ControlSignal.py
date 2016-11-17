@@ -714,7 +714,30 @@ class ControlSignal(Projection_Base):
                                                                                    self.allocation))
                 warnings.warn("[Intensity function {0}]".format(["ignored", "used"][self.ignoreIntensityFunction]))
 
+
         # compute cost(s)
+        # # MODIFIED 11/16/16 OLD:
+        # new_cost = 0
+        # if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+        #     new_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
+        #     if self.prefs.verbosePref:
+        #         print("++ Used intensity cost")
+        # if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+        #     self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
+        #     new_cost = self._compute_cost(self.intensityCost,
+        #                                  self.adjustmentCost,
+        #                                  self.costCombinationFunction)
+        #     if self.prefs.verbosePref:
+        #         print("++ Used adjustment cost")
+        # if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
+        #     self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
+        #     new_cost += self.durationCost
+        #     if self.prefs.verbosePref:
+        #         print("++ Used duration cost")
+        # if new_cost < 0:
+        #     new_cost = 0
+        # self.cost = new_cost
+        # MODIFIED 11/16/16 NEW:
         new_cost = 0
         if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
             new_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
@@ -735,6 +758,8 @@ class ControlSignal(Projection_Base):
         if new_cost < 0:
             new_cost = 0
         self.cost = new_cost
+        # MODIFIED 11/16/16 END
+
 
         # Report new values to stdio
         if self.prefs.verbosePref:
