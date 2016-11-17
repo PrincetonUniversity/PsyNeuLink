@@ -37,7 +37,7 @@ until its ``sender`` and ``receiver`` have been fully specified.  This means tha
 LearningSignal using its constructor without specifying either its ``sender`` or its ``receiver``.
 
 COMMENT:
-   CURRENT
+   CURRENT
 COMMENT
 It is not necessary to assign a ``sender``;  if none is specified when it is initialized, a MonitoringMechanism of
 the appropriate type will be created (see :ref:`Structure <LearningSignal_Structure>` below).  However,
@@ -45,6 +45,8 @@ a LearningSignal's ``receiver`` must be specified.  One that is done, for the Le
 initializaton must be completed by calling its ``deferred_init`` method.  This is not necessary if the LearningSignal
 is specified as part of a system, process, or a projection in the pathway of a process -- in those cases,
 initialization is completed automatically.
+
+THIS IS A TEST
 
 COMMENT:
    REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
