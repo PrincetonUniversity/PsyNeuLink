@@ -1,0 +1,424 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Run &mdash; PsyNeuLink 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Run</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Run.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-Run">
+<span id="run"></span><h1>Run<a class="headerlink" href="#module-Run" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">run</span></code> function is used for executing a mechanism, process or system.  It can be called directly, however,
+it is typically invoked by calling the <code class="docutils literal"><span class="pre">run</span></code> method of the object to be run.  It  executes an object by calling the
+object&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method.  While an object&#8217;s execute method can be called directy, using <code class="docutils literal"><span class="pre">run</span></code> is much easier
+because it:</p>
+<blockquote>
+<div><ul class="simple">
+<li>allows multiple rounds of execution to be run in sequence; the <code class="docutils literal"><span class="pre">execute</span></code> method of an object
+runs only a single execution of the object);</li>
+<li>uses simpler formats for specifying inputs (see below);</li>
+<li>manages timing factors (such as updating the <code class="docutils literal"><span class="pre">CentralClock</span></code> and presenting inputs at the correct time
+for execution (see below).</li>
+<li>automatically aggregates results across executions and stores these in the results attribute of the object.</li>
+</ul>
+</div></blockquote>
+<p>There are a few concepts to understand that will help in using the <code class="docutils literal"><span class="pre">run</span></code> function.  These are discussed below.</p>
+<div class="section" id="timing">
+<span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
+<p>When <code class="docutils literal"><span class="pre">run</span></code> is called, it executes objects within the scope of execution.  For a mechanism [LINK], the scope of
+execution is simply that mechanism.  For a process [LINK], the scope of execution is all of the mechanisms specified
+in its <code class="docutils literal"><span class="pre">pathway</span></code> [LINK] parameter.  For a system [LINK], the scope of execution is all of the mechanisms in the
+processes specified in the system&#8217;s <code class="docutils literal"><span class="pre">processes</span></code> parameter.</p>
+<p>PsyNeuLink supports two time scales for executing objects:<code class="docutils literal"><span class="pre">time_step</span></code> and <code class="docutils literal"><span class="pre">trial</span></code>.  Every mechanism in
+PsyNeuLink defines its execution at one or both of these time scales, and its current mode of execution can be set
+using its <code class="docutils literal"><span class="pre">TimeScale</span></code> [LINK] parameter.</p>
+<ul class="simple">
+<li><strong>time_step</strong>:  this mode of execution is a mechanism&#8217;s closest approximation to continuous, or &#8220;real time&#8221;
+processing.  Execution of a time_step is defined as a single execution of all objects in the scope of
+execution for at their time_step time scale.  Mechanisms called upon to execute a time_step that do not support
+that time scale of execution have the option of generating an exception, being ignored, or providing their trial
+mode response, either on the first time_step, every time_step, or the last time_step in the sequence being run
+(see Timing [LINK] for further details).</li>
+<li><strong>trial</strong>: this mode of execution is defined as the &#8220;ballistic&#8221; execution of a mechanism to a state that would
+have been achieved with time_step execution to a specified criterion.  The criterion can be specified in terms of
+the number of time_steps, or a condition to be met by the mechanism&#8217;s output.  It is up to the mechanism how it
+implements its trial mode of execution (i.e., whether this is done by internal numerical iteration or an analytic
+calculation). A trial of execution is defined as the execution of a trial of all of the objects in the scope of
+execution.</li>
+</ul>
+<p>The TimeScale argument to <code class="docutils literal"><span class="pre">run</span></code> determines the time scale for each round of execution: a time_step or a trial.
+When a process is run, each  mechanism is executed in the order that it appears in the <code class="docutils literal"><span class="pre">pathway</span></code> parameter of the
+process, once per round of execution.  When a system is run, the order of execution is determined by the system&#8217;s `
+<cite>executionList`</cite>, which is based on a graph analysis of the system&#8217;s processes that determines the dependencies
+among its mechanisms (both within and  between processes). Execution of the mechanisms in a system also depends on
+the <code class="docutils literal"><span class="pre">phaseSpec</span></code> of each mechanism: this determines <em>when</em> in an execution sequence it should be run.  The
+<code class="docutils literal"><span class="pre">CentralClock``[LINK]</span> <span class="pre">is</span> <span class="pre">used</span> <span class="pre">to</span> <span class="pre">control</span> <span class="pre">timing,</span> <span class="pre">so</span> <span class="pre">executing</span> <span class="pre">a</span> <span class="pre">system</span> <span class="pre">requires</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">``CentralClock</span></code>
+be appropriately updated.</p>
+<p>The <code class="docutils literal"><span class="pre">run</span></code> function handles all of the above factors automatically.</p>
+</div>
+<div class="section" id="inputs">
+<span id="run-inputs"></span><h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
+<p>The primary purpose of the <code class="docutils literal"><span class="pre">run</span></code> function is to present the inputs for each round of execution to the inputStates of
+the relevant mechanisms.  The <code class="docutils literal"><span class="pre">inputs</span></code> argument is used to specify those input values.  For a mechanism, this is the
+input values for each of the mechanism&#8217;s inputStates.  For a process or system, it assigns the inputs to the
+inputState(s) of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism(s) [LINK].  Input values can be specified either as a nested list or
+an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
+(number of axes) for an ndarray:</p>
+<ul class="simple">
+<li><strong>Number of rounds of execution</strong>.  If the <code class="docutils literal"><span class="pre">inputs</span></code> argument contains the input for more than one round of
+execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
+is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
+used for the next relevant factor in the list below.</li>
+<li><strong>Number of mechanisms.</strong> If run is used for a system, and it  has more than one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, then
+the next level of nesting of a list, or next higher axis of an ndarray, is used for the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms,
+with each item containing the inputs for a given <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism within a round.  This factor is not
+relevant when run is used for a single mechanism, a process (which only ever has one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism),
+or a system that has only one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</li>
+<li><strong>Number of inputStates.</strong> In general, mechanisms have a single (&#8220;primary&#8221;) inputState [LINK];  however, some types
+of mechanisms can have more than one (e.g., ComparatorMechanisms [LINK] have two: one for their <code class="docutils literal"><span class="pre">sample_input</span></code> and
+the other for their <code class="docutils literal"><span class="pre">target_input</span></code>).  If any <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in a process or system has more than one
+inputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the set of
+inputStates for each mechanism.</li>
+<li><strong>Number of elements for the value of an inputState.</strong> The input to an inputState can be a single element (e.g.,
+a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an inputState is only a
+single element, it should nevertheless always be specified as a list or a 1d np.array (it is internally converted to
+the latter by PsyNeuLink).  PsyNeuLink can usually parse single-element inputs specified as a stand-alone value
+(e.g., as a number not in a list or ndarray).  Nevertheless, it is best to embed such inputs in a single-element
+list or a 1d array, both for clarity and to insure consistent treatment of nested lists and ndarrays.  If this
+convention is followed, then the number of elements for a given input should not affect nesting of lists or
+dimensionality (number of axes) of ndarrays of an inputs argument.</li>
+</ul>
+<p>With these factors in mind, inputs can be specified in the simplest form possible (least number of nestings for a list,
+or lowest dimension of an ndarray).  Inputs can be specified using one of two formats:  <em>execution</em> format or
+<em>mechanism</em> format.</p>
+<p><strong>Sequence format</strong> <em>(List[values] or ndarray):</em></p>
+<blockquote>
+<div><p>This uses a nested list or ndarray to fully specify the input for each round of execution in a sequence.
+The following provides a description of the sequeunce format for all of the combinations of the factors listed
+above. The figure shows examples.</p>
+<p><em>Lists:</em> if there is more than one round, then the outermost level of the list is used for the sequence of
+executions.  If there is only one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism and it has only one inputState (the most common
+case), then is a single sublist is used for the input of each round.  If the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism has more
+than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a
+sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than
+one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
+input for that mechanism.  If there is more than one mechanism, and any have more than one inputState,
+then a sublist is used for each mechanism for each round, within which a sublist is used for each
+inputState of the corresponding mechanism, and inside that a sublist is used for the input for each inputState.</p>
+<p><em>ndarray:</em>  axis 0 is used for the first factor (round, mechanism, inputState or input) for which there is only one
+item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there is
+more than one round, only one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and that has only one inputState (the most common case),
+then axis 0 is used for round, and axis 1 for inputs per round.  In the extreme, if there are multiple rounds,
+more than one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and more than on inputState for any of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms,
+then axis 0 is used for rounds, axis 1 for mechanisms within rouund, axis 2 for inputStates of each mechanim, and
+axis 3 for the input to each inputState of a mechanism.  Note that if <em>any</em> mechanism being run (directly, or as
+one of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms of a process or system) has more than one inputState, then an axis must be
+committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
+(i.e., even for those mechanisms that have a single inputState).</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/Sequence_format_input_specs_fig.png"><img alt="Example input specifications in sequence format" src="_images/Sequence_format_input_specs_fig.png" style="width: 1553.25px; height: 1622.25px;" /></a>
+<p class="caption"><span class="caption-text">Example input specifications in sequence format</span></p>
+</div>
+</div></blockquote>
+<dl class="docutils">
+<dt><strong>Mechanism format</strong> <em>(Dict[mechanism, List[values] or ndarray]):</em></dt>
+<dd><p class="first">This provides a simpler format for specifying inputs.  It uses a dictionary, each entry of which is the sequence of
+inputs for a given <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.  The key for each entry is the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and the
+value contains either a list or ndarray specifying the sequence of inputs for that mechanism, one for each round
+of execution.  If a list is used, and the mechanism has more than one inputState, then a sublist is used in each
+item of the list to specify the inputs for each of the mechanism&#8217;s inputStates for that round.  If an ndarray is
+used, axis 0 is used for the sequence of rounds. If the mechanism has a single inputState, then axis 1 is used for
+the input for each round.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates,
+and axis 2 is used for the input to each inputState for each round.</p>
+<div class="last figure align-center" id="id2">
+<img alt="Mechanism format input specification" src="_images/Mechanism_format_input_specs_fig.png" />
+<p class="caption"><span class="caption-text">Mechanism format input specification</span></p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="initial-values">
+<span id="run-initial-values"></span><h3>Initial Values<a class="headerlink" href="#initial-values" title="Permalink to this headline">¶</a></h3>
+<p>Any mechanism that is the source (sender) of a projection that closes a processing loop in a process or system, and
+that is not an <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, is designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>. [LINK]  An initial value
+can be assigned to such mechanisms, that will be used to initialize the process or system when it is first run.  These
+values are specified in the <code class="docutils literal"><span class="pre">initial_values</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>, as a dict.  The key for each entry must be a
+mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>, and its value an input for the mechanism to be used as its
+initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
+must equal the number of inputStates of the mechanism, and the size of each value must match that of the variable
+for the corresponding inputState.</p>
+</div>
+<div class="section" id="targets">
+<span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
+<p>If a process or system uses learning, then target values must be provided (in the <code class="docutils literal"><span class="pre">targets</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>)*[]:
+Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
+level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
+must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.</p>
+<dl class="function">
+<dt id="Run.run">
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10d466908&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10d466978&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10d466a58&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10d466a90&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10d466b38&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10d466ba8&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10d466c18&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10d466c88&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10d466cf8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a sequence of executions for a process or system</p>
+<p>First, validate inputs.  Then, for each round of execution:</p>
+<ul>
+<li><p class="first">call call_before_trial if specified;</p>
+</li>
+<li><p class="first">for each time_step in the trial:</p>
+<blockquote>
+<div><ul class="simple">
+<li>call call_before_time_step if specified;</li>
+<li>call <code class="docutils literal"><span class="pre">object.execute</span></code> with inputs, and append result to <code class="docutils literal"><span class="pre">object.results</span></code>;</li>
+<li>call call_after_time_step if specified;</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">call call_after_trial if specified.</p>
+</li>
+</ul>
+<p>Return <code class="docutils literal"><span class="pre">object.results</span></code>.</p>
+<p>The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the inner-most dimension must equal the length of object.variable (i.e., the input to the object);</li>
+<li>for mechanism format, the length of the value of all entries must be equal (== number of executions);</li>
+</ul>
+</div></blockquote>
+<p>The targets argument must be the same length as the inputs argument.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ul class="last simple">
+<li>if num_executions is <code class="docutils literal"><span class="pre">None</span></code>, a number of executions is run equal to the length of the input
+(i.e., size of axis 0)</li>
+</ul>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value for a single execution</em>) &#8211; input for each execution in a sequence (see <code class="docutils literal"><span class="pre">run</span></code> function [LINK] for detailed description of formatting
+requirements and options).</li>
+<li><strong>reset_clock</strong> (<em>bool : default True</em>) &#8211; reset <code class="docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
+<li><strong>initialize</strong> (<em>bool default False</em>) &#8211; calls the <code class="docutils literal"><span class="pre">initialize</span></code> method of the system prior to a sequence of executions.</li>
+<li><strong>initial_values</strong> (Dict[Mechanism, List[input] or np.ndarray(input)] : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; initial values for mechanisms designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> [LINK].</li>
+<li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; target values for monitoring mechanisms for each execution (used for learning).
+The length must be equal to inputs.</li>
+<li><strong>learning</strong> (bool :  default <code class="docutils literal"><span class="pre">None</span></code>) &#8211; enables or disables learning during execution.
+If it is not specified, current state is left intact.
+If True, learning is forced on; if False, learning is forced off.</li>
+<li><strong>call_before_trial</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each trial in the sequence is executed.</li>
+<li><strong>call_after_trial</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each trial in the sequence is executed.</li>
+<li><strong>call_before_time_step</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each time_step is executed.</li>
+<li><strong>call_after_time_step</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each time_step is executed.</li>
+<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;object&gt;.results</strong> &#8211; list of the values, for each execution, of the outputStates for a mechanism run directly,
+or of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms for the process or system run</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="Run.random">
+<code class="descclassname">Run.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Run.random" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jon Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
