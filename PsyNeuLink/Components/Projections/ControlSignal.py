@@ -288,7 +288,8 @@ class ControlSignal(Projection_Base):
     ----------
 
     COMMENT:
-    ControlSignal_General_Attributes
+      ControlSignal_General_Attributes
+    COMMENT
 
     allocation : float : default: defaultControlAllocation
         value used as variable for projection's ``function`` to determine ``intensity``.
@@ -314,7 +315,9 @@ class ControlSignal(Projection_Base):
     totalCostFunction : TransferFunction : default Linear
         combines intensity and adjustment costs into reported cost
 
-        .. _ControlSignal_State_Attributes:
+    COMMENT:
+        ControlSignal_State_Attributes:
+    COMMENT
 
     value : float
         during initialization, assigned keyword string (either kwInit or kwDeferredInit);
@@ -335,7 +338,9 @@ class ControlSignal(Projection_Base):
     cost : float
         current value of total cost.
 
-        .. _ControlSignal_History_Attributes:
+    COMMENT:
+        ControlSignal_History_Attributes:
+    COMMENT
 
     last_allocation : float
         allocation for last execution of the projection.
