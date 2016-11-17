@@ -180,7 +180,7 @@ class Comparator(MonitoringMechanism_Base):
     def _validate_variable(self, variable, context=None):
 
         if len(variable) != 2:
-            if kwInit in context:
+            if INITIALIZING in context:
                 raise ComparatorError("Variable argument in initializaton of {} must be a two item list or array".
                                             format(self.name))
             else:
@@ -188,7 +188,7 @@ class Comparator(MonitoringMechanism_Base):
                                             "must be a two item list or array".format(self.name))
 
         if len(variable[0]) != len(variable[1]):
-            if kwInit in context:
+            if INITIALIZING in context:
                 raise ComparatorError("The two items in variable argument used to initialize {} "
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))

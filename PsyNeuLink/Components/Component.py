@@ -277,7 +277,7 @@ class Component(object):
         # # MODIFIED 8/14/16 NEW:
         # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
         # try:
-        #     if self.value is kwDeferredInit:
+        #     if self.value is DEFERRED_INITIALIZATION:
         #         defer_init = True
         # except AttributeError:
         #     pass
@@ -287,7 +287,7 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        context = context + kwInit + ": " + kwFunctionInit
+        context = context + INITIALIZING + ": " + kwFunctionInit
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = NotImplemented
@@ -444,12 +444,12 @@ class Component(object):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.value is kwDeferredInit:
+        if self.value is DEFERRED_INITIALIZATION:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
-            self.value = kwInit
+            self.value = INITIALIZING
 
             del self.init_args['self']
 

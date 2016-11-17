@@ -17,8 +17,7 @@ Overview
 A ControlSignal projection takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to
 compute its ``intensity`` that is assigned as the ControlSignal's value.  Its value is used to modify the value of a
 parameterState (its ''receiver'') associated with the parameter of a function of a ProcessingMechanism.  A
-ControlSignal also has an associated ``cost`` that is calculated based on its intensity, and optionally the time
-course of its intensity.
+ControlSignal also has an associated ``cost`` that is calculated based on its intensity and/or its time course.
 
 .. _ControlSignal_Creating_A_ControlSignal_Projection:
 
@@ -28,70 +27,72 @@ Creating a ControlSignal Projection
 A ControlSignal projection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification for the
 :ref:`parameter of a mechanism's function <Mechanism_Assigning_A_Control_Signal>`.  If the constructor is used,
-the ``receiver`` argument must be specified.  If it is included in a parameter specification, its receiver will be
+the ``receiver`` argument must be specified.  If it is included in a parameter specification, its ``receiver`` will be
 assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
-the receiver.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal's
+the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal's
 ``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
 Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
-The cost of a ControlSignal is calculated from its intensity, using four
+The cost of a ControlSignal is calculated from its ``intensity``, using four
 :ref:`cost functions <ControlSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
 or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
-so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  A cost function can
-be permanently disabled for its  ControlSignal by assigning ``None`` to the argument for that function in its
-constructor (or the appropriate entry in its params dictionary).
+so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost
+functions can be :ref:`enabled or disabled <ControlSignal_Toggle_Costs>`, to select which make contributions to the
+ControlSignal's ``cost``.  A cost function can also be permanently disabled for its ControlSignal by assigning
+``None`` to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
+Cost functions that are permanently disabled in this way cannot be re-enabled.
 
-A ControlSignal projection takes an allocation_samples specification as its input.  This must be an array that
-specifies the allocation values that will be sampled by ControlMechanisms that adaptively adjust ControlSignal
-allocations (e.g., :doc:`EVCMechanism`[LINK]).  The default is an array of values from 0.1 to 1.0 with a step size of
-0.1.
+A ControlSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
+specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
+ControlSignal allocations (e.g., :doc:`EVCMechanism`[LINK]).  The default is an array of values from 0.1 to 1.0 in
+steps of 0.1.
 
 .. _ControlSignal_Structure:
 
 Structure
 ---------
 
-The ControlSignal's ``function`` calculates its intensity from its allocation.  The default is an identity function
-(Linear(slope=1, intercept=0)), and the ControlSignal's intensity is equal to its allocation.  However, this can be
-assigned to any :class:`TransferFunction`.  In addition, there are four functions that determine how the
-ControlSignal computes its cost:
+The ControlSignal's ``function`` calculates its ``intensity`` from its ``allocation``.  The default is an identity
+function (Linear(slope=1, intercept=0)), and the ControlSignal's ``intensity`` is equal to its ``allocation``.  The
+``function`` can assigned another :class:`TransferFunction`, or any other function that takes and returns a scalar
+value.  In addition, there are four functions that determine how the ControlSignal computes its cost, all of which
+can be customized, and the first three of which can be enabled or disabled:
 
 .. _ControlSignal_Cost_Functions:
 
-* ``INTENSTITY_COST_FUNCTION`` - calculates the contribution of the ControlSignal's current
-  intensity to its ``cost``.  This must be a function that takes and returns a scalar value. If it is a
-  PsyNeuLink :doc:`Function`, it must be from the subclass :class:`TransferFunction`.  The default is
-  :class:`Exponential`.
+* :keyword:`INTENSTITY_COST_FUNCTION`
+    Calculates a cost based on the ControlSignal's ``intensity``.
+    It can be any :class:`TransferFunction`, or any other function  that takes and returns a scalar value.
+    The default is :class:`Exponential`.
 
-COMMENT:
-   HOW IS DURATION MEASURED??  TIME_STEPS??
-COMMENT
-* ``ADJUSTMENT_COST_FUNCTION`` - calculates the contribution of the ControlSignal's duration
-  to its ``cost``.  This must be a function that takes and returns a scalar value. If it is a
-  PsyNeuLink :doc:`Function`, it must be from the subclass :class:`TransferFunction`.  The default is :class:`Linear`.
+* :keyword:`ADJUSTMENT_COST_FUNCTION`
+    Calculates a cost based on a change in the ControlSignal's ``intensity`` from its last value.
+    It can be any :class:`TransferFunction`, or any other function that takes and returns a scalar value.
+    The default is :class:`Linear`.
 
-COMMENT:
-   HOW IS ADJUSTMENT MEASURED??  TIME_STEPS??
-COMMENT
-* ``DURATION_COST_FUNCTION`` - calculates the contribution that changes in the ControlSignal's
-  intensity makes to its ``cost``.  This must be a function that takes and returns a scalar value. If it is a
-  PsyNeuLink :doc:`Function`, it must be from the subclass :class:`TransferFunction`.  The default is :class:`Linear`.
+* :keyword:`DURATION_COST_FUNCTION`
+    Calculates an integral of the ControlSignal's ``cost``.
+    It can be any :class:`IntegratorFunction`, or any other function  that takes a list or array of two values and
+    returns a scalar value. The default is :class:`Integrator`.
 
-* ``TOTAL_COST_FUNCTION`` - combines the intensity, adjustment, and duration contributions to
-  determine the ControlSigna's current total ``cost``. This must be a function that takes an array and returns a scalar
-  value. If it is a PsyNeuLink :doc:`Function`, it must be from the subclass :class:`CombinationFunction`.  The
-  default is :class:`LinearCombination`.
+* :keyword:`COST_COMBINATION_FUNCTION`
+    Combines the results of any cost functions that are enabled, and assigns the result as the ControlSignal's
+    ``cost``.  It can be any :class:`CombinationFunction`, or any other function that takes an array and returns a
+    scalar value.  The default is :class:`LinearCombination`.
 
-A cost function (other than the TOTAL_COST_FUNTION can be permanently disabled for a ControlSignal by assigning
-``None`` to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
-It can also be "manually" disabled using the ``toggle_cost_function method to turn it :keyword:`OFF`, and manually
-re-enabled to turn it :keyword:`ON`.  Note, however, that a cost function that has been permanently disabled (by
-assigning ``None`` in the constructor) can not be enabled using ``toggle_cost_function``.
+.. _ControlSignal_Toggle_Costs:
 
-In addition to its functions, a ControlSignal projection has an ``allocation_samples`` array attribute.  This is used by
-:ref:`ControlMechanisms <ControlMechanism> that sample different allocation values in order to adaptively adjust the
-function of mechanisms in their systems (e.g., :doc:`EVCMechanism`).  The default value is an array that ranges from
-0.1 to 1 in step sizes of 0.1.
+Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be enabled or disabled using the
+``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is disabled, that component of the
+cost is not included in the ControlSignal's ``cost`` attribute. A cost function  can also be permanently disabled for
+the ControlSignal by assigning ``None`` to its argument in the constructor (or the corresponding entry in its params
+dictionary).  If a cost function is permanently disabled for a ControlSignal, it cannot be re-enabled using
+``toggle_cost_function``.
+
+In addition to its functions, a ControlSignal projection has an ``allocation_samples`` attribute.  This is a list
+by :ref:`ControlMechanisms <ControlMechanism> that sample different values of ``allocation`` in order to adaptively
+adjust the function of mechanisms in their systems (e.g., :doc:`EVCMechanism`).  The default value is an array that
+ranges from 0.1 to 1 in steps of 0.1.
 
 An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
 the total cost (``cost``), and the resulting intensity (``intensity``).  In addition, the ``last_allocation`` and
@@ -102,10 +103,10 @@ the total cost (``cost``), and the resulting intensity (``intensity``).  In addi
 Execution
 ---------
 
-A ControlSignal projection uses its ``function`` to compute the intensity (value) of the ControlSignal, and its
-cost functions [LINK] use this to compute the total ``cost`` associated with the current ``intensity``.  The
-intensity is then assigned as the projection's ``value``, and used by the parmaterState to which it projects to
-modify the corresponding parameter of the owner mechanism's function.
+A ControlSignal projection uses its ``function`` to compute its ``intensity``, and its :ref:`cost functions
+<ControlSignal_Cost_Functions> use the ``intensity`` to compute the its ``cost``.  The ``intensity`` is assigned as
+the ControlSignal projection's ``value``, which is used by the parmaterState to which it projects to modify the
+corresponding parameter of the owner mechanism's function.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlSignal projection are not applied until the
@@ -141,11 +142,11 @@ CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
 DURATION_COST_FUNCTION = 'duration_cost_function'
-TOTAL_COST_FUNCTION = 'total_cost_function'
+COST_COMBINATION_FUNCTION = 'cost_combination_function'
 costFunctionNames = [INTENSITY_COST_FUNCTION,
                      ADJUSTMENT_COST_FUNCTION,
                      DURATION_COST_FUNCTION,
-                     TOTAL_COST_FUNCTION]
+                     COST_COMBINATION_FUNCTION]
 
 # Attributes / KVO keypaths
 # kpLog = "Control Signal Log"
@@ -196,8 +197,8 @@ class ControlSignal(Projection_Base):
      function=Linear                                 \
      intensity_cost_function=Exponential,            \
      adjustment_cost_function=Linear,                \
-     duration_cost_function=Linear,                  \
-     total_cost_function=LinearCombination,          \
+     duration_cost_function=Integrator,              \
+     cost_combination_function=LinearCombination,    \
      allocation_samples=DEFAULT_ALLOCATION_SAMPLES,  \
      params=None,                                    \
      name=None,                                      \
@@ -247,27 +248,27 @@ class ControlSignal(Projection_Base):
         or be able to be determined by the context in which the ControlSignal is created or assigned.
 
     function : TransferFunction : default Linear
-        Converts allocation into intensity of the ControlSignal.
+        Converts the ControlSignal's ``allocation`` into its ``intensity`` (equal to its ``value``).
 
     intensity_cost_function : Optional[TransferFuntion] : default Exponential
-        Converts intensity into its contribution to the cost.
+        Calculates a cost based on the ControlSignal's ``intensity``.
         It can be disabled permanently for the ControlSignal by assigning ``None``.
 
     adjustment_cost_function : Optiona[TransferFunction] : default Linear
-        Converts changes in intensity into a contribution to the cost.
+        Calculates a cost based on a change in the ControlSignal's ``intensity`` from its last value.
         It can be disabled permanently for the ControlSignal by assigning ``None``.
 
     duration_cost_function : Optional[TransferFunction] : default Linear
-        Converts duration of control signal into a contribution to the cost.
+        Calculates an integral of the ControlSignal's ``cost``.
         It can be disabled permanently for the ControlSignal by assigning ``None``.
 
-    total_cost_function : CombinationFunction : default LinearCombination
-        Combines intensity and adjustment costs into reported cost.
+    cost_combination_function : CombinationFunction : default LinearCombination
+        Combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
 
-    allocation_samples : list : default DEFAULT_ALLOCATION_SAMPLES
+    allocation_samples : list : default :keyword:`DEFAULT_ALLOCATION_SAMPLES`
         Set of values used by ControlMechanisms that sample different allocation values in order to adaptively adjust
-        the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in step
-        sizes of 0.1.
+        the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in steps
+        of 0.1.
 
     params : Optional[Dict[param keyword, param value]]
         Dictionary that can be used to specify the parameters for the projection, parameters for its function,
@@ -292,7 +293,7 @@ class ControlSignal(Projection_Base):
     COMMENT
 
     allocation : float : default: defaultControlAllocation
-        value used as variable for projection's ``function`` to determine ``intensity``.
+        value used as ``variable`` for projection's ``function`` to determine ``intensity``.
 
     allocationSamples : list : DEFAULT_SAMPLE_VALUES
         set of values used by ControlMechanisms that sample different allocation values in order to
@@ -301,52 +302,52 @@ class ControlSignal(Projection_Base):
         .. _ControlSignal_Function_Attributes:
 
     function : TransferFunction :  default Linear
-        converts allocation into intensity that is provided as output to receiver of projection.
+        converts ``allocation`` into ``intensity`` that is provided as output to receiver of projection.
 
     intensityCostFunction : TransferFunction : default Exponential
-        converts intensity into its contribution to the cost
+        calculates "intensityCost`` from the curent value of ``intensity``.
 
     adjustmentCostFunction : TransferFunction : default Linear
-        converts changes in intensity into a contribution to the cost.
+        calculates ``adjustmentCost`` based on the change in ``intensity`` from its last value.
 
-    durationCostFunction : TransferFunction : default Linear
-        converts duration of control signal into its contribution to the cost.
+    durationCostFunction : IntegratorFunction : default Linear
+        calculates an integral of the ControlSignal's ``cost``.
 
-    totalCostFunction : TransferFunction : default Linear
-        combines intensity and adjustment costs into reported cost
+    costCombinationFunction : CombinationFunction : default LinearCombination
+        combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
 
     COMMENT:
         ControlSignal_State_Attributes:
     COMMENT
 
     value : float
-        during initialization, assigned keyword string (either kwInit or kwDeferredInit);
+        during initialization, assigned keyword string (either INITIALIZING or DEFERRED_INITIALIZATION);
         during execution, returns value of ``intensity``.
 
     intensity : float
         output of ``function``, used to determine controlled parameter of task.
 
     intensityCost : float
-        cost associated with current intensity.
+        cost associated with current ``intensity``.
 
     adjustmentCost : float
-        cost associated with last change to intensity.
+        cost associated with last change to ``intensity``.
 
     durationCost
-        cost associated with temporal integral of intensity.
+        intregral of ``cost``.
 
     cost : float
-        current value of total cost.
+        current value of ControlSignal's ``cost``;  combined result of all cost functions that are enabled.
 
     COMMENT:
         ControlSignal_History_Attributes:
     COMMENT
 
     last_allocation : float
-        allocation for last execution of the projection.
+        ``allocation`` for last execution of the ControlSignal.
 
     last_intensity : float
-        intensity calculated for last execution of the projection.
+        ``intensity`` for last execution of the ControlSignal.
 
         .. _ControlSignal_Cost_Functions:
 
@@ -375,8 +376,8 @@ class ControlSignal(Projection_Base):
                  function=Linear(slope=1, intercept=0),
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=Linear,
-                 total_cost_function:tc.optional(is_function_type)=LinearCombination,
+                 duration_cost_function:tc.optional(is_function_type)=Integrator,
+                 cost_combination_function:tc.optional(is_function_type)=LinearCombination,
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
@@ -388,7 +389,7 @@ class ControlSignal(Projection_Base):
                                                   intensity_cost_function=intensity_cost_function,
                                                   adjustment_cost_function=adjustment_cost_function,
                                                   duration_cost_function=duration_cost_function,
-                                                  total_cost_function=total_cost_function,
+                                                  cost_combination_function=cost_combination_function,
                                                   allocation_samples=allocation_samples)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
@@ -402,10 +403,10 @@ class ControlSignal(Projection_Base):
             del self.init_args[INTENSITY_COST_FUNCTION]
             del self.init_args[ADJUSTMENT_COST_FUNCTION]
             del self.init_args[DURATION_COST_FUNCTION]
-            del self.init_args[TOTAL_COST_FUNCTION]
+            del self.init_args[COST_COMBINATION_FUNCTION]
 
             # Flag for deferred initialization
-            self.value = kwDeferredInit
+            self.value = DEFERRED_INITIALIZATION
             return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
@@ -447,23 +448,23 @@ class ControlSignal(Projection_Base):
                 cost_function = cost_function()
 
             # cost_function is Function object:
-            #     TOTAL_COST_FUNCTION must be CombinationFunction
+            #     COST_COMBINATION_FUNCTION must be CombinationFunction
             #     others must be TransferFunction
             if isinstance(cost_function, Function):
-                if cost_function_name == TOTAL_COST_FUNCTION:
+                if cost_function_name == COST_COMBINATION_FUNCTION:
                     if not isinstance(cost_function, CombinationFunction):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
-                                                 format(TOTAL_COST_FUNCTION, cost_function))
+                                                 format(COST_COMBINATION_FUNCTION, cost_function))
                 elif not isinstance(cost_function, TransferFunction):
                     raise ControlSignalError("Assignment of Function to {} ({}) must be a TransferFunction".
                                              format(cost_function_name, cost_function))
 
             # cost_function is custom-specified function
-            #     TOTAL_COST_FUNCTION must accept an array
+            #     COST_COMBINATION_FUNCTION must accept an array
             #     others must accept a scalar
             #     all must return a scalar
             elif isinstance(cost_function, function_type):
-                if cost_function_name == TOTAL_COST_FUNCTION:
+                if cost_function_name == COST_COMBINATION_FUNCTION:
                     test_value = [1, 1]
                 else:
                     test_value = 1
@@ -651,21 +652,21 @@ class ControlSignal(Projection_Base):
         # else:
         super(ControlSignal, self)._instantiate_receiver(context=context)
 
-    def _compute_cost(self, intensity_cost, adjustment_cost, total_cost_function):
+    def _compute_cost(self, intensity_cost, adjustment_cost, cost_combination_function):
         """Compute the current cost for the control signal, based on allocation and most recent adjustment
 
         Computes the current cost by combining intensityCost and adjustmentCost, using the function specified by
-              total_cost_function (should be of Function type; default: LinearCombination)
+              cost_combination_function (should be of Function type; default: LinearCombination)
         Returns totalCost
 
         :parameter intensity_cost
         :parameter adjustment_cost:
-        :parameter total_cost_function: (should be of Function type)
+        :parameter cost_combination_function: (should be of Function type)
         :returns cost:
         :rtype: scalar:
         """
 
-        return total_cost_function([intensity_cost, adjustment_cost])
+        return cost_combination_function([intensity_cost, adjustment_cost])
 
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
@@ -723,7 +724,7 @@ class ControlSignal(Projection_Base):
             self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
             new_cost = self._compute_cost(self.intensityCost,
                                          self.adjustmentCost,
-                                         self.totalCostFunction)
+                                         self.costCombinationFunction)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
         if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
@@ -827,7 +828,9 @@ class ControlSignal(Projection_Base):
         #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
     def toggle_cost_function(self, cost_function_name, assignment=ON):
-        """Enables/disables use of a cost function
+        """Enables/disables use of a cost function.
+
+        ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlSignal_Structure>`).
         """
 
         if cost_function_name == INTENSITY_COST_FUNCTION:
@@ -836,8 +839,8 @@ class ControlSignal(Projection_Base):
             cost_option = ControlSignalCostOptions.DURATION_COST
         elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
             cost_option = ControlSignalCostOptions.ADJUSTMENT_COST
-        elif cost_function_name == TOTAL_COST_FUNCTION:
-            raise ControlSignalError("{} cannot be disabled".format(TOTAL_COST_FUNCTION))
+        elif cost_function_name == COST_COMBINATION_FUNCTION:
+            raise ControlSignalError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
         else:
             raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
 
@@ -868,7 +871,7 @@ class ControlSignal(Projection_Base):
     #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
     #
     def get_costs(self):
-        """Return three-element list with intensityCost, adjustmentCost and durationCost
+        """Return three-element list with the values of ``intensityCost``, ``adjustmentCost`` and ``durationCost``
         """
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
 

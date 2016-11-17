@@ -77,7 +77,7 @@ kwSeparator = ': '
 kwSeparatorBar = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
-kwInit = " INITIALIZING "  # Used as context for Log
+INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
@@ -147,7 +147,7 @@ PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
 kwFunctionInit = 'Function.__init__'
-kwDeferredInit = 'Deferred Init'
+DEFERRED_INITIALIZATION = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION

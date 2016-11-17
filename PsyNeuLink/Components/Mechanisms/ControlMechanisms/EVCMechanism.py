@@ -457,7 +457,7 @@ class EVCMechanism(ControlMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=componentType+kwInit):
+                 context=componentType+INITIALIZING):
 
         prediction_mechanism_params = prediction_mechanism_params or {MONITORED_OUTPUT_STATES:None}
 

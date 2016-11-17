@@ -252,7 +252,7 @@ class Mapping(Projection_Base):
             del self.init_args['param_modulation_operation']
 
             # Flag for deferred initialization
-            self.value = kwDeferredInit
+            self.value = DEFERRED_INITIALIZATION
             return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
