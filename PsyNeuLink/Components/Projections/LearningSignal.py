@@ -37,7 +37,7 @@ until its ``sender`` and ``receiver`` have been fully specified.  This means tha
 LearningSignal using its constructor without specifying either its ``sender`` or its ``receiver``.
 
 COMMENT:
-   CURRENT
+   CURRENT
 COMMENT
 It is not necessary to assign a ``sender``;  if none is specified when it is initialized, a MonitoringMechanism of
 the appropriate type will be created (see :ref:`Structure <LearningSignal_Structure>` below).  However,
@@ -55,7 +55,7 @@ COMMENT:
     a system, process, or projection in the pathway of a process.
 COMMENT
 
-.. _LearningSignal_Structure:
+.. _LearningSignal_Structure:
 
 Structure
 ---------
