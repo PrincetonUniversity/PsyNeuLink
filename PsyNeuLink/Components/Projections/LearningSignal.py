@@ -14,7 +14,7 @@
 Overview
 --------
 
-A LearningSignal projection takes a value (an *error_signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
+A LearningSignal projection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
 and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.  This is used to modify the
 :ref:`matrix <Mapping_Matrix>` parameter of a :doc:`Mapping` projection.  A LearningSignal can be assigned different
 functions[LINK] to implement different learning algorithms, which are associated with corresponding types of
@@ -29,23 +29,29 @@ A LearningSignal projection can be created in any of the ways that can be used t
 :ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
 :ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <>` of a process.
 
+
+If it is
+created with its constructor, its ``sender`` and/or ``receiver`` do not need to be specified
+
+A LearningSignal can be created with its constructor before assigning the MonitoringMechanism from which it receives
+an error signal (its ``sender``) and/or the Mapping projection to which it projects (its ``receiver``); this is
+referred to as *deferred initialization* [LINK].  However, once these have been assigned,
+ to a
+specific projection
+
+XXXX
+Sender must be a MonitoringMechanism or ProcessingMechanism
 xxxx
 ??TRUE:
-If the constructor is used,
-the ``receiver`` argument must be specified.  If it is included in a parameter specification, its ``receiver`` will be
+If the constructor is used, the ``receiver`` argument must be specified.  If it is included in a parameter
+specification, its ``receiver`` will be
 assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
 the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the LearningSignal's
 ``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
 Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
-The cost of a LearningSignal is calculated from its ``intensity``, using four
-:ref:`cost functions <LearningSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
-or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
-so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost
-functions can be :ref:`enabled or disabled <LearningSignal_Toggle_Costs>`, to select which make contributions to the
-LearningSignal's ``cost``.  A cost function can also be permanently disabled for its LearningSignal by assigning
-``None`` to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
-Cost functions that are permanently disabled in this way cannot be re-enabled.
+
+
 
 A LearningSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
 specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
@@ -265,8 +271,6 @@ class LearningSignal(Projection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 # sender=NotImplemented,
-                 # receiver=NotImplemented,
                  sender=None,
                  receiver=None,
                  function=BackPropagation(learning_rate=1,
@@ -289,7 +293,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function, params=params)
 
-
         # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self
@@ -297,18 +300,6 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         # Flag for deferred initialization
         self.value = DEFERRED_INITIALIZATION
-
-        # # MODIFIED 8/14/16 NEW:
-        # # PROBLEM: variable has different name for different classes; need to standardize across classes
-        # context = self
-        # name = self.name
-        # super().__init__(sender=sender,
-        #                  receiver=receiver,
-        #                  params=params,
-        #                  name=name,
-        #                  prefs=prefs,
-        #                  context=context)
-
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
