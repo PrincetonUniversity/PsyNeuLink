@@ -216,11 +216,13 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
-# 11/16/16:
-# REPLACE np.sum IN ControlSignal WITH NEW REDUCE FUNCTION (ADDITIVE AND MULTIPLICATIVE)
+# 11/17/16:
+# FIX: IF LEARNING SIGNAL IS ASSIGNED TO MAPPING PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
+# FIX:    CHECK IF THIS COMPLETES THE ASSIGNMENT OF ITS SENDER AND/OR RECEIVER AND, IF SO, CALL DEFERRED_INIT
+# FIX:    ONCE IMPLEMENTED, UPDATE LearningSignal DOCUMENTATION, TO REMOVE REQUIREMENT THAT DEFERRED INIT BE CALLED
 
 # 11/14/16:
-# DOCUMENTATION: MOVE DESCRIOPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
+# DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
 #                   (see :doc:`Mechanism` for specification of a parms dict)
 # FIX: ControlSignal._instantiate_receiver has to be called before _instantiate_fucntion (like LearningSignal)
@@ -1095,11 +1097,14 @@
 # DOCUMENT: constructor_arguments get instantiated (if ncessary) and assigned to objectAttributes
 #           members of params dicts get turned into object_attributes but remain in original state
 
-# DOCUMENT:
+# DOCUMENT: Lazy Evaluation
 # "lazy evaluation" (or call-by-need) (see https://en.wikipedia.org/wiki/Lazy_evaluation)[LINK].
 # :ref:"Lazy_Evaluation": for execution, this means that objects are updated by
 # calling items from which they receive input;  for implementation, this means that objects can create objects
 # from which they expect input, but cannot "impose" the creation of "downstream" objects.
+
+# DOCUMENT: Deferred Initialization
+#   For LearingSignal, ??ControlSignal
 
 # DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
 #                     OVERALL STRUCTURE, INCLUDING:  COMPONENTS MADE UP OF VARIABLE, FUNCTION AND OUTPUT
