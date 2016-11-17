@@ -90,7 +90,7 @@ def is_Function(x):
 def is_function_type(x):
     if not x:
         return False
-    elif isinstance(x, function_type):
+    elif isinstance(x, (Function, function_type)):
         return True
     elif issubclass(x, Function):
         return True
@@ -151,8 +151,8 @@ class Function_Base(Function):
                     to implement .function instead of doing so directly)
                 Function Components are the end of the recursive line: as such:
                     they don't implement functionParams
-                    in general, don't bother implementing .execute, rather...
-                    they rely on Function.execute which passes on the return value of .function 
+                    in general, don't bother implementing function, rather...
+                    they rely on Function.function which passes on the return value of .function
 
     Instantiation:
         A function can be instantiated in one of several ways:
@@ -464,6 +464,101 @@ class Contradiction(Function_Base): # Example
 class CombinationFunction(Function_Base):
     componentType = kwCombinationFunction
 
+
+class Reduce(CombinationFunction): # ------------------------------------------------------------------------
+# FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
+# FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
+# FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
+    """Combines an array of values into a single value
+
+    Description:
+        Combine elements of an array in variable arg, using arithmetic operation determined by OPERATION.
+        Returns a scalar value.
+
+    Initialization arguments:
+     - variable (list or np.ndarray of numbers): values to be combined;
+     - params (dict) can include:
+         + OPERATION (Operation Enum) - method used to combine terms (default: SUM)
+              SUM: element-wise sum of the arrays in variable
+              PRODUCT: Hadamard Product of the arrays in variable
+
+    Reduce.function returns combined values:
+    - single scalar value
+    """
+    componentName = kwReduce
+
+    # # Operation indicators
+    # class Operation(Enum):
+    #     SUM = 0
+    #     PRODUCT = 1
+    #     SUBTRACT = 2
+    #     DIVIDE = 3
+    #
+    variableClassDefault = [0, 0]
+    # variableClassDefault_locked = True
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 operation:tc.enum(SUM, PRODUCT)=SUM,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(operation=operation,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+        if not is_numerical(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+
+
+    def function(self,
+                variable=NotImplemented,
+                params=NotImplemented,
+                context=None):
+        """Combine a list or array of values
+
+        Returns a scalar value
+
+        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
+        :params: (dict) with entries specifying:
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
+        :return: (scalar)
+        """
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        operation = self.paramsCurrent[OPERATION]
+
+        # Calculate using relevant aggregation operation and return
+        if (operation is SUM):
+            result = np.sum(self.variable)
+        elif operation is PRODUCT:
+            result = np.product(self.variable)
+        else:
+            raise FunctionError("Unrecognized operator ({0}) for Reduce function".
+                               format(self.paramsCurrent[OPERATION].self.Operation.SUM))
+        return result
+
+
 kwLinearCombinationInitializer = "Initializer"
 
 
@@ -500,7 +595,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
               SUM: element-wise sum of the arrays in variable
               PRODUCT: Hadamard Product of the arrays in variable
 
-    LinearCombination.execute returns combined values:
+    LinearCombination.function returns combined values:
     - single number if variable was a single number
     - list of numbers if variable was list of numbers
     - 1D np.array if variable was a single np.variable or np.ndarray
@@ -742,7 +837,7 @@ class Linear(TransferFunction): # ----------------------------------------------
          + slope (SLOPE: value) - slope (default: 1)
          + intercept (INTERCEPT: value) - intercept (defaul: 0)
 
-    Linear.execute returns scalar result
+    Linear.function returns scalar result
     """
 
     componentName = kwLinear
@@ -861,7 +956,7 @@ class Exponential(TransferFunction): # -----------------------------------------
          + rate (RATE: coeffiencent on variable in exponent (default: 1)
          + scale (SCALE: coefficient on exponential (default: 1)
 
-    Exponential.execute returns scalar result
+    Exponential.function returns scalar result
     """
 
     componentName = kwExponential
@@ -934,7 +1029,7 @@ class Logistic(TransferFunction): # --------------------------------------------
          + gain (GAIN): coeffiencent on exponent (default: 1)
          + bias (BIAS): additive constant in exponent (default: 0)
 
-    Logistic.execute returns scalar result
+    Logistic.function returns scalar result
     """
 
     componentName = kwLogistic
@@ -1005,7 +1100,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
              PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
          # + max (kwMax): only reports max value, all others set to 0 (default: False)
 
-    SoftMax.execute returns scalar result
+    SoftMax.function returns scalar result
     """
 
     componentName = kwSoftMax
@@ -1138,7 +1233,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
          + filler (kwFillerValue: number) value used to initialize all entries in matrix (default: 0)
          + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: False)
 
-    Create a matrix in self.matrix that is used in calls to LinearMatrix.execute.
+    Create a matrix in self.matrix that is used in calls to LinearMatrix.function.
 
     Returns sender 2D array linearly transformed by self.matrix
     """
@@ -1360,7 +1455,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
 
-         Specification is derived from MATRIX param (passed to self.__init__ or self.execute)
+         Specification is derived from MATRIX param (passed to self.__init__ or self.function)
 
          Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
@@ -1529,7 +1624,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Class attributes:
     - oldValue (value): stores previous value with which value provided in variable is integrated
 
-    Integrator.execute returns scalar result
+    Integrator.function returns scalar result
     """
 
     componentName = kwIntegrator
@@ -1914,7 +2009,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     delta_weight =  learning rate   *     error
       return     =  LEARNING_RATE  *  self.variable
 
-    Reinforcement.execute:
+    Reinforcement.function:
         variable must be a 1D np.array of error terms
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
@@ -2019,7 +2114,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
     delta_weight =  learning rate   *    input      *            d(output)/d(input)                 *     error
       return     =  LEARNING_RATE  *  variable[0]  *  kwTransferFctDeriv(variable[1],variable[0])  *  variable[2]
 
-    BackPropagation.execute:
+    BackPropagation.function:
         variable must be a list or np.array with three items:
             - input (e.g, array of activities of sender units)
             - output (array of activities of receiver units)

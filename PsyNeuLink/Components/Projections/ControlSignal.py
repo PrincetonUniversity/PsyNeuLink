@@ -77,8 +77,7 @@ can be customized, and the first three of which can be enabled or disabled:
 
 * :keyword:`COST_COMBINATION_FUNCTION`
     Combines the results of any cost functions that are enabled, and assigns the result as the ControlSignal's
-    ``cost``.  It can be any :class:`CombinationFunction`, or any other function that takes an array and returns a
-    scalar value.  The default is np.sum.
+    ``cost``.  It can be any function that takes an array and returns a scalar value.  The default is Reduce.
 
 .. _ControlSignal_Toggle_Costs:
 
@@ -191,17 +190,17 @@ class ControlSignalError(Exception):
 # class ControlSignal_Base(Projection_Base):
 class ControlSignal(Projection_Base):
     """
-    ControlSignal(                                   \
-     sender=None,                                    \
-     receiver=None,                                  \
-     function=Linear                                 \
-     intensity_cost_function=Exponential,            \
-     adjustment_cost_function=Linear,                \
-     duration_cost_function=Integrator,              \
-     cost_combination_function=np.sum,               \
-     allocation_samples=DEFAULT_ALLOCATION_SAMPLES,  \
-     params=None,                                    \
-     name=None,                                      \
+    ControlSignal(                                    \
+     sender=None,                                     \
+     receiver=None,                                   \
+     function=Linear                                  \
+     intensity_cost_function=Exponential,             \
+     adjustment_cost_function=Linear,                 \
+     duration_cost_function=Integrator,               \
+     cost_combination_function=Reduce(operation=SUM), \
+     allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
+     params=None,                                     \
+     name=None,                                       \
      prefs=None)
 
     Implements a projection that controls the parameter of a mechanism function.
@@ -262,7 +261,7 @@ class ControlSignal(Projection_Base):
         Calculates an integral of the ControlSignal's ``cost``.
         It can be disabled permanently for the ControlSignal by assigning ``None``.
 
-    cost_combination_function : function : default np.sum
+    cost_combination_function : function : default Reduce(operation=SUM)
         Combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
 
     allocation_samples : list : default :keyword:`DEFAULT_ALLOCATION_SAMPLES`
@@ -313,7 +312,7 @@ class ControlSignal(Projection_Base):
     durationCostFunction : IntegratorFunction : default Linear
         calculates an integral of the ControlSignal's ``cost``.
 
-    costCombinationFunction : function : default np.sum
+    costCombinationFunction : function : default Reduce(operation=SUM)
         combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
 
     COMMENT:
@@ -377,7 +376,7 @@ class ControlSignal(Projection_Base):
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=Integrator,
-                 cost_combination_function:tc.optional(is_function_type)=np.sum,
+                 cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
