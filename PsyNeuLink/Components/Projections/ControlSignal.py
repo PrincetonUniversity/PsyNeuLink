@@ -78,7 +78,7 @@ can be customized, and the first three of which can be enabled or disabled:
 * :keyword:`COST_COMBINATION_FUNCTION`
     Combines the results of any cost functions that are enabled, and assigns the result as the ControlSignal's
     ``cost``.  It can be any :class:`CombinationFunction`, or any other function that takes an array and returns a
-    scalar value.  The default is :class:`LinearCombination`.
+    scalar value.  The default is np.sum.
 
 .. _ControlSignal_Toggle_Costs:
 
@@ -198,7 +198,7 @@ class ControlSignal(Projection_Base):
      intensity_cost_function=Exponential,            \
      adjustment_cost_function=Linear,                \
      duration_cost_function=Integrator,              \
-     cost_combination_function=LinearCombination,    \
+     cost_combination_function=np.sum,               \
      allocation_samples=DEFAULT_ALLOCATION_SAMPLES,  \
      params=None,                                    \
      name=None,                                      \
@@ -262,7 +262,7 @@ class ControlSignal(Projection_Base):
         Calculates an integral of the ControlSignal's ``cost``.
         It can be disabled permanently for the ControlSignal by assigning ``None``.
 
-    cost_combination_function : CombinationFunction : default LinearCombination
+    cost_combination_function : function : default np.sum
         Combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
 
     allocation_samples : list : default :keyword:`DEFAULT_ALLOCATION_SAMPLES`
@@ -313,7 +313,7 @@ class ControlSignal(Projection_Base):
     durationCostFunction : IntegratorFunction : default Linear
         calculates an integral of the ControlSignal's ``cost``.
 
-    costCombinationFunction : CombinationFunction : default LinearCombination
+    costCombinationFunction : function : default np.sum
         combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
 
     COMMENT:
@@ -377,7 +377,7 @@ class ControlSignal(Projection_Base):
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=Integrator,
-                 cost_combination_function:tc.optional(is_function_type)=LinearCombination,
+                 cost_combination_function:tc.optional(is_function_type)=np.sum,
                  allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
@@ -449,27 +449,32 @@ class ControlSignal(Projection_Base):
 
             # cost_function is Function object:
             #     COST_COMBINATION_FUNCTION must be CombinationFunction
+            #     DURATION_COST_FUNCTION must be an IntegratorFunction
             #     others must be TransferFunction
             if isinstance(cost_function, Function):
                 if cost_function_name == COST_COMBINATION_FUNCTION:
                     if not isinstance(cost_function, CombinationFunction):
                         raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
                                                  format(COST_COMBINATION_FUNCTION, cost_function))
+                elif cost_function_name == DURATION_COST_FUNCTION:
+                    if not isinstance(cost_function, IntegratorFunction):
+                        raise ControlSignalError("Assignment of Function to {} ({}) must be an IntegratorFunction".
+                                                 format(DURATION_COST_FUNCTION, cost_function))
                 elif not isinstance(cost_function, TransferFunction):
                     raise ControlSignalError("Assignment of Function to {} ({}) must be a TransferFunction".
                                              format(cost_function_name, cost_function))
 
             # cost_function is custom-specified function
-            #     COST_COMBINATION_FUNCTION must accept an array
+            #     DURATION_COST_FUNCTION and COST_COMBINATION_FUNCTION must accept an array
             #     others must accept a scalar
             #     all must return a scalar
             elif isinstance(cost_function, function_type):
-                if cost_function_name == COST_COMBINATION_FUNCTION:
+                if cost_function_name in {DURATION_COST_FUNCTION, COST_COMBINATION_FUNCTION}:
                     test_value = [1, 1]
                 else:
                     test_value = 1
                 try:
-                    if not is_numerical(cost_function()):
+                    if not is_numerical(cost_function(test_value)):
                         raise ControlSignalError("Function assigned to {} ({}) must return a scalar".
                                                  format(cost_function_name, cost_function))
                 except:
@@ -509,7 +514,7 @@ class ControlSignal(Projection_Base):
             cost_function = target_set[cost_function_name]
             if not cost_function:
                 continue
-            if not isinstance(cost_function, Function) and not issubclass(cost_function, Function):
+            if (not isinstance(cost_function, (Function, function_type)) and not issubclass(cost_function, Function)):
                 raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -652,21 +657,21 @@ class ControlSignal(Projection_Base):
         # else:
         super(ControlSignal, self)._instantiate_receiver(context=context)
 
-    def _compute_cost(self, intensity_cost, adjustment_cost, cost_combination_function):
-        """Compute the current cost for the control signal, based on allocation and most recent adjustment
-
-        Computes the current cost by combining intensityCost and adjustmentCost, using the function specified by
-              cost_combination_function (should be of Function type; default: LinearCombination)
-        Returns totalCost
-
-        :parameter intensity_cost
-        :parameter adjustment_cost:
-        :parameter cost_combination_function: (should be of Function type)
-        :returns cost:
-        :rtype: scalar:
-        """
-
-        return cost_combination_function([intensity_cost, adjustment_cost])
+    # def _compute_cost(self, intensity_cost, adjustment_cost, cost_combination_function):
+    #     """Compute the current cost for the control signal, based on allocation and most recent adjustment
+    #
+    #     Computes the current cost by combining intensityCost and adjustmentCost, using the function specified by
+    #           cost_combination_function (should be of Function type; default: LinearCombination)
+    #     Returns totalCost
+    #
+    #     :parameter intensity_cost
+    #     :parameter adjustment_cost:
+    #     :parameter cost_combination_function: (should be of Function type)
+    #     :returns cost:
+    #     :rtype: scalar:
+    #     """
+    #
+    #     return cost_combination_function([intensity_cost, adjustment_cost])
 
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
@@ -716,6 +721,7 @@ class ControlSignal(Projection_Base):
 
 
         # compute cost(s)
+
         # # MODIFIED 11/16/16 OLD:
         # new_cost = 0
         # if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
@@ -737,28 +743,32 @@ class ControlSignal(Projection_Base):
         # if new_cost < 0:
         #     new_cost = 0
         # self.cost = new_cost
+
         # MODIFIED 11/16/16 NEW:
-        new_cost = 0
+        new_cost = intensity_cost = adjustment_cost = duration_cost = 0
+
         if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
-            new_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
+            intensity_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
+
         if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
-            self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
-            new_cost = self._compute_cost(self.intensityCost,
-                                         self.adjustmentCost,
-                                         self.costCombinationFunction)
+            adjustment_cost = self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
+
         if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
-            self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
-            new_cost += self.durationCost
+            duration_cost = self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
+
+        new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
+        # new_cost = np.sum([float(intensity_cost), adjustment_cost, duration_cost])
+        # MODIFIED 11/16/16 END
+
         if new_cost < 0:
             new_cost = 0
         self.cost = new_cost
-        # MODIFIED 11/16/16 END
 
 
         # Report new values to stdio
