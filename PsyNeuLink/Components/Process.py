@@ -183,6 +183,8 @@ implement the appropriate type of, and specifications for the MonitoringMechanis
 specified type of learning.  However, as noted above, all mechanisms that receive projections being learned must
 be compatible with learning.
 
+.. _Process_Learning_Figure:
+
 **Figure: Learning in PsyNeuLink**
 
 .. figure:: _static/PNL_learning_fig.png
