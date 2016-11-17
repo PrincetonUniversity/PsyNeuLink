@@ -17,7 +17,8 @@ Overview
 A ControlSignal projection takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to
 compute its ``intensity`` that is assigned as the ControlSignal's value.  Its value is used to modify the value of a
 parameterState (its ''receiver'') associated with the parameter of a function of a ProcessingMechanism.  A
-ControlSignal also has an associated ``cost`` that is calculated based on its intensity and/or its time course.
+ControlSignal also has an associated ``cost`` that is calculated based on its intensity and/or its time course, and
+used by a ControlMechanism to adapt the ControlSignal's ``allocation``.[LINK]
 
 .. _ControlSignal_Creating_A_ControlSignal_Projection:
 

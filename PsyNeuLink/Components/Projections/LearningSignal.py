@@ -4,10 +4,130 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # *******************************************  LearningSignal **********************************************************
-#
+
+"""
+.. _LearningSignal_Overview:
+
+Overview
+--------
+
+A LearningSignal projection takes a value (an *error_signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
+and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.  This is used to modify the
+:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`Mapping` projection.  A LearningSignal can be assigned different
+functions[LINK] to implement different learning algorithms, which are associated with corresponding types of
+MonitoringMechanisms.
+
+.. _LearningSignal_Creating_A_LearningSignal_Projection:
+
+Creating a LearningSignal Projection
+------------------------------------
+
+A LearningSignal projection can be created in any of the ways that can be used to
+:ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
+:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <>` of a process.
+
+xxxx
+??TRUE:
+If the constructor is used,
+the ``receiver`` argument must be specified.  If it is included in a parameter specification, its ``receiver`` will be
+assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
+the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the LearningSignal's
+``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
+Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
+
+The cost of a LearningSignal is calculated from its ``intensity``, using four
+:ref:`cost functions <LearningSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
+or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
+so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost
+functions can be :ref:`enabled or disabled <LearningSignal_Toggle_Costs>`, to select which make contributions to the
+LearningSignal's ``cost``.  A cost function can also be permanently disabled for its LearningSignal by assigning
+``None`` to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
+Cost functions that are permanently disabled in this way cannot be re-enabled.
+
+A LearningSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
+specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
+LearningSignal allocations (e.g., :doc:`EVCMechanism`).  The default is an array of values from 0.1 to 1.0
+in steps of 0.1.
+
+.. _LearningSignal_Structure:
+
+Structure
+---------
+
+*Intensity*. The LearningSignal's ``function`` uses its ``allocation`` to calculate an ``intensity``.  The default is an
+identity function (Linear(slope=1, intercept=0)), in which case the LearningSignal's ``intensity`` is equal to its
+``allocation``. The ``function`` can be assigned another :class:`TransferFunction`, or any other function that takes
+and returns a scalar value.
+
+*Costs*. A LearningSignal has four cost functions that determine how the LearningSignal computes its cost, all of which
+can be customized, and the first three of which can be enabled or disabled:
+
+.. _LearningSignal_Cost_Functions:
+
+* :keyword:`INTENSTITY_COST_FUNCTION`
+    Calculates a cost based on the LearningSignal's ``intensity``.
+    It can be any :class:`TransferFunction`, or any other function  that takes and returns a scalar value.
+    The default is :class:`Exponential`.
+
+* :keyword:`ADJUSTMENT_COST_FUNCTION`
+    Calculates a cost based on a change in the LearningSignal's ``intensity`` from its last value.
+    It can be any :class:`TransferFunction`, or any other function that takes and returns a scalar value.
+    The default is :class:`Linear`.
+
+* :keyword:`DURATION_COST_FUNCTION`
+    Calculates an integral of the LearningSignal's ``cost``.
+    It can be any :class:`IntegratorFunction`, or any other function  that takes a list or array of two values and
+    returns a scalar value. The default is :class:`Integrator`.
+
+* :keyword:`COST_COMBINATION_FUNCTION`
+    Combines the results of any cost functions that are enabled, and assigns the result as the LearningSignal's
+    ``cost``.  It can be any function that takes an array and returns a scalar value.  The default is :class:`Reduce`.
+
+An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
+the total cost (``cost``).
+
+.. _LearningSignal_Toggle_Costs:
+
+*Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
+enabled or disabled using the ``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is
+disabled, that component of the cost is not included in the LearningSignal's ``cost`` attribute. A cost function  can
+also be permanently disabled for the LearningSignal by assigning ``None`` to its argument in the constructor (or the
+corresponding entry in its params dictionary).  If a cost function is permanently disabled for a LearningSignal,
+it cannot be re-enabled using ``toggle_cost_function``.
+
+*Additional Attributes*.  In addition to the ``intensity`` and cost attributes described above, a LearningSignal has
+``last_allocation`` and ``last_intensity`` attributes that store the values associated with its previous execution.
+Finally, it has an ``allocation_samples`` attribute, that is a  list of used by
+:ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of ``allocation`` for the LearningSignal,
+in order to adaptively adjust the parameters that it controls (e.g., :doc:`EVCMechanism`). The default value is an
+array that ranges from 0.1 to 1.0 in steps of 0.1.
+
+.. _LearningSignal_Execution:
+
+Execution
+---------
+
+A LearningSignal projection uses its ``function`` to compute its ``intensity``, and its :ref:`cost functions
+<LearningSignal_Cost_Functions> use the ``intensity`` to compute the its ``cost``.  The ``intensity`` is assigned as
+the LearningSignal projection's ``value``, which is used by the parmaterState to which it projects to modify the
+corresponding parameter of the owner mechanism's function.
+
+.. note::
+   The changes in a parameter in response to the execution of a LearningSignal projection are not applied until the
+   mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of "lazy"
+   updating).
+
+.. _LearningSignal_Class_Reference:
+
+
+Class Reference
+---------------
+
+"""
+
 
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator, COMPARATOR_SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
@@ -39,13 +159,14 @@ class LearningSignalError(Exception):
 class LearningSignal(Projection_Base):
 # DOCUMENT: USES DEFERRED INITIALIZATION
 # DOCUMENT: self.variable has 3 items:
-#               input: <Mapping projection>.sender.value
-#                          (output of the Mechanism that is the sender of the Mapping projection)
-#               output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
-#                          (output of the Mechanism that is the receiver of the Mapping projection)
-#               error_signal: <Mapping projection>.receiver.owner.parameterState[MATRIX].receivesFromProjections[0].sender.value ==
-#                                 self.errorSource.monitoringMechanism.value
-#                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
+#   input: <Mapping projection>.sender.value
+#              (output of the Mechanism that is the sender of the Mapping projection)
+#   output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
+#              (output of the Mechanism that is the receiver of the Mapping projection)
+#   error_signal: <Mapping projection>.receiver.owner.parameterState[MATRIX].receivesFromProjections[0].sender.value ==
+#                 self.errorSource.monitoringMechanism.value
+#                 (output of the MonitoringMechanism that is the sender of the LearningSignal 
+#                  for the next Mapping projection in the Process)
 # DOCUMENT: if it instantiates a DefaultTrainingSignal:
 #               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
 #               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
@@ -144,8 +265,10 @@ class LearningSignal(Projection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 sender=NotImplemented,
-                 receiver=NotImplemented,
+                 # sender=NotImplemented,
+                 # receiver=NotImplemented,
+                 sender=None,
+                 receiver=None,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic()),
                  params=None,
@@ -813,7 +936,8 @@ FROM TODO:
         # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for Mapping projection's receiver mechanism
         # output = self.mappingProjection.receiver.owner.outputState.value
-# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender, ASSIGN self.input ACCORDINGLY
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender, 
+# FIX:   ASSIGN self.input ACCORDINGLY
         output = self.errorSource.outputState.value
 
         # ASSIGN ERROR

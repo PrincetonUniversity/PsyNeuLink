@@ -162,24 +162,25 @@ Learning
 ~~~~~~~~
 
 Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for a projection to a particular mechanism (see Projection), or for the entire process
-(using its ''learning'' attribute).  Specifying learning for a process will implement it for all projections
-# XXX TEST WHICH IS TRUE:  in the process [???] OR
-# XXX that have been assigned by default (but not ones created using either inline or stand-alone specification).
-When it is specified for the process, then it will train all projections in the process so that a given input to the
-first mechanism in the process (i.e, the input to the process) will generate the target value as the output of the
-last mechanism in the process (i.e., the output of the process).  In either case, all mechanisms that receive
-projections for which learning has been specified must be compatiable with learnin (see LearningSignal).
+Learning can be configured for a :ref:`projection <LearningSignal_Creating_A_LearningSignal_Projection>` to a
+particular mechanism, or for the entire process (using its ''learning'' attribute).  Specifying learning for a
+process will implement it for all eligible projections the process (i.e., all Mapping projections, excluding
+projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the
+:keyword:`TERIMINAL` mechanism to the process' outputState). When learning is specified for the process, all
+projections in the process will be trained so that input to the process (i.e., its :keyword:`ORIGIN` mechanism)
+will generate the specified target value as its output (i.e., the output of the :keyword:`TERMINAL` mechanism).
+In either case, all mechanisms that receive projections for which learning has been specified must be compatiable
+with learning (see :doc:`LearningSignal`).
 
 When learning is specified, the following objects are automatically created (see figure below):
-MonitoringMechanism, used to evaluate the output of a mechanism against a target value.
-Mapping projection from the mechanism being monitored to the MonitoringMechanism
-LearningSignal that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
-projects to the mechanism being monitored).
+* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value.
+* :doc:`Mapping` projection from the mechanism being monitored to the MonitoringMechanism
+* :doc:`LearningSignal` that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
+  projects to the mechanism being monitored).
 
-Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation), that will implement
-the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
-specified type of learning.  As noted above, however, all mechanisms that receive projections being learned must
+Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation[LINK]), that will
+implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
+specified type of learning.  However, as noted above, all mechanisms that receive projections being learned must
 be compatible with learning.
 
 **Figure: Learning in PsyNeuLink**
@@ -424,8 +425,8 @@ def process(process_spec=None,
         type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
 
     learning : Optional[LearningSignal spec]
-        implements learning for all eligible projections in the process
-        (see LearningSignal [LINK] for specifications)
+        implements :ref:`learning <LearningSignal_Creating_A_LearningSignal_ProjectionLearningSignal>`
+        for all eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
         must be the same length as the :keyword:`TERMINAL` mechanism's output
@@ -684,9 +685,13 @@ class Process_Base(Process):
 
     learning : Optional[LearningSignal]
         Specifies whether process should be configured for learning;  value can be the name of the class, the name of
-        a learningSignal object, or a call to the class.  Note that if it is an instance (or a call to create one),
-        that object itself will not be used as the learningSignal for the process; rather it will be used as a template
-        (including any parameters that are specified) for creating learningSignal projections for the process.
+        a learningSignal object, or a LearningSignal constructor.
+
+        .. note::
+        If an existing instance of a LearningSignal used for the specification, or a call to the LearningSignal
+        constructor), that object itself, or the one created by the constructor, will **not** be used as the actual
+        LearningSignal projection for the process. Rather it will be used as a template (including any parameters that
+        are specified) for creating LearningSignal projections for all the Mapping projections in the process.
 
       .. _learning_enabled : bool
              indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
@@ -1125,6 +1130,7 @@ class Process_Base(Process):
             # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
             # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
             # FIX:     MAKE IT A COPY?
+
             matrix_spec = (self.default_projection_matrix, self.learning)
         else:
             matrix_spec = self.default_projection_matrix
@@ -1139,6 +1145,7 @@ class Process_Base(Process):
 
                 # Must be a Mechanism (enforced above)
                 # Assign input(s) from Process to it if it doesn't already have any
+                # Note: does not include learning (even if specified for the process)
                 if i == 0:
                     # Relabel for clarity
                     mechanism = item
@@ -1162,7 +1169,6 @@ class Process_Base(Process):
                     # PRECEDING ITEM IS A PROJECTION
                     if isinstance(preceding_item, Projection):
                         if self.learning:
-                            # from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 
                             # Check if preceding_item has a matrix parameterState and, if so, it has any learningSignals
                             # If it does, assign them to learning_signals
@@ -1172,17 +1178,10 @@ class Process_Base(Process):
                                                         projection in
                                                         preceding_item.parameterStates[MATRIX].receivesFromProjections
                                                         if isinstance(projection, LearningSignal))
-                                # if learning_signals:
-                                #     learning_signal = learning_signals[0]
-                                #     if len(learning_signals) > 1:
-                                #         print("{} in {} has more than LearningSignal; only the first ({}) will be used".
-                                #               format(preceding_item.name, self.name, learning_signal.name))
-                                # # if (any(isinstance(projection, LearningSignal) for
-                                # #         projection in preceding_item.parameterStates[MATRIX].receivesFromProjections)):
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
                             except AttributeError:
-                                # Instantiate parameterStates Ordered dict with ParameterState for self.learning
+                                # Instantiate parameterStates Ordered dict with ParameterState and self.learning
                                 preceding_item.parameterStates = instantiate_state_list(
                                                                                 owner=preceding_item,
                                                                                 state_list=[(MATRIX,
@@ -1207,23 +1206,8 @@ class Process_Base(Process):
                                                                                 context=context)
                             # preceding_item has parameterState for MATRIX,
                             else:
-                                # # MODIFIED 9/19/16 OLD:
-                                # if learning_signals:
-                                #     for learning_signal in learning_signals:
-                                #         # FIX: ?? SHOULD THIS USE assign_defaults:
-                                #         # Update matrix params with any specified by LearningSignal
-                                #         try:
-                                #             preceding_item.parameterStates[MATRIX].paramsCurrent.\
-                                #                                                     update(learning_signal.user_params)
-                                #             # FIX:  PROBLEM IS THAT learningSignal HAS NOT BEEN INIT'ED YET:
-                                #                          # update(learning_signal.paramsCurrent['weight_change_params']
-                                #         except TypeError:
-                                #             pass
-                                # else:
-                                # MODIFIED 9/19/16 NEW:
                                 if not learning_signals:
-                                # MODIFIED 9/19/16 END
-                                    # Add learning signal to projection
+                                    # Add learning signal to projection if it doesn't have one
                                     _add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
                                                       projection_spec=self.learning)
