@@ -16,7 +16,6 @@ my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
              prefs = DDM_prefs
              )
 
-
 my_DDM.prefs = DDM_prefs
 my_DDM.prefs.level = PreferenceLevel.SYSTEM
 

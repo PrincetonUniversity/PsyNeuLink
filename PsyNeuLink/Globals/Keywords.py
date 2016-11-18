@@ -77,7 +77,7 @@ kwSeparator = ': '
 kwSeparatorBar = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
-kwInit = " INITIALIZING "  # Used as context for Log
+INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
@@ -86,7 +86,7 @@ kwReceiver = "receiver"
 kwValidate = 'Validate'
 VALIDATE = kwValidate
 kwParams = 'params'
-kwAllocationSamples = "allocation_samples"
+ALLOCATION_SAMPLES = "allocation_samples"
 
 #endregion
 
@@ -147,7 +147,7 @@ PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
 kwFunctionInit = 'Function.__init__'
-kwDeferredInit = 'Deferred Init'
+DEFERRED_INITIALIZATION = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
@@ -183,7 +183,7 @@ kwControlMechanism = "ControlMechanism"
 
 # States:
 kwInputState = "InputState"
-kwOutputState = "OutputState"
+OUTPUT_STATE = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
@@ -217,6 +217,7 @@ kwAdaptiveIntegrator = "AdaptiveIntegrator"
 
 # Function:
 kwContradiction = "Contradiction"
+kwReduce = "Reduce"
 kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
 kwExponential = "Exponential"
@@ -312,8 +313,8 @@ kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_SIGNAL_PROJECTIONS = 'ControlSignalProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
+OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
 COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
-COST_APPLICATION_FUNCTION = 'cost_application_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
 kwEVCSimulation = 'SIMULATING'
@@ -349,9 +350,9 @@ PROJECTION_PARAMS = "ProjectionParams"
 MAPPING_PARAMS = "MappingParams"
 CONTROL_SIGNAL_PARAMS = "ControlSignalParams"
 kwLearningSignalParams = 'LearningSignalParams'
-kwProjectionSender = 'ProjectionSender'
+PROJECTION_SENDER = 'projectionSender'
 kwSenderArg = 'sender'
-kwProjectionSenderValue =  "ProjectDefaultSenderValue"
+PROJECTION_SENDER_VALUE =  "projectionSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"

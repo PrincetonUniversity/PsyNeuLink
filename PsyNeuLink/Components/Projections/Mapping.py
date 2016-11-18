@@ -4,10 +4,120 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # **********************************************  Mapping **************************************************************
-#
+
+"""
+.. _Mapping_Overview:
+
+Overview
+--------
+
+Mapping projections transmit value from an outputState of one ProcessingMechanism (its ``sender``) to the inputState of
+another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, which uses the projection's ``matrix``
+parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
+``receiver``.
+
+.. _Mapping_Creating_A_Mapping_Projection:
+
+Creating a Mapping Projection
+-----------------------------
+
+COMMENT:
+    ??LEGACY:
+    - as part of the instantiation of a mechanism:
+        the mechanism outputState will automatically be used as the receiver:
+            if the mechanism is being instantiated on its own, the sender must be explicity specified
+COMMENT
+
+A mapping projection can be created in any of the ways that can be used to create a
+:ref:`projection <_Projection_Creating_A_Projection>) or by specifying it in the:ref:`pathway <_Process_Projections>`
+of a process. Mapping projections are also generated automatically by PsyNeuLink in a number of circumstances,
+using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
+
+* in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
+  the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.
+..
+* by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
+  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creating_A_ControlMechanism`);  a
+  :keyword:`IDENTITY_MATRIX` will be used.
+
+* by a **LearningSignal**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
+  that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
+  depends on the ``function`` parameter of the :doc:`LearningSignal`.[LINK]
+
+When a mapping projection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
+or they can be assigned by default (see below).
+
+.. _Mapping_Structure:
+
+Structure
+---------
+
+COMMENT:
+    XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningSignal CAN BE SPECIFIED HERE:
+            IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
+            SEE BELOW:  "If there is a functionParameterStates[LEARNING_SIGNAL]"
+COMMENT
+
+In addition to its ``function``, mapping projections use the following two the primary parameters:
+
+.. _Mapping_Matrix:
+
+``matrix``
+
+  Used by the Mapping projection's ``function`` to execute a matrix transformation of its input.
+  It can be assigned a list of 1d arrays, an np.ndarray, np.matrix, a function that resolves to one of these,
+  or one of the following keywords:
+
+  .. _Matrix_Keywords:
+
+  * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
+    values are the same.
+  * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
+    and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
+  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
+    and a number of columns equal to the length of the receiver's value, all the elements of which are filled with
+    random values uniformly distributed between 0 and 1.
+  * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
+    is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
+  * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
+    assigns an keyword:`IDENTITY_MATRIX`.
+  ..
+  PsyNeuLink also provides a convenience function, :class:`random_matrix`, that can be used to generate a random matrix
+  sized for a sender, receiver, with random numbers drawn from a uniform distribution within a specified range and
+  with a specified offset.
+
+
+``parameter_modulation_operation``
+
+  Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
+  influence it.  For example, this is used for a :doc:`LearningSignal` projection to apply weight changes to
+  ``matrix`` during learning.  ``parameter_modulation_operation`` must be assigned a value of
+  :class:`ModulationOperation`, and the operation is always applied in an element-wise (Hadamard[LINK]) fashion.
+  The default operation is ``ADD``.
+
+.. _Projection_Execution:
+
+Execution
+---------
+
+A mapping projection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
+and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
+cause the value of any projections (e.g., a LearningSignal) it receives to be applied to the matrix. This will bring
+into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
+Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
+``matrix`` will not show the effects of projections to its parameterState until the mapping projection has been
+executed).
+
+.. _Projection_Class_Reference:
+
+
+Class Reference
+---------------
+
+"""
 
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
@@ -18,103 +128,97 @@ class MappingError(Exception):
 
 
 class Mapping(Projection_Base):
-    """Implement projection conveying values from output of a mechanism to input of another (default: IdentityMapping)
+    """
+    Mapping(                                                \
+        sender=None,                                        \
+        receiver=None,                                      \
+        matrix=DEFAULT_MATRIX,                              \
+        param_modulation_operation=ModulationOperation.ADD, \
+        params=None,                                        \
+        name=None,                                          \
+        prefs=None)
 
-    Description:
-        The Mapping class is a type in the Projection category of Component,
-        It's function conveys (and possibly transforms) the OutputState.value of a sender
-            to the InputState.value of a receiver
-
-    Instantiation:
-        - Mapping Projections can be instantiated in one of several ways:
-            - directly: requires explicit specification of the sender
-            - as part of the instantiation of a mechanism:
-                the mechanism outputState will automatically be used as the receiver:
-                    if the mechanism is being instantiated on its own, the sender must be explicity specified
-                    if the mechanism is being instantiated within a pathway:
-                        if a sender is explicitly specified for the mapping, that will be used;
-                        otherwise, if it is the first mechanism in the list, process.input will be used as the sender;
-                        otherwise, the preceding mechanism in the list will be used as the sender
-
-    Initialization arguments:
-        - sender (State) - source of projection input (default: systemDefaultSender)
-        - receiver: (State or Mechanism) - destination of projection output (default: systemDefaultReceiver)
-            if it is a Mechanism, and has >1 inputStates, projection will be mapped to the first inputState
-# IMPLEMENTATION NOTE:  ABOVE WILL CHANGE IF SENDER IS ALLOWED TO BE A MECHANISM (SEE FIX ABOVE)
-        - params (dict) - dictionary of projection params:
-# IMPLEMENTTION NOTE: ISN'T kwProjectionSenderValue REDUNDANT WITH sender and receiver??
-            + kwProjectionSenderValue (list): (default: [1]) ?? OVERRIDES sender ARG??
-            + FUNCTION (Function): (default: LinearMatrix)
-            + FUNCTION_PARAMS (dict): (default: {MATRIX: IDENTITY_MATRIX})
-# IMPLEMENTATION NOTE:  ?? IS THIS STILL CORRECT?  IF NOT, SEARCH FOR AND CORRECT IN OTHER CLASSES
-        - name (str) - if it is not specified, a default based on the class is assigned in register_category
-        - prefs (PreferenceSet or specification dict):
-             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-             (see Description under PreferenceSet for details)
-# IMPLEMENTATION NOTE:  AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
-#                RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OUTPUTSTATES
-#                (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESONDING RECEIVER INPUT STATE
-#                              USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
-#                OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
-#       SHOULD BE CHECKED IN OVERRIDE OF _validate_variable THEN HANDLED IN _instantiate_sender and _instantiate_receiver
+    Implements a projection that transmits the output of one mechanism to the input of another.
 
 
-    Parameters:
-        The default for FUNCTION is LinearMatrix using IDENTITY_MATRIX:
-            the sender state is passed unchanged to the receiver's state
-# IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        FUNCTION can be set to another function, so long as it has type kwMappingFunction
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
+    COMMENT:
+        Description:
+            The Mapping class is a type in the Projection category of Component.
+            It implements a projection that takes the value of an outputState of one mechanism, transforms it as
+            necessary, and provides it to the inputState of another ProcessingMechanism.
+            It's function conveys (and possibly transforms) the OutputState.value of a sender
+                to the InputState.value of a receiver.
+
+            IMPLEMENTATION NOTE:
+                AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
+                    RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OUTPUTSTATES
+                        (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESPONDING RECEIVER INPUT STATE
+                            USING THE SAME MAPPING PROJECTION MATRIX, OR AN ARRAY OF THEM)
+                    OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
+                    SHOULD BE CHECKED IN OVERRIDE OF _validate_variable
+                        THEN HANDLED IN _instantiate_sender and _instantiate_receiver
+
+        Class attributes:
+            + className = MAPPING
+            + componentType = PROJECTION
+            + paramClassDefaults (dict)
+                paramClassDefaults.update({
+                                   FUNCTION:LinearMatrix,
+                                   FUNCTION_PARAMS: {
+                                       # LinearMatrix.kwReceiver: receiver.value,
+                                       LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
+                                   PROJECTION_SENDER: kwInputState, # Assigned to class ref in __init__ module
+                                   PROJECTION_SENDER_VALUE: [1],
+                                   })
+            + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
+
+        Class methods:
+            function (executes function specified in params[FUNCTION]
+    COMMENT
+
+    Arguments
+    ---------
+
+    sender : Optional[OutputState or Mechanism]
+        Source of projection input.  If a mechanism is specified, its primary outputState will be used.  If it is not
+        specified, it will be assigned in the context in which the projection is used.
+
+    receiver: Optional[InputState or Mechanism]
+        Destination of projection output.  If a mechanism is specified, its primary inputState will be used.  If it
+        is not specified, it will be assigned in the context in which the projection is used.
+
+    matrix : list, np.ndarray, np.matrix, function or keyword : default :keyword:`DEFAULT_MATRIX`
+        Matrix used by ``function`` (default: LinearCombination) to transform value of ``sender``
+
+    param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
+        Operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
+        Most commonly used with LearningSignal projections.
+
+    params : Optional[Dict[param keyword, param value]]
+        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
+        By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
+
+    name : str : default Transfer-<index>
+        String used for the name of the mapping projection.
+        If not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        Preference set for the mapping projection.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
+    Attributes
+    ----------
+
+    monitoringMechanism : MonitoringMechanism
+        source of error signal for matrix weight changes when :ref:`learning <LearningSignal> is used.
 
 
 
-    ProjectionRegistry:
-        All Mapping projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
 
-    Naming:
-        Mapping projections can be named explicitly (using the name='<name>' argument).  If this argument is omitted,
-        it will be assigned "Mapping" with a hyphenated, indexed suffix ('Mapping-n')
-
-    Class attributes:
-        + className = MAPPING
-        + componentType = PROJECTION
-        # + defaultSender (State)
-        # + defaultReceiver (State)
-        + paramClassDefaults (dict)
-            paramClassDefaults.update({
-                               FUNCTION:LinearMatrix,
-                               FUNCTION_PARAMS: {
-                                   # LinearMatrix.kwReceiver: receiver.value,
-                                   LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
-                               kwProjectionSender: kwInputState, # Assigned to class ref in __init__ module
-                               kwProjectionSenderValue: [1],
-                               })
-        + paramNames (dict)
-        # + senderDefault (State) - set to Process inputState
-        + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-
-    Class methods:
-        function (executes function specified in params[FUNCTION]
-
-    Instance attributes:
-        + sender (State)
-        + receiver (State)
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's function
-        + value (value) - output of function
-        + monitoringMechanism (MonitoringMechanism) - source of error signal for matrix weight changes
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying MappingPreferenceSet
-
-    Instance methods:
-        none
     """
 
     componentType = MAPPING
@@ -125,31 +229,19 @@ class Mapping(Projection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION: LinearMatrix,
-                               kwProjectionSender: kwOutputState, # Assigned to class ref in __init__.py module
-                               kwProjectionSenderValue: [1],
+                               PROJECTION_SENDER: OUTPUT_STATE, # Assigned to class ref in __init__.py module
+                               PROJECTION_SENDER_VALUE: [1],
                                })
     @tc.typecheck
     def __init__(self,
-                 sender=NotImplemented,
-                 receiver=NotImplemented,
-                 # sender=None,
-                 # receiver=None,
+                 sender=None,
+                 receiver=None,
                  matrix=DEFAULT_MATRIX,
                  param_modulation_operation=ModulationOperation.ADD,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
-
-        :param sender:
-        :param receiver:
-        :param params:
-        :param name:
-        :param context:
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(
@@ -161,8 +253,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.monitoringMechanism = None
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if sender is NotImplemented or receiver is NotImplemented:
-        # if not sender or receiver:
+        # if sender is NotImplemented or receiver is NotImplemented:
+        if not sender or not receiver:
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
@@ -172,7 +264,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
             del self.init_args['param_modulation_operation']
 
             # Flag for deferred initialization
-            self.value = kwDeferredInit
+            self.value = DEFERRED_INITIALIZATION
             return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
@@ -273,16 +365,16 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
-        If there is an functionParrameterStates[LEARNING_SIGNAL], update the matrix parameterState:
+        If there is a functionParameterStates[LEARNING_SIGNAL], update the matrix parameterState:
                  it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
            - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 
-        """
+        Assumes that if self.monitoringMechanism is assigned *and* parameterState[MATRIX] has been instantiated
+        then learningSignal exists;  this averts duck typing which otherwise would be required for the most
+        frequent cases (i.e., *no* learningSignal).
 
-        # ASSUMES IF self.monitoringMechanism IS ASSIGNED AND parameterState[MATRIX] HAS BEEN INSTANTIATED
-        # THAT LEARNING SIGNAL EXISTS
-        # AVERTS DUCK TYPING WHICH OTHERWISE WOULD BE REQUIRED FOR THE MOST FREQUENT CASES (I.E., NO LearningSignal)
+        """
 
         # Check whether weights changed
         if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:

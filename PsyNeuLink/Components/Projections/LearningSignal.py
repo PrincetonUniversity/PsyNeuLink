@@ -4,10 +4,138 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # *******************************************  LearningSignal **********************************************************
-#
+
+"""
+.. _LearningSignal_Overview:
+
+Overview
+--------
+
+A LearningSignal projection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
+and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.  This is used to modify the
+:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`Mapping` projection.  A LearningSignal can be assigned different
+functions[LINK] to implement different learning algorithms, which are associated with corresponding types of
+MonitoringMechanisms.
+
+.. _LearningSignal_Creating_A_LearningSignal_Projection:
+
+Creating a LearningSignal Projection
+------------------------------------
+
+COMMENT:
+    XXXX INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
+COMMENT
+
+A LearningSignal projection can be created in any of the ways that can be used to
+:ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
+:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <>` of a process.  Its
+``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver`` must be the
+parameterState of a Mapping projection.  When a LearningSignal is created, its full initialization is deferred [LINK]
+until its ``sender`` and ``receiver`` have been fully specified.  This means that it is possible to create a
+LearningSignal using its constructor without specifying either its ``sender`` or its ``receiver``.
+
+COMMENT:
+   CURRENT
+COMMENT
+It is not necessary to assign a ``sender``;  if none is specified when it is initialized, a MonitoringMechanism of
+the appropriate type will be created (see :ref:`Structure <LearningSignal_Structure>` below).  However,
+a LearningSignal's ``receiver`` must be specified.  One that is done, for the LearningSignal to be operational,
+initializaton must be completed by calling its ``deferred_init`` method.  This is not necessary if the LearningSignal
+is specified as part of a system, process, or a projection in the pathway of a process -- in those cases,
+initialization is completed automatically.
+
+COMMENT:
+   REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
+    Initialization will
+    be  completed as soon as the LearningSignal has been assigned as the projection *from* a MonitoringMechanism (i.e.,
+    it's ``sender`` has been specified) and as the projection *to* the parameterState of a Mapping projection (i.e.,
+    its ``receiver`` has been specified).  This is handled automatically when the LearningSignal is specified as part of
+    a system, process, or projection in the pathway of a process.
+COMMENT
+
+.. _LearningSignal_Structure:
+
+Structure
+---------
+
+*Error Signal, Error Source, and Mapping Projection*.  The ``variable`` for a LearningSignal is the error signal it
+gets from a  MonitoringMechanism (its ``sender``).  This is stored in its ``errorSignal`` attribute.  The
+``sender`` is a MonitoringMechanism that compares the output of a ProcessingMechanism with a target value,
+and uses the disparity to compute the error signal.  The ProcessingMechanism -- its ``errorSource`` -- is the one that
+receives the Mapping projection to which the  LearningSignal projects -- its ``mappingProjection`` (see
+:ref:`figure <Process_Learning_Figure>`).
+
+*Function*.  This computes the changes to the ``matrix`` parameter of the LearningSignal's ``mappingProjection``
+required to reduce the ``errorSignal`` for its ``errorSource``.  The default is :class:`BackPropagation` (also known
+as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned a different function
+that implements another learning algorithm.  Assignment of the LearningSignal's ``function`` must be appropriate for
+the ``function`` of the ProcessingMechanism that is its ``errorSource`` (since how the learning signal is computed
+depends on the nature of the function that generated the error);  failure to match the ``function`` of the
+LearningSignal with the ``function`` of its ``errorSource`` ProcesingMechanism will generate an error.
+
+
+COMMENT:
+    *Targets*  XXXXX
+COMMENT
+
+
+*Monitoring Mechanism*.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
+``sender``).  The type of MOntiringMechanism, and how it computes its errorSignal, depends on the ``eerrorSource``.
+If it is a :keyword:`TERMINAL` mechanism of a system or process, it is a Comparator mechanism, that compares
+the output of the ``errorSource`` with a target value that is specified for the process or system when it is
+:ref:`run <Run_Targets>`.  If the ``errorSource`` is not the final mechanism of a system or process,
+then the MOnitoringMechanism is a ??WEIGTHED ERROR...  IT...
+
+COMMENT:
+    XXXX NEED TO ADDRESS THIS:
+    , or in the constructor for a :ref:`Mapping projection <Mapping_Structure>`
+    XXXX NEED TO ADD THIS:
+           if it instantiates a DefaultTrainingSignal:
+              if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
+              otherwise, use error_source.outputState (i.e., error source's primary outputState)
+COMMENT
+
+.. _LearningSignal_Automatic_Creation:
+
+*Automatic instantiation*.  When learning is specified for a :ref:`system <System_Execution_Learning>` or
+a :ref:`process <Process_Learning>`,  PsyNeuLink automatically generates the LearningSignals, MonitoringMechanisms,
+and corresponding projections required for learning to occur.  More specifically, LearningSignals are
+automatically created for the relevant Mapping projection(s) (for a system or process, this excludes input
+projections to their :keyword:`ORIGIN` mechansims and output projections to their :keyword:`TERMINAL` mechanisms).
+Each LearningSignal is assigned the relevant ``errorSource`` -- that is, the ProcessingMechanism that receives the
+Mapping projection that is the LearningSignal's ``receiver``.  If the ``errorSource`` projects to a MonitoringMechanism,
+then that is assigned as the LearningSignal's ``sender``.  If the ``errorSource`` does not projection to a
+MonitoringMechanism, then one is created for it, and a Mapping projection is created that projects to it from the
+``errorSource``.  The type of MonitoringMechanism created depends on where the ProcessingMechanism sits in the
+processing stream.  If it is a standalone mechanism, or the :keyword:`TERMINAL` mechanism of a system or process,
+then a :doc:`Comparator` mechanism is created (which compares the output of the ``errorSource`` with a target to
+generate the ``errorSignal``).  If the ``errorSource`` projects to any other mechanisms, then a ``WeightedError``
+mechanism is created (takes, in calculating the ``errorSignal``, takes account of the effect that the ``errorSource``
+has on the output of the mechanism(s) to which it projects).
+
+.. _LearningSignal_Execution:
+
+Execution
+---------
+
+LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
+MonitoringMechanisms that provide the ``errorSignal`` to each LearningSignal.  When the LearningSignal is executed,
+it uses its ``errorSignal`` to calculate changes to the ``matrix`` of the Mapping projection to which it projects.
+The changes are calculated so as to reduce the errorSignal calculated for ``errorSource`` (the ProcessingMechanism
+that receives the Mapping projection).  The changes are assigned as the ``value`` of the LearningSignal, and applied
+to the ``matrix`` the next time the Mapping projection to which it belongs is executed
+(see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
+
+.. _LearningSignal_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
 
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator, COMPARATOR_SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
@@ -37,91 +165,95 @@ class LearningSignalError(Exception):
 
 
 class LearningSignal(Projection_Base):
-# DOCUMENT: USES DEFERRED INITIALIZATION
-# DOCUMENT: self.variable has 3 items:
-#               input: <Mapping projection>.sender.value
-#                          (output of the Mechanism that is the sender of the Mapping projection)
-#               output: <Mapping projection>.receiver.owner.outputState.value == self.errorSource.outputState.value
-#                          (output of the Mechanism that is the receiver of the Mapping projection)
-#               error_signal: <Mapping projection>.receiver.owner.parameterState[MATRIX].receivesFromProjections[0].sender.value ==
-#                                 self.errorSource.monitoringMechanism.value
-#                                 (output of the MonitoringMechanism that is the sender of the LearningSignal for the next Mapping projection in the Process)
-# DOCUMENT: if it instantiates a DefaultTrainingSignal:
-#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
-#               otherwise, use error_soure.outputState (i.e., error source's primary outputState)
+    """
+    LearningSignal(                                                         \
+                 sender=None,                                               \
+                 receiver=None,                                             \
+                 function=BackPropagation(learning_rate=1,                  \
+                                          activation_function=Logistic()),  \
+                 params=None,                                               \
+                 name=None,                                                 \
+                 prefs=None)
 
-    """Implements projection that modifies the matrix param of a Mapping projection
 
-    Description:
-        The LearningSignal class is a componentType in the Projection category of Function,
-        It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
-            the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
-            weight changes for the Mapping Projection's matrix parameter
+    Implements a projection that modifies the matrix param of a Mapping projection.
 
-    Instantiation:
-        LearningSignal Projections are instantiated:
-            - directly by specifying a MonitoringMechanism sender and a Mapping receiver
-            - automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
+    COMMENT:
+        Description:
+            The LearningSignal class is a componentType in the Projection category of Function.
+            It implements a projection to the parameterState of a Mapping projection that modifies its matrix parameter.
+            It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
+                the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
+                weight changes for the Mapping Projection's matrix parameter.
 
-    Initialization arguments:
-        - sender (MonitoringMechanism) - source of projection input (default: TBI)
-        - receiver: (Mapping Projection) - destination of projection output (default: TBI)
-        - params (dict) - dictionary of projection params:
-            + FUNCTION (Function): (default: BP)
-            + FUNCTION_PARAMS (dict):
-                + LEARNING_RATE (value): (default: 1)
-        - name (str) - if it is not specified, a default based on the class is assigned in register_category
-        - prefs (PreferenceSet or specification dict):
-             if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-             dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-             (see Description under PreferenceSet for details)
+        Class attributes:
+            + className = LEARNING_SIGNAL
+            + componentType = PROJECTION
+            # + defaultSender (State)
+            # + defaultReceiver (State)
+            + paramClassDefaults (dict):
+                + FUNCTION (Function): (default: BP)
+                + FUNCTION_PARAMS:
+                    + LEARNING_RATE (value): (default: 1)
+            + paramNames (dict)
+            + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
-    Parameters:
-        The default for FUNCTION is BackPropagation:
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
+        Class methods:
+            function (computes function specified in params[FUNCTION]
+    COMMENT
 
-    ProjectionRegistry:
-        All LearningSignal projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+    Arguments
+    ---------
+    sender : Optional[MonitoringMechanism or OutputState of one]
+        Source of the ``errorSignal`` for the LearningSignal. If it is not specified, one will be
+        :ref:`automatically created <LearningSignal_Automatic_Creation>` that is appropriate for
+        the LearningSignal's ``errorSource``.
 
-    Naming:
-        LearningSignal projections can be named explicitly (using the name argument).  If this argument is omitted,
-        it will be assigned "LearningSignal" with a hyphenated, indexed suffix ('LearningSignal-n')
+    receiver : Optional[Mapping projection or ParameterState for ``matrix`` parameter of one]
+        Mapping projection, the ``matrix`` of which is modified by the LearningSignal.
 
-    Class attributes:
-        + className = LEARNING_SIGNAL
-        + componentType = PROJECTION
-        # + defaultSender (State)
-        # + defaultReceiver (State)
-        + paramClassDefaults (dict):
-            + FUNCTION (Function): (default: BP)
-            + FUNCTION_PARAMS:
-                + LEARNING_RATE (value): (default: 1)
-        + paramNames (dict)
-        + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
+    params : Optional[Dict[param keyword, param value]]
+        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
+        By default, it contains an entry for the projection's default ``function`` and parameter assignments.
 
-    Class methods:
-        function (computes function specified in params[FUNCTION]
+    name : str : default Transfer-<index>
+        String used for the name of the ControlSignal projection.
+        If not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    Instance attributes:
-        + sender (MonitoringMechanism)
-        + receiver (Mapping)
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + paramsCurrent (dict) - set currently in effect
-        + variable (value) - used as input to projection's function
-        + value (value) - output of function
-        + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[FUNCTION_PARAMS][MATRIX]
-        + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
-        + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying LearningSignalPreferenceSet
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        Preference set for the ControlSignal projection.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
-    Instance methods:
-        none
+
+    Attributes
+    ----------
+
+    sender : OutputState of MonitoringMechanism
+        source of errorSignal.
+
+    receiver : ParameterState of Mapping projection
+        parameterState for the ``matrix`` parameter of the Mapping projection to be modified by learning.
+
+    errorSignal : 1d np.array
+        value used as the ``variable`` for the LearningSignal's ``function`` to determine changes to
+        ``mappingWeightMatrix``.
+
+    errorSource : ProcessingMechanism
+        mechanism that receives the Mapping projection to which the LearningSignal projects.
+
+    mappingWeightMatrix : 2d np.array
+        ``matrix`` parameter for the function of the Mapping projection to which the LearningSignal projects.
+
+    weightChangeMatrix : 2d np.array
+        matrix of changes to be made to the ``mappingWeightMatrix`` (rows correspond to sender, columns to receiver).
+
+    value : 2d np.array
+        same as ``weightChangeMatrix``
+
     """
 
     componentType = LEARNING_SIGNAL
@@ -133,7 +265,7 @@ class LearningSignal(Projection_Base):
     # variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({kwProjectionSender: MonitoringMechanism_Base,
+    paramClassDefaults.update({PROJECTION_SENDER: MonitoringMechanism_Base,
                                PARAMETER_STATES: None, # This suppresses parameterStates
                                kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes Mapping.function is LinearCombination
@@ -144,28 +276,17 @@ class LearningSignal(Projection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 sender=NotImplemented,
-                 receiver=NotImplemented,
+                 sender=None,
+                 receiver=None,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic()),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
-
-        :param sender:
-        :param receiver:
-        :param params:
-        :param name:
-        :param context:
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function, params=params)
-
 
         # Store args for deferred initialization
         self.init_args = locals().copy()
@@ -173,24 +294,12 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.init_args['name'] = name
 
         # Flag for deferred initialization
-        self.value = kwDeferredInit
-
-        # # MODIFIED 8/14/16 NEW:
-        # # PROBLEM: variable has different name for different classes; need to standardize across classes
-        # context = self
-        # name = self.name
-        # super().__init__(sender=sender,
-        #                  receiver=receiver,
-        #                  params=params,
-        #                  name=name,
-        #                  prefs=prefs,
-        #                  context=context)
-
+        self.value = DEFERRED_INITIALIZATION
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
-        Validate send in params[kwProjectionSender] or, if not specified, sender arg:
+        Validate send in params[PROJECTION_SENDER] or, if not specified, sender arg:
         - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
@@ -199,21 +308,21 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
          """
 
-        # Parse params[kwProjectionSender] if specified, and assign self.sender
+        # Parse params[PROJECTION_SENDER] if specified, and assign self.sender
         super()._validate_params(request_set, target_set, context)
 
         # VALIDATE SENDER
         sender = self.sender
-        self.validate_sender(sender)
+        self._validate_sender(sender)
 
         # VALIDATE RECEIVER
         try:
             receiver = target_set[PARAMETER_STATES]
-            self.validate_receiver(receiver)
+            self._validate_receiver(receiver)
         except (KeyError, LearningSignalError):
             # PARAMETER_STATES not specified:
             receiver = self.receiver
-            self.validate_receiver(receiver)
+            self._validate_receiver(receiver)
 
         # VALIDATE WEIGHT CHANGE PARAMS
         try:
@@ -230,20 +339,20 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
                                                      self.name,
                                                      param_value))
 
-    def validate_sender(self, sender):
+    def _validate_sender(self, sender):
         """Make sure sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;
         """
 
         # If specified as a MonitoringMechanism, reassign to its outputState
         if isinstance(sender, MonitoringMechanism_Base):
-            self.sender = sender.outputState
+            sender = self.sender = sender.outputState
 
         # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
         if isinstance(sender, OutputState):
-            if not isinstance(sender.value, (list, np.array)):
+            if not isinstance(sender.value, (list, np.ndarray)):
                 raise LearningSignalError("Sender for {} (outputState of MonitoringMechanism {}) "
                                           "must be a list or 1D np.array".format(self.name, sender))
-            if not np.array.ndim == 1:
+            if not np.array(sender.value).ndim == 1:
                 raise LearningSignalError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
                                           format(sender, self.name))
 
@@ -254,9 +363,9 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         else:
             raise LearningSignalError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
                                       "the outputState of one, or a reference to the class"
-                                      .format(kwProjectionSender, sender, self.name, ))
+                                      .format(PROJECTION_SENDER, sender, self.name, ))
 
-    def validate_receiver(self, receiver):
+    def _validate_receiver(self, receiver):
         """Make sure receiver is a Mapping projection or the parameterState of one
         """
 
@@ -439,7 +548,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         self.errorSource = self.mappingProjection.receiver.owner
 
         # GET RECEIVER'S WEIGHT MATRIX
-        self.get_mapping_projection_weight_matrix()
+        self._get_mapping_projection_weight_matrix()
 
         # Format input to Mapping projection's weight matrix
         # MODIFIED 8/19/16:
@@ -453,7 +562,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
         # self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
         self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
 
-    def get_mapping_projection_weight_matrix(self):
+    def _get_mapping_projection_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
 
         """
@@ -479,7 +588,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
 
         Call this after _instantiate_receiver, as that is needed to determine the sender (i.e., source of errorSignal)
 
-        If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
+        If sender arg or PROJECTION_SENDER was specified, it has been assigned to self.sender
             and has been validated as a MonitoringMechanism, so:
             - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
             - assign its outputState.value as self.variable
@@ -554,7 +663,7 @@ FROM TODO:
                                           format(self.sender.name,
                                                  self.name,
                                                  self.sender.owner.__class__.__name__))
-            self.validate_error_signal(self.sender.value)
+            self._validate_error_signal(self.sender.value)
 
             # - assign MonitoringMechanism's outputState.value as self.variable
             # FIX: THIS DOESN"T SEEM TO HAPPEN HERE.  DOES IT HAPPEN LATER??
@@ -581,7 +690,7 @@ FROM TODO:
             for projection in self.errorSource.outputState.sendsToProjections:
                 # errorSource has a projection to a MonitoringMechanism, so validate it, assign it and quit search
                 if isinstance(projection.receiver.owner, MonitoringMechanism_Base):
-                    self.validate_error_signal(projection.receiver.owner.outputState.value)
+                    self._validate_error_signal(projection.receiver.owner.outputState.value)
                     monitoring_mechanism = projection.receiver.owner
                     break
                 # errorSource has a projection to a ProcessingMechanism, so:
@@ -619,6 +728,7 @@ FROM TODO:
                     Mapping(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
                             # name=monitoring_mechanism.name+'_'+MAPPING)
+                            matrix=IDENTITY_MATRIX,
                             name=next_level_monitoring_mechanism.name +
                                  ' to '+monitoring_mechanism.name +
                                  ' ' + MAPPING + ' Projection')
@@ -683,7 +793,7 @@ FROM TODO:
         # Add reference to MonitoringMechanism to Mapping projection
         self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
-    def validate_error_signal(self, error_signal):
+    def _validate_error_signal(self, error_signal):
         """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
         """
 
@@ -802,7 +912,7 @@ FROM TODO:
         :return: (2D np.array) self.weightChangeMatrix
         """
         # Pass during initialization (since has not yet been fully initialized
-        if self.value is kwDeferredInit:
+        if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
         # GET INPUT TO Projection to Error Source:
@@ -812,7 +922,8 @@ FROM TODO:
         # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for Mapping projection's receiver mechanism
         # output = self.mappingProjection.receiver.owner.outputState.value
-# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender, ASSIGN self.input ACCORDINGLY
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender, 
+# FIX:   ASSIGN self.input ACCORDINGLY
         output = self.errorSource.outputState.value
 
         # ASSIGN ERROR
@@ -823,7 +934,7 @@ FROM TODO:
         # rows:  sender errors;  columns:  receiver errors
         self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
 
-        if not kwInit in context and self.reportOutputPref:
+        if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.weightChangeMatrix

@@ -17,11 +17,11 @@ Overview
 Creating an InputState
 ----------------------
 
-An inputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
+An inputState can be created by calling its constructor, but more commonly it is done by specifying one (or more)
 inputStates in the `INPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An inputState must
 be owned by a mechanism.  If the inputState is created directly, the mechanism to which it belongs must be specified
-in ``owner`` argument when calling the class;  if the inputState is specified in the INPUT_STATES entry of parameter
-dictionary for a mechanism, then the owner is inferred from the context.
+in ``owner`` argument when calling its constructor;  if the inputState is specified in the INPUT_STATES entry of
+parameter dictionary for a mechanism, then the owner is inferred from the context.
 
 
 INPUT_STATES (value, list, dict):

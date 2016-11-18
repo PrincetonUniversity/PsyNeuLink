@@ -4,8 +4,8 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # ******************************************  OutputState *****************************************************
 
 """
@@ -15,11 +15,11 @@
 Creating an OutputState
 -----------------------
 
-An outputState can be created by calling the class directly, but more commonly it is done by specifying one (or more)
-outputStates in the `OUTPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An outputState must
-be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs must be specified
-in ``owner`` argument when calling the class;  if the outputState is specified in the OUTPUT_STATES entry of parameter
-dictionary for a mechanism, then the owner is inferred from the context.
+An outputState can be created by calling its constructor, but more commonly it is done by specifying one (or more)
+outputStates in the :keyword:`OUTPUT_STATES` entry of a params dictionary when creating a mechanism. An
+outputState must be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs
+must be specified in the ``owner`` argument when calling the constructor;  if the outputState is specified in the
+:keyword:`OUTPUT_STATES` entry of a parameter dictionary for a mechanism, then the owner is inferred from the context.
 
 + OUTPUT_STATES (value, list, dict):
     supports the ability of a subclass to define specialized outputStates;

@@ -501,7 +501,7 @@ class State_Base(State):
             #     else, returns new (default) PROJECTION_TYPE object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
-                if projection_spec.value is kwDeferredInit:
+                if projection_spec.value is DEFERRED_INITIALIZATION:
                     from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
                     if isinstance(projection_spec, LearningSignal):
                         # Assign projection to parameterState
@@ -626,7 +626,7 @@ class State_Base(State):
             #    requiring reassignment or modification of sender outputStates, etc.
 
             # Initialization of projection is deferred
-            if projection_spec.value is kwDeferredInit:
+            if projection_spec.value is DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
                 self.receivesFromProjections.append(projection_spec)
                 continue
@@ -1114,7 +1114,7 @@ class State_Base(State):
                 projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
-            if kwInit in context and projection_value is kwDeferredInit:
+            if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
                 continue
             # Add projection_value to list (for aggregation below)
             projection_value_list.append(projection_value)
@@ -1259,11 +1259,11 @@ def instantiate_state_list(owner,
                          if None, instantiate a default using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
         - kwInputState
-        - kwOutputState
+        - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
         - kwInputState: self.variable
-        - kwOutputState: self.value
+        - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
     - constraint_value_name (str):  passed to State.instantiate_state(), used in error messages

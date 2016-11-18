@@ -3,7 +3,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Trans
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Components.Projections.Mapping import Mapping
-from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic
 
 
 
