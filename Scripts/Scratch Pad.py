@@ -8,15 +8,29 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
-# from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Components.Process import process
-#
+from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Process import process
+
 # linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
 # linear_transfer_process = process(pathway = [linear_transfer_mechanism])
 # print(linear_transfer_process.execute())
 # print ('Done')
-#
+
+my_mech1 = Transfer(function=Logistic)
+my_mech2 = Transfer(function=Logistic)
+my_monitor = Comparator()
+my_learning_signal = LearningSignal()
+my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
+# my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
+# my_learning_signal = LearningSignal(receiver=my_mapping_projection)
+my_learning_signal._deferred_init(context="TEST")
+TEST = True
+
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -42,11 +56,16 @@ class ScratchPadError(Exception):
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-
-mech = DDM()
-mech.execute([0])
-
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+#
+# mech = DDM()
+#
+# mcs = ControlSignal(receiver=mech)
+#
+#
+# mech.execute([0])
+#
 # a = System_Base()
 # a.execute()
 #
@@ -1881,23 +1900,6 @@ import typecheck as tc
 #
 # # Can also change settings on the fly (note:  ControlSignal.OFF is just an enum defined in the ControlSignal module)
 # x.set_adjustment_cost(OFF)
-#
-# # Assign transfer_functions for cost functions
-# x.assign_function(kwControlSignalIntensityFunction,
-#                   Function.Linear(NotImplemented,
-#                                   {SLOPE : 1,
-#                                    INTERCEPT : 0})
-#                   )
-# x.assign_function(kwControlSignalIntensityCostFunction,
-#                   Function.Linear(NotImplemented,
-#                                   {SLOPE : 1,
-#                                    INTERCEPT : 1})
-#                   )
-# x.assign_function(kwControlSignalDurationCostFunction,
-#                   Function.Integrator(NotImplemented,
-#                                       {Function.Integrator.RATE : 0.5,
-#                                        Function.Integrator.WEIGHTING : Function.Integrator.Weightings.SCALED})
-#                   )
 #
 # # Display some values in controlSignal (just to be sure it is set up OK)
 # print("Intensity Function: ", x.functions[kwControlSignalIntensityFunction].name)

@@ -119,41 +119,24 @@
 
 #endregion
 
+#region DEVELOPMENT
+
+# time_step DDM integration
+# learning working in a system
+# system.graph -> NetworkX
+
+#endregion
+
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
-# QUESTION:  Should execution (and run) return full outputValue or just value of primary ouptputState?
-#    NO
-# QUESTION:  Docs: "Creating a <OBJECT>" [more "friendly"]  vs. "Instantiation" [more parallel to "Execution"]
-#   CALL THE "CONSTRUCTOR"
-# QUESTION:  Add function params to mechanism (e.g.: self.function_param[<PARAM>] to self.<param>??)
-# FIX: MAKE SURE THAT REASSIGNMENT OF FUNCTION UPDATES FUNCTION_PARAMS ATTRIBUTE
-#
-# QUESTION:  DDM:
-#              How to handle function arg of DDM when time_scale == TIME_STEP:
-#                      function is irrelevant, so just ignore, or require (for clairty) that it be set to Integrator
-#              Handling of PROB_UPPER_BOUND <-> Acurracy;  PROB_LOWER_BOUND <-> ER and relationship to interrogation
-#                 protocol (see docs for DDM)
-#              How does RT relate to time_step and ms??
-#              What to say about units of t0 for analytic solutions of DDM (assume it is time steps for integration)
-# FIX:  THRESHOLD MUST BE POSITIVE
-# FIX:  ELMINATE ANY REFERENCE TO "CORRECT RESPONSE", AND ONLY REFER TO PROB_XXX_BOUND
-# FIX:  BOGACZ & NAVARRO GIVE RT AND TO IN MS (OR SECONDS? IF SO, NEED TO ADJUST T0 DEFAULT AND TYPE)
-# FIX:  TIME_STEP SHOUDL HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
-# QUESTION:  EVC:  Names of functions:
-#                     FUNCTION - specifies how the values of the outputStates are combined
-#                                 to generate an aggregate value for each control allocation
-#                     COST_AGGREGATION_FUNCTION` - specifies how costs are combined across ControlSignals
-#                                 to generate an aggregate cost for each control allocation policy.
-#                     COST_APPLICATION_FUNCTION` - specifies how the aggregated cost is combined
-#                                 with the aggregated value (i.e., the output of the ``function``)
-#                                 to determine the EVC for each control allocation policy.
-# SOLUTION:  COST_APPLICATION_FUNCTION -> FUNCTION;
-#            FUNCTION -> OUTCOME_AGGREGATION_FUNCTION
-# QUESTION: Where should detailed info about paramters/attributes be put:
-#                     Module docstring, under Arguments for __init__, or under Attributes for class?
-#
 # -------------------
-#
+
+# QUESTION: DDM:
+#            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
+#            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
+#            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
+#            IS t0 MS OR SECONDS?
+
 # QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 #           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
 
@@ -232,11 +215,44 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
+# 11/17/16:
+# FIX: IF LEARNING SIGNAL IS ASSIGNED TO MAPPING PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
+# FIX:    CHECK IF THIS COMPLETES THE ASSIGNMENT OF ITS SENDER AND/OR RECEIVER AND, IF SO, CALL DEFERRED_INIT
+# FIX:    ONCE IMPLEMENTED, UPDATE LearningSignal DOCUMENTATION, TO REMOVE REQUIREMENT THAT DEFERRED INIT BE CALLED
+
+# 11/14/16:
+# DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
+#                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
+#                   (see :doc:`Mechanism` for specification of a parms dict)
+# FIX: ControlSignal._instantiate_receiver has to be called before _instantiate_fucntion (like LearningSignal)
+#              since execute (called in _instantiate_function) uses self.receiver.
+#              COULD CATCH IT IN EXECUTE, AND CALL _instantiate_receiver.
+# FIX: make ControlSignal functions arguments in __init__, and get them out of a dictionary
+
+# 11/13/16:
+# FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
+# IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
+#                   (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
+
+# 11/10/16:
+# FIX: ALLOW ControlMechanism.system ASSIGNMENT TO BE DEFERRED (CHECK ONLY ON EXECUTION?)
+#      THEN TEST EVC System Laming Validation Test with weights assigned to EVC
+
+# 11/7/16:
+
+# FROM EVC MEETING:
+# FIX: MAKE SURE THAT, IF function IS REASSIGNED, function_params IS UPDATED
+# FIX:  DDM:
+# FIX:     BOGACZ & NAVARRO GIVE RT AND t0 IN MS (OR SECONDS? IF SO, NEED TO ADJUST t0 DEFAULT AND TYPE)
+
+
 # DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
 #                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
 #                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
 #                    ARE DISCUSSED.
 # DOCUMENTATION: ControlMechanism -> controlMechanism or control mechanism (in appropriate places)
+# DOCUMENTATION: Call subclass -> "Constructor"
 
 # 11/6/16:
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
@@ -316,7 +332,6 @@
 
 # FIX:  ScratchPad example
 
-# FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
@@ -474,7 +489,7 @@
 # IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
 # FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
-#               IS PROBABILITY_UPPER_BOUND THE CORRECT PARAM IN EVC System Laming Validation Test Script??
+#               IS PROBABILITY_UPPER_THRESHOLD THE CORRECT PARAM IN EVC System Laming Validation Test Script??
 # PROBLEM: IN Process, WAS ADDING +1 TO _phaseSpecMax for monitoringMechanisms (for learning)
 #                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
 #          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
@@ -979,19 +994,23 @@
 
 #region DOCUMENTATION: ------------------------------------------------------------------------------------------------------
 
+# QUESTION: should attributes that are common to different subclasses be documented there, or only in the base classes?
+
 # SPHINX / RST ***********************************************************
 
-# SECTION: -------
-# SUB SECTION: ~~~~~~~
-# SUB SUB SECTION: ..........
-# EXCLUDE FROM DOCS: COMMENT:
-#                    Text to be excluded
-#                    COMMENT
-#
-# Internal attributes of a class (i.e., not to be included in rst construction): name should begin with undescore
+# Convention for names of arguments, attributes, methods and keywords:
+# =====================================================================
 
-# Tokens:
-# ======
+# argument_attribute -> argument and user-accessible attribute derived from a constructor argument
+# nonArgumentAttribue -> user-accesible attribute that is not an argument in the constructor
+# _internal_atttribute or _method -> not user accessible, and not to be included in rst docs
+# KEY_OR_KEYWORD -> name of a str used as a key for a dict or as a PsyNeuLink keyword
+
+# Main documentation of params/attributes should be in module docstring;  Arguments and Attributes should refer to that
+
+
+# rST formatting for tokens:
+# =========================
 
 # None:
 #    :keyword:`None`
@@ -1006,8 +1025,15 @@
 #    _<DOCUMENT>_<SECTION>_<SUBSECTION>:
 
 
-# Headings:
-# ========
+# rST formatting for Headings:
+# ===========================
+
+# SECTION: -------
+# SUB SECTION: ~~~~~~~
+# SUB SUB SECTION: ..........
+# EXCLUDE FROM DOCS: COMMENT:
+#                    Text to be excluded
+#                    COMMENT
 
 # Arguments [SECTION]
 # ---------
@@ -1027,7 +1053,7 @@
 #           More description.
 
 
-# ?? ADD TO FUNCTION OR GENERAL DESCRIPTOIN SOMEWHERE:
+# ?? ADD TO FUNCTION OR GENERAL DESCRIPTION SOMEWHERE:
 
     # Notes:
     # *  params can be set in the standard way for any Function subclass:
@@ -1051,14 +1077,16 @@
 # Line spacing between lines in a list
 
 # Dereference variable values
+#   Example (line 295 in DDM):
+#      default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
 # Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
 # How to underline?
-# Why does adding ": default _______ " to parmater specification suppress italicization??
+# Why does adding ": default _______ " to parameter specification suppress italicization??
 
 # ADDITIONAL QUESTIONS / ISSUES:
-# Why are some parameter type specifications (in parens) italicied and others not?
+# Why are some parameter type specifications (in parens) italicized and others not?
 # Why do some underlines work and not others (e.g., Examples in Process)
-# Defintion of a Python keyword
+# Definition of a Python keyword
 # Why does Process_Base get referenced as Process, but System_Base as such?
 
 # US:
@@ -1066,14 +1094,20 @@
 
 # ***********************************************************************
 
-# DOCUMENT:
+# DOCUMENT: constructor_arguments get instantiated (if ncessary) and assigned to objectAttributes
+#           members of params dicts get turned into object_attributes but remain in original state
+
+# DOCUMENT: Lazy Evaluation:  PUT .. _Lazy_Evaluation: SOMEWHERE (IN COMPONENTS??)
 # "lazy evaluation" (or call-by-need) (see https://en.wikipedia.org/wiki/Lazy_evaluation)[LINK].
 # :ref:"Lazy_Evaluation": for execution, this means that objects are updated by
 # calling items from which they receive input;  for implementation, this means that objects can create objects
 # from which they expect input, but cannot "impose" the creation of "downstream" objects.
 
+# DOCUMENT: Deferred Initialization
+#   For LearingSignal, ??ControlSignal
 
-
+# DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
+#                     OVERALL STRUCTURE, INCLUDING:  COMPONENTS MADE UP OF VARIABLE, FUNCTION AND OUTPUT
 # DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
 #                novices (students, non-modelers)
 #                "sketch pad", mock-up of models
@@ -1190,7 +1224,7 @@
 #                Subclasses of mechanism implement __execute__ that is called by Mechanism
 #                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
 #                    - if a subclass does not implement __execute__, calling it will call .function directly
-#                    -  if kwInit is in context for call to execute, initMethod is checked to determine whether:
+#                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
 #                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
 #                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
 #                        full subclass.__execute__ and Mechanism.execute method are run
@@ -1200,7 +1234,7 @@
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
-# 1) Function implements _deferred_init(), which checks whether self.value is kwDeferredInit;
+# 1) Function implements _deferred_init(), which checks whether self.value is DEFERRED_INITIALIZATION;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
 #     <subclass> is the class implementing deferred initialization
 #     <**self.init_args> is the set of args passed to the __init__() method of the subclass
@@ -1210,15 +1244,15 @@
 #         self.init_args['context'] = self
 #         self.init_args['name'] = name
 #         del self.init_args['self']
-#     - set self.value = kwDeferredInit
+#     - set self.value = DEFERRED_INITIALIZATION
 # 3) Where projections are ordinarily instantiated, assign instantiated stub" to sendsToProjections,
 # 4) When a process is instantiated, the last thing it does is call _deferred_init
 #    for all of the projections associated with the mechanism in its pathway,
 #    beginning with the last and moving backward though the pathway
 # 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
 #          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
-# 6) update() method should test for self.value and if it is kwDeferredInit it should return self.value
-# 7) Objects that call execute method of ones with deferred init should test for return value of kwDeferredInit
+# 6) update() method should test for self.value and if it is DEFERRED_INITIALIZATION it should return self.value
+# 7) Objects that call execute method of ones with deferred init should test for return value of DEFERRED_INITIALIZATION
 #     and handle appropriately
 
 
@@ -1523,6 +1557,12 @@
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[INPUT_STATES] IS SPECIFIED IN __init__()
 #
+# - IMPLEMENT: controlSignals attribute:  list of control signals for mechanism
+#                                        (get from outputStates.sendsToProjections)
+# - IMPLEMENT: controlSignalSearchSpace argument in constructor, that can be:
+#                   - 2d array (each item of which is validated for length = len(self.controlSignals
+#                   - function that returns a 2d array, validate per above.
+#
 # - IMPLEMENT: EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (inputStates)
 #
@@ -1557,7 +1597,7 @@
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
-# FIX:                   ControlSignal.paramClassDefaults[kwProjectionSender]
+# FIX:                   ControlSignal.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
@@ -1599,6 +1639,13 @@
 #                 instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
+
+#endregion
+
+#region TIMESCALE ------------------------------------------------------------------------------------------------------
+
+# FIX:  TIME_STEP SHOULD HAVE A GLOBAL PARAMETER, AND THEN DDM TIME_STEP MODE USES THAT
+# FIX: Put in an "apology" exception message if anything that can't handle it is called to run in time_step mode.
 
 #endregion
 
@@ -1728,7 +1775,8 @@
 #
 #endregion
 
-#region FUNCTIONS: -----------------------------------------------------------------------------------------------------------
+#region COMPONENTS:
+# -----------------------------------------------------------------------------------------------------------
 #
 #  _validate_function:
 #
@@ -1900,7 +1948,7 @@
 # - replace "state" with "mechanism_state"
 # - Generalize _validate_params to go through all params, reading from each its type (from a registry),
 #                            and calling on corresponding subclass to get default values (if param not found)
-#                            (as PROJECTION_TYPE and kwProjectionSender are currently handled)
+#                            (as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)
 # IN MECHANISMS _validate_function:
 #   ENFORCEMENT OF CONSTRAINTS
 #
@@ -2037,7 +2085,7 @@
 #
 #      controlModulatedParamValues
 #
-# 0) MAKE SURE THAT kwProjectionSenderValue IS NOT PARSED AS PARAMS
+# 0) MAKE SURE THAT PROJECTION_SENDER_VALUE IS NOT PARSED AS PARAMS
 #      NEEDING THEIR OWN PROJECTIONS (HOW ARE THEY HANDLED IN PROJECTIONS?) -- ARE THEWE EVEN USED??
 #      IF NOT, WHERE ARE DEFAULTS SET??
 # 2) Handle assignment of default ControlSignal sender (DefaultController)
@@ -2191,7 +2239,7 @@
 
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
-# - FIX: CLEAN UP PROBABILITY_UPPER_BOUND ETC.
+# - FIX: CLEAN UP PROBABILITY_UPPER_THRESHOLD ETC.
 # - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
 # - Fix:  move kwDDM_AnalyticSolution back to FUNCTION_PARAMS and adjust validation to allow non-numeric value
 # - implement: add options to multiply or fully override parameterState.values
@@ -2210,7 +2258,8 @@
 #
 #endregion
 
-#region FUNCTION: ------------------------------------------------------------------------------------------------------
+#region COMPONENT:
+# ------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
 # Implement abstract Types (aggregate, transfer, tranform, objective)

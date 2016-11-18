@@ -32,7 +32,7 @@ also be specified so long as they return a numeric value or list or np.ndarray o
 Creating a Transfer Mechanism
 -----------------------------
 
-A Transfer Mechanism can be instantiated either directly, by calling the class, or using the :class:`mechanism`
+A Transfer Mechanism can be instantiated either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying Transfer as its ``mech_spec`` argument.  Its function is specified in the ``function``
 argument, which can be simply the name of the class (first example below), or a call to the class which can
 include arguments specifying the function's parameters (second example)::
@@ -207,7 +207,7 @@ class Transfer(ProcessingMechanism_Base):
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
-    .. context=componentType+kwInit):
+    .. context=componentType+INITIALIZING):
             context : str : default ''None''
                    string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
@@ -277,7 +277,7 @@ class Transfer(ProcessingMechanism_Base):
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=componentType+kwInit):
+                 context=componentType+INITIALIZING):
         """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
 
         :param default_input_value: (value)
@@ -422,7 +422,7 @@ class Transfer(ProcessingMechanism_Base):
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
-        if kwInit in context:
+        if INITIALIZING in context:
             self.previous_input = self.variable
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:

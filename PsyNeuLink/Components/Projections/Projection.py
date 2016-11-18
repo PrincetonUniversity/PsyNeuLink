@@ -4,8 +4,8 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # **********************************************  Projection ***********************************************************
 
 """
@@ -54,7 +54,7 @@ Creating a Projection
 ---------------------
 
 Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
-subclass for the desired type of projection.  However, projections can also be specified "in context," for example
+constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the ``pathway`` attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
 This can be done using a call to the projection subclass, or one of the following ways:
 
@@ -93,7 +93,7 @@ This can be done using a call to the projection subclass, or one of the followin
 Structure
 ---------
 
-In addition to its ``function``, a projections has two core components:
+In addition to its ``function``, a projection has two core components:
 
 .. _Projection_Sender:
 
@@ -111,11 +111,10 @@ sender's ``value`` is used as the ``variable`` (input) for projection's ``functi
   ..
   * the name of an existing mechanism (to which a default outputState will be added);
   ..
-  * a specification dictionary (see _State_Creating_A_State).
+  * a specification dictionary (see :ref:`State_Creating_A_State`[LINK]).
 
-If a sender is not specified, or its specification creates a default and
- paramClassDefaults[kwProjectionSender] is used to assign a default appropriate
-to the type of projection (see [LINK]).
+If a sender is not specified, or its specification creates a default, paramClassDefaults[PROJECTION_SENDER] is
+used to assign a default appropriate to the type of projection (see [LINK]).
 
 
 .. _Projection_Receiver:
@@ -229,13 +228,12 @@ class Projection_Base(Projection):
     name=None,        \
     prefs=None)
 
-
     Abstract class definition for
 
     .. note::
        Projections should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated by calling the desired subclass or the other methods for specifying a projection
-       (see [LINK]).
+       They should be instantiated by calling the constructor for the desired subclass or by using the other methods
+       for specifying a projection (see [LINK]).
 
 
     COMMENT:
@@ -251,7 +249,7 @@ class Projection_Base(Projection):
             + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
             + variableClassDefault (value): [0]
-            + requiredParamClassDefaultTypes = {kwProjectionSender: [str, Mechanism, State]}) # Default sender type
+            + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
             + paramNames (dict)
             + FUNCTION (Function class or object, or method)
@@ -273,39 +271,25 @@ class Projection_Base(Projection):
         Input to projection, received from outputState.value of sender.
 
     sender : State
-        State (of a mechanism) from which projection receives its input.
+        State from which projection receives its input.
 
     receiver : State
-        State (of a mechanism or projection) to which projection sends its output.
+        State (of a mechanism or projection)
+        State to which projection sends its output.
 
     value : value
         Output of projection, transmitted to inputState.variable of receiver.
 
     COMMENT:
-        params : Dict[param arg, parm value]
-            kwProjectionSender:<Mechanism or State class or object>
-                This is populated by __init__ with the default sender state for each subclass.
-                It is used if sender arg is not provided.
-                If it is different than the default, it overrides the sender arg even if that is provided.
-            kwProjectionSenderValue:<value>
-                Use to instantiate ProjectionSender (i.e., a default sender)
+        projectionSender : Mechanism, State, or Object
+            This is assigned by __init__.py with the default sender state for each subclass.
+            It is used if sender arg is not specified in the constructor or when the projection is assigned.
+            If it is different than the default;  where it is used, it overrides the ``sender`` argument even if that is
+            provided.
 
-        paramsCurrent : Dict[param arg, parm value]
-            Current value of all params for instance.
-
-        paramInstanceDefaults : Dict[param arg, parm value]
-            Defaults for instance (created and validated in Components init).
-
-        paramNames : List[str]
-            list of keys for the params in paramInstanceDefaults.
-
-            .. _stateRegistry (Registry): registry containing a dict for the projection's parameterStates, that has
-                an instance dict of the parameterStates and a count of them
-                Note: registering instances of parameterStates with the projection (rather than in the StateRegistry)
-                      allows the same name to be used for parameterStates belonging to different projections
-                      without adding index suffixes for the name across projections
-                      while still indexing multiple uses of the same base name within a projection.
-    COMMENT:
+        projectionSender : 1d array
+            Used to instantiate projectionSender
+    COMMENT
 
     name : str : default <Projection subclass>-<index>
         Name of the projection.
@@ -334,7 +318,7 @@ class Projection_Base(Projection):
     variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({kwProjectionSender: [str, Mechanism, State]}) # Default sender type
+    requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
 
     def __init__(self,
                  receiver,
@@ -375,7 +359,7 @@ class Projection_Base(Projection):
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
-            - _validate_params must be called before _instantiate_sender, as it validates kwProjectionSender
+            - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
             - instantatiate_sender may alter self.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
@@ -455,14 +439,14 @@ class Projection_Base(Projection):
         # self.paramNames = self.paramInstanceDefaults.keys()
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Validate kwProjectionSender and/or sender arg (current self.sender), and assign one of them as self.sender
+        """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
-        - that kwProjectionSender is a Mechanism or State
-        - if it is different from paramClassDefaults[kwProjectionSender], use it
+        - that PROJECTION_SENDER is a Mechanism or State
+        - if it is different from paramClassDefaults[PROJECTION_SENDER], use it
         - if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
-        - if sender arg is valid use it (if kwProjectionSender can't be used);
-        - otherwise use paramClassDefaults[kwProjectionSender]
+        - if sender arg is valid use it (if PROJECTION_SENDER can't be used);
+        - otherwise use paramClassDefaults[PROJECTION_SENDER]
         - when done, sender is assigned to self.sender
 
         Note: check here only for sender's type, NOT content (e.g., length, etc.); that is done in _instantiate_sender
@@ -476,25 +460,25 @@ class Projection_Base(Projection):
         super(Projection, self)._validate_params(request_set, target_set, context)
 
         try:
-            sender_param = target_set[kwProjectionSender]
+            sender_param = target_set[PROJECTION_SENDER]
         except KeyError:
-            # This should never happen, since kwProjectionSender is a required param
+            # This should never happen, since PROJECTION_SENDER is a required param
             raise ProjectionError("Program error: required param {0} missing in {1}".
-                                  format(kwProjectionSender, self.name))
+                                  format(PROJECTION_SENDER, self.name))
 
-        # kwProjectionSender is either an instance or class of Mechanism or State:
+        # PROJECTION_SENDER is either an instance or class of Mechanism or State:
         if (isinstance(sender_param, (Mechanism, State)) or
                 (inspect.isclass(sender_param) and
                      (issubclass(sender_param, Mechanism) or issubclass(sender_param, State)))):
             # it is NOT the same as the default, use it
-            if sender_param is not self.paramClassDefaults[kwProjectionSender]:
+            if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
                 self.sender = sender_param
             # it IS the same as the default, but sender arg was not provided, so use it (= default):
             elif self.sender is None:
                 self.sender = sender_param
                 if self.prefs.verbosePref:
                     warnings.warn("Neither {0} nor sender arg was provided for {1} projection to {2}; "
-                                  "default ({3}) will be used".format(kwProjectionSender,
+                                  "default ({3}) will be used".format(PROJECTION_SENDER,
                                                                       self.name,
                                                                       self.receiver.owner.name,
                                                                       sender_param.__class__.__name__))
@@ -502,11 +486,11 @@ class Projection_Base(Projection):
             elif not (isinstance(self.sender, (Mechanism, State, Process)) or
                           (inspect.isclass(self.sender) and
                                (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
-                # sender arg (self.sender) is not valid, so use kwProjectionSender (= default)
+                # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
                 self.sender = sender_param
                 if self.prefs.verbosePref:
                     warnings.warn("{0} was not provided for {1} projection to {2}, and sender arg ({3}) is not valid; "
-                                  "default ({4}) will be used".format(kwProjectionSender,
+                                  "default ({4}) will be used".format(PROJECTION_SENDER,
                                                                       self.name,
                                                                       self.receiver.owner.name,
                                                                       self.sender,
@@ -516,39 +500,39 @@ class Projection_Base(Projection):
             # IS the same as the default, and sender arg was provided, so use sender arg
             else:
                 pass
-        # kwProjectionSender is not valid, and:
+        # PROJECTION_SENDER is not valid, and:
         else:
             # sender arg was not provided, use paramClassDefault
             if self.sender is None:
-                self.sender = self.paramClassDefaults[kwProjectionSender]
+                self.sender = self.paramClassDefaults[PROJECTION_SENDER]
                 if self.prefs.verbosePref:
                     warnings.warn("{0} ({1}) is invalid and sender arg ({2}) was not provided;"
                                   " default {3} will be used".
-                                  format(kwProjectionSender, sender_param, self.sender,
-                                         self.paramClassDefaults[kwProjectionSender]))
+                                  format(PROJECTION_SENDER, sender_param, self.sender,
+                                         self.paramClassDefaults[PROJECTION_SENDER]))
             # sender arg is also invalid, so use paramClassDefault
             elif not isinstance(self.sender, (Mechanism, State)):
-                self.sender = self.paramClassDefaults[kwProjectionSender]
+                self.sender = self.paramClassDefaults[PROJECTION_SENDER]
                 if self.prefs.verbosePref:
                     warnings.warn("Both {0} ({1}) and sender arg ({2}) are both invalid; default {3} will be used".
-                                  format(kwProjectionSender, sender_param, self.sender,
-                                         self.paramClassDefaults[kwProjectionSender]))
+                                  format(PROJECTION_SENDER, sender_param, self.sender,
+                                         self.paramClassDefaults[PROJECTION_SENDER]))
             else:
-                self.sender = self.paramClassDefaults[kwProjectionSender]
+                self.sender = self.paramClassDefaults[PROJECTION_SENDER]
                 if self.prefs.verbosePref:
                     warnings.warn("{0} ({1}) is invalid; sender arg ({2}) will be used".
-                                  format(kwProjectionSender, sender_param, self.sender))
-            if not isinstance(self.paramClassDefaults[kwProjectionSender], (Mechanism, State)):
+                                  format(PROJECTION_SENDER, sender_param, self.sender))
+            if not isinstance(self.paramClassDefaults[PROJECTION_SENDER], (Mechanism, State)):
                 raise ProjectionError("Program error: {0} ({1}) and sender arg ({2}) for {3} are both absent or invalid"
                                       " and default (paramClassDefault[{4}]) is also invalid".
-                                      format(kwProjectionSender,
+                                      format(PROJECTION_SENDER,
                                              # sender_param.__name__,
                                              # self.sender.__name__,
-                                             # self.paramClassDefaults[kwProjectionSender].__name__))
+                                             # self.paramClassDefaults[PROJECTION_SENDER].__name__))
                                              sender_param,
                                              self.sender,
                                              self.name,
-                                             self.paramClassDefaults[kwProjectionSender]))
+                                             self.paramClassDefaults[PROJECTION_SENDER]))
 
     def _instantiate_attributes_before_function(self, context=None):
 
@@ -560,7 +544,7 @@ class Projection_Base(Projection):
     def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
 
-        Assume self.sender has been assigned in _validate_params, from either sender arg or kwProjectionSender
+        Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
         Validate, set self.variable, and assign projection to sender's sendsToProjections attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
@@ -589,7 +573,7 @@ class Projection_Base(Projection):
                 # self.paramsCurrent['function_params']['matrix']
                 # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING PROJECTION??
                 # MODIFIED 9/12/16 END
-                self.sender = self.paramsCurrent[kwProjectionSender](self.paramsCurrent[kwProjectionSenderValue])
+                self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
                 raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
                                       format(self.sender.__class__.__name__, self.name))
@@ -845,7 +829,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
     state must be a specification of an outputState
     Specification of OutputState can be any of the following:
-            - kwOutputState - assigns projection_spec to (primary) outputState
+            - OUTPUT_STATE - assigns projection_spec to (primary) outputState
             - OutputState object
             - index for Mechanism.outputStates OrderedDict
             - name of outputState (i.e., key for Mechanism.outputStates OrderedDict))
@@ -871,8 +855,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         state.instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
-    # Generic kwOutputState is specified, so use (primary) outputState
-    elif state is kwOutputState:
+    # Generic OUTPUT_STATE is specified, so use (primary) outputState
+    elif state is OUTPUT_STATE:
         sender.outputState.instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 

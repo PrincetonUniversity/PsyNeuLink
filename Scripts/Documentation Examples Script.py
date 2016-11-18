@@ -8,7 +8,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Trans
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Projections.Mapping import Mapping
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Globals.Run import run
 
 from PsyNeuLink.Components.Functions.Function import *

@@ -21,7 +21,9 @@
 
 CONTENTS:
 
-    VALUE COMPARISON:
+    TYPE CHECKING and VALUE COMPARISON:
+        is_numerical_or_none
+        is_numerical
         iscompatible
 
     ENUM:
@@ -38,8 +40,9 @@ CONTENTS:
         np_array_less_that_2d
         convert_to_np_array
         get_value_from_array
+        is_matrix
         underscore_to_camelCase
-
+        append_type_to_name
 """
 
 import warnings
@@ -116,7 +119,7 @@ class AutoNumber(IntEnum):
         return obj
 
 
-# ************************************** GLOBAL STRUCTURES AND CONSTANTS ***********************************************
+# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 
 TEST_CONDTION = False
 
@@ -445,6 +448,9 @@ def get_value_from_array(array):
     :param array:
     :return:
     """
+
+def random_matrix(sender, receiver, range=1, offset=0):
+    return (range * np.random.rand(sender, receiver)) + offset
 
 def underscore_to_camelCase(item):
     item = item[1:]
