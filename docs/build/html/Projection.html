@@ -93,6 +93,14 @@
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
 <li class="toctree-l2"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sender">Sender</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#receiver">Receiver</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -149,6 +157,153 @@
 <li class="toctree-l1"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
 </ul>
 </div>
+<span class="target" id="module-Projection"></span><div class="section" id="overview">
+<span id="projection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
+one mechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is needed to transmit that information as the input
+to another mechanism (its <code class="docutils literal"><span class="pre">receiver</span></code>).  There are three types of projections that serve difference purposes:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a></dt>
+<dd><p class="first last">These take the ouptut of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>, convert this by convolving it with the projection&#8217;s
+<code class="docutils literal"><span class="pre">matrix</span></code> parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
+are used to connect the mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <span class="xref doc">process</span>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a></dt>
+<dd><p class="first last">Thess take a &#8220;control allocation&#8221; specification — usually the ouptput of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> — and transmit
+this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
+parameter of the mechanism&#8217;s function.  ControlSignals projections are typically used in the context of a
+<a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt><span class="xref doc">Learning</span></dt>
+<dd><p class="first last">These take an &#8220;error signal&#8221; —&nbsp;usually the output of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a> —&nbsp;and transmit this to the
+parameterState of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection, which uses this to modify its <code class="docutils literal"><span class="pre">matrix</span></code> parameter.
+ControlSignal projections are typically used in the context of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> that uses learning.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="creating-a-projection">
+<span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
+<p>Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
+constructor for the desired type of projection.  However, projections can also be specified &#8220;in context,&#8221; for example
+in the <code class="docutils literal"><span class="pre">pathway</span></code> attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
+This can be done using a call to the projection subclass, or one of the following ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li>name of an <strong>existing projection</strong>:</li>
+</ul>
+<ul class="simple">
+<li>name of a <strong>projection type</strong> (subclass);</li>
+</ul>
+<ul>
+<li><p class="first"><strong>specification dictionary</strong> &#8211; this can contain an entry specifying the type of projection,
+and/or entries specifying the value of parameters used to instantiate it.
+These should take the following form:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_TYPE</span></code>: &lt;name of a projection type&gt;</p>
+<blockquote>
+<div><p>if this entry is absent, a default projection will be created that is appropriate for the context
+(for example, a Mapping projection for an inputState, and a ControlSignal projection for a parameterState).</p>
+</div></blockquote>
+</li>
+<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_PARAMS</span></code>: Dict[projection argument, argument value]</p>
+<blockquote>
+<div><p>the key for each entry of the dict must be the name of a projection parameter (see <code class="xref py py-class docutils literal"><span class="pre">Projection_Base</span></code>
+below), and the value should be the value of the parameter.  It can contain any of the standard parameters
+for instantiating a projection (see <code class="xref py py-class docutils literal"><span class="pre">Projection_Base</span></code>) or ones specific to a particular type of
+projection (see documentation for subclass).  Note that parameter values in the specification dict will be
+used to instantiate the projection.  These can be overridden during execution by specifying
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for the projection, either when calling the * <code class="docutils literal"><span class="pre">execute</span></code> method for a
+<code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code> directly, or where it is specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <code class="xref py py-class docutils literal"><span class="pre">process</span></code>.</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first"><strong>automatically</strong> &#8211; PsyNeuLink will automatically create projections under some circumstances.  For example,
+a process automatically generates a  <a class="reference internal" href="Mapping.html#module-Mapping" title="Mapping"><code class="xref py py-class docutils literal"><span class="pre">Mapping</span></code></a> projection between adjacent mechanisms in its pathway if
+none is specified; and <a class="reference internal" href="LearningSignal.html#module-LearningSignal" title="LearningSignal"><code class="xref py py-class docutils literal"><span class="pre">LearningSignal</span></code></a>  projections are automatically generated when <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Learning</span></a>
+is specified for a process.  Creating a <code class="xref py py-class docutils literal"><span class="pre">state</span></code> will also automatically generate a projection and a sender
+mechanism, if none is specified (the type of projection and its sender mechanism depend on the type of state &#8211;
+see state subclasses for details).</p>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="structure">
+<span id="projection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>In addition to its <code class="docutils literal"><span class="pre">function</span></code>, a projection has two core components:</p>
+<div class="section" id="sender">
+<span id="projection-sender"></span><h3>Sender<a class="headerlink" href="#sender" title="Permalink to this headline">¶</a></h3>
+<p>This must be an <a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><code class="xref py py-class docutils literal"><span class="pre">OutputState</span></code></a>.  The projection is assigned to the sender&#8217;s <code class="docutils literal"><span class="pre">sendsToProjections</span></code> list, and the
+sender&#8217;s <code class="docutils literal"><span class="pre">value</span></code> is used as the <code class="docutils literal"><span class="pre">variable</span></code> (input) for projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.  A sender can be specified as:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the name of an existing inputState;</li>
+</ul>
+<ul class="simple">
+<li>a string used to name a default instance of InputState (if the owner for the inputState can&#8217;t be inferred
+from the context, a default mechanism will be created as the owner for the inputState, the type of which
+is determined by the projection&#8217;s type —&nbsp;see [LINK]);</li>
+</ul>
+<ul class="simple">
+<li>the name of an existing mechanism (to which a default outputState will be added);</li>
+</ul>
+<ul class="simple">
+<li>a specification dictionary (see :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>State_Creating_A_State`[LINK]).</li>
+</ul>
+</div></blockquote>
+<p>If a sender is not specified, or its specification creates a default, paramClassDefaults[PROJECTION_SENDER] is
+used to assign a default appropriate to the type of projection (see [LINK]).</p>
+</div>
+<div class="section" id="receiver">
+<span id="projection-receiver"></span><h3>Receiver<a class="headerlink" href="#receiver" title="Permalink to this headline">¶</a></h3>
+<p>This must be an <a class="reference internal" href="InputState.html#module-InputState" title="InputState"><code class="xref py py-class docutils literal"><span class="pre">InputState</span></code></a> or a <a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><code class="xref py py-class docutils literal"><span class="pre">ParameterState</span></code></a>.  The projection is assigned to the receiver&#8217;s
+<code class="docutils literal"><span class="pre">receivesFromProjections</span></code> list, and the output of the projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> is transmitted to its receiver,
+where it is combined with the input from any other projections to generate its <code class="docutils literal"><span class="pre">variable</span></code>.  A receiver can be
+specified as:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the name of an existing outputState;</li>
+</ul>
+<ul class="simple">
+<li>the name of an existing mechanism or projection, for which a default state will be created and added
+(whether the object can be a mechanism or projection, and the type of state that will be created for it
+is determined by the type of projection —&nbsp;see subclass for details).</li>
+</ul>
+<ul class="simple">
+<li>a specification dictionary (see _State_Creating_A_State).</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">a receiver <strong>must</strong> be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
+principle of :ref:&#8221;Lazy_Evaluation&#8221; which, here, means that objects can create other objects from which they
+<em>expect</em> input, but cannot <em>impose</em> the creation of &#8220;downstream&#8221; objects.</p>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="execution">
+<span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A projection cannot be executed directly.  It is executed when the state to which it projects —&nbsp;its <code class="docutils literal"><span class="pre">receiver</span></code> —
+is updated;  that occurs when the state&#8217;s owner mechanism is executed.  When a projection executes, it gets the value
+of its <code class="docutils literal"><span class="pre">sender</span></code>, assigns this as the variable for its <code class="docutils literal"><span class="pre">function</span></code>, calls the function, and assigns the result as
+the variable of its <code class="docutils literal"><span class="pre">receiver</span></code>.  The function of a projection converts the value received from its  <code class="docutils literal"><span class="pre">sender</span></code> to a
+form suitable as input to its <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<span class="target" id="projection-class-reference"></span></div>
 </div>
 
 
