@@ -310,16 +310,16 @@ class LearningSignal(Projection_Base):
 
         # VALIDATE SENDER
         sender = self.sender
-        self.validate_sender(sender)
+        self._validate_sender(sender)
 
         # VALIDATE RECEIVER
         try:
             receiver = target_set[PARAMETER_STATES]
-            self.validate_receiver(receiver)
+            self._validate_receiver(receiver)
         except (KeyError, LearningSignalError):
             # PARAMETER_STATES not specified:
             receiver = self.receiver
-            self.validate_receiver(receiver)
+            self._validate_receiver(receiver)
 
         # VALIDATE WEIGHT CHANGE PARAMS
         try:
@@ -336,7 +336,7 @@ class LearningSignal(Projection_Base):
                                                      self.name,
                                                      param_value))
 
-    def validate_sender(self, sender):
+    def _validate_sender(self, sender):
         """Make sure sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;
         """
 
@@ -362,7 +362,7 @@ class LearningSignal(Projection_Base):
                                       "the outputState of one, or a reference to the class"
                                       .format(PROJECTION_SENDER, sender, self.name, ))
 
-    def validate_receiver(self, receiver):
+    def _validate_receiver(self, receiver):
         """Make sure receiver is a Mapping projection or the parameterState of one
         """
 
