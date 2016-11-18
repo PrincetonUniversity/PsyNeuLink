@@ -3,4 +3,4 @@ LearningSignal
 
 .. automodule:: LearningSignal
    :members:
-   :exclude-members: random
+   :exclude-members: random, execute
