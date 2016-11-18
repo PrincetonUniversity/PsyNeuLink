@@ -1097,7 +1097,7 @@
 # DOCUMENT: constructor_arguments get instantiated (if ncessary) and assigned to objectAttributes
 #           members of params dicts get turned into object_attributes but remain in original state
 
-# DOCUMENT: Lazy Evaluation
+# DOCUMENT: Lazy Evaluation:  PUT .. _Lazy_Evaluation: SOMEWHERE (IN COMPONENTS??)
 # "lazy evaluation" (or call-by-need) (see https://en.wikipedia.org/wiki/Lazy_evaluation)[LINK].
 # :ref:"Lazy_Evaluation": for execution, this means that objects are updated by
 # calling items from which they receive input;  for implementation, this means that objects can create objects
