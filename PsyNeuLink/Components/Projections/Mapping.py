@@ -55,6 +55,12 @@ or they can be assigned by default (see below).
 Structure
 ---------
 
+COMMENT:
+    XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningSignal CAN BE SPECIFIED HERE:
+            IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
+            SEE BELOW:  "If there is a functionParameterStates[LEARNING_SIGNAL]"
+COMMENT
+
 In addition to its ``function``, mapping projections use the following two the primary parameters:
 
 .. _Mapping_Matrix:
@@ -356,7 +362,7 @@ class Mapping(Projection_Base):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
-        If there is an functionParameterStates[LEARNING_SIGNAL], update the matrix parameterState:
+        If there is a functionParameterStates[LEARNING_SIGNAL], update the matrix parameterState:
                  it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
            - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)

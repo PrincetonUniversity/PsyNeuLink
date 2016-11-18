@@ -93,7 +93,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Mapping.html">Mapping</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">Control Signal</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">LearningSignal</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">LearningSignal</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-learningsignal-projection">Creating a LearningSignal Projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -143,8 +154,246 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="learningsignal">
-<h1>LearningSignal<a class="headerlink" href="#learningsignal" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-LearningSignal">
+<span id="learningsignal"></span><h1>LearningSignal<a class="headerlink" href="#module-LearningSignal" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="learningsignal-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A LearningSignal projection takes a value (an <em>error signal</em>) from a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a> (its <code class="docutils literal"><span class="pre">sender</span></code>),
+and uses this to compute a <code class="docutils literal"><span class="pre">weightChangeMatrix</span></code> that is assigned as its value.  This is used to modify the
+<a class="reference internal" href="Mapping.html#mapping-matrix"><span class="std std-ref">matrix</span></a> parameter of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection.  A LearningSignal can be assigned different
+functions[LINK] to implement different learning algorithms, which are associated with corresponding types of
+MonitoringMechanisms.</p>
+</div>
+<div class="section" id="creating-a-learningsignal-projection">
+<span id="learningsignal-creating-a-learningsignal-projection"></span><h2>Creating a LearningSignal Projection<a class="headerlink" href="#creating-a-learningsignal-projection" title="Permalink to this headline">¶</a></h2>
+<p>???INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection</p>
+<p>A LearningSignal projection can be created in any of the ways that can be used to
+<a class="reference internal" href="Projection.html#projection-creating-a-projection"><span class="std std-ref">create a projection</span></a>, or by including it in the specification of a
+<span class="xref std std-ref">system</span>, <span class="xref std std-ref">process</span>, or projection in the <span class="xref std std-ref">pathway</span> of a process.  Its
+<code class="docutils literal"><span class="pre">sender</span></code> (the source of its error signal) must be a MonitoringMechanism, and its <code class="docutils literal"><span class="pre">receiver</span></code> must be the
+parameterState of a Mapping projection.  When a LearningSignal is created, its full initialization is deferred [LINK]
+until its <code class="docutils literal"><span class="pre">sender</span></code> and <code class="docutils literal"><span class="pre">receiver</span></code> have been fully specified.  This means that it is possible to create a
+LearningSignal using its constructor without specifying either its <code class="docutils literal"><span class="pre">sender</span></code> or its <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<p>It is not necessary to assign a <code class="docutils literal"><span class="pre">sender</span></code>;  if none is specified when it is initialized, a MonitoringMechanism of
+the appropriate type will be created (see <a class="reference internal" href="#learningsignal-structure"><span class="std std-ref">Structure</span></a> below).  However,
+a LearningSignal&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code> must be specified.  One that is done, for the LearningSignal to be operational,
+initializaton must be completed by calling its <code class="docutils literal"><span class="pre">deferred_init</span></code> method.  This is not necessary if the LearningSignal
+is specified as part of a system, process, or a projection in the pathway of a process &#8211; in those cases,
+initialization is completed automatically.</p>
+<p>THIS IS A TEST</p>
+</div>
+<div class="section" id="structure">
+<span id="learningsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p><em>Error Signal, Error Source, and Mapping Projection</em>.  The <code class="docutils literal"><span class="pre">variable</span></code> for a LearningSignal is the error signal it
+gets from a  MonitoringMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>).  This is stored in its <code class="docutils literal"><span class="pre">errorSignal</span></code> attribute.  The
+<code class="docutils literal"><span class="pre">sender</span></code> is a MonitoringMechanism that compares the output of a ProcessingMechanism with a target value,
+and uses the disparity to compute the error signal.  The ProcessingMechanism &#8211; its <code class="docutils literal"><span class="pre">errorSource</span></code> &#8211; is the one that
+receives the Mapping projection to which the  LearningSignal projects &#8211; its <code class="docutils literal"><span class="pre">mappingProjection</span></code> (see
+<a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">figure</span></a>).</p>
+<p><em>Function</em>.  This computes the changes to the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">mappingProjection</span></code>
+required to reduce the <code class="docutils literal"><span class="pre">errorSignal</span></code> for its <code class="docutils literal"><span class="pre">errorSource</span></code>.  The default is <code class="xref py py-class docutils literal"><span class="pre">BackPropagation</span></code> (also known
+as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned a different function
+that implements another learning algorithm.  Assignment of the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">function</span></code> must be appropriate for
+the <code class="docutils literal"><span class="pre">function</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code> ProcessingMechanism (since how the learning signal is computed depends on the
+nature of the function that generated the error);  failure to match the learning algorithm with the function of the
+ProcesingMechanism will generate an error that flags the problem.</p>
+<p><em>Monitoring Mechanism</em>.  The errorSignal itself is computed by the MonitoringMechanism, which compares the output of
+the <code class="docutils literal"><span class="pre">errorSource</span></code> ProcessingMechanism, with a target value.  The target value is provided to the Process or System to
+which it belongs when it is <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">run</span></a>.</p>
+<p>Automatic implementation:  generates monitoring mechanism, and the appropriate projection from the errorSource to
+the MonitoringMechanism.
+Primary (Comparator) vs. seconadry (WeightedError)</p>
+<p># DOCUMENT: if it instantiates a DefaultTrainingSignal:
+#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
+#               otherwise, use error_source.outputState (i.e., error source&#8217;s primary outputState)</p>
+</div>
+<div class="section" id="execution">
+<span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When the LearningSignal is executed, it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to compute the changes to the <code class="docutils literal"><span class="pre">matrix</span></code> parameter
+of that Mapping projection that minimize the
+ProcessingMechanism&#8217;s output and the target for training (specified in the <code class="docutils literal"><span class="pre">run</span></code> method of a system or process.
+Those changes are
+assigned as the
+LearningSignal&#8217;s
+value</p>
+<p>A LearningSignal projection uses its <code class="docutils literal"><span class="pre">function</span></code> to compute its <code class="docutils literal"><span class="pre">intensity</span></code>, and its <span class="xref std std-ref">cost functions
+&lt;LearningSignal_Cost_Functions&gt; use the ``intensity`</span> to compute the its <code class="docutils literal"><span class="pre">cost</span></code>.  The <code class="docutils literal"><span class="pre">intensity</span></code> is assigned as
+the LearningSignal projection&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, which is used by the parmaterState to which it projects to modify the
+corresponding parameter of the owner mechanism&#8217;s function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The changes in a parameter in response to the execution of a LearningSignal projection are not applied until the
+mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of &#8220;lazy&#8221;
+updating).</p>
+</div>
+</div>
+<div class="section" id="class-reference">
+<span id="learningsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="LearningSignal.LearningSignal">
+<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b613378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements projection that modifies the matrix param of a Mapping projection</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sender (MonitoringMechanism) - source of projection input (default</strong> (<em>-</em>) &#8211; </li>
+<li><strong>receiver</strong> (<em>-</em>) &#8211; </li>
+<li><strong>params (dict) - dictionary of projection params</strong> (<em>-</em>) &#8211; <ul>
+<li>FUNCTION (Function): (default: BP)</li>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS (dict):</dt>
+<dd><ul class="first last">
+<li>LEARNING_RATE (value): (default: 1)</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</li>
+<li><strong>name (str) - if it is not specified, a default based on the class is assigned in register_category</strong> (<em>-</em>) &#8211; </li>
+<li><strong>prefs (PreferenceSet or specification dict)</strong> (<em>-</em>) &#8211; if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
+dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
+(see Description under PreferenceSet for details)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt>
+<code class="descname">+ sender (MonitoringMechanism)</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ receiver (Mapping)</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ paramsCurrent (dict) - set currently in effect</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ variable (value) - used as input to projection's function</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ value (value) - output of function</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ mappingWeightMatrix (2D np.array) - points to &lt;Mapping&gt;.paramsCurrent[FUNCTION_PARAMS][MATRIX]</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ weightChangeMatrix (2D np.array) - rows</code></dt>
+<dd><p><em>sender deltas;  columns:  receiver deltas</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">+ prefs (PreferenceSet) - if not specified as an arg, default is created by copying LearningSignalPreferenceSet</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="LearningSignal.LearningSignal.validate_sender">
+<code class="descname">validate_sender</code><span class="sig-paren">(</span><em>sender</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal.validate_sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="LearningSignal.LearningSignal.validate_receiver">
+<code class="descname">validate_receiver</code><span class="sig-paren">(</span><em>receiver</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal.validate_receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure receiver is a Mapping projection or the parameterState of one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="LearningSignal.LearningSignal.get_mapping_projection_weight_matrix">
+<code class="descname">get_mapping_projection_weight_matrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal.get_mapping_projection_weight_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get weight matrix for Mapping projection to which LearningSignal projects</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="LearningSignal.LearningSignal.validate_error_signal">
+<code class="descname">validate_error_signal</code><span class="sig-paren">(</span><em>error_signal</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal.validate_error_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="LearningSignal.LearningSignal.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=NotImplemented</em>, <em>params=None</em>, <em>time_scale=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOCUMENT:
+LearnningSignal (Projection):</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>sender:  output of Monitoring Mechanism</dt>
+<dd><dl class="first last docutils">
+<dt>default: receiver.owner.outputState.sendsToProjections.&lt;MonitoringMechanism&gt; if specified,</dt>
+<dd><p class="first last">else default Comparator</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><p class="first">receiver: Mapping Projection parameterState (or some equivalent thereof)</p>
+</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>Mapping Projection should have kwLearningParam which:</dt>
+<dd><ul class="first last simple">
+<li>specifies LearningSignal</li>
+<li>defaults to BP</li>
+</ul>
+</dd>
+</dl>
+<p>?? - uses self.outputStates.sendsToProjections.&lt;MonitoringMechanism&gt; if specified</p>
+<dl class="docutils">
+<dt>LearningSignal function:</dt>
+<dd>Generalized delta rule:
+weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
+for sumSquared error function:  errorDerivative = (target - sample)
+for logistic activation function: transferDerivative = sample * (1-sample)</dd>
+</dl>
+<p>NEEDS:
+- errorDerivative:  get from FUNCTION of Comparator Mechanism
+- transferDerivative:  get from FUNCTION of Processing Mechanism</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(2D np.array) self.weightChangeMatrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
 </div>
 
 
