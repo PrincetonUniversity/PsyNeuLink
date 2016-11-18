@@ -2,11 +2,14 @@ Projections
 ===========
 
 .. toctree::
-	:maxdepth: 2
+   :maxdepth: 1
 
-	Mapping
-	ControlSignal
-	Learning
+   Mapping
+   ControlSignal
+   LearningSignal
 
 .. automodule:: Projection
-	:members:
+
+..
+   :members:
+   :exclude-members: Projection_Base, _is_projection_spec, random

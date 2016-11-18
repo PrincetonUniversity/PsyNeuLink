@@ -26,7 +26,7 @@ classdef DDM_Padmala2011 < Simulations.DDMSim
             
             this.defaultDDMParams.c = 0.69;                     % 0.67 % 0.62
             this.defaultDDMParams.thresh = 0.76;                % 0.77 % 0.78
-            this.defaultDDMParams.T0 = 0.45;                    % 0.45 % 0.2
+            this.defaultDDMParams.t0 = 0.45;                    % 0.45 % 0.2
             
             %% task environment parameters: task environment
             

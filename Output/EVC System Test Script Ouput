@@ -68,7 +68,7 @@ Decision execute method:
     drift: 0.5
     bias: 0.5
     thresh: 10.0
-    T0: 0.2
+    t0: 0.2
     noise: 0.5
 - output:
     mean ER: 0.000
@@ -138,7 +138,7 @@ Decision execute method:
     drift: 0.5
     bias: 0.5
     thresh: 10.0
-    T0: 0.2
+    t0: 0.2
     noise: 0.5
 - output:
     mean ER: 0.000

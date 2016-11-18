@@ -1,6 +1,6 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Run import run
 
@@ -36,7 +36,3 @@ myDDM.reportOutputPref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
 # myProcess.execute(input=[-1, 2])
 # myProcess.run(inputs=[-1, 2])
 run(myProcess, [[-1,2],[2,3],[5,5]])
-
-
-
-

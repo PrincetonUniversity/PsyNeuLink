@@ -1,7 +1,7 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
 
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
 my_Transfer = Transfer(name='my_Transfer',
@@ -9,7 +9,7 @@ my_Transfer = Transfer(name='my_Transfer',
                        function=Logistic(gain=1.0, bias=0),
                        noise=0.0,
                        rate = .1,
-                       time_scale=TimeScale.REAL_TIME
+                       time_scale=TimeScale.TIME_STEP
                        # function=Linear(slope=2, intercept=10)
                        )
 
