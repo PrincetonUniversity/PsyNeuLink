@@ -47,8 +47,6 @@ initializaton must be completed by calling its ``deferred_init`` method.  This i
 is specified as part of a system, process, or a projection in the pathway of a process -- in those cases,
 initialization is completed automatically.
 
-THIS IS A TEST
-
 COMMENT:
    REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
     Initialization will
