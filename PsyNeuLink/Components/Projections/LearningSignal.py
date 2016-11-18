@@ -103,8 +103,9 @@ then that is assigned as the LearningSignal's ``sender``.  If the ``errorSource`
 MontioringMechanism, then one is created for it, and a Mapping projection is created that projects to it from the
 ``errorSource``.  The type of MonitoringMechanism created depends on where the ProcessingMechanism sits in the
 processing stream.  If it is a standalone mechanism, or the :keyword:`TERMINAL` mechanism of a system or process,
-then a Comparator MonitoringMechanism is created.  If the ``errorSource`` projects to any other mechanisms,
-then a WeightedError MonitoringMechanism is created.
+then a :doc:`Comparator` mechanism is created (which compares the output of the ``errorSource`` with a target to
+generate the ``errorSignal``).  If the ``errorSource`` projects to any other mechanisms, then a ``WeightedError``
+mechanism is created.
 
 COMMENT:
     Comparator MonitoringMechanism:
