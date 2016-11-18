@@ -94,17 +94,25 @@ COMMENT
 
 *Automatic instantiation*.  When learning is specified for a :ref:`system <System_Execution_Learning>` or
 a :ref:`process <Process_Learning>`,  PsyNeuLink automatically generates the LearningSignals, MonitoringMechanisms,
-and projections to them required for learning in that object.  More specifically, LearningSignals are  automatically
-created for the relevant Mapping projection(s) (for a system or process, this excludes input projections to their
-:keyword:`ORIGIN` mechansims and output prjoections to their :keyword:`TERMINAL` mechanisms).  The MonitoringMechanism
-for the ``errorSource`` of each LearningSignal is assigned as the LearningSignal's ``sender``.  If the ``errorSource``
-does not have a MonitoringMechanism, then one is created for it, and a Mapping projection is created that projects
-from the ``errorSource`` to the MonitoringMechanism.  The type of MonitoringMechanism created depends on where the
-ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism, or the :keyword:`TERMINAL`
-mechanism of a system or process, then a Comparator is created.  This compares output of the ``errorSource`` with a
-target provided to it.  If the ProcessingMechanism projects to any other mechanisms, then a WeightedError mechanism
-is assigned as its MonitoringMechanism.  This takes account of the effect that the output of the ProcessingMechanism
-has on the output of the mechanism(s) to which it projects when calculating its error signal.
+and corresponding projections required for learning to occur.  More specifically, LearningSignals are
+automatically created for the relevant Mapping projection(s) (for a system or process, this excludes input
+projections to their :keyword:`ORIGIN` mechansims and output projections to their :keyword:`TERMINAL` mechanisms).
+Each LearningSignal is assigned the relevant ``errorSource`` -- that is, the ProcessingMechanism that receives the
+Mapping projection that is the LearningSignal's ``receiver``.  If the ``errorSource`` projects to a MonitoringMechanism,
+then that is assigned as the LearningSignal's ``sender``.  If the ``errorSource`` does not projection to a
+MontioringMechanism, then one is created for it, and a Mapping projection is created that projects to it from the
+``errorSource``.  The type of MonitoringMechanism created depends on where the ProcessingMechanism sits in the
+processing stream.  If it is a standalone mechanism, or the :keyword:`TERMINAL` mechanism of a system or process,
+then a Comparator MonitoringMechanism is created.  If the ``errorSource`` projects to any other mechanisms,
+then a WeightedError MonitoringMechanism is created.
+
+COMMENT:
+    Comparator MonitoringMechanism:
+        This compares output of the ``errorSource`` with a target provided to it.
+    WeightedError MonitoringMechanism:
+      This takes account of the effect that the output of the ProcessingMechanism has on the output of the mechanism(s)
+      to which it projects when calculating its error signal.
+COMMENT
 
 .. _LearningSignal_Execution:
 
