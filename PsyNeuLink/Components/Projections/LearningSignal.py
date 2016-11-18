@@ -25,7 +25,9 @@ MonitoringMechanisms.
 Creating a LearningSignal Projection
 ------------------------------------
 
-XXXX INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
+COMMENT:
+    XXXX INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
+COMMENT
 
 A LearningSignal projection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
@@ -76,7 +78,10 @@ the ``function`` of the ProcessingMechanism that is its ``errorSource`` (since h
 depends on the nature of the function that generated the error);  failure to match the ``function`` of the
 LearningSignal with the ``function`` of its ``errorSource`` ProcesingMechanism will generate an error.
 
-*Targets*  XXXXX
+
+COMMENT:
+    *Targets*  XXXXX
+COMMENT
 
 
 *Monitoring Mechanism*.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
