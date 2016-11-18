@@ -114,7 +114,7 @@ Execution
 ---------
 
 LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
-MonitoringMechanisms that provide their ``errorSignal``.  When the LearningSignal is executed, it uses the
+MonitoringMechanisms that provide their ``errorSignal``.  When the LearningSignal is executed, it uses its
 ``errorSignal`` to calculate changes to the ``matrix`` of the Mapping projection that is its ``receiver``.
 The changes are calculated so as to reduce the errorSignal originating from its ``errorSource`` (the
 ProcessingMechanism that receives the Mapping projection).

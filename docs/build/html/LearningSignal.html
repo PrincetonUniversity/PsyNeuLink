@@ -222,7 +222,7 @@ has on the output of the mechanism(s) to which it projects).</p>
 <div class="section" id="execution">
 <span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
-MonitoringMechanisms that provide their <code class="docutils literal"><span class="pre">errorSignal</span></code>.  When the LearningSignal is executed, it uses the
+MonitoringMechanisms that provide their <code class="docutils literal"><span class="pre">errorSignal</span></code>.  When the LearningSignal is executed, it uses its
 <code class="docutils literal"><span class="pre">errorSignal</span></code> to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> of the Mapping projection that is its <code class="docutils literal"><span class="pre">receiver</span></code>.
 The changes are calculated so as to reduce the errorSignal originating from its <code class="docutils literal"><span class="pre">errorSource</span></code> (the
 ProcessingMechanism that receives the Mapping projection).</p>
@@ -245,7 +245,7 @@ updating).</p>
 <span id="learningsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="LearningSignal.LearningSignal">
-<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bc65488&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bdc0488&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements projection that modifies the matrix param of a Mapping projection</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
