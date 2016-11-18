@@ -166,7 +166,7 @@ MonitoringMechanisms.</p>
 </div>
 <div class="section" id="creating-a-learningsignal-projection">
 <span id="learningsignal-creating-a-learningsignal-projection"></span><h2>Creating a LearningSignal Projection<a class="headerlink" href="#creating-a-learningsignal-projection" title="Permalink to this headline">¶</a></h2>
-<p>???INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection</p>
+<p>XXXX INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection</p>
 <p>A LearningSignal projection can be created in any of the ways that can be used to
 <a class="reference internal" href="Projection.html#projection-creating-a-projection"><span class="std std-ref">create a projection</span></a>, or by including it in the specification of a
 <span class="xref std std-ref">system</span>, <span class="xref std std-ref">process</span>, or projection in the <span class="xref std std-ref">pathway</span> of a process.  Its
@@ -194,32 +194,47 @@ receives the Mapping projection to which the  LearningSignal projects &#8211; it
 required to reduce the <code class="docutils literal"><span class="pre">errorSignal</span></code> for its <code class="docutils literal"><span class="pre">errorSource</span></code>.  The default is <code class="xref py py-class docutils literal"><span class="pre">BackPropagation</span></code> (also known
 as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned a different function
 that implements another learning algorithm.  Assignment of the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">function</span></code> must be appropriate for
-the <code class="docutils literal"><span class="pre">function</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code> ProcessingMechanism (since how the learning signal is computed depends on the
-nature of the function that generated the error);  failure to match the learning algorithm with the function of the
-ProcesingMechanism will generate an error that flags the problem.</p>
-<p><em>Monitoring Mechanism</em>.  The errorSignal itself is computed by the MonitoringMechanism, which compares the output of
-the <code class="docutils literal"><span class="pre">errorSource</span></code> ProcessingMechanism, with a target value.  The target value is provided to the Process or System to
-which it belongs when it is <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">run</span></a>.</p>
-<p>Automatic implementation:  generates monitoring mechanism, and the appropriate projection from the errorSource to
-the MonitoringMechanism.
-Primary (Comparator) vs. seconadry (WeightedError)</p>
-<p># DOCUMENT: if it instantiates a DefaultTrainingSignal:
-#               if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
-#               otherwise, use error_source.outputState (i.e., error source&#8217;s primary outputState)</p>
+the <code class="docutils literal"><span class="pre">function</span></code> of the ProcessingMechanism that is its <code class="docutils literal"><span class="pre">errorSource</span></code> (since how the learning signal is computed
+depends on the nature of the function that generated the error);  failure to match the <code class="docutils literal"><span class="pre">function</span></code> of the
+LearningSignal with the <code class="docutils literal"><span class="pre">function</span></code> of its <code class="docutils literal"><span class="pre">errorSource</span></code> ProcesingMechanism will generate an error.</p>
+<p><em>Monitoring Mechanism</em>.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal&#8217;s
+<code class="docutils literal"><span class="pre">sender</span></code>).  The type of MOntiringMechanism, and how it computes its errorSignal, depends on the <code class="docutils literal"><span class="pre">eerrorSource</span></code>.
+If it is a <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a system or process, it is a Comparator mechanism, that compares
+the output of the <code class="docutils literal"><span class="pre">errorSource</span></code> with a target value that is specified for the process or system when it is
+<a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">run</span></a>.  If the <code class="docutils literal"><span class="pre">errorSource</span></code> is not the final mechanism of a system or process,
+then the MOnitoringMechanism is a ??WEIGTHED ERROR...  IT...</p>
+<p><em>Automatic instantiation</em>.  When learning is specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a> or
+a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a>,  PsyNeuLink automatically generates the LearningSignals, MonitoringMechanisms,
+and projections to them required for learning in that object.  More specifically, LearningSignals are  automatically
+created for the relevant Mapping projection(s) (for a system or process, this excludes input projections to their
+<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechansims and output prjoections to their <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms).  The MonitoringMechanism
+for the <code class="docutils literal"><span class="pre">errorSource</span></code> of each LearningSignal is assigned as the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">sender</span></code>.  If the <code class="docutils literal"><span class="pre">errorSource</span></code>
+does not have a MonitoringMechanism, then one is created for it, and a Mapping projection is created that projects
+from the <code class="docutils literal"><span class="pre">errorSource</span></code> to the MonitoringMechanism.  The type of MonitoringMechanism created depends on where the
+ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism, or the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code>
+mechanism of a system or process, then a Comparator is created.  This compares output of the <code class="docutils literal"><span class="pre">errorSource</span></code> with a
+target provided to it.  If the ProcessingMechanism projects to any other mechanisms, then a WeightedError mechanism
+is assigned as its MonitoringMechanism.  This takes account of the effect that the output of the ProcessingMechanism
+has on the output of the mechanism(s) to which it projects when calculating its error signal.</p>
 </div>
 <div class="section" id="execution">
 <span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>When the LearningSignal is executed, it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to compute the changes to the <code class="docutils literal"><span class="pre">matrix</span></code> parameter
-of that Mapping projection that minimize the
-ProcessingMechanism&#8217;s output and the target for training (specified in the <code class="docutils literal"><span class="pre">run</span></code> method of a system or process.
+<p>When the LearningSignal is executed, it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> of the
+Mapping projection to which it projects.  The changes are calculated so as to reduce the errorSignal originating from
+its <code class="docutils literal"><span class="pre">errorSource</span></code> &#8211; the ProcessingMechanism to which the Mapping projection projects —- and calculated by the
+MonitoringMechanism.</p>
+<p>ALT:
+errorSignal calculated by its <code class="docutils literal"><span class="pre">sender</span></code>, and bawed on the output of the Pocessing mechanism to which the mapping
+projection projects.</p>
+<p>the changes to the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of the Mapping projection that</p>
+<p>of the Mapping projection to which it projects that minimize the ProcessingMechanism&#8217;s output and the target for
+training (specified in the <code class="docutils literal"><span class="pre">run</span></code> method of a system or process.
 Those changes are
 assigned as the
 LearningSignal&#8217;s
 value</p>
-<p>A LearningSignal projection uses its <code class="docutils literal"><span class="pre">function</span></code> to compute its <code class="docutils literal"><span class="pre">intensity</span></code>, and its <span class="xref std std-ref">cost functions
-&lt;LearningSignal_Cost_Functions&gt; use the ``intensity`</span> to compute the its <code class="docutils literal"><span class="pre">cost</span></code>.  The <code class="docutils literal"><span class="pre">intensity</span></code> is assigned as
-the LearningSignal projection&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, which is used by the parmaterState to which it projects to modify the
-corresponding parameter of the owner mechanism&#8217;s function.</p>
+<p>required to reduce the <code class="docutils literal"><span class="pre">errorSignal</span></code> generated by its <code class="docutils literal"><span class="pre">errorSource</span></code> (i.e, the ProcessingSystem monitored by the
+MonitoringMechanism from which the LearningSignal recevies the <code class="docutils literal"><span class="pre">errorSignal</span></code>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes in a parameter in response to the execution of a LearningSignal projection are not applied until the
@@ -231,7 +246,7 @@ updating).</p>
 <span id="learningsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="LearningSignal.LearningSignal">
-<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10b613378&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.BackPropagation object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bc7f2f0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements projection that modifies the matrix param of a Mapping projection</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
