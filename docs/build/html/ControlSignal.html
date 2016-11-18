@@ -267,7 +267,8 @@ updating).</p>
 <dl class="class">
 <dt id="ControlSignal.ControlSignal">
 <em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear                                       intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements a projection that controls the parameter of a mechanism function.</p>
+<dd><blockquote>
+<div>Implements a projection that controls the parameter of a mechanism&#8217;s function.</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -303,6 +304,18 @@ If it is not specified, a default is assigned using <code class="docutils litera
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.sender">
+<code class="descname">sender</code><a class="headerlink" href="#ControlSignal.ControlSignal.sender" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState of ControlSignal</em> &#8211; mechanism that provides the current <code class="docutils literal"><span class="pre">allocation</span></code> for the ControlSignal.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlSignal.ControlSignal.receiver">
+<code class="descname">receiver</code><a class="headerlink" href="#ControlSignal.ControlSignal.receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ParameterState of Mechanism</em> &#8211; parameterState for the parameter to be modified by ControlSignal.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="ControlSignal.ControlSignal.allocation">
 <code class="descname">allocation</code><a class="headerlink" href="#ControlSignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>

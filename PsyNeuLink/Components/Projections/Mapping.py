@@ -129,22 +129,25 @@ class MappingError(Exception):
 
 class Mapping(Projection_Base):
     """
-    Mapping(                                             \
-     sender=None,                                        \
-     receiver=None,                                      \
-     matrix=DEFAULT_MATRIX,                              \
-     param_modulation_operation=ModulationOperation.ADD, \
-     params=None,                                        \
-     name=None,                                          \
-     prefs=None)
+    Mapping(                                                \
+        sender=None,                                        \
+        receiver=None,                                      \
+        matrix=DEFAULT_MATRIX,                              \
+        param_modulation_operation=ModulationOperation.ADD, \
+        params=None,                                        \
+        name=None,                                          \
+        prefs=None)
 
-    Implements a projection that uses LinearMatrix function to transform value of sender, and assigns it to receiver
+    Implements a projection that transmits the output of one mechanism to the input of another.
+
 
     COMMENT:
         Description:
-            The Mapping class is a type in the Projection category of Component,
+            The Mapping class is a type in the Projection category of Component.
+            It implements a projection that takes the value of an outputState of one mechanism, transforms it as
+            necessary, and provides it to the inputState of another ProcessingMechanism.
             It's function conveys (and possibly transforms) the OutputState.value of a sender
-                to the InputState.value of a receiver
+                to the InputState.value of a receiver.
 
             IMPLEMENTATION NOTE:
                 AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
