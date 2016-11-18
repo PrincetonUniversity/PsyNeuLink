@@ -545,7 +545,7 @@ class LearningSignal(Projection_Base):
         self.errorSource = self.mappingProjection.receiver.owner
 
         # GET RECEIVER'S WEIGHT MATRIX
-        self.get_mapping_projection_weight_matrix()
+        self._get_mapping_projection_weight_matrix()
 
         # Format input to Mapping projection's weight matrix
         # MODIFIED 8/19/16:
@@ -559,7 +559,7 @@ class LearningSignal(Projection_Base):
         # self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix.T[0])
         self.output_of_weight_matrix = np.zeros_like(self.mappingWeightMatrix[0])
 
-    def get_mapping_projection_weight_matrix(self):
+    def _get_mapping_projection_weight_matrix(self):
         """Get weight matrix for Mapping projection to which LearningSignal projects
 
         """
@@ -660,7 +660,7 @@ FROM TODO:
                                           format(self.sender.name,
                                                  self.name,
                                                  self.sender.owner.__class__.__name__))
-            self.validate_error_signal(self.sender.value)
+            self._validate_error_signal(self.sender.value)
 
             # - assign MonitoringMechanism's outputState.value as self.variable
             # FIX: THIS DOESN"T SEEM TO HAPPEN HERE.  DOES IT HAPPEN LATER??
@@ -687,7 +687,7 @@ FROM TODO:
             for projection in self.errorSource.outputState.sendsToProjections:
                 # errorSource has a projection to a MonitoringMechanism, so validate it, assign it and quit search
                 if isinstance(projection.receiver.owner, MonitoringMechanism_Base):
-                    self.validate_error_signal(projection.receiver.owner.outputState.value)
+                    self._validate_error_signal(projection.receiver.owner.outputState.value)
                     monitoring_mechanism = projection.receiver.owner
                     break
                 # errorSource has a projection to a ProcessingMechanism, so:
@@ -790,7 +790,7 @@ FROM TODO:
         # Add reference to MonitoringMechanism to Mapping projection
         self.mappingProjection.monitoringMechanism = monitoring_mechanism
 
-    def validate_error_signal(self, error_signal):
+    def _validate_error_signal(self, error_signal):
         """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
         """
 
