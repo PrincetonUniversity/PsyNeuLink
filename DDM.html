@@ -144,10 +144,257 @@
 <h1>DDM<a class="headerlink" href="#ddm" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">DDM</a><ul class="simple">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DDM</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-ddm-mechanism">Creating a DDM Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ddm-parameters">DDM Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 </ul>
+</div>
+<span class="target" id="module-DDM"></span><div class="section" id="overview">
+<span id="ddm-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The DDM mechanism implements the &#8220;Drift Diffusion Model&#8221; (also know as the Diffusion Decision, Accumulation to Bound,
+Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
+the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
+forced choice (TAFC) decision making ([REF]).</p>
+<p>The DDM mechanism implements three versions of the process: two
+analytic solutions (<code class="xref std std-keyword docutils literal"><span class="pre">BogaczEtAl</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss</span></code>) that can be used when <code class="docutils literal"><span class="pre">time_scale</span></code> is
+<code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code>, and return an expected mean response time and accuracy; and one that is used when
+<code class="docutils literal"><span class="pre">time_scale</span></code> is  <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> that numerically integrates  the path of the decision variable.</p>
+</div>
+<div class="section" id="creating-a-ddm-mechanism">
+<span id="ddm-creating-a-ddm-mechanism"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
+<p>A DDM Mechanism can be instantiated directly by calling its constructor, or by using the PsyNeuLink
+<code class="xref py py-class docutils literal"><span class="pre">mechanism`[LINK]</span> <span class="pre">function</span> <span class="pre">and</span> <span class="pre">specifying</span> <span class="pre">DDM</span> <span class="pre">as</span> <span class="pre">its</span> <span class="pre">``mech_spec`</span></code> argument.  The analytic solution used in
+<code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode is selected using the <code class="docutils literal"><span class="pre">function</span></code> argument.  The <code class="docutils literal"><span class="pre">function</span></code> argument can be simply the name
+of a DDM function (first example below), or a call to the function with arguments specifying its parameters
+(see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below for a description of DDM function parameters) and, optionally, a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a>
+(second example):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">**</span> <span class="n">ADD</span> <span class="n">INPUT</span> <span class="n">TO</span> <span class="n">EXAMPLE</span>
+</pre></div>
+</div>
+<blockquote>
+<div>my_DDM = DDM(function=BogaczEtAl)
+my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))</div></blockquote>
+<p>The input to a DDM mechanism can be a single scalar value or an an array (list or 1d np.array).
+If it is a single value, a single DDM process is implemented, and the input is used as the stimulus component
+of the drift rate for the process (see below[LINK]).  If the input is an array, multiple parallel DDM processes
+are implemented all of which use the same parameters but each of which receives its own input
+(from the corresponding element of the input array) and is executed independently of the others.</p>
+</div>
+<div class="section" id="ddm-parameters">
+<h2>DDM Parameters<a class="headerlink" href="#ddm-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The parameters of the DDM process can be specified as arguments for the functions used in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code>
+mode or in the <code class="docutils literal"><span class="pre">params</span></code> dict argument  for the mechanism when it is created, using the keywords in the list below,
+as in the following example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+             <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">DRIFT_RATE</span><span class="p">:(</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">),</span>
+                     <span class="n">STARTING_POINT</span><span class="p">:</span><span class="o">-</span><span class="mf">0.5</span><span class="p">),</span>
+             <span class="n">time_scale</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TIME_STEP</span><span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Parameters specified in the <code class="docutils literal"><span class="pre">params</span></code> argument (as in the example above) will be used for both
+<code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> mode, since any parameters specified in the  <code class="docutils literal"><span class="pre">params</span></code> argument when
+creating a mechanism override any corresponding ones specified as arguments to its <code class="docutils literal"><span class="pre">function</span></code>).[LINK]
+In the example above, this means that even if the <code class="docutils literal"><span class="pre">time_scale</span></code> parameter is set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL`</span></code>,
+the <code class="docutils literal"><span class="pre">drift_rate</span></code> of 0.2 will be used (rather than 0.1).</p>
+</div>
+<p>The parameters for the DDM are:</p>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">DRIFT_RATE</span></code> (default 0.0)
+- multiplies the input to the mechanism before assigning it to the <code class="docutils literal"><span class="pre">variable</span></code> on each call of <code class="docutils literal"><span class="pre">function</span></code>.
+The resulting value is further multiplied by the value of any ControlSignal projections to the  <code class="docutils literal"><span class="pre">DRIFT_RATE</span></code>
+parameterState. The <code class="docutils literal"><span class="pre">drift_rate</span></code> parameter can be thought of as the &#8220;automatic&#8221; component (baseline strength)
+of the decision process, the value received from a ControlSignal projection as the &#8220;attentional&#8221; component,
+and the input its &#8220;stimuuls&#8221; component.  The product of all three determines the drift rate in effect for each
+time_step of the decision process.</li>
+</ul>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">STARTING_POINT</span></code> (default 0.0)
+- specifies the starting value of the decision variable.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> and
+the <code class="docutils literal"><span class="pre">starting_point</span></code> is added to the decision variable on the first call to <code class="docutils literal"><span class="pre">function</span></code> but not subsequently.</li>
+</ul>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">THRESHOLD</span></code> (default 1.0)
+- specifies the stopping value for the decision process.  When <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code>, the
+integration process is terminated when the absolute value of the decision variable equals the absolute value
+of threshold.  The <code class="docutils literal"><span class="pre">threshold</span></code> parameter must be greater than or equal to zero.</li>
+</ul>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">NOISE</span></code> (default 0.5)
+- specifies the variance of the stochastic (&#8220;diffusion&#8221;) component of the decision process.  If <code class="docutils literal"><span class="pre">time_scale</span></code>
+is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code>, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
+distribution on every call of <code class="docutils literal"><span class="pre">function</span></code>, and added to the decision variable.</li>
+</ul>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">NON_DECISION_TIME</span></code> (default 200)
+specifies the <code class="docutils literal"><span class="pre">t0</span></code> parameter of the decision process;  when <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code>, it is added to
+the number of time steps taken to complete the decision process when reporting the response time.</li>
+</ul>
+</div>
+<div class="section" id="execution">
+<span id="ddm-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When a DDM mechanism is executed it computes the decision process, either analytically (in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode)
+or by step-wise integration (in <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> mode).  As noted above, if the input is a single value,
+it computes a single DDM process.  If the input is an array, then multiple parallel DDM processes are executed,
+with each element of the input used for the corresponding process (all use the same set of parameters; to implement
+processes that use their own parameters, a separate DDM mechanism should explicitly be created for each).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">DDM handles &#8220;runtime&#8221; parameters (specified in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods) differently than
+standard Components: runtime parameters are added to the mechanism&#8217;s current value of the corresponding
+parameterState (rather than overriding it);  that is, they are combined additively with the value of
+any <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> it receives to determine the parameter&#8217;s value for that execution.  The parameterState&#8217;s
+value is then restored to its original value (i.e., either its default value or the one assigned when it was
+created) for the next execution.</p>
+</div>
+<p>After each execution of the mechanism, the following values are assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> and
+the value(s) of its outputState(s):</p>
+<blockquote>
+<div><ul class="simple">
+<li>value of the <strong>decision variable</strong> is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of the 1st item
+of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute, and as the value of its <code class="xref std std-keyword docutils literal"><span class="pre">DECISION_VARIABLE</span></code> outputState;</li>
+</ul>
+<ul class="simple">
+<li><strong>response time</strong> is assigned as the value of the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute and as
+the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, the value is
+the mean response time (in milliseconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
+</ul>
+<p>The following assignments are made only if time_scale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>;  otherwise the value of the
+corresponding attributes is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
+<ul class="simple">
+<li><strong>probability of reaching the upper threshold</strong> is assigned to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>
+attribute, and as the value of its <code class="docutils literal"><span class="pre">PROBABILITY_UPPER_THRESHOLD</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is
+<code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, the value is the probability (calculated by the analytic solution used in
+<code class="docutils literal"><span class="pre">function</span></code>) that the value of the decision variable reached the upper (positive) threshold.  Often, by
+convention, the upper threshold is associated with the ccorrect response, in which case
+<code class="docutils literal"><span class="pre">PROBABILITY_LOWER_THRESHOLD</span></code> corresponds to the accuracy of the decision process.</li>
+</ul>
+<ul class="simple">
+<li><strong>probability of reaching the lower threshold</strong> is assigned to the 4th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>
+attribute and as the value of its <code class="docutils literal"><span class="pre">PROBABILITY_LOWER_THRESHOLD</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is
+<code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, the value is the probability (calculated by the analytic solution used in
+<code class="docutils literal"><span class="pre">function</span></code>) that the value of the decision variable reached the lower (negative) threshold.  Often, by
+convention, the lower threshold is associated with the inccorrect response, in which case
+<code class="docutils literal"><span class="pre">PROBABILITY_LOWER_THRESHOLD</span></code> corresponds to the error rate of the decision process.</li>
+</ul>
+<ul class="simple">
+<li><strong>mean correct response time</strong> is assigned to the 5th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute and as
+the value of its <code class="docutils literal"><span class="pre">RT_CORRECT_MEAN</span></code> outputState.  It is reported as milliseconds.  This is only assigned if the
+<code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss`</span></code> function is used, and <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  Otherwise,
+neither the <code class="docutils literal"><span class="pre">outputValue</span></code> nor the <code class="docutils literal"><span class="pre">outputState</span></code> attribute have a 6th item (if another function is assigned)
+or they are asssigned <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> if <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></li>
+</ul>
+<ul class="simple">
+<li><strong>variance of correct response time</strong> is assigned to the 6th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute
+and as the value of its <code class="docutils literal"><span class="pre">RT_CORRECT_VARIANCE</span></code> outputState and .  This is only assigned if the
+<code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss</span> <span class="pre">function</span> <span class="pre">is</span> <span class="pre">used,</span> <span class="pre">and</span> <span class="pre">``time_scale`</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  Otherwise,
+neither the <code class="docutils literal"><span class="pre">outputValue</span></code> nor the <code class="docutils literal"><span class="pre">outputState</span></code> attribute have a 6th item (if another function is assigned)
+or they are asssigned <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> if <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="class-reference">
+<span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="DDM.DDM">
+<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=BogaczEtAl</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a Drift Diffusion Process</p>
+<p>Computes an analytic solution when <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, or numerically integrates it
+when <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_input_value</strong> (<em>value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; </li>
+<li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) &#8211; specifies the analytic solution to use for the decision process if <code class="docutils literal"><span class="pre">time_scale</span></code> is set to
+<code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>; can be <code class="xref py py-class docutils literal"><span class="pre">BogaczEtAl</span></code> or <code class="xref py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code> (note:  the latter requires
+that the MatLab engine is installed). If <code class="docutils literal"><span class="pre">time_scale</span></code> is set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
+<code class="docutils literal"><span class="pre">function</span></code> is automatically assigned to <code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; dictionary that can be used to specify parameters of the mechanism, parameters of its function,
+and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
+<li><strong>time_scale</strong> (<em>TimeScale : defaul tTimeScale.TRIAL</em>) &#8211; determines whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
+This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code> to use one of the analytic solutions specified by <code class="docutils literal"><span class="pre">function</span></code>.
+This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> to numerically integrate the decision variable.</li>
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; string used for the name of the mechanism.
+If not is specified, a default is assigned by MechanismRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; preference set for process.
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</li>
+<li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
+<dt>context</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &#8216;&#8217;None&#8217;&#8216;</span><dd>string used for contextualization of instantiation, hierarchical calls, executions, etc.</dd>
+</dl>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="DDM.DDM.variable">
+<code class="descname">variable</code><a class="headerlink" href="#DDM.DDM.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value : default  DDM_Defaults.starting_point</em> &#8211; Input to mechanism&#8217;s execute method.  Serves as the &#8220;stimulus&#8221; component of the drift rate.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DDM.DDM.function">
+<code class="descname">function</code><a class="headerlink" href="#DDM.DDM.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IntegratorFunction : default BogaczEtAl</em> &#8211; Determines method used to compute the outcome of the decision process when <code class="docutils literal"><span class="pre">time_scale</span></code> is
+<code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  If <code class="docutils literal"><span class="pre">times_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, <code class="docutils literal"><span class="pre">function</span></code>
+is automatically assigned to :class`Integrator`, and used to compute the decision process by
+stepwise integration of the decision variable (one step per <code class="docutils literal"><span class="pre">CentralClock.time_step</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DDM.DDM.function_params">
+<code class="descname">function_params</code><a class="headerlink" href="#DDM.DDM.function_params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str, value]</em> &#8211; Contains one entry for each parameter of the mechanism&#8217;s function.
+The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DDM.DDM.value">
+<code class="descname">value</code><a class="headerlink" href="#DDM.DDM.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> &#8211; output of execute method.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DDM.DDM.name">
+<code class="descname">name</code><a class="headerlink" href="#DDM.DDM.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default DDM-&lt;index&gt;</em> &#8211; Name of the mechanism.
+Specified in the name argument of the call to create the projection;
+if not is specified, a default is assigned by MechanismRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="DDM.DDM.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#DDM.DDM.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; Preference set for mechanism.
+Specified in the prefs argument of the call to create the mechanism;
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DDM.DDM.terminate_function">
+<code class="descname">terminate_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM.terminate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Terminate the process</p>
+<p>called by process.terminate() - MUST BE OVERRIDDEN BY SUBCLASS IMPLEMENTATION
+returns output</p>
+<p>Returns: value</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 
