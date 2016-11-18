@@ -166,7 +166,6 @@ MonitoringMechanisms.</p>
 </div>
 <div class="section" id="creating-a-learningsignal-projection">
 <span id="learningsignal-creating-a-learningsignal-projection"></span><h2>Creating a LearningSignal Projection<a class="headerlink" href="#creating-a-learningsignal-projection" title="Permalink to this headline">¶</a></h2>
-<p>XXXX INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection</p>
 <p>A LearningSignal projection can be created in any of the ways that can be used to
 <a class="reference internal" href="Projection.html#projection-creating-a-projection"><span class="std std-ref">create a projection</span></a>, or by including it in the specification of a
 <span class="xref std std-ref">system</span>, <span class="xref std std-ref">process</span>, or projection in the <span class="xref std std-ref">pathway</span> of a process.  Its
@@ -197,7 +196,6 @@ that implements another learning algorithm.  Assignment of the LearningSignal&#8
 the <code class="docutils literal"><span class="pre">function</span></code> of the ProcessingMechanism that is its <code class="docutils literal"><span class="pre">errorSource</span></code> (since how the learning signal is computed
 depends on the nature of the function that generated the error);  failure to match the <code class="docutils literal"><span class="pre">function</span></code> of the
 LearningSignal with the <code class="docutils literal"><span class="pre">function</span></code> of its <code class="docutils literal"><span class="pre">errorSource</span></code> ProcesingMechanism will generate an error.</p>
-<p><em>Targets</em>  XXXXX</p>
 <p><em>Monitoring Mechanism</em>.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal&#8217;s
 <code class="docutils literal"><span class="pre">sender</span></code>).  The type of MOntiringMechanism, and how it computes its errorSignal, depends on the <code class="docutils literal"><span class="pre">eerrorSource</span></code>.
 If it is a <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a system or process, it is a Comparator mechanism, that compares
