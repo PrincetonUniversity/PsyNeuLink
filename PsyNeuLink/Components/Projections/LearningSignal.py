@@ -95,6 +95,8 @@ COMMENT:
               otherwise, use error_source.outputState (i.e., error source's primary outputState)
 COMMENT
 
+.. _LearningSignal_Automatic_Creation:
+
 *Automatic instantiation*.  When learning is specified for a :ref:`system <System_Execution_Learning>` or
 a :ref:`process <Process_Learning>`,  PsyNeuLink automatically generates the LearningSignals, MonitoringMechanisms,
 and corresponding projections required for learning to occur.  More specifically, LearningSignals are
@@ -125,7 +127,6 @@ to the ``matrix`` the next time the Mapping projection to which it belongs is ex
 (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
 
 .. _LearningSignal_Class_Reference:
-
 
 Class Reference
 ---------------
@@ -161,14 +162,26 @@ class LearningSignalError(Exception):
 
 
 class LearningSignal(Projection_Base):
-    """Implements projection that modifies the matrix param of a Mapping projection
+    """
+    LearningSignal(                                                         \
+                 sender=None,                                               \
+                 receiver=None,                                             \
+                 function=BackPropagation(learning_rate=1,                  \
+                                          activation_function=Logistic()),  \
+                 params=None,                                               \
+                 name=None,                                                 \
+                 prefs=None)
+
+
+    Implements a projection that modifies the matrix param of a Mapping projection.
 
     COMMENT:
         Description:
-            The LearningSignal class is a componentType in the Projection category of Function,
+            The LearningSignal class is a componentType in the Projection category of Function.
+            It implements a projection to the parameterState of a Mapping projection that modifies its matrix parameter.
             It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
                 the ProcessingMechanism to which its receiver Mapping Projection projects, and generates a matrix of
-                weight changes for the Mapping Projection's matrix parameter
+                weight changes for the Mapping Projection's matrix parameter.
 
         Class attributes:
             + className = LEARNING_SIGNAL
@@ -189,32 +202,54 @@ class LearningSignal(Projection_Base):
 
     Arguments
     ---------
-    - sender (MonitoringMechanism) - source of projection input (default: TBI)
-    - receiver: (Mapping Projection) - destination of projection output (default: TBI)
-    - params (dict) - dictionary of projection params:
-        + FUNCTION (Function): (default: BP)
-        + FUNCTION_PARAMS (dict):
-            + LEARNING_RATE (value): (default: 1)
-    - name (str) - if it is not specified, a default based on the class is assigned in register_category
-    - prefs (PreferenceSet or specification dict):
-         if it is omitted, a PreferenceSet will be constructed using the classPreferences for the subclass
-         dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
-         (see Description under PreferenceSet for details)
+    sender : Optional[MonitoringMechanism or OutputState of one]
+        Source of the ``errorSignal`` for the LearningSignal. If it is not specified, one will be
+        :ref:`automatically created <LearningSignal_Automatic_Creation>` that is appropriate for
+        the LearningSignal's ``errorSource``.
+
+    receiver : Optional[Mapping projection or ParameterState for ``matrix`` parameter of one]
+        Mapping projection, the ``matrix`` of which is modified by the LearningSignal.
+
+    params : Optional[Dict[param keyword, param value]]
+        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
+        By default, it contains an entry for the projection's default ``function`` and parameter assignments.
+
+    name : str : default Transfer-<index>
+        String used for the name of the ControlSignal projection.
+        If not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        Preference set for the ControlSignal projection.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
 
     Attributes
     ----------
-    + sender (MonitoringMechanism)
-    + receiver (Mapping)
-    + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-    + paramsCurrent (dict) - set currently in effect
-    + variable (value) - used as input to projection's function
-    + value (value) - output of function
-    + mappingWeightMatrix (2D np.array) - points to <Mapping>.paramsCurrent[FUNCTION_PARAMS][MATRIX]
-    + weightChangeMatrix (2D np.array) - rows:  sender deltas;  columns:  receiver deltas
-    + errorSignal (1D np.array) - sum of errors for each sender element of Mapping projection
-    + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-    + prefs (PreferenceSet) - if not specified as an arg, default is created by copying LearningSignalPreferenceSet
+
+    sender : OutputState of MonitoringMechanism
+        source of errorSignal.
+
+    receiver : ParameterState of Mapping projection
+        parameterState for the ``matrix`` parameter of the Mapping projection to be modified by learning.
+
+    errorSignal : 1d np.array
+        value used as the ``variable`` for the LearningSignal's ``function`` to determine changes to
+        ``mappingWeightMatrix``.
+
+    errorSource : ProcessingMechanism
+        mechanism that receives the Mapping projection to which the LearningSignal projects.
+
+    mappingWeightMatrix : 2d np.array
+        ``matrix`` parameter for the function of the Mapping projection to which the LearningSignal projects.
+
+    weightChangeMatrix : 2d np.array
+        matrix of changes to be made to the ``mappingWeightMatrix`` (rows correspond to sender, columns to receiver).
+
+    value : 2d np.array
+        same as ``weightChangeMatrix``
 
     """
 
@@ -246,16 +281,6 @@ class LearningSignal(Projection_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL)
-
-        :param sender:
-        :param receiver:
-        :param params:
-        :param name:
-        :param context:
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function, params=params)

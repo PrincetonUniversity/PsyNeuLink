@@ -207,15 +207,16 @@ class ControlSignal(Projection_Base):
      name=None,                                       \
      prefs=None)
 
-    Implements a projection that controls the parameter of a mechanism function.
+        Implements a projection that controls the parameter of a mechanism's function.
 
     COMMENT:
         Description:
-            The ControlSignal class is a type in the Projection category of Component,
+            The ControlSignal class is a type in the Projection category of Component.
+            It implements a projection to the parameterState of a mechanism that modifies a parameter of its function.
             It:
                - takes an allocation (scalar) as its input (self.variable)
                - uses self.function (params[FUNCTION]) to compute intensity based on allocation from self.sender,
-                   used by self.receiver.owner to modify a parameter of self.receiver.owner.function
+                   used by self.receiver.owner to modify a parameter of self.receiver.owner.function.
 
         ** MOVE:
         ProjectionRegistry:
@@ -294,6 +295,12 @@ class ControlSignal(Projection_Base):
     COMMENT:
       ControlSignal_General_Attributes
     COMMENT
+
+    sender : OutputState of ControlSignal
+        mechanism that provides the current ``allocation`` for the ControlSignal.
+
+    receiver : ParameterState of Mechanism
+        parameterState for the parameter to be modified by ControlSignal.
 
     allocation : float : default: defaultControlAllocation
         value used as ``variable`` for projection's ``function`` to determine ``intensity``.
