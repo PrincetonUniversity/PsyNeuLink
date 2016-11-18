@@ -100,38 +100,24 @@ projections to their :keyword:`ORIGIN` mechansims and output projections to thei
 Each LearningSignal is assigned the relevant ``errorSource`` -- that is, the ProcessingMechanism that receives the
 Mapping projection that is the LearningSignal's ``receiver``.  If the ``errorSource`` projects to a MonitoringMechanism,
 then that is assigned as the LearningSignal's ``sender``.  If the ``errorSource`` does not projection to a
-MontioringMechanism, then one is created for it, and a Mapping projection is created that projects to it from the
+MonitoringMechanism, then one is created for it, and a Mapping projection is created that projects to it from the
 ``errorSource``.  The type of MonitoringMechanism created depends on where the ProcessingMechanism sits in the
 processing stream.  If it is a standalone mechanism, or the :keyword:`TERMINAL` mechanism of a system or process,
 then a :doc:`Comparator` mechanism is created (which compares the output of the ``errorSource`` with a target to
 generate the ``errorSignal``).  If the ``errorSource`` projects to any other mechanisms, then a ``WeightedError``
-mechanism is created.
-
-COMMENT:
-    Comparator MonitoringMechanism:
-        This compares output of the ``errorSource`` with a target provided to it.
-    WeightedError MonitoringMechanism:
-      This takes account of the effect that the output of the ProcessingMechanism has on the output of the mechanism(s)
-      to which it projects when calculating its error signal.
-COMMENT
+mechanism is created (takes, in calculating the ``errorSignal``, takes account of the effect that the ``errorSource``
+has on the output of the mechanism(s) to which it projects).
 
 .. _LearningSignal_Execution:
 
 Execution
 ---------
 
-When the LearningSignal is executed, it uses its ``errorSignal`` to calculate changes to the ``matrix`` of the
-Mapping projection to which it projects.  The changes are calculated so as to reduce the errorSignal originating from
-its ``errorSource`` -- the ProcessingMechanism to which the Mapping projection projects —- and calculated by the
-MonitoringMechanism.
-
-ALT:
-errorSignal calculated by its ``sender``, and bawed on the output of the Pocessing mechanism to which the mapping
-projection projects.
-
-
-the changes to the ``matrix`` parameter of the Mapping projection that
-
+LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
+MonitoringMechanisms that provide their ``errorSignal``.  When the LearningSignal is executed, it uses the
+``errorSignal`` to calculate changes to the ``matrix`` of the Mapping projection that is its ``receiver``.
+The changes are calculated so as to reduce the errorSignal originating from its ``errorSource`` (the
+ProcessingMechanism that receives the Mapping projection).
 
 of the Mapping projection to which it projects that minimize the ProcessingMechanism's output and the target for
 training (specified in the ``run`` method of a system or process.
