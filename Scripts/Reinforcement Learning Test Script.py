@@ -1,7 +1,7 @@
 import numpy as np
 
 from PsyNeuLink import *
-from PsyNeuLink.Functions.Utilities.Utility import SoftMax, Reinforcement
+from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
 input_layer = Transfer(default_input_value=[0,0,0],
                        name='Input Layer')

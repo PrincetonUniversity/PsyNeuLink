@@ -1,9 +1,10 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic
 
 
 

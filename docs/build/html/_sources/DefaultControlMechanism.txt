@@ -2,4 +2,5 @@ Default Control Mechanism
 =========================
 
 .. automodule:: DefaultControlMechanism
-	:members:
+   :members:
+   :exclude-members: random

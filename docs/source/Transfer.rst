@@ -1,5 +1,11 @@
 Transfer
 ========
 
+.. toctree::
+   :maxdepth: 3
+
+   Transfer
+
 .. automodule:: Transfer
-	:members:
+   :members:
+   :exclude-members: random

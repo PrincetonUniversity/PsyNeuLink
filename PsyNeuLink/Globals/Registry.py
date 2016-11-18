@@ -8,7 +8,7 @@
 #
 # ***********************************************  Registry ************************************************************
 #
-import PsyNeuLink.Functions.Function
+import PsyNeuLink.Components.Component
 from collections import namedtuple
 from inspect import isclass
 
@@ -20,18 +20,18 @@ DEFAULT_REGISTRY_VERBOSITY = False
 from PsyNeuLink.Globals.Keywords import *
 RegistryVerbosePrefs = {
     kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
-    kwFunctionPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
+    kwComponentPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
     kwProcessFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwMechanismFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwStateFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwInputState: DEFAULT_REGISTRY_VERBOSITY,
     kwParameterState: DEFAULT_REGISTRY_VERBOSITY,
-    kwOutputState: DEFAULT_REGISTRY_VERBOSITY,
+    OUTPUT_STATE: DEFAULT_REGISTRY_VERBOSITY,
     kwDDM: DEFAULT_REGISTRY_VERBOSITY,
     kwProjectionFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
     CONTROL_SIGNAL: DEFAULT_REGISTRY_VERBOSITY,
     MAPPING: DEFAULT_REGISTRY_VERBOSITY,
-    kwUtilityFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
+    kwComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
 }
 
 RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCount, default')
@@ -85,7 +85,7 @@ def register_category(entry,
         # # MechanismRegistry ------------------------------------------------------------------------
         # #
         # # Dictionary of registered Mechanism subclasses; each entry has:
-        # #     - key: Mechanism function type name (functionType)
+        # #     - key: Mechanism function type name (componentType)
         # #     - value: MechanismEntry tuple (mechanism, instanceCount, default)
         # #              Notes:
         # #              * instanceCount is incremented each time a new default instance is created
@@ -138,9 +138,9 @@ def register_category(entry,
         # If function type is not already registered in registry, then:
         else:
             # Set instance's name to first instance:
-            # If name was not provided, assign functionType-1 as default;
+            # If name was not provided, assign componentType-1 as default;
             if not name:
-                entry.name = entry.functionType + "-1"
+                entry.name = entry.componentType + "-1"
             else:
                 entry.name = name
 
@@ -224,16 +224,16 @@ def register_instance(entry, name, base_class, registry, sub_dict):
 #
 #     # Flag specified function type as default
 #     try:
-#         MechanismRegistry[mechanism_subclass.functionType] =\
-#             MechanismRegistry[mechanism_subclass.functionType]._replace(default=True)
+#         MechanismRegistry[mechanism_subclass.componentType] =\
+#             MechanismRegistry[mechanism_subclass.componentType]._replace(default=True)
 #     # Not yet registered, so do so as default
 #     except KeyError:
 #         register_mechanism_subclass(mechanism_subclass)
-#         MechanismRegistry[mechanism_subclass.functionType] =\
-#             MechanismRegistry[mechanism_subclass.functionType]._replace(default=True)
+#         MechanismRegistry[mechanism_subclass.componentType] =\
+#             MechanismRegistry[mechanism_subclass.componentType]._replace(default=True)
 
 #     # Assign to DefaultMechanism
-#     Functions.DefaultMechanism = MechanismRegistry[mechanism_subclass.name].mechanismSubclass
+#     Components.DefaultMechanism = MechanismRegistry[mechanism_subclass.name].mechanismSubclass
 # mechanism_subclass
 #     # Issue warning
 #     if self.prefs.verbosePref:

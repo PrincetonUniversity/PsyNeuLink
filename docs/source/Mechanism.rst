@@ -2,16 +2,16 @@ Mechanisms
 ==========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    ProcessingMechanism
-   MonitoringMechanism
    ControlMechanism
+   MonitoringMechanism
+
+.. toctree::
+   :maxdepth: 3
 
 .. automodule:: Mechanism
-	:members:
-
-
-
-
+   :members:
+   :exclude-members: MechanismTuple, MechanismList, random
 

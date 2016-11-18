@@ -22,7 +22,7 @@ classdef DDMProc < handle
         THRESH = 2;
         BIAS = 3;
         NOISE = 4;
-        T0 = 5;
+        t0 = 5;
     end
     
     methods
@@ -111,7 +111,7 @@ classdef DDMProc < handle
             end
             
             % which DDM parameters aren't specified yet?
-            missingDDMProxies = [EVC.DDM.DDMProc.DRIFT EVC.DDM.DDMProc.THRESH EVC.DDM.DDMProc.BIAS EVC.DDM.DDMProc.NOISE EVC.DDM.DDMProc.T0];
+            missingDDMProxies = [EVC.DDM.DDMProc.DRIFT EVC.DDM.DDMProc.THRESH EVC.DDM.DDMProc.BIAS EVC.DDM.DDMProc.NOISE EVC.DDM.DDMProc.t0];
             for i = 1:length(processes)
                 missingDDMProxies = missingDDMProxies(missingDDMProxies ~= processes(i).DDMProxy);
             end
@@ -130,8 +130,8 @@ classdef DDMProc < handle
                         DDMParam = defaultParams.bias;
                     case EVC.DDM.DDMProc.NOISE
                         DDMParam = defaultParams.c;
-                    case EVC.DDM.DDMProc.T0
-                        DDMParam = defaultParams.T0;  
+                    case EVC.DDM.DDMProc.t0
+                        DDMParam = defaultParams.t0;
                 end
                 
                 params{1} = DDMParam;

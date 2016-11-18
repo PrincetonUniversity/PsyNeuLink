@@ -1,13 +1,15 @@
 States
 ======
 
+.. toctree::
+   :maxdepth: 1
+
+   InputState
+   ParameterState
+   OutputState
 
 .. toctree::
-	:maxdepth: 2
-
-	InputState
-	ParameterState
-	OutputState
+   :maxdepth: 3
 
 .. automodule:: State
-	:members:
+

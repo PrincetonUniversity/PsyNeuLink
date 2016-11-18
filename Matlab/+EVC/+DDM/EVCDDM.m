@@ -41,7 +41,7 @@ classdef EVCDDM < EVC.EVCModel
             bias = 0;
             ddmp.z = 0;
             ddmp.c = 0;
-            ddmp.T0 = 0;
+            ddmp.t0 = 0;
             
             if(this.useActualState)
                 stateType = DDMProc.ACTUAL_STATE;
@@ -66,8 +66,8 @@ classdef EVCDDM < EVC.EVCModel
                              bias = bias + this.DDMProcesses(i).getVal();
                         case DDMProc.NOISE
                              ddmp.c = ddmp.c + this.DDMProcesses(i).getVal();
-                        case DDMProc.T0
-                             ddmp.T0 = ddmp.T0 + this.DDMProcesses(i).getVal();
+                        case DDMProc.t0
+                             ddmp.t0 = ddmp.t0 + this.DDMProcesses(i).getVal();
                     end
                     
                 end
