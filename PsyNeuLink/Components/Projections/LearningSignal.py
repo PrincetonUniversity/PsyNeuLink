@@ -78,25 +78,25 @@ to which it projects).
 Structure
 ---------
 
-The components involved in learning are shown in :ref:`this figure <Process_Learning_Figure>`), and described below.
+The components involved in learning are shown in :ref:`this figure <Process_Learning_Figure>`, and described below.
 
-*Mapping projection*.  Learning Signals project to the parameterState for a ``matrix`` parameter of a Mapping
+**Mapping projection**.  Learning Signals project to the parameterState for a ``matrix`` parameter of a Mapping
 projection, stored in the LearningSignal's ``mappingProjection`` attribute.  It modifies the ``matrix``  based on
 the output of the ProcessingMechanism to which the ``mappingProjection`` projects.
 
-*Error source*.  This is the ProcessingMechanism to which the ``mappingProjection`` projects, and on which the
+**Error source**.  This is the ProcessingMechanism to which the ``mappingProjection`` projects, and on which the
 *error signal*  is based.  It projects to a MonitoringMechanism that calculates the error signal.  By default,
 the primary outputState of the ``errorSource`` projects to the MonitoringMechanism, and its value is used to
 calculate the ``errorSignal``.  However, a different outputState can be specified by including an entry with
 :keyword:`MONITOR_FOR_LEARNING` as its key in a params dictionary for the ``errorSource``, and assigning a list
 with the specified outputState(s) as its value.
 
-*Error Signal*.  This is computed by a MonitoringMechanism to which the error_source projects.  It compares the
+**Error Signal**.  This is computed by a MonitoringMechanism to which the error_source projects.  It compares the
 output of the errorSource with a target value, and uses the disparity to compute the error signal.  The
 MonitoringMechanism projects to the LearningSignal, serving at its ``sender``, and the error signal is used by the
 LearningSignal as the ``variable`` for its ``function`` (it is also stored in the ``errorSignal`` attribute).
 
-*Function*.  This computes the changes to the ``matrix`` parameter of the LearningSignal's ``mappingProjection``
+**Function**.  This computes the changes to the ``matrix`` parameter of the LearningSignal's ``mappingProjection``
 required to reduce the ``errorSignal`` for its ``errorSource``.  The default is :class:`BackPropagation` (also known
 as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned to other functions
 that implement different learning algorithms.  Assignment of the LearningSignal's ``function`` must be appropriate for
@@ -104,11 +104,11 @@ the ``function`` of its ``errorSource`` (how the learning signal is computed dep
 that generated the error);  failure to match the ``function`` of the LearningSignal with the ``function`` of the
 ProcessingMechanism that is its ``errorSource`` will generate an error.
 
-*Target(s)*.  This specifies the value with which the output of an ``errorSource`` is compared, to calculate the
+**Target(s)**.  This specifies the value with which the output of an ``errorSource`` is compared, to calculate the
 ``errorSignal``.  It is required by the :doc:`run <Run>` method of a system or process when learning is specified.
 provides to the :keyword:`TARGET` inputState of a :doc:`Comparator` mechanism.
 
-*Monitoring Mechanism*.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
+**Monitoring Mechanism**.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
 ``sender``).  The type of MonitoringMechanism, and how it computes its errorSignal, depends on the ``errorSource``.
 If it is a :keyword:`TERMINAL` mechanism of a system or process, the MonitoringMechanism is a :doc:`Comparator`
 mechanism,  that compares the output of the ``errorSource`` (which projects to the Comparator's :keyword:`SAMPLE`
@@ -124,10 +124,9 @@ Execution
 
 LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
 MonitoringMechanisms that provide the ``errorSignal`` to each LearningSignal.  When the LearningSignal is executed,
-it uses its ``errorSignal`` to calculate changes to the ``matrix`` of the Mapping projection to which it projects.
-The changes are calculated so as to reduce the errorSignal calculated for ``errorSource`` (the ProcessingMechanism
-that receives the Mapping projection).  The changes are assigned as the ``value`` of the LearningSignal, and applied
-to the ``matrix`` the next time the Mapping projection to which it belongs is executed
+it uses its ``errorSignal`` to calculate changes to the ``matrix`` of its ``mappingProjection``. Changes to the
+``matrix`` are  calculated so as to reduce the ``errorSignal``. The changes are assigned as the ``value`` of the
+LearningSignal, but are not applied to the ``matrix`` unit the next time the ``mappingProjection`` is executed
 (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
 
 .. _LearningSignal_Class_Reference:
@@ -237,20 +236,24 @@ class LearningSignal(Projection_Base):
         source of errorSignal.
 
     receiver : ParameterState of Mapping projection
-        parameterState for the ``matrix`` parameter of the Mapping projection to be modified by learning.
+        parameterState for the ``matrix`` parameter of ``mappingProjection`` (the one to be modified by learning).
+
+    mappingProjection : Mapping projection
+        the Mapping projection to which the LearningSignal projects;  more specifically, the owner of the
+        parameterState that is the LearningSignal's ``receiver``.
+
+    mappingWeightMatrix : 2d np.array
+        ``matrix`` parameter for the function of ``mappingProjection``.
+
+    errorSource : ProcessingMechanism
+        mechanism to which ``mappingProjection`` projects.
 
     errorSignal : 1d np.array
         value used as the ``variable`` for the LearningSignal's ``function`` to determine changes to
         ``mappingWeightMatrix``.
 
-    errorSource : ProcessingMechanism
-        mechanism that receives the Mapping projection to which the LearningSignal projects.
-
-    mappingProjection : Mapping projection
-        the owner of the parameterState that is the LearningSignal's ``receiver``.
-
-    mappingWeightMatrix : 2d np.array
-        ``matrix`` parameter for the function of the Mapping projection to which the LearningSignal projects.
+    variable : 1d np.array
+        same as ``errorSignal``.
 
     weightChangeMatrix : 2d np.array
         matrix of changes to be made to the ``mappingWeightMatrix`` (rows correspond to sender, columns to receiver).
