@@ -220,8 +220,8 @@
 #    Search for XXXX NEEDS TO BE ADDED
 #    Consistify Preference set vs. Preference set vs. preference set
 #    Determines -> Specifies
-#    None and ``None`` -> :keyword:`None`
-#    Search for "Preference object" -> ??prefs attribute?  PreferenceSet object??
+#    True,  ``True``, False, and ``False`` -> :keyword:`True` and :keyword:`False`
+#    ``None`` -> :keyword:`None`
 
 # TEST: DOES ASSIGNING A Mapping OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A Mapping Projection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_SIGNAL.
