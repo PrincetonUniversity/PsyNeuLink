@@ -73,7 +73,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                # MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
                                FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
-                               MONITORED_OUTPUT_STATES:None
+                               MONITOR_FOR_CONTROL:None
                                })
 
     from PsyNeuLink.Components.Functions.Function import Linear

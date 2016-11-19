@@ -1760,7 +1760,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             + bias (kwDDM_Bias: float)
             + noise (NOISE: float)
             + t0 (NON_DECISION_TIME: float)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -1900,7 +1900,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
             + bias (kwDDM_Bias: float)
             + noise (NOISE: float)
             + t0 (NON_DECISION_TIME: float)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in

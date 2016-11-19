@@ -216,18 +216,12 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/18/16:
-# DOCUMENTATION:
-#    Search for XXXX NEEDS TO BE ADDED
-#    Consistify Preference set vs. Preference set vs. preference set
-#    Determines -> Specifies
-#    True,  ``True``, False, and ``False`` -> :keyword:`True` and :keyword:`False`
-#    ``None`` -> :keyword:`None`
 
 # TEST: DOES ASSIGNING A Mapping OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A Mapping Projection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_SIGNAL.
 #
 # DOCUMENTATION: MONITOR_FOR_LEARNING (in LearningSignal AND ??WHERE ELSE:
-#                                                                 Mechanism?? Paralleling MONITORED_OUTPUT_STATES
+#                                                                 Mechanism?? Paralleling MONITOR_FOR_CONTROL
 #                                                                 OutputState??
 #                                                                 MonitoringMechanism??
 # DOCUMENTATION: THESE NEED TO BE ADDED:
@@ -235,7 +229,7 @@
 #       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
 # IMPLEMENT: TimeScale argument for System
-# IMPLEMENT: MONITORED_OUTPUT_STATES -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
+# IMPLEMENT: MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
 
 # 11/17/16:
 # IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING SIGNAL (OR ANY PROJECTION??):
@@ -793,11 +787,11 @@
 
 # 7/14/16:
 #
-# FIX: MAKE MONITORED_OUTPUT_STATES A REQUIRED PARAM FOR System CLASS
+# FIX: MAKE MONITOR_FOR_CONTROL A REQUIRED PARAM FOR System CLASS
 #      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
-# FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITORED_OUTPUT_STATES IN SYSTEM.params[]
+# FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITOR_FOR_CONTROL IN SYSTEM.params[]
 # FIX: CALL _instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
-# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITORED_OUTPUT_STATES default: System,Mechanism or ConrolMechanism?
+# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITOR_FOR_CONTROL default: System,Mechanism or ConrolMechanism?
 #
 # 7/13/16:
 #
@@ -1158,7 +1152,8 @@
 #           Mapping -> MappingProjection
 #           ControlSignal -> ControlSignalProjection
 #           LearningSignal -> LearningSignalProjection
-#           MONITORED_OUTPUT_STATES -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
+#           MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
+#           arguments "specify";  attributes "determine"
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
@@ -1318,7 +1313,7 @@
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
 # DOCUMENT:  PREDICTION_MECHANISM_TYPE IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
 #                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITORED_OUTPUT_STATES APPLIES TO ALL predictionMechanisms
+# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL predictionMechanisms
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
@@ -1596,7 +1591,7 @@
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:
 # params={
-#     MONITORED_OUTPUT_STATES:[[reward_mechanism, DDM.outputStates[_ddm_rt]],
+#     MONITOR_FOR_CONTROL:[[reward_mechanism, DDM.outputStates[_ddm_rt]],
 #     FUNCTION_PARAMS:{OPERATION:LinearCombination.Operation.PRODUCT,
 #                            WEIGHTS:[1,1/x]}}
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
@@ -1634,9 +1629,9 @@
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
 #                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
-# - IMPLEMENT: MONITORED_OUTPUT_STATES_OPTION for individual Mechanisms (in ControlMechanism):
-#        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITORED_OUTPUT_STATES specification
-#                                and/or MONITORED_OUTPUT_STATES in Mechanism.params[]
+# - IMPLEMENT: MONITOR_FOR_CONTROL_OPTION for individual Mechanisms (in ControlMechanism):
+#        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITOR_FOR_CONTROL specification
+#                                and/or MONITOR_FOR_CONTROL in Mechanism.params[]
 #                                         (that is checked when ControlMechanism is implemented
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
@@ -1660,7 +1655,7 @@
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)
 #
 # FIX: self.variable:
-#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR MONITORED_OUTPUT_STATES
+#      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR MONITOR_FOR_CONTROL
 #
 # DOCUMENT:  protocol for assigning DefaultControlMechanism
 #           Initial assignment is to SystemDefaultCcontroller

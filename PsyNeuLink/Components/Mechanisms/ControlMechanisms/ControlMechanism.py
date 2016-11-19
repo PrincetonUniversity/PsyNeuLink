@@ -42,14 +42,14 @@ name of one (see :ref:ControlMechanism_Examples' below).
 The specification of whether an outputState is monitored by a ControlMechanism can be done in the following ways:
 
 * An **outputState** can be *excluded* from being monitored by assigning :keyword:`None` as the value of the
-  :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in the outputState's ``params``
+  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the outputState's ``params``
   argument.  This specification takes precedence over any others;  that is, specifying :keyword:`None` will suppress
   monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
   outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
   based on one of the other specification methods below.
 ..
 * The outputState of a particular **mechanism** can be designated to be monitored, by specifying it in the
-  :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in the mechanism's ``params``
+  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the mechanism's ``params``
   argument.  The value of the entry must be either a list containing the outputState(s) and/or their name(s),
   a :ref:`monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a :class:`MonitoredOutputStatesOption`
   value, or :keyword:`None`. The values of :class:`MonitoredOutputStatesOption` are treated as follows:
@@ -62,7 +62,7 @@ The specification of whether an outputState is monitored by a ControlMechanism c
 * OutputStates to be monitored can be specified in the **ControlMechanism** responsible for the monitoring, or in the
   **system** for which that ControlMechanism is the :ref:`controller <System_Execution_Control>`).  Specification
   can be in the controlMechanism or system's ``monitored_output_states`` argument, or in the
-  :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in its ``params`` argument.  In
+  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in its ``params`` argument.  In
   either case, the value must be a list, each item of which must be one of the following:
 
   * An  outputState or the name of one.
@@ -109,7 +109,7 @@ Execution
 
 The ControlMechanism of a system is always the last to be executed (see System :ref:`System_Execution_Control`).  A
 ControlMechanism's ``function`` takes as its input the values of the outputStates specified in its
-:keyword:`MONITORED_OUTPUT_STATES` parameter, and uses those to determine the value of its :doc:`ControlSignal`
+:keyword:`MONITOR_FOR_CONTROL` parameter, and uses those to determine the value of its :doc:`ControlSignal`
 projections. In the next round of execution, each ControlSignal's value is used by the :doc:`ParameterState` to which it
 projects, to update the corresponding parameter of the recieving mechanism's function.
 
@@ -155,7 +155,7 @@ class ControlMechanism_Base(Mechanism_Base):
                    then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
                    which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
 
-            MONITORED_OUTPUT_STATES param determines which states will be monitored.
+            MONITOR_FOR_CONTROL param determines which states will be monitored.
                 specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
                 this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how states are assigned from
@@ -171,7 +171,7 @@ class ControlMechanism_Base(Mechanism_Base):
             + paramClassDefaults (dict):
                 + FUNCTION: Linear
                 + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
-                + MONITORED_OUTPUT_STATES: List[]
+                + MONITOR_FOR_CONTROL: List[]
     COMMENT
 
     Arguments
@@ -266,13 +266,13 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     context=self)
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Validate SYSTEM, MONITORED_OUTPUT_STATES and FUNCTION_PARAMS
+        """Validate SYSTEM, MONITOR_FOR_CONTROL and FUNCTION_PARAMS
 
         If SYSTEM is not specified:
         - OK if controller is DefaultControlMechanism
         - otherwise, raise an exception
-        Check that all items in MONITORED_OUTPUT_STATES are Mechanisms or OutputStates for Mechanisms in self.system
-        Check that len(WEIGHTS) = len(MONITORED_OUTPUT_STATES)
+        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that len(WEIGHTS) = len(MONITOR_FOR_CONTROL)
         """
 
         # DefaultController does not require a system specification

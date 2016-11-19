@@ -330,7 +330,7 @@ def run(object,
         called after each time_step is executed.
 
     time_scale : TimeScale :  default TimeScale.TRIAL
-        determines whether mechanisms are executed for a single time step or a trial
+        specifies whether mechanisms are executed for a single time step or a trial
 
     Returns
     -------

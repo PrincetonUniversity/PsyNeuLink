@@ -89,7 +89,7 @@ use any supported format for specifying a mechanism (see :ref:`Mechanism_Creatin
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
 specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
 belongs) is executed, but otherwise they do not remain associated with the mechanism
-(see :ref:`Mechanism_Runtime_Parameters`).  The phase specification is determines the time_step at which the mechanism
+(see :ref:`Mechanism_Runtime_Parameters`).  The phase specification determines the time_step at which the mechanism
 is executed when it is executed as part of a system (see System :ref:`System_Phase` for an explanation of phases).
 Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
 assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
@@ -578,6 +578,7 @@ class Process_Base(Process):
     ----------
 
     pathway : List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]
+        specifies the list of mechanisms that are executed when the process executes.
         Entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
         a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
         the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
@@ -595,12 +596,15 @@ class Process_Base(Process):
              the third is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
 
     processInputStates : Optional[List[ProcessInputState]]
-        Each processInputState sends a Mapping projection to one or more inputStates of the :keyword:`ORIGIN`
-        mechanism.
+        used to represent the input to the process, and transmit this to the inputState(s) of its :keyword:`ORIGIN`
+        mechanism.  Each processInputState sends a Mapping projection to one or more inputStates of the
+        :keyword:`ORIGIN` mechanism.
 
     input :  Optional[List[value] or ndarray]
-        Value of input arg in a call to process' execute() method or run() function; assigned to process.variable.
-        Each item of the input must match the format of the corresponding inputState of the :keyword:`ORIGIN` mechanism.
+        input to the process on each round of execution;  it is assigned the value of the ``input`` argument in a call
+        to the process` ``execute``  or ``run`` method. It's value is assigned to ``variable``, each item of
+        which is assigned as the ``value`` of the corresponding ProcessInputState in ``processInputStates``.
+        Each item must match the format of the corresponding inputState of the :keyword:`ORIGIN` mechanism.
 
         .. note:: The ``input`` attribute of a process preserves its value throughout the execution of the process.
                   It's value is assigned to the `variable` attribute of the :keyword:`ORIGIN` mechanism at the start
@@ -610,10 +614,10 @@ class Process_Base(Process):
                   modified with the ``clamp_input`` attribute of the process.
 
     inputValue :  2d np.array : default ``variableInstanceDefault``
-        Synonym for the ``variable`` attribute of the process, and contains the values of its ``ProcessInputStates``.
+        same as the ``variable`` attribute of the process; contains the values of its ``ProcessInputStates``.
 
     clamp_input : Optional[keyword]
-        Determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
+        determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
         :keyword:`None`: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism
@@ -626,12 +630,10 @@ class Process_Base(Process):
         :keyword:`ORIGIN` mechanism every time it is executed in a round of execution.
 
     value: 2d. np.array
-        Value of the primary outputState of the :keyword:`TERMINAL` mechanism(s)
-        (see State for an explanation of a primary state).[LINK]
+        the value of the :ref:`primary outputState <[LINK]> of the :keyword:`TERMINAL` mechanism(s) of the process.
 
     outputState : State
-        Reference to the primary outputState of the :keyword:`TERMINAL` mechanism
-        (see State for an explanation of a primary state).[LINK]
+        refers to the :ref:`primary outputState <[LINK]> of the :keyword:`TERMINAL` mechanism in the process.
 
       .. _mech_tuples : List[MechanismTuple]
              :class:`MechanismTuple` for all mechanisms in the process, listed in the order specified in pathway.
@@ -656,48 +658,48 @@ class Process_Base(Process):
              property that points to _allMechanisms.mechanisms (see below).
 
     mechanismNames : List[str]
-        Names of all mechanisms in the process.
+        the names of all of the mechanisms in the process.
 
         .. property that points to _allMechanisms.names (see below).
 
     originMechanisms : MechanismList
-        Contains :keyword:`ORIGIN` mechanism of the process.
+        a list of the :keyword:`ORIGIN` mechanism of the process.
 
         .. based on _origin_mech_tuples
            process.input contains the input to :keyword:`ORIGIN` mechanism.
 
     terminalMechanisms : MechanismList
-        Contains :keyword:`TERMINAL` mechanism of the process.
+        a list of the :keyword:`TERMINAL` mechanism of the process.
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of :keyword:`TERMINAL` mechanism.
 
     monitoringMechanisms : MechanismList
-        Contains all monitoring mechanisms in the process.
+        a list of all of the monitoring mechanisms in the process.
 
         .. based on _monitoring_mech_tuples
 
     systems : List[System]
-        Systems to which the process belongs.
+        a list of the systems to which the process belongs.
 
       .. _phaseSpecMax : int : default 0
              phase of last (set of) ProcessingMechanism(s) to be executed in the process.
              It is assigned to the ``phaseSpec`` for the mechanism in the pathway with the largest ``phaseSpec`` value.
 
     numPhases : int : default 1
-        Number of phases for the process.
+        the number of phases for the process.
         It is assigned as ``_phaseSpecMax + 1``.
 
       .. _isControllerProcess : bool : :keyword:`False`
              identifies whether the process is an internal one created by a ControlMechanism.
 
     learning : Optional[LearningSignal]
-        Specifies whether process should be configured for learning;  value can be the name of the class, the name of
-        a learningSignal object, or a LearningSignal constructor.
+        determines whether the process is configured for learning.  The value can be the name of the
+        LearningSignal class, a call to its constructor, or the name of or reference to an existing LearningSignal.
 
         .. note::
         If an existing instance of a LearningSignal used for the specification, or a call to the LearningSignal
-        constructor), that object itself, or the one created by the constructor, will **not** be used as the actual
+        constructor, that object itself, or the one created by the constructor, will **not** be used as the actual
         LearningSignal projection for the process. Rather it will be used as a template (including any parameters that
         are specified) for creating LearningSignal projections for all the Mapping projections in the process.
 
@@ -706,13 +708,13 @@ class Process_Base(Process):
              has been specified (see above).
 
     results : List[outputState.value]
-        List of return values (outputState.value) from a sequence of executions.
+        a list of return values (outputState.value) from a sequence of executions.
 
     timeScale : TimeScale : default TimeScale.TRIAL
-        Determines the default TimeScale value used by mechanisms in the pathway.
+        determines the default TimeScale value used by mechanisms in the pathway.
 
     name : str : default Process-<index>
-        Name of the process.
+        the name of the process.
         Specified in the name argument of the call to create the process;
         if not is specified, a default is assigned by ProcessRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -1968,7 +1970,7 @@ class Process_Base(Process):
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial.
+            specifies whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------

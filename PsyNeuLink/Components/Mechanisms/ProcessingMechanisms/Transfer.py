@@ -406,7 +406,7 @@ class Transfer(ProcessingMechanism_Base):
             + NOISE (float)
             + RATE (float)
             + RANGE ([float, float])
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
