@@ -37,11 +37,11 @@ Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultContr
 The cost of a ControlSignal is calculated from its ``intensity``, using four
 :ref:`cost functions <ControlSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
 or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
-so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost
-functions can be :ref:`enabled or disabled <ControlSignal_Toggle_Costs>`, to select which make contributions to the
+so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost functions
+can be :ref:`enabled or disabled <ControlSignal_Toggle_Costs>`, to select which make contributions to the
 ControlSignal's ``cost``.  A cost function can also be permanently disabled for its ControlSignal by assigning
-``None`` to the argument for that function in its constructor (or the appropriate entry in its params dictionary).
-Cost functions that are permanently disabled in this way cannot be re-enabled.
+:keyword:`None` to the argument for that function in its constructor (or the appropriate entry in its params
+dictionary). Cost functions that are permanently disabled in this way cannot be re-enabled.
 
 A ControlSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
 specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
@@ -90,8 +90,8 @@ the total cost (``cost``).
 *Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
 enabled or disabled using the ``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is
 disabled, that component of the cost is not included in the ControlSignal's ``cost`` attribute. A cost function  can
-also be permanently disabled for the ControlSignal by assigning ``None`` to its argument in the constructor (or the
-corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlSignal,
+also be permanently disabled for the ControlSignal by assigning :keyword:`None` to its argument in the constructor
+(or the corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlSignal,
 it cannot be re-enabled using ``toggle_cost_function``.
 
 *Additional Attributes*.  In addition to the ``intensity`` and cost attributes described above, a ControlSignal has
@@ -243,28 +243,28 @@ class ControlSignal(Projection_Base):
     ---------
 
     sender : Optional[Mechanism or OutputState]
-        Source of the allocation for the ControlSignal;  usually an outputState of a :doc:`ControlMechanism`.
+        the source of the allocation for the ControlSignal;  usually an outputState of a :doc:`ControlMechanism`.
         If it is not specified, the :doc:`DefaultControlMechanism` for the system to which the receiver belongs
         will be assigned.
 
     receiver : Optional[Mechanism or ParameterState]
-        The parameterState associated with the parameter of a function to be controlled.  This must be specified,
+        the parameterState associated with the parameter of a function to be controlled.  This must be specified,
         or be able to be determined by the context in which the ControlSignal is created or assigned.
 
     function : TransferFunction : default Linear
-        Converts the ControlSignal's ``allocation`` into its ``intensity`` (equal to its ``value``).
+        converts the ControlSignal's ``allocation`` into its ``intensity`` (equal to its ``value``).
 
     intensity_cost_function : Optional[TransferFuntion] : default Exponential
-        Calculates a cost based on the ControlSignal's ``intensity``.
-        It can be disabled permanently for the ControlSignal by assigning ``None``.
+        calculates a cost based on the ControlSignal's ``intensity``.
+        It can be disabled permanently for the ControlSignal by assigning :keyword:`None`.
 
     adjustment_cost_function : Optiona[TransferFunction] : default Linear
-        Calculates a cost based on a change in the ControlSignal's ``intensity`` from its last value.
-        It can be disabled permanently for the ControlSignal by assigning ``None``.
+        calculates a cost based on a change in the ControlSignal's ``intensity`` from its last value.
+        It can be disabled permanently for the ControlSignal by assigning :keyword:`None`.
 
     duration_cost_function : Optional[TransferFunction] : default Linear
         Calculates an integral of the ControlSignal's ``cost``.
-        It can be disabled permanently for the ControlSignal by assigning ``None``.
+        It can be disabled permanently for the ControlSignal by assigning :keyword:`None`.
 
     cost_combination_function : function : default Reduce(operation=SUM)
         Combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
@@ -275,17 +275,17 @@ class ControlSignal(Projection_Base):
         of 0.1.
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        a dictionary that can be used to specify the parameters for the projection, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` and cost function assignments.
 
     name : str : default Transfer-<index>
-        String used for the name of the ControlSignal projection.
+        a string used for the name of the ControlSignal projection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        Preference set for the ControlSignal projection.
+        the PreferenceSet for the ControlSignal projection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 

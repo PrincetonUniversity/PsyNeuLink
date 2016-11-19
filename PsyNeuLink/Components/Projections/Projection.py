@@ -322,7 +322,7 @@ class Projection_Base(Projection):
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        Preference set for the projection.
+        the PreferenceSet for the projection.
         Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
@@ -693,7 +693,7 @@ def _is_projection_spec(spec):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
 
-    Otherwise, return False
+    Otherwise, return :keyword:`False`
 
     Returns: (bool)
     """
@@ -729,7 +729,7 @@ def _is_projection_subclass(spec, keyword):
         keyword is a keyword for an entry in the spec dict
         keyword[spec] is a legal specification for the subclass
 
-    Otherwise, return False
+    Otherwise, return :keyword:`False`
     """
     if spec is keyword:
         return True

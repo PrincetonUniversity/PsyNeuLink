@@ -271,8 +271,8 @@ def system(default_input_value=None,
     processes=None,                           \
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
-    enable_controller=False,                  \
-    monitored_output_states=None,             \
+    enable_controller=:keyword:`False`,       \
+    monitored_output_states=:keyword:`None`,  \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -289,7 +289,7 @@ def system(default_input_value=None,
     ---------
 
     default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
-        used as the input to the system if none is provided in a call to the execute() method or run() function.
+        the input to the system if none is provided in a call to the execute() method or run() function.
         Should contain one item corresponding to the input of each ORIGIN mechanism in the system.
 
         COMMENT:
@@ -297,35 +297,37 @@ def system(default_input_value=None,
         COMMENT
 
     processes : list of process specifications : default list(''DefaultProcess'')
-        process specifications can be an instance, the class name (creates a default Process, or a specification
+        a list of the processes to include in the system.
+        Process specifications can be an instance, the class name (creates a default Process, or a specification
         dictionary (see Processes for details).
 
     initial_values : dict of mechanism:value entries
-        dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
+        a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
+        INITIALIZE_CYCLE).
         The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
         compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
-        monitors the value of the outputState(s) for mechanisms specified in monitored_output_states, and uses those
-        to specify the value of the ControlSignal projections for the :doc:`ControlMechanism`.
+        the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
+        monitored_output_states, and specify the value of ControlSignal projections in the system.
 
-    enable_controller :  bool : default False
-        determines whether the controller is called during system execution.
+    enable_controller :  bool : default :keyword:`False`
+        specifies whether the ``controller`` is executed during system execution.
 
     monitored_output_states : list of OutputState objects or specifications : default None
-        specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller (see
-        :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitored_output_states`` parameter.
+        specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
+        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitored_output_states`` parameter).
 
     params : dict : default None
-        dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
+        a dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
         values in the dictionary will override argument values
 
     name : str : default System-<index>
-        string used for the name of the system
+        a string used for the name of the system
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        preference set for system (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the PreferenceSet for system (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -362,8 +364,8 @@ class System_Base(System):
     processes=None,                           \
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
-    enable_controller=False,                  \
-    monitored_output_states=None,             \
+    enable_controller=:keyword:`False`,       \
+    monitored_output_states=:keyword:`None`   \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -537,7 +539,7 @@ class System_Base(System):
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        Preference set for system.
+        the PreferenceSet for system.
         Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details).[LINK]
@@ -1228,7 +1230,7 @@ class System_Base(System):
         Arguments
         ---------
         inputs : list or ndarray
-            list or array of input value arrays, one for each ORIGIN mechanism of the system
+            a list or array of input value arrays, one for each :keyword:`ORIGIN` mechanism in the system.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
                specifies a default TimeScale for the system]
@@ -1401,38 +1403,39 @@ class System_Base(System):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-            input for each in a sequence of executions (see ``run`` function [LINK] for detailed
-            description of formatting requirements and options).
+            the input for each in a sequence of executions (see :doc:`Run` for detailed description of formatting
+            requirements and options).
 
-        reset_clock : bool : default True
-            reset ``CentralClock`` to 0 before a sequence of executions.
+        reset_clock : bool : default :keyword:`True`
+            if True, resets the ``CentralClock`` to 0 before a sequence of executions.
 
-        initialize : bool default False
-            calls the ``initialize`` method of the system before a sequence of executions.
+        initialize : bool default :keyword:`False`
+            if :keyword:`True`, calls the ``initialize`` method of the system before a sequence of executions.
 
-        targets : List[input] or np.ndarray(input) : default ``None``
-            target values for monitoring mechanisms for each execution (used for learning).  The length (of the
-            outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+        targets : List[input] or np.ndarray(input) : default :keyword:`None`
+            the target values for the MonitoringMechanisms of the system for each execution (used for learning).
+            The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
+            of ``inputs``.
 
-        learning : bool :  default ``None``
+        learning : bool :  default :keyword:`None`
             enables or disables learning during execution.
-            If it is not specified, current state is left intact.
-            If True, learning is forced on; if False, learning is forced off.
+            If it is not specified, the current state is left intact.
+            If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= ``None``
+        call_before_trial : Function : default= :keyword:`None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= ``None``
+        call_after_trial : Function : default= :keyword:`None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= ``None``
+        call_before_time_step : Function : default= :keyword:`None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= ``None``
+        call_after_time_step : Function : default= :keyword:`None`
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial.
+            specifies whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------
@@ -1538,7 +1541,8 @@ class System_Base(System):
         DICT_OUTPUT = ()
 
     def show(self, options=None):
-        """Print execution_sets, executionList, origin and terminal mechanisms, outputs, and output labels
+        """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms,
+        ``outputs`` and their labels for the system.
 
         Arguments
         ---------

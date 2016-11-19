@@ -163,47 +163,51 @@ class Transfer(ProcessingMechanism_Base):
     ---------
 
     default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+        also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
+        of the mechanism.
 
     function : TransferFunction : default Linear
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
 
     function_params : Dict[str, value]
-        Contains one entry for each parameter of the mechanism's function.
+        contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        Specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
+        specifies the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
-        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian.
+        a stochastically-sampled value added to the output of the ``function``.
+        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         If it is a function, it must return a scalar value.
 
     rate : float : default 1.0
-        Time constant for exponential time averaging of input
+        the time constant for exponential time averaging of input
         when the mechanism is executed at the time_step time scale:
         input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
 
     range : Optional[Tuple[float, float]]
-        Specifies the allowable range of the result: the first value specifies the minimum allowable value
+        specifies the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
         is set to the corresponding value.
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        Determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
     name : str : default Transfer-<index>
-        String used for the name of the mechanism.
+        a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        Preference set for process.
+        the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -220,22 +224,22 @@ class Transfer(ProcessingMechanism_Base):
     ----------
 
     variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        Input to mechanism's function.
+        the input to mechanism's function.
 
     function : Function :  default Linear
-        Function used to transform the input.
+        the function used to transform the input.
 
     value : List[value]
-        Output of function.
+        the output of function.
 
     name : str : default Transfer-<index>
-        Name of the mechanism.
+        the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        Preference set for mechanism.
+        the PreferenceSet for mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].

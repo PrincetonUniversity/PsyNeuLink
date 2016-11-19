@@ -216,6 +216,13 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/18/16:
+# DOCUMENTATION:
+#    Search for XXXX NEEDS TO BE ADDED
+#    Consistify Preference set vs. Preference set vs. preference set
+#    Determines -> Specifies
+#    None and ``None`` -> :keyword:`None`
+#    Search for "Preference object" -> ??prefs attribute?  PreferenceSet object??
+
 # TEST: DOES ASSIGNING A Mapping OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A Mapping Projection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_SIGNAL.
 #
@@ -227,6 +234,7 @@
 #       (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
 #       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
+# IMPLEMENT: TimeScale argument for System
 # IMPLEMENT: MONITORED_OUTPUT_STATES -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
 
 # 11/17/16:

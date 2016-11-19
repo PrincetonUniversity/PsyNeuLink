@@ -414,7 +414,8 @@ def mechanism(mech_spec=None, params=None, context=None):
     ---------
 
     mech_spec : Optional[Mechanism subclass, str, or dict]
-        if it is :keyword:`None`, returns the default mechanism ([LINK for default]);
+        specification for the mechanism to create.
+        If it is :keyword:`None`, returns the default mechanism ([LINK for default]);
         if it is the name of a Mechanism subclass, a default instance of that subclass is returned;
         if it is the name of a Mechanism subclass registered in the ``MechanismRegistry``
         an instance of a default mechanism for that class is returned,
@@ -424,14 +425,17 @@ def mechanism(mech_spec=None, params=None, context=None):
         ``componentType`` attribute as the base and adding an indexed suffix:  componentType-n.
 
     params : Optional[Dict[param keyword, param value]]
-        passed to the relevant subclass to instantiate the mechanism.
-        Entries can be any parameters described in :ref:`Mechanism_Specifying_Parameters`
-        that are relevant to the mechanism's subclass,
-        and/or any defined by a :doc:`Mechanism` subclass itself.
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        It is passed to the relevant subclass to instantiate the mechanism. Entries can be any parameters described
+        in :ref:`Mechanism_Specifying_Parameters` that are relevant to the mechanism's subclass, and/or any defined
+        by a :doc:`Mechanism` subclass itself.
 
-    context : str
-        if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid
-        subclass object; otherwise returns :keyword:`False`.
+    COMMENT:
+        context : str
+            if it is the keyword :keyword:`VALIDATE`, returns :keyword:`True` if specification would return a valid
+            subclass object; otherwise returns :keyword:`False`.
+    COMMENT
 
     Returns
     -------
@@ -653,7 +657,7 @@ class Mechanism_Base(Mechanism):
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        Preference set for the mechanism.
+        the PreferenceSet for the mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details).[LINK]
@@ -1190,7 +1194,7 @@ class Mechanism_Base(Mechanism):
             (see :ref:`Run_Inputs` for details of input specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
-            dictionary that can include any of the parameters used as arguments to instantiate the object,
+            a dictionary that can include any of the parameters used as arguments to instantiate the object,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter
             will override the current value of that parameter for this -- but only this execution of the mechanism;
             it will return to its previous value following execution.
@@ -1381,13 +1385,13 @@ class Mechanism_Base(Mechanism):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_input_value
-            input for each execution of mechanism (see :ref:`Run_Inputs` in :doc:`Run` for
-            detailed description of formatting requirements and options).
+            the inputs used for each in a sequence of executions of the mechanism (see :ref:`Run_Inputs` in
+            :doc:`Run` for detailed description of formatting requirements and options).
 
-        call_before_execution : Function : default= ``None``
+        call_before_execution : Function : default= :keyword:`None`
             called before each execution of the mechanism.
 
-        call_after_execution : Function : default= ``None``
+        call_after_execution : Function : default= :keyword:`None`
             called after each execution of the mechanism.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
@@ -1618,7 +1622,7 @@ def _is_mechanism_spec(spec):
     Return true if spec is any of the following:
     + Mechanism class
     + Mechanism object:
-    Otherwise, return False
+    Otherwise, return :keyword:`False`
 
     Returns: (bool)
     """

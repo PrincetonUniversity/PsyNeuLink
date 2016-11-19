@@ -48,7 +48,7 @@ of a DDM function (first example below), or a call to the function with argument
     my_DDM = DDM(function=BogaczEtAl)
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
 
-The input to a DDM mechanism can be a single scalar value or an an array (list or 1d np.array).
+**Input**.  The input to a DDM mechanism can be a single scalar value or an an array (list or 1d np.array).
 If it is a single value, a single DDM process is implemented, and the input is used as the stimulus component
 of the drift rate for the process (see below[LINK]).  If the input is an array, multiple parallel DDM processes
 are implemented all of which use the same parameters but each of which receives its own input
@@ -295,7 +295,11 @@ class DDM(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK]
+        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+        also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
+        of the mechanism (see :ref:`Input` <DDM_Creating_A_DDM_Mechanism>` for how an input with a length of greater
+        than 1 is handled).
 
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if ``time_scale`` is set to
@@ -304,22 +308,22 @@ class DDM(ProcessingMechanism_Base):
         ``function`` is automatically assigned to :class:`Integrator`.
 
     params : Optional[Dict[param keyword, param value]]
-        dictionary that can be used to specify parameters of the mechanism, parameters of its function,
+        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
         and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
-        determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TRIAL` to use one of the analytic solutions specified by ``function``.
         This must be set to :keyword:`TimeScale.TIME_STEP` to numerically integrate the decision variable.
 
     name : str : default Transfer-<index>
-        string used for the name of the mechanism.
+        a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        preference set for process.
-        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the PreferenceSet for the process.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
     .. context=componentType+INITIALIZING):
@@ -330,29 +334,29 @@ class DDM(ProcessingMechanism_Base):
     ----------
 
     variable : value : default  DDM_Defaults.starting_point
-        Input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
+        the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
 
     function :  IntegratorFunction : default BogaczEtAl
-        Determines method used to compute the outcome of the decision process when ``time_scale`` is
+        the function used to compute the outcome of the decision process when ``time_scale`` is
         :keyword:`TimeScale.TRIAL`.  If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, ``function``
         is automatically assigned to :class`Integrator`, and used to compute the decision process by
         stepwise integration of the decision variable (one step per ``CentralClock.time_step``).
 
     function_params : Dict[str, value]
-        Contains one entry for each parameter of the mechanism's function.
+        contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
     value : value
-        output of execute method.
+        the output of the execute method.
 
     name : str : default DDM-<index>
-        Name of the mechanism.
+        the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        Preference set for mechanism.
+        a PreferenceSet for the mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].

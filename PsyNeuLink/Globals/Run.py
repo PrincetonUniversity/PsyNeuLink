@@ -289,44 +289,44 @@ def run(object,
     The targets argument must be the same length as the inputs argument.
 
     .. note::
-        * if num_executions is ``None``, a number of executions is run equal to the length of the input 
+        * if num_executions is :keyword:`None`, a number of executions is run equal to the length of the input
           (i.e., size of axis 0)
 
     Arguments
     ---------
 
     inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-        input for each execution in a sequence (see ``run`` function [LINK] for detailed description of formatting 
+        the input for each execution in a sequence (see :doc:`Run` for detailed description of formatting
         requirements and options).
 
-    reset_clock : bool : default True
-        reset ``CentralClock`` to 0 before a sequence of executions.
+    reset_clock : bool : default :keyword:`True`
+        if :keyword:`True`, resets ``CentralClock`` to 0 before a sequence of executions.
 
-    initialize : bool default False
+    initialize : bool default :keyword:`False`
         calls the ``initialize`` method of the system prior to a sequence of executions.
 
-    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default ``None``
-        initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK].
+    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default :keyword:`None`
+        the initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK].
 
-    targets : List[input] or np.ndarray(input) : default ``None``
-        target values for monitoring mechanisms for each execution (used for learning).  
+    targets : List[input] or np.ndarray(input) : default :keyword:`None`
+        the target values for monitoring mechanisms for each execution (used for learning).
         The length must be equal to inputs.
 
-    learning : bool :  default ``None``
+    learning : bool :  default :keyword:`None`
         enables or disables learning during execution.
         If it is not specified, current state is left intact.
-        If True, learning is forced on; if False, learning is forced off.
+        If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
-    call_before_trial : Function : default= ``None``
+    call_before_trial : Function : default= :keyword:`None`
         called before each trial in the sequence is executed.
 
-    call_after_trial : Function : default= ``None``
+    call_after_trial : Function : default= :keyword:`None`
         called after each trial in the sequence is executed.
 
-    call_before_time_step : Function : default= ``None``
+    call_before_time_step : Function : default= `:keyword:`None`
         called before each time_step is executed.
 
-    call_after_time_step : Function : default= ``None``
+    call_after_time_step : Function : default= :keyword:`None`
         called after each time_step is executed.
 
     time_scale : TimeScale :  default TimeScale.TRIAL

@@ -54,7 +54,7 @@ COMMENT
 
 .. _LearningSignal_Automatic_Creation:
 
-*Automatic creation*.  When learning is specified for a :ref:`system <System_Execution_Learning>`,
+**Automatic creation**.  When learning is specified for a :ref:`system <System_Execution_Learning>`,
 a :ref:`process <Process_Learning>`, or in a :ref:`tuple that specifies a projection <>`,   PsyNeuLink automatically
 generates the LearningSignals, MonitoringMechanisms, and corresponding projections required for learning to occur.
 More specifically, LearningSignals are automatically created for the relevant Mapping projection(s) (for a system or
@@ -205,25 +205,25 @@ class LearningSignal(Projection_Base):
     Arguments
     ---------
     sender : Optional[MonitoringMechanism or OutputState of one]
-        Source of the ``errorSignal`` for the LearningSignal. If it is not specified, one will be
+        the source of the ``errorSignal`` for the LearningSignal. If it is not specified, one will be
         :ref:`automatically created <LearningSignal_Automatic_Creation>` that is appropriate for
         the LearningSignal's ``errorSource``.
 
     receiver : Optional[Mapping projection or ParameterState for ``matrix`` parameter of one]
-        Mapping projection, the ``matrix`` of which is modified by the LearningSignal.
+        a Mapping projection, the ``matrix`` of which is modified by the LearningSignal.
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        a dictionary that specifies the parameters for the projection, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` and parameter assignments.
 
     name : str : default Transfer-<index>
-        String used for the name of the ControlSignal projection.
+        a string used for the name of the LearningSignal projection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        Preference set for the ControlSignal projection.
+        the PreferenceSet for the LearningSignal projection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
