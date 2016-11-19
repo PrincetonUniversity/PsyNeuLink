@@ -305,7 +305,7 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
-MONITORED_OUTPUT_STATES = "monitored_output_states"
+MONITOR_FOR_CONTROL = "monitored_output_states"
 kwPredictionMechanism = "PredictionMechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"

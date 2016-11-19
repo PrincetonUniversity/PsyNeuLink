@@ -297,7 +297,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
       used to specify specialized outputStates required by a mechanism subclass
       (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
     ..
-    * :keyword:`MONITORED_OUTPUT_STATES` : List[OutputState] -
+    * :keyword:`MONITOR_FOR_CONTROL` : List[OutputState] -
       used to specify outputStates to be monitored by a ControlMechanism
       (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
 
@@ -707,7 +707,7 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
-        MONITORED_OUTPUT_STATES: NotImplemented,
+        MONITOR_FOR_CONTROL: NotImplemented,
         MONITOR_FOR_LEARNING: NotImplemented
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,
@@ -834,7 +834,7 @@ class Mechanism_Base(Mechanism):
         self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITORED_OUTPUT_STATES
+        """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
         Go through target_set params (populated by Function._validate_params) and validate values for:
             + kwTimeScale:  <TimeScale>
@@ -1030,17 +1030,17 @@ class Mechanism_Base(Mechanism):
         # Note: this must be validated after OUTPUT_STATES as it can reference entries in that param
         try:
             # MODIFIED 7/16/16 NEW:
-            if not target_set[MONITORED_OUTPUT_STATES] or target_set[MONITORED_OUTPUT_STATES] is NotImplemented:
+            if not target_set[MONITOR_FOR_CONTROL] or target_set[MONITOR_FOR_CONTROL] is NotImplemented:
                 pass
             # MODIFIED END
             # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
+            elif isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
                 # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-                target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
+                target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
             else:
-                # Validate each item of MONITORED_OUTPUT_STATES
-                for item in target_set[MONITORED_OUTPUT_STATES]:
+                # Validate each item of MONITOR_FOR_CONTROL
+                for item in target_set[MONITOR_FOR_CONTROL]:
                     self._validate_monitored_state(item, context=context)
                 # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
@@ -1054,8 +1054,8 @@ class Mechanism_Base(Mechanism):
                 #     pass
                 # else:
                 #     # Insure that number of weights specified in WEIGHTS
-                #     #    equals the number of states instantiated from MONITORED_OUTPUT_STATES
-                #     num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
+                #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
+                #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
                 #     if not num_weights != num_monitored_states:
                 #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
                 #                        "does not match the number of monitored states ({1})".
@@ -1066,7 +1066,7 @@ class Mechanism_Base(Mechanism):
         # MODIFIED END
 
 # FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
-# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITORED_OUTPUT_STATES param
+# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITOR_FOR_CONTROL param
 
     def _validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
@@ -1080,17 +1080,17 @@ class Mechanism_Base(Mechanism):
 
         if isinstance(state_spec, tuple):
             if len(state_spec) != 3:
-                raise MechanismError("Specification of tuple ({0}) in MONITORED_OUTPUT_STATES for {1} "
+                raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
                                      "has {2} items;  it should be 3".
                                      format(state_spec, self.name, len(state_spec)))
 
             if not isinstance(state_spec[1], numbers.Number):
-                raise MechanismError("Specification of the exponent ({0}) for MONITORED_OUTPUT_STATES of {1} "
+                raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
                                      "must be a number".
                                      format(state_spec, self.name, state_spec[0]))
 
             if not isinstance(state_spec[2], numbers.Number):
-                raise MechanismError("Specification of the weight ({0}) for MONITORED_OUTPUT_STATES of {1} "
+                raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
                                      "must be a number".
                                      format(state_spec, self.name, state_spec[0]))
 
@@ -1112,7 +1112,7 @@ class Mechanism_Base(Mechanism):
             state_spec_is_OK = True
 
         if not state_spec_is_OK:
-            raise MechanismError("Specification ({0}) in MONITORED_OUTPUT_STATES for {1} is not "
+            raise MechanismError("Specification ({0}) in MONITOR_FOR_CONTROL for {1} is not "
                                  "a Mechanism or OutputState object or the name of one".
                                  format(state_spec, self.name))
 #endregion
@@ -1244,7 +1244,7 @@ class Mechanism_Base(Mechanism):
           COMMENT
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial
+            specifies whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------
@@ -1395,7 +1395,7 @@ class Mechanism_Base(Mechanism):
             called after each execution of the mechanism.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial
+            specifies whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------

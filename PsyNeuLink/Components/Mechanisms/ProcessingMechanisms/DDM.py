@@ -410,7 +410,7 @@ class DDM(ProcessingMechanism_Base):
                         PROBABILITY_LOWER_THRESHOLD, # Probability of hitting lower bound
                         RT_CORRECT_MEAN,         # NavarroAnd Fuss only
                         RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
-        # MONITORED_OUTPUT_STATES:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
+        # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
     })
 
     # Set default input_value to default bias for DDM
@@ -531,7 +531,7 @@ class DDM(ProcessingMechanism_Base):
             + kwDDM_Bias (float)
             + NON_DECISION_TIME (float)
             + NOISE (float)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in

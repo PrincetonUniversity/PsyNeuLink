@@ -45,7 +45,7 @@ it is generated automatically when a system is created and an EVCMechanism is sp
     EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
     is added to the EVCMechanism for each outputState specified in its ``monitored_output_states`` parameter, and a
     :doc:`Mapping` projection is created that projects from that outputState to the EVCMechanism's inputState
-    (see _ControlMechanism_Monitored_OutputStates for specifying :keyword:`MONITORED_OUTPUT_STATES`).
+    (see _ControlMechanism_Monitored_OutputStates for specifying :keyword:`MONITOR_FOR_CONTROL`).
   ..
   * **Prediction Mechanisms** -- these are used to generate the input for each simulation of the system run by the
     EVCMechanism (see :ref:`EVCMechanism_Execution`).  A prediction mechanism is created for each :keyword:`ORIGIN`
@@ -73,7 +73,7 @@ In that case, the EVCMechanism is assigned as the system's ``controller`` attrib
 assigning a params dictionary to the controller's ``params`` attribute using the following keys for its entries
 (see :ref:`Mechanism_Specifying_Parameters` for details of parameter specification):
 
-    * :keyword:`MONITORED_OUTPUT_STATES` - the outputStates of the system's mechanisms used  to evaluate the outcome
+    * :keyword:`MONITOR_FOR_CONTROL` - the outputStates of the system's mechanisms used  to evaluate the outcome
       of performance for the EVC calculation (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying
       monitored outputStates).  The default is: :keyword:`MonitoredOutputStateOption.PRIMARY_OUTPUT_STATES`,
       which uses the value of the primary outputState of every :keyword:`TERMINAL` mechanism in the system (see
@@ -92,7 +92,7 @@ assigning a params dictionary to the controller's ``params`` attribute using the
       exponentiate the contribution of each outputState's value to the aggregated outcome  The length of thes array
       for these arguments must equal the number of outputStates in``monitoredOutputStates``.  These specifications
       will supercede any made for individual outputStates in a tuple of the ``monitored_output_states`` argument, or
-      MONITORED_OUTPUT_STATES entry of a params specification dictionary (see
+      MONITOR_FOR_CONTROL entry of a params specification dictionary (see
       :ref:`ControlMechanism_Monitored_OutputStates`).
     ..
     * :keyword:`COST_AGGREGATION_FUNCTION` - combines the costs of the ControlSignals to genreat an aggregate **cost**
@@ -141,7 +141,7 @@ The EVC calculation can be parameterized by specifying any of the three function
 how each outputState in its ``monitoredOutputStates`` attribute contributes to the outcome of a control allocation
 policy calculated by the :keyword:`OUTCOME_AGGREGATION_FUNCTION`.  The latter can be done by using the tuples format
 to specify an outputState in the ``monitored_states_argument`` of an EVCMechanism or system constructor, or the
-:keyword:`MONITORED_OUTPUT_STATES` entry of a specification dict assigned to their ``params`` argument (see
+:keyword:`MONITOR_FOR_CONTROL` entry of a specification dict assigned to their ``params`` argument (see
 :ref:`ControlMechanism_Monitored_OutputStates`). The tuples format can be used to assign an exponent to an outputState
 (e.g., to make it a divisor), and/or a weight (i.e., to scale its) for use when it is combined with the others by the
 :keyword:`OUTCOME_AGGREGATION_FUNCTION`.  OutputStates not specified in a tuple are assigned an exponent and weight of
@@ -259,7 +259,7 @@ class EVCMechanism(ControlMechanism_Base):
             + componentType (str): System Default Mechanism
             + paramClassDefaults (dict):
                 + SYSTEM (System)
-                + MONITORED_OUTPUT_STATES (list of Mechanisms and/or OutputStates)
+                + MONITOR_FOR_CONTROL (list of Mechanisms and/or OutputStates)
 
         Class methods:
             None
@@ -375,9 +375,8 @@ class EVCMechanism(ControlMechanism_Base):
         self.inputStates).
 
     function : CombinationFunction : default LinearCombination(offset=0.0,scale=1,operation=SUM)
-        COMMENT:
-            XXXX NEEDS TO BE ADDED
-        COMMENT
+        the function used to combine the aggregated value of the monitored outputStates with the aggregated cost of
+        the control signal values for a given control allocation policy, to determine the **EVC** for that policy.
 
     outcome_aggregation_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,
     operation=PRODUCT)
@@ -462,7 +461,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
-        prediction_mechanism_params = prediction_mechanism_params or {MONITORED_OUTPUT_STATES:None}
+        prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(# system=system,
@@ -491,12 +490,12 @@ class EVCMechanism(ControlMechanism_Base):
         Instantiate PredictionMechanisms for origin mechanisms in System
         - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
         - if an associated input mechanism needs to be monitored by the EVCMechanism, it must be specified explicilty
-            in an outputState, mechanism, controller or systsem MONITORED_OUTPUT_STATES param (see below)
+            in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
 
-        Parse paramsCurent[MONITORED_OUTPUT_STATES] for system, controller, mechanisms and/or their outputStates:
+        Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
         - if specification in outputState is None:
              do NOT monitor this state (this overrides any other specifications)
-        - if an outputState is specified in *any* MONITORED_OUTPUT_STATES, monitor it (this overrides any other specs)
+        - if an outputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
         - if a mechanism is terminal and/or specified in the system or controller:
             if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
             if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
@@ -538,14 +537,14 @@ class EVCMechanism(ControlMechanism_Base):
         mech_specs = []
         all_specs = []
 
-        # Get controller's MONITORED_OUTPUT_STATES specifications (optional, so need to try)
+        # Get controller's MONITOR_FOR_CONTROL specifications (optional, so need to try)
         try:
-            controller_specs = self.paramsCurrent[MONITORED_OUTPUT_STATES] or []
+            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL] or []
         except KeyError:
             controller_specs = []
 
-        # Get system's MONITORED_OUTPUT_STATES specifications (specified in paramClassDefaults, so must be there)
-        system_specs = self.system.paramsCurrent[MONITORED_OUTPUT_STATES]
+        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
+        system_specs = self.system.paramsCurrent[MONITOR_FOR_CONTROL]
 
         # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if controller_specs:
@@ -572,7 +571,7 @@ class EVCMechanism(ControlMechanism_Base):
             # IMPLEMENTATION NOTE: This should never occur, as should have been found in _validate_monitored_state()
             else:
                 raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
-                               "in MONITORED_OUTPUT_STATES for a mechanism, controller or system in its scope".
+                               "in MONITOR_FOR_CONTROL for a mechanism, controller or system in its scope".
                                format(item, self.name))
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
@@ -585,7 +584,7 @@ class EVCMechanism(ControlMechanism_Base):
             raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStateOption specified in {}: {}".
                            format(self.name, option_specs))
 
-        # Get MONITORED_OUTPUT_STATES specifications for each mechanism and outputState in the System
+        # Get MONITOR_FOR_CONTROL specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
         self.monitoredOutputStates = []
         
@@ -612,26 +611,26 @@ class EVCMechanism(ControlMechanism_Base):
 
             # PARSE MECHANISM'S SPECS
 
-            # Get MONITORED_OUTPUT_STATES specification from mechanism
+            # Get MONITOR_FOR_CONTROL specification from mechanism
             try:
-                mech_specs = mech.paramsCurrent[MONITORED_OUTPUT_STATES]
+                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
 
-                # Setting MONITORED_OUTPUT_STATES to None specifies mechanism's outputState(s) should NOT be monitored
+                # Setting MONITOR_FOR_CONTROL to None specifies mechanism's outputState(s) should NOT be monitored
                 if mech_specs is None:
                     raise ValueError
 
-            # Mechanism's MONITORED_OUTPUT_STATES is absent or NotImplemented, so proceed to parse outputState(s) specs
+            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse outputState(s) specs
             except (KeyError, AttributeError):
                 pass
 
-            # Mechanism's MONITORED_OUTPUT_STATES is set to None, so do NOT monitor any of its outputStates
+            # Mechanism's MONITOR_FOR_CONTROL is set to None, so do NOT monitor any of its outputStates
             except ValueError:
                 continue
 
-            # Parse specs in mechanism's MONITORED_OUTPUT_STATES
+            # Parse specs in mechanism's MONITOR_FOR_CONTROL
             else:
 
                 # Add mech_specs to all_specs
@@ -660,25 +659,25 @@ class EVCMechanism(ControlMechanism_Base):
             # for output_state_name, output_state in list(mech.outputStates.items()):
             for output_state_name, output_state in mech.outputStates.items():
 
-                # Get MONITORED_OUTPUT_STATES specification from outputState
+                # Get MONITOR_FOR_CONTROL specification from outputState
                 try:
-                    output_state_specs = output_state.paramsCurrent[MONITORED_OUTPUT_STATES]
+                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
                     if output_state_specs is NotImplemented:
                         raise AttributeError
 
-                    # Setting MONITORED_OUTPUT_STATES to None specifies outputState should NOT be monitored
+                    # Setting MONITOR_FOR_CONTROL to None specifies outputState should NOT be monitored
                     if output_state_specs is None:
                         raise ValueError
 
-                # outputState's MONITORED_OUTPUT_STATES is absent or NotImplemented, so ignore
+                # outputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
                 except (KeyError, AttributeError):
                     pass
 
-                # outputState's MONITORED_OUTPUT_STATES is set to None, so do NOT monitor it
+                # outputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
                 except ValueError:
                     continue
 
-                # Parse specs in outputState's MONITORED_OUTPUT_STATES
+                # Parse specs in outputState's MONITOR_FOR_CONTROL
                 else:
 
                     # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
@@ -751,7 +750,7 @@ class EVCMechanism(ControlMechanism_Base):
                         continue
                     # # MODIFIED 11/13/16 END
                     else:
-                        raise EVCError("PROGRAM ERROR: unrecognized specification of MONITORED_OUTPUT_STATES for "
+                        raise EVCError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
                                        format(output_state_name, mech.name))
 
