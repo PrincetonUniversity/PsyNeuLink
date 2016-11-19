@@ -260,7 +260,7 @@ def system(default_input_value=None,
            initial_values:dict={},
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
-           monitored_output_states:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -272,7 +272,7 @@ def system(default_input_value=None,
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitored_output_states=:keyword:`None`,  \
+    monitor_for_control=:keyword:`None`,  \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -309,14 +309,14 @@ def system(default_input_value=None,
 
     controller : ControlMechanism : default DefaultController
         the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        monitored_output_states, and specify the value of ControlSignal projections in the system.
+        monitor_for_control, and specify the value of ControlSignal projections in the system.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the ``controller`` is executed during system execution.
 
-    monitored_output_states : list of OutputState objects or specifications : default None
+    monitor_for_control : list of OutputState objects or specifications : default None
         specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
-        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitored_output_states`` parameter).
+        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` parameter).
 
     params : dict : default None
         a dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
@@ -350,7 +350,7 @@ def system(default_input_value=None,
                        controller=controller,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
-                       monitored_output_states=monitored_output_states,
+                       monitor_for_control=monitor_for_control,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -365,7 +365,7 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitored_output_states=:keyword:`None`   \
+    monitor_for_control=:keyword:`None`   \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -573,21 +573,21 @@ class System_Base(System):
                  initial_values=None,
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
-                 monitored_output_states=None,
+                 monitor_for_control=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         processes = processes or []
-        monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                  initial_values=initial_values,
                                                  controller=controller,
                                                  enable_controller=enable_controller,
-                                                 monitored_output_states=monitored_output_states,
+                                                 monitor_for_control=monitor_for_control,
                                                  params=params)
 
         self.pathway = NotImplemented

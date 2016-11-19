@@ -43,7 +43,7 @@ it is generated automatically when a system is created and an EVCMechanism is sp
 
   * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
     EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
-    is added to the EVCMechanism for each outputState specified in its ``monitored_output_states`` parameter, and a
+    is added to the EVCMechanism for each outputState specified in its ``monitor_for_control`` parameter, and a
     :doc:`Mapping` projection is created that projects from that outputState to the EVCMechanism's inputState
     (see _ControlMechanism_Monitored_OutputStates for specifying :keyword:`MONITOR_FOR_CONTROL`).
   ..
@@ -91,7 +91,7 @@ assigning a params dictionary to the controller's ``params`` attribute using the
       values.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively, to scale and/or
       exponentiate the contribution of each outputState's value to the aggregated outcome  The length of thes array
       for these arguments must equal the number of outputStates in``monitoredOutputStates``.  These specifications
-      will supercede any made for individual outputStates in a tuple of the ``monitored_output_states`` argument, or
+      will supercede any made for individual outputStates in a tuple of the ``monitor_for_control`` argument, or
       MONITOR_FOR_CONTROL entry of a params specification dictionary (see
       :ref:`ControlMechanism_Monitored_OutputStates`).
     ..
@@ -188,9 +188,9 @@ The following example implements a system with an EVCMechanism (and two processe
 
     mySystem = system(processes=[myRewardProcess, myDecisionProcess],
                       controller=EVCMechanism,
-                      monitored_output_states=[Reward, DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
+                      monitor_for_control=[Reward, DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
-It uses the system's ``monitored_output_states`` argument to assign three outputStates to be monitored (belonging
+It uses the system's ``monitor_for_control`` argument to assign three outputStates to be monitored (belonging
 to mechanisms not show here).  The first one references a mechanism (belonging to a mechanism not shown;  its
 primary outputState will be used by default).  The second and third uses keywords that are the names of
 outputStates (in this case, for a :doc:`DDM` ProcessingMechanism).  The last one (RESPONSE_TIME) is assgined an
@@ -243,7 +243,7 @@ class EVCMechanism(ControlMechanism_Base):
     """EVCMechanism(                                                                    \
     prediction_mechanism_type=AdaptiveIntegratorMechanism,                              \
     prediction_mechanism_params=None,                                                   \
-    monitored_output_states=None,                                                       \
+    monitor_for_control=None,                                                       \
     function=LinearCombination(offset=0.0,scale=1,operation=SUM),                       \
     outcome_aggregation_function=LinearCombination(offset=0,scale=1,operation=PRODUCT), \
     cost_aggregation_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM),    \
@@ -310,7 +310,7 @@ class EVCMechanism(ControlMechanism_Base):
         a parameter dictionary passed to ``prediction_mechanism_type`` constructor.
         The same set is passed to all PredictionMechanisms.
 
-    monitored_output_states : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
+    monitor_for_control : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
     default :keyword:`MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES`
         specifies set of outputState values to monitor, and that are passed to outcome_aggregation_function
         (see :ref:`ControlMechanism_Monitored_OutputStates` for specification options, and
@@ -443,7 +443,7 @@ class EVCMechanism(ControlMechanism_Base):
                  # default_input_value=None,
                  prediction_mechanism_type=AdaptiveIntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
-                 monitored_output_states:tc.optional(list)=None,
+                 monitor_for_control:tc.optional(list)=None,
                  function=LinearCombination(offset=0.0,
                                             scale=1,
                                             operation=SUM,
@@ -467,7 +467,7 @@ class EVCMechanism(ControlMechanism_Base):
         params = self._assign_args_to_param_dicts(# system=system,
                                                   prediction_mechanism_type=prediction_mechanism_type,
                                                   prediction_mechanism_params=prediction_mechanism_params,
-                                                  monitored_output_states=monitored_output_states,
+                                                  monitor_for_control=monitor_for_control,
                                                   function=function,
                                                   outcome_aggregation_function=outcome_aggregation_function,
                                                   cost_aggregation_function=cost_aggregation_function,
@@ -477,7 +477,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.controlSignalChannels = OrderedDict()
 
         super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
-                                           monitored_output_states=monitored_output_states,
+                                           monitor_for_control=monitor_for_control,
                                            function=function,
                                            params=params,
                                            name=name,
