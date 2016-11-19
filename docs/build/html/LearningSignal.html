@@ -234,10 +234,9 @@ which uses the output of the ProcessingMechanism(s) to which the errorSource pro
 <span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
 MonitoringMechanisms that provide the <code class="docutils literal"><span class="pre">errorSignal</span></code> to each LearningSignal.  When the LearningSignal is executed,
-it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> of the Mapping projection to which it projects.
-The changes are calculated so as to reduce the errorSignal calculated for <code class="docutils literal"><span class="pre">errorSource</span></code> (the ProcessingMechanism
-that receives the Mapping projection).  The changes are assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the LearningSignal, and applied
-to the <code class="docutils literal"><span class="pre">matrix</span></code> the next time the Mapping projection to which it belongs is executed
+it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> of its <code class="docutils literal"><span class="pre">mappingProjection</span></code>. Changes to the
+<code class="docutils literal"><span class="pre">matrix</span></code> are  calculated so as to reduce the <code class="docutils literal"><span class="pre">errorSignal</span></code>. The changes are assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the
+LearningSignal, but are not applied to the <code class="docutils literal"><span class="pre">matrix</span></code> unit the next time the <code class="docutils literal"><span class="pre">mappingProjection</span></code> is executed
 (see <span class="xref std std-ref">Lazy_Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).</p>
 </div>
 <div class="section" id="class-reference">
@@ -278,7 +277,26 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="LearningSignal.LearningSignal.receiver">
 <code class="descname">receiver</code><a class="headerlink" href="#LearningSignal.LearningSignal.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ParameterState of Mapping projection</em> &#8211; parameterState for the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of the Mapping projection to be modified by learning.</p>
+<dd><p><em>ParameterState of Mapping projection</em> &#8211; parameterState for the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of <code class="docutils literal"><span class="pre">mappingProjection</span></code> (the one to be modified by learning).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="LearningSignal.LearningSignal.mappingProjection">
+<code class="descname">mappingProjection</code><a class="headerlink" href="#LearningSignal.LearningSignal.mappingProjection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mapping projection</em> &#8211; the Mapping projection to which the LearningSignal projects;  more specifically, the owner of the
+parameterState that is the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="LearningSignal.LearningSignal.mappingWeightMatrix">
+<code class="descname">mappingWeightMatrix</code><a class="headerlink" href="#LearningSignal.LearningSignal.mappingWeightMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; <code class="docutils literal"><span class="pre">matrix</span></code> parameter for the function of <code class="docutils literal"><span class="pre">mappingProjection</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="LearningSignal.LearningSignal.errorSource">
+<code class="descname">errorSource</code><a class="headerlink" href="#LearningSignal.LearningSignal.errorSource" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ProcessingMechanism</em> &#8211; mechanism to which <code class="docutils literal"><span class="pre">mappingProjection</span></code> projects.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -289,21 +307,9 @@ If it is not specified, a default is assigned using <code class="docutils litera
 </dd></dl>
 
 <dl class="attribute">
-<dt id="LearningSignal.LearningSignal.errorSource">
-<code class="descname">errorSource</code><a class="headerlink" href="#LearningSignal.LearningSignal.errorSource" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ProcessingMechanism</em> &#8211; mechanism that receives the Mapping projection to which the LearningSignal projects.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="LearningSignal.LearningSignal.mappingProjection">
-<code class="descname">mappingProjection</code><a class="headerlink" href="#LearningSignal.LearningSignal.mappingProjection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mapping projection</em> &#8211; the owner of the parameterState that is the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="LearningSignal.LearningSignal.mappingWeightMatrix">
-<code class="descname">mappingWeightMatrix</code><a class="headerlink" href="#LearningSignal.LearningSignal.mappingWeightMatrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; <code class="docutils literal"><span class="pre">matrix</span></code> parameter for the function of the Mapping projection to which the LearningSignal projects.</p>
+<dt id="LearningSignal.LearningSignal.variable">
+<code class="descname">variable</code><a class="headerlink" href="#LearningSignal.LearningSignal.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; same as <code class="docutils literal"><span class="pre">errorSignal</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">

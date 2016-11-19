@@ -29,20 +29,21 @@ one mechanism (its ``sender``), and does whatever conversion is needed to transm
 to another mechanism (its ``receiver``).  There are three types of projections that serve difference purposes:
 
 * :doc:`Mapping`
-    These take the ouptut of one :doc:`ProcessingMechanism`, convert this by convolving it with the projection's
-    ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
-    are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
+    These take the ouptut of one :doc:`ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
+    the projection's ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically,
+    Mapping projections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
 * :doc:`ControlSignal`
-    Thess take a "control allocation" specification — usually the ouptput of a :doc:`ControlMechanism` — and transmit
-    this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
-    parameter of the mechanism's function.  ControlSignals projections are typically used in the context of a
-    :doc:`System`.
+    Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
+    <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
+    modulate the value of the corresponding parameter of the mechanism's function.  ControlSignals projections are
+    typically used in the context of a :doc:`System`.
 ..
-* :doc:`Learning`
-    These take an "error signal" — usually the output of a :doc:`MonitoringMechanism` — and transmit this to the
-    parameterState of a :doc:`Mapping` projection, which uses this to modify its ``matrix`` parameter.
-    ControlSignal projections are typically used in the context of a :doc:`Process` or :doc:`System` that uses learning.
+* :doc:`LearningSignal`
+    These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
+    transmit this to the parameterState of a :doc:`Mapping` projection, which uses this to modify its ``matrix``
+    parameter. LearningSignal projections are used in the context of a :doc:`System` or :doc:`Process` that uses
+    learning.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver

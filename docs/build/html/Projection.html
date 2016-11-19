@@ -165,9 +165,9 @@ to another mechanism (its <code class="docutils literal"><span class="pre">recei
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a></dt>
-<dd><p class="first last">These take the ouptut of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>, convert this by convolving it with the projection&#8217;s
-<code class="docutils literal"><span class="pre">matrix</span></code> parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
-are used to connect the mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <span class="xref doc">process</span>.</p>
+<dd><p class="first last">These take the ouptut of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
+the projection&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code> parameter, and transmit this as input to another ProcessingMechanism.  Typically,
+Mapping projections are used to connect the mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <span class="xref doc">process</span>.</p>
 </dd>
 </dl>
 </li>
@@ -175,20 +175,20 @@ are used to connect the mechanisms in the <code class="docutils literal"><span c
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a></dt>
-<dd><p class="first last">Thess take a &#8220;control allocation&#8221; specification — usually the ouptput of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> — and transmit
-this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
-parameter of the mechanism&#8217;s function.  ControlSignals projections are typically used in the context of a
-<a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
+<dd><p class="first last">Thess take a &#8220;control allocation&#8221; specification — usually the ouptput of a  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
+modulate the value of the corresponding parameter of the mechanism&#8217;s function.  ControlSignals projections are
+typically used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <ul>
 <li><dl class="first docutils">
-<dt><span class="xref doc">Learning</span></dt>
-<dd><p class="first last">These take an &#8220;error signal&#8221; —&nbsp;usually the output of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a> —&nbsp;and transmit this to the
-parameterState of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection, which uses this to modify its <code class="docutils literal"><span class="pre">matrix</span></code> parameter.
-ControlSignal projections are typically used in the context of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> that uses learning.</p>
+<dt><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a></dt>
+<dd><p class="first last">These take an &#8220;error signal&#8221; —&nbsp;usually the output of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> —&nbsp;and
+transmit this to the parameterState of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection, which uses this to modify its <code class="docutils literal"><span class="pre">matrix</span></code>
+parameter. LearningSignal projections are used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> or <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> that uses
+learning.</p>
 </dd>
 </dl>
 </li>

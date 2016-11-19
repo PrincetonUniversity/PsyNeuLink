@@ -1398,6 +1398,37 @@
     #  ?? RESTRICT THEM ONLY TO CATEGORY D
     #  ?? ALLOW DICT ENTRIES FOR EACH (WITH DEDICATED KEYS)
 #
+
+# DOC LIST:
+
+#    AdaptiveIntegrator
+#    Comparator
+#  ~ ControlMechanism
+#  √ ControlSignal
+#  ! DDM
+#    DefaultControlMechanism
+#  √ EVCMechanism
+#    Function
+#  ~ InputState
+#  √ LearningSignal
+#    Log
+#  √ Mapping
+#  ! Mechanism
+#    MonitoringMechanism
+#  ~ OutputState
+#    ParameterState
+#    Preferences
+#  √ Process
+#    ProcessingMechanism
+#  ~ Projection
+#  ! Run
+#    State
+#  ! System
+#  ! Transfer
+#    Utilities
+#    WeightedError
+
+
 #endregion
 
 #region PREFERENCES: ---------------------------------------------------------------------------------------------------------
@@ -2305,3 +2336,4 @@
 # my_input_layer = Transfer(default_input_value=[0,0,0], function=Linear)
 # my_hidden_layer = Transfer(default_input_value=[0,0,0], function=Logistic)
 # my_decision_layer = DDM(default_input_value=[0], function=BogaczEtAl)
+
