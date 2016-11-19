@@ -14,7 +14,7 @@ Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
 
 Output_Layer = DDM(name='Output Layer DDM',
                    threshold=0.1,
-                   params = {MONITOR_FOR_LEARNING:ERROR_RATE},
+                   params = {MONITOR_FOR_LEARNING:PROBABILITY_LOWER_THRESHOLD},
                    default_input_value = [0])
 
 Input_Weights = Mapping(name='Input Weights',
