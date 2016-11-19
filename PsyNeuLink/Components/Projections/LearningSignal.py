@@ -25,7 +25,6 @@ MonitoringMechanisms.
 Creating a LearningSignal Projection
 ------------------------------------
 
-
 A LearningSignal projection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
 :ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <_Process_Projections>`
