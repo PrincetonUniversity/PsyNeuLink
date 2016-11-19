@@ -190,9 +190,15 @@ or they can be assigned by default (see below).</p>
 <p id="mapping-matrix"><code class="docutils literal"><span class="pre">matrix</span></code></p>
 <blockquote>
 <div><p>Used by the Mapping projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to execute a matrix transformation of its input.
-It can be assigned a list of 1d arrays, an np.ndarray, np.matrix, a function that resolves to one of these,
-or one of the following keywords:</p>
-<ul class="simple" id="matrix-keywords">
+It can be specified using any of the following formats:</p>
+<p><em>List, array or matrix</em>.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
+it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+or matrix rows) corresponds to the elements of the <code class="docutils literal"><span class="pre">sender</span></code>, and the inner dimension (inner list items,
+array axis 1, or matrix columns) corresponds to the weighting of the conribution that a given <code class="docutils literal"><span class="pre">sender</span></code>
+makes to the <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<p id="matrix-keywords"><em>Matrix keyword</em>.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
+of the following keywords can be use:</p>
+<ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> - a square matrix of 1&#8217;s; this requires that the length of the sender and receiver
 values are the same.</li>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code> - a matrix that has a number of rows equal to the length of the sender&#8217;s value,
@@ -205,9 +211,12 @@ is assigned;  otherwise, it a <code class="xref std std-keyword docutils literal
 <li><code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code> - used if no matrix specification is provided in the constructor;  it presently
 assigns an keyword:<cite>IDENTITY_MATRIX</cite>.</li>
 </ul>
-<p>PsyNeuLink also provides a convenience function, <code class="xref py py-class docutils literal"><span class="pre">random_matrix</span></code>, that can be used to generate a random matrix
-sized for a sender, receiver, with random numbers drawn from a uniform distribution within a specified range and
-with a specified offset.</p>
+<p><code class="xref py py-class docutils literal"><span class="pre">random_matrix</span></code>.  This is a convenience function that provides more flexibility than
+<code class="xref std std-keyword docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>.  It generates a random matrix sized for a sender, receiver,
+with random numbers drawn from a uniform distribution within a specified range and with a specified offset.</p>
+<p><em>Tuple</em>.  This is used to specify a projection to the parameterState of a <code class="docutils literal"><span class="pre">matrix</span></code> along with the <code class="docutils literal"><span class="pre">matrix</span></code> itself.
+The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
+<a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection specification</span></a>.</p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">parameter_modulation_operation</span></code></p>
 <blockquote>
@@ -262,7 +271,13 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="Mapping.Mapping.monitoringMechanism">
 <code class="descname">monitoringMechanism</code><a class="headerlink" href="#Mapping.Mapping.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when :ref:<a href="#id3"><span class="problematic" id="id4">`</span></a>learning &lt;LearningSignal&gt; is used.</p>
+<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when <a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Mapping.Mapping.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#Mapping.Mapping.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform input from <code class="docutils literal"><span class="pre">sender</span></code> and to <code class="docutils literal"><span class="pre">value</span></code> used by <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </dd></dl>
 
 </dd></dl>

@@ -165,9 +165,9 @@ to another mechanism (its <code class="docutils literal"><span class="pre">recei
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a></dt>
-<dd><p class="first last">These take the ouptut of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>, convert this by convolving it with the projection&#8217;s
-<code class="docutils literal"><span class="pre">matrix</span></code> parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
-are used to connect the mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <span class="xref doc">process</span>.</p>
+<dd><p class="first last">These take the ouptut of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
+the projection&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code> parameter, and transmit this as input to another ProcessingMechanism.  Typically,
+Mapping projections are used to connect the mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <span class="xref doc">process</span>.</p>
 </dd>
 </dl>
 </li>
@@ -175,20 +175,20 @@ are used to connect the mechanisms in the <code class="docutils literal"><span c
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a></dt>
-<dd><p class="first last">Thess take a &#8220;control allocation&#8221; specification — usually the ouptput of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> — and transmit
-this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
-parameter of the mechanism&#8217;s function.  ControlSignals projections are typically used in the context of a
-<a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
+<dd><p class="first last">Thess take a &#8220;control allocation&#8221; specification — usually the ouptput of a  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
+modulate the value of the corresponding parameter of the mechanism&#8217;s function.  ControlSignals projections are
+typically used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
 </dd>
 </dl>
 </li>
 </ul>
 <ul>
 <li><dl class="first docutils">
-<dt><span class="xref doc">Learning</span></dt>
-<dd><p class="first last">These take an &#8220;error signal&#8221; —&nbsp;usually the output of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a> —&nbsp;and transmit this to the
-parameterState of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection, which uses this to modify its <code class="docutils literal"><span class="pre">matrix</span></code> parameter.
-ControlSignal projections are typically used in the context of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> that uses learning.</p>
+<dt><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a></dt>
+<dd><p class="first last">These take an &#8220;error signal&#8221; —&nbsp;usually the output of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> —&nbsp;and
+transmit this to the parameterState of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection, which uses this to modify its <code class="docutils literal"><span class="pre">matrix</span></code>
+parameter. LearningSignal projections are used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> or <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> that uses
+learning.</p>
 </dd>
 </dl>
 </li>
@@ -198,21 +198,31 @@ ControlSignal projections are typically used in the context of a <a class="refer
 <span id="projection-creating-a-projection"></span><h2>Creating a Projection<a class="headerlink" href="#creating-a-projection" title="Permalink to this headline">¶</a></h2>
 <p>Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of projection.  However, projections can also be specified &#8220;in context,&#8221; for example
-in the <code class="docutils literal"><span class="pre">pathway</span></code> attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
-This can be done using a call to the projection subclass, or one of the following ways:</p>
+in the <code class="docutils literal"><span class="pre">pathway</span></code> attribute of a process, or when a tuple is used to specify the parameter of a function
+(such as a <a class="reference internal" href="Mechanism.html#mechanism-assigning-a-control-signal"><span class="std std-ref">ControlSignal for a mechanism</span></a>,
+or a <a class="reference internal" href="Mapping.html#mapping-tuple-specification"><span class="std std-ref">LearningSignal for a Mapping projection</span></a>).</p>
+<p id="projection-in-context-specification"><em>In context specification</em>.  Any of the following can be used:</p>
 <blockquote>
-<div><ul class="simple">
-<li>name of an <strong>existing projection</strong>:</li>
-</ul>
+<div><p><em>Constructor</em>.  Used the same way in context as it is ordinarily.</p>
+<p><em>Projection instance</em>.  This must be an instance of an existing projection.</p>
+<p><em>Projection keyword</em>.  This will create a default instance of the specified type, and can be any of the following:</p>
 <ul class="simple">
-<li>name of a <strong>projection type</strong> (subclass);</li>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PROJECTION</span></code> - a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection with the <span class="xref doc">DefaultMechanism</span> as its <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_SIGNAL</span></code> - a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection  with the <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">Default Control Mechanism</span></a> as its</li>
 </ul>
-<ul>
-<li><p class="first"><strong>specification dictionary</strong> &#8211; this can contain an entry specifying the type of projection,
-and/or entries specifying the value of parameters used to instantiate it.
-These should take the following form:</p>
+<p><code class="docutils literal"><span class="pre">sender</span></code>.
+* <code class="xref std std-keyword docutils literal"><span class="pre">LEARNING_SIGNAL</span></code> - a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection.  This can only be used for a projection to the</p>
 <blockquote>
-<div><ul>
+<div><code class="docutils literal"><span class="pre">matrix</span></code> parameterState of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection.  If the <code class="docutils literal"><span class="pre">receiver</span></code> for the Mapping projection
+(the <em>error source*</em>) projects to a MonitoringMechanism, it will be used as the <code class="docutils literal"><span class="pre">sender</span></code> for the LearningSignal.
+Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a Mapping
+projection from the error source to the MonitoringMechanism
+(see <span class="xref std std-ref">Automatic Instantiation</span> &lt;LearningSignal_Automatic_Creation&gt;` of a LearningSignal for details).</div></blockquote>
+<p><em>Projection type</em>.  This must be the name of a projection subclass;  it will create a default instance of the
+specified type.</p>
+<p><em>Specification dictionary</em>.  This can contain an entry specifying the type of projection, and/or entries
+specifying the value of parameters used to instantiate it. These should take the following form:</p>
+<ul>
 <li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_TYPE</span></code>: &lt;name of a projection type&gt;</p>
 <blockquote>
 <div><p>if this entry is absent, a default projection will be created that is appropriate for the context
@@ -232,16 +242,12 @@ used to instantiate the projection.  These can be overridden during execution by
 </li>
 </ul>
 </div></blockquote>
-</li>
-<li><p class="first"><strong>automatically</strong> &#8211; PsyNeuLink will automatically create projections under some circumstances.  For example,
-a process automatically generates a  <a class="reference internal" href="Mapping.html#module-Mapping" title="Mapping"><code class="xref py py-class docutils literal"><span class="pre">Mapping</span></code></a> projection between adjacent mechanisms in its pathway if
-none is specified; and <a class="reference internal" href="LearningSignal.html#module-LearningSignal" title="LearningSignal"><code class="xref py py-class docutils literal"><span class="pre">LearningSignal</span></code></a>  projections are automatically generated when <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Learning</span></a>
-is specified for a process.  Creating a <code class="xref py py-class docutils literal"><span class="pre">state</span></code> will also automatically generate a projection and a sender
-mechanism, if none is specified (the type of projection and its sender mechanism depend on the type of state &#8211;
-see state subclasses for details).</p>
-</li>
-</ul>
-</div></blockquote>
+<p id="projection-automatic-creation"><em>Automatic creation</em>.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
+a process automatically generates a  <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection between adjacent mechanisms in its <code class="docutils literal"><span class="pre">pathway</span></code> if
+none is specified; and <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>  projections are automatically generated when
+<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning</span></a> is specified for a process.  Creating a <a class="reference internal" href="State.html"><span class="doc">state</span></a> will also
+automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
+projection and its sender mechanism depend on the type of state &#8211; see <span class="xref doc">state subclasses</span> for details).</p>
 </div>
 <div class="section" id="structure">
 <span id="projection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
