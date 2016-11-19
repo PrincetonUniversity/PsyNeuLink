@@ -85,31 +85,10 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Transfer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-transfer-mechanism">Creating a Transfer Mechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -236,28 +215,31 @@ and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><spa
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>default_input_value</strong> (<em>value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; </li>
+<li><strong>default_input_value</strong> (<em>value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; the input to the mechanism to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods;
+also serves as a template to specify the length of <code class="docutils literal"><span class="pre">variable</span></code> for <code class="docutils literal"><span class="pre">function</span></code>, and the primary  outputState
+of the mechanism.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies function used to transform input;  can be <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Logistic</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code>,
 or a custom function.</li>
-<li><strong>function_params</strong> (<em>Dict[str, value]</em>) &#8211; Contains one entry for each parameter of the mechanism&#8217;s function.
+<li><strong>function_params</strong> (<em>Dict[str, value]</em>) &#8211; contains one entry for each parameter of the mechanism&#8217;s function.
 The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.</li>
-<li><strong>initial_value</strong> (<em>value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; Specifies starting value for time-averaged input (only relevant if <code class="docutils literal"><span class="pre">rate</span></code> parameter is not 1.0).</li>
-<li><strong>noise</strong> (<em>float or function : default 0.0</em>) &#8211; If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian.
+<li><strong>initial_value</strong> (<em>value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; specifies the starting value for time-averaged input (only relevant if <code class="docutils literal"><span class="pre">rate</span></code> parameter is not 1.0).</li>
+<li><strong>noise</strong> (<em>float or function : default 0.0</em>) &#8211; a stochastically-sampled value added to the output of the <code class="docutils literal"><span class="pre">function</span></code>.
+If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
 If it is a function, it must return a scalar value.</li>
-<li><strong>rate</strong> (<em>float : default 1.0</em>) &#8211; Time constant for exponential time averaging of input
+<li><strong>rate</strong> (<em>float : default 1.0</em>) &#8211; the time constant for exponential time averaging of input
 when the mechanism is executed at the time_step time scale:
 input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).</li>
-<li><strong>range</strong> (<em>Optional[Tuple[float, float]]</em>) &#8211; Specifies the allowable range of the result: the first value specifies the minimum allowable value
+<li><strong>range</strong> (<em>Optional[Tuple[float, float]]</em>) &#8211; specifies the allowable range of the result: the first value specifies the minimum allowable value
 and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
 is set to the corresponding value.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
-<li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; Determines whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
+<li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
 This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> for the <code class="docutils literal"><span class="pre">rate</span></code> parameter to have an effect.</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; String used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; Preference set for process.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the PreferenceSet for mechanism.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 <li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
@@ -279,25 +261,25 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="Transfer.Transfer.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Transfer.Transfer.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em> &#8211; Input to mechanism&#8217;s function.</p>
+<dd><p><em>value: default Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em> &#8211; the input to mechanism&#8217;s function.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.function">
 <code class="descname">function</code><a class="headerlink" href="#Transfer.Transfer.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Function :  default Linear</em> &#8211; Function used to transform the input.</p>
+<dd><p><em>Function :  default Linear</em> &#8211; the function used to transform the input.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.value">
 <code class="descname">value</code><a class="headerlink" href="#Transfer.Transfer.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[value]</em> &#8211; Output of function.</p>
+<dd><p><em>List[value]</em> &#8211; the output of function.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Transfer.Transfer.name">
 <code class="descname">name</code><a class="headerlink" href="#Transfer.Transfer.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default Transfer-&lt;index&gt;</em> &#8211; Name of the mechanism.
+<dd><p><em>str : default Transfer-&lt;index&gt;</em> &#8211; the name of the mechanism.
 Specified in the name argument of the call to create the projection;
 if not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
@@ -306,7 +288,7 @@ if not is specified, a default is assigned by MechanismRegistry
 <dl class="attribute">
 <dt id="Transfer.Transfer.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Transfer.Transfer.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; Preference set for mechanism.
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for mechanism.
 Specified in the prefs argument of the call to create the mechanism;
 if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</p>

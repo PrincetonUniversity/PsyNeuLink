@@ -412,9 +412,12 @@ used to specify specialized outputStates required by a mechanism subclass
 </li>
 </ul>
 <ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> : List[OutputState] -
-used to specify outputStates to be monitored by a ControlMechanism
-(see <span class="xref std std-ref">ControlMechanisms_Monitored_OutputStates</span> for details of specification).</li>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> : List[OutputState] -
+used to specify mechanisms or specific outputStates to be monitored by a ControlMechanism
+(see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">specifying monitored outputStates</span></a>
+for details of specification).</li>
+</ul>
+<ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_LEARNING</span></code> : List[OutputState] -
 used to specify outputStates to be used by a MonitoringMechanism for learning
 (see <span class="xref std std-ref">MonitoringMechanisms_Monitored_For_Learning</span> for details of specification).</li>
@@ -478,7 +481,8 @@ entries for the values of the runtime parameters for a state, its function, or i
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>mech_spec</strong> (<em>Optional[Mechanism subclass, str, or dict]</em>) &#8211; if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns the default mechanism ([LINK for default]);
+<li><strong>mech_spec</strong> (<em>Optional[Mechanism subclass, str, or dict]</em>) &#8211; specification for the mechanism to create.
+If it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns the default mechanism ([LINK for default]);
 if it is the name of a Mechanism subclass, a default instance of that subclass is returned;
 if it is the name of a Mechanism subclass registered in the <code class="docutils literal"><span class="pre">MechanismRegistry</span></code>
 an instance of a default mechanism for that class is returned,
@@ -486,12 +490,11 @@ otherwise the string is used to name an instance of the default mechanism;
 if it is a dict, it must be a mechanism specification dict (see <span class="xref std std-ref">Mechanism_Creating_A_Mechanism</span>).
 Note: if a name is not specified, the nth instance created will be named by using the mechanism&#8217;s
 <code class="docutils literal"><span class="pre">componentType</span></code> attribute as the base and adding an indexed suffix:  componentType-n.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; passed to the relevant subclass to instantiate the mechanism.
-Entries can be any parameters described in <a class="reference internal" href="#mechanism-specifying-parameters"><span class="std std-ref">Specifying Mechanism Parameters</span></a>
-that are relevant to the mechanism&#8217;s subclass,
-and/or any defined by a <a class="reference internal" href="#"><span class="doc">Mechanisms</span></a> subclass itself.</li>
-<li><strong>context</strong> (<em>str</em>) &#8211; if it is the keyword <code class="xref std std-keyword docutils literal"><span class="pre">VALIDATE</span></code>, returns <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> if specification would return a valid
-subclass object; otherwise returns <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+and/or a custom function and its parameters (see <a class="reference internal" href="#"><span class="doc">Mechanisms</span></a> for specification of a parms dict).
+It is passed to the relevant subclass to instantiate the mechanism. Entries can be any parameters described
+in <a class="reference internal" href="#mechanism-specifying-parameters"><span class="std std-ref">Specifying Mechanism Parameters</span></a> that are relevant to the mechanism&#8217;s subclass, and/or any defined
+by a <a class="reference internal" href="#"><span class="doc">Mechanisms</span></a> subclass itself.</li>
 </ul>
 </td>
 </tr>
@@ -632,7 +635,7 @@ a default is assigned by MechanismRegistry based on the mechanism&#8217;s subcla
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#Mechanism.Mechanism_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; Preference set for the mechanism.
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for the mechanism.
 Specified in the prefs argument of the call to create the mechanism;
 if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details).[LINK]</p>
@@ -654,7 +657,7 @@ the number of items in the outermost level of list,
 or axis 0 of ndarray, must equal the number of inputStates (if there is more than one), and each
 item must be compatible with the format (number and type of elements) of each inputState&#8217;s variable
 (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> for details of input specification formats).</li>
-<li><strong>runtime_params</strong> (<em>Optional[Dict[str, Dict[str, Dict[str, value]]]]:</em>) &#8211; dictionary that can include any of the parameters used as arguments to instantiate the object,
+<li><strong>runtime_params</strong> (<em>Optional[Dict[str, Dict[str, Dict[str, value]]]]:</em>) &#8211; a dictionary that can include any of the parameters used as arguments to instantiate the object,
 its function, or projection(s) to any of its states.  Any value assigned to a parameter
 will override the current value of that parameter for this &#8211; but only this execution of the mechanism;
 it will return to its previous value following execution.
@@ -670,7 +673,7 @@ The key for each entry is a keyword indicating whether it is for the state&#8217
 projection (<code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PARAMS</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_SIGNAL_PARAMS</span></code>), or to a specific projection
 (using its name), and the value of each entry is a dictionary containing the parameters for the function,
 projection, or set of projections (keys of which are parameter names, and values the values to be assigned).</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
+<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; specifies whether mechanisms are executed for a single time step or a trial.</li>
 </ul>
 </td>
 </tr>
@@ -696,11 +699,11 @@ after either one time_step or the full trial</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value</em>) &#8211; input for each execution of mechanism (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> in <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for
-detailed description of formatting requirements and options).</li>
-<li><strong>call_before_execution</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called before each execution of the mechanism.</li>
-<li><strong>call_after_execution</strong> (Function : default= <code class="docutils literal"><span class="pre">None</span></code>) &#8211; called after each execution of the mechanism.</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; determines whether mechanisms are executed for a single time step or a trial</li>
+<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value</em>) &#8211; the inputs used for each in a sequence of executions of the mechanism (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> in
+<a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for detailed description of formatting requirements and options).</li>
+<li><strong>call_before_execution</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called before each execution of the mechanism.</li>
+<li><strong>call_after_execution</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called after each execution of the mechanism.</li>
+<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; specifies whether mechanisms are executed for a single time step or a trial.</li>
 </ul>
 </td>
 </tr>

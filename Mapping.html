@@ -247,20 +247,20 @@ executed).</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; Source of projection input.  If a mechanism is specified, its primary outputState will be used.  If it is not
-specified, it will be assigned in the context in which the projection is used.</li>
-<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; Destination of projection output.  If a mechanism is specified, its primary inputState will be used.  If it
-is not specified, it will be assigned in the context in which the projection is used.</li>
-<li><strong>matrix</strong> (list, np.ndarray, np.matrix, function or keyword : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code>) &#8211; Matrix used by <code class="docutils literal"><span class="pre">function</span></code> (default: LinearCombination) to transform value of <code class="docutils literal"><span class="pre">sender</span></code></li>
-<li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; Operation used to combine the value of any projections to the matrix&#8217;s parameterState with the <code class="docutils literal"><span class="pre">matrix</span></code>.
+<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; the source of the projection&#8217;s input.  If a mechanism is specified, its primary outputState will be used.
+If it is not specified, it will be assigned in the context in which the projection is used.</li>
+<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; the destination of the projection&#8217;s output.  If a mechanism is specified, its primary inputState will be used.
+If it is not specified, it will be assigned in the context in which the projection is used.</li>
+<li><strong>matrix</strong> (list, np.ndarray, np.matrix, function or keyword : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code>) &#8211; the matrix used by <code class="docutils literal"><span class="pre">function</span></code> (default: LinearCombination) to transform the value of the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+<li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the <code class="docutils literal"><span class="pre">matrix</span></code>.
 Most commonly used with LearningSignal projections.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the projection, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).[LINK]
 By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> assignment (LinearCombination);</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; String used for the name of the mapping projection.
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mapping projection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; Preference set for the mapping projection.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the PreferenceSet for the mapping projection.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 </ul>
@@ -271,13 +271,15 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="Mapping.Mapping.monitoringMechanism">
 <code class="descname">monitoringMechanism</code><a class="headerlink" href="#Mapping.Mapping.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when <a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
+<dd><p><em>MonitoringMechanism</em> &#8211; the source of the error signal used by a LearningSignal to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> when
+<a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Mapping.Mapping.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#Mapping.Mapping.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform input from <code class="docutils literal"><span class="pre">sender</span></code> and to <code class="docutils literal"><span class="pre">value</span></code> used by <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<dd><p><em>2d np.array</em> &#8211; the matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform the input from the <code class="docutils literal"><span class="pre">sender</span></code> and to the <code class="docutils literal"><span class="pre">value</span></code> used by
+the <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </dd></dl>
 
 </dd></dl>

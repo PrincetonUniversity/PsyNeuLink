@@ -179,7 +179,7 @@ a LearningSignal&#8217;s <code class="docutils literal"><span class="pre">receiv
 initializaton must be completed by calling its <code class="docutils literal"><span class="pre">deferred_init</span></code> method.  This is not necessary if the LearningSignal
 is specified as part of a system, process, or a projection in the pathway of a process &#8211; in those cases,
 initialization is completed automatically.</p>
-<p id="learningsignal-automatic-creation"><em>Automatic creation</em>.  When learning is specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>,
+<p id="learningsignal-automatic-creation"><strong>Automatic creation</strong>.  When learning is specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>,
 a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a>, or in a <span class="xref std std-ref">tuple that specifies a projection</span>,   PsyNeuLink automatically
 generates the LearningSignals, MonitoringMechanisms, and corresponding projections required for learning to occur.
 More specifically, LearningSignals are automatically created for the relevant Mapping projection(s) (for a system or
@@ -250,17 +250,17 @@ LearningSignal, but are not applied to the <code class="docutils literal"><span 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[MonitoringMechanism or OutputState of one]</em>) &#8211; Source of the <code class="docutils literal"><span class="pre">errorSignal</span></code> for the LearningSignal. If it is not specified, one will be
+<li><strong>sender</strong> (<em>Optional[MonitoringMechanism or OutputState of one]</em>) &#8211; the source of the <code class="docutils literal"><span class="pre">errorSignal</span></code> for the LearningSignal. If it is not specified, one will be
 <a class="reference internal" href="#learningsignal-automatic-creation"><span class="std std-ref">automatically created</span></a> that is appropriate for
 the LearningSignal&#8217;s <code class="docutils literal"><span class="pre">errorSource</span></code>.</li>
-<li><strong>receiver</strong> (Optional[Mapping projection or ParameterState for <code class="docutils literal"><span class="pre">matrix</span></code> parameter of one]) &#8211; Mapping projection, the <code class="docutils literal"><span class="pre">matrix</span></code> of which is modified by the LearningSignal.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+<li><strong>receiver</strong> (Optional[Mapping projection or ParameterState for <code class="docutils literal"><span class="pre">matrix</span></code> parameter of one]) &#8211; a Mapping projection, the <code class="docutils literal"><span class="pre">matrix</span></code> of which is modified by the LearningSignal.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that specifies the parameters for the projection, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).[LINK]
 By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> and parameter assignments.</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; String used for the name of the ControlSignal projection.
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the LearningSignal projection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; Preference set for the ControlSignal projection.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the PreferenceSet for the LearningSignal projection.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 </ul>

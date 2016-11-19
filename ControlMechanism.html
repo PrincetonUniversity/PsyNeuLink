@@ -182,9 +182,9 @@ other ProcessingMechanisms in the system for which the ControlMechanism is a <co
 <span id="controlmechanism-creating-a-controlmechanism"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
 <p>ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creating-a-system"><span class="std std-ref">Creating a System</span></a>),
-and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>). The outputStates monitored by
-a ControlMechanism are listed in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code>, which can be specified in a number of ways (see
-below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
+and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>). The outputStates to be monitored
+by a ControlMechanism are specified in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> argument, which can be specified in a number of
+ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
 outputStates it monitors, and assigns a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection from that outputState to the newly created
 inputState.  How a ControlMechanism creates its ControlSignal projections depends on the subclass.</p>
 <div class="section" id="monitored-outputstates">
@@ -195,35 +195,35 @@ outputState(s). In all cases, specifications can be a references to an outputSta
 name of one (see :ref:ControlMechanism_Examples&#8217; below).</p>
 <p>The specification of whether an outputState is monitored by a ControlMechanism can be done in the following ways:</p>
 <ul class="simple">
-<li>An <strong>outputState</strong> can be <em>excluded</em> from being monitored by assigning <code class="docutils literal"><span class="pre">None</span></code> as the value of the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> entry of a parameter specification dictionary in the outputState&#8217;s <code class="docutils literal"><span class="pre">params</span></code>
-argument.  This specification takes precedence over any others;  that is, specifying <code class="docutils literal"><span class="pre">None</span></code> will suppress
+<li>An <strong>outputState</strong> can be <em>excluded</em> from being monitored by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> as the value of the
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in the outputState&#8217;s <code class="docutils literal"><span class="pre">params</span></code>
+argument.  This specification takes precedence over any others;  that is, specifying <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> will suppress
 monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
 outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
 based on one of the other specification methods below.</li>
 </ul>
 <ul>
 <li><p class="first">The outputState of a particular <strong>mechanism</strong> can be designated to be monitored, by specifying it in the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> entry of a parameter specification dictionary in the mechanism&#8217;s <code class="docutils literal"><span class="pre">params</span></code>
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in the mechanism&#8217;s <code class="docutils literal"><span class="pre">params</span></code>
 argument.  The value of the entry must be either a list containing the outputState(s) and/or their name(s),
 a <a class="reference internal" href="#controlmechanism-outputstate-tuple"><span class="std std-ref">monitoredOutputState tuple</span></a>, a <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code>
-value, or <code class="docutils literal"><span class="pre">None</span></code>. The values of <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> are treated as follows:</p>
+value, or <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>. The values of <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> are treated as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>: only the primary (first) outputState of the mechanism will be monitored;</li>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code>:  all of the mechanism&#8217;s outputStates will be monitored.</li>
 </ul>
 </div></blockquote>
-<p>This specification takes precedence of any of the other types listed below:  if it is <code class="docutils literal"><span class="pre">None</span></code>, then none of that
-mechanism&#8217;s outputStates will be monitored;   if it specifies outputStates to be monitored, those will be monitored
-even if the mechanism is not a <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism (see below).</p>
+<p>This specification takes precedence of any of the other types listed below:  if it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, then none of
+that mechanism&#8217;s outputStates will be monitored;   if it specifies outputStates to be monitored, those will be
+monitored even if the mechanism is not a <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism (see below).</p>
 </li>
 </ul>
 <ul>
 <li><p class="first">OutputStates to be monitored can be specified in the <strong>ControlMechanism</strong> responsible for the monitoring, or in the
 <strong>system</strong> for which that ControlMechanism is the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>).  Specification
-can be in the controlMechanism or system&#8217;s <code class="docutils literal"><span class="pre">monitored_output_states</span></code> argument, or in the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> entry of a parameter specification dictionary in its <code class="docutils literal"><span class="pre">params</span></code> argument.  In
+can be in the controlMechanism or system&#8217;s <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument, or in the
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="docutils literal"><span class="pre">params</span></code> argument.  In
 either case, the value must be a list, each item of which must be one of the following:</p>
 <ul class="simple">
 <li>An  outputState or the name of one.</li>
@@ -238,7 +238,7 @@ overridden in a params dictionary specification for the mechanism (see above).</
 </ul>
 <ul class="simple">
 <li>A value of <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code>.  This applies to any mechanisms that appear in the list
-(except those that override it with their own <code class="docutils literal"><span class="pre">monitored_output_states</span></code> specification). If the value of
+(except those that override it with their own <code class="docutils literal"><span class="pre">monitor_for_control</span></code> specification). If the value of
 <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> appears alone in the list, it is treated as follows:<ul>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>: only the primary (first) outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism(s)
 in the system for which the ControlMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</li>
@@ -248,7 +248,7 @@ in the system for which the ControlMechanism is the <code class="docutils litera
 </li>
 </ul>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">None</span></code>.</li>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</li>
 </ul>
 <p>Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
 in the constructor or params dictionary for an outputState or mechanism.</p>
@@ -275,7 +275,7 @@ must have the three following items in the order listed:</p>
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The ControlMechanism of a system is always the last to be executed (see System <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">Control</span></a>).  A
 ControlMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> takes as its input the values of the outputStates specified in its
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> parameter, and uses those to determine the value of its <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a>
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> parameter, and uses those to determine the value of its <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a>
 projections. In the next round of execution, each ControlSignal&#8217;s value is used by the <a class="reference internal" href="ParameterState.html"><span class="doc">Parameter State</span></a> to which it
 projects, to update the corresponding parameter of the recieving mechanism&#8217;s function.</p>
 <div class="admonition note">

@@ -91,7 +91,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Monitoring Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Monitoring Mechanisms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-monitoringmechanism">Creating A MonitoringMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -150,7 +155,27 @@
             
   <div class="section" id="monitoring-mechanisms">
 <h1>Monitoring Mechanisms<a class="headerlink" href="#monitoring-mechanisms" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-MonitoringMechanism"></span><dl class="class">
+<span class="target" id="module-MonitoringMechanism"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, which is evaluated by
+its <code class="docutils literal"><span class="pre">function</span></code>.  This can generate an error signal (e.g., for learning[LINK]) or some other value (e.g., conflict).</p>
+</div>
+<div class="section" id="creating-a-monitoringmechanism">
+<span id="monitoringmechanism-creating-a-monitoringmechanism"></span><h2>Creating A MonitoringMechanism<a class="headerlink" href="#creating-a-monitoringmechanism" title="Permalink to this headline">¶</a></h2>
+<p>a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
+type. One or more MonitoringMechanisms are also created automatically whenever a system or a process is created for
+which learning is specified; they are assigned projections from the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code>
+mechanisms, and LearningSignal projections to the Mapping projections being learned (see
+<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
+<span class="xref std std-ref">automatic creation of LearningSignals</span> for the specific requirements of each type.</p>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A MonitoringMechanism always executes after the mechanism it is monitoring.  The <code class="docutils literal"><span class="pre">value</span></code> of the outputState of the
+mechanism being monitored is assigned as an item in the <code class="docutils literal"><span class="pre">variable</span></code> for the MonitoringMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.
+Other items may be also be assigned (for example, a <a class="reference internal" href="Comparator.html"><span class="doc">Comparator</span></a> takes an additional input against which it
+compares the monitored value).</p>
+<dl class="class">
 <dt id="MonitoringMechanism.ComparatorOutput">
 <em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">ComparatorOutput</code><a class="headerlink" href="#MonitoringMechanism.ComparatorOutput" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
@@ -160,22 +185,6 @@
 <dt id="MonitoringMechanism.MonitoringMechanism_Base">
 <em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for processing mechanism subclasses</p>
-<dl class="method">
-<dt id="MonitoringMechanism.MonitoringMechanism_Base.update_monitored_state_changed_attribute">
-<code class="descname">update_monitored_state_changed_attribute</code><span class="sig-paren">(</span><em>current_monitored_state</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base.update_monitored_state_changed_attribute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Test whether monitored state has changed and set monitoredStateChanged attribute accordingly</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>current_monitored_state</strong> &#8211; </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">value of self.monitoredStateChanged</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="function">
@@ -183,6 +192,7 @@
 <code class="descclassname">MonitoringMechanism.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#MonitoringMechanism.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
 </div>
 
 
