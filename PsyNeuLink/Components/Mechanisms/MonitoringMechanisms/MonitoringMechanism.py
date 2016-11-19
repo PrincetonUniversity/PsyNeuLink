@@ -4,10 +4,41 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
-# **************************************  ControlMechanism ************************************************
-#
+
+
+# ******************************************  MonitoringMechanism ******************************************************
+
+"""
+Overview
+--------
+
+A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a :doc:`System`, which is evaluated by
+its ``function``.  This can generate an error signal (e.g., for learning[LINK]) or some other value (e.g., conflict).
+
+.. _MonitoringMechanism_Creating_A_MonitoringMechanism:
+
+Creating A MonitoringMechanism
+---------------------------
+
+a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
+type. One or more MonitoringMechanisms are also created automatically whenever a system or a process is created for
+which learning is specified; they are assigned projections from the outputStates of the :keyword:`TERMINAL`
+mechanisms, and LearningSignal projections to the Mapping projections being learned (see
+:ref:`learning in a process <Process_Learning>`, and
+:ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).  Different
+types of MonitoringMechanisms monitor different types of information, and therefore have varying input reqirements.
+See :doc:`subclasses <MonitoringMechanisms>` for the specific requirements of each type.
+
+Execution
+---------
+
+A MonitoringMechanism always executes after the mechanism it is monitoring.  The ``value`` of the outputState of the
+mechanism being monitored is assigned as an item in the ``variable`` for the MonitoringMechanism's ``function``.
+Other items may be also be assigned (for example, a :doc:`Comparator` takes an additional input against which it
+compares the monitored value).
+
+"""
+
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.ShellClasses import *
@@ -49,7 +80,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
     # Instance Attributes:
     #     monitoredStateChanged
     # Instance Methods:
-    #     update_monitored_state_changed_attribute(current_monitored_state)
+    #     _update_monitored_state_changed_attribute(current_monitored_state)
 
     """Abstract class for processing mechanism subclasses
    """
@@ -95,7 +126,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
                          context=context)
 
 
-    def update_monitored_state_changed_attribute(self, current_monitored_state):
+    def _update_monitored_state_changed_attribute(self, current_monitored_state):
         """Test whether monitored state has changed and set monitoredStateChanged attribute accordingly
 
         Args:

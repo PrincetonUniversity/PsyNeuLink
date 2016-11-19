@@ -23,9 +23,9 @@ Creating A ControlMechanism
 
 ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`),
-and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates monitored by
-a ControlMechanism are listed in its ``monitoredOutputStates``, which can be specified in a number of ways (see
-below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
+and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates to be monitored
+by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can be specified in a number of
+ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
 outputStates it monitors, and assigns a :doc:`Mapping` projection from that outputState to the newly created
 inputState.  How a ControlMechanism creates its ControlSignal projections depends on the subclass.
 
