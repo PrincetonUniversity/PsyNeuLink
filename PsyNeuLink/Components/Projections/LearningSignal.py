@@ -25,17 +25,14 @@ MonitoringMechanisms.
 Creating a LearningSignal Projection
 ------------------------------------
 
-COMMENT:
-    XXXX INCLUDE: automatically by specifying the LEARNING_SIGNAL parameter of a Mapping Projection
-COMMENT
 
 A LearningSignal projection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
-:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <>` of a process.  Its
-``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver`` must be the
-parameterState of a Mapping projection.  When a LearningSignal is created, its full initialization is deferred [LINK]
-until its ``sender`` and ``receiver`` have been fully specified.  This means that it is possible to create a
-LearningSignal using its constructor without specifying either its ``sender`` or its ``receiver``.
+:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <_Process_Projections>`
+of a process.  Its ``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver``
+must be the parameterState of a Mapping projection.  When a LearningSignal is created, its full initialization is
+deferred [LINK] until its ``sender`` and ``receiver`` have been fully specified.  This means that it is possible to
+create a LearningSignal using its constructor without specifying either its ``sender`` or its ``receiver``.
 
 COMMENT:
    CURRENT
@@ -56,65 +53,69 @@ COMMENT:
     a system, process, or projection in the pathway of a process.
 COMMENT
 
+.. _LearningSignal_Automatic_Creation:
+
+*Automatic creation*.  When learning is specified for a :ref:`system <System_Execution_Learning>`,
+a :ref:`process <Process_Learning>`, or in a :ref:`tuple that specifies a projection <>`,   PsyNeuLink automatically
+generates the LearningSignals, MonitoringMechanisms, and corresponding projections required for learning to occur.
+More specifically, LearningSignals are automatically created for the relevant Mapping projection(s) (for a system or
+process, this excludes input projections to their :keyword:`ORIGIN` mechansims and output projections to their
+:keyword:`TERMINAL` mechanisms). Each LearningSignal is assigned the relevant ``errorSource`` -- that is,
+the ProcessingMechanism that receives the LearningSignal's mappingProjection (the one to which it projects and
+modifies).  If the ``errorSource`` projects to a MonitoringMechanism, then that is assigned as the LearningSignal's
+``sender``.  If the ``errorSource`` does not projection to a MonitoringMechanism, then one is created for it,
+and a Mapping projection is created that projects to it from the ``errorSource``.  The type of MonitoringMechanism
+created depends on where the ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism,
+or the :keyword:`TERMINAL` mechanism of a system or process, then a :doc:`Comparator` mechanism is created (which
+compares the output of the ``errorSource`` with a target to generate the ``errorSignal``).  If the ``errorSource``
+projects to any other mechanisms, then a ``WeightedError`` mechanism is created (which, in calculating the
+``errorSignal``, takes account of the effect that the ``errorSource`` has on the output of the ProcessingMechanism(s)
+to which it projects).
+
+
 .. _LearningSignal_Structure:
 
 Structure
 ---------
 
-*Error Signal, Error Source, and Mapping Projection*.  The ``variable`` for a LearningSignal is the error signal it
-gets from a  MonitoringMechanism (its ``sender``).  This is stored in its ``errorSignal`` attribute.  The
-``sender`` is a MonitoringMechanism that compares the output of a ProcessingMechanism with a target value,
-and uses the disparity to compute the error signal.  The ProcessingMechanism -- its ``errorSource`` -- is the one that
-receives the Mapping projection to which the  LearningSignal projects -- its ``mappingProjection`` (see
-:ref:`figure <Process_Learning_Figure>`).
+The components involved in learning are shown in :ref:`this figure <Process_Learning_Figure>`), and described below.
+
+*Mapping projection*.  Learning Signals project to the parameterState for a ``matrix`` parameter of a Mapping
+projection, stored in the LearningSignal's ``mappingProjection`` attribute.  It modifies the ``matrix``  based on
+the output of the ProcessingMechanism to which the ``mappingProjection`` projects.
+
+*Error source*.  This is the ProcessingMechanism to which the ``mappingProjection`` projects, and on which the
+*error signal*  is based.  It projects to a MonitoringMechanism that calculates the error signal.  By default,
+the primary outputState of the ``errorSource`` projects to the MonitoringMechanism, and its value is used to
+calculate the ``errorSignal``.  However, a different outputState can be specified by including an entry with
+:keyword:`MONITOR_FOR_LEARNING` as its key in a params dictionary for the ``errorSource``, and assigning a list
+with the specified outputState(s) as its value.
+
+*Error Signal*.  This is computed by a MonitoringMechanism to which the error_source projects.  It compares the
+output of the errorSource with a target value, and uses the disparity to compute the error signal.  The
+MonitoringMechanism projects to the LearningSignal, serving at its ``sender``, and the error signal is used by the
+LearningSignal as the ``variable`` for its ``function`` (it is also stored in the ``errorSignal`` attribute).
 
 *Function*.  This computes the changes to the ``matrix`` parameter of the LearningSignal's ``mappingProjection``
 required to reduce the ``errorSignal`` for its ``errorSource``.  The default is :class:`BackPropagation` (also known
-as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned a different function
-that implements another learning algorithm.  Assignment of the LearningSignal's ``function`` must be appropriate for
-the ``function`` of the ProcessingMechanism that is its ``errorSource`` (since how the learning signal is computed
-depends on the nature of the function that generated the error);  failure to match the ``function`` of the
-LearningSignal with the ``function`` of its ``errorSource`` ProcesingMechanism will generate an error.
+as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned to other functions
+that implement different learning algorithms.  Assignment of the LearningSignal's ``function`` must be appropriate for
+the ``function`` of its ``errorSource`` (how the learning signal is computed depends on the nature of the function
+that generated the error);  failure to match the ``function`` of the LearningSignal with the ``function`` of the
+ProcessingMechanism that is its ``errorSource`` will generate an error.
 
-
-COMMENT:
-    *Targets*  XXXXX
-COMMENT
-
+*Target(s)*.  This specifies the value with which the output of an ``errorSource`` is compared, to calculate the
+``errorSignal``.  It is required by the :doc:`run <Run>` method of a system or process when learning is specified.
+provides to the :keyword:`TARGET` inputState of a :doc:`Comparator` mechanism.
 
 *Monitoring Mechanism*.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
-``sender``).  The type of MOntiringMechanism, and how it computes its errorSignal, depends on the ``eerrorSource``.
-If it is a :keyword:`TERMINAL` mechanism of a system or process, it is a Comparator mechanism, that compares
-the output of the ``errorSource`` with a target value that is specified for the process or system when it is
-:ref:`run <Run_Targets>`.  If the ``errorSource`` is not the final mechanism of a system or process,
-then the MOnitoringMechanism is a ??WEIGTHED ERROR...  IT...
-
-COMMENT:
-    XXXX NEED TO ADDRESS THIS:
-    , or in the constructor for a :ref:`Mapping projection <Mapping_Structure>`
-    XXXX NEED TO ADD THIS:
-           if it instantiates a DefaultTrainingSignal:
-              if outputState for error source is specified in its paramsCurrent[MONITOR_FOR_LEARNING], use that
-              otherwise, use error_source.outputState (i.e., error source's primary outputState)
-COMMENT
-
-.. _LearningSignal_Automatic_Creation:
-
-*Automatic instantiation*.  When learning is specified for a :ref:`system <System_Execution_Learning>` or
-a :ref:`process <Process_Learning>`,  PsyNeuLink automatically generates the LearningSignals, MonitoringMechanisms,
-and corresponding projections required for learning to occur.  More specifically, LearningSignals are
-automatically created for the relevant Mapping projection(s) (for a system or process, this excludes input
-projections to their :keyword:`ORIGIN` mechansims and output projections to their :keyword:`TERMINAL` mechanisms).
-Each LearningSignal is assigned the relevant ``errorSource`` -- that is, the ProcessingMechanism that receives the
-Mapping projection that is the LearningSignal's ``receiver``.  If the ``errorSource`` projects to a MonitoringMechanism,
-then that is assigned as the LearningSignal's ``sender``.  If the ``errorSource`` does not projection to a
-MonitoringMechanism, then one is created for it, and a Mapping projection is created that projects to it from the
-``errorSource``.  The type of MonitoringMechanism created depends on where the ProcessingMechanism sits in the
-processing stream.  If it is a standalone mechanism, or the :keyword:`TERMINAL` mechanism of a system or process,
-then a :doc:`Comparator` mechanism is created (which compares the output of the ``errorSource`` with a target to
-generate the ``errorSignal``).  If the ``errorSource`` projects to any other mechanisms, then a ``WeightedError``
-mechanism is created (takes, in calculating the ``errorSignal``, takes account of the effect that the ``errorSource``
-has on the output of the mechanism(s) to which it projects).
+``sender``).  The type of MonitoringMechanism, and how it computes its errorSignal, depends on the ``errorSource``.
+If it is a :keyword:`TERMINAL` mechanism of a system or process, the MonitoringMechanism is a :doc:`Comparator`
+mechanism,  that compares the output of the ``errorSource`` (which projects to the Comparator's :keyword:`SAMPLE`
+inputState) with a target value that is provided as input to the process or system when it is :ref:`run
+<Run_Targets>` (and projects to the Comparator's :keyword:`TARGET` inputState). If the ``errorSource`` is not the
+final mechanism of a system or process, then the MonitoringMechanism is a :doc:`WeightedError` mechanism,
+which uses the output of the ProcessingMechanism(s) to which the errorSource projects to calculate the ``errorSignal``.
 
 .. _LearningSignal_Execution:
 
@@ -244,6 +245,9 @@ class LearningSignal(Projection_Base):
 
     errorSource : ProcessingMechanism
         mechanism that receives the Mapping projection to which the LearningSignal projects.
+
+    mappingProjection : Mapping projection
+        the owner of the parameterState that is the LearningSignal's ``receiver``.
 
     mappingWeightMatrix : 2d np.array
         ``matrix`` parameter for the function of the Mapping projection to which the LearningSignal projects.

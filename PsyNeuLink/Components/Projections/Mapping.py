@@ -58,7 +58,9 @@ Structure
 COMMENT:
     XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningSignal CAN BE SPECIFIED HERE:
             IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
-            SEE BELOW:  "If there is a functionParameterStates[LEARNING_SIGNAL]"
+            SEE BELOW:  If there is a params[FUNCTION_PARAMS][MATRIX][1]
+    SPECIFIED IN TUPLE ASSIGNED TO MATRIX PARAM (MATRIX ENTRY OF PARAMS DICT)
+
 COMMENT
 
 In addition to its ``function``, mapping projections use the following two the primary parameters:
@@ -68,10 +70,18 @@ In addition to its ``function``, mapping projections use the following two the p
 ``matrix``
 
   Used by the Mapping projection's ``function`` to execute a matrix transformation of its input.
-  It can be assigned a list of 1d arrays, an np.ndarray, np.matrix, a function that resolves to one of these,
-  or one of the following keywords:
+  It can be specified using any of the following formats:
+
+  *List, array or matrix*.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
+  it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+  or matrix rows) corresponds to the elements of the ``sender``, and the inner dimension (inner list items,
+  array axis 1, or matrix columns) corresponds to the weighting of the conribution that a given ``sender``
+  makes to the ``receiver``.
 
   .. _Matrix_Keywords:
+
+  *Matrix keyword*.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
+  of the following keywords can be use:
 
   * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
     values are the same.
@@ -85,10 +95,18 @@ In addition to its ``function``, mapping projections use the following two the p
   * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
     assigns an keyword:`IDENTITY_MATRIX`.
   ..
-  PsyNeuLink also provides a convenience function, :class:`random_matrix`, that can be used to generate a random matrix
-  sized for a sender, receiver, with random numbers drawn from a uniform distribution within a specified range and
-  with a specified offset.
+  :class:`random_matrix`.  This is a convenience function that provides more flexibility than
+  :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
+  with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
+  .. _Mapping_Tuple_Specification:
+  *Tuple*.  This is used to specify a projection to the parameterState of a ``matrix`` along with the ``matrix`` itself.
+  The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
+  :ref:`projection specification <Projection_In_Context_Specification>`.
+  COMMENT:
+      XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING SIGNAL, BUT ALSO A CONTROL SIGNAL OR A MAPPING PROJECTION
+      XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
+  COMMENT
 
 ``parameter_modulation_operation``
 
@@ -214,10 +232,10 @@ class Mapping(Projection_Base):
     ----------
 
     monitoringMechanism : MonitoringMechanism
-        source of error signal for matrix weight changes when :ref:`learning <LearningSignal> is used.
+        source of error signal for matrix weight changes when :doc:`learning <LearningSignal>` is used.
 
-
-
+    matrix : 2d np.array
+        matrix used by ``function`` to transform input from ``sender`` and to ``value`` used by ``receiver``.
 
     """
 
@@ -424,12 +442,16 @@ class Mapping(Projection_Base):
     def _matrix_spec(self, value):
         """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
-        Assigns matrix param for Mapping, assiging second item if it is
-         a ParamValueprojection or unnamed (matrix, projection) tuple
+        Assigns matrix param for Mapping, assigning second item if it is
+         a ParamValueProjection or unnamed (matrix, projection) tuple
         """
+
+        # Specification is a ParamValueProjection tuple, so allow
         if isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], ParamValueProjection):
             self.paramsCurrent[FUNCTION_PARAMS][MATRIX].value =  value
 
+        # Specification is a two-item tuple, so validate that 2nd item is:
+        # a projection keyword, projection subclass, or instance of a projection subclass
         elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
                       len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
                   (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL}

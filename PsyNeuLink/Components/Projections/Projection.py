@@ -55,38 +55,61 @@ Creating a Projection
 
 Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
-in the ``pathway`` attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
-This can be done using a call to the projection subclass, or one of the following ways:
+in the ``pathway`` attribute of a process, or when a tuple is used to specify the parameter of a function
+(such as a :ref:`ControlSignal for a mechanism <Mechanism_Assigning_A_Control_Signal>`,
+or a :ref:`LearningSignal for a Mapping projection <Mapping_Tuple_Specification>`).
 
-  * name of an **existing projection**:
-  ..
-  * name of a **projection type** (subclass);
-  ..
-  * **specification dictionary** -- this can contain an entry specifying the type of projection,
-    and/or entries specifying the value of parameters used to instantiate it.
-    These should take the following form:
+.. _Projection_In_Context_Specification:
 
-      * :keyword:`PROJECTION_TYPE`: <name of a projection type>
+*In context specification*.  Any of the following can be used:
 
-          if this entry is absent, a default projection will be created that is appropriate for the context
-          (for example, a Mapping projection for an inputState, and a ControlSignal projection for a parameterState).
+  *Constructor*.  Used the same way in context as it is ordinarily.
 
-      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
+  *Projection instance*.  This must be an instance of an existing projection.
 
-          the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
-          below), and the value should be the value of the parameter.  It can contain any of the standard parameters
-          for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
-          projection (see documentation for subclass).  Note that parameter values in the specification dict will be
-          used to instantiate the projection.  These can be overridden during execution by specifying
-          :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the * ``execute`` method for a
-          :class:`mechanism` directly, or where it is specified in the ``pathway`` of a :class:`process`.
+  *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  * **automatically** -- PsyNeuLink will automatically create projections under some circumstances.  For example,
-    a process automatically generates a  :class:`Mapping` projection between adjacent mechanisms in its pathway if
-    none is specified; and :class:`LearningSignal`  projections are automatically generated when :ref:`Process_Learning`
-    is specified for a process.  Creating a :class:`state` will also automatically generate a projection and a sender
-    mechanism, if none is specified (the type of projection and its sender mechanism depend on the type of state --
-    see state subclasses for details).
+  * :keyword:`MAPPING_PROJECTION` - a :doc:`Mapping` projection with the :doc:`DefaultMechanism` as its ``sender``.
+  * :keyword:`CONTROL_SIGNAL` - a :doc:`ControlSignal` projection  with the :doc:`DefaultControlMechanism` as its
+  ``sender``.
+  * :keyword:`LEARNING_SIGNAL` - a :doc:`LearningSignal` projection.  This can only be used for a projection to the
+    ``matrix`` parameterState of a :doc:`Mapping` projection.  If the ``receiver`` for the Mapping projection
+    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningSignal.
+    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a Mapping
+    projection from the error source to the MonitoringMechanism
+    (see :ref:`Automatic Instantiation` <LearningSignal_Automatic_Creation>` of a LearningSignal for details).
+
+  *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
+  specified type.
+
+  *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
+  specifying the value of parameters used to instantiate it. These should take the following form:
+
+  * :keyword:`PROJECTION_TYPE`: <name of a projection type>
+
+      if this entry is absent, a default projection will be created that is appropriate for the context
+      (for example, a Mapping projection for an inputState, and a ControlSignal projection for a parameterState).
+
+  * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
+
+      the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
+      below), and the value should be the value of the parameter.  It can contain any of the standard parameters
+      for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
+      projection (see documentation for subclass).  Note that parameter values in the specification dict will be
+      used to instantiate the projection.  These can be overridden during execution by specifying
+      :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the * ``execute`` method for a
+      :class:`mechanism` directly, or where it is specified in the ``pathway`` of a :class:`process`.
+
+.. _Projection_Automatic_Creation:
+
+*Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
+a process automatically generates a  :doc:`Mapping` projection between adjacent mechanisms in its ``pathway`` if
+none is specified; and :doc:`LearningSignal`  projections are automatically generated when
+:ref:`learning <Process_Learning>` is specified for a process.  Creating a :doc:`state <State>` will also
+automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
+projection and its sender mechanism depend on the type of state -- see :doc:`state subclasses <States>` for details).
+
+
 
 .. _Projection_Structure:
 

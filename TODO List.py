@@ -215,6 +215,19 @@
 
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/18/16:
+# TEST: DOES ASSIGNING A Mapping OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A Mapping Projection work?
+#       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_SIGNAL.
+#
+# DOCUMENTATION: MONITOR_FOR_LEARNING (in LearningSignal AND ??WHERE ELSE:
+#                                                                 Mechanism?? Paralleling MONITORED_OUTPUT_STATES
+#                                                                 OutputState??
+#                                                                 MonitoringMechanism??
+# DOCUMENTATION: THESE NEED TO BE ADDED:
+#       (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
+#       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
+
+# IMPLEMENT: MONITORED_OUTPUT_STATES -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
 
 # 11/17/16:
 # FIX: IF LEARNING SIGNAL IS ASSIGNED TO MAPPING PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
@@ -1127,14 +1140,16 @@
 # DOCUMENT: TERMINOLOGY:
 #           kwKeyWord -> programmatic (internal use) keywords
 #           KEY_WORD -> user-accessible (scripting use) keywords
-#           Function -> Mechanism?, Component?
 #           System -> Agent?
-#           Process -> Pathway?
 #           Mechanism -> Process? [Representation? Transformation?]
-#           Projection -> Transmission? Flow
 #           phase -> event
 #           value:  can be a single number (scalar), non-numeric value, or an array (vector) of either.  Used to refer
 #                   to what is received by, represented, or output by a mechanism or state
+#           Mapping projection matrix -> weightMatrix;  make corresponding changes in learningSignal
+#           Mapping -> MappingProjection
+#           ControlSignal -> ControlSignalProjection
+#           LearningSignal -> LearningSignalProjection
+#           MONITORED_OUTPUT_STATES -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:

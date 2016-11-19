@@ -301,6 +301,10 @@ mechanism subclass, as well as those specific to a particular subclass (document
       used to specify outputStates to be monitored by a ControlMechanism
       (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
 
+    * :keyword:`MONITOR_FOR_LEARNING` : List[OutputState] -
+      used to specify outputStates to be used by a MonitoringMechanism for learning
+      (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
+
 COMMENT:
     FOR DEVELOPERS:
     + FUNCTION : function or method :  method used to transform mechanism input to its output;
