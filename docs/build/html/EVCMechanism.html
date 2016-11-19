@@ -195,9 +195,9 @@ it is generated automatically when a system is created and an EVCMechanism is sp
 <div><ul class="simple">
 <li><strong>Monitored OutputStates</strong> &#8211; these are the outputStates of the system&#8217;s mechanisms that are monitored by the
 EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
-is added to the EVCMechanism for each outputState specified in its <code class="docutils literal"><span class="pre">monitored_output_states</span></code> parameter, and a
+is added to the EVCMechanism for each outputState specified in its <code class="docutils literal"><span class="pre">monitor_for_control</span></code> parameter, and a
 <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection is created that projects from that outputState to the EVCMechanism&#8217;s inputState
-(see _ControlMechanism_Monitored_OutputStates for specifying <code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code>).</li>
+(see _ControlMechanism_Monitored_OutputStates for specifying <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code>).</li>
 </ul>
 <ul class="simple">
 <li><strong>Prediction Mechanisms</strong> &#8211; these are used to generate the input for each simulation of the system run by the
@@ -226,7 +226,7 @@ assigning a params dictionary to the controller&#8217;s <code class="docutils li
 (see <a class="reference internal" href="Mechanism.html#mechanism-specifying-parameters"><span class="std std-ref">Specifying Mechanism Parameters</span></a> for details of parameter specification):</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> - the outputStates of the system&#8217;s mechanisms used  to evaluate the outcome
+<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> - the outputStates of the system&#8217;s mechanisms used  to evaluate the outcome
 of performance for the EVC calculation (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying
 monitored outputStates).  The default is: <code class="xref std std-keyword docutils literal"><span class="pre">MonitoredOutputStateOption.PRIMARY_OUTPUT_STATES</span></code>,
 which uses the value of the primary outputState of every <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism in the system (see
@@ -252,7 +252,7 @@ values for its control signals), which is placed in its <code class="docutils li
 how each outputState in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> attribute contributes to the outcome of a control allocation
 policy calculated by the <code class="xref std std-keyword docutils literal"><span class="pre">OUTCOME_AGGREGATION_FUNCTION</span></code>.  The latter can be done by using the tuples format
 to specify an outputState in the <code class="docutils literal"><span class="pre">monitored_states_argument</span></code> of an EVCMechanism or system constructor, or the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITORED_OUTPUT_STATES</span></code> entry of a specification dict assigned to their <code class="docutils literal"><span class="pre">params</span></code> argument (see
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a specification dict assigned to their <code class="docutils literal"><span class="pre">params</span></code> argument (see
 <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a>). The tuples format can be used to assign an exponent to an outputState
 (e.g., to make it a divisor), and/or a weight (i.e., to scale its) for use when it is combined with the others by the
 <code class="xref std std-keyword docutils literal"><span class="pre">OUTCOME_AGGREGATION_FUNCTION</span></code>.  OutputStates not specified in a tuple are assigned an exponent and weight of
@@ -290,7 +290,7 @@ aggregated value for the policy.</li>
 </li>
 </ul>
 <ul class="simple">
-<li><strong>Save</strong> the values associated with each policy, if the <strong>save_all_values_and_policies</strong> attribute is True.
+<li><strong>Save</strong> the values associated with each policy, if the <strong>save_all_values_and_policies</strong> attribute is <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>.
 Otherwise, only the <code class="docutils literal"><span class="pre">EVCMax</span></code> value is stored.</li>
 </ul>
 <p>Once the all control allocation policies in the controlSignalSearchSpace have been evaluated, the policy generating the
@@ -300,10 +300,10 @@ parameterStates to which they project in the next execution of the system.</p>
 <p>The following example implements a system with an EVCMechanism (and two processes not shown):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mySystem</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">myRewardProcess</span><span class="p">,</span> <span class="n">myDecisionProcess</span><span class="p">],</span>
                   <span class="n">controller</span><span class="o">=</span><span class="n">EVCMechanism</span><span class="p">,</span>
-                  <span class="n">monitored_output_states</span><span class="o">=</span><span class="p">[</span><span class="n">Reward</span><span class="p">,</span> <span class="n">DECISION_VARIABLE</span><span class="p">,(</span><span class="n">RESPONSE_TIME</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
+                  <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">Reward</span><span class="p">,</span> <span class="n">DECISION_VARIABLE</span><span class="p">,(</span><span class="n">RESPONSE_TIME</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
 </pre></div>
 </div>
-<p>It uses the system&#8217;s <code class="docutils literal"><span class="pre">monitored_output_states</span></code> argument to assign three outputStates to be monitored (belonging
+<p>It uses the system&#8217;s <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument to assign three outputStates to be monitored (belonging
 to mechanisms not show here).  The first one references a mechanism (belonging to a mechanism not shown;  its
 primary outputState will be used by default).  The second and third uses keywords that are the names of
 outputStates (in this case, for a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> ProcessingMechanism).  The last one (RESPONSE_TIME) is assgined an
@@ -315,19 +315,19 @@ and then divide that by the value of the RESPONSE_TIME outputState of the DDM me
 <span id="evcmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="EVCMechanism.EVCMechanism">
-<em class="property">class </em><code class="descclassname">EVCMechanism.</code><code class="descname">EVCMechanism</code><span class="sig-paren">(</span><em>prediction_mechanism_type=AdaptiveIntegratorMechanism</em>, <em>prediction_mechanism_params=None</em>, <em>monitored_output_states=None</em>, <em>function=LinearCombination(offset=0.0</em>, <em>scale=1</em>, <em>operation=SUM)</em>, <em>outcome_aggregation_function=LinearCombination(offset=0</em>, <em>scale=1</em>, <em>operation=PRODUCT)</em>, <em>cost_aggregation_function=LinearCombination(offset=0.0</em>, <em>scale=1.0</em>, <em>operation=SUM)</em>, <em>save_all_values_and_policies:bool=False</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVCMechanism.EVCMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">EVCMechanism.</code><code class="descname">EVCMechanism</code><span class="sig-paren">(</span><em>prediction_mechanism_type=AdaptiveIntegratorMechanism</em>, <em>prediction_mechanism_params=None</em>, <em>monitor_for_control=None</em>, <em>function=LinearCombination(offset=0.0</em>, <em>scale=1</em>, <em>operation=SUM)</em>, <em>outcome_aggregation_function=LinearCombination(offset=0</em>, <em>scale=1</em>, <em>operation=PRODUCT)</em>, <em>cost_aggregation_function=LinearCombination(offset=0.0</em>, <em>scale=1.0</em>, <em>operation=SUM)</em>, <em>save_all_values_and_policies:bool=:keyword:`False`</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVCMechanism.EVCMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimizes the ControlSignals for a System.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>prediction_mechanism_type</strong> (<em>CombinationFunction: default AdaptiveIntegratorMechanism</em>) &#8211; mechanism class used for prediction mechanism(s).
+<li><strong>prediction_mechanism_type</strong> (<em>CombinationFunction: default AdaptiveIntegratorMechanism</em>) &#8211; the mechanism class used for prediction mechanism(s).
 Each instance is named using the name of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism + PREDICTION_MECHANISM
 and assigned an outputState named based on the same.</li>
-<li><strong>prediction_mechanism_params</strong> (<em>Optional[Dict[param keyword, param value]] : default None</em>) &#8211; parameter dictionary passed to <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> constructor.
+<li><strong>prediction_mechanism_params</strong> (<em>Optional[Dict[param keyword, param value]] : default None</em>) &#8211; a parameter dictionary passed to <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> constructor.
 The same set is passed to all PredictionMechanisms.</li>
-<li><strong>monitored_output_states</strong> (List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] :     default <code class="xref std std-keyword docutils literal"><span class="pre">MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES</span></code>) &#8211; specifies set of outputState values to monitor, and that are passed to outcome_aggregation_function
+<li><strong>monitor_for_control</strong> (List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] :     default <code class="xref std std-keyword docutils literal"><span class="pre">MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES</span></code>) &#8211; specifies set of outputState values to monitor, and that are passed to outcome_aggregation_function
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specification options, and
 and <a class="reference internal" href="#evcmechanism-parameterizing-evc-calculation"><span class="std std-ref">Parameterizing the EVC Calculation</span></a>.</li>
 <li><strong>function</strong> (<em>CombinationFunction : LinearCombination(offset=0.0,scale=1,operation=SUM)</em>) &#8211; specifies the function used to calculate the value discounted by the cost of a control
@@ -340,14 +340,14 @@ in <code class="docutils literal"><span class="pre">monitoredOutputStates</span>
 The <code class="docutils literal"><span class="pre">weight</span></code> and/or the <code class="docutils literal"><span class="pre">exponent</span></code> arguments can be used to parameterize the contribution that each
 control signal makes to the aggregated value;  the length of each argument must equal the number of
 control signals in <code class="docutils literal"><span class="pre">controlSignals</span></code>.</li>
-<li><strong>save_all_values_and_policies</strong> (<em>bool : default False</em>) &#8211; when True, saves all ontrol allocation policies in <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code> and associated EVC values
-(in addition to the max).</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+<li><strong>save_all_values_and_policies</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; when <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, saves all control allocation policies in <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code>
+and associated EVC values (in addition to the max).</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; String used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict] : default Process.classPreferences</em>) &#8211; Preference set for process.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict] : default Process.classPreferences</em>) &#8211; the PreferenceSet for the mechanism.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 </ul>
@@ -358,25 +358,25 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.make_default_controller">
 <code class="descname">make_default_controller</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.make_default_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : default True</em> &#8211; if True, assigns EVCMechanism when instantiated as the DefaultController</p>
+<dd><p>bool : default <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code> &#8211; if True, assigns EVCMechanism when instantiated as the DefaultController</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.system">
 <code class="descname">system</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.system" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>System</em> &#8211; system for which EVCMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</p>
+<dd><p><em>System</em> &#8211; the system for which EVCMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.predictionMechanisms">
 <code class="descname">predictionMechanisms</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.predictionMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[ProcessingMechanism]</em> &#8211; list of predictionMechanisms added to the system, one for each of its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms</p>
+<dd><p><em>List[ProcessingMechanism]</em> &#8211; a list of predictionMechanisms added to the system, one for each of its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.predictionProcesses">
 <code class="descname">predictionProcesses</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.predictionProcesses" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[Process]</em> &#8211; list of prediction processes added to the system, each comprise of one of its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms
+<dd><p><em>List[Process]</em> &#8211; a list of prediction processes added to the system, each comprise of one of its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms
 and the associated <code class="docutils literal"><span class="pre">predictionMechanism</span></code>.</p>
 </dd></dl>
 
@@ -390,14 +390,15 @@ inputState of the EVCMechanism.</p>
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.monitoredValues">
 <code class="descname">monitoredValues</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.monitoredValues" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3D np.nparray</em> &#8211; array of values of the outputStates in <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> (equivalent to the values of
+<dd><p><em>3D np.nparray</em> &#8211; an array of values of the outputStates in <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> (equivalent to the values of
 self.inputStates).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.function">
 <code class="descname">function</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>CombinationFunction : default LinearCombination(offset=0.0,scale=1,operation=SUM)</em></p>
+<dd><p><em>CombinationFunction : default LinearCombination(offset=0.0,scale=1,operation=SUM)</em> &#8211; the function used to combine the aggregated value of the monitored outputStates with the aggregated cost of
+the control signal values for a given control allocation policy, to determine the <strong>EVC</strong> for that policy.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -409,13 +410,13 @@ self.inputStates).</p>
 <dl class="attribute">
 <dt>
 <code class="descname">operation=PRODUCT)</code></dt>
-<dd><p>function used to combine the values of the outputStates in <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code>.</p>
+<dd><p>the function used to combine the values of the outputStates in <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.cost_aggregation_function">
 <code class="descname">cost_aggregation_function</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.cost_aggregation_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,operation=SUM)</em> &#8211; function used to combine the cost of the mechanism&#8217;s ControlSignal projections.  The :keyword:<code class="docutils literal"><span class="pre">weights</span></code>
+<dd><p><em>CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,operation=SUM)</em> &#8211; the function used to combine the cost of the mechanism&#8217;s ControlSignal projections.  The :keyword:<code class="docutils literal"><span class="pre">weights</span></code>
 argument can be used to scale the contribution of the cost of each control signal;  it must be an array of
 scalar values, the length of which is equal to the number of the EVCMechanism&#8217;s outputStates.</p>
 </dd></dl>
@@ -423,7 +424,7 @@ scalar values, the length of which is equal to the number of the EVCMechanism&#8
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.controlSignalSearchSpace">
 <code class="descname">controlSignalSearchSpace</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.controlSignalSearchSpace" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array that contains arrays of control allocation policies.  Each control allocation policy contains one
+<dd><p><em>2d np.array</em> &#8211; an array that contains arrays of control allocation policies.  Each control allocation policy contains one
 value for each of the mechanism&#8217;s control signals (i.e., ControlSignal projections).  By default,
 it is assigned a set of all possible control allocation policies (using np.meshgrid to construct all
 permutations of control signal values).</p>
@@ -452,7 +453,7 @@ that generated <code class="docutils literal"><span class="pre">EVCmax</span></c
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.prediction_mechanism_type">
 <code class="descname">prediction_mechanism_type</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.prediction_mechanism_type" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ProcessingMechanism : default AdaptiveIntegratorMechanism</em> &#8211; processingMechanism class used for prediction mechanism(s).
+<dd><p><em>ProcessingMechanism : default AdaptiveIntegratorMechanism</em> &#8211; the processingMechanism class used for prediction mechanism(s).
 Note: each instance will be named based on origin mechanism + kwPredictionMechanism,</p>
 <blockquote>
 <div>and assigned an outputState named based on the same</div></blockquote>
@@ -461,14 +462,14 @@ Note: each instance will be named based on origin mechanism + kwPredictionMechan
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.prediction_mechanism_params">
 <code class="descname">prediction_mechanism_params</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.prediction_mechanism_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dict[param key, param value] : default <code class="docutils literal"><span class="pre">None</span></code> &#8211; parameter dictionary passed to <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> on instantiation.
+<dd><p>Dict[param key, param value] : default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> &#8211; a parameter dictionary passed to <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> on instantiation.
 The same dictionary will be passed to all instances of <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> created.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.save_all_values_and_policies">
 <code class="descname">save_all_values_and_policies</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.save_all_values_and_policies" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : default False</em> &#8211; specifies whether or not to save all ControlAllocationPolicies and associated EVC values (in addition to max).</p>
+<dd><p>bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code> &#8211; specifies whether or not to save all ControlAllocationPolicies and associated EVC values (in addition to max).</p>
 </dd></dl>
 
 </dd></dl>

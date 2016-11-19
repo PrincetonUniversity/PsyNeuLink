@@ -298,9 +298,10 @@ mechanism subclass, as well as those specific to a particular subclass (document
       (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
     ..
     * :keyword:`MONITOR_FOR_CONTROL` : List[OutputState] -
-      used to specify outputStates to be monitored by a ControlMechanism
-      (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
-
+      used to specify mechanisms or specific outputStates to be monitored by a ControlMechanism
+      (see :ref:`specifying monitored outputStates <ControlMechanism_Monitored_OutputStates>`
+      for details of specification).
+    ..
     * :keyword:`MONITOR_FOR_LEARNING` : List[OutputState] -
       used to specify outputStates to be used by a MonitoringMechanism for learning
       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).

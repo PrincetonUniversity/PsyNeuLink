@@ -744,9 +744,6 @@ FROM TODO:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
                 #         (compares errorSource output with external training signal)
                 else:
-                    # # MODIFIED 9/4/16 OLD:
-                    # output_signal = np.zeros_like(self.errorSource.outputState.value)
-                    # MODIFIED 9/4/16 NEW:
                     if self.function.componentName is kwBackProp:
                         output_signal = np.zeros_like(self.errorSource.outputState.value)
                     # Force smaple and target of Comparartor to be scalars for RL
@@ -755,7 +752,6 @@ FROM TODO:
                     else:
                         raise LearningSignalError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
                                                   format(self.function.name, self.name))
-                    # MODIFIED 9/4/16 END
                     # IMPLEMENTATION NOTE: training_signal assignment currently assumes training mech is Comparator
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])

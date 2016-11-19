@@ -229,7 +229,6 @@
 #       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
 # IMPLEMENT: TimeScale argument for System
-# IMPLEMENT: MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
 
 # 11/17/16:
 # IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING SIGNAL (OR ANY PROJECTION??):

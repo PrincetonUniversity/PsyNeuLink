@@ -356,7 +356,7 @@ PROJECTION_SENDER_VALUE =  "projectionSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
-MONITOR_FOR_LEARNING = 'MonitorForLearning'
+MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 
 #endregion
