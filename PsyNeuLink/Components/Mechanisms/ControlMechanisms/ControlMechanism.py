@@ -41,9 +41,9 @@ name of one (see :ref:ControlMechanism_Examples' below).
 
 The specification of whether an outputState is monitored by a ControlMechanism can be done in the following ways:
 
-* An **outputState** can be *excluded* from being monitored by assigning ``None`` as the value of the
+* An **outputState** can be *excluded* from being monitored by assigning :keyword:`None` as the value of the
   :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in the outputState's ``params``
-  argument.  This specification takes precedence over any others;  that is, specifying ``None`` will suppress
+  argument.  This specification takes precedence over any others;  that is, specifying :keyword:`None` will suppress
   monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
   outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
   based on one of the other specification methods below.
@@ -52,12 +52,12 @@ The specification of whether an outputState is monitored by a ControlMechanism c
   :keyword:`MONITORED_OUTPUT_STATES` entry of a parameter specification dictionary in the mechanism's ``params``
   argument.  The value of the entry must be either a list containing the outputState(s) and/or their name(s),
   a :ref:`monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a :class:`MonitoredOutputStatesOption`
-  value, or ``None``. The values of :class:`MonitoredOutputStatesOption` are treated as follows:
+  value, or :keyword:`None`. The values of :class:`MonitoredOutputStatesOption` are treated as follows:
     * :keyword:`PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism will be monitored;
     * :keyword:`ALL_OUTPUT_STATES`:  all of the mechanism's outputStates will be monitored.
-  This specification takes precedence of any of the other types listed below:  if it is ``None``, then none of that
-  mechanism's outputStates will be monitored;   if it specifies outputStates to be monitored, those will be monitored
-  even if the mechanism is not a :keyword:`TERMINAL` mechanism (see below).
+  This specification takes precedence of any of the other types listed below:  if it is :keyword:`None`, then none of
+  that mechanism's outputStates will be monitored;   if it specifies outputStates to be monitored, those will be
+  monitored even if the mechanism is not a :keyword:`TERMINAL` mechanism (see below).
 ..
 * OutputStates to be monitored can be specified in the **ControlMechanism** responsible for the monitoring, or in the
   **system** for which that ControlMechanism is the :ref:`controller <System_Execution_Control>`).  Specification
@@ -84,7 +84,7 @@ The specification of whether an outputState is monitored by a ControlMechanism c
     * :keyword:`ALL_OUTPUT_STATES`:  all of the outputStates of the :keyword:`TERMINAL` mechanism(s)
       in the system for which the ControlMechanism is the ``controller``.
   ..
-  * ``None``.
+  * :keyword:`None`.
 
   Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
   in the constructor or params dictionary for an outputState or mechanism.
@@ -177,7 +177,11 @@ class ControlMechanism_Base(Mechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
+    COMMENT:
+        NOT CURRENTLY IN USE:
+        default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
+            the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
+    COMMENT
 
     monitored_output_states : List[OutputState specification] : default None
         specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
@@ -187,16 +191,16 @@ class ControlMechanism_Base(Mechanism_Base):
         specifies function used to combine values of monitored output states.
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     name : str : default Transfer-<index>
-        String used for the name of the mechanism.
+        a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        Preference set for process.
+        the PreferenceSet for process.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -204,13 +208,14 @@ class ControlMechanism_Base(Mechanism_Base):
     ----------
 
     controlSignals : List[ControlSignal]
-        List of :class:`ControlSignal` projections managed by the ControlMechanism.
+        list of :class:`ControlSignal` projections managed by the ControlMechanism.  There is one for each ouputState
+        in the ``outputStates`` dictionary.
 
     controlSignalCosts : 2d np.array
-        Array of costs associated with each of the control signals in the ``controlSignals`` attribute.
+        array of costs associated with each of the control signals in the ``controlSignals`` attribute.
 
     allocationPolicy : 2d np.array
-        Array of values currently assigned to each control signal in the ``controlSignals`` attribute.
+        array of values currently assigned to each control signal in the ``controlSignals`` attribute.
 
 
     """

@@ -172,7 +172,7 @@ execution of the System.  Details of the procedure for each sample are as follow
     * calculate the **EVC** using the EVCMechanism's ``function`` to subtract the aggregated cost from the
       aggregated value for the policy.
 ..
-* **Save** the values associated with each policy, if the **save_all_values_and_policies** attribute is True.
+* **Save** the values associated with each policy, if the **save_all_values_and_policies** attribute is :keyword:`True`.
   Otherwise, only the ``EVCMax`` value is stored.
 
 Once the all control allocation policies in the controlSignalSearchSpace have been evaluated, the policy generating the
@@ -247,7 +247,7 @@ class EVCMechanism(ControlMechanism_Base):
     function=LinearCombination(offset=0.0,scale=1,operation=SUM),                       \
     outcome_aggregation_function=LinearCombination(offset=0,scale=1,operation=PRODUCT), \
     cost_aggregation_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM),    \
-    save_all_values_and_policies:bool=False,                                            \
+    save_all_values_and_policies:bool=:keyword:`False`,                                 \
     params=None,                                                                        \
     name=None,                                                                          \
     prefs=None)
@@ -302,12 +302,12 @@ class EVCMechanism(ControlMechanism_Base):
     ---------
 
     prediction_mechanism_type : CombinationFunction: default AdaptiveIntegratorMechanism
-        mechanism class used for prediction mechanism(s).
+        the mechanism class used for prediction mechanism(s).
         Each instance is named using the name of the :keyword:`ORIGIN` mechanism + PREDICTION_MECHANISM
         and assigned an outputState named based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        parameter dictionary passed to ``prediction_mechanism_type`` constructor.
+        a parameter dictionary passed to ``prediction_mechanism_type`` constructor.
         The same set is passed to all PredictionMechanisms.
 
     monitored_output_states : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
@@ -332,38 +332,38 @@ class EVCMechanism(ControlMechanism_Base):
         control signal makes to the aggregated value;  the length of each argument must equal the number of
         control signals in ``controlSignals``.
 
-    save_all_values_and_policies : bool : default False
-        when True, saves all ontrol allocation policies in ``controlSignalSearchSpace`` and associated EVC values
-        (in addition to the max).
+    save_all_values_and_policies : bool : default :keyword:`False`
+        when :keyword:`True`, saves all control allocation policies in ``controlSignalSearchSpace``
+        and associated EVC values (in addition to the max).
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
 
     name : str : default Transfer-<index>
-        String used for the name of the mechanism.
+        a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
-        Preference set for process.
+        the PreferenceSet for the mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
     Attributes
     ----------
 
-    make_default_controller : bool : default True
+    make_default_controller : bool : default :keyword:`True`
         if True, assigns EVCMechanism when instantiated as the DefaultController
 
     system : System
-        system for which EVCMechanism is the ``controller``.
+        the system for which EVCMechanism is the ``controller``.
 
     predictionMechanisms : List[ProcessingMechanism]
-        list of predictionMechanisms added to the system, one for each of its :keyword:`ORIGIN` mechanisms
+        a list of predictionMechanisms added to the system, one for each of its :keyword:`ORIGIN` mechanisms
 
     predictionProcesses : List[Process]
-        list of prediction processes added to the system, each comprise of one of its :keyword:`ORIGIN` mechanisms
+        a list of prediction processes added to the system, each comprise of one of its :keyword:`ORIGIN` mechanisms
         and the associated ``predictionMechanism``.
 
     monitoredOutputStates : List[OutputState]
@@ -371,22 +371,25 @@ class EVCMechanism(ControlMechanism_Base):
         inputState of the EVCMechanism.
 
     monitoredValues : 3D np.nparray
-        array of values of the outputStates in ``monitoredOutputStates`` (equivalent to the values of
+        an array of values of the outputStates in ``monitoredOutputStates`` (equivalent to the values of
         self.inputStates).
 
     function : CombinationFunction : default LinearCombination(offset=0.0,scale=1,operation=SUM)
+        COMMENT:
+            XXXX NEEDS TO BE ADDED
+        COMMENT
 
     outcome_aggregation_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,
     operation=PRODUCT)
-        function used to combine the values of the outputStates in ``monitoredOutputStates``.
+        the function used to combine the values of the outputStates in ``monitoredOutputStates``.
 
     cost_aggregation_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,operation=SUM)
-        function used to combine the cost of the mechanism's ControlSignal projections.  The :keyword:``weights``
+        the function used to combine the cost of the mechanism's ControlSignal projections.  The :keyword:``weights``
         argument can be used to scale the contribution of the cost of each control signal;  it must be an array of
         scalar values, the length of which is equal to the number of the EVCMechanism's outputStates.
 
     controlSignalSearchSpace : 2d np.array
-        array that contains arrays of control allocation policies.  Each control allocation policy contains one
+        an array that contains arrays of control allocation policies.  Each control allocation policy contains one
         value for each of the mechanism's control signals (i.e., ControlSignal projections).  By default,
         it is assigned a set of all possible control allocation policies (using np.meshgrid to construct all
         permutations of control signal values).
@@ -403,15 +406,15 @@ class EVCMechanism(ControlMechanism_Base):
         that generated ``EVCmax``.
 
     prediction_mechanism_type : ProcessingMechanism : default AdaptiveIntegratorMechanism
-        processingMechanism class used for prediction mechanism(s).
+        the processingMechanism class used for prediction mechanism(s).
         Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
               and assigned an outputState named based on the same
 
-    prediction_mechanism_params : Dict[param key, param value] : default ``None``
-        parameter dictionary passed to ``prediction_mechanism_type`` on instantiation.
+    prediction_mechanism_params : Dict[param key, param value] : default :keyword:`None`
+        a parameter dictionary passed to ``prediction_mechanism_type`` on instantiation.
         The same dictionary will be passed to all instances of ``prediction_mechanism_type`` created.
 
-    save_all_values_and_policies : bool : default False
+    save_all_values_and_policies : bool : default :keyword:`False`
         specifies whether or not to save all ControlAllocationPolicies and associated EVC values (in addition to max).
 
     """

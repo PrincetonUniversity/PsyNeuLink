@@ -387,7 +387,8 @@ def process(process_spec=None,
     ---------
 
     process_spec : Optional[str or Dict[param keyword, param value]]
-        if it is :keyword:`None`, returns an instance of Process with a single DefaultMechanism [LINK for default];
+        specification for the process to create.
+        If it is :keyword:`None`, returns an instance of Process with a single DefaultMechanism [LINK for default];
         if it is a string, uses it as the name for the process;
         if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
         parameter (these values will be used to instantiate the process, and will override any values assigned
@@ -396,26 +397,28 @@ def process(process_spec=None,
         ``componentType`` attribute as the base and adding an indexed suffix:  componentType-n.
 
     default_input_value : List[values] or ndarray :  default default input value of :keyword:`ORIGIN` mechanism
-        use as the input to the process if none is provided in a call to the ``execute`` method or ``run`` function.
+        the input to the process to use if none is provided in a call to the ``execute`` method or ``run`` function.
         Must the same length as the :keyword:`ORIGIN` mechanism's input.
 
     pathway : List[mechanism spec[, projection spec], mechanism spec...] : default List[``DefaultMechanism``]
-        mechanisms must be from the ProcessingMechanism class [LINK], and the specification can be an instance,
-        a class name (creates a default instance), or a specification dictionary [LINK];
-        projections must be from the Mapping [LINK] projection class, and can be an instance, a class name
-        (creates a default instance), or a specification dictionary [LINK].
+        the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
+        must a  :doc:`ProcessingMechanism`.  The specification for each can be an instance, a class name (creates a
+        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`Mapping` projection.
+        The specification for each can be the class name (creates a default instance), an instance, or a specification
+        dictionary [LINK].
 
-    initial_values : Optional[Dict[mechanism, param value]] : default ``None``
-        dictionary of values used to initialize specified mechanisms. The key for each entry is a mechanism object,
-        and the value is a number, list or np.array that must be compatible with the format of mechanism.value.
-        Mechanisms not specified will be initialized with their default input value.
+    initial_values : Optional[Dict[mechanism, param value]] : default :keyword:`None`
+        a dictionary of values used to initialize the specified mechanisms. The key for each entry is a mechanism
+        object, and the value is a number, list or np.array that must be compatible with the format of
+        the mechanism's ``value`` attribute. Mechanisms not specified will be initialized with their
+        ``default_input_value``.
 
     clamp_input : Optional[keyword]
-        determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
-        after its initial execution.
+        specifies whether the input to the process continues to be applied to the :keyword:`ORIGIN` mechanism after
+        its initial execution.  The following keywords can be used:
 
-        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a round of
-        executions.
+        :keyword:`None`: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism
+        in a round of executions.
 
         :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
         :keyword:`ORIGIN` mechanism every time it is executed in a round of executions.
@@ -424,25 +427,28 @@ def process(process_spec=None,
         :keyword:`ORIGIN` mechanism every time it is executed in a round of executions.
 
     default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
-        type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
+        the type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
 
     learning : Optional[LearningSignal spec]
-        implements :ref:`learning <LearningSignal_Creating_A_LearningSignal_ProjectionLearningSignal>`
-        for all eligible projections in the process.
+        implements :ref:`learning <LearningSignal_Creating_A_LearningSignal_ProjectionLearningSignal>` for all
+        eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
-        must be the same length as the :keyword:`TERMINAL` mechanism's output
+        the value assigned to the :keyword:`TARGET` inputState of a :doc:`MonitoringMechanism` to which a
+        :keyword:`TERMINAL` mechanism of a process or system projects (used for learning[LINK]).
+        It must be the same length as the :keyword:`TERMINAL` mechanism's output.
 
     params : Optional[Dict[param keyword, param value]
-        dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its entry;
+        a dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its
+        entry;
         values in the dictionary will override argument values.
 
     name : str : default Process-<index>
-        string used for the name of the process
+        a string used for the name of the process
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        preference set for process (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the PreferenceSet for process (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default ''None''
@@ -577,16 +583,16 @@ class Process_Base(Process):
         the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
         spec can be a LearningSignal projection object, the class (which specifies a default instance) or a function
         call to instantiate a LearningSignal (including parameters).  The second and third items of mechanism tuples,
-        and the second item of projection tuples are optional and therefore may be ``None``.
-        The third item of projection tuples is currenlty not used and is always ``None``.
+        and the second item of projection tuples are optional and therefore may be :keyword:`None`.
+        The third item of projection tuples is currenlty not used and is always :keyword:`None`.
 
         .. note::
              This is constructed from the :keyword:`PATHWAY` argument, the entries of which do not necessarily
              have to have all items in a tuple, or even be in tuple form.  All entries of the :keyword:`PATHWAY`
              argument are converted to tuples when assigned to the ``pathway`` attribute.  Entries that are
              not tuples must be a mechanism or projection.  For tuple entries, the first item must be a
-             mechanism or projection;  the second is optional, and ``None`` is entered for missing values;  the third
-             is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
+             mechanism or projection;  the second is optional, and :keyword:`None` is entered for missing values;
+             the third is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
 
     processInputStates : Optional[List[ProcessInputState]]
         Each processInputState sends a Mapping projection to one or more inputStates of the :keyword:`ORIGIN`
@@ -610,8 +616,8 @@ class Process_Base(Process):
         Determines whether the process' input continues to be applied to the :keyword:`ORIGIN` mechanism
         after its initial execution.
 
-        ``None``: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism in a round of
-        execution.
+        :keyword:`None`: Process input is used only for the first execution of the :keyword:`ORIGIN` mechanism
+        in a round of execution.
 
         :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
         :keyword:`ORIGIN` mechanism every time it is executed within a round of execution.
@@ -682,7 +688,7 @@ class Process_Base(Process):
         Number of phases for the process.
         It is assigned as ``_phaseSpecMax + 1``.
 
-      .. _isControllerProcess : bool : False
+      .. _isControllerProcess : bool : :keyword:`False`
              identifies whether the process is an internal one created by a ControlMechanism.
 
     learning : Optional[LearningSignal]
@@ -712,7 +718,7 @@ class Process_Base(Process):
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        Preference set for process.
+        the PreferenceSet for the process.
         Specified in the prefs argument of the call to create the process;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details).[LINK]
@@ -1796,18 +1802,21 @@ class Process_Base(Process):
         ---------
 
         input : List[value] or ndarray: default input to process
-            must be consistent with input of the first mechanism in the process' ``pathway``
+            input to use for execution of the process.
+            Must be consistent with input of the first mechanism in the process' ``pathway``.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial
+            specifies whether mechanisms are executed for a single time step or a trial.
 
         params : Dict[param keyword, param value] :  default None
-            dictionary that can include any of the parameters used as arguments to instantiate the object.
+            a dictionary that can include any of the parameters used as arguments to instantiate the object.
             Use parameter's name as the keyword for its entry; values will override current parameter values
             only for the current execution.
 
-        context : str : default kwExecuting + self.name
-            string used for contextualization of instantiation, hierarchical calls, executions, etc.
+        COMMENT:
+            context : str : default kwExecuting + self.name
+                a string used for contextualization of instantiation, hierarchical calls, executions, etc.
+        COMMENT
 
         Returns
         -------
@@ -1928,34 +1937,34 @@ class Process_Base(Process):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-            input for each in a sequence of executions (see ``run`` function [LINK] for detailed
-            description of formatting requirements and options).
+            input for each in a sequence of executions (see :doc:`Run` for a detailed description of formatting
+            requirements and options).
 
-        reset_clock : bool : default True
+        reset_clock : bool : default :keyword:`True`
             reset ``CentralClock`` to 0 before a sequence of executions.
 
-        initialize : bool default False
+        initialize : bool default :keyword:`False`
             calls the ``initialize`` method of the process before a sequence of executions.
 
-        targets : List[input] or np.ndarray(input) : default ``None``
+        targets : List[input] or np.ndarray(input) : default :keyword:`None`
             target values for monitoring mechanisms for each execution (used for learning).  The length (of the
             outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
 
-        learning : bool :  default ``None``
+        learning : bool :  default :keyword:`None`
             enables or disables learning during execution.
             If it is not specified, current state is left intact.
-            If True, learning is forced on; if False, learning is forced off.
+            If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= ``None``
+        call_before_trial : Function : default= :keyword:`None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= ``None``
+        call_after_trial : Function : default= :keyword:`None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= ``None``
+        call_before_time_step : Function : default= :keyword:`None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= ``None``
+        call_after_time_step : Function : default= :keyword:`None`
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL

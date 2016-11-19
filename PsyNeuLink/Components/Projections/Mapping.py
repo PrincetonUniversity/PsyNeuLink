@@ -199,32 +199,32 @@ class Mapping(Projection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        Source of projection input.  If a mechanism is specified, its primary outputState will be used.  If it is not
-        specified, it will be assigned in the context in which the projection is used.
+        the source of the projection's input.  If a mechanism is specified, its primary outputState will be used.
+        If it is not specified, it will be assigned in the context in which the projection is used.
 
     receiver: Optional[InputState or Mechanism]
-        Destination of projection output.  If a mechanism is specified, its primary inputState will be used.  If it
-        is not specified, it will be assigned in the context in which the projection is used.
+        the destination of the projection's output.  If a mechanism is specified, its primary inputState will be used.
+        If it is not specified, it will be assigned in the context in which the projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default :keyword:`DEFAULT_MATRIX`
-        Matrix used by ``function`` (default: LinearCombination) to transform value of ``sender``
+        the matrix used by ``function`` (default: LinearCombination) to transform the value of the ``sender``.
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
-        Operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
+        the operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
         Most commonly used with LearningSignal projections.
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+        a dictionary that can be used to specify the parameters for the projection, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
 
     name : str : default Transfer-<index>
-        String used for the name of the mapping projection.
+        a string used for the name of the mapping projection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        Preference set for the mapping projection.
+        the PreferenceSet for the mapping projection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -232,10 +232,12 @@ class Mapping(Projection_Base):
     ----------
 
     monitoringMechanism : MonitoringMechanism
-        source of error signal for matrix weight changes when :doc:`learning <LearningSignal>` is used.
+        the source of the error signal used by a LearningSignal to calculate changes to the ``matrix`` when
+        :doc:`learning <LearningSignal>` is used.
 
     matrix : 2d np.array
-        matrix used by ``function`` to transform input from ``sender`` and to ``value`` used by ``receiver``.
+        the matrix used by ``function`` to transform the input from the ``sender`` and to the ``value`` used by
+        the ``receiver``.
 
     """
 

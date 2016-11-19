@@ -193,7 +193,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         + registry (dict): FunctionRegistry
         + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: False}
+        + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: :keyword:`False`}
 
     Class methods:
         none
@@ -313,7 +313,7 @@ class Contradiction(Function_Base): # Example
          + propensity (kwPropensity: a mode specifying the manner of responses (tendency to agree or disagree)
          + pertinacity (kwPertinacity: the consistency with which the manner complies with the propensity
 
-    Contradiction.function returns True or False
+    Contradiction.function returns :keyword:`True` or :keyword:`False`
     """
 
     # Function componentName and type (defined at top of module)
@@ -363,7 +363,8 @@ class Contradiction(Function_Base): # Example
                 context=None):
         """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
 
-        Returns True or False, that is either the same or opposite the statement passed in as the variable
+        Returns :keyword:`True` or :keyword:`False`, that is either the same or opposite the statement passed in as the
+        variable
         The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which
             determines whether the response is (or tends to be) the same as or opposite to the statement
         The pertinacity parameter determines the consistency with which the response conforms to the manner
@@ -398,7 +399,7 @@ class Contradiction(Function_Base): # Example
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
-        Note:  this method (or the class version) is called only if the parameter_validation attribute is True
+        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
 
         :param variable: (anything but a dict) - variable to be validated:
         :param context: (str)
@@ -416,7 +417,7 @@ class Contradiction(Function_Base): # Example
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
-        Note:  this method (or the class version) is called only if the parameter_validation attribute is True
+        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
 
         :param request_set: (dict) - params to be validated
         :param target_set: (dict) - destination of validated params
@@ -1098,7 +1099,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
              MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
              PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
-         # + max (kwMax): only reports max value, all others set to 0 (default: False)
+         # + max (kwMax): only reports max value, all others set to 0 (default: :keyword:`False`)
 
     SoftMax.function returns scalar result
     """
@@ -1231,7 +1232,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     - variable (2D np.ndarray containing exactly two sub-arrays:  sender and receiver vectors
     - params (dict) specifying:
          + filler (kwFillerValue: number) value used to initialize all entries in matrix (default: 0)
-         + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: False)
+         + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: :keyword:`False`)
 
     Create a matrix in self.matrix that is used in calls to LinearMatrix.function.
 
@@ -1306,7 +1307,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
-        Note:  this method (or the class version) is called only if the parameter_validation attribute is True
+        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
 
         :param request_set: (dict) - params to be validated
         :param target_set: (dict) - destination of validated params
