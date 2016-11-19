@@ -61,7 +61,7 @@ The specification of whether an outputState is monitored by a ControlMechanism c
 ..
 * OutputStates to be monitored can be specified in the **ControlMechanism** responsible for the monitoring, or in the
   **system** for which that ControlMechanism is the :ref:`controller <System_Execution_Control>`).  Specification
-  can be in the controlMechanism or system's ``monitored_output_states`` argument, or in the
+  can be in the controlMechanism or system's ``monitor_for_control`` argument, or in the
   :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in its ``params`` argument.  In
   either case, the value must be a list, each item of which must be one of the following:
 
@@ -75,7 +75,7 @@ The specification of whether an outputState is monitored by a ControlMechanism c
   * A :ref:`monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`.
   ..
   * A value of :class:`MonitoredOutputStatesOption`.  This applies to any mechanisms that appear in the list
-    (except those that override it with their own ``monitored_output_states`` specification). If the value of
+    (except those that override it with their own ``monitor_for_control`` specification). If the value of
     :class:`MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
 
     * :keyword:`PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the :keyword:`TERMINAL` mechanism(s)
@@ -183,7 +183,7 @@ class ControlMechanism_Base(Mechanism_Base):
             the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
     COMMENT
 
-    monitored_output_states : List[OutputState specification] : default None
+    monitor_for_control : List[OutputState specification] : default None
         specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
         specification options).
 
@@ -243,7 +243,7 @@ class ControlMechanism_Base(Mechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 monitored_output_states:tc.optional(list)=None,
+                 monitor_for_control:tc.optional(list)=None,
                  function = Linear(slope=1, intercept=0),
                  params=None,
                  name=None,
@@ -254,7 +254,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # MODIFIED 11/5/16 NEW:
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
+        params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   function=function,
                                                   params=params)
          # MODIFIED 11/5/16 END

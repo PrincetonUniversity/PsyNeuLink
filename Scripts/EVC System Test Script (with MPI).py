@@ -65,7 +65,7 @@ RewardProcess = process(default_input_value=[0],
 
 #region System
 mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
-                       monitored_output_states=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
+                       monitor_for_control=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
                        name='Test System')
 #endregion
 
