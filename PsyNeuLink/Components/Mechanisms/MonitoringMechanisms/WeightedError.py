@@ -14,9 +14,9 @@ Overview
 
 A WeightedError mechanism monitors the outputState of it's ``errorSource``: a ProcessingMechanism that projects to
 another mechanism in a :doc:`Process`.  It computes the contribution of each element of the output of the
-``errorSource`` to the error in the output of the mechanism to which the ``errorSource`` projects (the ``errorSignal``).
+``errorSource`` to the error in the output of the mechanism to which the ``errorSource`` projects (the ``weightedErrorSignal``).
 The WeightedError ``function``returns an error array that can be used by a :doc:`LearningSignal` to adjust a Mapping
-projection the ``errorSource``, so as to reduce its future contribution to the errorSignal.
+projection the ``errorSource``, so as to reduce its future contribution to the weightedErrorSignal.
 
 .. _WeightedError_Creating_A_WeightedError:
 
@@ -140,21 +140,25 @@ class WeightedError(MonitoringMechanism_Base):
         Includes the following entry:
 
         * :keyword:`NEXT_LEVEL_PROJECTION`:  Mapping projection;
-          its ``matrix`` parameter is used to calculate the error_array;
+          its ``matrix`` parameter is used to calculate the ``weightedErrorSignal``;
           it's width (number of columns) must match the length of ``error_signal``.
 
     Attributes
     ----------
 
+    errorSource : ProcessingMechanism
+        the mechanism that projects to the WeightedError mechanism, and for which it calculates the ``weightedErrorSignal``.
+        
+    next_level_projection : Mapping projection
+        projection from the ``errorSource to the next mechanism in the process;  its ``matrix`` parameter is 
+        used to calculate the ``weightedErrorSignal``.
+
     variable : 1d np.array
         error_signal used by ``function``.
 
-    next_level_projection : Mapping projection
-        projection, Its ``matrix`` parameter is used to calculate error_array.
-
     value : 1d np.array
-        output of ``function``; an error array that specifies the weighted contribution made by each element of the
-        ``value`` of the error source to the error_signal.
+        output of ``function``, and same as ``weightedErrorSignal``: an array that specifies the weighted contribution 
+        made by each element of the ``value`` of the error source to the error_signal.
 
     outputValue : 1d np.array
         output of ``function``:  error array XXXX
@@ -271,12 +275,12 @@ class WeightedError(MonitoringMechanism_Base):
         error_derivative = error * output_derivative
 
         # Compute error terms for each unit of current mechanism weighted by contribution to error in the next one
-        error_array = np.dot(next_level_matrix, error_derivative)
+        self.weightedErrorSignal = np.dot(next_level_matrix, error_derivative)
 
         # Compute summed error for use by callers to decide whether to update
-        self.summedErrorSignal = np.sum(error_array)
+        self.summedErrorSignal = np.sum(self.weightedErrorSignal)
 
         # Assign output values
-        self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = error_array
+        self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = self.weightedErrorSignal
 
         return self.outputValue
