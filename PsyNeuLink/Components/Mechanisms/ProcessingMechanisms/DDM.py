@@ -125,11 +125,10 @@ COMMENT:
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
 COMMENT
 
-After each execution of the mechanism, the following values are assigned to the mechanism's ``outputValue`` and
-the value(s) of its outputState(s):
+After each execution of the mechanism:
 
-    * value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of the 1st item
-      of its ``outputValue`` attribute, and as the value of its :keyword:`DECISION_VARIABLE` outputState;
+    * the value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of the 1st
+      item of its ``outputValue`` attribute, and as the value of its :keyword:`DECISION_VARIABLE` outputState;
     ..
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
       the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is
