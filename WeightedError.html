@@ -219,9 +219,8 @@ and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="i
 
 <dl class="class">
 <dt id="WeightedError.WeightedError">
-<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bc83510&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
-<dd><p>WeightedError{         error_signal=None,     params=None,           name=None,             prefs=None)</p>
-<p>Implements WeightedError subclass of MonitoringMechanism</p>
+<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements WeightedError subclass of MonitoringMechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -230,11 +229,12 @@ and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="i
 <li><strong>error_signal</strong> (<em>1d np.array</em>) &#8211; </li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; <p>a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).
-Includes the following entry:
-* <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  Mapping projection;</p>
-<blockquote>
-<div>its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the error_array;
-it&#8217;s width (number of columns) must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</div></blockquote>
+Includes the following entry:</p>
+<ul>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  Mapping projection;
+its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the error_array;
+it&#8217;s width (number of columns) must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</li>
+</ul>
 </li>
 </ul>
 </td>
@@ -285,11 +285,6 @@ if it is not specified, a default is assigned using <code class="docutils litera
 </dd></dl>
 
 </dd></dl>
-
-<dl class="function">
-<dt id="WeightedError.random">
-<code class="descclassname">WeightedError.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#WeightedError.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 </div>
