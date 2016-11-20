@@ -224,7 +224,7 @@ class Mapping(Projection_Base):
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        the PreferenceSet for the mapping projection.
+        the Preference set for the mapping projection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -232,12 +232,10 @@ class Mapping(Projection_Base):
     ----------
 
     monitoringMechanism : MonitoringMechanism
-        the source of the error signal used by a LearningSignal to calculate changes to the ``matrix`` when
-        :doc:`learning <LearningSignal>` is used.
+        source of error signal for matrix weight changes when :doc:`learning <LearningSignal>` is used.
 
     matrix : 2d np.array
-        the matrix used by ``function`` to transform the input from the ``sender`` and to the ``value`` used by
-        the ``receiver``.
+        matrix used by ``function`` to transform input from ``sender`` and to ``value`` used by ``receiver``.
 
     """
 
