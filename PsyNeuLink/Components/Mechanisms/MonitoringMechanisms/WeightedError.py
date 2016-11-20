@@ -91,13 +91,13 @@ class WeightedErrorError(Exception):
 
 class WeightedError(MonitoringMechanism_Base):
     """
-    WeightedError{     \
+    WeightedError(     \
     error_signal=None, \
     params=None,       \
     name=None,         \
     prefs=None)
 
-    Implements WeightedError subclass of MonitoringMechanism
+    Implements WeightedError subclass of MonitoringMechanism.
 
     COMMENT:
         Description:
@@ -134,6 +134,7 @@ class WeightedError(MonitoringMechanism_Base):
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
         Includes the following entry:
+
         * :keyword:`NEXT_LEVEL_PROJECTION`:  Mapping projection;
           its ``matrix`` parameter is used to calculate the error_array;
           it's width (number of columns) must match the length of ``error_signal``.
