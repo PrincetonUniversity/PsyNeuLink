@@ -145,7 +145,7 @@ class ControlMechanismError(Exception):
 
 class ControlMechanism_Base(Mechanism_Base):
     """
-    ControlMechanism(          \
+    ControlMechanism_Base(     \
     default_input_value=None,  \
     monitor_for_control=None,  \
     function=Linear,           \

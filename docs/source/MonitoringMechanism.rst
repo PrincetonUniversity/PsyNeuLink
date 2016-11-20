@@ -2,7 +2,7 @@ Monitoring Mechanisms
 =====================
 
 .. toctree::
-	:maxdepth:
+	:maxdepth: 2
 
 	Comparator
 	WeightedError
