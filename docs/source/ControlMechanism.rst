@@ -7,7 +7,6 @@ Control Mechanisms
    DefaultControlMechanism
    EVCMechanism
 
-
 .. automodule:: ControlMechanism
    :members:
    :exclude-members: Linear, random
