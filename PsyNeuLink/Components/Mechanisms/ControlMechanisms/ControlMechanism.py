@@ -119,7 +119,7 @@ projects, to update the corresponding parameter of the recieving mechanism's fun
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
    receiver mechanism has executed.
 
-.. _ConrolMechanism_Class_Reference:
+.. _ControlMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -144,7 +144,16 @@ class ControlMechanismError(Exception):
 
 
 class ControlMechanism_Base(Mechanism_Base):
-    """Abstract class for ControlMechanism
+    """
+    ControlMechanism(          \
+    default_input_value=None,  \
+    monitor_for_control=None,  \
+    function=Linear,           \
+    params=None,               \
+    name=None,                 \
+    prefs=None)                \
+
+    Abstract class for ControlMechanism
 
     .. note::
        ControlMechanisms should NEVER be instantiated by a direct call to the base class.

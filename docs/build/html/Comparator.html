@@ -168,13 +168,13 @@ The function returns an array with the Hadamard (element-wise) differece/quotien
 <blockquote>
 <div><ul>
 <li><dl class="first docutils">
-<dt>COMPARATOR_SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)</dt>
+<dt>SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)</dt>
 <dd><p class="first last">specifies inputState to be used for comparator sample</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>COMPARATOR_TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)</dt>
+<dt>TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)</dt>
 <dd><p class="first last">specifies inputState to be used for comparator target</p>
 </dd>
 </dl>
@@ -186,7 +186,7 @@ The function returns an array with the Hadamard (element-wise) differece/quotien
 <dd><ul class="first last">
 <li><dl class="first docutils">
 <dt>COMPARISON_OPERATION (str): (default: SUBTRACTION)</dt>
-<dd><p class="first last">specifies operation used to compare COMPARATOR_SAMPLE with COMPARATOR_TARGET;
+<dd><p class="first last">specifies operation used to compare SAMPLE with TARGET;
 SUBTRACTION:  output = target-sample
 DIVISION:  output = target/sample</p>
 </dd>
@@ -270,8 +270,8 @@ if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current valu
 <dd><ul class="first last simple">
 <li>variable (value): input to mechanism&#8217;s execute method (default:  Comparator_DEFAULT_STARTING_POINT)</li>
 <li>value (value): output of execute method</li>
-<li>sample (1D np.array): reference to inputState[COMPARATOR_SAMPLE].value</li>
-<li>target (1D np.array): reference to inputState[COMPARATOR_TARGET].value</li>
+<li>sample (1D np.array): reference to inputState[SAMPLE].value</li>
+<li>target (1D np.array): reference to inputState[TARGET].value</li>
 <li>comparisonFunction (Function): Function Function used to compare sample and test</li>
 <li>name (str): if it is not specified as an arg, a default based on the class is assigned in register_category</li>
 <li>prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet</li>

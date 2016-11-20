@@ -208,7 +208,7 @@
 #              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
 #       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
 #                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
-#        SEBASTRIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
+#        SEBASTIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
 #    *  Parameters of parameterModulation function should be accessible
 
 #endregion
@@ -227,8 +227,6 @@
 # DOCUMENTATION: THESE NEED TO BE ADDED:
 #       (see :ref:`ControlMechanisms_Monitored_OutputStates` for details of specification).
 #       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
-
-# IMPLEMENT: TimeScale argument for System
 
 # 11/17/16:
 # IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING SIGNAL (OR ANY PROJECTION??):
@@ -764,11 +762,11 @@
 #    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
 
 # 7/26/16:
-# TEST specification of kwCompartorSample and COMPARATOR_TARGET
+# TEST specification of kwCompartorSample and TARGET
 
 # 7/25/16:
 #
-# FIX handling of inputStates (COMPARATOR_SAMPLE and COMPARATOR_TARGET) in Comparator:
+# FIX handling of inputStates (SAMPLE and TARGET) in Comparator:
 #              requirecParamClassDefaults
 #              _instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
@@ -1007,9 +1005,38 @@
 #   - get rid of tests for PROGRAM ERROR
 # endregion
 
-#region DOCUMENTATION: ------------------------------------------------------------------------------------------------------
+#region DOCUMENTATION: -------------------------------------------------------------------------------------------------
 
 # QUESTION: should attributes that are common to different subclasses be documented there, or only in the base classes?
+
+# DOC LIST:
+
+#    AdaptiveIntegrator
+#    Comparator
+#  ~ ControlMechanism
+#  √ ControlSignal
+#  ! DDM
+#    DefaultControlMechanism
+#  √ EVCMechanism
+#    Function
+#  ~ InputState
+#  √ LearningSignal
+#    Log
+#  √ Mapping
+#  ! Mechanism
+#  √ MonitoringMechanism
+#  ~ OutputState
+#    ParameterState
+#    Preferences
+#  √ Process
+#    ProcessingMechanism
+#  ~ Projection
+#  ! Run
+#    State
+#  ! System
+#  ! Transfer
+#    Utilities
+#    WeightedError
 
 # SPHINX / RST ***********************************************************
 
@@ -1400,36 +1427,6 @@
     #  ?? RESTRICT THEM ONLY TO CATEGORY D
     #  ?? ALLOW DICT ENTRIES FOR EACH (WITH DEDICATED KEYS)
 #
-
-# DOC LIST:
-
-#    AdaptiveIntegrator
-#    Comparator
-#  ~ ControlMechanism
-#  √ ControlSignal
-#  ! DDM
-#    DefaultControlMechanism
-#  √ EVCMechanism
-#    Function
-#  ~ InputState
-#  √ LearningSignal
-#    Log
-#  √ Mapping
-#  ! Mechanism
-#    MonitoringMechanism
-#  ~ OutputState
-#    ParameterState
-#    Preferences
-#  √ Process
-#    ProcessingMechanism
-#  ~ Projection
-#  ! Run
-#    State
-#  ! System
-#  ! Transfer
-#    Utilities
-#    WeightedError
-
 
 #endregion
 

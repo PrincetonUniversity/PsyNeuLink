@@ -525,8 +525,8 @@ class System_Base(System):
         must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system
         (self.recurrentInitMechanisms).
 
-        .. timeScale : TimeScale  : default TimeScale.TRIAL
-           set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
+    timeScale : TimeScale  : default TimeScale.TRIAL
+       determines the default TimeScale value used by mechanisms in the system.
 
     results : List[outputState.value]
         List of return values (outputState.value) from the sequence of executions.

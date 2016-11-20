@@ -207,7 +207,7 @@ class ControlSignal(Projection_Base):
      name=None,                                       \
      prefs=None)
 
-        Implements a projection that controls the parameter of a mechanism's function.
+     Implements a projection that controls the parameter of a mechanism's function.
 
     COMMENT:
         Description:
