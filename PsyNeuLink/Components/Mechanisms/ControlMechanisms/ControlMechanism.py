@@ -181,35 +181,35 @@ class ControlMechanism_Base(Mechanism_Base):
                 + FUNCTION: Linear
                 + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
                 + MONITOR_FOR_CONTROL: List[]
-
-        Arguments
-        ---------
-
-            NOT CURRENTLY IN USE:
-            default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
-                the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
-
-        monitor_for_control : List[OutputState specification] : default None
-            specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
-            specification options).
-
-        function : TransferFunction : default Linear(slope=1, intercept=0)
-            specifies function used to combine values of monitored output states.
-
-        params : Optional[Dict[param keyword, param value]]
-            a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-            and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
-
-        name : str : default Transfer-<index>
-            a string used for the name of the mechanism.
-            If not is specified, a default is assigned by MechanismRegistry
-            (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
-
-        prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-            the PreferenceSet for process.
-            If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-            (see Description under PreferenceSet for details) [LINK].
     COMMENT
+
+    Arguments
+    ---------
+
+        NOT CURRENTLY IN USE:
+        default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
+            the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
+
+    monitor_for_control : List[OutputState specification] : default None
+        specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
+        specification options).
+
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored output states.
+
+    params : Optional[Dict[param keyword, param value]]
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+
+    name : str : default Transfer-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+        the PreferenceSet for process.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
 
     Attributes
