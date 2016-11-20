@@ -151,7 +151,7 @@ class ControlMechanism_Base(Mechanism_Base):
     function=Linear,           \
     params=None,               \
     name=None,                 \
-    prefs=None)                \
+    prefs=None)
 
     Abstract class for ControlMechanism
 

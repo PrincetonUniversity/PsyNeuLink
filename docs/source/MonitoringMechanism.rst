@@ -8,4 +8,5 @@ Monitoring Mechanisms
 	WeightedError
 
 .. automodule:: MonitoringMechanism
-	:members:
+   :members:
+   :exclude-members: Linear, random
