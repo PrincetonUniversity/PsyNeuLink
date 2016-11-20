@@ -12,9 +12,10 @@
 Overview
 --------
 
-WeightedError mechanisms monitor the outputState of a ProcessingMechanism in a :doc:`System` or :doc:`Process` ,
-and compare this to a target provided as input to the ``run`` method of the system or process when it is executed.
-The comparison can be done using subtraction or division.
+WeightedError mechanisms monitor the outputState of a ProcessingMechanism that projects to another mechanism in a
+:doc:`Process`, and computes the contribution of each element of its output to the error of the elements of the
+mechanism to which it projects.  It's ``function`` returns an error array that can be used by a :doc:`LearningSignal`
+to adjust the Mapping projection it receives so as to reduce its future contribution to the error.
 
 .. _WeightedError_Creating_A_WeightedError:
 
@@ -24,24 +25,41 @@ Creating A WeightedError
 A WeightedError mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying "WeightedError" as its ``mech_spec`` argument.  It can also be created by :ref:`in context
 specification of a LearningSignal <_Projection_Creating_A_Projection>` for a projection  to a ProcessingMechanism in
-a system or process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
-are also created automatically when a system or a process is created for which learning is specified; each is
+a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
+are also created automatically when a process system is created for which learning is specified; each is
 assigned a projection from the outputState of a ProcessingMechanism that receives a Mapping projection being
 learned, and a LearningSignal projection to that Mapping projection
 (see :ref:`learning in a process <Process_Learning>`, and
 :ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
+
+.. _WeightedError_Structure
+
+Structure
+---------
+
+A WeightedError mechanism has a single inputState, a :keyword:`NEXT_LEVEL_PROJECTION` parameter, and a single
+(:keyword:`WEIGHTED_ERROR`) outputState.  The inputState receives a Mapping projection from the Processing mechanism
+for which the WeightedError mechanism computes the error — the *error source*.  The value of the
+:keyword:`NEXT_LEVEL_PROJECTION` parameter is a Mapping projection from the error source's primary outputState to the
+next mechanism in the process.  Each row of it's ``matrix`` parameter corresponds to an element of the error source's
+``value``, each column an element of the ``value`` of the mechanism to which the error source projects, and each element
+of the matrix the weight of the association between the two.  The outputState of a WeightedError mechanism is
+typically assigned a :doc:`LearningSignal` projection that is used to modify the ``matrix`` parameter of the Mapping
+projection that projects to the error source (as shown in :ref:`this figure <Process_Learning_Figure>`)
 
 .. _WeightedError_Execution
 
 Execution
 ---------
 
-A WeightedError always executes after the mechanism it is monitoring.  It's ``function`` computes the contribution of
-each sender element (the rows of its :keyword:`NEXT_LEVEL_PROJECTION` matrix attribute) to the error values of the
-receivers (elements of the ``error_signal`` array, columns of the ``NEXT_LEVEL_PROJECTION matrix), weighted by the
-association of each sender with each receiver (specified in NEXT_LEVEL_PROJECTION.matrix).  The ``function`` returns
-an array with the weighted errors for each sender element, which is placed in its ``value`` and ``outputValue``
-attributes, and the value of of its ouptputState.
+A WeightedError mechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
+contribution of each element of its error source's ``value`` to the ``error_signal``:  the error associated with each
+element of the ``value`` of the mechanism to which the error_source projects, scaled both by the weight of its
+association to that element  specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
+``function`` for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
+"backpropagation") learning algorithm (REFS AND [LINK]). The ``function`` returns an array with the weighted errors
+for each element of the error source, which is placed in its ``value`` and  ``outputValue`` attributes,
+and the value of of its (:keyword:`WEIGHTED_ERROR) outputState.
 
 .. _WeightedError_Class_Reference:
 
@@ -110,11 +128,15 @@ class WeightedError(MonitoringMechanism_Base):
     Arguments
     ---------
 
-    - error_signal (1D np.array)
-    - params (dict):
-        + NEXT_LEVEL_PROJECTION (Mapping Projection):
-            projection, the matrix of which is used to calculate error_array
-            width (number of columns) must match error_signal
+    error_signal : 1d np.array
+
+    params : Optional[Dict[param keyword, param value]]
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        Includes the following entry:
+        * :keyword:`NEXT_LEVEL_PROJECTION`:  Mapping projection;
+          its ``matrix`` parameter is used to calculate the error_array;
+          it's width (number of columns) must match the length of ``error_signal``.
 
     Attributes
     ----------
@@ -122,8 +144,15 @@ class WeightedError(MonitoringMechanism_Base):
     variable : 1d np.array
         error_signal used by ``function``.
 
-    value : XXXX
-        output of ``function``.
+    next_level_projection : Mapping projection
+        projection, Its ``matrix`` parameter is used to calculate error_array.
+
+    value : 1d np.array
+        output of ``function``; an error array that specifies the weighted contribution made by each element of the
+        ``value`` of the error source to the error_signal.
+
+    outputValue : 1d np.array
+        output of ``function``:  error array XXXX
 
     name : str : default WeightedError-<index>
         the name of the mechanism.
@@ -160,7 +189,7 @@ class WeightedError(MonitoringMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 error_signal=NotImplemented,
+                 error_signal=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

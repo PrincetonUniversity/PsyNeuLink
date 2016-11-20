@@ -73,7 +73,6 @@ Output_Weights = Mapping(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-
 z = process(default_input_value=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
@@ -111,6 +110,8 @@ def show_target():
     # print ('MSE: \n', Output_Layer.outputValue[])
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+
+z.execute()
 
 z.run(num_executions=10,
       # inputs=stim_list,
