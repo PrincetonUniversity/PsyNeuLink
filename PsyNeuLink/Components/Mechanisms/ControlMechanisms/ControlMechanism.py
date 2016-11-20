@@ -119,6 +119,11 @@ projects, to update the corresponding parameter of the recieving mechanism's fun
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
    receiver mechanism has executed.
 
+.. _ConrolMechanism_Class_Reference:
+
+Class Reference
+---------------
+
 """
 
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
@@ -139,7 +144,7 @@ class ControlMechanismError(Exception):
 
 
 class ControlMechanism_Base(Mechanism_Base):
-    """Abstract class for ControlMechanism subclasses
+    """Abstract class for ControlMechanism
 
     .. note::
        ControlMechanisms should NEVER be instantiated by a direct call to the base class.
@@ -176,15 +181,13 @@ class ControlMechanism_Base(Mechanism_Base):
                 + FUNCTION: Linear
                 + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
                 + MONITOR_FOR_CONTROL: List[]
-    COMMENT
 
-    Arguments
-    ---------
+        Arguments
+        ---------
 
-    COMMENT:
-        NOT CURRENTLY IN USE:
-        default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
-            the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
+            NOT CURRENTLY IN USE:
+            default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
+                the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
 
         monitor_for_control : List[OutputState specification] : default None
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
@@ -206,8 +209,8 @@ class ControlMechanism_Base(Mechanism_Base):
             the PreferenceSet for process.
             If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
             (see Description under PreferenceSet for details) [LINK].
-
     COMMENT
+
 
     Attributes
     ----------
