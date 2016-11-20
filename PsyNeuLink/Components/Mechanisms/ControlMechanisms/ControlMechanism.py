@@ -153,7 +153,7 @@ class ControlMechanism_Base(Mechanism_Base):
     name=None,                 \
     prefs=None)
 
-    Abstract class for ControlMechanism
+    Abstract class for ControlMechanism.
 
     .. note::
        ControlMechanisms should NEVER be instantiated by a direct call to the base class.
