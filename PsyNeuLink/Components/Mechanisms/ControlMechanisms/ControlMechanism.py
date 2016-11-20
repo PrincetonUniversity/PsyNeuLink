@@ -181,7 +181,9 @@ class ControlMechanism_Base(Mechanism_Base):
                 + FUNCTION: Linear
                 + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
                 + MONITOR_FOR_CONTROL: List[]
+    COMMENT
 
+    COMMENT:
         Arguments
         ---------
 
