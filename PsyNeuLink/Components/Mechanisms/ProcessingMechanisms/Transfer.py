@@ -55,10 +55,10 @@ If the ``rate`` parameter is specified and ``time_scale`` is :keyword:`TimeScale
 exponentially time-averaged before transforming it (higher value specifies faster rate); if ``time_scale`` is
 :keyword:`TimeScale.TIME_STEP` the ``rate`` parameter is ignored.
 If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
-the range.
-After each execution of the mechanism:
-    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`RESULT` outputState,
-      and to the 1st item of the mechanism's ``outputValue`` attribute;
+the range.  After each execution of the mechanism:
+
+    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`TRANSFER_RESULT`
+      outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
     * **mean** of the result is assigned to the value of the mechanism's :keyword:`RESULT_MEAN` outputState,
       and to the 2nd item of the mechanism's ``outputValue`` attribute;
@@ -92,9 +92,9 @@ RANGE = "range"
 INITIAL_VALUE = 'initial_value'
 
 # Transfer outputs (used to create and name outputStates):
-RESULT = "result"
-RESULT_MEAN = "result_mean "
-RESULT_VARIANCE = "result_variance"
+TRANSFER_RESULT = "result"
+TRANSFER_MEAN = "transfer_mean "
+TRANSFER_VARIANCE = "transfer_variance"
 
 # Transfer output indices (used to index output values):
 class Transfer_Output(AutoNumber):
@@ -262,9 +262,9 @@ class Transfer(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # kwTimeScale: TimeScale.TRIAL,
         INPUT_STATES: None,
-        OUTPUT_STATES:[RESULT,
-                       RESULT_MEAN,
-                       RESULT_VARIANCE]
+        OUTPUT_STATES:[TRANSFER_RESULT,
+                       TRANSFER_MEAN,
+                       TRANSFER_VARIANCE]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -376,9 +376,9 @@ class Transfer(ProcessingMechanism_Base):
 
         # Map indices of output to outputState(s)
         self._outputStateValueMapping = {}
-        self._outputStateValueMapping[RESULT] = Transfer_Output.RESULT.value
-        self._outputStateValueMapping[RESULT_MEAN] = Transfer_Output.RESULT_MEAN.value
-        self._outputStateValueMapping[RESULT_VARIANCE] = Transfer_Output.RESULT_VARIANCE.value
+        self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
+        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.RESULT_MEAN.value
+        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.RESULT_VARIANCE.value
 
         super()._instantiate_attributes_before_function(context=context)
 

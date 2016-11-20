@@ -39,8 +39,23 @@ mechanism being monitored is assigned as the value of the Comparator's :keyword:
 target value received from the system or process when it is run is assigned to the Comparator's :keyword:`TARGET`
 inputState.  When the Comparator is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`,
 then its ``function`` subtracts the :keyword:`SAMPLE` from the :keyword:`TARGET`; if ``comparison_operation`` is
-:keyword:`DIVISION`, the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  The result is assigned to the
+:keyword:`DIVISION`, the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  After each execution of the
+mechanism:
 
+    * the **result** of the ``function`` calculation is assigned to the mechanism's ``value`` attribute, the value of
+      its :keyword:`COMPARISON_RESULT` outputState, and to the 1st item of its ``outputValue`` attribute.
+
+    * the **mean** of the result is assigned to the value of the mechanism's :keyword:`COMPARISON_MEAN` outputState,
+      and to the 2nd item of its ``outputValue`` attribute.
+
+    * the **sum** of the result is assigned to the value of the mechanism's :keyword:`COMPARISON_SUM` outputState,
+      and to the 3rd item of its ``outputValue`` attribute.
+
+    * the **sum of squares** of the result's elements is assigned to value of the mechanism's
+      :keyword:`COMPARISON_SUM_SQUARES` outputState, and to the 4th item of its ``outputValue`` attribute.
+
+    * the **mean of the squares (MSE)** of the result's elements is assigned to value of the mechanism's
+      :keyword:`COMPARISON_MSE` outputState, and to the 5th item of its ``outputValue`` attribute.
 
 .. _Comparator_Class_Reference:
 
