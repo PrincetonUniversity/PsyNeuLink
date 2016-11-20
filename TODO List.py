@@ -6,6 +6,12 @@
 # FIX:  RECONICLE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 #       MAKE IT SO THAT value = output of function, and outputValue is what is returned by __execute__
+#
+# DOCUMENTATION:  [system and process] or [system or process] -> [process and system] or [process and system]
+# DOCUMENTATION:  MonitoringMechanism and Comparator:  assume mechanism is in a process
+# DOCUMENTATION:  add Run module to toctree.rst
+# DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates)
+# IMPLEMENT:  errorSource attribute for WeightedError
 
 # 11/18/16:
 

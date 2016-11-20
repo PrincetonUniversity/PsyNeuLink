@@ -12,8 +12,9 @@
 Overview
 --------
 
-A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a :doc:`System`, which is evaluated by
-its ``function``.  This can generate an error signal (e.g., for learning[LINK]) or some other value (e.g., conflict).
+A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a :doc:`process <Process>` or
+:doc:`system <System>`, which is evaluated by its ``function``.  This can generate an error signal (e.g.,
+for learning[LINK]) or some other value (e.g., conflict).
 
 .. _MonitoringMechanism_Creating_A_MonitoringMechanism:
 
@@ -21,7 +22,7 @@ Creating A MonitoringMechanism
 ---------------------------
 
 a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. One or more MonitoringMechanisms are also created automatically when a system or a process is created for
+type. One or more MonitoringMechanisms are also created automatically when a process or system is created for
 which learning is specified (see :ref:`learning in a process <Process_Learning>`,
 and :ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
 Different types of MonitoringMechanisms monitor  different types of information, and therefore have varying input

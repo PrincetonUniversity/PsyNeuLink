@@ -183,9 +183,9 @@ also be specified so long as they return a numeric value or list or np.ndarray o
 </div>
 <div class="section" id="creating-a-transfer-mechanism">
 <span id="transfer-creating-a-transfer-mechanism"></span><h2>Creating a Transfer Mechanism<a class="headerlink" href="#creating-a-transfer-mechanism" title="Permalink to this headline">¶</a></h2>
-<p>A Transfer Mechanism can be instantiated either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
-function and specifying Transfer as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the <code class="docutils literal"><span class="pre">function</span></code>
-argument, which can be simply the name of the class (first example below), or a call to the class which can
+<p>A Transfer mechanism can be created either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
+function and specifying &#8220;Transfer&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the <code class="docutils literal"><span class="pre">function</span></code>
+argument, which can be simply the name of the class (first example below), or a call to its constructor which can
 include arguments specifying the function&#8217;s parameters (second example):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_linear_transfer_mechanism</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">my_logistic_transfer_mechanism</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">)</span>
@@ -202,25 +202,30 @@ If the <code class="docutils literal"><span class="pre">rate</span></code> param
 exponentially time-averaged before transforming it (higher value specifies faster rate); if <code class="docutils literal"><span class="pre">time_scale</span></code> is
 <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> the <code class="docutils literal"><span class="pre">rate</span></code> parameter is ignored.
 If the <code class="docutils literal"><span class="pre">range</span></code> parameter is specified, all elements of the output are capped by the lower and upper values of
-the range.
-After each execution of the mechanism:</p>
+the range.  After each execution of the mechanism:</p>
 <blockquote>
 <div><ul class="simple">
-<li><strong>result</strong> is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of its <code class="xref std std-keyword docutils literal"><span class="pre">RESULT</span></code> outputState,
-and to the 1st item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
+<li><strong>result</strong> is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of its <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_RESULT</span></code>
+outputState, and to the 1st item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
 </ul>
 <ul class="simple">
-<li><strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">RESULT_MEAN</span></code> outputState,
+<li><strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_MEAN</span></code> outputState,
 and to the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
 </ul>
 <ul class="simple">
-<li><strong>variance</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">RESULT_VARIANCE</span></code> outputState,
+<li><strong>variance</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code> outputState,
 and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="class-reference">
 <span id="transfer-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Transfer.Transfer_Output">
+<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer_Output</code><a class="headerlink" href="#Transfer.Transfer_Output" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="Transfer.Transfer">
 <em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
@@ -288,7 +293,16 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="Transfer.Transfer.value">
 <code class="descname">value</code><a class="headerlink" href="#Transfer.Transfer.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[value]</em> &#8211; the output of function.</p>
+<dd><p><em>List[1d np.array, float, float]</em> &#8211; same as <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Transfer.Transfer.outputValue">
+<code class="descname">outputValue</code><a class="headerlink" href="#Transfer.Transfer.outputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[1d np.array, float, float]</em> &#8211; a list with the following items:
+* <strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_RESULT</span></code> outputState);
+* <strong>mean</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_MEAN</span></code> outputState)
+* <strong>variance</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code> outputState)</p>
 </dd></dl>
 
 <dl class="attribute">

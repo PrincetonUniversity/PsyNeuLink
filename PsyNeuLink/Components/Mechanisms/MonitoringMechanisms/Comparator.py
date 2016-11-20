@@ -12,8 +12,8 @@
 Overview
 --------
 
-Comparator mechanisms monitor the outputState of a ProcessingMechanism in a :doc:`System` or :doc:`Process` ,
-and compare this to a target provided as input to the ``run`` method of the system or process when it is executed.
+Comparator mechanisms monitor the outputState of a ProcessingMechanism in a :doc:`Process` , and compare this to a
+target provided as input to the ``run`` method of the process (or system to which it belongs) when it is executed.
 The comparison can be done using subtraction or division.
 
 .. _Comparator_Creating_A_Comparator:
@@ -25,24 +25,34 @@ A Comparator mechanism can be created either directly, by calling its constructo
 function and specifying "Comparator" as its ``mech_spec`` argument. The type of comparison is specified in the
 ``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.  It can also be
 created by :ref:`in context specification of a LearningSignal <Projection_Creating_A_Projection>` for a projection
-to the  :keyword:`TERMINAL` mechanism of a system or  process.  One or more Comparators are also created
-automatically when a system or a process is created for which learning is specified; each is assigned a projection
+to the  :keyword:`TERMINAL` mechanism [LINK] of a process.  One or more Comparators are also created
+automatically when a process or system is created for which learning is specified; each is assigned a projection
 from the outputState of a :keyword:`TERMINAL` mechanism that receives a Mapping projection being learned,
 and a LearningSignal projection to that Mapping projection  (see :ref:`learning in a process <Process_Learning>`, and
 :ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creation> for details).
+
+
+.. _Comparator_Structure
+
+Structure
+---------
+
+A Comparator mechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from the
+primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`TARGET` inputState
+is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
+
 
 .. _Comparator_Execution
 
 Execution
 ---------
 
-A Comparator always executes after the mechanism it is monitoring.  The ``value`` of the outputState of the
+A Comparator always executes after the mechanism it is monitoring.  The ``value`` of the primary outputState of the
 mechanism being monitored is assigned as the value of the Comparator's :keyword:`SAMPLE` inputState;  the
-target value received from the system or process when it is run is assigned to the Comparator's :keyword:`TARGET`
-inputState.  When the Comparator is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`,
-then its ``function`` subtracts the :keyword:`SAMPLE` from the :keyword:`TARGET`; if ``comparison_operation`` is
-:keyword:`DIVISION`, the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  After each execution of the
-mechanism:
+value of the :keyword:`TARGET` inputState is received from the process (or system to which it belongs) when it is run.
+When the Comparator is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`, then its ``function``
+subtracts the  :keyword:`SAMPLE` from the :keyword:`TARGET`; if ``comparison_operation`` is :keyword:`DIVISION`,
+the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  After each execution of the mechanism:
 
     * the **result** of the ``function`` calculation is assigned to the mechanism's ``value`` attribute, the value of
       its :keyword:`COMPARISON_RESULT` outputState, and to the 1st item of its ``outputValue`` attribute.
