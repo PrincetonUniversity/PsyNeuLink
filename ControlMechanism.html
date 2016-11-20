@@ -99,6 +99,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
@@ -285,6 +286,40 @@ mechanism executes (see <span class="xref std std-ref">Lazy_Evaluation</span> fo
 ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
 receiver mechanism has executed.</p>
 </div>
+</div>
+<div class="section" id="class-reference">
+<span id="controlmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ControlMechanism.ControlMechanism_Base">
+<em class="property">class </em><code class="descclassname">ControlMechanism.</code><code class="descname">ControlMechanism_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>monitor_for_control: &lt;typecheck.framework.optional object at 0x10c0c2b00&gt; = None</em>, <em>function=&lt;PsyNeuLink.Components.Functions.Function.Linear object&gt;</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bd93510&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<dd><p>ControlMechanism(              default_input_value=None,      monitor_for_control=None,      function=Linear,               params=None,                   name=None,                     prefs=None)
+Abstract class for ControlMechanism</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">ControlMechanisms should NEVER be instantiated by a direct call to the base class.
+They should be instantiated using the constructor for a <a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
+</div>
+<dl class="attribute">
+<dt id="ControlMechanism.ControlMechanism_Base.controlSignals">
+<code class="descname">controlSignals</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlSignals" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[ControlSignal]</em> &#8211; list of <a class="reference internal" href="ControlSignal.html#module-ControlSignal" title="ControlSignal"><code class="xref py py-class docutils literal"><span class="pre">ControlSignal</span></code></a> projections managed by the ControlMechanism.  There is one for each ouputState
+in the <code class="docutils literal"><span class="pre">outputStates</span></code> dictionary.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlMechanism.ControlMechanism_Base.controlSignalCosts">
+<code class="descname">controlSignalCosts</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlSignalCosts" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the <code class="docutils literal"><span class="pre">controlSignals</span></code> attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlMechanism.ControlMechanism_Base.allocationPolicy">
+<code class="descname">allocationPolicy</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.allocationPolicy" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; array of values currently assigned to each control signal in the <code class="docutils literal"><span class="pre">controlSignals</span></code> attribute.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 

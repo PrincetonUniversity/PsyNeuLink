@@ -135,6 +135,50 @@
             
   <div class="section" id="module-WeightedError">
 <span id="weighted-error"></span><h1>Weighted Error<a class="headerlink" href="#module-WeightedError" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>WeightedError mechanisms monitor the outputState of a ProcessingMechanism that projects to another mechanism in a
+<a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, and computes the contribution of each element of its output to the error of the elements of the
+mechanism to which it projects.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> returns an error array that can be used by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
+to adjust the Mapping projection it receives so as to reduce its future contribution to the error.</p>
+</div>
+<div class="section" id="creating-a-weightederror">
+<span id="weightederror-creating-a-weightederror"></span><h2>Creating A WeightedError<a class="headerlink" href="#creating-a-weightederror" title="Permalink to this headline">¶</a></h2>
+<p>A WeightedError mechanism can be created either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
+function and specifying &#8220;WeightedError&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  It can also be created by <span class="xref std std-ref">in context
+specification of a LearningSignal</span> for a projection  to a ProcessingMechanism in
+a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
+are also created automatically when a process system is created for which learning is specified; each is
+assigned a projection from the outputState of a ProcessingMechanism that receives a Mapping projection being
+learned, and a LearningSignal projection to that Mapping projection
+(see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
+:ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>automatic creation of LearningSignals &lt;LearningSignal_Automatic_Creation&gt; for details).</p>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A WeightedError mechanism has a single inputState, a <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> parameter, and a single
+(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The inputState receives a Mapping projection from the Processing mechanism
+for which the WeightedError mechanism computes the error —&nbsp;the <em>error source</em>.  The value of the
+<code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> parameter is a Mapping projection from the error source&#8217;s primary outputState to the
+next mechanism in the process.  Each row of it&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code> parameter corresponds to an element of the error source&#8217;s
+<code class="docutils literal"><span class="pre">value</span></code>, each column an element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the error source projects, and each element
+of the matrix the weight of the association between the two.  The outputState of a WeightedError mechanism is
+typically assigned a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of the Mapping
+projection that projects to the error source (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>)</p>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A WeightedError mechanism always executes after the mechanism it is monitoring.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> computes the
+contribution of each element of its error source&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to the <code class="docutils literal"><span class="pre">error_signal</span></code>:  the error associated with each
+element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the error_source projects, scaled both by the weight of its
+association to that element  specified by from <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>) and the differential of the
+<code class="docutils literal"><span class="pre">function</span></code> for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
+&#8220;backpropagation&#8221;) learning algorithm (REFS AND [LINK]). The <code class="docutils literal"><span class="pre">function</span></code> returns an array with the weighted errors
+for each element of the error source, which is placed in its <code class="docutils literal"><span class="pre">value</span></code> and  <code class="docutils literal"><span class="pre">outputValue</span></code> attributes,
+and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="id4">`</span></a>WEIGHTED_ERROR) outputState.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="weightederror-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="WeightedError.WeightedErrorOutput">
 <em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedErrorOutput</code><a class="headerlink" href="#WeightedError.WeightedErrorOutput" title="Permalink to this definition">¶</a></dt>
@@ -143,138 +187,71 @@
 
 <dl class="class">
 <dt id="WeightedError.WeightedError">
-<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=NotImplemented</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bddf488&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implement WeightedError subclass</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><p class="first">WeightedError is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
-It&#8217;s function computes the contribution of each sender element (rows of the NEXT_LEVEL_PROJECTION param)</p>
+<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bd93510&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
+<dd><p>WeightedError{         error_signal=None,     params=None,           name=None,             prefs=None)</p>
+<p>Implements WeightedError subclass of MonitoringMechanism</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>error_signal</strong> (<em>1d np.array</em>) &#8211; </li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; <p>a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).
+Includes the following entry:
+* <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  Mapping projection;</p>
 <blockquote>
-<div><dl class="docutils">
-<dt>to the error values of the receivers</dt>
-<dd>(elements of the error_signal array, columns of the matrix of the NEXT_LEVEL_PROJECTION param),</dd>
-</dl>
-<p>weighted by the association of each sender with each receiver (specified in NEXT_LEVEL_PROJECTION.matrix)</p>
-</div></blockquote>
-<p class="last">The function returns an array with the weighted errors for each sender element</p>
-</dd>
-<dt>Instantiation:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>A WeightedError can be instantiated in several ways:</dt>
-<dd><ul class="first last">
-<li><p class="first">directly, by calling WeightedError()</p>
-</li>
-<li><dl class="first docutils">
-<dt>by assigning a LearningSignal Projection to a ProcessingMechanism that has at least one other</dt>
-<dd><p class="first last">ProcessingMechanism to which it projects</p>
-</dd>
-</dl>
+<div>its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the error_array;
+it&#8217;s width (number of columns) must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</div></blockquote>
 </li>
 </ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-<dt>Initialization arguments:</dt>
-<dd><p class="first">In addition to standard arguments params (see Mechanism), WeightedError also implements the following params:
-- error_signal (1D np.array)
-- params (dict):</p>
-<blockquote>
-<div><ul>
-<li><dl class="first docutils">
-<dt>NEXT_LEVEL_PROJECTION (Mapping Projection):</dt>
-<dd><p class="first last">projection, the matrix of which is used to calculate error_array
-width (number of columns) must match error_signal</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-<p>Notes:
-*  params can be set in the standard way for any Function subclass:</p>
-<blockquote class="last">
-<div><ul>
-<li><dl class="first docutils">
-<dt>params provided in param_defaults at initialization will be assigned as paramInstanceDefaults</dt>
-<dd><p class="first last">and used for paramsCurrent unless and until the latter are changed in a function call</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">paramInstanceDefaults can be later modified using assign_defaults</p>
-</li>
-<li><p class="first">params provided in a function call (to execute or adjust) will be assigned to paramsCurrent</p>
-</li>
-</ul>
-</div></blockquote>
-</dd>
-<dt>MechanismRegistry:</dt>
-<dd><dl class="first last docutils">
-<dt>All instances of WeightedError are registered in MechanismRegistry, which maintains an entry for the subclass,</dt>
-<dd>a count for all instances of it, and a dictionary of those instances</dd>
-</dl>
-</dd>
-<dt>Naming:</dt>
-<dd>Instances of WeightedError can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).
-If this argument is omitted, it will be assigned &#8220;WeightedError&#8221; with a hyphenated, indexed suffix (&#8216;WeightedError-n&#8217;)</dd>
-<dt>Execution:</dt>
-<dd><ul class="first">
-<li><dl class="first docutils">
-<dt>Computes comparison of two inputStates of equal length and generates array of same length,</dt>
-<dd><p class="first last">as well as summary statistics (sum, sum of squares, and variance of comparison array values)</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">self.execute returns self.value</p>
-</li>
-</ul>
-<p>Notes:
-* WeightedError handles &#8220;runtime&#8221; parameters (specified in call to execute method) differently than std Components:</p>
-<blockquote class="last">
-<div><p>any specified params are kept separate from paramsCurrent (Which are not overridden)
-if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the</p>
-<blockquote>
-<div>corresponding ParameterState;  that is, they are combined additively with controlSignal output</div></blockquote>
-</div></blockquote>
-</dd>
-<dt>Class attributes:</dt>
-<dd><ul class="first last simple">
-<li>componentType (str): WeightedError</li>
-<li>classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()</li>
-<li>classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE</li>
-<li>variableClassDefault (1D np.array):</li>
-<li>paramClassDefaults (dict): {NEXT_LEVEL_PROJECTION: Mapping}</li>
-<li>paramNames (dict): names as above</li>
-</ul>
-</dd>
-<dt>Class methods:</dt>
-<dd>None</dd>
-<dt>Instance attributes: none</dt>
-<dd><ul class="first last simple">
-<li>variable (1D np.array): error_signal used by execute method</li>
-<li>value (value): output of execute method</li>
-<li>name (str): if it is not specified as an arg, a default based on the class is assigned in register_category</li>
-<li>prefs (PreferenceSet): if not specified as arg, default set is created by copying WeightedError_PreferenceSet</li>
-</ul>
-</dd>
-<dt>Instance methods:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>_validate_params(self, request_set, target_set, context):</dt>
-<dd><p class="first last">validates that width of matrix for projection in NEXT_LEVEL_PROJECTION param equals length of error_signal</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>execute(error_signal, params, time_scale, context)</dt>
-<dd><p class="first last">calculates and returns weighted error array (in self.value and values of self.outputStates)</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.variable">
+<code class="descname">variable</code><a class="headerlink" href="#WeightedError.WeightedError.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; error_signal used by <code class="docutils literal"><span class="pre">function</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.next_level_projection">
+<code class="descname">next_level_projection</code><a class="headerlink" href="#WeightedError.WeightedError.next_level_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mapping projection</em> &#8211; projection, Its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate error_array.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.value">
+<code class="descname">value</code><a class="headerlink" href="#WeightedError.WeightedError.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>; an error array that specifies the weighted contribution made by each element of the
+<code class="docutils literal"><span class="pre">value</span></code> of the error source to the error_signal.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.outputValue">
+<code class="descname">outputValue</code><a class="headerlink" href="#WeightedError.WeightedError.outputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>:  error array XXXX</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.name">
+<code class="descname">name</code><a class="headerlink" href="#WeightedError.WeightedError.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default WeightedError-&lt;index&gt;</em> &#8211; the name of the mechanism.
+Specified in the name argument of the call to create the projection;
+if not is specified, a default is assigned by MechanismRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#WeightedError.WeightedError.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for mechanism.
+Specified in the prefs argument of the call to create the mechanism;
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -282,6 +259,7 @@ if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current valu
 <code class="descclassname">WeightedError.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#WeightedError.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
 </div>
 
 

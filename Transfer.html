@@ -85,10 +85,31 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Transfer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-transfer-mechanism">Creating a Transfer Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -162,9 +183,9 @@ also be specified so long as they return a numeric value or list or np.ndarray o
 </div>
 <div class="section" id="creating-a-transfer-mechanism">
 <span id="transfer-creating-a-transfer-mechanism"></span><h2>Creating a Transfer Mechanism<a class="headerlink" href="#creating-a-transfer-mechanism" title="Permalink to this headline">¶</a></h2>
-<p>A Transfer Mechanism can be instantiated either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
-function and specifying Transfer as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the <code class="docutils literal"><span class="pre">function</span></code>
-argument, which can be simply the name of the class (first example below), or a call to the class which can
+<p>A Transfer mechanism can be created either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
+function and specifying &#8220;Transfer&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the <code class="docutils literal"><span class="pre">function</span></code>
+argument, which can be simply the name of the class (first example below), or a call to its constructor which can
 include arguments specifying the function&#8217;s parameters (second example):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_linear_transfer_mechanism</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
 <span class="n">my_logistic_transfer_mechanism</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">)</span>
@@ -181,19 +202,18 @@ If the <code class="docutils literal"><span class="pre">rate</span></code> param
 exponentially time-averaged before transforming it (higher value specifies faster rate); if <code class="docutils literal"><span class="pre">time_scale</span></code> is
 <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> the <code class="docutils literal"><span class="pre">rate</span></code> parameter is ignored.
 If the <code class="docutils literal"><span class="pre">range</span></code> parameter is specified, all elements of the output are capped by the lower and upper values of
-the range.
-After each execution of the mechanism:</p>
+the range.  After each execution of the mechanism:</p>
 <blockquote>
 <div><ul class="simple">
-<li><strong>result</strong> is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of its <code class="xref std std-keyword docutils literal"><span class="pre">RESULT</span></code> outputState,
-and to the 1st item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
+<li><strong>result</strong> is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of its <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_RESULT</span></code>
+outputState, and to the 1st item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
 </ul>
 <ul class="simple">
-<li><strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">RESULT_MEAN</span></code> outputState,
+<li><strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_MEAN</span></code> outputState,
 and to the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
 </ul>
 <ul class="simple">
-<li><strong>variance</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">RESULT_VARIANCE</span></code> outputState,
+<li><strong>variance</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code> outputState,
 and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
 </ul>
 </div></blockquote>
@@ -273,7 +293,16 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="Transfer.Transfer.value">
 <code class="descname">value</code><a class="headerlink" href="#Transfer.Transfer.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[value]</em> &#8211; the output of function.</p>
+<dd><p><em>List[1d np.array, float, float]</em> &#8211; same as <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Transfer.Transfer.outputValue">
+<code class="descname">outputValue</code><a class="headerlink" href="#Transfer.Transfer.outputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[1d np.array, float, float]</em> &#8211; a list with the following items:
+* <strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_RESULT</span></code> outputState);
+* <strong>mean</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_MEAN</span></code> outputState)
+* <strong>variance</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code> outputState)</p>
 </dd></dl>
 
 <dl class="attribute">

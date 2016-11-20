@@ -95,6 +95,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-monitoringmechanism">Creating A MonitoringMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
@@ -157,17 +158,16 @@
 <h1>Monitoring Mechanisms<a class="headerlink" href="#monitoring-mechanisms" title="Permalink to this headline">¶</a></h1>
 <span class="target" id="module-MonitoringMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, which is evaluated by
-its <code class="docutils literal"><span class="pre">function</span></code>.  This can generate an error signal (e.g., for learning[LINK]) or some other value (e.g., conflict).</p>
+<p>A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> or
+<a class="reference internal" href="System.html"><span class="doc">system</span></a>, which is evaluated by its <code class="docutils literal"><span class="pre">function</span></code>.  This can generate an error signal (e.g.,
+for learning[LINK]) or some other value (e.g., conflict).</p>
 </div>
 <div class="section" id="creating-a-monitoringmechanism">
 <span id="monitoringmechanism-creating-a-monitoringmechanism"></span><h2>Creating A MonitoringMechanism<a class="headerlink" href="#creating-a-monitoringmechanism" title="Permalink to this headline">¶</a></h2>
 <p>a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. One or more MonitoringMechanisms are also created automatically whenever a system or a process is created for
-which learning is specified; they are assigned projections from the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code>
-mechanisms, and LearningSignal projections to the Mapping projections being learned (see
-<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
-<span class="xref std std-ref">automatic creation of LearningSignals</span> for the specific requirements of each type.</p>
+type. One or more MonitoringMechanisms are also created automatically when a process or system is created for
+which learning is specified (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>,
+and <span class="xref std std-ref">automatic creation of LearningSignals</span> for the specific requirements of each type.</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -175,6 +175,9 @@ mechanisms, and LearningSignal projections to the Mapping projections being lear
 mechanism being monitored is assigned as an item in the <code class="docutils literal"><span class="pre">variable</span></code> for the MonitoringMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.
 Other items may be also be assigned (for example, a <a class="reference internal" href="Comparator.html"><span class="doc">Comparator</span></a> takes an additional input against which it
 compares the monitored value).</p>
+</div>
+<div class="section" id="class-reference">
+<span id="monitoringmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="MonitoringMechanism.ComparatorOutput">
 <em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">ComparatorOutput</code><a class="headerlink" href="#MonitoringMechanism.ComparatorOutput" title="Permalink to this definition">¶</a></dt>
@@ -184,7 +187,19 @@ compares the monitored value).</p>
 <dl class="class">
 <dt id="MonitoringMechanism.MonitoringMechanism_Base">
 <em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Abstract class for processing mechanism subclasses</p>
+<dd><p>MonitoringMechanism(     variable=None,           params=None,             name=None,               prefs=None,              context=None):
+Abstract class for MonitoringMechanism</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">MonitoringMechanisms should NEVER be instantiated by a direct call to the base class.
+They should be instantiated using the constructor for a <a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
+</div>
+<dl class="attribute">
+<dt id="MonitoringMechanism.MonitoringMechanism_Base.monitoredStateChanged">
+<code class="descname">monitoredStateChanged</code><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base.monitoredStateChanged" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; identifies whether the outputState being monitored has changed since the last execution.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">

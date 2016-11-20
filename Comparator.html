@@ -135,165 +135,155 @@
             
   <div class="section" id="module-Comparator">
 <span id="comparator"></span><h1>Comparator<a class="headerlink" href="#module-Comparator" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Comparator mechanisms monitor the outputState of a ProcessingMechanism in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> , and compare this to a
+target provided as input to the <code class="docutils literal"><span class="pre">run</span></code> method of the process (or system to which it belongs) when it is executed.
+The comparison can be done using subtraction or division.</p>
+</div>
+<div class="section" id="creating-a-comparator">
+<span id="comparator-creating-a-comparator"></span><h2>Creating A Comparator<a class="headerlink" href="#creating-a-comparator" title="Permalink to this headline">¶</a></h2>
+<p>A Comparator mechanism can be created either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
+function and specifying &#8220;Comparator&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument. The type of comparison is specified in the
+<code class="docutils literal"><span class="pre">comparison_operation</span></code>, which can be the keyword <code class="xref std std-keyword docutils literal"><span class="pre">SUBTRACTION</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">DIVISION</span></code>.  It can also be
+created by <a class="reference internal" href="Projection.html#projection-creating-a-projection"><span class="std std-ref">in context specification of a LearningSignal</span></a> for a projection
+to the  <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism [LINK] of a process.  One or more Comparators are also created
+automatically when a process or system is created for which learning is specified; each is assigned a projection
+from the outputState of a <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism that receives a Mapping projection being learned,
+and a LearningSignal projection to that Mapping projection  (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
+:ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>automatic creation of LearningSignals  &lt;LearningSignal_Automatic_Creation&gt; for details).</p>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A Comparator mechanism has two inputStates:  the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span> <span class="pre">inputState</span> <span class="pre">receives</span> <span class="pre">a</span> <span class="pre">Mapping</span> <span class="pre">projection</span> <span class="pre">from</span> <span class="pre">the</span>
+<span class="pre">primary</span> <span class="pre">outputState</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">:keyword:`TERMINAL</span></code> mechanism in a process;  the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState
+is assigned its value from the <code class="docutils literal"><span class="pre">target</span></code> argument of a call to the <a class="reference internal" href="Run.html"><span class="doc">run</span></a> method of a process or system.</p>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A Comparator always executes after the mechanism it is monitoring.  The <code class="docutils literal"><span class="pre">value</span></code> of the primary outputState of the
+mechanism being monitored is assigned as the value of the Comparator&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> inputState;  the
+value of the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState is received from the process (or system to which it belongs) when it is run.
+When the Comparator is executed, if <code class="docutils literal"><span class="pre">comparison_operation</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">SUBTRACTION</span></code>, then its <code class="docutils literal"><span class="pre">function</span></code>
+subtracts the  <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> from the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code>; if <code class="docutils literal"><span class="pre">comparison_operation</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">DIVISION</span></code>,
+the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> is divided by the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code>.  After each execution of the mechanism:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the <strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of
+its <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_RESULT</span></code> outputState, and to the 1st item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+<li>the <strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MEAN</span></code> outputState,
+and to the 2nd item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+<li>the <strong>sum</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SUM</span></code> outputState,
+and to the 3rd item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+<li>the <strong>sum of squares</strong> of the result&#8217;s elements (&#8220;sum squared error&#8221;) is assigned to value of the mechanism&#8217;s
+<code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SSE</span></code> outputState, and to the 4th item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+<li>the <strong>mean of the squares</strong> of the result&#8217;s elements (&#8220;mean squared error&#8221;) is assigned to value of the
+mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MSE</span></code> outputState, and to the 5th item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="class-reference">
+<span id="comparator-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="Comparator.Comparator">
-<em class="property">class </em><code class="descclassname">Comparator.</code><code class="descname">Comparator</code><span class="sig-paren">(</span><em>default_sample_and_target=NotImplemented</em>, <em>comparison_operation: &lt;typecheck.tc_predicates.enum object at 0x106b476d8&gt; = 'subtraction'</em>, <em>comparison_type='vector'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bddf488&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implement Comparator subclass</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><p class="first">Comparator is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
-It&#8217;s function uses the LinearCombination Function to compare two input variables
-COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
-The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,</p>
-<blockquote class="last">
-<div>as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array</div></blockquote>
-</dd>
-<dt>Instantiation:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>A Comparator Mechanism can be instantiated in several ways:</dt>
-<dd><ul class="first last simple">
-<li>directly, by calling Comparator()</li>
-<li>as the default mechanism (by calling mechanism())</li>
+<em class="property">class </em><code class="descclassname">Comparator.</code><code class="descname">Comparator</code><span class="sig-paren">(</span><em>default_sample_and_target=None</em>, <em>comparison_operation=SUBTRACTION</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements Comparator subclass of MonitoringMechanism</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_sample_and_target</strong> (<em>Optional[List[array, array] or 2d np.array]</em>) &#8211; the input to the Comparator to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods.  The
+first item is the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> input and the second is the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> input, which must be the
+same length.  This also serves as a template to specify the length of inputs to the <code class="docutils literal"><span class="pre">function</span></code>.</li>
+<li><strong>comparison_operation</strong> (<em>keyword[SUBTRACTION or DIVISION] : default SUBTRACTION</em>) &#8211; specifies how the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> will be compared:
+* <code class="xref std std-keyword docutils literal"><span class="pre">SUBTRACTION</span></code>: <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> - <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code>;
+* <code class="xref std std-keyword docutils literal"><span class="pre">DIVISION</span></code>: <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> ÷ <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).
+The following entries can be included:
+* <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code>:  Mechanism, InputState, or the name of or specification dictionary for one;
+* <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code>:  Mechanism, InputState, or the name of or specification dictionary for one;
+* <a href="#id3"><span class="problematic" id="id4">:kewyord:`FUNCTION`</span></a>: Function or method;  default is <code class="xref py py-class docutils literal"><span class="pre">LinearCombination</span></code>.</li>
+<li><strong>name</strong> (<em>str : default Comparator-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+If not is specified, a default is assigned by MechanismRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the PreferenceSet for mechanism.
+If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</li>
 </ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-<dt>Initialization arguments:</dt>
-<dd><p class="first">In addition to standard arguments params (see Mechanism), Comparator also implements the following params:
-- variable (2D np.array): [[comparatorSample], [comparatorTarget]]
-- params (dict):</p>
-<blockquote>
-<div><ul>
-<li><dl class="first docutils">
-<dt>COMPARATOR_SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)</dt>
-<dd><p class="first last">specifies inputState to be used for comparator sample</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>COMPARATOR_TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)</dt>
-<dd><p class="first last">specifies inputState to be used for comparator target</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">FUNCTION (Function of method):  (default: LinearCombination)</p>
-</li>
-<li><dl class="first docutils">
-<dt>FUNCTION_PARAMS (dict):</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>COMPARISON_OPERATION (str): (default: SUBTRACTION)</dt>
-<dd><p class="first last">specifies operation used to compare COMPARATOR_SAMPLE with COMPARATOR_TARGET;
-SUBTRACTION:  output = target-sample
-DIVISION:  output = target/sample</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-<p>Notes:
-*  params can be set in the standard way for any Function subclass:</p>
-<blockquote class="last">
-<div><ul>
-<li><dl class="first docutils">
-<dt>params provided in param_defaults at initialization will be assigned as paramInstanceDefaults</dt>
-<dd><p class="first last">and used for paramsCurrent unless and until the latter are changed in a function call</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">paramInstanceDefaults can be later modified using assign_defaults</p>
-</li>
-<li><p class="first">params provided in a function call (to execute or adjust) will be assigned to paramsCurrent</p>
-</li>
-</ul>
-</div></blockquote>
-</dd>
-<dt>MechanismRegistry:</dt>
-<dd><dl class="first last docutils">
-<dt>All instances of Comparator are registered in MechanismRegistry, which maintains an entry for the subclass,</dt>
-<dd>a count for all instances of it, and a dictionary of those instances</dd>
-</dl>
-</dd>
-<dt>Naming:</dt>
-<dd>Instances of Comparator can be named explicitly (using the name=&#8217;&lt;name&gt;&#8217; argument).
-If this argument is omitted, it will be assigned &#8220;Comparator&#8221; with a hyphenated, indexed suffix (&#8216;Comparator-n&#8217;)</dd>
-<dt>Execution:</dt>
-<dd><ul class="first">
-<li><dl class="first docutils">
-<dt>Computes comparison of two inputStates of equal length and generates array of same length,</dt>
-<dd><p class="first last">as well as summary statistics (sum, sum of squares, and variance of comparison array values)</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">self.execute returns self.value</p>
-</li>
-</ul>
-<p>Notes:
-* Comparator handles &#8220;runtime&#8221; parameters (specified in call to execute method) differently than std Components:</p>
-<blockquote class="last">
-<div><p>any specified params are kept separate from paramsCurrent (Which are not overridden)
-if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the</p>
-<blockquote>
-<div>corresponding ParameterState;  that is, they are combined additively with controlSignal output</div></blockquote>
-</div></blockquote>
-</dd>
-<dt>Class attributes:</dt>
-<dd><ul class="first last">
-<li><p class="first">componentType (str): Comparator</p>
-</li>
-<li><p class="first">classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()</p>
-</li>
-<li><p class="first">classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE</p>
-</li>
-<li><p class="first">variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here</p>
-</li>
-<li><dl class="first docutils">
-<dt>paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,</dt>
-<dd><p class="first last">FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">paramNames (dict): names as above</p>
-</li>
-</ul>
-</dd>
-<dt>Class methods:</dt>
-<dd>None</dd>
-<dt>Instance attributes: none</dt>
-<dd><ul class="first last simple">
-<li>variable (value): input to mechanism&#8217;s execute method (default:  Comparator_DEFAULT_STARTING_POINT)</li>
-<li>value (value): output of execute method</li>
-<li>sample (1D np.array): reference to inputState[COMPARATOR_SAMPLE].value</li>
-<li>target (1D np.array): reference to inputState[COMPARATOR_TARGET].value</li>
-<li>comparisonFunction (Function): Function Function used to compare sample and test</li>
-<li>name (str): if it is not specified as an arg, a default based on the class is assigned in register_category</li>
-<li>prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet</li>
-</ul>
-</dd>
-<dt>Instance methods:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>_instantiate_function(context)</dt>
-<dd><p class="first last">deletes params not in use, in order to restrict outputStates to those that are computed for specified params</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>execute(variable, time_scale, params, context)</dt>
-<dd><p class="first last">executes COMPARISON_OPERATION and returns outcome values (in self.value and values of self.outputStates)</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Comparator.Comparator.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Comparator.Comparator.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; the input to <code class="docutils literal"><span class="pre">function</span></code>.  The first item is the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> inputState,
+and is the second <code class="docutils literal"><span class="pre">value</span></code> of the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.sample">
+<code class="descname">sample</code><a class="headerlink" href="#Comparator.Comparator.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; the first item of the <code class="docutils literal"><span class="pre">variable</span></code> and the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> inputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.target">
+<code class="descname">target</code><a class="headerlink" href="#Comparator.Comparator.target" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; the second item of <code class="docutils literal"><span class="pre">variable</span></code>, and the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.function">
+<code class="descname">function</code><a class="headerlink" href="#Comparator.Comparator.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CombinationFunction : default LinearCombination</em> &#8211; the function used to compare <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> with <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.comparison_operation">
+<code class="descname">comparison_operation</code><a class="headerlink" href="#Comparator.Comparator.comparison_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>SUBTRACTION or DIVISION : default SUBTRACTION</em> &#8211; determines the operation used by <code class="docutils literal"><span class="pre">function</span></code> to compare the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> with <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code>.
+* <code class="xref std std-keyword docutils literal"><span class="pre">SUBTRACTION</span></code>: <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> - <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code>;
+* <code class="xref std std-keyword docutils literal"><span class="pre">DIVISION</span></code>: <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> ÷ <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.value">
+<code class="descname">value</code><a class="headerlink" href="#Comparator.Comparator.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[1d np.array, float, float, float, float]</em> &#8211; same as <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.outputValue">
+<code class="descname">outputValue</code><a class="headerlink" href="#Comparator.Comparator.outputValue" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[1d np.array, float, float, float, float]</em> &#8211; a list with the following items:
+* <strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_RESULT</span></code> outputState);
+* <strong>mean</strong> of the result&#8217;s elements (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MEAN</span></code> outputState)
+* <strong>sum</strong> of the result&#8217;s elements (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SUM</span></code> outputState)
+* <strong>sum of squares</strong> of the result&#8217;s elements (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SSE</span></code> outputState)
+* <strong>mean of squares</strong> of the result&#8217;s elements (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MSE</span></code> outputState)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.name">
+<code class="descname">name</code><a class="headerlink" href="#Comparator.Comparator.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default Comparator-&lt;index&gt;</em> &#8211; the name of the mechanism.
+Specified in the name argument of the call to create the projection;
+if not is specified, a default is assigned by MechanismRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Comparator.Comparator.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Comparator.Comparator.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for mechanism.
+Specified in the prefs argument of the call to create the mechanism;
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="Comparator.Comparator.terminate_function">
 <code class="descname">terminate_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Comparator.Comparator.terminate_function" title="Permalink to this definition">¶</a></dt>
@@ -310,6 +300,7 @@ returns output</p>
 <code class="descclassname">Comparator.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#Comparator.random" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</div>
 </div>
 
 

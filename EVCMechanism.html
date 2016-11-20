@@ -102,6 +102,7 @@
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
@@ -300,7 +301,7 @@ parameterStates to which they project in the next execution of the system.</p>
 <p>The following example implements a system with an EVCMechanism (and two processes not shown):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mySystem</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">myRewardProcess</span><span class="p">,</span> <span class="n">myDecisionProcess</span><span class="p">],</span>
                   <span class="n">controller</span><span class="o">=</span><span class="n">EVCMechanism</span><span class="p">,</span>
-                  <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">Reward</span><span class="p">,</span> <span class="n">DECISION_VARIABLE</span><span class="p">,(</span><span class="n">RESPONSE_TIME</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
+                  <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">Reward</span><span class="p">,</span> <span class="n">DDM_DECISION_VARIABLE</span><span class="p">,(</span><span class="n">RESPONSE_TIME</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
 </pre></div>
 </div>
 <p>It uses the system&#8217;s <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument to assign three outputStates to be monitored (belonging
@@ -308,7 +309,7 @@ to mechanisms not show here).  The first one references a mechanism (belonging t
 primary outputState will be used by default).  The second and third uses keywords that are the names of
 outputStates (in this case, for a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> ProcessingMechanism).  The last one (RESPONSE_TIME) is assgined an
 exponent of -1 and weight of 1. As a result, each calculation of the EVC computation will multiply the value of the
-primary outputState of the Reward mechanism by the value of the DECISION_VARIABLE outputState of the DDM mechanism,
+primary outputState of the Reward mechanism by the value of the DDM_DECISION_VARIABLE outputState of the DDM mechanism,
 and then divide that by the value of the RESPONSE_TIME outputState of the DDM mechanism.</p>
 </div>
 <div class="section" id="class-reference">
