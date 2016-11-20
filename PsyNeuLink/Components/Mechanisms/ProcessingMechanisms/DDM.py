@@ -128,7 +128,7 @@ COMMENT
 After each execution of the mechanism:
 
     * the value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of the 1st
-      item of its ``outputValue`` attribute, and as the value of its :keyword:`DECISION_VARIABLE` outputState;
+      item of its ``outputValue`` attribute, and as the value of its :keyword:`DDM_DECISION_VARIABLE` outputState;
     ..
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
       the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is
@@ -202,12 +202,12 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.Functions.Function import *
 
 # DDM outputs (used to create and name outputStates):
-DECISION_VARIABLE = "DecisionVariable"
-RESPONSE_TIME = "RESPONSE_TIME"
-PROBABILITY_UPPER_THRESHOLD = "Probability_upperBound"
-PROBABILITY_LOWER_THRESHOLD = "Probability_lowerBound"
-RT_CORRECT_MEAN = "RT_Correct_Mean"
-RT_CORRECT_VARIANCE = "RT_Correct_Variance"
+DDM_DECISION_VARIABLE = "DDM_decision_variable"
+DDM_RESPONSE_TIME = "DDM_response_time"
+DDM_PROBABILITY_UPPER_THRESHOLD = "DDM_probability_upperBound"
+DDM_PROBABILITY_LOWER_THRESHOLD = "DDM_probability_lowerBound"
+DDM_RT_CORRECT_MEAN = "DDM_RT_Correct_Mean"
+DDM_RT_CORRECT_VARIANCE = "DDM_RT_correct_variance"
 
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
@@ -273,12 +273,12 @@ class DDM(ProcessingMechanism_Base):
                                                                   THRESHOLD:<>
                                                                   NOISE:<>
                                                                   NON_DECISION_TIME:<>},
-                                          OUTPUT_STATES: [DECISION_VARIABLE,
-                                                           RESPONSE_TIME,
-                                                           PROBABILITY_UPPER_THRESHOLD,
-                                                           PROBABILITY_LOWER_THRESHOLD,
-                                                           RT_CORRECT_MEAN,
-                                                           RT_CORRECT_VARIANCE,
+                                          OUTPUT_STATES: [DDM_DECISION_VARIABLE,
+                                                          DDM_RESPONSE_TIME,
+                                                          DDM_PROBABILITY_UPPER_THRESHOLD,
+                                                          DDM_PROBABILITY_LOWER_THRESHOLD,
+                                                          DDM_RT_CORRECT_MEAN,
+                                                          DDM_RT_CORRECT_VARIANCE,
             + paramNames (dict): names as above
 
         Class methods
@@ -345,8 +345,36 @@ class DDM(ProcessingMechanism_Base):
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
-    value : value
-        the output of the execute method.
+    value : List[float]
+        same as ``outputValue``.
+
+    COMMENT:
+        CORRECTED:
+        value : 1d np.array
+            the output of ``function``;  also assigned to ``value`` of the :keyword:`DDM_DECISION_VARIABLE` outputState
+            and the first item of ``outputValue``.
+    COMMENT
+
+    outputValue : List[float]
+        a list with the following items:
+
+        * **decision variable** (value of :keyword:`DDM_DECISION_VARIABLE` outputState);
+
+        * **response time** (``value`` of :keyword:`DDM_RESPONSE_TIME` outputState);
+
+        * **probability of reaching upper threshold** (``value`` of :keyword:`DDM_PROBABILITY_UPPER_THRESHOLD`
+          outputState); if time_scale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
+
+        * **probability of reaching lower threshold** (``value`` of :keyword:`DDM_PROBABILITY_LOWER_THRESHOLD`
+          outputState); if time_scale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
+
+        * **mean of correct response times** (``value`` of :keyword:`DDM_RT_CORRECT_MEAN` outputState);
+          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and time_scale is :keyword:`TimeScale.TRIAL,
+          otherwise it is :keyword:`None`;
+
+        * **variance of correct response times** (``value`` of :keyword:`DDM_RT_CORRECT_VARIANCE` outputState);
+          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and time_scale is :keyword:`TimeScale.TRIAL,
+          otherwise it is :keyword:`None`;
 
     name : str : default DDM-<index>
         the name of the mechanism.
@@ -403,12 +431,12 @@ class DDM(ProcessingMechanism_Base):
         kwTimeScale: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
-        OUTPUT_STATES:[DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
-                        RESPONSE_TIME,
-                        PROBABILITY_UPPER_THRESHOLD, # Probability of hitting upper bound
-                        PROBABILITY_LOWER_THRESHOLD, # Probability of hitting lower bound
-                        RT_CORRECT_MEAN,         # NavarroAnd Fuss only
-                        RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
+        OUTPUT_STATES:[DDM_DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
+                       DDM_RESPONSE_TIME,
+                       DDM_PROBABILITY_UPPER_THRESHOLD, # Probability of hitting upper bound
+                       DDM_PROBABILITY_LOWER_THRESHOLD, # Probability of hitting lower bound
+                       DDM_RT_CORRECT_MEAN,         # NavarroAnd Fuss only
+                       DDM_RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
         # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
     })
 
@@ -482,17 +510,17 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign output mappings:
         self._outputStateValueMapping = {}
-        self._outputStateValueMapping[DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-        self._outputStateValueMapping[RESPONSE_TIME] = DDM_Output.RESPONSE_TIME.value
-        self._outputStateValueMapping[PROBABILITY_UPPER_THRESHOLD] = DDM_Output.P_UPPER_MEAN.value
-        self._outputStateValueMapping[PROBABILITY_LOWER_THRESHOLD] = DDM_Output.P_LOWER_MEAN.value
+        self._outputStateValueMapping[DDM_DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
+        self._outputStateValueMapping[DDM_RESPONSE_TIME] = DDM_Output.RESPONSE_TIME.value
+        self._outputStateValueMapping[DDM_PROBABILITY_UPPER_THRESHOLD] = DDM_Output.P_UPPER_MEAN.value
+        self._outputStateValueMapping[DDM_PROBABILITY_LOWER_THRESHOLD] = DDM_Output.P_LOWER_MEAN.value
 
         # If not using Navarro and Fuss, get rid of extra params:
         if self.function is BogaczEtAl:
             outputStates = self.params[OUTPUT_STATES]
             try:
-                del outputStates[outputStates.index(RT_CORRECT_MEAN)]
-                del outputStates[outputStates.index(RT_CORRECT_VARIANCE)]
+                del outputStates[outputStates.index(DDM_RT_CORRECT_MEAN)]
+                del outputStates[outputStates.index(DDM_RT_CORRECT_VARIANCE)]
                 # del outputStates[outputStates.index(TOTAL_ALLOCATION)]
                 # del outputStates[outputStates.index(TOTAL_COST)]
             except ValueError:
@@ -602,11 +630,7 @@ class DDM(ProcessingMechanism_Base):
             if random() < self.outputValue[DDM_Output.P_LOWER_MEAN.value]:
                 self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
-                # # MODIFIED 10/5/16 OLD:
-                # self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(threshold)
-                # MODIFIED 10/5/16 NEW:
                 self.outputValue[DDM_Output.DECISION_VARIABLE.value] = threshold
-                # MODIFIED 10/5/16 END
 
             return self.outputValue
 

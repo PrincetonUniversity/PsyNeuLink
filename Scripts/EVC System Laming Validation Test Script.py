@@ -50,7 +50,7 @@ RewardProcess = process(
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitor_for_control=[Reward, PROBABILITY_UPPER_THRESHOLD, (RESPONSE_TIME, -1, 1)],
+                  monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')

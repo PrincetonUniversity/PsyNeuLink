@@ -188,14 +188,14 @@ The following example implements a system with an EVCMechanism (and two processe
 
     mySystem = system(processes=[myRewardProcess, myDecisionProcess],
                       controller=EVCMechanism,
-                      monitor_for_control=[Reward, DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
+                      monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
 It uses the system's ``monitor_for_control`` argument to assign three outputStates to be monitored (belonging
 to mechanisms not show here).  The first one references a mechanism (belonging to a mechanism not shown;  its
 primary outputState will be used by default).  The second and third uses keywords that are the names of
 outputStates (in this case, for a :doc:`DDM` ProcessingMechanism).  The last one (RESPONSE_TIME) is assgined an
 exponent of -1 and weight of 1. As a result, each calculation of the EVC computation will multiply the value of the
-primary outputState of the Reward mechanism by the value of the DECISION_VARIABLE outputState of the DDM mechanism,
+primary outputState of the Reward mechanism by the value of the DDM_DECISION_VARIABLE outputState of the DDM mechanism,
 and then divide that by the value of the RESPONSE_TIME outputState of the DDM mechanism.
 
 COMMENT:
