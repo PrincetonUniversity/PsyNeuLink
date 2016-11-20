@@ -82,8 +82,14 @@ class MonitoringMechanism_Base(Mechanism_Base):
     # Instance Methods:
     #     _update_monitored_state_changed_attribute(current_monitored_state)
 
-    """Abstract class for processing mechanism subclasses
-   """
+    """Abstract class for MonitoringMechanism
+
+    .. note::
+       Mechanisms should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
+       by calling the constructor for the desired subclass, or using other methods for specifying a mechanism in
+       context (see [LINK]).
+    """
 
     componentType = "ProcessingMechanism"
 

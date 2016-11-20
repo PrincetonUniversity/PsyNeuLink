@@ -141,6 +141,10 @@ class ControlMechanismError(Exception):
 class ControlMechanism_Base(Mechanism_Base):
     """Abstract class for ControlMechanism subclasses
 
+    .. note::
+       ControlMechanisms should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the constructor for a :doc:`subclass <ControlMechanism>`.
+
     COMMENT:
         Description:
             # DOCUMENTATION NEEDED:
