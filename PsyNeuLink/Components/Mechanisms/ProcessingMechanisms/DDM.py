@@ -26,10 +26,10 @@ Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This cor
 the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
 forced choice (TAFC) decision making ([REF]).
 
-The DDM mechanism implements three versions of the process: two
-analytic solutions (:keyword:`BogaczEtAl` and :keyword:`NavarroAndFuss`) that can be used when ``time_scale`` is
-:keyword:`TRIAL`, and return an expected mean response time and accuracy; and one that is used when
-``time_scale`` is  :keyword:`TIME_STEP` that numerically integrates  the path of the decision variable.
+The DDM mechanism implements three versions of the process: two analytic solutions (:keyword:`BogaczEtAl` and
+:keyword:`NavarroAndFuss`) that can be used when ``time_scale`` is :keyword:`TRIAL`, and return an expected mean
+response time and accuracy; and one that is used when ``time_scale`` is  :keyword:`TIME_STEP` that numerically
+integrates  the path of the decision variable.
 
 .. _DDM_Creating_A_DDM_Mechanism:
 

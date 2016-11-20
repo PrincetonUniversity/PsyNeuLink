@@ -21,13 +21,11 @@ Creating A MonitoringMechanism
 ---------------------------
 
 a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. One or more MonitoringMechanisms are also created automatically whenever a system or a process is created for
-which learning is specified; they are assigned projections from the outputStates of the :keyword:`TERMINAL`
-mechanisms, and LearningSignal projections to the Mapping projections being learned (see
-:ref:`learning in a process <Process_Learning>`, and
-:ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).  Different
-types of MonitoringMechanisms monitor different types of information, and therefore have varying input reqirements.
-See :doc:`subclasses <MonitoringMechanisms>` for the specific requirements of each type.
+type. One or more MonitoringMechanisms are also created automatically when a system or a process is created for
+which learning is specified (see :ref:`learning in a process <Process_Learning>`,
+and :ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
+Different types of MonitoringMechanisms monitor  different types of information, and therefore have varying input
+reqirements. See :doc:`subclasses  <MonitoringMechanisms>` for the specific requirements of each type.
 
 Execution
 ---------
@@ -36,6 +34,11 @@ A MonitoringMechanism always executes after the mechanism it is monitoring.  The
 mechanism being monitored is assigned as an item in the ``variable`` for the MonitoringMechanism's ``function``.
 Other items may be also be assigned (for example, a :doc:`Comparator` takes an additional input against which it
 compares the monitored value).
+
+.. _MonitoringMechanism_Class_Reference:
+
+Class Reference
+---------------
 
 """
 
@@ -47,12 +50,12 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 COMPARATOR = 'Comparator'
 
 # Comparator parameter keywords:
-COMPARATOR_SAMPLE = "ComparatorSample"
-COMPARATOR_TARGET = "ComparatorTarget"
+SAMPLE = "ComparatorSample"
+TARGET = "ComparatorTarget"
 COMPARISON_OPERATION = "comparison_operation"
 
 # Comparator outputs (used to create and name outputStates):
-COMPARISON_ARRAY = 'ComparisonArray'
+COMPARISON_RESULT = 'ComparisonArray'
 COMPARISON_MEAN = 'ComparisonMean'
 COMPARISON_SUM = 'ComparisonSum'
 COMPARISON_SUM_SQUARES = 'ComparisonSumSquares'
@@ -60,7 +63,7 @@ COMPARISON_MSE = 'ComparisonMSE'
 
 # Comparator output indices (used to index output values):
 class ComparatorOutput(AutoNumber):
-    COMPARISON_ARRAY = ()
+    COMPARISON_RESULT = ()
     COMPARISON_MEAN = ()
     COMPARISON_SUM = ()
     COMPARISON_SUM_SQUARES = ()
@@ -73,22 +76,38 @@ class MonitoringMechanismError(Exception):
 
 
 class MonitoringMechanism_Base(Mechanism_Base):
-    # DOCUMENTATION: this is a TYPE and subclasses are SUBTYPES
-    #                primary purpose is to implement TYPE level preferences for all monitoring mechanisms
-    #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
-    #                all subclasses must call update_monitored_state_flag
     # Instance Attributes:
     #     monitoredStateChanged
     # Instance Methods:
     #     _update_monitored_state_changed_attribute(current_monitored_state)
 
-    """Abstract class for MonitoringMechanism
+    """
+    MonitoringMechanism( \
+    variable=None,       \
+    params=None,         \
+    name=None,           \
+    prefs=None,          \
+    context=None):       \
+
+    Abstract class for MonitoringMechanism
 
     .. note::
-       Mechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
-       by calling the constructor for the desired subclass, or using other methods for specifying a mechanism in
-       context (see [LINK]).
+       MonitoringMechanisms should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated using the constructor for a :doc:`subclass <MonitoringMechanism>`.
+
+    COMMENT:
+        Description:
+            This is a TYPE and subclasses are SUBTYPES.
+            The primary purpose is to implement TYPE level preferences for all monitoring mechanisms.
+            All subclasses must call update_monitored_state_flag
+    COMMENT
+
+    Attributes
+    ----------
+
+    monitoredStateChanged : bool
+        identifies whether the outputState being monitored has changed since the last execution.
+
     """
 
     componentType = "ProcessingMechanism"

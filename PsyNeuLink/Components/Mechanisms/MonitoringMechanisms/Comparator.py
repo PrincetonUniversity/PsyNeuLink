@@ -4,10 +4,51 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # *********************************************  Comparator *******************************************************
-#
+
+"""
+Overview
+--------
+
+Comparator mechanisms monitor the outputState of a ProcessingMechanism in a :doc:`System` or :doc:`Process` ,
+and compare this to a target provided as input to the ``run`` method of the system or process when it is executed.
+The comparison can be done using subtraction or division.
+
+.. _Comparator_Creating_A_Comparator:
+
+Creating A Comparator
+---------------------
+
+A Comparator mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
+function and specifying "Comparator" as its ``mech_spec`` argument. The type of comparison is specified in the
+``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.
+One or more Comparators are also created  automatically when a system or a process is created for which
+learning is specified; they are assigned projections from the outputStates of the :keyword:`TERMINAL` mechanisms,
+and LearningSignal projections to the Mapping projections being learned (see :ref:`learning in a process
+<Process_Learning>`, and :ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
+
+.. _Comparator_Execution
+
+Execution
+---------
+
+A Comparator always executes after the mechanism it is monitoring.  The ``value`` of the outputState of the
+mechanism being monitored is assigned as the value of the Comparator's :keyword:`SAMPLE` inputState;  the
+target value received from the system or process when it is run is assigned to the Comparator's :keyword:`TARGET`
+inputState.  When the Comparator is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`,
+then its ``function`` subtracts the :keyword:`SAMPLE` from the :keyword:`TARGET`; if ``comparison_operation`` is
+:keyword:`DIVISION`, the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  The result is assigned to the
+
+
+.. _Comparator_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
 
 import typecheck as tc
 import numpy as np
@@ -45,14 +86,14 @@ class Comparator(MonitoringMechanism_Base):
         In addition to standard arguments params (see Mechanism), Comparator also implements the following params:
         - variable (2D np.array): [[comparatorSample], [comparatorTarget]]
         - params (dict):
-            + COMPARATOR_SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)
+            + SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)
                 specifies inputState to be used for comparator sample
-            + COMPARATOR_TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)
+            + TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)
                 specifies inputState to be used for comparator target
             + FUNCTION (Function of method):  (default: LinearCombination)
             + FUNCTION_PARAMS (dict):
                 + COMPARISON_OPERATION (str): (default: SUBTRACTION)
-                    specifies operation used to compare COMPARATOR_SAMPLE with COMPARATOR_TARGET;
+                    specifies operation used to compare SAMPLE with TARGET;
                     SUBTRACTION:  output = target-sample
                     DIVISION:  output = target/sample
         Notes:
@@ -95,8 +136,8 @@ class Comparator(MonitoringMechanism_Base):
     Instance attributes: none
         + variable (value): input to mechanism's execute method (default:  Comparator_DEFAULT_STARTING_POINT)
         + value (value): output of execute method
-        + sample (1D np.array): reference to inputState[COMPARATOR_SAMPLE].value
-        + target (1D np.array): reference to inputState[COMPARATOR_TARGET].value
+        + sample (1D np.array): reference to inputState[SAMPLE].value
+        + target (1D np.array): reference to inputState[TARGET].value
         + comparisonFunction (Function): Function Function used to compare sample and test
         + name (str): if it is not specified as an arg, a default based on the class is assigned in register_category
         + prefs (PreferenceSet): if not specified as an arg, default set is created by copying Comparator_PreferenceSet
@@ -127,14 +168,14 @@ class Comparator(MonitoringMechanism_Base):
     paramClassDefaults.update({
         kwTimeScale: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
-        INPUT_STATES:[COMPARATOR_SAMPLE,   # Instantiate two inputStates, one for sample and target each
-                       COMPARATOR_TARGET],  #    and name them using keyword names
+        INPUT_STATES:[SAMPLE,   # Instantiate two inputStates, one for sample and target each
+                       TARGET],  #    and name them using keyword names
         PARAMETER_STATES: None,             # This suppresses parameterStates
-        OUTPUT_STATES:[COMPARISON_ARRAY,
-                                 COMPARISON_MEAN,
-                                 COMPARISON_SUM,
-                                 COMPARISON_SUM_SQUARES,
-                                 COMPARISON_MSE]
+        OUTPUT_STATES:[COMPARISON_RESULT,
+                       COMPARISON_MEAN,
+                       COMPARISON_SUM,
+                       COMPARISON_SUM_SQUARES,
+                       COMPARISON_MSE]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -143,7 +184,6 @@ class Comparator(MonitoringMechanism_Base):
     def __init__(self,
                  default_sample_and_target=NotImplemented,
                  comparison_operation:tc.enum(SUBTRACTION, DIVISION)=SUBTRACTION,
-                 comparison_type=VECTOR,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -201,12 +241,12 @@ class Comparator(MonitoringMechanism_Base):
         super()._validate_variable(variable=variable, context=context)
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Get (and validate) [TBI: COMPARATOR_SAMPLE, COMPARATOR_TARGET and/or] FUNCTION if specified
+        """Get (and validate) [TBI: SAMPLE, TARGET and/or] FUNCTION if specified
 
         # TBI:
-        # Validate COMPARATOR_SAMPLE and/or COMPARATOR_TARGET, if specified, are valid references to an inputState
+        # Validate SAMPLE and/or TARGET, if specified, are valid references to an inputState
         #     and, if so, use to replace default (name) specifications in paramClassDefault[INPUT_STATES]
-        # Note: this is because COMPARATOR_SAMPLE and COMPARATOR_TARGET are
+        # Note: this is because SAMPLE and TARGET are
         #       declared but not defined in paramClassDefaults (above)
 
         Validate that FUNCTION, if specified, is a valid reference to a Function Function and, if so,
@@ -220,9 +260,9 @@ class Comparator(MonitoringMechanism_Base):
 
         """
 
-        # Validate COMPARATOR_SAMPLE (will be further parsed and instantiated in _instantiate_input_states())
+        # Validate SAMPLE (will be further parsed and instantiated in _instantiate_input_states())
         try:
-            sample = request_set[COMPARATOR_SAMPLE]
+            sample = request_set[SAMPLE]
         except KeyError:
             pass
         else:
@@ -233,7 +273,7 @@ class Comparator(MonitoringMechanism_Base):
             self.paramClassDefaults[INPUT_STATES][0] = sample
 
         try:
-            target = request_set[COMPARATOR_TARGET]
+            target = request_set[TARGET]
         except KeyError:
             pass
         else:
@@ -256,8 +296,8 @@ class Comparator(MonitoringMechanism_Base):
 
         """
         super()._instantiate_input_states(context=context)
-        self.sample = self.inputStates[COMPARATOR_SAMPLE].value
-        self.target = self.inputStates[COMPARATOR_TARGET].value
+        self.sample = self.inputStates[SAMPLE].value
+        self.target = self.inputStates[TARGET].value
 
     def _instantiate_attributes_before_function(self, context=None):
         """Assign sample and target specs to INPUT_STATES, use COMPARISON_OPERATION to re-assign FUNCTION_PARAMS
@@ -277,7 +317,7 @@ class Comparator(MonitoringMechanism_Base):
         comparison_operation = self.paramsCurrent[COMPARISON_OPERATION]
 
         self.paramsCurrent[FUNCTION_PARAMS] = {}
-        # For WEIGHTS and EXPONENTS: [<coefficient for COMPARATOR_SAMPLE>,<coefficient for COMPARATOR_TARGET>]
+        # For WEIGHTS and EXPONENTS: [<coefficient for SAMPLE>,<coefficient for TARGET>]
         # If the comparison operation is subtraction, set WEIGHTS
         if comparison_operation is SUBTRACTION:
             self.paramsCurrent[FUNCTION_PARAMS][OPERATION] = SUM
@@ -293,7 +333,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # Map indices of output to outputState(s)
         self._outputStateValueMapping = {}
-        self._outputStateValueMapping[COMPARISON_ARRAY] = ComparatorOutput.COMPARISON_ARRAY.value
+        self._outputStateValueMapping[COMPARISON_RESULT] = ComparatorOutput.COMPARISON_RESULT.value
         self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
         self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
         self._outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
@@ -325,7 +365,7 @@ class Comparator(MonitoringMechanism_Base):
         """Compare sample inputState.value with target inputState.value using comparison function
 
         Return:
-            value of item-wise comparison of sample vs. target in outputState[ComparatorOutput.COMPARISON_ARRAY].value
+            value of item-wise comparison of sample vs. target in outputState[ComparatorOutput.COMPARISON_RESULT].value
             mean of item-wise comparisons in outputState[ComparatorOutput.COMPARISON_MEAN].value
             sum of item-wise comparisons in outputState[ComparatorOutput.COMPARISON_SUM].value
             sum of squqres of item-wise comparisions in outputState[ComparatorOutput.COMPARISON_SUM_SQUARES].value
@@ -360,7 +400,7 @@ class Comparator(MonitoringMechanism_Base):
             self.summedErrorSignal = sum
 
             # Assign output values
-            self.outputValue[ComparatorOutput.COMPARISON_ARRAY.value] = comparison_array
+            self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
             self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
             self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
             self.outputValue[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE

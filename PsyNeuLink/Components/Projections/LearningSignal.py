@@ -136,7 +136,7 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator, COMPARATOR_SAMPLE
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator, SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError, NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
@@ -769,7 +769,7 @@ FROM TODO:
                     elif self.function.componentName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
-                                                         receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
+                                                         receiver=monitoring_mechanism.inputStates[SAMPLE],
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +

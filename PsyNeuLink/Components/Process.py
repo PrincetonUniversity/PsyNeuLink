@@ -1763,7 +1763,7 @@ class Process_Base(Process):
         # MODIFIED 9/20/16 END
 
         # Create ProcessInputState for target and assign to comparator's target inputState
-        comparator_target = self.comparator.inputStates[COMPARATOR_TARGET]
+        comparator_target = self.comparator.inputStates[TARGET]
 
         # Check that length of process' target input matches length of comparator's target input
         if len(target) != len(comparator_target.variable):
@@ -1773,7 +1773,7 @@ class Process_Base(Process):
         target_input_state = ProcessInputState(owner=self,
                                                 variable=target,
                                                 prefs=self.prefs,
-                                                name=COMPARATOR_TARGET)
+                                                name=TARGET)
         self.targetInputStates.append(target_input_state)
 
         # Add Mapping projection from target_input_state to MonitoringMechanism's target inputState
