@@ -2,11 +2,11 @@ Control Mechanisms
 ==================
 
 .. toctree::
-	:maxdepth: 2
+   :maxdepth: 2
 
-	DefaultControlMechanism
-	EVCMechanism
+   DefaultControlMechanism
+   EVCMechanism
 
 .. automodule:: ControlMechanism
    :members:
-   :exclude-members: Linear, random, ControlMechanism_Base
+   :exclude-members: Linear, random
