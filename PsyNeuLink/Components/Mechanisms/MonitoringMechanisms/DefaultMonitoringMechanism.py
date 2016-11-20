@@ -127,7 +127,7 @@ class Comparator(MonitoringMechanism_Base):
         OUTPUT_STATES:[COMPARISON_RESULT,
                                  COMPARISON_MEAN,
                                  COMPARISON_SUM,
-                                 COMPARISON_SUM_SQUARES,
+                                 COMPARISON_SSE,
                                  COMPARISON_MSE]
     })
 
@@ -302,7 +302,7 @@ class Comparator(MonitoringMechanism_Base):
         self._outputStateValueMapping[COMPARISON_RESULT] = ComparatorOutput.COMPARISON_RESULT.value
         self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
         self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-        self._outputStateValueMapping[COMPARISON_SUM_SQUARES] = ComparatorOutput.COMPARISON_SUM_SQUARES.value
+        self._outputStateValueMapping[COMPARISON_SSE] = ComparatorOutput.COMPARISON_SSE.value
         self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
 
         super()._instantiate_attributes_before_function(context=context)
@@ -331,7 +331,7 @@ class Comparator(MonitoringMechanism_Base):
             value of item-wise comparison of sample vs. target in outputState[ComparatorOutput.COMPARISON_RESULT].value
             mean of item-wise comparisons in outputState[ComparatorOutput.COMPARISON_MEAN].value
             sum of item-wise comparisons in outputState[ComparatorOutput.COMPARISON_SUM].value
-            sum of squqres of item-wise comparisions in outputState[ComparatorOutput.COMPARISON_SUM_SQUARES].value
+            sum of squqres of item-wise comparisions in outputState[ComparatorOutput.COMPARISON_SSE].value
         """
 
         # #region ASSIGN SAMPLE AND TARGET ARRAYS
@@ -370,7 +370,7 @@ class Comparator(MonitoringMechanism_Base):
             self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
             self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
             self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
-            self.outputValue[ComparatorOutput.COMPARISON_SUM_SQUARES.value] = SSE
+            self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
             self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
 
             return self.outputValue

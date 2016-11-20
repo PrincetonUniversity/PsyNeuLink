@@ -50,15 +50,15 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 COMPARATOR = 'Comparator'
 
 # Comparator parameter keywords:
-SAMPLE = "ComparatorSample"
-TARGET = "ComparatorTarget"
+SAMPLE = "comparatorSampleSource"
+TARGET = "comparatorTargetSource"
 COMPARISON_OPERATION = "comparison_operation"
 
 # Comparator outputs (used to create and name outputStates):
 COMPARISON_RESULT = 'ComparisonArray'
 COMPARISON_MEAN = 'ComparisonMean'
 COMPARISON_SUM = 'ComparisonSum'
-COMPARISON_SUM_SQUARES = 'ComparisonSumSquares'
+COMPARISON_SSE = 'ComparisonSumSquares'
 COMPARISON_MSE = 'ComparisonMSE'
 
 # Comparator output indices (used to index output values):
@@ -66,7 +66,7 @@ class ComparatorOutput(AutoNumber):
     COMPARISON_RESULT = ()
     COMPARISON_MEAN = ()
     COMPARISON_SUM = ()
-    COMPARISON_SUM_SQUARES = ()
+    COMPARISON_SSE = ()
     COMPARISON_MSE = ()
 
 

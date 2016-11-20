@@ -229,8 +229,25 @@ class Transfer(ProcessingMechanism_Base):
     function : Function :  default Linear
         the function used to transform the input.
 
-    value : List[value]
-        the output of function.
+    COMMENT:
+       THE FOLLOWING IS THE CURRENT ASSIGNMENT
+    COMMENT
+
+    value : List[1d np.array, float, float]
+        same as ``outputValue``.
+
+    COMMENT:
+        CORRECTED:
+        value : 1d np.array
+            the output of ``function``;  also assigned to ``value`` of the :keyword:`TRANSFER_RESULT` outputState
+            and the first item of ``outputValue``.
+    COMMENT
+
+    outputValue : List[1d np.array, float, float]
+        a list with the following items:
+        * **result** of the ``function`` calculation (value of :keyword:`TRANSFER_RESULT` outputState);
+        * **mean** of the result (``value`` of :keyword:`TRANSFER_MEAN` outputState)
+        * **variance** of the result (``value`` of :keyword:`TRANSFER_VARIANCE` outputState)
 
     name : str : default Transfer-<index>
         the name of the mechanism.

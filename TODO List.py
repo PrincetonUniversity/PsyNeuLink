@@ -1,219 +1,11 @@
 # NEW COMMENT
 # **************************************************  ToDo *************************************************************
-#
-#region PY QUESTIONS: --------------------------------------------------------------------------------------------------
-
-# QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop: np.empty
-#endregion
-# -------------------------------------------------------------------------------------------------
-
-#region PYCHARM QUESTIONS: ---------------------------------------------------------------------------------------------
-
-# QUESTION:  how to identify method in which breakpoint has occurred (or where execution has paused/stopped)
-# QUESTION:  how to share breakpoints across installations?
-# QUESTION:  how to set default for expanded vs. collapsed Favorites window/pane
-
-#endregion
-# -------------------------------------------------------------------------------------------------
-
-#region DEPENDENCIES: -----------------------------------------------------------------------------------------------
-#
-# toposort.py
-# wfpt.py
-# mpi4py.py
-#
-#region BRYN: -------------------------------------------------------------------------------------------------------
-
-# Documentation (from code -> HTML/MD -> website
-# Jupyter and matplotlib
-
-# - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
-#             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
-#                 target = [target]
-#             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
-#             if all(isinstance(i, numbers.Number) for i in target):
-#                 target = [target]
-# - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
-# - QUESTION:
-#   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
-#   and then overriding them later??
-
-# - ABC
-# - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
-# - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
-# - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
-#            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
-# - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
-
-
-# It’s helpful if methods that mutate object state have names that suggest they will do so.
-#      For example, it was confusing to me that _validate_variable assigns self.variable and self.variableClassDefault
-#      (at least it does in Mechanism, I’m not sure about other subclasses).  I was expecting it simply to validate,
-#      as in do nothing if the variable was OK, and throw an exception if it wasn’t.
-#      It may sound kooky, but even a clunky name like “validate_and_set_variable” would be better,
-#      or better still would be to make validate really just validate,
-#      and have another method like “assign_variable” or something.
-# In general, every assignment statement changes the behavior of the program in ways that are non-local,
-#      and thus hard to understand and debug. So you want as few of them as you can possibly get away with,
-#      and you want them clearly identified.
-# NotImplemented is used a lot for missing arguments. Usually people use None for that.
-#     This also allows for a nice idiom. Given a parameter foo = None, you can do defaulting like this:
-#     myval = foo or “some default value”
-#     So you get myval = foo if foo is truthy (not None, [], (), 0, 0.0, “”, or False), and your default value otherwise
-# I don’t think you have to worry quite so much about people implementing classes wrongly or subversively.
-#     This is Python - if they want to do bad things, you’ll be hard pressed to stop them.
-#     All you can do is guide them in the right direction.
-# In Function there’s a test to make sure there’s a registry - this probably ought to be handled by having
-#     a base class “Category” or something, that ensures there is one in its __init__, and just insisting that
-#     every category class extends that “Category” class. We can talk more about this.
-# Normally when implementing __init__, it’s a good idea for base classes to call super().__init__ first,
-#     before doing anything else. In some languages, e.g. C++ and Java, it’s actually required to be the first thing.
-#     There were some comments in Function.__init__ that made me think you’re expecting people to do some setup before
-#     calling super().__init__.
-# Automated type checking (like typecheck-decorator) would reduce code size noticeably.
-# PEP8
-#     Rename packages lowercase, Components -> functions
-#     Mechanism_Base -> MechanismBase
-#     Method names, e.g. verbosePref -> verbose_pref in ComponentPreferenceSet
-#     Aim for methods that fit on a single screen, e.g. Function.__init__ is about 150 lines,
-#         but you want something like 50 lines for a method for it to be comprehensible.
-#     Along the same lines, too many #regions, and too much SHOUTING. Breaks up the reader’s flow.
-#     Single line comments in normal case are fine.
-#     No need for #regions around 1-2 lines of code, especially if your region name almost exactly matches
-#         the name of the method you’re calling in the region (e.g. Function, around the end of __init__)
-#     For each #region more than 2-3 lines long, consider whether it would be better to extract that code to
-#         a small helper method or function.
-# Commenting style:
-#     Want comments on each method, not one block at the class level that lists all the methods.
-#     Documentation generators like sphinx will generate those class summaries from component parts,
-#         no need to synthesize them yourself
-#     Guiding principle: docs as physically close to the code as possible, so less likely to get out of sync.
-#     No point in listing things like “:param level: and :return:” if they’re not actually going to be documented,
-#         it’s just taking up space.
-#     Lots of code commented out. Just delete it, git will get it back for you if you decide you need it again.
-#     Use doc strings to document class members, not comments
-#         (e.g. Function.py line ~207 doc for variableClassDefault_Locked)
-
-#endregion
-
-#region PNL JAMBOREE
-#
-# DEVELOPMENT:
-# TimeStep time scale (DDM & Transfer Mechanisms)
-# Implement single centralized registry
-# Learning execution sequence
-# Cyclic system
-# API / extensibility
-#
-# ACTION ITEMS:
-#
-# Flatten params (and add kwArgs handling) to Functions
-# - function -> function
-# - functionParams -> args and/or params dict inside Function specification
-# - if functionParams are now all handled inside specification of a Function for function param:
-#      - need to make sure all parses of function can now handle this
-#      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
-# - add @property for all params, so they can be addressed directly as attributes
-#      setter method should call assign_defaults
-#
-
-#endregion
-
-#region DEVELOPMENT
-
-# time_step DDM integration
-# learning working in a system
-# system.graph -> NetworkX
-
-#endregion
-
-#region EVC MEETING: ---------------------------------------------------------------------------------------------------
-
-# -------------------
-
-# QUESTION: DDM:
-#            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
-#            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
-#            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
-#            IS t0 MS OR SECONDS?
-
-# QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
-#           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
-
-# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
-#      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
-
-# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
-# IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
-# IMPLEMENT [DONE!]:  BP
-#                     random weight matrix
-#                     can specify which outputstate to use for learning (see DDM Learning Test Script)
-#                        (example: learning drift rate input for given threshold:  nonmonotonic!)
-#                     fixed process factory method (can now call process instead of Process_Base)
-#                     flattened DDM arg structure (see DDM Test Script)
-#                         QUESTION: should defaults be numbers or values??
-
-# QUESTION: When executing a mechanism, and updating its projections (to get their input),
-#               should update only those from mechanisms that belong to the process currently being executed?
-#               or should all projections be updated (irrespective of source) when executing a mechanism?
-#           This issue includes Process inputs, as well as target inputs
-#           Inclined to only restrict Process and target inputs
-#           (since those are process-specific) but not other projections
-#
-# QUESTION: RL:
-#           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
-#               - how to provide reward for outcome of first trial, if it is selected probabilistically
-#               - must process trial, get reward from environment, then execute learning
-#               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
-#               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
-#               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
-#               - system should be take functions that specify values to use as inputs based on outputs
-#                   as per SOLUTION to Option 1 using lambda functions
-
-# QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
-#                                                                  or signify (e.g., class = template)
-#
-# QUESTION: ??OPTION (reshapedWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
-#
-# QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
-#           Process:
-#               - it manages the instantiation of LearningSignals
-#               - part of the definition of a Process: output is where supervised training signals are provided
-#               - may want to build a model that can learn and only has a Process
-#           System:
-#               - need to manage execution of learning in systems anyhow (same as for mechanisms)
-#               - learning that needs to straddle Processes
-#                   (e.g., error-signals that need to be passed from the first layer of one Process
-#                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
-#
-# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
-#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
-#             specifies number of units (length of input array)
-#
-# NEED FOR EVC MODEL:
-# - Sequential adjust effects:
-#   "Reactive":  simple controlMechanism that maps input values into ControlSignal intensities
-#   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
-#   "Feature-based model learning" (Falk & Tom)
-#   "Exhaustive Search + learning":
-#       searches through all ControlSignals to find the optimal one
-#       stimulus prediction
-#       reward prediction
-#       automatic component of the drift for each stimulus (== weight matrix)
-#    *  d(parameter_value)/d(control signal intensity) for each control signal ==
-#                                                          differential of the parameterModulationFunction
-#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function
-#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
-#              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
-#       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
-#                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
-#        SEBASTIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
-#    *  Parameters of parameterModulation function should be accessible
-
-#endregion
-
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+
+# 11/19/16:
+# FIX:  RECONICLE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
+#       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
+#       MAKE IT SO THAT value = output of function, and outputValue is what is returned by __execute__
 
 # 11/18/16:
 
@@ -896,6 +688,220 @@
 # QUESTION: WHAT DOES SETTING ControlSignal.set_intensity() DO NOW??
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE
 #                              (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+#endregion
+
+
+#
+#region PY QUESTIONS: --------------------------------------------------------------------------------------------------
+
+# QUESTION:  how to initialize a numpy array with a null value, and then assign in for loop: np.empty
+#endregion
+# -------------------------------------------------------------------------------------------------
+
+#region PYCHARM QUESTIONS: ---------------------------------------------------------------------------------------------
+
+# QUESTION:  how to identify method in which breakpoint has occurred (or where execution has paused/stopped)
+# QUESTION:  how to share breakpoints across installations?
+# QUESTION:  how to set default for expanded vs. collapsed Favorites window/pane
+
+#endregion
+# -------------------------------------------------------------------------------------------------
+
+#region DEPENDENCIES: -----------------------------------------------------------------------------------------------
+#
+# toposort.py
+# wfpt.py
+# mpi4py.py
+#
+#region BRYN: -------------------------------------------------------------------------------------------------------
+
+# Documentation (from code -> HTML/MD -> website
+# Jupyter and matplotlib
+
+# - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
+#             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
+#                 target = [target]
+#             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
+#             if all(isinstance(i, numbers.Number) for i in target):
+#                 target = [target]
+# - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
+# - QUESTION:
+#   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
+#   and then overriding them later??
+
+# - ABC
+# - params dict vs. args vs. **kwargs:  FIX: LOOK AT BRYN'S CHANGES TO isCompatible
+# - FIX: LOOK AT HIS IMPLEMENTATION OF SETTER FOR @ClassProperty
+# - QUESTION: CAN ERRORS IN TypeVar CHECKING BE CAPTURED AND CUSTOMIZED?
+#            (TO PROVIDE MORE INFO THAN JUST THE ERROR AND WHERE IT OCCURRED (E.G., OTHER OBJECTS INVOLVED)
+# - Revert all files to prior commit in PyCharm (VCS/Git/Revert command?)
+
+
+# It’s helpful if methods that mutate object state have names that suggest they will do so.
+#      For example, it was confusing to me that _validate_variable assigns self.variable and self.variableClassDefault
+#      (at least it does in Mechanism, I’m not sure about other subclasses).  I was expecting it simply to validate,
+#      as in do nothing if the variable was OK, and throw an exception if it wasn’t.
+#      It may sound kooky, but even a clunky name like “validate_and_set_variable” would be better,
+#      or better still would be to make validate really just validate,
+#      and have another method like “assign_variable” or something.
+# In general, every assignment statement changes the behavior of the program in ways that are non-local,
+#      and thus hard to understand and debug. So you want as few of them as you can possibly get away with,
+#      and you want them clearly identified.
+# NotImplemented is used a lot for missing arguments. Usually people use None for that.
+#     This also allows for a nice idiom. Given a parameter foo = None, you can do defaulting like this:
+#     myval = foo or “some default value”
+#     So you get myval = foo if foo is truthy (not None, [], (), 0, 0.0, “”, or False), and your default value otherwise
+# I don’t think you have to worry quite so much about people implementing classes wrongly or subversively.
+#     This is Python - if they want to do bad things, you’ll be hard pressed to stop them.
+#     All you can do is guide them in the right direction.
+# In Function there’s a test to make sure there’s a registry - this probably ought to be handled by having
+#     a base class “Category” or something, that ensures there is one in its __init__, and just insisting that
+#     every category class extends that “Category” class. We can talk more about this.
+# Normally when implementing __init__, it’s a good idea for base classes to call super().__init__ first,
+#     before doing anything else. In some languages, e.g. C++ and Java, it’s actually required to be the first thing.
+#     There were some comments in Function.__init__ that made me think you’re expecting people to do some setup before
+#     calling super().__init__.
+# Automated type checking (like typecheck-decorator) would reduce code size noticeably.
+# PEP8
+#     Rename packages lowercase, Components -> functions
+#     Mechanism_Base -> MechanismBase
+#     Method names, e.g. verbosePref -> verbose_pref in ComponentPreferenceSet
+#     Aim for methods that fit on a single screen, e.g. Function.__init__ is about 150 lines,
+#         but you want something like 50 lines for a method for it to be comprehensible.
+#     Along the same lines, too many #regions, and too much SHOUTING. Breaks up the reader’s flow.
+#     Single line comments in normal case are fine.
+#     No need for #regions around 1-2 lines of code, especially if your region name almost exactly matches
+#         the name of the method you’re calling in the region (e.g. Function, around the end of __init__)
+#     For each #region more than 2-3 lines long, consider whether it would be better to extract that code to
+#         a small helper method or function.
+# Commenting style:
+#     Want comments on each method, not one block at the class level that lists all the methods.
+#     Documentation generators like sphinx will generate those class summaries from component parts,
+#         no need to synthesize them yourself
+#     Guiding principle: docs as physically close to the code as possible, so less likely to get out of sync.
+#     No point in listing things like “:param level: and :return:” if they’re not actually going to be documented,
+#         it’s just taking up space.
+#     Lots of code commented out. Just delete it, git will get it back for you if you decide you need it again.
+#     Use doc strings to document class members, not comments
+#         (e.g. Function.py line ~207 doc for variableClassDefault_Locked)
+
+#endregion
+
+#region PNL JAMBOREE
+#
+# DEVELOPMENT:
+# TimeStep time scale (DDM & Transfer Mechanisms)
+# Implement single centralized registry
+# Learning execution sequence
+# Cyclic system
+# API / extensibility
+#
+# ACTION ITEMS:
+#
+# Flatten params (and add kwArgs handling) to Functions
+# - function -> function
+# - functionParams -> args and/or params dict inside Function specification
+# - if functionParams are now all handled inside specification of a Function for function param:
+#      - need to make sure all parses of function can now handle this
+#      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
+# - add @property for all params, so they can be addressed directly as attributes
+#      setter method should call assign_defaults
+#
+
+#endregion
+
+#region DEVELOPMENT
+
+# time_step DDM integration
+# learning working in a system
+# system.graph -> NetworkX
+
+#endregion
+
+#region EVC MEETING: ---------------------------------------------------------------------------------------------------
+
+# -------------------
+
+# QUESTION: DDM:
+#            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
+#            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
+#            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
+#            IS t0 MS OR SECONDS?
+
+# QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
+#           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
+
+# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
+#      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
+
+# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
+# IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
+# IMPLEMENT [DONE!]:  BP
+#                     random weight matrix
+#                     can specify which outputstate to use for learning (see DDM Learning Test Script)
+#                        (example: learning drift rate input for given threshold:  nonmonotonic!)
+#                     fixed process factory method (can now call process instead of Process_Base)
+#                     flattened DDM arg structure (see DDM Test Script)
+#                         QUESTION: should defaults be numbers or values??
+
+# QUESTION: When executing a mechanism, and updating its projections (to get their input),
+#               should update only those from mechanisms that belong to the process currently being executed?
+#               or should all projections be updated (irrespective of source) when executing a mechanism?
+#           This issue includes Process inputs, as well as target inputs
+#           Inclined to only restrict Process and target inputs
+#           (since those are process-specific) but not other projections
+#
+# QUESTION: RL:
+#           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
+#               - how to provide reward for outcome of first trial, if it is selected probabilistically
+#               - must process trial, get reward from environment, then execute learning
+#               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
+#           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
+#               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
+#               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
+#               - system should be take functions that specify values to use as inputs based on outputs
+#                   as per SOLUTION to Option 1 using lambda functions
+
+# QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
+#                                                                  or signify (e.g., class = template)
+#
+# QUESTION: ??OPTION (reshapedWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
+#
+# QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
+#           Process:
+#               - it manages the instantiation of LearningSignals
+#               - part of the definition of a Process: output is where supervised training signals are provided
+#               - may want to build a model that can learn and only has a Process
+#           System:
+#               - need to manage execution of learning in systems anyhow (same as for mechanisms)
+#               - learning that needs to straddle Processes
+#                   (e.g., error-signals that need to be passed from the first layer of one Process
+#                    to the last layer of a preceding Process) - but then make them one Process (per definition above)?
+#
+# FIX: HOW IS THIS DIFFERENT THAN LENGTH OF self.variable
+#         + kwTransfer_NUnits (float): (default: Transfer_DEFAULT_NUNITS
+#             specifies number of units (length of input array)
+#
+# NEED FOR EVC MODEL:
+# - Sequential adjust effects:
+#   "Reactive":  simple controlMechanism that maps input values into ControlSignal intensities
+#   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
+#   "Feature-based model learning" (Falk & Tom)
+#   "Exhaustive Search + learning":
+#       searches through all ControlSignals to find the optimal one
+#       stimulus prediction
+#       reward prediction
+#       automatic component of the drift for each stimulus (== weight matrix)
+#    *  d(parameter_value)/d(control signal intensity) for each control signal ==
+#                                                          differential of the parameterModulationFunction
+#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function
+#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
+#              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
+#       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
+#                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
+#        SEBASTIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
+#    *  Parameters of parameterModulation function should be accessible
+
 #endregion
 
 #region GENERAL: -------------------------------------------------------------------------------------------------------
