@@ -12,15 +12,16 @@
 Overview
 --------
 
-WeightedError mechanisms monitor the outputState of a ProcessingMechanism that projects to another mechanism in a
-:doc:`Process`, and computes the contribution of each element of its output to the error of the elements of the
-mechanism to which it projects.  It's ``function`` returns an error array that can be used by a :doc:`LearningSignal`
-to adjust the Mapping projection it receives so as to reduce its future contribution to the error.
+A WeightedError mechanism monitors the outputState of it's ``errorSource``: a ProcessingMechanism that projects to
+another mechanism in a :doc:`Process`.  It computes the contribution of each element of the output of the
+``errorSource`` to the error in the output of the mechanism to which the ``errorSource`` projects (the ``errorSignal``).
+The WeightedError ``function``returns an error array that can be used by a :doc:`LearningSignal` to adjust a Mapping
+projection the ``errorSource``, so as to reduce its future contribution to the errorSignal.
 
 .. _WeightedError_Creating_A_WeightedError:
 
-Creating A WeightedError
----------------------
+Creating A WeightedError Mechanism
+----------------------------------
 
 A WeightedError mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying "WeightedError" as its ``mech_spec`` argument.  It can also be created by :ref:`in context
@@ -38,14 +39,14 @@ Structure
 ---------
 
 A WeightedError mechanism has a single inputState, a :keyword:`NEXT_LEVEL_PROJECTION` parameter, and a single
-(:keyword:`WEIGHTED_ERROR`) outputState.  The inputState receives a Mapping projection from the Processing mechanism
-for which the WeightedError mechanism computes the error — the *error source*.  The value of the
-:keyword:`NEXT_LEVEL_PROJECTION` parameter is a Mapping projection from the error source's primary outputState to the
-next mechanism in the process.  Each row of it's ``matrix`` parameter corresponds to an element of the error source's
-``value``, each column an element of the ``value`` of the mechanism to which the error source projects, and each element
-of the matrix the weight of the association between the two.  The outputState of a WeightedError mechanism is
-typically assigned a :doc:`LearningSignal` projection that is used to modify the ``matrix`` parameter of the Mapping
-projection that projects to the error source (as shown in :ref:`this figure <Process_Learning_Figure>`)
+(:keyword:`WEIGHTED_ERROR`) outputState.  The **inputState** receives a Mapping projection from its ``errorSource`` --
+the Processing mechanism for which it computes the error.  :keyword:`NEXT_LEVEL_PROJECTION` is assigned to the Mapping
+projection from the primary outputState of the ``errorSource`` to the next mechanism in the process.  Each row of it's
+``matrix`` parameter corresponds to an element of the ``value`` of the ``errorSource``, each column corresponds to an
+element of the ``value`` of the mechanism to which it projects, and each element of the matrix is the weight of the
+association between the two.  The **outputState** of a WeightedError mechanism is typically assigned a
+:doc:`LearningSignal` projection that is used to modify the ``matrix`` parameter of a Mapping projection to the
+``errorSource`` (as shown in :ref:`this figure <Process_Learning_Figure>`).
 
 .. _WeightedError_Execution
 
@@ -53,18 +54,21 @@ Execution
 ---------
 
 A WeightedError mechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
-contribution of each element of its error source's ``value`` to the ``error_signal``:  the error associated with each
-element of the ``value`` of the mechanism to which the error_source projects, scaled both by the weight of its
-association to that element  specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
+contribution of each element of the ``value`` of the ``errorSource`` to the ``error_signal``:  the error associated
+with each element of the ``value`` of the mechanism to which the error_source projects, scaled both by the weight of
+its association to that element  specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
 ``function`` for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
 "backpropagation") learning algorithm (REFS AND [LINK]). The ``function`` returns an array with the weighted errors
-for each element of the error source, which is placed in its ``value`` and  ``outputValue`` attributes,
+for each element of the ``errorSource``, which is placed in its ``value`` and  ``outputValue`` attributes,
 and the value of of its (:keyword:`WEIGHTED_ERROR) outputState.
 
 .. _WeightedError_Class_Reference:
 
 Class Reference
 ---------------
+
+xxxxxxxxx IMPLEMENT errorSource ATTRIBUTE
+
 """
 
 
