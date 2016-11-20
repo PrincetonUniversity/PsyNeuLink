@@ -60,10 +60,10 @@ the range.  After each execution of the mechanism:
     * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`TRANSFER_RESULT`
       outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
-    * **mean** of the result is assigned to the value of the mechanism's :keyword:`RESULT_MEAN` outputState,
+    * **mean** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_MEAN` outputState,
       and to the 2nd item of the mechanism's ``outputValue`` attribute;
     ..
-    * **variance** of the result is assigned to the value of the mechanism's :keyword:`RESULT_VARIANCE` outputState,
+    * **variance** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_VARIANCE` outputState,
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
 
@@ -92,15 +92,15 @@ RANGE = "range"
 INITIAL_VALUE = 'initial_value'
 
 # Transfer outputs (used to create and name outputStates):
-TRANSFER_RESULT = "result"
+TRANSFER_RESULT = "transfer_result"
 TRANSFER_MEAN = "transfer_mean "
 TRANSFER_VARIANCE = "transfer_variance"
 
 # Transfer output indices (used to index output values):
 class Transfer_Output(AutoNumber):
     RESULT = ()
-    RESULT_MEAN = ()
-    RESULT_VARIANCE = ()
+    MEAN = ()
+    VARIANCE = ()
 
 # Transfer default parameter values:
 Transfer_DEFAULT_LENGTH= 1
@@ -377,8 +377,8 @@ class Transfer(ProcessingMechanism_Base):
         # Map indices of output to outputState(s)
         self._outputStateValueMapping = {}
         self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
-        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.RESULT_MEAN.value
-        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.RESULT_VARIANCE.value
+        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
+        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -395,8 +395,8 @@ class Transfer(ProcessingMechanism_Base):
             - Variance of the activation values across units
         Return:
             value of input transformed by transfer function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.RESULT_MEAN].value
-            variance of items in RESULT outputState[TransferOuput.RESULT_VARIANCE].value
+            mean of items in RESULT outputState[TransferOuput.MEAN].value
+            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
 
         Arguments:
 
@@ -471,8 +471,8 @@ class Transfer(ProcessingMechanism_Base):
         variance = np.var(output_vector)
 
         self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        self.outputValue[Transfer_Output.RESULT_MEAN.value] = mean
-        self.outputValue[Transfer_Output.RESULT_VARIANCE.value] = variance
+        self.outputValue[Transfer_Output.MEAN.value] = mean
+        self.outputValue[Transfer_Output.VARIANCE.value] = variance
 
         return self.outputValue
         #endregion
