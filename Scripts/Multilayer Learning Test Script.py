@@ -111,7 +111,7 @@ def show_target():
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 
-z.execute()
+# z.execute()
 
 z.run(num_executions=10,
       # inputs=stim_list,

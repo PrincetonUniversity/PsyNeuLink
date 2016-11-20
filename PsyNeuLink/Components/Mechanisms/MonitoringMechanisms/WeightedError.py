@@ -55,7 +55,7 @@ Execution
 
 A WeightedError mechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
 contribution of each element of the ``value`` of the ``errorSource`` to the ``error_signal``:  the error associated
-with each element of the ``value`` of the mechanism to which the error_source projects, scaled both by the weight of
+with each element of the ``value`` of the mechanism to which the ``errorSource`` projects, scaled both by the weight of
 its association to that element  specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
 ``function`` for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
 "backpropagation") learning algorithm (REFS AND [LINK]). The ``function`` returns an array with the weighted errors
