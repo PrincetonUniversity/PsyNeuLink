@@ -23,11 +23,13 @@ Creating A Comparator
 
 A Comparator mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying "Comparator" as its ``mech_spec`` argument. The type of comparison is specified in the
-``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.
-One or more Comparators are also created  automatically when a system or a process is created for which
-learning is specified; they are assigned projections from the outputStates of the :keyword:`TERMINAL` mechanisms,
-and LearningSignal projections to the Mapping projections being learned (see :ref:`learning in a process
-<Process_Learning>`, and :ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
+``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.  It can also be
+created by :ref:`in context specification of a LearningSignal <Projection_Creating_A_Projection>` for a projection
+to the  :keyword:`TERMINAL` mechanism of a system or  process.  One or more Comparators are also created
+automatically when a system or a process is created for which learning is specified; each is assigned a projection
+from the outputState of a :keyword:`TERMINAL` mechanism that receives a Mapping projection being learned,
+and a LearningSignal projection to that Mapping projection  (see :ref:`learning in a process <Process_Learning>`, and
+:ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creation> for details).
 
 .. _Comparator_Execution
 
@@ -91,7 +93,7 @@ class Comparator(MonitoringMechanism_Base):
     name=None,                        \
     prefs=None)
 
-    Implements Comparator subclass of Mechanism
+    Implements Comparator subclass of MonitoringMechanism
 
     COMMENT:
 
@@ -148,7 +150,7 @@ class Comparator(MonitoringMechanism_Base):
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
-    name : str : default Transfer-<index>
+    name : str : default Comparator-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -198,7 +200,7 @@ class Comparator(MonitoringMechanism_Base):
         * **sum of squares** of the result's elements (``value`` of :keyword:`COMPARISON_SSE` outputState)
         * **mean of squares** of the result's elements (``value`` of :keyword:`COMPARISON_MSE` outputState)
 
-    name : str : default Transfer-<index>
+    name : str : default Comparator-<index>
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
@@ -209,11 +211,6 @@ class Comparator(MonitoringMechanism_Base):
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
-
-
-
-
-
 
     """
 

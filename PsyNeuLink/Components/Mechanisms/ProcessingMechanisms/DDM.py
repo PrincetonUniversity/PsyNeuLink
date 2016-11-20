@@ -265,7 +265,7 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + variableClassDefault (value):  DDM_Defaults.starting_point
+            + variableClassDefault (value):  STARTING_POINT
             + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
@@ -294,7 +294,7 @@ class DDM(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK]
+    default_input_value : value, list or np.ndarray : keyword:`FUNCTION_PARAMS`[keyword:`STARTING_POINT`] [LINK]
         the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
         of the mechanism (see :ref:`Input` <DDM_Creating_A_DDM_Mechanism>` for how an input with a length of greater
@@ -315,7 +315,7 @@ class DDM(ProcessingMechanism_Base):
         This must be set to :keyword:`TimeScale.TRIAL` to use one of the analytic solutions specified by ``function``.
         This must be set to :keyword:`TimeScale.TIME_STEP` to numerically integrate the decision variable.
 
-    name : str : default Transfer-<index>
+    name : str : default DDM-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -332,7 +332,7 @@ class DDM(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    variable : value : default  DDM_Defaults.starting_point
+    variable : value : default  keyword:`FUNCTION_PARAMS`[keyword:`STARTING_POINT`]
         the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
 
     function :  IntegratorFunction : default BogaczEtAl
@@ -446,7 +446,7 @@ class DDM(ProcessingMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
@@ -459,9 +459,6 @@ class DDM(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  # context=None):
                  context=componentType+INITIALIZING):
-        """Assign type-level preferences, default input value (DDM_Defaults.starting_point) and call super.__init__
-
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
@@ -469,7 +466,7 @@ class DDM(ProcessingMechanism_Base):
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
-        if default_input_value is NotImplemented:
+        if default_input_value is None:
             default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
 
         super(DDM, self).__init__(variable=default_input_value,
@@ -504,8 +501,6 @@ class DDM(ProcessingMechanism_Base):
     # def _instantiate_function(self, context=NotImplemented):
     def _instantiate_attributes_before_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_method
-        :param context:
-        :return:
         """
 
         # Assign output mappings:
@@ -521,15 +516,11 @@ class DDM(ProcessingMechanism_Base):
             try:
                 del outputStates[outputStates.index(DDM_RT_CORRECT_MEAN)]
                 del outputStates[outputStates.index(DDM_RT_CORRECT_VARIANCE)]
-                # del outputStates[outputStates.index(TOTAL_ALLOCATION)]
-                # del outputStates[outputStates.index(TOTAL_COST)]
             except ValueError:
                 pass
         else:
-            self._outputStateValueMapping[RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-            self._outputStateValueMapping[RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
-            # self._outputStateValueMapping[TOTAL_ALLOCATION] = DDM_Output.TOTAL_ALLOCATION.value
-            # self._outputStateValueMapping[TOTAL_COST] = DDM_Output.TOTAL_COST.value
+            self._outputStateValueMapping[DDM_RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
+            self._outputStateValueMapping[DDM_RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
 
         super()._instantiate_attributes_before_function(context=context)
 
