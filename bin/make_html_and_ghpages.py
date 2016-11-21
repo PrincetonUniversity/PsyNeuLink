@@ -68,7 +68,8 @@ def run_command(command, printonly=False, exitOnError=True):
 
 
 def get_remote_url():
-    url = run_command(['git', 'remote', 'get-url', 'origin'])
+    #url = run_command(['git', 'remote', 'get-url', 'origin']) # too new for now (added Q4 2015 to git 2.7)
+    url = run_command(['git', 'ls-remote', '--get-url', 'origin'])
     return url
 
 
@@ -192,7 +193,6 @@ def main(argv):
     # make html
     print("generating the HTML via sphinx-build...")
     cmdline.main(['sphinx-build', '-b', 'html', '-aE', args.source, args.html])
-    run_command(['rm', '-rf', '.doctrees'])
     # commit all changes to current branch + push changes
     print("adding and committing all changes to the docs")
     run_command(['git', 'add', '-A'])
