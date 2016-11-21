@@ -41,36 +41,60 @@ of a DDM function (first example below), or a call to the function with argument
 
     my_DDM = DDM(function=BogaczEtAl)
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
+    COMMENT:
     my_DDM = DDM(default_input_value=[0, 0, 0]
                  function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
+    COMMENT
 
 .. _DDM_Input:
 
-**Input**.  The ``default_input_value`` argument specifies the number of decision processes implemented by a DDM
-mechanism, and the format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
+**Input**.  The ``default_input_value`` argument specifies the default value to use as the stimulus component of the
+:ref:`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
+
+COMMENT:
+[TBI - MULTIPROCESS DDM - REPLACE ABOVE]
+**Input**.  The ``default_input_value`` argument specifies the default value to use as the stimulus component of the
+:ref:`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
+and the corresponding format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
 single scalar value or an an array (list or 1d np.array). If it is a single value (as in the first two examples above),
-a single DDM process is implemented, and the input is used as the stimulus component of the :ref:`drift rate
-<DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above), multiple parallel DDM
-processes are implemented all of which use the same parameters but each of which receives its own input (from the
-corresponding element of the input array) and is executed independently of the others.
+a single DDM process is implemented, and the input is used as the stimulus component of the
+:ref:`drift rate <DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above),
+multiple parallel DDM processes are implemented all of which use the same parameters but each of which receives its
+own input (from the corresponding element of the input array) and is executed independently of the others.
+COMMENT
 
 .. _DDM_Structure:
 
 Structure
 ---------
 
+The DDM mechanism implements a general form of the decision process.  A DDM mechanism has a single **inputState** the
+``value`` of which is used is assigned to the ``input`` specified by its ``execute`` or ``run`` methods, and that is
+used as the stimulus component of the :ref:`drift rate <DDM_Drift_Rate>` for the decision process.  The decision
+process can be configured to execute in different modes.  The ``function`` and ``time_scale`` parameters are the
+primary determinants of how the decision process is executed, and what information is returned. The ``function``
+parameter specifies the analytical solution to use when ``time_scale`` is  set to :keyword:`TimeScale.TRIAL` (see
+:ref:`Functions <DDM_Functions>` below); when ``time_scale`` set to :keyword:`TimeScale.TIME_STEP`, executing the
+DDM mechanism numerically integrates the path of the decision variable (see :ref:`Execution <DDM_Execution>` below).
+The number of **outputStates** is determined by the ``function`` in use (see :ref:`list of output values <DDM_Results>`
+below).
+
+COMMENT:
+[TBI - MULTIPROCESS DDM - REPLACE ABOVE]
 The DDM mechanism implements a general form of the decision process.  A DDM mechanism assigns one **inputState** to
 each item in the ``default_input_value`` argument, corresponding to each of the decision processes implemented
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
-``function`` and ``time_scale`` parameters are the primary determinants of how the decision process is executed,
-and what information is returned. The ``function`` parameter specifies the analytical solution to use when ``time_scale``
+``function`` and ``time_scale`` parameters are the primary determinants of how the decision process is executed, and
+what information is returned. The ``function`` parameter specifies the analytical solution to use when ``time_scale``
 is  set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below); when ``time_scale`` set to
 :keyword:`TimeScale.TIME_STEP`, executing the DDM mechanism numerically integrates the path of the decision variable
 (see :ref:`Execution <DDM_Execution>` below).  The number of **outputStates** is determined by the ``function`` in use
 (see :ref:`list of output values <DDM_Results>` below).
+COMMENT
+
 
 COMMENT:
-[TBI]
+[TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
 If only a single decision process was run, then the value of each outputState is the corresponding output of
 the decision process.  If there is more than one decision process (i.e., the input has more than one item), then
@@ -149,6 +173,12 @@ Execution
 ---------
 
 When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
+or by step-wise integration (in :keyword:`TIME_STEP` mode).
+
+
+COMMENT:
+[TBI - MULTIPROCESS DDM - REPLACE ABOVE]
+When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
 or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single value,
 it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
 with each element of the input used for the corresponding process.  All use the same set of parameters,
@@ -157,6 +187,7 @@ this mode that use different parameters, a separate DDM mechanism should explici
 :keyword:`TIME_STEP` mode, the noise term will resolve to different values in each time step, so the integration
 paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
 single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
+COMMENT
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its ``execute`` or ``run`` methods) differently than
@@ -526,6 +557,17 @@ class DDM(ProcessingMechanism_Base):
                                   # context=context,
                                   context=self)
 
+    # MODIFIED 11/21/16 NEW:
+    def _validate_variable(self, variable, context=None):
+        """Insures that input to DDM is a single value.
+        Remove when MULTIPROCESS DDM is implemented.
+        """
+        if not isinstance(variable, numbers.Number) and len(variable) > 1:
+            raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
+        super()._validate_variable(variable=variable, context=context)
+    # MODIFIED 11/21/16 END
+
+
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -642,7 +684,13 @@ class DDM(ProcessingMechanism_Base):
             # print ("control signal: {}\n".format(self.parameterStates[DRIFT_RATE].value))
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
+            # MODIFIED 11/21/16 OLD:
             drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
+            # # MODIFIED 11/21/16 NEW:
+            # drift_rate = (self.inputState.value * self.parameterStates[DRIFT_RATE].value)
+            # drift_rate.astype(float)
+            # MODIFIED 11/21/16 END
+
             starting_point = float(self.parameterStates[STARTING_POINT].value)
             threshold = float(self.parameterStates[THRESHOLD].value)
             noise = float(self.parameterStates[NOISE].value)
