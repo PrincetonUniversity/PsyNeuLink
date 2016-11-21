@@ -59,4 +59,4 @@ __pycache__
 *.iml
 *.DS_Store
 
-.doctrees
+.doctrees/
