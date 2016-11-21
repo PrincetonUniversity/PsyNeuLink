@@ -1206,6 +1206,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     - each row of the mapping corresponds to an element of the sender vector (outer index)
     - each column of the mapping corresponds to an element of the receiver vector (inner index):
 
+    COMMENT:
+    XXXX CONVERT TO FIGURE:
     ----------------------------------------------------------------------------------------------------------
     MATRIX FORMAT
                                      INDICES:
@@ -1227,6 +1229,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                            [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
 
     ----------------------------------------------------------------------------------------------------------
+    COMMENT
 
     Initialization arguments:
     - variable (2D np.ndarray containing exactly two sub-arrays:  sender and receiver vectors

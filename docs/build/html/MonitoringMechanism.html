@@ -161,14 +161,7 @@
 <h1>Monitoring Mechanisms<a class="headerlink" href="#monitoring-mechanisms" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Comparator.html">Comparator</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Comparator.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Comparator.html#creating-a-comparator">Creating A Comparator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Comparator.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Comparator.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Comparator.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Comparator.html">Comparator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="WeightedError.html">Weighted Error</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="WeightedError.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="WeightedError.html#creating-a-weightederror-mechanism">Creating A WeightedError Mechanism</a></li>
@@ -189,7 +182,7 @@ for learning[LINK]) or some other value (e.g., conflict).</p>
 <span id="monitoringmechanism-creating-a-monitoringmechanism"></span><h2>Creating A MonitoringMechanism<a class="headerlink" href="#creating-a-monitoringmechanism" title="Permalink to this headline">¶</a></h2>
 <p>a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
 type. One or more MonitoringMechanisms are also created automatically when a process or system is created for
-which learning is specified (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>,
+which learning is specified (see <span class="xref std std-ref">learning in a process</span>,
 and <span class="xref std std-ref">automatic creation of LearningSignals</span> for the specific requirements of each type.</p>
 </div>
 <div class="section" id="execution">
@@ -201,6 +194,12 @@ compares the monitored value).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="monitoringmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="MonitoringMechanism.ComparatorOutput">
+<em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">ComparatorOutput</code><a class="headerlink" href="#MonitoringMechanism.ComparatorOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="MonitoringMechanism.MonitoringMechanism_Base">
 <em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
