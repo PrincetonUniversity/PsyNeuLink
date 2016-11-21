@@ -660,6 +660,10 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
+        if variable is None or np.isnan(variable):
+            # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
+            variable = self.variableInstanceDefault
+
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.TIME_STEP:
             raise MechanismError("TIME_STEP mode not yet implemented for DDM")
@@ -685,10 +689,11 @@ class DDM(ProcessingMechanism_Base):
 
             # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
             # MODIFIED 11/21/16 OLD:
-            drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
+            # drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
             # # MODIFIED 11/21/16 NEW:
             # drift_rate = (self.inputState.value * self.parameterStates[DRIFT_RATE].value)
             # drift_rate.astype(float)
+            drift_rate = float((self.variable * self.parameterStates[DRIFT_RATE].value))
             # MODIFIED 11/21/16 END
 
             starting_point = float(self.parameterStates[STARTING_POINT].value)
