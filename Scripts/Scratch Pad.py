@@ -31,12 +31,15 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # # my_learning_signal = LearningSignal(receiver=my_mapping_projection)
 # my_learning_signal._deferred_init(context="TEST")
 
-my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
+my_DDM = DDM(
+             # default_input_value=[0,0],
+             function=BogaczEtAl(drift_rate=2.0,
                                  threshold=20.0),
              params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
                                       THRESHOLD:30.0}}
              )
-my_DDM.execute(time_scale=TimeScale.TIME_STEP)
+my_DDM.execute()
+# my_DDM.execute(time_scale=TimeScale.TIME_STEP)
 
 TEST = True
 
