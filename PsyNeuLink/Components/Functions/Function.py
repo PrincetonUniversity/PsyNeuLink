@@ -1858,7 +1858,8 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             try:
                 rt = ztilde * tanh(ztilde * atilde) + \
                      ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + t0
-                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+                er = 1/(1+exp(2*ztilde*atilde)) - \
+                                             ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
 
             except (Warning):
                 # Per Mike Shvartsman:

@@ -7,6 +7,9 @@
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
+
+# TEST:  How does DDM currently handle len(default_input_value) > 1?
+# IMPLEMENT: DDM: if len(default_input_value) > 1, each item of outputValue and outputState.value is 1d array
 #
 # DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
 #                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
@@ -2304,11 +2307,18 @@
 
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
-# - FIX: CLEAN UP PROBABILITY_UPPER_THRESHOLD ETC.
-# - Fix: combine paramsCurrent with executeParameterState.values, or use them instead??
-# - Fix:  move kwDDM_AnalyticSolution back to FUNCTION_PARAMS and adjust validation to allow non-numeric value
-# - implement: add options to multiply or fully override parameterState.values
-# - implement time_step and terminate()
+# FIX: CLEAN UP PROBABILITY_UPPER_THRESHOLD ETC.
+# FIX: combine paramsCurrent with executeParameterState.values, or use them instead??
+# FIX:  move kwDDM_AnalyticSolution back to FUNCTION_PARAMS and adjust validation to allow non-numeric value
+# IMPLEMENT: add options to multiply or fully override parameterState.values
+# IMPLEMENT: time_step and terminate()
+# IMPLEMENT: "MULTIPROCESS DDM" (search for this for places to implement/document)
+# IMPLEMENT: "MULTIPROCESS DDM" (search for this for places to implement/document)
+# IMPLEMENT: ``average_output_states`` ARGUMENT / OPTION AFTER IMPLEMENTING MULTIPROCESS DDM
+# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
+# IMPLEMENT: customizable noise distribution for TIME_STEP mode??
+# IMPLEMENT: interrogation protocol:  ER (mass of distribution to left and right of decision variable)
+# IMPLEMENT: compute variance of path in time_step mode and report in RT_CORRECT_VARIANCE?? (but not just correct?)
 # -  Clean up control signal params, modulation function, etc.
 #        1) value field is initialized with self.value
 #        2) value points to mechanism.outputState.value
@@ -2316,10 +2326,6 @@
 #        4) duration field is updated at each time step or given -1
 #    Make sure paramCurrent[<kwDDMparam>] IS BEING PROPERLY UPDATED (IN PROCESS?  OR MECHANISM?) BEFORE BEING USED
 #                            (WHAT TOOK THE PLACE OF get_control_modulated_param_values)
-# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
-# IMPLEMENT: customizable noise distribution for TIME_STEP mode??
-# IMPLEMENT: interrogation protocol:  ER (mass of distribution to left and right of decision variable)
-# IMPLEMENT: compute variance of path in time_step mode and report in RT_CORRECT_VARIANCE?? (but not just correct?)
 #
 #endregion
 
