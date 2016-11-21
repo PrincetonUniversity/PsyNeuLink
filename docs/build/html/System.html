@@ -109,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 
             
@@ -277,14 +278,14 @@ When a mechanism is executed, it receives input from any other mechanisms that p
 <span id="system-execution-input-and-initialization"></span><h3>Input and Initialization<a class="headerlink" href="#input-and-initialization" title="Permalink to this headline">¶</a></h3>
 <p>The input to a system is specified in the <code class="docutils literal"><span class="pre">inputs</span></code> argument of either its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> method.  In both
 cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate input for the
-corresponding <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism (listed in system.originMechanisms.mechanisms). If the <a href="#id1"><span class="problematic" id="id2">``</span></a>execute` method
-is used, input for only a single trial is provided, and only a single trial is executed.  The run method can be used
+corresponding <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism (listed in <code class="docutils literal"><span class="pre">originMechanisms</span></code>). If the <code class="docutils literal"><span class="pre">execute</span></code> method
+is used, input for only a single trial is provided, and only a single trial is executed.  The <code class="docutils literal"><span class="pre">run</span></code> method can be used
 for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs, one for each
 round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
 execution, as input to mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>),
-and target values are assigned to the target attribute of monitoring mechanisms (see learning below;  also, see
-Run [LINK] for additional details of formatting input specifications).</p>
+and target values are assigned to the target attribute of <span class="xref doc">Monitoringmechanisms</span> (see learning below;  also, see
+<a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for additional details of formatting input specifications).</p>
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>

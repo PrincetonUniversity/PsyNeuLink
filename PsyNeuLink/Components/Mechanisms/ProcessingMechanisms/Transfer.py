@@ -42,6 +42,14 @@ include arguments specifying the function's parameters (second example)::
 
 In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
 
+
+COMMENT:
+.. _Transfer_Structure:
+
+Structure
+---------
+COMMENT
+
 .. _Transfer_Execution:
 
 Execution
@@ -146,7 +154,7 @@ class Transfer(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Transfer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL}
+            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
             + paramNames (dict): names as above
 
         Class methods
@@ -277,7 +285,7 @@ class Transfer(ProcessingMechanism_Base):
     # Transfer parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # kwTimeScale: TimeScale.TRIAL,
+        # TIME_SCALE: TimeScale.TRIAL,
         INPUT_STATES: None,
         OUTPUT_STATES:[TRANSFER_RESULT,
                        TRANSFER_MEAN,

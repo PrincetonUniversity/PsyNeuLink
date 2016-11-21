@@ -51,7 +51,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
         + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
-        + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
+        + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                       FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                  kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                  kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
@@ -83,7 +83,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwTimeScale: TimeScale.TRIAL,
+        TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[kwPredictionMechanismOutput]
     })
 

@@ -15,20 +15,29 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Com
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
 # linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
 # linear_transfer_process = process(pathway = [linear_transfer_mechanism])
 # print(linear_transfer_process.execute())
 # print ('Done')
 
-my_mech1 = Transfer(function=Logistic)
-my_mech2 = Transfer(function=Logistic)
-my_monitor = Comparator()
-my_learning_signal = LearningSignal()
-my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
-# my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
-# my_learning_signal = LearningSignal(receiver=my_mapping_projection)
-my_learning_signal._deferred_init(context="TEST")
+# my_mech1 = Transfer(function=Logistic)
+# my_mech2 = Transfer(function=Logistic)
+# my_monitor = Comparator()
+# my_learning_signal = LearningSignal()
+# my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
+# # my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
+# # my_learning_signal = LearningSignal(receiver=my_mapping_projection)
+# my_learning_signal._deferred_init(context="TEST")
+
+my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
+                                 threshold=20.0),
+             params = {DRIFT_RATE:3.0,
+                       THRESHOLD:30.0}
+             )
+my_DDM.execute(time_scale=TimeScale.TIME_STEP)
+
 TEST = True
 
 #endregion

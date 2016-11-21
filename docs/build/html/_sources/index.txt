@@ -137,7 +137,7 @@ Contributors
       State
       Projection
       Functions
-
+      Run
 
 .. toctree::
    :hidden:
@@ -148,6 +148,7 @@ Contributors
    State
    Projection
    Function
+   Run
 
 
 Indices and tables

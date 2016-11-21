@@ -82,7 +82,7 @@ class Comparator(MonitoringMechanism_Base):
         + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-        + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
+        + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                       FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
         + paramNames (dict): names as above
 
@@ -119,7 +119,7 @@ class Comparator(MonitoringMechanism_Base):
     # Comparator parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwTimeScale: TimeScale.TRIAL,
+        TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         FUNCTION_PARAMS:{COMPARISON_OPERATION: DIFFERENCE},
         INPUT_STATES:[SAMPLE,   # Automatically instantiate local InputStates

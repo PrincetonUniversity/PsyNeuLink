@@ -65,7 +65,7 @@ modifies).  If the ``errorSource`` projects to a MonitoringMechanism, then that 
 ``sender``.  If the ``errorSource`` does not projection to a MonitoringMechanism, then one is created for it,
 and a Mapping projection is created that projects to it from the ``errorSource``.  The type of MonitoringMechanism
 created depends on where the ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism,
-or the :keyword:`TERMINAL` mechanism of a system or process, then a :doc:`Comparator` mechanism is created (which
+or the :keyword:`TERMINAL` mechanism of a process or system, then a :doc:`Comparator` mechanism is created (which
 compares the output of the ``errorSource`` with a target to generate the ``errorSignal``).  If the ``errorSource``
 projects to any other mechanisms, then a ``WeightedError`` mechanism is created (which, in calculating the
 ``errorSignal``, takes account of the effect that the ``errorSource`` has on the output of the ProcessingMechanism(s)
@@ -104,16 +104,16 @@ that generated the error);  failure to match the ``function`` of the LearningSig
 ProcessingMechanism that is its ``errorSource`` will generate an error.
 
 **Target(s)**.  This specifies the value with which the output of an ``errorSource`` is compared, to calculate the
-``errorSignal``.  It is required by the :doc:`run <Run>` method of a system or process when learning is specified.
+``errorSignal``.  It is required by the :doc:`run <Run>` method of a process or sysetm when learning is specified.
 provides to the :keyword:`TARGET` inputState of a :doc:`Comparator` mechanism.
 
 **Monitoring Mechanism**.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
 ``sender``).  The type of MonitoringMechanism, and how it computes its errorSignal, depends on the ``errorSource``.
-If it is a :keyword:`TERMINAL` mechanism of a system or process, the MonitoringMechanism is a :doc:`Comparator`
+If it is a :keyword:`TERMINAL` mechanism of a process or system, the MonitoringMechanism is a :doc:`Comparator`
 mechanism,  that compares the output of the ``errorSource`` (which projects to the Comparator's :keyword:`SAMPLE`
 inputState) with a target value that is provided as input to the process or system when it is :ref:`run
 <Run_Targets>` (and projects to the Comparator's :keyword:`TARGET` inputState). If the ``errorSource`` is not the
-final mechanism of a system or process, then the MonitoringMechanism is a :doc:`WeightedError` mechanism,
+final mechanism of a process or system, then the MonitoringMechanism is a :doc:`WeightedError` mechanism,
 which uses the output of the ProcessingMechanism(s) to which the errorSource projects to calculate the ``errorSignal``.
 
 .. _LearningSignal_Execution:
@@ -121,7 +121,7 @@ which uses the output of the ProcessingMechanism(s) to which the errorSource pro
 Execution
 ---------
 
-LearningSignals are executed after all of the mechanisms in a system or process have executed, including the
+LearningSignals are executed after all of the mechanisms in a process or system have executed, including the
 MonitoringMechanisms that provide the ``errorSignal`` to each LearningSignal.  When the LearningSignal is executed,
 it uses its ``errorSignal`` to calculate changes to the ``matrix`` of its ``mappingProjection``. Changes to the
 ``matrix`` are  calculated so as to reduce the ``errorSignal``. The changes are assigned as the ``value`` of the

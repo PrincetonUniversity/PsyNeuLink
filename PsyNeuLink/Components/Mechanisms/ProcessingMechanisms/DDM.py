@@ -4,8 +4,8 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # ***************************************************  DDM *************************************************************
 #
 """
@@ -24,12 +24,8 @@ Overview
 The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).
-
-The DDM mechanism implements three versions of the process: two analytic solutions (:keyword:`BogaczEtAl` and
-:keyword:`NavarroAndFuss`) that can be used when ``time_scale`` is :keyword:`TRIAL`, and return an expected mean
-response time and accuracy; and one that is used when ``time_scale`` is  :keyword:`TIME_STEP` that numerically
-integrates  the path of the decision variable.
+forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (in
+:keyword:`TRIAL` mode), or integrated numerically (in :keyword:`TIME_STEP` mode).
 
 .. _DDM_Creating_A_DDM_Mechanism:
 
@@ -54,24 +50,49 @@ of the drift rate for the process (see below[LINK]).  If the input is an array, 
 are implemented all of which use the same parameters but each of which receives its own input
 (from the corresponding element of the input array) and is executed independently of the others.
 
+.. _DDM_Structure:
+
+Structure
+---------
+
+The DDM mechanism implements a general form of the decision process, that can be configure to run in various
+modes.  The two primary parameters that determine how the decision process is executed, and what information is
+returned, are the ``function`` and ``time_scale`` parameters.  The ``function`` parameter specifies the analytical
+solution to use when ``time_scale`` is set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below).
+When ``time_scale`` set to :keyword:`TimeScale.TIME_STEP`, executing the DDM mechanism numerically integrates the
+path of the decision variable.  The :ref:`analytic solutions <DDM_Functions>` are discussed below, followed by a
+description of :ref:`how it is executed <DDM_Execution>` in :keyword:`TRIAL` and :keyword:`TIME_STEP` modes and the
+:ref:`values reported <DDM_Results>`.
+
+.. _DDM_Functions:
+
+DDM Functions
+~~~~~~~~~~~~~
+
+The ``function`` parameter can be used to select one of two analytic solutions (:any:`BogaczEtAl` and
+:any:`NavarroAndFuss`) that are used when ``time_scale`` is set to :keyword:`TimeScale.TRIAL`.  These
+both return an expected mean response time and accuracy, while :keyword:`NavarroAndFuss` also returns an expected
+mean correct response time and accuracy.
 
 DDM Parameters
---------------
+~~~~~~~~~~~~~~
 
-The parameters of the DDM process can be specified as arguments for the functions used in :keyword:`TRIAL`
-mode or in the ``params`` dict argument  for the mechanism when it is created, using the keywords in the list below,
-as in the following example::
+All modes of executing the DDM use the same parameters for the decision process.  These can be specified as arguments
+for the functions used in :keyword:`TRIAL` mode or in the ``params`` dict argument for the mechanism when it is
+created, using the keywords in the list below, as in the following example::
 
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1,
                  params={DRIFT_RATE:(0.2, ControlSignal),
                          STARTING_POINT:-0.5),
                  time_scale=TimeScale.TIME_STEP}
 
-.. note:: Parameters specified in the ``params`` argument (as in the example above) will be used for both
+.. note::  Parameters specified in the ``params`` argument (as in the example above) will be used for both
    :keyword:`TRIAL` and :keyword:`TIME_STEP` mode, since any parameters specified in the  ``params`` argument when
    creating a mechanism override any corresponding ones specified as arguments to its ``function``).[LINK]
    In the example above, this means that even if the ``time_scale`` parameter is set to :keyword:`TimeScale.TRIAL``,
-   the ``drift_rate`` of 0.2 will be used (rather than 0.1).
+   the ``drift_rate`` of 0.2 will be used (rather than 0.1).  However, for parameters NOT specified as entries in
+   the params dictionary, the value specified for those in the function  will be used in both :keyword:`TRIAL` and
+   :keyword:`TIME_STEP` mode;  otherwise, default values will be used.
 
 The parameters for the DDM are:
 
@@ -124,6 +145,8 @@ COMMENT:
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
 COMMENT
+
+.. _DDM_Results:
 
 After each execution of the mechanism:
 
@@ -266,7 +289,7 @@ class DDM(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + variableClassDefault (value):  STARTING_POINT
-            + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL,
+            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
                                                                   STARTING_POINT:<>
@@ -336,7 +359,7 @@ class DDM(ProcessingMechanism_Base):
         the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
 
     function :  IntegratorFunction : default BogaczEtAl
-        the function used to compute the outcome of the decision process when ``time_scale`` is
+        the function used to compute the outcome of the decision process when ``timeScale`` is
         :keyword:`TimeScale.TRIAL`.  If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, ``function``
         is automatically assigned to :class`Integrator`, and used to compute the decision process by
         stepwise integration of the decision variable (one step per ``CentralClock.time_step``).
@@ -363,18 +386,21 @@ class DDM(ProcessingMechanism_Base):
         * **response time** (``value`` of :keyword:`DDM_RESPONSE_TIME` outputState);
 
         * **probability of reaching upper threshold** (``value`` of :keyword:`DDM_PROBABILITY_UPPER_THRESHOLD`
-          outputState); if time_scale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
+          outputState); if timeScale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
 
         * **probability of reaching lower threshold** (``value`` of :keyword:`DDM_PROBABILITY_LOWER_THRESHOLD`
-          outputState); if time_scale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
+          outputState); if timeScale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
 
         * **mean of correct response times** (``value`` of :keyword:`DDM_RT_CORRECT_MEAN` outputState);
-          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and time_scale is :keyword:`TimeScale.TRIAL,
+          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and timeScale is :keyword:`TimeScale.TRIAL,
           otherwise it is :keyword:`None`;
 
         * **variance of correct response times** (``value`` of :keyword:`DDM_RT_CORRECT_VARIANCE` outputState);
-          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and time_scale is :keyword:`TimeScale.TRIAL,
+          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and timeScale is :keyword:`TimeScale.TRIAL,
           otherwise it is :keyword:`None`;
+
+    timeScale : TimeScale : default TimeScale.TRIAL
+        determines the TimeScale at which the decision process is executed.
 
     name : str : default DDM-<index>
         the name of the mechanism.
@@ -428,7 +454,8 @@ class DDM(ProcessingMechanism_Base):
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        kwTimeScale: TimeScale.TRIAL,
+        TIME_SCALE: TimeScale.TRIAL,
+
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
         OUTPUT_STATES:[DDM_DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
@@ -572,6 +599,7 @@ class DDM(ProcessingMechanism_Base):
         if time_scale == TimeScale.TIME_STEP:
             raise MechanismError("TIME_STEP mode not yet implemented for DDM")
             # IMPLEMENTATION NOTES:
+            # Get params
             # Implement with calls to a step_function, that does not reset self.outputValue
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Assign "self.decision_variable"
