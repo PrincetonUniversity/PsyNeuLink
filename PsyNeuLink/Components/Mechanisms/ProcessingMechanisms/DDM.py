@@ -691,8 +691,6 @@ class DDM(ProcessingMechanism_Base):
             # MODIFIED 11/21/16 OLD:
             # drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
             # # MODIFIED 11/21/16 NEW:
-            # drift_rate = (self.inputState.value * self.parameterStates[DRIFT_RATE].value)
-            # drift_rate.astype(float)
             drift_rate = float((self.variable * self.parameterStates[DRIFT_RATE].value))
             # MODIFIED 11/21/16 END
 
