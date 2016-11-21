@@ -39,41 +39,47 @@ of a DDM function (first example below), or a call to the function with argument
 (see :ref:`DDM_Execution` below for a description of DDM function parameters) and, optionally, a :doc:`ControlSignal`
 (second example)::
 
-** ADD INPUT TO EXAMPLE
-
     my_DDM = DDM(function=BogaczEtAl)
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
+    my_DDM = DDM(default_input_value=[0, 0, 0]
+                 function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
 
-**Input**.  The input to a DDM mechanism can be a single scalar value or an an array (list or 1d np.array).
-If it is a single value, a single DDM process is implemented, and the input is used as the stimulus component
-of the drift rate for the process (see below[LINK]).  If the input is an array, multiple parallel DDM processes
-are implemented all of which use the same parameters but each of which receives its own input
-(from the corresponding element of the input array) and is executed independently of the others.
+.. _DDM_Input:
+
+**Input**.  The ``default_input_value`` argument specifies the number of decision processes implemented by a DDM
+mechanism, and the format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
+single scalar value or an an array (list or 1d np.array). If it is a single value (as in the first two examples above),
+a single DDM process is implemented, and the input is used as the stimulus component of the :ref:`drift rate
+<DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above), multiple parallel DDM
+processes are implemented all of which use the same parameters but each of which receives its own input (from the
+corresponding element of the input array) and is executed independently of the others.
 
 .. _DDM_Structure:
 
 Structure
 ---------
 
-xxxxxx DESCRIBE BELOW
-        INPUT STATES (INCLUDING PARALLEL PROCESSES -- GET FROM EXECUTION)
-        OUTPUT STATES
+The DDM mechanism implements a general form of the decision process.  A DDM mechanism assigns one **inputState** to
+each item in the ``default_input_value`` argument, corresponding to each of the decision processes implemented
+(see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
+``function`` and ``time_scale`` parameters are the primary determinants of how the decision process is executed,
+and what information is returned. The ``function`` parameter specifies the analytical solution to use when ``time_scale``
+is  set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below); when ``time_scale`` set to
+:keyword:`TimeScale.TIME_STEP`, executing the DDM mechanism numerically integrates the path of the decision variable
+(see :ref:`Execution <DDM_Execution>` below).  The number of **outputStates** is determined by the ``function`` in use
+(see :ref:`list of output values <DDM_Results>` below).
 
-The DDM mechanism implements a general form of the decision process, that can be configured to run in different
-modes.  The ``function`` and ``time_scale`` parameters are the primary determinants of how the decision process is
-executed, and what information is returned.  The ``function`` parameter specifies the analytical solution to use when
-``time_scale`` is set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below).
-When ``time_scale`` set to :keyword:`TimeScale.TIME_STEP`, executing the DDM mechanism numerically integrates the
-path of the decision variable.  The :ref:`analytic solutions <DDM_Functions>` are discussed below, followed by a
-description of :ref:`how the decision process is executed <DDM_Execution>` in :keyword:`TRIAL` and :keyword:`TIME_STEP`
-modes and the :ref:`results reported <DDM_Results>`.
-
-XXX
-The DDM mechanism assigns one inputState to each item in
-As noted above, if the input is a single value,
-it computes a single DDM process.  If the input is an array, then multiple parallel DDM processes are executed,
-with each element of the input used for the corresponding process (all use the same set of parameters; to implement
-processes that use their own parameters, a separate DDM mechanism should explicitly be created for each).
+COMMENT:
+[TBI]
+OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
+If only a single decision process was run, then the value of each outputState is the corresponding output of
+the decision process.  If there is more than one decision process (i.e., the input has more than one item), then
+the content of the outputStates is determined by the ``average_output_states`` argument.  If it is :keyword:`True`,
+then each outputState (and item of ``outputValue``) contains a single value, which is the average of the output
+values of that type over all of the processes run.  If ``average_output_states`` is :keyword:`False` (the default),
+then the value of each ouputState is a 1d array, each element of which is the outcome of that type for the
+corresponding decision process.
+COMMENT
 
 .. _DDM_Functions:
 
@@ -84,6 +90,8 @@ The ``function`` parameter can be used to select one of two analytic solutions (
 :any:`NavarroAndFuss`) that are used when ``time_scale`` is set to :keyword:`TimeScale.TRIAL`.  These
 both return an expected mean response time and accuracy, while :keyword:`NavarroAndFuss` also returns an expected
 mean correct response time and accuracy.
+
+.. _DDM_Parameters:
 
 DDM Parameters
 ~~~~~~~~~~~~~~
@@ -106,6 +114,8 @@ using the keywords in the list below, as in the following example::
    :keyword:`TIME_STEP` mode.
 
 The parameters for the DDM are:
+
+.. _DDM_Drift_Rate:
 
 * :keyword:`DRIFT_RATE` (default 0.0)
   - multiplies the input to the mechanism before assigning it to the ``variable`` on each call of ``function``.
@@ -142,11 +152,11 @@ When a DDM mechanism is executed it computes the decision process, either analyt
 or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single value,
 it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
 with each element of the input used for the corresponding process.  All use the same set of parameters,
-so the analytic solutions (ussed in :keyword:`TRIAL` mode) will be the same; to implement processes in this mode that
-use different parameters, a separate DDM mechanism should explicitly be created for each. In :keyword:`TIME_STEP` mode,
-the noise term will resolve to different values in each time step, so the integration paths and outcomes will vary.
-This can be used to generate distributions of the process for a single set of parameters that are not subject to the
-analytic solution (e.g., for time-varying drift rates).
+so the analytic solutions (used in :keyword:`TRIAL` mode) for a given input will be the same; to implement processes in
+this mode that use different parameters, a separate DDM mechanism should explicitly be created for each. In
+:keyword:`TIME_STEP` mode, the noise term will resolve to different values in each time step, so the integration
+paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
+single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its ``execute`` or ``run`` methods) differently than
@@ -211,17 +221,16 @@ After each execution of the mechanism:
           corresponds to the current likelihood that the lower threshold would have been reached.
       COMMENT:
     ..
+    The following assignments are made only assigned if the :keyword:`NavarroAndFuss`` function is used,
+    and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise, neither the ``outputValue`` nor the ``outputState``
+    attribute have a 6th item (if another function is assigned) or they are asssigned :keyword:`None` if ``time_scale``
+    is :keyword:`TimeScale.TIME_STEP`.
+
     * **mean correct response time** is assigned to the 5th item of the mechanism's ``outputValue`` attribute and as
-      the value of its ``RT_CORRECT_MEAN`` outputState.  It is reported as milliseconds.  This is only assigned if the
-      :keyword:`NavarroAndFuss`` function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
-      neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
-      or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+      the value of its ``RT_CORRECT_MEAN`` outputState.  It is reported as milliseconds.
     ..
     * **variance of correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute
-      and as the value of its ``RT_CORRECT_VARIANCE`` outputState and .  This is only assigned if the
-      :keyword:`NavarroAndFuss function is used, and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise,
-      neither the ``outputValue`` nor the ``outputState`` attribute have a 6th item (if another function is assigned)
-      or they are asssigned :keyword:`None` if ``time_scale`` is :keyword:`TimeScale.TIME_STEP`
+      and as the value of its ``RT_CORRECT_VARIANCE`` outputState.
     COMMENT:
         In time_step mode, compute and report variance of the path
         (e.g., as confirmation of /deviation from noise param??)??
