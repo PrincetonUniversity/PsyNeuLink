@@ -8,9 +8,16 @@
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
 #
-# DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates)
+# DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
+#                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
+# DOCUMENTATION:  singularize first statement in overview of all objects
+# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :any:
+
 # DOCUMENTATION: check that, for DDM in TIME_STEP mode, parameter values not specified in params dict will assume
 #                any value assigned in the function arg; otherwise, default will be used
+# DOCUMENTATION:  FROM DDM:  PUT FULL EXPLANATION IN MECHANISM AND THEN ADD LINK TO BELOW
+#             since any parameters specified in the  ``params`` argument when
+#             creating a mechanism override any corresponding ones specified as arguments to its ``function``).[LINK]
 
 # 11/18/16:
 

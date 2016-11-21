@@ -33,8 +33,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
 my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
                                  threshold=20.0),
-             params = {DRIFT_RATE:3.0,
-                       THRESHOLD:30.0}
+             params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
+                                      THRESHOLD:30.0}}
              )
 my_DDM.execute(time_scale=TimeScale.TIME_STEP)
 

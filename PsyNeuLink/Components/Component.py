@@ -603,6 +603,11 @@ class Component(object):
         if params_arg:
             try:
                 params[FUNCTION_PARAMS].update(params_arg[FUNCTION_PARAMS])
+                # This is needed so that when params is updated below,
+                #     it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set)
+                #     and not just whichever ones were in params_arg[FUNCTION_PARAMS]
+                #    (i.e., if the user just specified a subset)
+                params_arg[FUNCTION_PARAMS].update(params[FUNCTION_PARAMS])
             except KeyError:
                 pass
             params.update(params_arg)

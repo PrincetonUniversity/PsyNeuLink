@@ -40,6 +40,7 @@ Structure
 A Comparator mechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from the
 primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`TARGET` inputState
 is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
+It has five outputStates, described under Execution below.
 
 
 .. _Comparator_Execution
@@ -53,6 +54,8 @@ value of the :keyword:`TARGET` inputState is received from the process (or syste
 When the Comparator is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`, then its ``function``
 subtracts the  :keyword:`SAMPLE` from the :keyword:`TARGET`; if ``comparison_operation`` is :keyword:`DIVISION`,
 the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  After each execution of the mechanism:
+
+.. _Comparator_Results:
 
     * the **result** of the ``function`` calculation is assigned to the mechanism's ``value`` attribute, the value of
       its :keyword:`COMPARISON_RESULT` outputState, and to the 1st item of its ``outputValue`` attribute.

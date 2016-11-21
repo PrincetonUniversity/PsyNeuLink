@@ -148,6 +148,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Transfer</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-transfer-mechanism">Creating a Transfer Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
@@ -156,10 +157,9 @@
 </div>
 <span class="target" id="module-Transfer"></span><div class="section" id="overview">
 <span id="transfer-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Transfer mechanisms transform their input using a simple mathematical function.  The input can be a single scalar
-value or an an array (list or 1d np.array).  The following standard functions are provided:
-<code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Logistic</span></code> and <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code> (see <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>).  Custom functions can
-also be specified so long as they return a numeric value or list or np.ndarray of numeric values.</p>
+<p>A Transfer mechanism transforms its input using a simple mathematical function.  The input can be a single scalar
+value or an an array (list or 1d np.array).  The function used can be selected from a standard set, or specified
+using a custom function.</p>
 </div>
 <div class="section" id="creating-a-transfer-mechanism">
 <span id="transfer-creating-a-transfer-mechanism"></span><h2>Creating a Transfer Mechanism<a class="headerlink" href="#creating-a-transfer-mechanism" title="Permalink to this headline">¶</a></h2>
@@ -173,6 +173,14 @@ include arguments specifying the function&#8217;s parameters (second example):</
 </div>
 <p>In addition to function-specific parameters, <code class="docutils literal"><span class="pre">noise</span></code> and <code class="docutils literal"><span class="pre">rate</span></code> parameters can be specified (see Execution below).</p>
 </div>
+<div class="section" id="structure">
+<span id="transfer-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A Transfer mechanism has a single inputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is used as the <code class="docutils literal"><span class="pre">variable</span></code> for its <code class="docutils literal"><span class="pre">function</span></code>.
+The function can be selected from one of three standard PsyNeuLink <span class="xref doc">Functions</span>: <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> or
+<a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>; or a custom function can be specified, so long as it returns a numeric value or list or
+np.ndarray of numeric values.  A Transfer mechanism has three outputStates, described under
+<a class="reference internal" href="#transfer-execution-results"><span class="std std-ref">results</span></a>  below.</p>
+</div>
 <div class="section" id="execution">
 <span id="transfer-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a Transfer mechanism is executed, it transforms its input using the specified function and the following
@@ -183,7 +191,7 @@ exponentially time-averaged before transforming it (higher value specifies faste
 <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> the <code class="docutils literal"><span class="pre">rate</span></code> parameter is ignored.
 If the <code class="docutils literal"><span class="pre">range</span></code> parameter is specified, all elements of the output are capped by the lower and upper values of
 the range.  After each execution of the mechanism:</p>
-<blockquote>
+<blockquote id="transfer-execution-results">
 <div><ul class="simple">
 <li><strong>result</strong> is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of its <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_RESULT</span></code>
 outputState, and to the 1st item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
