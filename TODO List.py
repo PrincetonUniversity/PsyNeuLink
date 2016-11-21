@@ -7,6 +7,9 @@
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
+
+# TEST:  How does DDM currently handle len(default_input_value) > 1?
+# IMPLEMENT: DDM: if len(default_input_value) > 1, each item of outputValue and outputState.value is 1d array
 #
 # DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
 #                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
