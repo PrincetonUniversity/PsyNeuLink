@@ -1122,8 +1122,9 @@
     #     - paramInstanceDefaults can be later modified using assign_defaults
     #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
-# FIX:
+# FIX: Figures: need higher rez
 
+# FIX:
 # Where is this coming from:
 #    Process.random() → x in the interval [0, 1).# Suppress / rearrange particular members:
 #

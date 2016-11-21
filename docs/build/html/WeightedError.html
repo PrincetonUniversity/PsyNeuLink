@@ -185,7 +185,7 @@ a process that has at least one other ProcessingMechanism to which it projects. 
 are also created automatically when a process system is created for which learning is specified; each is
 assigned a projection from the outputState of a ProcessingMechanism that receives a Mapping projection being
 learned, and a LearningSignal projection to that Mapping projection
-(see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
+(see <span class="xref std std-ref">learning in a process</span>, and
 :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>automatic creation of LearningSignals &lt;LearningSignal_Automatic_Creation&gt; for details).</p>
 </div>
 <div class="section" id="structure">
@@ -198,7 +198,7 @@ projection from the primary outputState of the <code class="docutils literal"><s
 element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which it projects, and each element of the matrix is the weight of the
 association between the two.  The <strong>outputState</strong> of a WeightedError mechanism is typically assigned a
 <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of a Mapping projection to the
-<code class="docutils literal"><span class="pre">errorSource</span></code> (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>).</p>
+<code class="docutils literal"><span class="pre">errorSource</span></code> (as shown in <span class="xref std std-ref">this figure</span>).</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -213,6 +213,12 @@ and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="i
 </div>
 <div class="section" id="class-reference">
 <span id="weightederror-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="WeightedError.WeightedErrorOutput">
+<em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedErrorOutput</code><a class="headerlink" href="#WeightedError.WeightedErrorOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="WeightedError.WeightedError">
 <em class="property">class </em><code class="descclassname">WeightedError.</code><code class="descname">WeightedError</code><span class="sig-paren">(</span><em>error_signal=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#WeightedError.WeightedError" title="Permalink to this definition">¶</a></dt>
