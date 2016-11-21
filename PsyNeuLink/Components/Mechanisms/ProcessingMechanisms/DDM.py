@@ -65,9 +65,15 @@ executed, and what information is returned.  The ``function`` parameter specifie
 ``time_scale`` is set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below).
 When ``time_scale`` set to :keyword:`TimeScale.TIME_STEP`, executing the DDM mechanism numerically integrates the
 path of the decision variable.  The :ref:`analytic solutions <DDM_Functions>` are discussed below, followed by a
-description of :ref:`how it is executed <DDM_Execution>` in :keyword:`TRIAL` and :keyword:`TIME_STEP` modes and the
-:ref:`values reported <DDM_Results>`.
+description of :ref:`how the decision process is executed <DDM_Execution>` in :keyword:`TRIAL` and :keyword:`TIME_STEP`
+modes and the :ref:`results reported <DDM_Results>`.
 
+XXX
+The DDM mechanism assigns one inputState to each item in
+As noted above, if the input is a single value,
+it computes a single DDM process.  If the input is an array, then multiple parallel DDM processes are executed,
+with each element of the input used for the corresponding process (all use the same set of parameters; to implement
+processes that use their own parameters, a separate DDM mechanism should explicitly be created for each).
 
 .. _DDM_Functions:
 
@@ -106,7 +112,7 @@ The parameters for the DDM are:
   The resulting value is further multiplied by the value of any ControlSignal projections to the  ``DRIFT_RATE``
   parameterState. The ``drift_rate`` parameter can be thought of as the "automatic" component (baseline strength)
   of the decision process, the value received from a ControlSignal projection as the "attentional" component,
-  and the input its "stimuuls" component.  The product of all three determines the drift rate in effect for each
+  and the input its "stimulus" component.  The product of all three determines the drift rate in effect for each
   time_step of the decision process.
 ..
 * :keyword:`STARTING_POINT` (default 0.0)
@@ -134,9 +140,13 @@ Execution
 
 When a DDM mechanism is executed it computes the decision process, either analytically (in :keyword:`TRIAL` mode)
 or by step-wise integration (in :keyword:`TIME_STEP` mode).  As noted above, if the input is a single value,
-it computes a single DDM process.  If the input is an array, then multiple parallel DDM processes are executed,
-with each element of the input used for the corresponding process (all use the same set of parameters; to implement
-processes that use their own parameters, a separate DDM mechanism should explicitly be created for each).
+it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
+with each element of the input used for the corresponding process.  All use the same set of parameters,
+so the analytic solutions (ussed in :keyword:`TRIAL` mode) will be the same; to implement processes in this mode that
+use different parameters, a separate DDM mechanism should explicitly be created for each. In :keyword:`TIME_STEP` mode,
+the noise term will resolve to different values in each time step, so the integration paths and outcomes will vary.
+This can be used to generate distributions of the process for a single set of parameters that are not subject to the
+analytic solution (e.g., for time-varying drift rates).
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its ``execute`` or ``run`` methods) differently than

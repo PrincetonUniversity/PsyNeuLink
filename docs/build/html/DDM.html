@@ -189,14 +189,19 @@ are implemented all of which use the same parameters but each of which receives 
 </div>
 <div class="section" id="structure">
 <span id="ddm-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>The DDM mechanism implements a general form of the decision process, that can be configure to run in various
-modes.  The two primary parameters that determine how the decision process is executed, and what information is
-returned, are the <code class="docutils literal"><span class="pre">function</span></code> and <code class="docutils literal"><span class="pre">time_scale</span></code> parameters.  The <code class="docutils literal"><span class="pre">function</span></code> parameter specifies the analytical
-solution to use when <code class="docutils literal"><span class="pre">time_scale</span></code> is set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code> (see <a class="reference internal" href="#ddm-functions"><span class="std std-ref">Functions</span></a> below).
+<dl class="docutils">
+<dt>xxxxxx DESCRIBE BELOW</dt>
+<dd>INPUT STATES (INCLUDING PARALLEL PROCESSES &#8211; GET FROM EXECUTION)
+OUTPUT STATES</dd>
+</dl>
+<p>The DDM mechanism implements a general form of the decision process, that can be configured to run in different
+modes.  The <code class="docutils literal"><span class="pre">function</span></code> and <code class="docutils literal"><span class="pre">time_scale</span></code> parameters are the primary determinants of how the decision process is
+executed, and what information is returned.  The <code class="docutils literal"><span class="pre">function</span></code> parameter specifies the analytical solution to use when
+<code class="docutils literal"><span class="pre">time_scale</span></code> is set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code> (see <a class="reference internal" href="#ddm-functions"><span class="std std-ref">Functions</span></a> below).
 When <code class="docutils literal"><span class="pre">time_scale</span></code> set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, executing the DDM mechanism numerically integrates the
 path of the decision variable.  The <a class="reference internal" href="#ddm-functions"><span class="std std-ref">analytic solutions</span></a> are discussed below, followed by a
-description of <a class="reference internal" href="#ddm-execution"><span class="std std-ref">how it is executed</span></a> in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> modes and the
-<a class="reference internal" href="#ddm-results"><span class="std std-ref">values reported</span></a>.</p>
+description of <a class="reference internal" href="#ddm-execution"><span class="std std-ref">how the decision process is executed</span></a> in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code>
+modes and the <a class="reference internal" href="#ddm-results"><span class="std std-ref">results reported</span></a>.</p>
 <div class="section" id="ddm-functions">
 <span id="id1"></span><h3>DDM Functions<a class="headerlink" href="#ddm-functions" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">function</span></code> parameter can be used to select one of two analytic solutions (<a class="reference internal" href="Function.html#Function.BogaczEtAl" title="Function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a> and
@@ -322,6 +327,12 @@ or they are asssigned <code class="xref std std-keyword docutils literal"><span 
 </div>
 <div class="section" id="class-reference">
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="DDM.DDM_Output">
+<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM_Output</code><a class="headerlink" href="#DDM.DDM_Output" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="DDM.DDM">
 <em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=BogaczEtAl</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
