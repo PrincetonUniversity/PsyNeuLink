@@ -55,14 +55,19 @@ are implemented all of which use the same parameters but each of which receives 
 Structure
 ---------
 
-The DDM mechanism implements a general form of the decision process, that can be configure to run in various
-modes.  The two primary parameters that determine how the decision process is executed, and what information is
-returned, are the ``function`` and ``time_scale`` parameters.  The ``function`` parameter specifies the analytical
-solution to use when ``time_scale`` is set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below).
+xxxxxx DESCRIBE BELOW
+        INPUT STATES (INCLUDING PARALLEL PROCESSES -- GET FROM EXECUTION)
+        OUTPUT STATES
+
+The DDM mechanism implements a general form of the decision process, that can be configured to run in different
+modes.  The ``function`` and ``time_scale`` parameters are the primary determinants of how the decision process is
+executed, and what information is returned.  The ``function`` parameter specifies the analytical solution to use when
+``time_scale`` is set to :keyword:`TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below).
 When ``time_scale`` set to :keyword:`TimeScale.TIME_STEP`, executing the DDM mechanism numerically integrates the
 path of the decision variable.  The :ref:`analytic solutions <DDM_Functions>` are discussed below, followed by a
 description of :ref:`how it is executed <DDM_Execution>` in :keyword:`TRIAL` and :keyword:`TIME_STEP` modes and the
 :ref:`values reported <DDM_Results>`.
+
 
 .. _DDM_Functions:
 
@@ -77,9 +82,9 @@ mean correct response time and accuracy.
 DDM Parameters
 ~~~~~~~~~~~~~~
 
-All modes of executing the DDM use the same parameters for the decision process.  These can be specified as arguments
-for the functions used in :keyword:`TRIAL` mode or in the ``params`` dict argument for the mechanism when it is
-created, using the keywords in the list below, as in the following example::
+The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
+for the functions used in :keyword:`TRIAL` mode, or in a params dictionary assigned to the ``params`` argument,
+using the keywords in the list below, as in the following example::
 
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1,
                  params={DRIFT_RATE:(0.2, ControlSignal),
@@ -90,9 +95,9 @@ created, using the keywords in the list below, as in the following example::
    :keyword:`TRIAL` and :keyword:`TIME_STEP` mode, since any parameters specified in the  ``params`` argument when
    creating a mechanism override any corresponding ones specified as arguments to its ``function``).[LINK]
    In the example above, this means that even if the ``time_scale`` parameter is set to :keyword:`TimeScale.TRIAL``,
-   the ``drift_rate`` of 0.2 will be used (rather than 0.1).  However, for parameters NOT specified as entries in
-   the params dictionary, the value specified for those in the function  will be used in both :keyword:`TRIAL` and
-   :keyword:`TIME_STEP` mode;  otherwise, default values will be used.
+   the ``drift_rate`` of 0.2 will be used (rather than 0.1).  For parameters NOT specified as entries in
+   the params dictionary, the value specified for those in the function will be used in both :keyword:`TRIAL` and
+   :keyword:`TIME_STEP` mode.
 
 The parameters for the DDM are:
 
@@ -455,7 +460,6 @@ class DDM(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
-
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
         OUTPUT_STATES:[DDM_DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
@@ -489,7 +493,7 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
-                                                 params=params)
+                                                  params=params)
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 

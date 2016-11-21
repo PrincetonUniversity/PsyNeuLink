@@ -21,10 +21,9 @@
 Overview
 --------
 
-Transfer mechanisms transform their input using a simple mathematical function.  The input can be a single scalar
-value or an an array (list or 1d np.array).  The following standard functions are provided:
-:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`Function`).  Custom functions can
-also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
+A Transfer mechanism transforms its input using a simple mathematical function.  The input can be a single scalar
+value or an an array (list or 1d np.array).  The function used can be selected from a standard set, or specified
+using a custom function.
 
 
 .. _Transfer_Creating_A_Transfer_Mechanism:
@@ -43,12 +42,16 @@ include arguments specifying the function's parameters (second example)::
 In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
 
 
-COMMENT:
 .. _Transfer_Structure:
 
 Structure
 ---------
-COMMENT
+
+A Transfer mechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its ``function``.
+The function can be selected from one of three standard PsyNeuLink :doc:`Functions`: :any:`Linear`, :any:`Logistic` or
+:any:`Exponential`; or a custom function can be specified, so long as it returns a numeric value or list or
+np.ndarray of numeric values.  A Transfer mechanism has three outputStates, described under Execution  below.
+
 
 .. _Transfer_Execution:
 
@@ -64,6 +67,8 @@ exponentially time-averaged before transforming it (higher value specifies faste
 :keyword:`TimeScale.TIME_STEP` the ``rate`` parameter is ignored.
 If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
 the range.  After each execution of the mechanism:
+
+.. _Transfer_Results:
 
     * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`TRANSFER_RESULT`
       outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
