@@ -144,14 +144,14 @@ Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The input to a system is specified in the ``inputs`` argument of either its ``execute`` or ``run`` method.  In both
 cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate input for the
-corresponding :keyword:`ORIGIN` mechanism (listed in system.originMechanisms.mechanisms). If the ``execute` method
-is used, input for only a single trial is provided, and only a single trial is executed.  The run method can be used
+corresponding :keyword:`ORIGIN` mechanism (listed in ``originMechanisms``). If the ``execute`` method
+is used, input for only a single trial is provided, and only a single trial is executed.  The ``run`` method can be used
 for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs, one for each
 round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
 execution, as input to mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`),
-and target values are assigned to the target attribute of monitoring mechanisms (see learning below;  also, see
-Run [LINK] for additional details of formatting input specifications).
+and target values are assigned to the target attribute of :doc:`Monitoringmechanisms` (see learning below;  also, see
+:doc:`Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
 
@@ -393,7 +393,7 @@ class System_Base(System):
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
                                 kwController: DefaultController,
-                                kwTimeScale: TimeScale.TRIAL}
+                                TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -564,7 +564,7 @@ class System_Base(System):
     variableClassDefault = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     @tc.typecheck
     def __init__(self,

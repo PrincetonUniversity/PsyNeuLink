@@ -838,7 +838,7 @@ class Mechanism_Base(Mechanism):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
         Go through target_set params (populated by Function._validate_params) and validate values for:
-            + kwTimeScale:  <TimeScale>
+            + TIME_SCALE:  <TimeScale>
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, ParamValueProjection tuple, or numeric value(s)>;
@@ -877,16 +877,16 @@ class Mechanism_Base(Mechanism):
 
         #region VALIDATE TIME SCALE
         try:
-            param_value = params[kwTimeScale]
+            param_value = params[TIME_SCALE]
         except KeyError:
             self.timeScale = timeScaleSystemDefault
         else:
             if isinstance(param_value, TimeScale):
-                self.timeScale = params[kwTimeScale]
+                self.timeScale = params[TIME_SCALE]
             else:
                 if self.prefs.verbosePref:
                     print("Value for {0} ({1}) param of {2} must be of type {3};  default will be used: {4}".
-                          format(kwTimeScale, param_value, self.name, type(TimeScale), timeScaleSystemDefault))
+                          format(TIME_SCALE, param_value, self.name, type(TimeScale), timeScaleSystemDefault))
         #endregion
 
         #region VALIDATE INPUT STATE(S)

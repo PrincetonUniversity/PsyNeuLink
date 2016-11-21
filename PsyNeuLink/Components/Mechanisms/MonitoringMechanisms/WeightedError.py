@@ -67,8 +67,6 @@ and the value of of its (:keyword:`WEIGHTED_ERROR) outputState.
 Class Reference
 ---------------
 
-xxxxxxxxx IMPLEMENT errorSource ATTRIBUTE
-
 """
 
 
@@ -154,14 +152,19 @@ class WeightedError(MonitoringMechanism_Base):
         used to calculate the ``weightedErrorSignal``.
 
     variable : 1d np.array
-        error_signal used by ``function``.
+        error_signal from mechanism to which next_level_projection projects;  used by ``function`` to compute
+        weightedErrorSignal.
 
     value : 1d np.array
-        output of ``function``, and same as ``weightedErrorSignal``: an array that specifies the weighted contribution 
-        made by each element of the ``value`` of the error source to the error_signal.
+        output of ``function``, same as ``weightedErrorSignal``.
 
-    outputValue : 1d np.array
-        output of ``function``:  error array XXXX
+    weightedErrorSignal : 1d np.array
+        specifies the weighted contribution made by each element of the ``value`` of the error source to the
+        ``error_signal`` received from the next mechanism in the process (the one to which ``next_level_projection``
+        projects.
+    
+    outputValue : List[1d np.array]
+        single item in list is ``errorSignal`` (output of ``function``;  same as ``value``).
 
     name : str : default WeightedError-<index>
         the name of the mechanism.
@@ -248,9 +251,9 @@ class WeightedError(MonitoringMechanism_Base):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        """Compute error_signal for current layer from derivative of error_signal at next layer
+        """Compute weightedErrorSignal for errorSource from derivative of error_signal for mechanism it projects to.
 
-        Return weighted error array.
+        Return weightedErrorSignal.
         """
 
         if not context:

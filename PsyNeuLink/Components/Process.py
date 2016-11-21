@@ -547,7 +547,7 @@ class Process_Base(Process):
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PATHWAY: [Mechanism_Base.defaultMechanism],
-                                kwTimeScale: TimeScale.TRIAL}
+                                TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
         -------------
@@ -749,7 +749,7 @@ class Process_Base(Process):
     # MODIFIED 10/2/16 END
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     default_pathway = [Mechanism_Base.defaultMechanism]
 
