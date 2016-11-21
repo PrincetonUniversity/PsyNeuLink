@@ -1296,7 +1296,8 @@ class Mechanism_Base(Mechanism):
                                  params=runtime_params,
                                  time_scale=time_scale,
                                  context=context)
-
+        else:
+            pass
         # Execute
 
         #region VALIDATE RUNTIME PARAMETER SETS

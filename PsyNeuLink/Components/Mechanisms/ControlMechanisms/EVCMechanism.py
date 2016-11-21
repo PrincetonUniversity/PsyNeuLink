@@ -434,7 +434,7 @@ class EVCMechanism(ControlMechanism_Base):
     from PsyNeuLink.Components.Functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({d: True,
+    paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
                                PARAMETER_STATES: False})
 
     @tc.typecheck
