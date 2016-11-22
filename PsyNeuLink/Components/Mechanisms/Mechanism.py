@@ -1298,6 +1298,7 @@ class Mechanism_Base(Mechanism):
                                  context=context)
         else:
             pass
+            TEST = True
         # Execute
 
         #region VALIDATE RUNTIME PARAMETER SETS
