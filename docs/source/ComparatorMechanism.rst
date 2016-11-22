@@ -2,4 +2,4 @@ ComparatorMechanism
 ===================
 
 .. automodule:: ComparatorMechanism
-	:members:
+   :members:
