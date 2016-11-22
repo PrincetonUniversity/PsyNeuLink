@@ -378,7 +378,7 @@ import typecheck as tc
 # class Weightings(Enum):
 #     CONSTANT        = 'hello'
 #     SIMPLE        = 'goodbye'
-#     TIME_AVERAGED = 'you say'
+#     ADAPTIVE = 'you say'
 #
 # @tc.typecheck
 # def foo3(test:tc.re('hello')):

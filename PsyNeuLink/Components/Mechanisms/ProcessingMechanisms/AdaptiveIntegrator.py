@@ -27,7 +27,7 @@ An AdaptiveIntegrator mechanism can be created either directly, by calling its c
 :class:`mechanism` function and specifying "AdaptiveIntegrator" as its ``mech_spec`` argument.  Its function is
 specified in the ``function`` argument, which can be parameterized by calling to its constructor with parameter values::
 
-    my_time_averaging_mechanism = AdaptiveIntegrator(function=Integrator(weighting=TIME_AVERAGED, rate=0.5))
+    my_time_averaging_mechanism = AdaptiveIntegrator(function=Integrator(weighting=ADAPTIVE, rate=0.5))
 
 .. _AdaptiveIntegrator_Structure
 
@@ -37,7 +37,7 @@ Structure
 An AdaptiveIntegrator mechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its
 ``function``.   The ``default_input_value`` argument specifies the format of the ``value`` (i.e., whether it is a
 single scalar or an array), as well as the value to use if none is provided when mechanism is executed.  The default
-``function`` is Integrator, with ``weighting=:keyword`TIME_AVERAGED```  and ``rate=0.5``.  However a custom function
+``function`` is Integrator, with ``weighting=:keyword`ADAPTIVE```  and ``rate=0.5``.  However a custom function
 can also be specified,  so long as it  takes a numeric value or  list or np.ndarray of numeric values as its input, and
 returns a value of the same type and format.  The default function -- :any:`Integrator` -- has two parameters
 (``weighting`` and ``rate``) that determine the type and,  well, yes, the *rate* of integration.  The mechanism has a
@@ -80,7 +80,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     """
     AdaptiveIntegratorMechanism(                            \
     default_input_value=None,                               \
-    function=Integrator(weighting=TIME_AVERAGED, rate=0.5), \
+    function=Integrator(weighting=ADAPTIVE, rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
     name=None,                                              \
@@ -194,7 +194,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  function=Integrator(rate=0.5,
-                                     weighting=TIME_AVERAGED),
+                                     weighting=ADAPTIVE),
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
