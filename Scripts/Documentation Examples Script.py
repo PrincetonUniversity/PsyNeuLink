@@ -4,7 +4,7 @@
 
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Projections.Mapping import Mapping
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal

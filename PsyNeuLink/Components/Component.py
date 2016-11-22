@@ -192,7 +192,7 @@ class Component(object):
         + className
         + suffix - " " + className (used to create subclass and instance names)
         + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
-        + componentType - type of component within a category (e.g., transfer, distribution, mapping, controlSignal,
+        + componentType - type of component within a category (e.g., TransferMechanism, distribution, mapping, controlSignal,
         etc.)
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Component must
         implement;

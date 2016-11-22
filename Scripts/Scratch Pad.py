@@ -13,18 +13,18 @@ from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Components.Projections.Mapping import Mapping
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
-# linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
+# linear_transfer_mechanism = TransferMechanism(function=Linear(slope = 1, intercept = 0))
 # linear_transfer_process = process(pathway = [linear_transfer_mechanism])
 # print(linear_transfer_process.execute())
 # print ('Done')
 
-# my_mech1 = Transfer(function=Logistic)
-# my_mech2 = Transfer(function=Logistic)
+# my_mech1 = TransferMechanism(function=Logistic)
+# my_mech2 = TransferMechanism(function=Logistic)
 # my_monitor = ComparatorMechanism()
 # my_learning_signal = LearningSignal()
 # my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
@@ -99,15 +99,15 @@ print(my_adaptive_integrator.execute([3]))
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.States.InputState import InputState
 #
-# x = Transfer([0,0,0],
+# x = TransferMechanism([0,0,0],
 #              name='x')
 #
 # i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 #
-# y = Transfer(default_input_value=[0],
+# y = TransferMechanism(default_input_value=[0],
 #              params={INPUT_STATES:i},
 #              name='y')
 #
@@ -119,7 +119,7 @@ print(my_adaptive_integrator.execute([3]))
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.Process import process
 # from PsyNeuLink.Components.System import system
 #
@@ -131,9 +131,9 @@ print(my_adaptive_integrator.execute([3]))
 # # inputs=[[[2,2],[0]],[[2,2],[0]]]
 # # inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
 #
-# a = Transfer(name='a',default_input_value=[0,0])
-# b = Transfer(name='b')
-# c = Transfer(name='c')
+# a = TransferMechanism(name='a',default_input_value=[0,0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
 #
 #
 # print(a.execute([2,2]))
@@ -161,14 +161,14 @@ print(my_adaptive_integrator.execute([3]))
 #
 # from PsyNeuLink.Components.System import system
 # from PsyNeuLink.Components.Process import process
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Process import Mapping
 #
-# a = Transfer(name='a')
-# b = Transfer(name='b')
-# c = Transfer(name='c')
-# d = Transfer(name='d')
-# e = Transfer(name='e')
+# a = TransferMechanism(name='a')
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+# e = TransferMechanism(name='e')
 #
 # fb1 = Mapping(sender=c, receiver=b, name='fb1')
 # fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
@@ -199,9 +199,9 @@ print(my_adaptive_integrator.execute([3]))
 # #
 # from Components.Process import *
 # # from Components.Mechanisms.DDM import DDM
-# from Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 #
-# my_transfer = Transfer()
+# my_transfer = TransferMechanism()
 #
 # x = Process_Base(params={PATHWAY:[my_transfer]})
 #
@@ -261,10 +261,10 @@ print(my_adaptive_integrator.execute([3]))
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
 #
-# my_mech = Transfer(function=Linear())
+# my_mech = TransferMechanism(function=Linear())
 #
 # my_process = process(pathway=[my_mech])
 #
@@ -282,12 +282,12 @@ print(my_adaptive_integrator.execute([3]))
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
 # from PsyNeuLink.Components.Projections.Mapping import Mapping
 #
-# my_mech = Transfer(function=Linear())
-# my_mech2 = Transfer(function=Linear())
+# my_mech = TransferMechanism(function=Linear())
+# my_mech2 = TransferMechanism(function=Linear())
 # my_projection = Mapping(sender=my_mech,
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
@@ -320,20 +320,20 @@ print(my_adaptive_integrator.execute([3]))
 #region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Components.Process import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 # from PsyNeuLink.Components.Projections.Mapping import Mapping
 #
-# color_naming = Transfer(default_input_value=[0,0],
+# color_naming = TransferMechanism(default_input_value=[0,0],
 #                         function=Linear,
 #                         name="Color Naming"
 #                         )
 #
-# word_reading = Transfer(default_input_value=[0,0],
+# word_reading = TransferMechanism(default_input_value=[0,0],
 #                         function=Logistic,
 #                         name="Word Reading")
 #
-# verbal_response = Transfer(default_input_value=[0,0],
+# verbal_response = TransferMechanism(default_input_value=[0,0],
 #                            function=Logistic)
 #
 # color_pathway = Mapping(sender=color_naming,

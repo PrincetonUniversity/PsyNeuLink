@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  Transfer *******************************************************
+# ********************************************  TransferMechanism ******************************************************
 
 """
 ..
@@ -21,23 +21,23 @@
 Overview
 --------
 
-A Transfer mechanism transforms its input using a simple mathematical function.  The input can be a single scalar
+A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar
 value or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set
 of PsyNeuLink Functions (:any:`Linear`, :anay:`Exponential` or :any:`Logistic`), or specified using a custom function.
 
 
 .. _Transfer_Creation:
 
-Creating a Transfer Mechanism
+Creating a TransferMechanism
 -----------------------------
 
-A Transfer mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
-function and specifying "Transfer" as its ``mech_spec`` argument.  Its function is specified in the ``function``
-argument, which can be simply the name of the class (first example below), or a call to its constructor which can
-include arguments specifying the function's parameters (second example)::
+A TransferMechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
+function and specifying "TransferMechanism" as its ``mech_spec`` argument.  Its function is specified in the
+``function`` argument, which can be simply the name of the class (first example below), or a call to its constructor
+which can include arguments specifying the function's parameters (second example)::
 
-    my_linear_transfer_mechanism = Transfer(function=Linear)
-    my_logistic_transfer_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4)
+    my_linear_transfer_mechanism = TransferMechanism(function=Linear)
+    my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
 In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
 
@@ -47,10 +47,10 @@ In addition to function-specific parameters, ``noise`` and ``rate`` parameters c
 Structure
 ---------
 
-A Transfer mechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its ``function``.
+A TransferMechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its ``function``.
 The ``function`` can be selected from one of three standard PsyNeuLink :doc:`Functions`: :any:`Linear`, :any:`Logistic`
 or :any:`Exponential`; or a custom function can be specified, so long as it returns a numeric value or list or
-np.ndarray of numeric values.  A Transfer mechanism has three outputStates, described under Execution  below.
+np.ndarray of numeric values.  A TransferMechanism has three outputStates, described under Execution  below.
 
 
 .. _Transfer_Execution:
@@ -58,7 +58,7 @@ np.ndarray of numeric values.  A Transfer mechanism has three outputStates, desc
 Execution
 ---------
 
-When a Transfer mechanism is executed, it transforms its input using the specified function and the following
+When a TransferMechanism is executed, it transforms its input using the specified function and the following
 parameters (in addition to those specified for the function):
 
 If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
@@ -92,22 +92,22 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import Linear
 
-# Transfer parameter keywords:
+# TransferMechanism parameter keywords:
 RANGE = "range"
 INITIAL_VALUE = 'initial_value'
 
-# Transfer outputs (used to create and name outputStates):
+# TransferMechanism outputs (used to create and name outputStates):
 TRANSFER_RESULT = "transfer_result"
 TRANSFER_MEAN = "transfer_mean "
 TRANSFER_VARIANCE = "transfer_variance"
 
-# Transfer output indices (used to index output values):
+# TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
     RESULT = ()
     MEAN = ()
     VARIANCE = ()
 
-# Transfer default parameter values:
+# TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
@@ -125,7 +125,7 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class Transfer(ProcessingMechanism_Base):
     """
-    Transfer(                    \
+    TransferMechanism(                    \
     default_input_value=None,    \
     function=Linear,             \
     initial_value=None,          \
@@ -137,17 +137,18 @@ class Transfer(ProcessingMechanism_Base):
     name=None,                   \
     prefs=None)
 
-    Implements Transfer subclass of Mechanism.
+    Implements TransferMechanism subclass of Mechanism.
 
     COMMENT:
         Description
         -----------
-            Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
+            TransferMechanism is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the
+                Function class
             It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
         Class attributes
         ----------------
-            + componentType (str): Transfer
+            + componentType (str): TransferMechanism
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Transfer_DEFAULT_BIAS
@@ -160,8 +161,8 @@ class Transfer(ProcessingMechanism_Base):
 
         MechanismRegistry
         -----------------
-            All instances of Transfer are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+            All instances of TransferMechanism are registered in MechanismRegistry, which maintains an
+              entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
     Arguments
@@ -202,7 +203,7 @@ class Transfer(ProcessingMechanism_Base):
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
-    name : str : default Transfer-<index>
+    name : str : default TransferMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -218,7 +219,7 @@ class Transfer(ProcessingMechanism_Base):
 
     Returns
     -------
-    instance of Transfer mechanism : Transfer
+    instance of TransferMechanism : TransferMechanism
 
 
     Attributes
@@ -253,7 +254,7 @@ class Transfer(ProcessingMechanism_Base):
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
 
-    name : str : default Transfer-<index>
+    name : str : default TransferMechanism-<index>
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
@@ -278,7 +279,7 @@ class Transfer(ProcessingMechanism_Base):
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
 
-    # Transfer parameter and control signal assignments):
+    # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
@@ -408,14 +409,14 @@ class Transfer(ProcessingMechanism_Base):
                 params=NotImplemented,
                 time_scale = TimeScale.TRIAL,
                 context=None):
-        """Execute Transfer function and return transform of input
+        """Execute TransferMechanism function and return transform of input
 
-        Execute Transfer function on input, and assign to outputValue:
+        Execute TransferMechanism function on input, and assign to outputValue:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units
         Return:
-            value of input transformed by transfer function in outputState[TransferOuput.RESULT].value
+            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
             mean of items in RESULT outputState[TransferOuput.MEAN].value
             variance of items in RESULT outputState[TransferOuput.VARIANCE].value
 
@@ -466,7 +467,7 @@ class Transfer(ProcessingMechanism_Base):
         #endregion
 
 
-        #region EXECUTE TRANSFER FUNCTION ------------------------------------------------------------------------------
+        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
 
@@ -480,7 +481,7 @@ class Transfer(ProcessingMechanism_Base):
 
         self.previous_input = current_input
 
-        # Apply transfer function
+        # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=params)
 
         if range:
@@ -521,6 +522,6 @@ class Transfer(ProcessingMechanism_Base):
     #
     #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
     #     """
-    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Transfer
+    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
 
 

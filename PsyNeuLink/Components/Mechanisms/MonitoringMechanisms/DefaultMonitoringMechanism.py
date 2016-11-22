@@ -38,7 +38,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
 
     Instantiation:
-        - A ComparatorMechanism Mechanism can be instantiated in several ways:
+        - A ComparatorMechanism can be instantiated in several ways:
             - directly, by calling ComparatorMechanism()
             - as the default mechanism (by calling mechanism())
 
