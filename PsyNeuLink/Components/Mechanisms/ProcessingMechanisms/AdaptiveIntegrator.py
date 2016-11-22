@@ -176,7 +176,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        TIME_SCALE: TimeScale.TRIAL,
+        # TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[kwPredictionMechanismOutput]
     })
 
