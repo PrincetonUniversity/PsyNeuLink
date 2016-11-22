@@ -92,6 +92,9 @@
 <li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
@@ -152,7 +155,36 @@
 </div>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-State"></span></div>
+<span class="target" id="module-State"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A State is a component that provides an interface to a <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a>, and represents the value
+associated with that projection.  There are three types of states, all of which are used by
+<a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a> and one of which is used by <a class="reference internal" href="Projection.html"><span class="doc">projections</span></a>, as summarized below:</p>
+<ul class="simple">
+<li><a class="reference internal" href="InputState.html"><span class="doc">**inputState**</span></a>: used by a mechanism to represent its input, as provided by a
+<a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection;</li>
+<li><a class="reference internal" href="ParameterState.html"><span class="doc">**parameterStates**</span></a>: used by a mechanism to represent the value of a parameter of its
+<code class="docutils literal"><span class="pre">function</span></code>, possibly regulated by a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection;  and used by a Mapping projection to represent
+the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of its <code class="docutils literal"><span class="pre">function</span></code>, possibly regulated by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection.</li>
+<li><a class="reference internal" href="OutputState.html"><span class="doc">**outputState**</span></a>: used by a mechanism to represent its output, and as the source of an outgoing
+projection (<a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>; <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>;
+and <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> for a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a>).</li>
+</ul>
+</div>
+<div class="section" id="creating-a-state">
+<h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
+<p>States can be created used the constructor for one of the subclasses.  However, in general, they are created
+automatically by the mechanisms to which they belong, and/or through specification in context (e.g., when specifying
+the parameters of a mechanism&#8217;s function to be controlled [LINK], or Mapping projections to be learned [LINK]).</p>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>Like all PsyNeuLink components, they have the three fundamental attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">variable</span></code>:</li>
+</ul>
+</div>
+</div>
 
 
            </div>

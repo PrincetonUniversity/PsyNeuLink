@@ -764,7 +764,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
             - the keyword kwAddInputState or the name for an inputState to be added
     Specification of ParameterState must be a ParameterState object
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
+    projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
     IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
                           CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
@@ -788,12 +788,12 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # state is State object, so use that
     if isinstance(state, State_Base):
-        state.instantiate_projections_to_state(projections=projection_spec, context=context)
+        state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # Generic kwInputState is specified, so use (primary) inputState
     elif state is kwInputState:
-        receiver.inputState.instantiate_projections_to_state(projections=projection_spec, context=context)
+        receiver.inputState._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
@@ -811,7 +811,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
+            receiver.inputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -845,12 +845,12 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     except AttributeError:
         receiver.inputStates = OrderedDict({input_state.name:input_state})
         receiver.inputState = list(receiver.inputStates)[0]
-    input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
+    input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
+    projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
     state must be a specification of an outputState
     Specification of OutputState can be any of the following:
             - OUTPUT_STATE - assigns projection_spec to (primary) outputState
@@ -876,12 +876,12 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
 
     # state is State object, so use that
     if isinstance(state, State_Base):
-        state.instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
+        state._instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
     # Generic OUTPUT_STATE is specified, so use (primary) outputState
     elif state is OUTPUT_STATE:
-        sender.outputState.instantiate_projections_to_state(projections=projection_spec, context=context)
+        sender.outputState._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
@@ -899,7 +899,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            sender.outputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
+            sender.outputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -933,4 +933,4 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     except AttributeError:
         sender.outputStates = OrderedDict({output_state.name:output_state})
         sender.outputState = list(sender.outputStates)[0]
-    output_state.instantiate_projections_to_state(projections=projection_spec, context=context)
+    output_state._instantiate_projections_to_state(projections=projection_spec, context=context)

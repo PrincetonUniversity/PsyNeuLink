@@ -3,14 +3,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/19/16:
-# FIX:  RECONICLE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
+# FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
 
-# TEST:  How does DDM currently handle len(default_input_value) > 1?
-# IMPLEMENT: DDM: if len(default_input_value) > 1, each item of outputValue and outputState.value is 1d array
-#
 # DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
 #                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
 # DOCUMENTATION:  singularize first statement in overview of all objects
@@ -173,6 +170,7 @@
 
 # FIX: Process: Identify recurrent projections, designate mechanisms as INITIALIZE_CYCLE,
 # FIX:          and in implement initialization of them in execution
+#           OPTIONS:  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 
 # 10/17/16:
 # IMPLEMENT: Process: phases in execution
@@ -838,26 +836,17 @@
 # -------------------
 
 # QUESTION: DDM:
-#            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
+#            MULTIPLE PROCESSES AND AVERAGED OUTPUT VALUES IDEA
+#            t0 BUISINESS (ms or secs?)
+#            DOES NAVARRO AND FUSS ACTUALLY RETURN ER (I ASSUMED IT DID)
 #            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
 #            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
 #            IS t0 MS OR SECONDS?
 
-# QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
-#           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
+# -------------------------------------------
 
 # FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
 #      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
-
-# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
-# IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
-# IMPLEMENT [DONE!]:  BP
-#                     random weight matrix
-#                     can specify which outputstate to use for learning (see DDM Learning Test Script)
-#                        (example: learning drift rate input for given threshold:  nonmonotonic!)
-#                     fixed process factory method (can now call process instead of Process_Base)
-#                     flattened DDM arg structure (see DDM Test Script)
-#                         QUESTION: should defaults be numbers or values??
 
 # QUESTION: When executing a mechanism, and updating its projections (to get their input),
 #               should update only those from mechanisms that belong to the process currently being executed?
@@ -1615,8 +1604,8 @@
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #
 # REFACTORING NEEDED:
-# ? MODIFY State.instantiate_projections_to_state TO TAKE A LIST OF PROJECTIONS AS ITS ARG
-# √ ADD METHOD TO Mechanism:  instantiate_projections_to_state:
+# ? MODIFY State._instantiate_projections_to_state TO TAKE A LIST OF PROJECTIONS AS ITS ARG
+# √ ADD METHOD TO Mechanism:  _instantiate_projections_to_state:
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
@@ -2033,7 +2022,7 @@
         # IMPLEMENTATION NOTE:
         #    - need to do some checking on state_spec[1] to see if it is a projection
         #      since it could just be a numeric tuple used for the variable of a state;
-        #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
+        #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     # IMPLEMENTATION NOTE:
     #    - should create list of valid projection keywords and limit validation below to that (instead of just str)
 #
@@ -2070,7 +2059,7 @@
          #  - MOVE STATE_PROJECTIONS out of kwStateParams:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
-         #    and process in __init__ (instantiate_projections_to_state()) rather than in _validate_params
+         #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params
          # - if so, then correct in _instantiate_function_params under Mechanism
          # - ADD instantiate_projection akin to instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
@@ -2129,7 +2118,7 @@
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
 # FIX: clean up _instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
-# FIX:  Move marked section of instantiate_projections_to_state(), check_projection_receiver(), and parse_projection_ref
+# FIX:  Move marked section of _instantiate_projections_to_state(), _check_projection_receiver(), and _parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
