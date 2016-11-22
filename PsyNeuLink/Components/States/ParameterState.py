@@ -212,8 +212,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # # ParameterState is for a matrix of a mapping projection,
         # #     so its function (LinearCombination) should use SUM (rather than PRODUCT)
         # #     so that weight changes can be added (e.g., by learningSignals)
-        # from PsyNeuLink.Components.Projections.Mapping import Mapping
-        # if (isinstance(owner, Mapping) and
+        # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        # if (isinstance(owner, MappingProjection) and
         #         (isinstance(reference_value, np.matrix) or
         #              (isinstance(reference_value, np.ndarray) and reference_value.ndim == 2))):
         #     params[FUNCTION] = Linear

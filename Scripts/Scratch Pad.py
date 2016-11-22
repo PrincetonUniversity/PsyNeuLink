@@ -11,7 +11,7 @@ class ScratchPadError(Exception):
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Functions.Function import Logistic
@@ -27,7 +27,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # my_mech2 = TransferMechanism(function=Logistic)
 # my_monitor = ComparatorMechanism()
 # my_learning_signal = LearningSignal()
-# my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
+# my_mapping_projection = MappingProjection(sender=my_mech1, receiver=my_mech2)
 # # my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
 # # my_learning_signal = LearningSignal(receiver=my_mapping_projection)
 # my_learning_signal._deferred_init(context="TEST")
@@ -162,7 +162,7 @@ print(my_adaptive_integrator.execute([3]))
 # from PsyNeuLink.Components.System import system
 # from PsyNeuLink.Components.Process import process
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-# from PsyNeuLink.Components.Process import Mapping
+# from PsyNeuLink.Components.Process import MappingProjection
 #
 # a = TransferMechanism(name='a')
 # b = TransferMechanism(name='b')
@@ -170,8 +170,8 @@ print(my_adaptive_integrator.execute([3]))
 # d = TransferMechanism(name='d')
 # e = TransferMechanism(name='e')
 #
-# fb1 = Mapping(sender=c, receiver=b, name='fb1')
-# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+# fb1 = MappingProjection(sender=c, receiver=b, name='fb1')
+# fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 #
 # p1 = process(pathway=[a, b, c, d], name='p1')
 # p2 = process(pathway=[e, b, c, d], name='p2')
@@ -279,16 +279,16 @@ print(my_adaptive_integrator.execute([3]))
 #endregion
 
 
-#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 #
 # my_mech = TransferMechanism(function=Linear())
 # my_mech2 = TransferMechanism(function=Linear())
-# my_projection = Mapping(sender=my_mech,
+# my_projection = MappingProjection(sender=my_mech,
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
@@ -317,12 +317,12 @@ print(my_adaptive_integrator.execute([3]))
 
 #endregion
 
-#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Components.Process import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-# from PsyNeuLink.Components.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 #
 # color_naming = TransferMechanism(default_input_value=[0,0],
 #                         function=Linear,
@@ -336,12 +336,12 @@ print(my_adaptive_integrator.execute([3]))
 # verbal_response = TransferMechanism(default_input_value=[0,0],
 #                            function=Logistic)
 #
-# color_pathway = Mapping(sender=color_naming,
+# color_pathway = MappingProjection(sender=color_naming,
 #                         receiver=verbal_response,
 #                         matrix=IDENTITY_MATRIX,
 #                         )
 #
-# word_pathway = Mapping(sender=word_reading,
+# word_pathway = MappingProjection(sender=word_reading,
 #                        receiver=verbal_response,
 #                         matrix=IDENTITY_MATRIX
 #                        )

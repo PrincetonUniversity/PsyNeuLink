@@ -65,7 +65,7 @@ See the License for the specific language governing permissions and limitations 
                  Component that takes a source of in, possibly transforms it, and uses it to
                  determine the operation of a mechanism;  three primary types:
     
-                 + Mapping
+                 + MappingProjection
                      Takes the output of sender mechanism, possibly transforms it,
                          and provides it as the input to a receiver mechanism
     

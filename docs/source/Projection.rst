@@ -4,7 +4,7 @@ Projections
 .. toctree::
    :maxdepth: 1
 
-   Mapping
+   MappingProjection
    ControlSignal
    LearningSignal
 

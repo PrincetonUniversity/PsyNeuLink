@@ -18,18 +18,18 @@ associated with that projection.  There are three types of states, all of which 
 :doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below.
 
 * **InputState**:
-     used by a mechanism to represent the input provided by one or more :doc:`Mapping` projections.
+     used by a mechanism to represent the input provided by one or more :doc:`MappingProjection` projections.
 
 * **ParameterState**:
     * used by a mechanism to represent the value of a parameter of its ``function``,
       possibly regulated by a :doc:`ControlSignal` projection;
-    * used by a Mapping projection to represent the ``matrix`` parameter of its ``function``,
+    * used by a MappingProjection to represent the ``matrix`` parameter of its ``function``,
       possibly regulated by a :doc:`LearningSignal` projection.
 
 * **OutputState**:
     * used by a mechanism to represent its output, and as the source of any outgoing projection(s):
 
-      * :doc:`Mapping` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
+      * :doc:`MappingProjection` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
       * :doc:`ControlSignal` for a :doc:`ControlMechanism <ControlMechanism>`;
       * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
 
@@ -40,7 +40,7 @@ Creating a State
 
 States can be created used the constructor for one of the subclasses.  However, in general, they are created
 automatically by the objects to which they belong, and/or through specification in context (e.g., when specifying
-the parameters of a mechanism's function to be controlled [LINK], or Mapping projections to be learned [LINK]).
+the parameters of a mechanism's function to be controlled [LINK], or MappingProjections to be learned [LINK]).
 
 Structure
 ---------
@@ -1180,12 +1180,12 @@ class State_Base(State):
                     continue
 
 
-            from PsyNeuLink.Components.Projections.Mapping import Mapping
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
             from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 
             # Merge with relevant projection type-specific params
-            if isinstance(projection, Mapping):
+            if isinstance(projection, MappingProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, mapping_params, )
             elif isinstance(projection, ControlSignal):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, control_signal_params)

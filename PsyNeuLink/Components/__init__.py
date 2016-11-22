@@ -190,13 +190,13 @@ register_category(entry=ParameterState,
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
 
-# Mapping
-from PsyNeuLink.Components.Projections.Mapping import Mapping
-register_category(entry=Mapping,
+# MappingProjection
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# MAPPING = Mapping.__name__
+# MAPPING = MappingProjection.__name__
 
 # ControlSignal
 from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
@@ -339,7 +339,7 @@ ControlSignal.classPreferences = ComponentPreferenceSet(owner=ControlSignal,
                                                        level=PreferenceLevel.TYPE,
                                                        context=".__init__.py")
 
-Mapping.classPreferences = ComponentPreferenceSet(owner=Mapping,
+MappingProjection.classPreferences = ComponentPreferenceSet(owner=MappingProjection,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
                                                  level=PreferenceLevel.TYPE,
                                                  context=".__init__.py")

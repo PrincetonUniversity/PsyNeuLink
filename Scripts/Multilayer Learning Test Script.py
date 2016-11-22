@@ -2,7 +2,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
 # from PsyNeuLink.Globals.Run import run, construct_inputs
@@ -37,7 +37,7 @@ Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 # This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
-Input_Weights = Mapping(name='Input Weights',
+Input_Weights = MappingProjection(name='Input Weights',
                         # sender=Input_Layer,
                         # receiver=Hidden_Layer_1,
                         # matrix=(random_weight_matrix, LearningSignal()),
@@ -50,7 +50,7 @@ Input_Weights = Mapping(name='Input Weights',
 
 # This projection will be used by the process below by assigning its sender and receiver args
 #    to mechanismss in the pathway
-Middle_Weights = Mapping(name='Middle Weights',
+Middle_Weights = MappingProjection(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
@@ -59,7 +59,7 @@ Middle_Weights = Mapping(name='Middle Weights',
                          )
 
 # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
-Output_Weights = Mapping(name='Output Weights',
+Output_Weights = MappingProjection(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
                          # matrix=random_weight_matrix,

@@ -131,8 +131,8 @@ class InputState(State_Base):
         - self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
         - output of self.function must be compatible with self.value (enforced in _validate_params)
         - if owner is being instantiated within a pathway:
-            - InputState will be assigned as the receiver of a Mapping projection from the preceding mechanism
-            - if it is the first mechanism in the list, it will receive a Mapping projection from process.input
+            - InputState will be assigned as the receiver of a MappingProjection from the preceding mechanism
+            - if it is the first mechanism in the list, it will receive a MappingProjection from process.input
 
     Parameters:
         The default for FUNCTION is LinearCombination using kwAritmentic.Operation.SUM:

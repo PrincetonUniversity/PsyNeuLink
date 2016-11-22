@@ -1654,7 +1654,7 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of Mapping projections that receive learning projections
+            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 
             :keyword:`CONTROL_MECHANISMS`:list of CONTROL mechanisms
 

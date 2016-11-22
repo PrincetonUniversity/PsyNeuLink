@@ -89,7 +89,7 @@ PsyNeuLink uses the following primary constructs:
             receiver), transforming it if necessary so that it is usable by its receiver.
 
 
-            + :doc:`Mapping`
+            + :doc:`MappingProjection`
                 Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
                 and then provide that as input to the receiver mechanism.
 

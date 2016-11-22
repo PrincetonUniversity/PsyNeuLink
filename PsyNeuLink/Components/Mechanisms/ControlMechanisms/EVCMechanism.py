@@ -44,12 +44,12 @@ it is generated automatically when a system is created and an EVCMechanism is sp
   * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
     EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
     is added to the EVCMechanism for each outputState specified in its ``monitor_for_control`` parameter, and a
-    :doc:`Mapping` projection is created that projects from that outputState to the EVCMechanism's inputState
+    :doc:`MappingProjection` projection is created that projects from that outputState to the EVCMechanism's inputState
     (see _ControlMechanism_Monitored_OutputStates for specifying :keyword:`MONITOR_FOR_CONTROL`).
   ..
   * **Prediction Mechanisms** -- these are used to generate the input for each simulation of the system run by the
     EVCMechanism (see :ref:`EVCMechanism_Execution`).  A prediction mechanism is created for each :keyword:`ORIGIN`
-    (input) mechanism in the system; a Mapping projection is created that projects to it from the corresponding
+    (input) mechanism in the system; a MappingProjection is created that projects to it from the corresponding
     :keyword:`ORIGIN` mechanism; and the pair are assigned to their own *prediction process*.  The prediction mechanisms
     and prediction processes for an EVCMechanism are listed in its ``predictionMechanisms`` and ``predictionProcesses``
     attributes, respectively.
@@ -485,7 +485,7 @@ class EVCMechanism(ControlMechanism_Base):
                                            context=self)
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate inputState and Mapping Projections for list of Mechanisms and/or States to be monitored
+        """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
         - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
@@ -879,7 +879,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         Validate specification for outputState to be monitored
         Instantiate inputState with value of monitoredOutputState
-        Instantiate Mapping projection to inputState from monitoredOutputState
+        Instantiate MappingProjection to inputState from monitoredOutputState
 
         Args:
             monitored_state (OutputState):
@@ -895,9 +895,9 @@ class EVCMechanism(ControlMechanism_Base):
                                                                       monitored_state.value,
                                                                       context=context)
 
-        # Instantiate Mapping Projection from monitored_state to new input_state
-        from PsyNeuLink.Components.Projections.Mapping import Mapping
-        Mapping(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
+        # Instantiate MappingProjection from monitored_state to new input_state
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)

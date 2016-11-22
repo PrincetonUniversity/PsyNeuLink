@@ -58,7 +58,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      Component that takes a source, possibly transforms it, and uses it to
                      determine the operation of a mechanism;  three primary types:
         
-                     + Mapping
+                     + MappingProjection
                          Takes output state of sender, possibly transforms it,
                              and provides it as input state to receiver
         
@@ -123,7 +123,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      OutputState(owner, [reference_value, params, name, prefs])
                                                                                     # output from mechanism execute method
                  Projection_Base(receiver, [sender, params, name, prefs, context])
-                     Mapping([sender, receiver, params, name, prefs])                    # outputState -> inputState
+                     MappingProjection([sender, receiver, params, name, prefs])                    # outputState -> inputState
                      ControlSignals([allocation_source, receiver, params, name, prefs])  # outputState -> parameterState
                      [TBI: - Gating()]                                                   # outputState -> inputState/outputState
                      [TBI: - Learning()]                                                 # outputState -> projection
@@ -167,7 +167,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
                  Projection(Component)....................................[PsyNeuLink.Components.ShellClasses]
                      Projection_Base(Projection).........................[PsyNeuLink.Components.Projections.Projection]
-                         Mapping(Projection_Base)........................[PsyNeuLink.Components.Projections.Mapping]
+                         MappingProjection(Projection_Base)........................[PsyNeuLink.Components.Projections.MappingProjection]
                          ControlSignal(Projection_Base)..................[PsyNeuLink.Components.Projections.ControlSignal]
         
                  Function(Component).......................................[PsyNeuLink.Components.ShellClasses]
@@ -295,13 +295,13 @@ Description: Princeton University licenses this file to You under the Apache Lic
              - Every mechanism has three types (subclasses) of State associated with it:
                  - a single InputState:
                       its value serves as the input to the mechanism
-                      it receives one or more Mapping Projections from other mechanisms
+                      it receives one or more MappingProjections from other mechanisms
                  - one or more ParameterStates:
                      their values serve as the parameters of the mechanism's FUNCTION (self.execute),
                      each of which receives typically one (but possibly more) ControlSignal projections
                  - a single OutputState:
                       its value serves as the output to the mechanism,
-                      and is typically assinged as the sender for other mechanisms' Mapping Projection(s)
+                      and is typically assinged as the sender for other mechanisms' MappingProjection(s)
              - State:
                  every instance of State has a single value attribute (that represents its "state"; = self.variable)
                  every instance of State must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
@@ -356,7 +356,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      projection's execute method)
                      a) State <: projections.receiver;
                          [Process._instantiate_pathway, State.instantiate_projection,
-                          Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
+                          Projection.validate_states, ControlSignal.assign_states, MappingProjection.assign_states]
                     b) self.sender.value : self.variable (function variable)
                         [Projection._instantiate_attributes_before_function / _instantiate_sender]
                     c) self.receiver.value = self.value
@@ -440,7 +440,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  FUNCTION_PARAMS as an entry in one of the following dicts, that itself must be included in
                                  one of the kw<state_type>Params dicts listed above:
                                      kwProjectionParams: will apply for all projections to the specified state_type
-                                     kwMappingParams: will apply only to Mapping projections for the specified state_type
+                                     kwMappingParams: will apply only to MappingProjections for the specified state_type
                                      kwControlSignalParams: will apply only to ControlSignal projections for the specified state_type
                                      kwLearningSignalParams: will apply only to LearningSignal projections for the specified state_type
                                      <projection_name>: will apply only to projections with the specified name for the state_type
@@ -607,20 +607,20 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          d) _instantiate_attributes_before_function:
                              - calls _instantiate_receiver and _instantiate_sender (which both must be done before _validate_function)
                                  * _instantiate_receiver must be called before _instantiate_sender since the latter requires access to
-                                     self.receiver to determine whether to use a comparatorMechanism mechanism or <Mapping>.receiverError for error signals
+                                     self.receiver to determine whether to use a comparatorMechanism mechanism or <MappingProjection>.receiverError for error signals
                              i) _instantiate_receiver:
                                  * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls _add_projection_to_mechanism
         
                 """Instantiate and/or assign the parameterState of the projection to be modified by learning
         
-                If receiver is specified as a Mapping Projection, it is assigned to parameterStates[kwWeightMatrix]
+                If receiver is specified as a MappingProjection, it is assigned to parameterStates[kwWeightMatrix]
                     for the projection;  if that does not exist, it is instantiated and assigned as the receiver
                 If specified as a ParameterState, validate that it is parameterStates[kwWeightMatrix]
                 Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
                 
                 Note:
                 * This must be called before _instantiate_sender since that requires access to self.receiver
-                    to determine whether to use a comparatorMechanism mechanism or <Mapping>.receiverError for error signals
+                    to determine whether to use a comparatorMechanism mechanism or <MappingProjection>.receiverError for error signals
                 * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                                       and calls _add_projection_to_mechanism
         
@@ -638,7 +638,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                     - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
                     - assign its outputState.value as self.variable
                 If sender was not specified (remains MonitoringMechanism_Base as specified in paramClassDefaults):
-                   if the owner of the Mapping projection projects to a MonitoringMechanism, then
+                   if the owner of the MappingProjection projects to a MonitoringMechanism, then
                        - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
                        - assign its outputState.value as self.variable
                    otherwise, if self.receiver.owner has an receiverError attribute, as that as self.variable
@@ -730,7 +730,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  There are four PreferenceLevels defined for the Component hierarchy:
                  + System:  reserved for the Component class
                  + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
-                 + Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Function subclasses)
+                 + Type: Category subclasses (e.g., MappingProjection and ControlSignal subclasses of Projection, Function subclasses)
                  + Instance: an instance of an object of any class
         
              - Setting preferences:
@@ -779,7 +779,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  DDM:
                      InputState:
                          projections:
-                             Mapping
+                             MappingProjection
                                  sender: SystemDefaultSender
                      OutputState:
                          [TBI: sender for projection to SystemDefaultReceiver]

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **********************************************  Mapping **************************************************************
+# **********************************************  MappingProjection **************************************************************
 
 """
 .. _Mapping_Overview:
@@ -14,14 +14,14 @@
 Overview
 --------
 
-Mapping projections transmit value from an outputState of one ProcessingMechanism (its ``sender``) to the inputState of
+MappingProjections transmit value from an outputState of one ProcessingMechanism (its ``sender``) to the inputState of
 another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, which uses the projection's ``matrix``
 parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
 ``receiver``.
 
 .. _Mapping_Creation:
 
-Creating a Mapping Projection
+Creating a MappingProjection
 -----------------------------
 
 COMMENT:
@@ -33,7 +33,7 @@ COMMENT
 
 A mapping projection can be created in any of the ways that can be used to create a
 :ref:`projection <_Projection_Creation>) or by specifying it in the:ref:`pathway <_Process_Projections>`
-of a process. Mapping projections are also generated automatically by PsyNeuLink in a number of circumstances,
+of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
 using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
 
 * in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
@@ -69,7 +69,7 @@ In addition to its ``function``, mapping projections use the following two the p
 
 ``matrix``
 
-  Used by the Mapping projection's ``function`` to execute a matrix transformation of its input.
+  Used by the MappingProjection's ``function`` to execute a matrix transformation of its input.
   It can be specified using any of the following formats:
 
   *List, array or matrix*.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
@@ -145,9 +145,9 @@ class MappingError(Exception):
         self.error_value = error_value
 
 
-class Mapping(Projection_Base):
+class MappingProjection(Projection_Base):
     """
-    Mapping(                                                \
+    MappingProjection(                                                \
         sender=None,                                        \
         receiver=None,                                      \
         matrix=DEFAULT_MATRIX,                              \
@@ -161,7 +161,7 @@ class Mapping(Projection_Base):
 
     COMMENT:
         Description:
-            The Mapping class is a type in the Projection category of Component.
+            The MappingProjection class is a type in the Projection category of Component.
             It implements a projection that takes the value of an outputState of one mechanism, transforms it as
             necessary, and provides it to the inputState of another ProcessingMechanism.
             It's function conveys (and possibly transforms) the OutputState.value of a sender
@@ -286,7 +286,7 @@ class Mapping(Projection_Base):
             return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        super(Mapping, self).__init__(sender=sender,
+        super(MappingProjection, self).__init__(sender=sender,
                                       receiver=receiver,
                                       params=params,
                                       name=name,
@@ -322,7 +322,7 @@ class Mapping(Projection_Base):
         except TypeError:
             receiver_len = 1
 
-        # Compare length of Mapping output and receiver's variable to be sure matrix has proper dimensions
+        # Compare length of MappingProjection output and receiver's variable to be sure matrix has proper dimensions
         try:
             mapping_output_len = len(self.value)
         except TypeError:
@@ -424,7 +424,7 @@ class Mapping(Projection_Base):
         if not (isinstance(matrix, np.matrix) or
                     (isinstance(matrix,np.ndarray) and matrix.ndim == 2) or
                     (isinstance(matrix,list) and np.array(matrix).ndim == 2)):
-            raise MappingError("Matrix parameter for {} ({}) Mapping projection must be "
+            raise MappingError("Matrix parameter for {} ({}) MappingProjection must be "
                                "an np.matrix, a 2d np.array, or a correspondingly configured list".
                                format(self.name, matrix))
         self.function.__self__.matrix = matrix
@@ -433,7 +433,7 @@ class Mapping(Projection_Base):
     def _matrix_spec(self):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
-        Returns matrix param for Mapping, getting second item if it is
+        Returns matrix param for MappingProjection, getting second item if it is
          a ParamValueprojection or unnamed (matrix, projection) tuple
         """
         return get_function_param(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
@@ -442,7 +442,7 @@ class Mapping(Projection_Base):
     def _matrix_spec(self, value):
         """Assign matrix specification for self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
 
-        Assigns matrix param for Mapping, assigning second item if it is
+        Assigns matrix param for MappingProjection, assigning second item if it is
          a ParamValueProjection or unnamed (matrix, projection) tuple
         """
 

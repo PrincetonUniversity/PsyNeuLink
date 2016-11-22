@@ -95,7 +95,7 @@ class OutputState(State_Base):
 
     Description:
         The OutputState class is a type in the State category of Component,
-        It is used primarily as the sender for Mapping projections
+        It is used primarily as the sender for MappingProjections
         Its FUNCTION updates its value:
             note:  currently, this is the identity function, that simply maps variable to self.value
 

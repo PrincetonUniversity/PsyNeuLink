@@ -64,7 +64,7 @@ at least to the next one in the pathway, though it can project to others, and al
 projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
 a :doc:`System`.  the mechanisms in a process pathway are generally :doc:`ProcessingMechanisms`, which receive an input,
 transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
-in a process must be  :doc:`Mapping` projections (see Projections).  These transmit the output of a mechanism
+in a process must be  :doc:`MappingProjection` projections (see Projections).  These transmit the output of a mechanism
 (the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a pathway
 requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
 of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
@@ -107,8 +107,8 @@ Projections between mechanisms in the ``pathway`` of a process are specified in 
 * Inline specification
     Projection specifications can be interposed between any two mechanisms in the ``pathway`` list.  This creates
     a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
-    can be an instance of a :doc:`Mapping` projection, the class name Mapping, a :ref:`keyword <Matrix_Keywords>`
-    for a type of Mapping projection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
+    can be an instance of a :doc:`MappingProjection` projection, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
+    for a type of MappingProjection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
     :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
     (see :ref:`Projection <Projection_Creation>` for details of how to specify projections).
 
@@ -122,7 +122,7 @@ Projections between mechanisms in the ``pathway`` of a process are specified in 
 
 * Default assignment
     For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
-    the methods above), a Mapping projection is automatically created from the mechanism that precedes it in the
+    the methods above), a MappingProjection is automatically created from the mechanism that precedes it in the
     pathway.  If the format of the preceding mechanism's output matches that of the next mechanism, then
     :keyword:`IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or learning has been specified
     either for the projection or the process, then :keyword:`FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is
@@ -137,11 +137,11 @@ Process input and output
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The input to a process is a list or 2D np.array provided as an arg in its execute() method or the run() function,
-and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and Mapping projections
+and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and MappingProjections
 are automatically generated to transmit the process' input to its :keyword:`ORIGIN` mechanism, as follows:
 
 * if the number of items in the input is the same as the number of :keyword:`ORIGIN` inputStates:
-    a Mapping projection is created for each value of the input to an inputState of the :keyword:`ORIGIN` mechanism
+    a MappingProjection is created for each value of the input to an inputState of the :keyword:`ORIGIN` mechanism
 
 * if the input has only one item but the :keyword:`ORIGIN` mechanism has more than one inputState:
     a single ProcessInputState is created with projections to each of the :keyword:`ORIGIN` mechanism inputStates
@@ -164,7 +164,7 @@ Learning
 Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
 Learning can be configured for a :ref:`projection <LearningSignal_Creation>` to a
 particular mechanism, or for the entire process (using its ''learning'' attribute).  Specifying learning for a
-process will implement it for all eligible projections the process (i.e., all Mapping projections, excluding
+process will implement it for all eligible projections the process (i.e., all MappingProjections, excluding
 projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the
 :keyword:`TERIMINAL` mechanism to the process' outputState). When learning is specified for the process, all
 projections in the process will be trained so that input to the process (i.e., its :keyword:`ORIGIN` mechanism)
@@ -174,7 +174,7 @@ with learning (see :doc:`LearningSignal`).
 
 When learning is specified, the following objects are automatically created (see figure below):
 * :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value.
-* :doc:`Mapping` projection from the mechanism being monitored to the MonitoringMechanism
+* :doc:`MappingProjection` projection from the mechanism being monitored to the MonitoringMechanism
 * :doc:`LearningSignal` that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
   projects to the mechanism being monitored).
 
@@ -241,7 +241,7 @@ A mapping projection is automatically instantiated between each of the mechanism
 In this pathway, projection_A is specified as the projection between the first and second mechanisms; a
 default projection will be created between mechanism_2 and mechanism_3::
 
-    projection_A = Mapping()
+    projection_A = MappingProjection()
     my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
 *Inline projection specification using a keyword:*
@@ -257,7 +257,7 @@ In this pathway, projection_A is explicilty specified as a projection between me
 and so will be used as the projection between them in my_process; a default projection will be created between
 mechanism_2 and mechanism_3::
 
-    projection_A = Mapping(sender=mechanism_1, receiver=mechanism_2)
+    projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
 *Process that implements learning:*
@@ -311,7 +311,7 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -403,7 +403,7 @@ def process(process_spec=None,
     pathway : List[mechanism spec[, projection spec], mechanism spec...] : default List[``DefaultMechanism``]
         the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
         must a  :doc:`ProcessingMechanism`.  The specification for each can be an instance, a class name (creates a
-        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`Mapping` projection.
+        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`MappingProjection` projection.
         The specification for each can be the class name (creates a default instance), an instance, or a specification
         dictionary [LINK].
 
@@ -427,7 +427,7 @@ def process(process_spec=None,
         :keyword:`ORIGIN` mechanism every time it is executed in a round of executions.
 
     default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
-        the type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
+        the type of matrix used for default projections (see ''matrix'' parameter for ''MappingProjection()'' projection) [LINK]
 
     learning : Optional[LearningSignal spec]
         implements :ref:`learning <LearningSignal_CreationLearningSignal>` for all
@@ -597,7 +597,7 @@ class Process_Base(Process):
 
     processInputStates : Optional[List[ProcessInputState]]
         used to represent the input to the process, and transmit this to the inputState(s) of its :keyword:`ORIGIN`
-        mechanism.  Each processInputState sends a Mapping projection to one or more inputStates of the
+        mechanism.  Each processInputState sends a MappingProjection to one or more inputStates of the
         :keyword:`ORIGIN` mechanism.
 
     input :  Optional[List[value] or ndarray]
@@ -701,7 +701,7 @@ class Process_Base(Process):
         If an existing instance of a LearningSignal used for the specification, or a call to the LearningSignal
         constructor, that object itself, or the one created by the constructor, will **not** be used as the actual
         LearningSignal projection for the process. Rather it will be used as a template (including any parameters that
-        are specified) for creating LearningSignal projections for all the Mapping projections in the process.
+        are specified) for creating LearningSignal projections for all the MappingProjections in the process.
 
       .. _learning_enabled : bool
              indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
@@ -879,7 +879,7 @@ class Process_Base(Process):
 #
 
     def _instantiate_pathway(self, context):
-        # DOCUMENT:  Projections SPECIFIED IN A PATHWAY MUST BE A Mapping Projection
+        # DOCUMENT:  Projections SPECIFIED IN A PATHWAY MUST BE A MappingProjection
         # DOCUMENT:
         # Each item in Pathway can be a Mechanism or Projection object, class ref, or specification dict,
         #     str as name for a default Mechanism,
@@ -907,7 +907,7 @@ class Process_Base(Process):
                 - if Projection is explicitly specified as item between them in the list, use that;
                 - if Projection is NOT explicitly specified,
                     but the next Mechanism already has a projection from the previous one, use that;
-                - otherwise, instantiate a default Mapping projection from previous mechanism to next:
+                - otherwise, instantiate a default MappingProjection from previous mechanism to next:
                     use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if the lengths are not equal
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if kwLearning has been set
@@ -1284,12 +1284,12 @@ class Process_Base(Process):
                     if not projection_found:
                         # No projection found, so instantiate mapping projection from preceding mech to current one;
                         # Note:  If self.learning arg is specified, it has already been added to projection_params above
-                        Mapping(sender=preceding_item,
+                        MappingProjection(sender=preceding_item,
                                 receiver=item,
                                 params=projection_params
                                 )
                         if self.prefs.verbosePref:
-                            print("Mapping projection added from mechanism {0} to mechanism {1}"
+                            print("MappingProjection added from mechanism {0} to mechanism {1}"
                                   " in pathway of {2}".format(preceding_item.name, item.name, self.name))
 
                 # Item is a Projection or specification for one
@@ -1312,15 +1312,15 @@ class Process_Base(Process):
                     # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
                     #            and _parse_projection_ref() all to Projection_Base.__init__() and call that
                     #           VALIDATION OF PROJECTION OBJECT:
-                    #                MAKE SURE IT IS A Mapping PROJECTION
+                    #                MAKE SURE IT IS A MappingProjection
                     #                CHECK THAT SENDER IS pathway[i-1][OBJECT]
                     #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT]
 
                     sender_mech=pathway[i-1][OBJECT]
                     receiver_mech=pathway[i+1][OBJECT]
 
-                    # projection spec is an instance of a Mapping projection
-                    if isinstance(item, Mapping):
+                    # projection spec is an instance of a MappingProjection
+                    if isinstance(item, MappingProjection):
                         # Check that Projection's sender and receiver are to the mech before and after it in the list
                         # IMPLEMENT: CONSIDER ADDING LEARNING TO ITS SPECIFICATION?
     # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
@@ -1390,12 +1390,12 @@ class Process_Base(Process):
                         if params:
                             projection.matrix = params
 
-                    # projection spec is a Mapping class reference
-                    elif inspect.isclass(item) and issubclass(item, Mapping):
+                    # projection spec is a MappingProjection class reference
+                    elif inspect.isclass(item) and issubclass(item, MappingProjection):
                         if params:
                             # Note:  If self.learning is specified, it has already been added to projection_params above
                             projection_params = params
-                        projection = Mapping(sender=sender_mech,
+                        projection = MappingProjection(sender=sender_mech,
                                              receiver=receiver_mech,
                                              params=projection_params)
 
@@ -1412,7 +1412,7 @@ class Process_Base(Process):
                         # Otherwise, do not include any LearningSignal
                         else:
                             matrix_spec = item
-                        projection = Mapping(sender=sender_mech,
+                        projection = MappingProjection(sender=sender_mech,
                                              receiver=receiver_mech,
                                              matrix=matrix_spec)
                     else:
@@ -1497,8 +1497,8 @@ class Process_Base(Process):
         """Create projection(s) for each item in Process input to inputState(s) of the specified Mechanism
 
         For each item in Process input:
-        - create process_input_state, as sender for Mapping Projection to the mechanism.inputState
-        - create the Mapping projection (with process_input_state as sender, and mechanism as receiver)
+        - create process_input_state, as sender for MappingProjection to the mechanism.inputState
+        - create the MappingProjection (with process_input_state as sender, and mechanism as receiver)
 
         If len(Process.input) == len(mechanism.variable):
             - create one projection for each of the mechanism.inputState(s)
@@ -1553,7 +1553,7 @@ class Process_Base(Process):
                                                     prefs=self.prefs)
             self.processInputStates.append(process_input_state)
 
-        from PsyNeuLink.Components.Projections.Mapping import Mapping
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
         # If there is the same number of Process input values and mechanism.inputStates, assign one to each
         if num_process_inputs == num_mechanism_input_states:
@@ -1563,8 +1563,8 @@ class Process_Base(Process):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                        "variable for corresponding inputState of {3}".
                                        format(i, process_input[i], self.name, mechanism.name))
-                # Create Mapping projection from Process input state to corresponding mechanism.inputState
-                Mapping(sender=self.processInputStates[i],
+                # Create MappingProjection from Process input state to corresponding mechanism.inputState
+                MappingProjection(sender=self.processInputStates[i],
                         receiver=list(mechanism.inputStates.items())[i][1],
                         name=self.name+'_Input Projection',
                         context=context)
@@ -1585,8 +1585,8 @@ class Process_Base(Process):
                                            "variable ({3}) for inputState {4} of {5}".
                                            format(j, process_input[j], self.name,
                                                   mechanism.variable[i], i, mechanism.name))
-                    # Create Mapping projection from Process buffer_intput_state to corresponding mechanism.inputState
-                    Mapping(sender=self.processInputStates[j],
+                    # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.inputState
+                    MappingProjection(sender=self.processInputStates[j],
                             receiver=list(mechanism.inputStates.items())[i][1],
                             name=self.name+'_Input Projection')
                     if self.prefs.verbosePref:
@@ -1776,9 +1776,9 @@ class Process_Base(Process):
                                                 name=TARGET)
         self.targetInputStates.append(target_input_state)
 
-        # Add Mapping projection from target_input_state to MonitoringMechanism's target inputState
-        from PsyNeuLink.Components.Projections.Mapping import Mapping
-        Mapping(sender=target_input_state,
+        # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        MappingProjection(sender=target_input_state,
                 receiver=comparator_target,
                 name=self.name+'_Input Projection to '+comparator_target.name)
 
@@ -2079,7 +2079,7 @@ class ProcessInputState(OutputState):
     """Encodes input to the process and transmits it to the :keyword:`ORIGIN` mechanism in the process
 
     Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
-    Mapping projection that projects to one or more inputStates of the :keyword:`ORIGIN` mechanism in the process.
+    MappingProjection that projects to one or more inputStates of the :keyword:`ORIGIN` mechanism in the process.
 
     (See Process input and output [LINK] for an explantion of the mapping from processInputStates to :keyword:`ORIGIN`
     mechanism inputStates when there is more than one process input value and/or mechanism inputState)

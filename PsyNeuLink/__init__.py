@@ -17,7 +17,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
@@ -32,7 +32,7 @@ __all__ = ['System',
            'EVCMechanism',
            'ComparatorMechanism',
            'WeightedErrorMechanism',
-           'Mapping',
+           'MappingProjection',
            'ControlSignal',
            'LearningSignal',
            'LinearCombination',

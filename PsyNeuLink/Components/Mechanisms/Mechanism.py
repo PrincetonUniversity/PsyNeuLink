@@ -1245,14 +1245,14 @@ class Mechanism_Base(Mechanism):
                              entry will be passed to all of the State's projections, and used by
                              by their execute methods, overriding their paramInstanceDefaults for that call
                         + MAPPING_PARAMS:<dict>:
-                             entry will be passed to all of the State's Mapping projections,
+                             entry will be passed to all of the State's MappingProjections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + CONTROL_SIGNAL_PARAMS:<dict>:
                              entry will be passed to all of the State's ControlSignal projections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + <projectionName>:<dict>:
                              entry will be passed to the State's projection with the key's name,
-                             along with any in the PROJECTION_PARAMS and Mapping or ControlSignal dicts
+                             along with any in the PROJECTION_PARAMS and MappingProjection or ControlSignal dicts
           COMMENT
 
         time_scale : TimeScale :  default TimeScale.TRIAL
@@ -1458,7 +1458,7 @@ class Mechanism_Base(Mechanism):
     def _update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
 
-        Call execute method for all (Mapping) projections in inputState.receivesFromProjections
+        Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
         Aggregate results (using inputState execute method)
         Update inputState.value
 
