@@ -32,7 +32,7 @@ associated with each ControlSignal projection (based on its ``value`` for the po
 ``cost`` attribute).  The policy that generates the maximum EVC is implemented, and used on the next round of
 execution.
 
-.. _EVCMechanism_Creating_An_EVCMechanism:
+.. _EVCMechanism_Creation:
 
 Creating an EVCMechanism
 ------------------------

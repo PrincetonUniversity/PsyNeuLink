@@ -12,7 +12,7 @@
 ..
     Sections:
       * :ref:`DDM_Overview`
-      * :ref:`DDM_Creating_A_DDM_Mechanism`
+      * :ref:`DDM_Creation`
       * :ref:`DDM_Execution`
       * :ref:`DDM_Class_Reference`
 
@@ -27,7 +27,7 @@ the sequential probability ratio test (SPRT [REF]), which is the statistically o
 forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (in
 :keyword:`TRIAL` mode), or integrated numerically (in :keyword:`TIME_STEP` mode).
 
-.. _DDM_Creating_A_DDM_Mechanism:
+.. _DDM_Creation:
 
 Creating a DDM Mechanism
 -----------------------------
@@ -378,7 +378,7 @@ class DDM(ProcessingMechanism_Base):
     default_input_value : value, list or np.ndarray : keyword:`FUNCTION_PARAMS`[keyword:`STARTING_POINT`] [LINK]
         the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
-        of the mechanism (see :ref:`Input` <DDM_Creating_A_DDM_Mechanism>` for how an input with a length of greater
+        of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length of greater
         than 1 is handled).
 
     function : IntegratorFunction : default BogaczEtAl

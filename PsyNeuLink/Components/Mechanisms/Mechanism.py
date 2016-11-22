@@ -11,7 +11,7 @@
 """
 ..
     * :ref:`Mechanism_Overview`
-    * :ref:`Mechanism_Creating_A_System`
+    * :ref:`Mechanism_Creation`
     * :ref:`Mechanism_Structure`
      * :ref:`Mechanism_Function`
      * :ref:`Mechanism_States`
@@ -69,7 +69,7 @@ COMMENT
 A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
 uses to represent its input, function parameters, and output
 
-.. _Mechanism_Creating_A_System:
+.. _Mechanism_Creation:
 
 Creating a Mechanism
 --------------------
@@ -281,7 +281,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
 
     * :keyword:`INPUT_STATES` : Dict[str, InputState] -
       used to specify specialized inputStates required by a mechanism subclass
-      (see :ref:`InputStates_Creating_An_InputState` for details of specification).
+      (see :ref:`InputStates_Creation` for details of specification).
     ..
     * :keyword:`FUNCTION` : function or method :  default method implemented by subclass -
       specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
@@ -293,7 +293,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
 
       * the value of the parameter itself;
       * a parameter state, the value of which specifies the parameter's value
-        (see :ref:`ParameterState_Creating_A_ParameterState`).
+        (see :ref:`ParameterState_Creation`).
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
         :doc:`ControlSignal` or a :doc:`LearningSignal`
         (a :class:`ParamValueProjection` namedtuple can be used for clarity).
@@ -306,7 +306,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
 
     * :keyword:`OUTPUT_STATES` : Dict[str, OutputState] -
       used to specify specialized outputStates required by a mechanism subclass
-      (see :ref:`OutputStates_Creating_An_OutputState` for details of specification).
+      (see :ref:`OutputStates_Creation` for details of specification).
     ..
     * :keyword:`MONITOR_FOR_CONTROL` : List[OutputState] -
       used to specify mechanisms or specific outputStates to be monitored by a ControlMechanism
@@ -432,7 +432,7 @@ def mechanism(mech_spec=None, params=None, context=None):
         if it is the name of a Mechanism subclass registered in the ``MechanismRegistry``
         an instance of a default mechanism for that class is returned,
         otherwise the string is used to name an instance of the default mechanism;
-        if it is a dict, it must be a mechanism specification dict (see :ref:`Mechanism_Creating_A_Mechanism`).
+        if it is a dict, it must be a mechanism specification dict (see :ref:`Mechanism_Creation`).
         Note: if a name is not specified, the nth instance created will be named by using the mechanism's
         ``componentType`` attribute as the base and adding an indexed suffix:  componentType-n.
 
@@ -500,7 +500,7 @@ class Mechanism_Base(Mechanism):
        Mechanisms should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
        by calling the constructor for the desired subclass, or using other methods for specifying a mechanism in
-       context (see :ref:`Mechanism_Creating_A_Mechanism`).
+       context (see :ref:`Mechanism_Creation`).
 
     COMMENT:
         Description

@@ -20,13 +20,13 @@ parameterState (its ''receiver'') associated with the parameter of a function of
 ControlSignal also has an associated ``cost`` that is calculated based on its intensity and/or its time course, and
 used by a ControlMechanism to adapt the ControlSignal's ``allocation``.[LINK]
 
-.. _ControlSignal_Creating_A_ControlSignal_Projection:
+.. _ControlSignal_Creation:
 
 Creating a ControlSignal Projection
 -----------------------------------
 
 A ControlSignal projection can be created in any of the ways that can be used to
-:ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification for the
+:ref:`create a projection <Projection_Creation>`, or by including it in the specification for the
 :ref:`parameter of a mechanism's function <Mechanism_Assigning_A_Control_Signal>`.  If the constructor is used,
 the ``receiver`` argument must be specified.  If it is included in a parameter specification, its ``receiver`` will be
 assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on

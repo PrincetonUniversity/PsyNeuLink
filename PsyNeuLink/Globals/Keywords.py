@@ -369,6 +369,7 @@ EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
 LINEAR = 'linear'
+CONSTANT = 'constant'
 SCALED = 'scaled'
 TIME_AVERAGED = 'time_averaged'
 

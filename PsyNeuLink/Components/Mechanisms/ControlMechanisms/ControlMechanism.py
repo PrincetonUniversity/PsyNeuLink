@@ -16,13 +16,13 @@ ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms
 outcome of processing by those mechanisms, and use this to regulate the value of :doc:`ControlSignal` projections to
 other ProcessingMechanisms in the system for which the ControlMechanism is a ``controller``.
 
-.. _ControlMechanism_Creating_A_ControlMechanism:
+.. _ControlMechanism_Creation:
 
 Creating A ControlMechanism
 ---------------------------
 
 ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creating_A_System`),
+A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creation`),
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates to be monitored
 by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can be specified in a number of
 ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the

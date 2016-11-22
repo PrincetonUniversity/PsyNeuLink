@@ -15,7 +15,7 @@
 Overview
 --------
 
-.. _InputStates_Creating_An_InputState:
+.. _InputStates_Creation:
 
 Creating an InputState
 ----------------------

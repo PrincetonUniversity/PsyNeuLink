@@ -4,19 +4,17 @@
 
 # 11/19/16:
 # FIX: AdaptiveIntegrator MECHANISM:
-# FIX:         CAN IT HANLDE AN ARRAY?  IF NOT, ADJUST DOCUMENTATION ACCORDINGLY
 # FIX:         EITHER CORRECT THE NAMES OF LINEAR AND SCALED, OR CORRECT THE COMPUTATIONS
 # FIX: WHAT IS ITS NAME:  AdaptiveIntegrator or AdpativeIntegratorMechanism?
+#
 # FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??
+#
 # FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
 
-# DOCUMENTATION: XXX_Creating_A_XXX --> XXX_Creation
-# DOCUMENTATION: State:  XXXX COORDINATE THIS TO MECHANISM DOCUMENTATION REGARDING MECHANISM-SPECIFIC STATE REGISTRIES
-# DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
-#                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
+# DOCUMENTATION:  MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
 # DOCUMENTATION:  singularize first statement in overview of all objects
 # DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :any:
 

@@ -12,7 +12,7 @@
 ..
     Sections of this document:
       * :ref:`Projection_Overview`
-      * :ref:`Projection_Creating_A_Projection`
+      * :ref:`Projection_Creation`
       * :ref:`Projection_Structure`
          * :ref:`Projection_Sender`
          * :ref:`Projection_Receiver`
@@ -49,7 +49,7 @@ COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
 COMMENT
 
-.. _Projection_Creating_A_Projection:
+.. _Projection_Creation:
 
 Creating a Projection
 ---------------------
@@ -134,7 +134,7 @@ sender's ``value`` is used as the ``variable`` (input) for projection's ``functi
   ..
   * the name of an existing mechanism (to which a default outputState will be added);
   ..
-  * a specification dictionary (see :ref:`State_Creating_A_State`[LINK]).
+  * a specification dictionary (see :ref:`State_Creation`[LINK]).
 
 If a sender is not specified, or its specification creates a default, paramClassDefaults[PROJECTION_SENDER] is
 used to assign a default appropriate to the type of projection (see [LINK]).
@@ -156,7 +156,7 @@ specified as:
     (whether the object can be a mechanism or projection, and the type of state that will be created for it
     is determined by the type of projection — see subclass for details).
   ..
-  * a specification dictionary (see _State_Creating_A_State).
+  * a specification dictionary (see _State_Creation).
   ..
   .. note::
      a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the

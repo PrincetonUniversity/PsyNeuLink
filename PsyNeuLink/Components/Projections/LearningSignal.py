@@ -20,13 +20,13 @@ and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.
 functions[LINK] to implement different learning algorithms, which are associated with corresponding types of
 MonitoringMechanisms.
 
-.. _LearningSignal_Creating_A_LearningSignal_Projection:
+.. _LearningSignal_Creation:
 
 Creating a LearningSignal Projection
 ------------------------------------
 
 A LearningSignal projection can be created in any of the ways that can be used to
-:ref:`create a projection <Projection_Creating_A_Projection>`, or by including it in the specification of a
+:ref:`create a projection <Projection_Creation>`, or by including it in the specification of a
 :ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <_Process_Projections>`
 of a process.  Its ``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver``
 must be the parameterState of a Mapping projection.  When a LearningSignal is created, its full initialization is
