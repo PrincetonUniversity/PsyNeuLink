@@ -95,6 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
@@ -159,16 +160,38 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A State is a component that provides an interface to a <a class="reference internal" href="Projection.html"><span class="doc">projection</span></a>, and represents the value
 associated with that projection.  There are three types of states, all of which are used by
-<a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a> and one of which is used by <a class="reference internal" href="Projection.html"><span class="doc">projections</span></a>, as summarized below:</p>
-<ul class="simple">
-<li><a class="reference internal" href="InputState.html"><span class="doc">**inputState**</span></a>: used by a mechanism to represent its input, as provided by a
-<a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection;</li>
-<li><a class="reference internal" href="ParameterState.html"><span class="doc">**parameterStates**</span></a>: used by a mechanism to represent the value of a parameter of its
-<code class="docutils literal"><span class="pre">function</span></code>, possibly regulated by a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection;  and used by a Mapping projection to represent
-the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of its <code class="docutils literal"><span class="pre">function</span></code>, possibly regulated by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection.</li>
-<li><a class="reference internal" href="OutputState.html"><span class="doc">**outputState**</span></a>: used by a mechanism to represent its output, and as the source of an outgoing
-projection (<a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>; <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>;
-and <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> for a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a>).</li>
+<a class="reference internal" href="Mechanism.html"><span class="doc">mechanisms</span></a> and one of which is used by <a class="reference internal" href="Projection.html"><span class="doc">projections</span></a>, as summarized below.</p>
+<ul>
+<li><dl class="first docutils">
+<dt><strong>InputState</strong>:</dt>
+<dd><p class="first last">used by a mechanism to represent the input provided by one or more <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projections.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>ParameterState</strong>:</dt>
+<dd><ul class="first last simple">
+<li>used by a mechanism to represent the value of a parameter of its <code class="docutils literal"><span class="pre">function</span></code>,
+possibly regulated by a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection;</li>
+<li>used by a Mapping projection to represent the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of its <code class="docutils literal"><span class="pre">function</span></code>,
+possibly regulated by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><strong>OutputState</strong>:</dt>
+<dd><ul class="first last simple">
+<li>used by a mechanism to represent its output, and as the source of any outgoing projection(s):<ul>
+<li><a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>;</li>
+<li><a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>;</li>
+<li><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> for a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a>.</li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </div>
 <div class="section" id="creating-a-state">
@@ -179,10 +202,27 @@ the parameters of a mechanism&#8217;s function to be controlled [LINK], or Mappi
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>Like all PsyNeuLink components, they have the three fundamental attributes:</p>
+<p>Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, they have the three
+fundamental attributes:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">variable</span></code>:</li>
+<li><code class="docutils literal"><span class="pre">variable</span></code>:  for an inputState and parameterState, this is determined by the value(s) received from the
+projection(s) that it receives, listed in it the <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute;  for an outputState,
+this is the value returned by owner mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (and also assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the state).</li>
+<li><code class="docutils literal"><span class="pre">function</span></code>:  for an inputState and parameterState, this aggregates the values received by the projections it
+receives (the default is a <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function that sums the values); at present, outputState
+<code class="docutils literal"><span class="pre">functions</span></code> are not used (the value of outputStates is assigned directly by the mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method).</li>
+<li><code class="docutils literal"><span class="pre">value</span></code>:  for an inputState and parameterState, this is the aggregated value of the projections it receives;
+for an outputState, this is assigned by the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method</li>
 </ul>
+<p>XXXXX ARE THE ABOVE STATEMENTS ABOUT OUTPUT FUNCTION AND VALUES CORRECT??</p>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>States cannot be executed directly.  They are executed when the component to which they belong is executed.
+When an inputState or parameterState is executed, it executes any projections it receives, calls its <code class="docutils literal"><span class="pre">function</span></code> to
+aggregate their values, and then assigns this as its own <code class="docutils literal"><span class="pre">value</span></code>.  This conforms to a &#8220;lazy evaluation&#8221; protocol (
+see [LINK] for a more detailed discussion).</p>
+<p>XXXXX WHAT HAPPENS WHEN AN OUTPUTSTATE UPDATES?</p>
 </div>
 </div>
 
