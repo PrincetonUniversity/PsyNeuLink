@@ -4,7 +4,7 @@
 
 # 11/22/16:
 # √ AdaptiveIntegrator -> IntegratorMechanism
-#   TransferMechanism -> TransferMechanism
+# √ TransferMechanism -> TransferMechanism
 # √ WeightedErrorMechanism -> WeightedErrorMechanism
 # √ ComparatorMechanism -> ComparatorMechanism
 #   DDM -> DDMMechanism
