@@ -1392,7 +1392,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     #                         format(matrix_cols, self.name, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
-                # Note:  assume that these will be properly processed by caller (e.g., Mapping._instantiate_receiver)
+                # Note:  assume that these will be properly processed by caller (e.g., MappingProjection._instantiate_receiver)
                 elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 
@@ -1519,10 +1519,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # # MODIFIED 10/29/16 OLD:
         # matrix = get_matrix(keyword)
         # MODIFIED 10/29/16 NEW:
-        from PsyNeuLink.Components.Projections.Mapping import Mapping
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         rows = None
         cols = None
-        if isinstance(self, Mapping):
+        if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
             cols = len(self.receiver.variable)
         matrix = get_matrix(keyword, rows, cols)
@@ -2116,7 +2116,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         Assume output array has a single non-zero value chosen by the softmax function of the error_source
         Assume error is a single scalar value
-        Assume weight matrix (for Mapping projection to error_source) is a diagonal matrix
+        Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
             (one weight for corresponding pairs of elements in the input and output arrays)
         Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
 

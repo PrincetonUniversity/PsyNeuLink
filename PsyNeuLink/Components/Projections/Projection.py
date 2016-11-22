@@ -28,10 +28,10 @@ Projections allow information to be passed between mechanisms.  A projection tak
 one mechanism (its ``sender``), and does whatever conversion is needed to transmit that information as the input
 to another mechanism (its ``receiver``).  There are three types of projections that serve difference purposes:
 
-* :doc:`Mapping`
+* :doc:`MappingProjection`
     These take the ouptut of one :doc:`ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
     the projection's ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically,
-    Mapping projections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
+    MappingProjections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
 * :doc:`ControlSignal`
     Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
@@ -41,7 +41,7 @@ to another mechanism (its ``receiver``).  There are three types of projections t
 ..
 * :doc:`LearningSignal`
     These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
-    transmit this to the parameterState of a :doc:`Mapping` projection, which uses this to modify its ``matrix``
+    transmit this to the parameterState of a :doc:`MappingProjection` projection, which uses this to modify its ``matrix``
     parameter. LearningSignal projections are used in the context of a :doc:`System` or :doc:`Process` that uses
     learning.
 
@@ -58,7 +58,7 @@ Projections can be created in several ways.  The simplest is to use the standard
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the ``pathway`` attribute of a process, or when a tuple is used to specify the parameter of a function
 (such as a :ref:`ControlSignal for a mechanism <Mechanism_Assigning_A_Control_Signal>`,
-or a :ref:`LearningSignal for a Mapping projection <Mapping_Tuple_Specification>`).
+or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`).
 
 .. _Projection_In_Context_Specification:
 
@@ -70,13 +70,13 @@ or a :ref:`LearningSignal for a Mapping projection <Mapping_Tuple_Specification>
 
   *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  * :keyword:`MAPPING_PROJECTION` - a :doc:`Mapping` projection with the :doc:`DefaultMechanism` as its ``sender``.
+  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` projection with the :doc:`DefaultMechanism` as its ``sender``.
   * :keyword:`CONTROL_SIGNAL` - a :doc:`ControlSignal` projection  with the :doc:`DefaultControlMechanism` as its
   ``sender``.
   * :keyword:`LEARNING_SIGNAL` - a :doc:`LearningSignal` projection.  This can only be used for a projection to the
-    ``matrix`` parameterState of a :doc:`Mapping` projection.  If the ``receiver`` for the Mapping projection
+    ``matrix`` parameterState of a :doc:`MappingProjection` projection.  If the ``receiver`` for the MappingProjection
     (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningSignal.
-    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a Mapping
+    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a MappingProjection
     projection from the error source to the MonitoringMechanism
     (see :ref:`Automatic Instantiation` <LearningSignal_Automatic_Creation>` of a LearningSignal for details).
 
@@ -89,7 +89,7 @@ or a :ref:`LearningSignal for a Mapping projection <Mapping_Tuple_Specification>
   * :keyword:`PROJECTION_TYPE`: <name of a projection type>
 
       if this entry is absent, a default projection will be created that is appropriate for the context
-      (for example, a Mapping projection for an inputState, and a ControlSignal projection for a parameterState).
+      (for example, a MappingProjection for an inputState, and a ControlSignal projection for a parameterState).
 
   * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
 
@@ -104,7 +104,7 @@ or a :ref:`LearningSignal for a Mapping projection <Mapping_Tuple_Specification>
 .. _Projection_Automatic_Creation:
 
 *Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
-a process automatically generates a  :doc:`Mapping` projection between adjacent mechanisms in its ``pathway`` if
+a process automatically generates a  :doc:`MappingProjection` projection between adjacent mechanisms in its ``pathway`` if
 none is specified; and :doc:`LearningSignal`  projections are automatically generated when
 :ref:`learning <Process_Learning>` is specified for a process.  Creating a :doc:`state <State>` will also
 automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
@@ -166,14 +166,14 @@ specified as:
 COMMENT:
     If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added
     to the mechanism depends on the type of projection:
-        Mapping projection:
+        MappingProjection:
             receiver = <Mechanism>.inputState
         ControlSignal projection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
         LearningSignal projection:
             sender = <Mechanism>.outputState
-            receiver = <Mapping projection>.parameterState IF AND ONLY IF there is a single one
+            receiver = <MappingProjection>.parameterState IF AND ONLY IF there is a single one
                         that is a ParameterState;  otherwise, an exception is raised
 COMMENT
 
@@ -261,7 +261,7 @@ class Projection_Base(Projection):
     COMMENT:
         Description
         -----------
-            Projection category of Component class (default type:  Mapping)
+            Projection category of Component class (default type:  MappingProjection)
 
         Class attributes
         ----------------
@@ -374,7 +374,7 @@ class Projection_Base(Projection):
         NOTES:
         * Receiver is required, since can't instantiate a Projection without a receiving State
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
-            Mapping projection:
+            MappingProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.inputState
             ControlSignal projection:
@@ -447,7 +447,7 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
+# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlSignal??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
@@ -614,7 +614,7 @@ class Projection_Base(Projection):
 
         # At this point, self.sender should be a OutputState
         if not isinstance(self.sender, OutputState):
-            raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
+            raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
         # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from

@@ -1,7 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import Logistic
 
 Input_Layer = Transfer(name='Input Layer',
@@ -17,14 +17,14 @@ Output_Layer = DDM(name='Output Layer DDM',
                    params = {MONITOR_FOR_LEARNING:PROBABILITY_LOWER_THRESHOLD},
                    default_input_value = [0])
 
-Input_Weights = Mapping(name='Input Weights',
+Input_Weights = MappingProjection(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
                                   # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
                                   params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
                                   )
 
-Output_Weights = Mapping(name='Output Weights',
+Output_Weights = MappingProjection(name='Output Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Output_Layer,
                                   # params={FUNCTION_PARAMS:{MATRIX:IDENTITY_MATRIX}}

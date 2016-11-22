@@ -25,7 +25,7 @@ It also contains:
             [PDP]
     Projection
         types:
-            Mapping
+            MappingProjection
             ControlSignal
             LearningSignal
     Function

@@ -27,8 +27,8 @@ is specified in the ``comparison_operation``, which can be the keyword :keyword:
 It can also be created by :ref:`in context specification of a LearningSignal <Projection_Creation>`
 for a projection to the  :keyword:`TERMINAL` mechanism [LINK] of a process.  One or more ComparatorMechanisms are also
 created automatically when a process or system is created for which learning is specified; each is assigned a
-projection from the outputState of a :keyword:`TERMINAL` mechanism that receives a Mapping projection being learned,
-and a LearningSignal projection to that Mapping projection  (see :ref:`learning in a process <Process_Learning>`,
+projection from the outputState of a :keyword:`TERMINAL` mechanism that receives a MappingProjection being learned,
+and a LearningSignal projection to that MappingProjection  (see :ref:`learning in a process <Process_Learning>`,
 and :ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creation> for details).
 
 
@@ -37,7 +37,7 @@ and :ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creat
 Structure
 ---------
 
-A ComparatorMechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from
+A ComparatorMechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a MappingProjection from
 the primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`TARGET` inputState is
 assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
 It has five outputStates, described under Execution below.

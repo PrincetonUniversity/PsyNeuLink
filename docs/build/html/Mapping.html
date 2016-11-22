@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mapping &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -91,9 +91,9 @@
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mapping</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MappingProjection</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-mapping-projection">Creating a Mapping Projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-mapping-projection">Creating a MappingProjection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
@@ -141,11 +141,11 @@
       
           <li><a href="Projection.html">Projections</a> &raquo;</li>
       
-    <li>Mapping</li>
+    <li>MappingProjection</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/Mapping.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/MappingProjection.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -155,20 +155,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-Mapping">
-<span id="mapping"></span><h1>Mapping<a class="headerlink" href="#module-Mapping" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-MappingProjection">
+<span id="mapping"></span><h1>MappingProjection<a class="headerlink" href="#module-MappingProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="mapping-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Mapping projections transmit value from an outputState of one ProcessingMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>) to the inputState of
+<p>MappingProjections transmit value from an outputState of one ProcessingMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>) to the inputState of
 another (its <code class="docutils literal"><span class="pre">receiver</span></code>).  Its default <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref py py-class docutils literal"><span class="pre">LinearMatrix</span></code>, which uses the projection&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code>
 parameter to transform an array received from its <code class="docutils literal"><span class="pre">sender</span></code>, transforms it, and transmits the result to its
 <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </div>
 <div class="section" id="creating-a-mapping-projection">
-<span id="mapping-creating-a-mapping-projection"></span><h2>Creating a Mapping Projection<a class="headerlink" href="#creating-a-mapping-projection" title="Permalink to this headline">¶</a></h2>
+<span id="mapping-creating-a-mapping-projection"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mapping-projection" title="Permalink to this headline">¶</a></h2>
 <p>A mapping projection can be created in any of the ways that can be used to create a
 <span class="xref std std-ref">projection</span>
-of a process. Mapping projections are also generated automatically by PsyNeuLink in a number of circumstances,
+of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
 using a <code class="docutils literal"><span class="pre">matrix</span></code> appropriate to the circumstance  (matrix types are described in :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>Mapping_Structure):</p>
 <ul class="simple">
 <li>in a <strong>process</strong>, between adjacent mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> for which none has been assigned;
@@ -190,7 +190,7 @@ or they can be assigned by default (see below).</p>
 <p>In addition to its <code class="docutils literal"><span class="pre">function</span></code>, mapping projections use the following two the primary parameters:</p>
 <p id="mapping-matrix"><code class="docutils literal"><span class="pre">matrix</span></code></p>
 <blockquote>
-<div><p>Used by the Mapping projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to execute a matrix transformation of its input.
+<div><p>Used by the MappingProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to execute a matrix transformation of its input.
 It can be specified using any of the following formats:</p>
 <p><em>List, array or matrix</em>.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
 it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
@@ -240,8 +240,8 @@ executed).</p>
 <div class="section" id="class-reference">
 <span id="projection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="Mapping.Mapping">
-<em class="property">class </em><code class="descclassname">Mapping.</code><code class="descname">Mapping</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>param_modulation_operation=ModulationOperation.ADD</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping" title="Permalink to this definition">¶</a></dt>
+<dt id="MappingProjection.MappingProjection">
+<em class="property">class </em><code class="descclassname">MappingProjection.</code><code class="descname">MappingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>param_modulation_operation=ModulationOperation.ADD</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MappingProjection.MappingProjection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a projection that transmits the output of one mechanism to the input of another.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -270,14 +270,14 @@ If it is not specified, a default is assigned using <code class="docutils litera
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="Mapping.Mapping.monitoringMechanism">
-<code class="descname">monitoringMechanism</code><a class="headerlink" href="#Mapping.Mapping.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
+<dt id="MappingProjection.MappingProjection.monitoringMechanism">
+<code class="descname">monitoringMechanism</code><a class="headerlink" href="#MappingProjection.MappingProjection.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when <a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Mapping.Mapping.matrix">
-<code class="descname">matrix</code><a class="headerlink" href="#Mapping.Mapping.matrix" title="Permalink to this definition">¶</a></dt>
+<dt id="MappingProjection.MappingProjection.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#MappingProjection.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> &#8211; matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform input from <code class="docutils literal"><span class="pre">sender</span></code> and to <code class="docutils literal"><span class="pre">value</span></code> used by <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </dd></dl>
 

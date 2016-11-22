@@ -1,6 +1,6 @@
-Mapping
+MappingProjection
 =======
 
-.. automodule:: Mapping
+.. automodule:: MappingProjection
    :members:
    :exclude-members: random, execute

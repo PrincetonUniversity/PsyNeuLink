@@ -6,7 +6,7 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
@@ -34,7 +34,7 @@ print(my_process.execute())
 mechanism_1 = Transfer()
 mechanism_2 = Transfer()
 mechanism_3 = DDM()
-projection_A = Mapping()
+projection_A = MappingProjection()
 my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 print(my_process.execute())
 
@@ -49,7 +49,7 @@ print(my_process.execute())
 mechanism_1 = Transfer()
 mechanism_2 = Transfer()
 mechanism_3 = DDM()
-projection_A = Mapping(sender=mechanism_1, receiver=mechanism_2)
+projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
 my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 print(my_process.execute())
 

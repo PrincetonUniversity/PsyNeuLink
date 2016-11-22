@@ -1,7 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
 
@@ -15,7 +15,7 @@ Output_Layer = Transfer(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0])
 
-Learned_Weights = Mapping(name='Learned Weights',
+Learned_Weights = MappingProjection(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
 

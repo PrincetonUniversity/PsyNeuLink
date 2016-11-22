@@ -8,7 +8,7 @@
 # √ WeightedErrorMechanism -> WeightedErrorMechanism
 # √ ComparatorMechanism -> ComparatorMechanism
 #   DDM -> DDMMechanism
-#   Mapping -> MappingProjection
+# √ MappingProjection -> MappingProjection
 #   ControlSignal -> ControlSignalProjection
 #   LearningSignal -> LearningSignalProjection
 
@@ -36,7 +36,7 @@
 
 # 11/18/16:
 
-# TEST: DOES ASSIGNING A Mapping OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A Mapping Projection work?
+# TEST: DOES ASSIGNING A MappingProjection OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A MappingProjection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_SIGNAL.
 #
 # DOCUMENTATION: MONITOR_FOR_LEARNING (in LearningSignal AND ??WHERE ELSE:
@@ -239,7 +239,7 @@
 #                     # FIX: THESE NEED TO BE PROPERLY MAPPED
 #                     return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
 
-# IMPLEMENT: Mapping -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
+# IMPLEMENT: MappingProjection -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
 # FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
@@ -374,7 +374,7 @@
 # PROCESS:
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 # FIX: AUTO_ASSIGN_MATRIX NOT WORKING:  FIX IN Function LinearCombination
-# IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in Mapping?
+# IMPLEMENT: AUTO_ASSIGN_MATRIX  in LinearCombination or in MappingProjection?
 #                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy _is_mechanism_spec in validation contexts generally
 # TEST:
@@ -393,8 +393,8 @@
 
 # FIX: Replace NotImplemented with None for context and params args throughout
 
-# FIX: Default name for LearningSignal is Mapping Projection class and parameter state,
-#      rather than Mapping projection's actual name
+# FIX: Default name for LearningSignal is MappingProjection class and parameter state,
+#      rather than MappingProjection's actual name
 
 # IMPLEMENT: Process:  modify execute to take training_signal arg if LearningSignal param is set
 #                      (i.e., specify its format and where it will come from -- input or projection from a mechanism)
@@ -406,7 +406,7 @@
 # IMPLEMENT: Change all enum values to keywords (make read_only?? by using @getters and setters)
 #            (follow design pattern in SoftMax)
 #
-# IMPLEMENT: Deferred Init for Mapping projection (re: receiver) (until added in a Projection pathway) xxx
+# IMPLEMENT: Deferred Init for MappingProjection (re: receiver) (until added in a Projection pathway) xxx
 #
 # IMPLEMENT: FUNCTION
 #            Move .function -> __function__ and make .function the Function Function object itself
@@ -425,7 +425,7 @@
 #                                         and use those in mechanism functions (as current value of parameters)
 #             Implement same pattern for inputState and outputState dicts, so that can have: inputState.name.value
 
-# IMPLEMENT: Add params to Process for projection type (default: Mapping) and matrix type (default: random)
+# IMPLEMENT: Add params to Process for projection type (default: MappingProjection) and matrix type (default: random)
 #
 # IMPLEMENT: GET RID OF params ARG;  replace assignments as follows:
 #            OLD VERSION:
@@ -458,7 +458,7 @@
 #                       (note: slope gets parameterState that is controlled by learning_rate of LearningSignal)
 #                1) Use Softmax as final output layer
 #                2) ComparatorMechanism:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
-#                3) FullConnectivity Mapping from terminalMechanism->ComparatorMechanism
+#                3) FullConnectivity MappingProjection from terminalMechanism->ComparatorMechanism
 #                4) LearningSignal.learningRate sets slope of Linear layer
 #                ----------------
 #
@@ -540,7 +540,7 @@
 # FIX:
 #     Specification of projections arg for Process level:  projection object?  matrix??
 #     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
-#     Flattening of matrix param of function arg for Mapping projection
+#     Flattening of matrix param of function arg for MappingProjection
 #
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
 #       USE EVC System Test Script and delete CONTROL_SIGNAL for drift_rate param in DDM.__init__()
@@ -570,7 +570,7 @@
 # PROBLEM:
 #    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningSignal's receiver, and thus that _instantiate_receiver be called first;
-#    - that means instantiating receiver before the execute method of the Mapping Projection has been instantiated
+#    - that means instantiating receiver before the execute method of the MappingProjection has been instantiated
 #        which, in turn, means that the weight matrix has not been instantiated
 #    - that is a problem for _instantiate_sender, as there is no way to validate that
 #        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
@@ -621,8 +621,8 @@
 #
 # FIX: ERROR in "Sigmoid" script:
 # Components.Projections.Projection.ProjectionError:
-#  'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for Mapping projection'
-#       PROBLEM: Mapping._instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
+#  'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for MappingProjection'
+#       PROBLEM: MappingProjection._instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
 #                                                     with length of receiver, which for DDM is just a single inputState
 #
 #
@@ -653,7 +653,7 @@
 # FIX (FUNCTIONS / LinearMatrix): MOVE KEYWORD DEFINITIONS OUT OF CLASS (CONFUSING) AND REPLACE self.kwXXX with kwXXX
 # -------------
 # FIX (PROJECTION): FIX MESS CONCERNING VARIABLE AND SENDER ASSIGNMENTS:
-#         SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
+#         SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlSignal??
 #                     MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                      (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
 # --------------
@@ -884,7 +884,7 @@
 # QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
 #                                                                  or signify (e.g., class = template)
 #
-# QUESTION: ??OPTION (reshapedWeightMatrixOption for Mapping) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
+# QUESTION: ??OPTION (reshapedWeightMatrixOption for MappingProjection) TO SUPPRESS RESHAPING (FOR FULL CONNECTIVITY)
 #
 # QUESTION: WHICH CLASS SHOULD HANDLE THE EXECUTION OF LEARNING:  PROCESS OR SYSTEM
 #           Process:
@@ -936,7 +936,7 @@
 #   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
 #   <>.paramsCurrent = <>.params
 #   kwXxxYyy -> XXX_YYY
-#   MATRIX -> kwWeightMatrix;  matrix -> weightMatrix in Mapping projection
+#   MATRIX -> kwWeightMatrix;  matrix -> weightMatrix in MappingProjection
 #   item -> element for any array/vector/matrix contexts
 #   function (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
 #   kwParameterState -> PARAMETER_STATES
@@ -1047,7 +1047,7 @@
 #  ~ InputState
 #  √ LearningSignal
 #    Log
-#  √ Mapping
+#  √ MappingProjection
 #  ! Mechanism
 #  √ MonitoringMechanism
 #  ~ OutputState
@@ -1200,8 +1200,8 @@
 #           phase -> event
 #           value:  can be a single number (scalar), non-numeric value, or an array (vector) of either.  Used to refer
 #                   to what is received by, represented, or output by a mechanism or state
-#           Mapping projection matrix -> weightMatrix;  make corresponding changes in learningSignal
-#           Mapping -> MappingProjection
+#           MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
+#           MappingProjection -> MappingProjection
 #           ControlSignal -> ControlSignalProjection
 #           LearningSignal -> LearningSignalProjection
 #           MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
@@ -1209,7 +1209,7 @@
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
-#              Function, Mapping, ControlSignal, and DDM documentation:
+#              Function, MappingProjection, ControlSignal, and DDM documentation:
 
 # DOCUMENT: SYSTEM:
 #           ORIGIN: origin mechanism of a process in a system that does not receive projections from any other mechanisms
@@ -1225,7 +1225,7 @@
 #                     (however, it can project to a ControlMechanism or a MonitoringMechanism)
 #
 # DOCUMENT: PROCESS:
-#           If either the sender and/or receiver arg of a Mapping projection are not specified,
+#           If either the sender and/or receiver arg of a MappingProjection are not specified,
 #               initialization of the projection is delayed.  This has the following consequence:
 #           If the mapping projection is defined outside the Process pathway and not explicitly listed in it,
 #               it will not be included in the Process;  this is because deferring intialization means that
@@ -1242,7 +1242,7 @@
 #           To use lambda functions for params, Function Function must implement .lambda method that resolves it to value
 
 # DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
-#            (in Mapping _instantiate_receiver and Function LinearCombination)
+#            (in MappingProjection _instantiate_receiver and Function LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
 
@@ -1250,7 +1250,7 @@
 #                      as well as any explicity specified (except for ones that already have a LearningSignal specified)
 
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
-#                          for Mapping and ControlSignal, if receiver is not specified in __init__,
+#                          for MappingProjection and ControlSignal, if receiver is not specified in __init__,
 #                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
 #                          for LearningSignal, at end of Process._instantiate_pathway
 # DOCUMENT:  ARGS & PARAMS
@@ -1339,16 +1339,16 @@
 #  LearningSignal requires that:
 #               - _instantiate_sender and _instantiate_receiver be called in reverse order,
 #               - some of their elements be rearranged, and
-#               - Mapping.instantiate_parameter_state() be called in Mapping._instantiate_attributes_after_function
+#               - MappingProjection.instantiate_parameter_state() be called in MappingProjection._instantiate_attributes_after_function
 #               this is because:
 #               - _instantiate_sender needs to know whether or not a MonitoringMechanism already exists
-#                   which means it needs to know about the LearningSignal's receiver (Mapping Projection)
+#                   which means it needs to know about the LearningSignal's receiver (MappingProjection)
 #                   that it uses to find the ProcessingMechanism being monitored (error_source)
 #                   which, in turn, means that _instantiate_receiver has to have already been called
 #               - _instantiate_sender must know size of weight matrix to check compatibilit of error_signal with it
 #           Error Signal "sits" in Monitoring mechanim that is the sender for the LearningSignal
 #  MonitoringMechanism must implement and update flag that indicates errorSignal has occured
-#           this is used by Mapping projection to decide whether to update LearningSignal & weight matrix
+#           this is used by MappingProjection to decide whether to update LearningSignal & weight matrix
 #
 # DOCUMENT: If _validate_params is overridden:
 #               before call to super()._validate_params(), params specified by user are in request_set
@@ -1401,7 +1401,7 @@
 #     CONTEXTUALIZE BY # OF INPUT STATES:  IF ONLY ONE, THEN SPECIFY AS LIST OF NUMBERS;  IF MULITPLE, SPECIFIY EACH AS A LIST
 
 # DOCUMENT: When "chaining" processes (such that the first Mechanism of one Process becomes the last Mechanism
-#               of another), then that Mechanism loses its Mapping Projection from the input_state
+#               of another), then that Mechanism loses its MappingProjection from the input_state
 #               of the first Process.  The principole here is that only "leaves" in a Process or System
 #              (i.e., Mechanisms with otherwise unspecified inputs sources) get assigned Process.input_state Mappings
 #
@@ -1555,7 +1555,7 @@
 #      In projection() and Function:
 #          DefaultProjection
 #      In Process_Base:
-#          kwProcessDefaultProjection: Components.Projections.Mapping
+#          kwProcessDefaultProjection: Components.Projections.MappingProjection
 #          kwProcessDefaultProjectionFunction: Components.Function.LinearMatrix
 #  DefaultMechanism is now being assigned in Process;
 #  -  need to re-instate some form of set_default_mechanism() in Mechanism
@@ -1746,7 +1746,7 @@
 #      tuples: (senderMech, receiverMech, [projection])
 #                     senderMech & receiverMech must be mechanism specifications
 #                     projectionMatrix must specify either:
-#                          + Mapping projection object
+#                          + MappingProjection object
 #                          + IDENTITY_MATRIX: len(sender.value) == len(receiver.variable)
 #                          + kwFull (full cross-connectivity) [** ADD THIS AS SPEC FOR LinearMatrix FUNCTION)
 #                          + timing params
@@ -2072,7 +2072,7 @@
 #                 FOR MechainismInputState SET self.value = self.variable of owner
 #                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of owner
 #
-# - State, ControlSignal and Mapping:
+# - State, ControlSignal and MappingProjection:
 # - if "senderValue" is in **args dict, assign to variable in init
 # - clean up documentation
 #
@@ -2136,8 +2136,8 @@
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT _instantiate_receiver
-#               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# FIX: clean up _instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
+#               (AS ControlSignal AND MappingProjection BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
+# FIX: clean up _instantiate_sender -- better integrate versions for MappingProjection, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
 # FIX:  Move marked section of _instantiate_projections_to_state(), _check_projection_receiver(), and _parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
@@ -2201,25 +2201,25 @@
 #             - implement self.errorSignal attribute
 # IMPLEMENT: LEARNING_SIGNAL for Process:
 #             - assign self.errorSignal attribute to all mechanisms
-#             - assign LearningSignal projection to all Mapping projections
+#             - assign LearningSignal projection to all MappingProjections
 # IMPLEMENT: NEW DESIGN:
 #
-# 0) Make sure Mapping projection from terminal Mechanism in Process is to ComparatorMechanism using IDENTITY_MATRIX
+# 0) Make sure MappingProjection from terminal Mechanism in Process is to ComparatorMechanism using IDENTITY_MATRIX
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:
 #    - _instantiate_receiver:
-#        - Mapping projection
+#        - MappingProjection
 #    - _instantiate_sender:
-#        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
+#        - examine mechanism to which MappingProjection project (receiver) projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
 #                    - ComparatorMechanism ErrorMonitoringMechanism
 #                        - ProcessInputState for ComparatorMechanism (name it??) with projection to target inputState
-#                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
+#                        - MappingProjection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
 #                    - WeightedErrorMechanism ErrorMonitoringMechanism
-#                        - Mapping projection from preceding ErrorMonitoringMechanism:
+#                        - MappingProjection from preceding ErrorMonitoringMechanism:
 #                            preceding processing mechanism (ppm):
 #                                ppm = self.receiver.owner.receiver.owner
 #                            preceding processing mechanism's output projection (pop)
@@ -2228,25 +2228,25 @@
 #                                popls = pop.parameterState.receivesFromProjections[0]
 #                            preceding ErrorMonitoringMechanism (pem):
 #                                pem = popls.sender.owner
-#                            assign Mapping projection from pem.outputState to self.inputState
+#                            assign MappingProjection from pem.outputState to self.inputState
 #                        - Get weight matrix for pop (pwm):
 #                                pwm = pop.parameterState.params[MATRIX]
 #    - update: compute weight changes based on errorSignal received rom ErrorMonitor Mechanism and pwm
 #
 # 2) ErrorMonitoring Mechanism:
-#    - get Mapping projection from source of errorSignal:
+#    - get MappingProjection from source of errorSignal:
 #        last one (associated with terminal ProcessingMechanism) gets it from external input
 #        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
 #            the ErrorMonitor associated with the next ProcessingMechanism in the process:
 #    - get weightMatrix for the output of its associated ProcessingMechanism
-#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to ComparatorMechanism)
+#        last one:  this should be identityMatrix (for MappingProjection from terminal mechanism to ComparatorMechanism)
 #        preceding ones: get from self.receiver.owner.outputState.projections.params[MATRIX]
 #    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
 #        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
 #        preceding ones compute it as the dot product of its input (errorSignal) and weightMatrix
 #    - outputState (errorSignal) has two projections:
-#         one Mapping projection to the preceding ErrorMonitorMechanism
-#         one LearningSignal to the output Mapping projection of its associated ProcessingMechanism
+#         one MappingProjection to the preceding ErrorMonitorMechanism
+#         one LearningSignal to the output MappingProjection of its associated ProcessingMechanism
 #
 
 # 3) Update:
@@ -2264,14 +2264,14 @@
 #     - sender:  output of Monitoring Mechanism
 #         default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
 #                  else default ComparatorMechanism
-#     - receiver: Mapping Projection parameterState (or some equivalent thereof)
+#     - receiver: MappingProjection parameterState (or some equivalent thereof)
 #
 # Need to add parameterState to Projection class;  composition options:
 #    - use ParameterState
 #    - extract core functionality from ParameterState:
 #        make it an object of its own
 #        ParameterState and Training Projection both call that object
-# Mapping Projection should have kwLearningParam which:
+# MappingProjection should have kwLearningParam which:
 #    - specifies LearningSignal
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
 #    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningSignal Projection with BP

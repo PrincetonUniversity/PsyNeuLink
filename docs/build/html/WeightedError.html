@@ -173,7 +173,7 @@
 <p>A WeightedErrorMechanism monitors the outputState of it&#8217;s <code class="docutils literal"><span class="pre">errorSource</span></code>: a ProcessingMechanism that projects to
 another mechanism in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  It computes the contribution of each element of the output of the
 <code class="docutils literal"><span class="pre">errorSource</span></code> to the error in the output of the mechanism to which the <code class="docutils literal"><span class="pre">errorSource</span></code> projects (the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>).
-The WeightedErrorMechanism <code class="docutils literal"><span class="pre">function``returns</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">array</span> <span class="pre">that</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">used</span> <span class="pre">by</span> <span class="pre">a</span> <span class="pre">:doc:`LearningSignal`</span> <span class="pre">to</span> <span class="pre">adjust</span> <span class="pre">a</span> <span class="pre">Mapping</span>
+The WeightedErrorMechanism <code class="docutils literal"><span class="pre">function``returns</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">array</span> <span class="pre">that</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">used</span> <span class="pre">by</span> <span class="pre">a</span> <span class="pre">:doc:`LearningSignal`</span> <span class="pre">to</span> <span class="pre">adjust</span> <span class="pre">a</span> <span class="pre">MappingProjection</span>
 <span class="pre">projection</span> <span class="pre">the</span> <span class="pre">``errorSource</span></code>, so as to reduce its future contribution to the weightedErrorSignal.</p>
 </div>
 <div class="section" id="creating-a-weightedErrorMechanism-mechanism">
@@ -183,21 +183,21 @@ function and specifying &#8220;WeightedErrorMechanism&#8221; as its <code class=
 specification of a LearningSignal</span> for a projection  to a ProcessingMechanism in
 a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
 are also created automatically when a process system is created for which learning is specified; each is
-assigned a projection from the outputState of a ProcessingMechanism that receives a Mapping projection being
-learned, and a LearningSignal projection to that Mapping projection
+assigned a projection from the outputState of a ProcessingMechanism that receives a MappingProjection being
+learned, and a LearningSignal projection to that MappingProjection
 (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
 :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>automatic creation of LearningSignals &lt;LearningSignal_Automatic_Creation&gt; for details).</p>
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A WeightedErrorMechanism has a single inputState, a <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> parameter, and a single
-(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The <strong>inputState</strong> receives a Mapping projection from its <code class="docutils literal"><span class="pre">errorSource</span></code> &#8211;
-the Processing mechanism for which it computes the error.  <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> is assigned to the Mapping
+(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The <strong>inputState</strong> receives a MappingProjection from its <code class="docutils literal"><span class="pre">errorSource</span></code> &#8211;
+the Processing mechanism for which it computes the error.  <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> is assigned to the MappingProjection
 projection from the primary outputState of the <code class="docutils literal"><span class="pre">errorSource</span></code> to the next mechanism in the process.  Each row of it&#8217;s
 <code class="docutils literal"><span class="pre">matrix</span></code> parameter corresponds to an element of the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code>, each column corresponds to an
 element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which it projects, and each element of the matrix is the weight of the
 association between the two.  The <strong>outputState</strong> of a WeightedErrorMechanism is typically assigned a
-<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of a Mapping projection to the
+<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of a MappingProjection to the
 <code class="docutils literal"><span class="pre">errorSource</span></code> (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>).</p>
 </div>
 <div class="section" id="execution">
@@ -233,7 +233,7 @@ and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="i
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).
 Includes the following entry:</p>
 <ul>
-<li><code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  Mapping projection;
+<li><code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  MappingProjection;
 its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>;
 it&#8217;s width (number of columns) must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</li>
 </ul>
@@ -252,7 +252,7 @@ it&#8217;s width (number of columns) must match the length of <code class="docut
 <dl class="attribute">
 <dt id="WeightedErrorMechanism.WeightedErrorMechanism.next_level_projection">
 <code class="descname">next_level_projection</code><a class="headerlink" href="#WeightedErrorMechanism.WeightedErrorMechanism.next_level_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mapping projection</em> &#8211; projection from the <code class="docutils literal"><span class="pre">errorSource</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">next</span> <span class="pre">mechanism</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">process;</span>&#160; <span class="pre">its</span> <span class="pre">``matrix</span></code> parameter is
+<dd><p><em>MappingProjection</em> &#8211; projection from the <code class="docutils literal"><span class="pre">errorSource</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">next</span> <span class="pre">mechanism</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">process;</span>&#160; <span class="pre">its</span> <span class="pre">``matrix</span></code> parameter is
 used to calculate the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
 </dd></dl>
 
