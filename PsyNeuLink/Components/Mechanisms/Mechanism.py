@@ -504,7 +504,7 @@ class Mechanism_Base(Mechanism):
                     • explicitly specify inputStates in params[INPUT_STATES] (each with its own variable specification);
                         those variables will be concantenated into a 2d array to create the mechanism's variable
                 if both methods are used, they must generate the same sized variable for the mechanims
-                ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: inputState SPECIFICATION (IN instantiate_state)??
+                ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: inputState SPECIFICATION (IN _instantiate_state)??
             - an execute method:
                 coordinates updating of inputStates, parameterStates (and params), execution of the function method
                 implemented by the subclass, (by calling its __execute__ method), and updating of the outputStates

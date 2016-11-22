@@ -561,7 +561,7 @@
 #        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
-#    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
+#    currently, used for mechanisms, and get parsed by _instantiate_state when instantiating their parameter states;
 #        paramValue is assigned to value of state, and that is used for function of the *mechanism*
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
@@ -667,7 +667,7 @@
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
 #         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
 #                        LENGTH OF EITHER LIST OF NAMES OR SPECIFICATION DICT (I.E., # ENTRIES)
-#                        DO THIS IN instantiate_state IF PARAM_STATE_IDENTIFIER IS InputState
+#                        DO THIS IN _instantiate_state IF PARAM_STATE_IDENTIFIER IS InputState
 #                        OR HAVE InputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
 #     * constraint_value in Mechanism.instantiate_state_lists (2D)
@@ -1306,7 +1306,7 @@
 #    for all of the projections associated with the mechanism in its pathway,
 #    beginning with the last and moving backward though the pathway
 # 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
-#          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
+#          State._instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
 # 6) update() method should test for self.value and if it is DEFERRED_INITIALIZATION it should return self.value
 # 7) Objects that call execute method of ones with deferred init should test for return value of DEFERRED_INITIALIZATION
 #     and handle appropriately
@@ -1399,7 +1399,7 @@
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
 #           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_SIGNAL)
 #     - Clean up ControlSignal InstanceAttributes
-# DOCUMENT instantiate_state_list() in Mechanism
+# DOCUMENT _instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
@@ -1693,7 +1693,7 @@
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
 #             _instantiate_control_signal_projection() for current controller
-#                 instantiate_state() [Mechanism]
+#                 _instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
 
@@ -1964,7 +1964,7 @@
 #            required if self.execute is not implemented and return value of FUNCTION is len > 1
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
-# FIX: IN instantiate_state:
+# FIX: IN _instantiate_state:
 # FIX: - check that constraint_value IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value
 # Search & Replace: constraint_value -> constraint_value
@@ -2018,7 +2018,7 @@
 #             assign this Function.__init__
 
 #
-# In instantiate_state (re: 2-item tuple and Projection cases):
+# In _instantiate_state (re: 2-item tuple and Projection cases):
         # IMPLEMENTATION NOTE:
         #    - need to do some checking on state_spec[1] to see if it is a projection
         #      since it could just be a numeric tuple used for the variable of a state;
@@ -2061,7 +2061,7 @@
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params
          # - if so, then correct in _instantiate_function_params under Mechanism
-         # - ADD instantiate_projection akin to instantiate_state in Mechanism
+         # - ADD instantiate_projection akin to _instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
 #
 ## ******* MOVE THIS TO State
