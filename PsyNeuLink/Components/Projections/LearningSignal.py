@@ -497,8 +497,8 @@ class LearningSignal(Projection_Base):
 
             self.mappingProjection = self.receiver
 
-            from PsyNeuLink.Components.States.InputState import instantiate_state_list
-            from PsyNeuLink.Components.States.InputState import instantiate_state
+            from PsyNeuLink.Components.States.InputState import _instantiate_state_list
+            from PsyNeuLink.Components.States.InputState import _instantiate_state
 
             # Check if Mapping Projection has parameterStates Ordered Dict and MATRIX entry
             try:
@@ -508,7 +508,7 @@ class LearningSignal(Projection_Base):
             except AttributeError:
                 # Instantiate parameterStates Ordered dict
                 #     with ParameterState for receiver's functionParams[MATRIX] param
-                self.receiver.parameterStates = instantiate_state_list(owner=self.receiver,
+                self.receiver.parameterStates = _instantiate_state_list(owner=self.receiver,
                                                                        state_list=[(MATRIX,
                                                                                     weight_change_params)],
                                                                        state_type=ParameterState,
@@ -521,7 +521,7 @@ class LearningSignal(Projection_Base):
             # receiver has parameterStates but not (yet!) one for MATRIX, so instantiate it
             except KeyError:
                 # Instantiate ParameterState for MATRIX
-                self.receiver.parameterStates[MATRIX] = instantiate_state(owner=self.receiver,
+                self.receiver.parameterStates[MATRIX] = _instantiate_state(owner=self.receiver,
                                                                             state_type=ParameterState,
                                                                             state_name=MATRIX,
                                                                             state_spec=kwParameterState,

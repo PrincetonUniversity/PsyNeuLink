@@ -775,7 +775,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         context:
 
     """
-    from PsyNeuLink.Components.States.State import instantiate_state
+    from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.InputState import InputState
     from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -831,7 +831,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
 
-    input_state = instantiate_state(owner=receiver,
+    input_state = _instantiate_state(owner=receiver,
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
@@ -866,7 +866,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         context:
     """
 
-    from PsyNeuLink.Components.States.State import instantiate_state
+    from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.OutputState import OutputState
 
@@ -919,7 +919,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                 raise ProjectionError("Unable to assign projection {0} to sender {1}".
                                       format(projection_spec.name, sender.name))
 
-    output_state = instantiate_state(owner=sender,
+    output_state = _instantiate_state(owner=sender,
                                      state_type=OutputState,
                                      state_name=output_state,
                                      state_spec=projection_spec.value,

@@ -1281,16 +1281,16 @@ class State_Base(State):
 
 # Module functions:
 #
-# - instantiate_state_list(state_type,
+# - _instantiate_state_list(state_type,
 #                                    state_param_identifier,
 #                                    constraint_value,
 #                                    constraint_value_name,
 #                                    context)
 #     instantiates states of type specified from list in paramsCurrent specified by state_param_identifier;
-#     passes state_type and constraints to State.instantiate_state
+#     passes state_type and constraints to State._instantiate_state
 #         for instantiating each individual state
 #
-# - instantiate_state(owner,
+# - _instantiate_state(owner,
 #                               state_type
 #                               state_name,
 #                               state_spec,
@@ -1300,7 +1300,7 @@ class State_Base(State):
 #                               context):
 #     instantiates state of type specified by state_type and state_spec, using constraints
 
-def instantiate_state_list(owner,
+def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
                            state_type,              # StateType subclass
                            state_param_identifier,  # used to specify state_type state(s) in params[]
@@ -1323,7 +1323,7 @@ def instantiate_state_list(owner,
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
-    - constraint_value_name (str):  passed to State.instantiate_state(), used in error messages
+    - constraint_value_name (str):  passed to State._instantiate_state(), used in error messages
     - context (str)
 
     If state_list is None:
@@ -1480,7 +1480,7 @@ def instantiate_state_list(owner,
                     # Note: state_spec has already been assigned to item in state_entries list by enumeration above
                     state_constraint_value = constraint_value[key]
 
-            state = instantiate_state(owner=owner,
+            state = _instantiate_state(owner=owner,
                                                 state_type=state_type,
                                                 state_name=state_name,
                                                 state_spec=state_spec,
@@ -1500,7 +1500,7 @@ def instantiate_state_list(owner,
                          format(state_entries, state_param_identifier, owner.__class__.__name__))
 
 
-def instantiate_state(owner,                   # Object to which state will belong
+def _instantiate_state(owner,                   # Object to which state will belong
                       state_type,              # State subclass
                       state_name,              # Name used to refer to subclass in prompts
                       state_spec,              # State subclass, object, spec dict or value
@@ -1557,13 +1557,13 @@ def instantiate_state(owner,                   # Object to which state will belo
 
     #region VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
-        raise StateError("state_type arg ({0}) to instantiate_state "
+        raise StateError("state_type arg ({0}) to _instantiate_state "
                              "must be a State subclass".format(state_type))
     if not isinstance(state_name, str):
-        raise StateError("state_name arg ({0}) to instantiate_state must be a string".
+        raise StateError("state_name arg ({0}) to _instantiate_state must be a string".
                              format(state_name))
     if not isinstance(constraint_value_name, str):
-        raise StateError("constraint_value_name arg ({0}) to instantiate_state must be a string".
+        raise StateError("constraint_value_name arg ({0}) to _instantiate_state must be a string".
                              format(constraint_value_name))
     #endregion
 
