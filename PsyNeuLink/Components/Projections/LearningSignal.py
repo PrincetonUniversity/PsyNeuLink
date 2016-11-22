@@ -16,9 +16,9 @@ Overview
 
 A LearningSignal projection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
 and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.  This is used to modify the
-:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection` projection.  A LearningSignal can be assigned different
-functions[LINK] to implement different learning algorithms, which are associated with corresponding types of
-MonitoringMechanisms.
+:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection` projection.  A LearningSignal can be
+assigned different functions[LINK] to implement different learning algorithms, which are associated with
+corresponding types of MonitoringMechanisms.
 
 .. _LearningSignal_Creation:
 
@@ -65,11 +65,11 @@ modifies).  If the ``errorSource`` projects to a MonitoringMechanism, then that 
 ``sender``.  If the ``errorSource`` does not projection to a MonitoringMechanism, then one is created for it,
 and a MappingProjection is created that projects to it from the ``errorSource``.  The type of MonitoringMechanism
 created depends on where the ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism,
-or the :keyword:`TERMINAL` mechanism of a process or system, then a :doc:`ComparatorMechanism` mechanism is created (which
-compares the output of the ``errorSource`` with a target to generate the ``errorSignal``).  If the ``errorSource``
-projects to any other mechanisms, then a ``WeightedErrorMechanism`` mechanism is created (which, in calculating the
-``errorSignal``, takes account of the effect that the ``errorSource`` has on the output of the ProcessingMechanism(s)
-to which it projects).
+or the :keyword:`TERMINAL` mechanism of a process or system, then a :doc:`ComparatorMechanism` mechanism is created
+(which compares the output of the ``errorSource`` with a target to generate the ``errorSignal``).  If the
+``errorSource`` projects to any other mechanisms, then a ``WeightedErrorMechanism`` mechanism is created (which,
+in calculating the ``errorSignal``, takes account of the effect that the ``errorSource`` has on the output of the
+ProcessingMechanism(s) to which it projects).
 
 
 .. _LearningSignal_Structure:
@@ -303,7 +303,8 @@ class LearningSignal(Projection_Base):
         self.value = DEFERRED_INITIALIZATION
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or MappingProjection
+        """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or
+        MappingProjection
 
         Validate send in params[PROJECTION_SENDER] or, if not specified, sender arg:
         - must be the outputState of a MonitoringMechanism (e.g., ComparatorMechanism or WeightedErrorMechanism)

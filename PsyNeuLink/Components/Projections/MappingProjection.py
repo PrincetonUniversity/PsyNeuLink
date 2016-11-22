@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **********************************************  MappingProjection **************************************************************
+# **********************************************  MappingProjection ****************************************************
 
 """
 .. _Mapping_Overview:
@@ -87,9 +87,9 @@ In addition to its ``function``, mapping projections use the following two the p
     values are the same.
   * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
     and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
-  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
-    and a number of columns equal to the length of the receiver's value, all the elements of which are filled with
-    random values uniformly distributed between 0 and 1.
+  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of
+    the sender's value, and a number of columns equal to the length of the receiver's value, all the elements of
+    which are filled with random values uniformly distributed between 0 and 1.
   * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
     is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
   * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently

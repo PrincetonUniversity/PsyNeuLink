@@ -1,5 +1,5 @@
-Weighted Error
-==============
+WeightedErrorMechanism
+======================
 
 .. automodule:: WeightedErrorMechanism
    :members:

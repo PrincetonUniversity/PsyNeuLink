@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVC Mechanism &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>EVCMechanism &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Control Mechanisms" href="ControlMechanism.html"/>
-        <link rel="next" title="Monitoring Mechanisms" href="MonitoringMechanism.html"/>
-        <link rel="prev" title="Default Control Mechanism" href="DefaultControlMechanism.html"/> 
+        <link rel="next" title="MonitoringMechanisms" href="MonitoringMechanism.html"/>
+        <link rel="prev" title="DefaultControlMechanism" href="DefaultControlMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -91,8 +91,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="DefaultControlMechanism.html">Default Control Mechanism</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">EVC Mechanism</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="DefaultControlMechanism.html">DefaultControlMechanism</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">EVCMechanism</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
@@ -105,7 +105,7 @@
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -151,7 +151,7 @@
       
           <li><a href="ControlMechanism.html">Control Mechanisms</a> &raquo;</li>
       
-    <li>EVC Mechanism</li>
+    <li>EVCMechanism</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -166,12 +166,12 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-EVCMechanism">
-<span id="evc-mechanism"></span><h1>EVC Mechanism<a class="headerlink" href="#module-EVCMechanism" title="Permalink to this headline">¶</a></h1>
+<span id="evcmechanism"></span><h1>EVCMechanism<a class="headerlink" href="#module-EVCMechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An EVCMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that seeks to optimize a &#8220;portfolio&#8221; of control signals
 so as to maximize the performance of the system to which it belongs.  Each control signal is implemented as a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection, that regulates the parameter of a mechanism in the system;  collectively,
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> projection, that regulates the parameter of a mechanism in the system;  collectively,
 the control signals govern the system&#8217;s behavior.  A particular combination of control signal values is called a
 <em>control allocation policy</em>.  The EVCMechanism evaluates the system&#8217;s performance under each control allocation policy,
 selects the one that generates the best performance, and then assigns the allocation values designated by that policy
@@ -189,7 +189,7 @@ associated with each ControlSignal projection (based on its <code class="docutil
 execution.</p>
 </div>
 <div class="section" id="creating-an-evcmechanism">
-<span id="evcmechanism-creating-an-evcmechanism"></span><h2>Creating an EVCMechanism<a class="headerlink" href="#creating-an-evcmechanism" title="Permalink to this headline">¶</a></h2>
+<span id="evcmechanism-creation"></span><h2>Creating an EVCMechanism<a class="headerlink" href="#creating-an-evcmechanism" title="Permalink to this headline">¶</a></h2>
 <p>An EVCMechanism can be created using the standard Python method of calling its constructor.  However,  more commonly,
 it is generated automatically when a system is created and an EVCMechanism is specified as its
 <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>). When this occurs, PsyNeuLink configures the EVCMechanism as follows:</p>
@@ -346,7 +346,7 @@ control signals in <code class="docutils literal"><span class="pre">controlSigna
 and associated EVC values (in addition to the max).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default TransferMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict] : default Process.classPreferences</em>) &#8211; the PreferenceSet for the mechanism.
@@ -486,10 +486,10 @@ The same dictionary will be passed to all instances of <code class="docutils lit
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MonitoringMechanism.html" class="btn btn-neutral float-right" title="Monitoring Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="MonitoringMechanism.html" class="btn btn-neutral float-right" title="MonitoringMechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="DefaultControlMechanism.html" class="btn btn-neutral" title="Default Control Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="DefaultControlMechanism.html" class="btn btn-neutral" title="DefaultControlMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -498,7 +498,7 @@ The same dictionary will be passed to all instances of <code class="docutils lit
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

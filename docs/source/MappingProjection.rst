@@ -1,5 +1,5 @@
 MappingProjection
-=======
+=================
 
 .. automodule:: MappingProjection
    :members:

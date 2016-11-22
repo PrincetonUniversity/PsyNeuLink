@@ -1,5 +1,5 @@
-Default Control Mechanism
-=========================
+DefaultControlMechanism
+=======================
 
 [DOCUMENTATION COMING...]
 

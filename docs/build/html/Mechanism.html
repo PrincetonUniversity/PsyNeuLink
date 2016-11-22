@@ -90,7 +90,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Mechanisms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
@@ -166,7 +166,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -195,7 +195,7 @@ parameters of those or other mechanisms.</li>
 uses to represent its input, function parameters, and output</p>
 </div>
 <div class="section" id="creating-a-mechanism">
-<span id="mechanism-creating-a-system"></span><h2>Creating a Mechanism<a class="headerlink" href="#creating-a-mechanism" title="Permalink to this headline">¶</a></h2>
+<span id="mechanism-creation"></span><h2>Creating a Mechanism<a class="headerlink" href="#creating-a-mechanism" title="Permalink to this headline">¶</a></h2>
 <p>Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a  <code class="docutils literal"><span class="pre">mechanism</span></code> [LINK] &#8220;factory&#8221;
 method that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).
@@ -247,9 +247,9 @@ automtically when <a class="reference internal" href="Process.html#process-learn
 specified by the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> parameter.  Each type of mechanism specifies one or more functions to use,
 and generally these are from the <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class provided by PsyNeuLink.  Components are specified
 in the same form that an object is instantiated in Python (by calling its constructor), and thus can be used to
-specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
+specify its parameters.  For example, for a TransferMechanism, if the Logistic function is selected, then its gain
 and bias parameters can also be specified as shown in the following example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
@@ -299,7 +299,7 @@ attributes for all a mechanism&#8217;s inputStates are concatenated into a 2d np
 <p>These represent the parameters of a mechanism&#8217;s function, and used to control the parameters of its <code class="docutils literal"><span class="pre">function</span></code>.
 PsyNeuLink assigns one parameterState for each parameter of the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (which correspond to the
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
-from the <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection(s) of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, that is used to modify the
+from the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> projection(s) of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, that is used to modify the
 function&#8217;s parameter value in response to the outcome(s) of processing.</p>
 <blockquote>
 <div><p id="mechanism-assigning-a-control-signal"><em>Assigning a Control Signal</em></p>
@@ -380,7 +380,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
 <div><ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> : Dict[str, InputState] -
 used to specify specialized inputStates required by a mechanism subclass
-(see <a class="reference internal" href="InputState.html#inputstates-creating-an-inputstate"><span class="std std-ref">Creating an InputState</span></a> for details of specification).</li>
+(see <a class="reference internal" href="InputState.html#inputstates-creation"><span class="std std-ref">Creating an InputState</span></a> for details of specification).</li>
 </ul>
 <ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION</span></code> : function or method :  default method implemented by subclass -
@@ -394,9 +394,9 @@ The value of each entry can be one of the following:</p>
 <ul class="simple">
 <li>the value of the parameter itself;</li>
 <li>a parameter state, the value of which specifies the parameter&#8217;s value
-(see <a class="reference internal" href="ParameterState.html#parameterstate-creating-a-parameterstate"><span class="std std-ref">Creating a ParameterState</span></a>).</li>
+(see <a class="reference internal" href="ParameterState.html#parameterstate-creation"><span class="std std-ref">Creating a ParameterState</span></a>).</li>
 <li>a tuple with exactly two items: the parameter value and a projection type specifying either a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
 (a <code class="xref py py-class docutils literal"><span class="pre">ParamValueProjection</span></code> namedtuple can be used for clarity).</li>
 </ul>
 <div class="admonition note">
@@ -408,7 +408,7 @@ of the mechanism&#8217;s params dict take precedence over values specified in su
 </li>
 <li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> : Dict[str, OutputState] -
 used to specify specialized outputStates required by a mechanism subclass
-(see <span class="xref std std-ref">OutputStates_Creating_An_OutputState</span> for details of specification).</p>
+(see <span class="xref std std-ref">OutputStates_Creation</span> for details of specification).</p>
 </li>
 </ul>
 <ul class="simple">
@@ -481,7 +481,7 @@ if it is the name of a Mechanism subclass, a default instance of that subclass i
 if it is the name of a Mechanism subclass registered in the <code class="docutils literal"><span class="pre">MechanismRegistry</span></code>
 an instance of a default mechanism for that class is returned,
 otherwise the string is used to name an instance of the default mechanism;
-if it is a dict, it must be a mechanism specification dict (see <span class="xref std std-ref">Mechanism_Creating_A_Mechanism</span>).
+if it is a dict, it must be a mechanism specification dict (see <a class="reference internal" href="#mechanism-creation"><span class="std std-ref">Creating a Mechanism</span></a>).
 Note: if a name is not specified, the nth instance created will be named by using the mechanism&#8217;s
 <code class="docutils literal"><span class="pre">componentType</span></code> attribute as the base and adding an indexed suffix:  componentType-n.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
@@ -511,7 +511,7 @@ by a <a class="reference internal" href="#"><span class="doc">Mechanisms</span><
 <p class="last">Mechanisms should NEVER be instantiated by a direct call to the base class.
 They should be instantiated using the <a class="reference internal" href="#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code></a> factory method (see it for description of parameters),
 by calling the constructor for the desired subclass, or using other methods for specifying a mechanism in
-context (see <span class="xref std std-ref">Mechanism_Creating_A_Mechanism</span>).</p>
+context (see <a class="reference internal" href="#mechanism-creation"><span class="std std-ref">Creating a Mechanism</span></a>).</p>
 </div>
 <dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.variable">
@@ -750,7 +750,7 @@ after either one time_step or the full trial</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>
