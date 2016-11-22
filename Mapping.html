@@ -108,6 +108,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 
             
@@ -260,7 +261,7 @@ By default, it contains an entry for the projection&#8217;s default <code class=
 <li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mapping projection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the PreferenceSet for the mapping projection.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the Preference set for the mapping projection.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 </ul>
@@ -271,15 +272,13 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="Mapping.Mapping.monitoringMechanism">
 <code class="descname">monitoringMechanism</code><a class="headerlink" href="#Mapping.Mapping.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MonitoringMechanism</em> &#8211; the source of the error signal used by a LearningSignal to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> when
-<a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
+<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when <a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Mapping.Mapping.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#Mapping.Mapping.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; the matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform the input from the <code class="docutils literal"><span class="pre">sender</span></code> and to the <code class="docutils literal"><span class="pre">value</span></code> used by
-the <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform input from <code class="docutils literal"><span class="pre">sender</span></code> and to <code class="docutils literal"><span class="pre">value</span></code> used by <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </dd></dl>
 
 </dd></dl>

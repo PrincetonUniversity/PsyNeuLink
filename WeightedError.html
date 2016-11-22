@@ -95,7 +95,7 @@
 <li class="toctree-l3"><a class="reference internal" href="Comparator.html">Comparator</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Weighted Error</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-weightederror">Creating A WeightedError</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-weightederror-mechanism">Creating A WeightedError Mechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
@@ -117,6 +117,7 @@
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 
             
@@ -169,13 +170,14 @@
 <span id="weighted-error"></span><h1>Weighted Error<a class="headerlink" href="#module-WeightedError" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>WeightedError mechanisms monitor the outputState of a ProcessingMechanism that projects to another mechanism in a
-<a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, and computes the contribution of each element of its output to the error of the elements of the
-mechanism to which it projects.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> returns an error array that can be used by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
-to adjust the Mapping projection it receives so as to reduce its future contribution to the error.</p>
+<p>A WeightedError mechanism monitors the outputState of it&#8217;s <code class="docutils literal"><span class="pre">errorSource</span></code>: a ProcessingMechanism that projects to
+another mechanism in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  It computes the contribution of each element of the output of the
+<code class="docutils literal"><span class="pre">errorSource</span></code> to the error in the output of the mechanism to which the <code class="docutils literal"><span class="pre">errorSource</span></code> projects (the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>).
+The WeightedError <code class="docutils literal"><span class="pre">function``returns</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">array</span> <span class="pre">that</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">used</span> <span class="pre">by</span> <span class="pre">a</span> <span class="pre">:doc:`LearningSignal`</span> <span class="pre">to</span> <span class="pre">adjust</span> <span class="pre">a</span> <span class="pre">Mapping</span>
+<span class="pre">projection</span> <span class="pre">the</span> <span class="pre">``errorSource</span></code>, so as to reduce its future contribution to the weightedErrorSignal.</p>
 </div>
-<div class="section" id="creating-a-weightederror">
-<span id="weightederror-creating-a-weightederror"></span><h2>Creating A WeightedError<a class="headerlink" href="#creating-a-weightederror" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="creating-a-weightederror-mechanism">
+<span id="weightederror-creating-a-weightederror"></span><h2>Creating A WeightedError Mechanism<a class="headerlink" href="#creating-a-weightederror-mechanism" title="Permalink to this headline">¶</a></h2>
 <p>A WeightedError mechanism can be created either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
 function and specifying &#8220;WeightedError&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  It can also be created by <span class="xref std std-ref">in context
 specification of a LearningSignal</span> for a projection  to a ProcessingMechanism in
@@ -189,24 +191,24 @@ learned, and a LearningSignal projection to that Mapping projection
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A WeightedError mechanism has a single inputState, a <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> parameter, and a single
-(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The inputState receives a Mapping projection from the Processing mechanism
-for which the WeightedError mechanism computes the error —&nbsp;the <em>error source</em>.  The value of the
-<code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> parameter is a Mapping projection from the error source&#8217;s primary outputState to the
-next mechanism in the process.  Each row of it&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code> parameter corresponds to an element of the error source&#8217;s
-<code class="docutils literal"><span class="pre">value</span></code>, each column an element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the error source projects, and each element
-of the matrix the weight of the association between the two.  The outputState of a WeightedError mechanism is
-typically assigned a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of the Mapping
-projection that projects to the error source (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>)</p>
+(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The <strong>inputState</strong> receives a Mapping projection from its <code class="docutils literal"><span class="pre">errorSource</span></code> &#8211;
+the Processing mechanism for which it computes the error.  <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> is assigned to the Mapping
+projection from the primary outputState of the <code class="docutils literal"><span class="pre">errorSource</span></code> to the next mechanism in the process.  Each row of it&#8217;s
+<code class="docutils literal"><span class="pre">matrix</span></code> parameter corresponds to an element of the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code>, each column corresponds to an
+element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which it projects, and each element of the matrix is the weight of the
+association between the two.  The <strong>outputState</strong> of a WeightedError mechanism is typically assigned a
+<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of a Mapping projection to the
+<code class="docutils literal"><span class="pre">errorSource</span></code> (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>).</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A WeightedError mechanism always executes after the mechanism it is monitoring.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> computes the
-contribution of each element of its error source&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to the <code class="docutils literal"><span class="pre">error_signal</span></code>:  the error associated with each
-element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the error_source projects, scaled both by the weight of its
-association to that element  specified by from <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>) and the differential of the
+contribution of each element of the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code> to the <code class="docutils literal"><span class="pre">error_signal</span></code>:  the error associated
+with each element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the <code class="docutils literal"><span class="pre">errorSource</span></code> projects, scaled both by the weight of
+its association to that element  specified by from <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>) and the differential of the
 <code class="docutils literal"><span class="pre">function</span></code> for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
 &#8220;backpropagation&#8221;) learning algorithm (REFS AND [LINK]). The <code class="docutils literal"><span class="pre">function</span></code> returns an array with the weighted errors
-for each element of the error source, which is placed in its <code class="docutils literal"><span class="pre">value</span></code> and  <code class="docutils literal"><span class="pre">outputValue</span></code> attributes,
+for each element of the <code class="docutils literal"><span class="pre">errorSource</span></code>, which is placed in its <code class="docutils literal"><span class="pre">value</span></code> and  <code class="docutils literal"><span class="pre">outputValue</span></code> attributes,
 and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="id4">`</span></a>WEIGHTED_ERROR) outputState.</p>
 </div>
 <div class="section" id="class-reference">
@@ -232,7 +234,7 @@ and/or a custom function and its parameters (see <a class="reference internal" h
 Includes the following entry:</p>
 <ul>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  Mapping projection;
-its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the error_array;
+its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>;
 it&#8217;s width (number of columns) must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</li>
 </ul>
 </li>
@@ -242,28 +244,43 @@ it&#8217;s width (number of columns) must match the length of <code class="docut
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="WeightedError.WeightedError.variable">
-<code class="descname">variable</code><a class="headerlink" href="#WeightedError.WeightedError.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; error_signal used by <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<dt id="WeightedError.WeightedError.errorSource">
+<code class="descname">errorSource</code><a class="headerlink" href="#WeightedError.WeightedError.errorSource" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ProcessingMechanism</em> &#8211; the mechanism that projects to the WeightedError mechanism, and for which it calculates the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="WeightedError.WeightedError.next_level_projection">
 <code class="descname">next_level_projection</code><a class="headerlink" href="#WeightedError.WeightedError.next_level_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mapping projection</em> &#8211; projection, Its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate error_array.</p>
+<dd><p><em>Mapping projection</em> &#8211; projection from the <code class="docutils literal"><span class="pre">errorSource</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">next</span> <span class="pre">mechanism</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">process;</span>&#160; <span class="pre">its</span> <span class="pre">``matrix</span></code> parameter is
+used to calculate the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.variable">
+<code class="descname">variable</code><a class="headerlink" href="#WeightedError.WeightedError.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; error_signal from mechanism to which next_level_projection projects;  used by <code class="docutils literal"><span class="pre">function</span></code> to compute
+weightedErrorSignal.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="WeightedError.WeightedError.value">
 <code class="descname">value</code><a class="headerlink" href="#WeightedError.WeightedError.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>; an error array that specifies the weighted contribution made by each element of the
-<code class="docutils literal"><span class="pre">value</span></code> of the error source to the error_signal.</p>
+<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>, same as <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="WeightedError.WeightedError.weightedErrorSignal">
+<code class="descname">weightedErrorSignal</code><a class="headerlink" href="#WeightedError.WeightedError.weightedErrorSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; specifies the weighted contribution made by each element of the <code class="docutils literal"><span class="pre">value</span></code> of the error source to the
+<code class="docutils literal"><span class="pre">error_signal</span></code> received from the next mechanism in the process (the one to which <code class="docutils literal"><span class="pre">next_level_projection</span></code>
+projects.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="WeightedError.WeightedError.outputValue">
 <code class="descname">outputValue</code><a class="headerlink" href="#WeightedError.WeightedError.outputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>:  error array XXXX</p>
+<dd><p><em>List[1d np.array]</em> &#8211; single item in list is <code class="docutils literal"><span class="pre">errorSignal</span></code> (output of <code class="docutils literal"><span class="pre">function</span></code>;  same as <code class="docutils literal"><span class="pre">value</span></code>).</p>
 </dd></dl>
 
 <dl class="attribute">
