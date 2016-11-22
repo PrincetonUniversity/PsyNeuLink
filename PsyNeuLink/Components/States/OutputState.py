@@ -12,6 +12,12 @@
 
 .. _OutputStates_Creating_An_OutputState:
 
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
+Overview
+--------
+
+
 Creating an OutputState
 -----------------------
 
@@ -180,7 +186,7 @@ reference_value is component of owner.variable that corresponds to the current S
         # Potential problem:
         #    - a OutputState may correspond to a particular item of owner.value
         #        in which case there will be a mismatch here
-        #    - if OutputState is being instantiated from Mechanism (in instantiate_output_states)
+        #    - if OutputState is being instantiated from Mechanism (in _instantiate_output_states)
         #        then the item of owner.value is known and has already been checked
         #        (in the call to _instantiate_state)
         #    - otherwise, should ignore
@@ -241,7 +247,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.reference_value))
 
-def instantiate_output_states(owner, context=None):
+def _instantiate_output_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]

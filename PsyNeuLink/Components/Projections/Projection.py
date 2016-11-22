@@ -111,7 +111,6 @@ automatically generate a projection and a sender mechanism, if none is specified
 projection and its sender mechanism depend on the type of state -- see :doc:`state subclasses <States>` for details).
 
 
-
 .. _Projection_Structure:
 
 Structure
@@ -243,7 +242,6 @@ class ProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-# DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
     """
     Projection_Base(  \
     receiver,         \
@@ -261,7 +259,8 @@ class Projection_Base(Projection):
 
 
     COMMENT:
-        Description:
+        Description
+        -----------
             Projection category of Component class (default type:  Mapping)
 
         Class attributes
@@ -562,8 +561,8 @@ class Projection_Base(Projection):
 
         self._instantiate_sender(context=context)
 
-        from PsyNeuLink.Components.States.ParameterState import instantiate_parameter_states
-        instantiate_parameter_states(owner=self, context=context)
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        _instantiate_parameter_states(owner=self, context=context)
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable

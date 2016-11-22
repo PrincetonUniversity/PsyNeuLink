@@ -246,18 +246,29 @@ OutputStates
 ^^^^^^^^^^^^
 
 These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates,
-the *primary* (first or only) outputState is assigned to the mechanism's ``outputState`` attribute, while all of its
-outputStates (including the primary one) are stored in an OrderedDict in its ``outputStates`` attribute;  the
-key for each entry is the name of an outputState, and the value is the outputState itself.  Usually the function
-of the primary outputState transfers the result of the mechanism's function to the primary outputState's ``value``
-attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other outputStates may use
-other functions to transform the result of the mechanism's function in various ways (e.g., generate its mean,
-variance, etc.), the results of which are stored in each outputState's ``value`` attribute.  OutputStates may also
-be used for other purposes.  For example, ControlMechanisms can have multiple outputStates, one for each parameter
-controlled.  The ``value`` of each outputState can serve as a sender for projections, to transmit its value to other
-mechahnisms and/or the ouput of a process or system.  The ``value`` attributes of all of a mechanism's outputStates
-are concatenated into a 2d np.array and assigned to the mechanism's ``outputValue`` attribute.
+the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState`` attribute, while all of
+its outputStates (including the primary one) are stored in an OrderedDict in its ``outputStates`` attribute;  the
+key for each entry is the name of an outputState, and the value is the outputState itself.  By convention,
+a mechanism's ``execute`` method assigns the output of its ``function`` to the value of the primary outputState.
+Other outputStates are assigned other values associated with the output of the ``function`` (e.g., its mean,
+variance, etc.).  OutputStates may also be used for other purposes.  For example, :doc:`ControlMechanisms` can have
+multiple outputStates, one for each of their :doc:`ControlSignals`.  Each outputState can serve as a sender for
+projections, to transmit its value to other mechanisms and/or the output of a process or system.  The ``value``
+attributes of all of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the mechanism's
+``outputValue`` attribute.
 
+COMMENT:
+[TBI:]
+Usually the ``function`` of the primary outputState transfers the result of the mechanism's function to the primary
+outputState's ``value`` attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other
+outputStates may use other functions to transform the result of the mechanism's function in various ways (e.g.,
+generate its mean, variance, etc.), the results of which are stored in each outputState's ``value`` attribute.
+OutputStates may also be used for other purposes.  For example, ControlMechanisms can have multiple outputStates,
+one for each parameter controlled.  The ``value`` of each outputState can serve as a sender for projections,
+to transmit its value to other mechahnisms and/or the ouput of a process or system.  The ``value`` attributes of all
+of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the mechanism's ``outputValue``
+attribute.
+COMMENT
 
 .. _Mechanism_Specifying_Parameters:
 
@@ -489,7 +500,7 @@ class Mechanism_Base(Mechanism):
        Mechanisms should NEVER be instantiated by a direct call to the base class.
        They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
        by calling the constructor for the desired subclass, or using other methods for specifying a mechanism in
-       context (see [LINK]).
+       context (see :ref:`Mechanism_Creating_A_Mechanism`).
 
     COMMENT:
         Description
@@ -664,8 +675,8 @@ class Mechanism_Base(Mechanism):
         (see Description under PreferenceSet for details).[LINK]
 
         .. _stateRegistry : Registry
-               registry containing dicts for each state type (InputState, OutputState and ParameterState)
-               with instance dicts for the instances of each type and an instance count for each state type.
+               registry containing dicts for each state type (InputState, OutputState and ParameterState) with instance
+               dicts for the instances of each type and an instance count for each state type in the mechanism.
                Note: registering instances of state types with the mechanism (rather than in the StateRegistry)
                      allows the same name to be used for instances of a state type belonging to different mechanisms
                      without adding index suffixes for that name across mechanisms
@@ -1126,15 +1137,15 @@ class Mechanism_Base(Mechanism):
 
         self._instantiate_input_states(context=context)
 
-        from PsyNeuLink.Components.States.ParameterState import instantiate_parameter_states
-        instantiate_parameter_states(owner=self, context=context)
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        _instantiate_parameter_states(owner=self, context=context)
 
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        # self.instantiate_output_states(context=context)
-        from PsyNeuLink.Components.States.OutputState import instantiate_output_states
-        instantiate_output_states(owner=self, context=context)
+        # self._instantiate_output_states(context=context)
+        from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
+        _instantiate_output_states(owner=self, context=context)
 
     def _instantiate_input_states(self, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of inputState(s)
