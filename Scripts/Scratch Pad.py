@@ -8,6 +8,7 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Components.Projections.Mapping import Mapping
@@ -31,15 +32,19 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # # my_learning_signal = LearningSignal(receiver=my_mapping_projection)
 # my_learning_signal._deferred_init(context="TEST")
 
-my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
-                                 threshold=20.0),
-             params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
-                                      THRESHOLD:30.0}}
-             )
-# my_DDM.execute(time_scale=TimeScale.TIME_STEP)
-my_DDM.execute()
+# my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
+#                                  threshold=20.0),
+#              params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
+#                                       THRESHOLD:30.0}}
+#              )
+# # my_DDM.execute(time_scale=TimeScale.TIME_STEP)
+# my_DDM.execute()
+#
+# TEST = True
 
-TEST = True
+my_adaptive_integrator = AdaptiveIntegratorMechanism(default_input_value=[0,0])
+print(my_adaptive_integrator.execute([1,1]))
+print(my_adaptive_integrator.execute([1,1]))
 
 #endregion
 
