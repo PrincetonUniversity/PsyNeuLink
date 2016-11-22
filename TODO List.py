@@ -2,6 +2,16 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# 11/22/16:
+# AdaptiveIntegrator -> IntegratorMechanism
+# Transfer -> TranferMechanism
+# WeightedError -> WeightedErrorMechanism
+# Comparator -> ComparatorMechanism
+# DDM -> DDMMechanism
+# Mapping -> MappingProjection
+# ControlSignal -> ControlSignalProjection
+# LearningSignal -> LearningSignalProjection
+
 # 11/19/16:
 # FIX: AdaptiveIntegrator MECHANISM:
 # FIX:         EITHER CORRECT THE NAMES OF LINEAR AND SIMPLE, OR CORRECT THE COMPUTATIONS
