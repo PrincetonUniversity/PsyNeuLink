@@ -198,7 +198,7 @@ include arguments specifying the function&#8217;s parameters (second example):</
 <div class="section" id="structure">
 <span id="transfer-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A Transfer mechanism has a single inputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is used as the <code class="docutils literal"><span class="pre">variable</span></code> for its <code class="docutils literal"><span class="pre">function</span></code>.
-The function can be selected from one of three standard PsyNeuLink <span class="xref doc">Functions</span>: <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> or
+The function can be selected from one of three standard PsyNeuLink <span class="xref doc">Functions</span>: <a class="reference internal" href="DefaultControlMechanism.html#DefaultControlMechanism.DefaultControlMechanism.Linear" title="DefaultControlMechanism.DefaultControlMechanism.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> or
 <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>; or a custom function can be specified, so long as it returns a numeric value or list or
 np.ndarray of numeric values.  A Transfer mechanism has three outputStates, described under Execution  below.</p>
 </div>
@@ -229,6 +229,12 @@ and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><spa
 </div>
 <div class="section" id="class-reference">
 <span id="transfer-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Transfer.Transfer_Output">
+<em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer_Output</code><a class="headerlink" href="#Transfer.Transfer_Output" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="Transfer.Transfer">
 <em class="property">class </em><code class="descclassname">Transfer.</code><code class="descname">Transfer</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Transfer.Transfer" title="Permalink to this definition">¶</a></dt>
