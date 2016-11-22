@@ -7,9 +7,11 @@
 
 
 # ********************************************** Component  ************************************************************
-#
+
 
 """  COMPONENT MODULE
+
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
 This module defines the Component abstract class
 

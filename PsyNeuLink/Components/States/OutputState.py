@@ -12,6 +12,12 @@
 
 .. _OutputStates_Creating_An_OutputState:
 
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
+Overview
+--------
+
+
 Creating an OutputState
 -----------------------
 
@@ -60,12 +66,13 @@ must be specified in the ``owner`` argument when calling the constructor;  if th
                 value must match value of the corresponding item of the mechanism's EMO
             + value:
                 will be used a variable to instantiate a OutputState; value must be compatible with EMO
-        * note: inputStates can also be added using State.instantiate_state()
+        * note: inputStates can also be added using State._instantiate_state()
 
 """
 
 # import Components
 from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.State import _instantiate_state_list
 from PsyNeuLink.Components.Functions.Function import *
 
 # class OutputStateLog(IntEnum):
@@ -179,9 +186,9 @@ reference_value is component of owner.variable that corresponds to the current S
         # Potential problem:
         #    - a OutputState may correspond to a particular item of owner.value
         #        in which case there will be a mismatch here
-        #    - if OutputState is being instantiated from Mechanism (in instantiate_output_states)
+        #    - if OutputState is being instantiated from Mechanism (in _instantiate_output_states)
         #        then the item of owner.value is known and has already been checked
-        #        (in the call to instantiate_state)
+        #        (in the call to _instantiate_state)
         #    - otherwise, should ignore
 
         :param owner: (Mechanism object)
@@ -240,8 +247,8 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.reference_value))
 
-def instantiate_output_states(owner, context=None):
-    """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
+def _instantiate_output_states(owner, context=None):
+    """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
     If INPUT_STATES is not specified, use self.variable to create a default output state
@@ -252,7 +259,7 @@ def instantiate_output_states(owner, context=None):
         - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
-    (See State.instantiate_state_list() for additional details)
+    (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) is assigned here
@@ -261,7 +268,7 @@ def instantiate_output_states(owner, context=None):
     :param context:
     :return:
     """
-    owner.outputStates = instantiate_state_list(owner=owner,
+    owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
                                                 state_param_identifier=OUTPUT_STATES,

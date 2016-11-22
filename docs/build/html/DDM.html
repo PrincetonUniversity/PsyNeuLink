@@ -85,10 +85,32 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-ddm-mechanism">Creating a DDM Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Transfer.html">Transfer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -250,9 +272,8 @@ is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_ST
 distribution on every call of <code class="docutils literal"><span class="pre">function</span></code>, and added to the decision variable.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">NON_DECISION_TIME</span></code> (default 200)
-specifies the <code class="docutils literal"><span class="pre">t0</span></code> parameter of the decision process;  when <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code>, it is added to
-the number of time steps taken to complete the decision process when reporting the response time.</li>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">NON_DECISION_TIME</span></code> (default 0.2)
+specifies the <code class="docutils literal"><span class="pre">t0</span></code> parameter of the decision process (in units of seconds).</li>
 </ul>
 </div>
 </div>
@@ -277,8 +298,8 @@ item of its <code class="docutils literal"><span class="pre">outputValue</span><
 </ul>
 <ul class="simple">
 <li><strong>response time</strong> is assigned as the value of the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute and as
-the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, the value is
-the mean response time (in milliseconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
+the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>,
+the value is the mean response time (in seconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
 </ul>
 <p>The following assignments are made only if time_scale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>;  otherwise the value of the
 corresponding attributes is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
@@ -303,8 +324,8 @@ and <code class="docutils literal"><span class="pre">time_scale</span></code> is
 attribute have a 6th item (if another function is assigned) or they are asssigned <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> if <code class="docutils literal"><span class="pre">time_scale</span></code>
 is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>.</p>
 <ul class="simple">
-<li><strong>mean correct response time</strong> is assigned to the 5th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute and as
-the value of its <code class="docutils literal"><span class="pre">RT_CORRECT_MEAN</span></code> outputState.  It is reported as milliseconds.</li>
+<li><strong>mean correct response time</strong> (in seconds) is assigned to the 5th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>
+attribute and as  the value of its <code class="docutils literal"><span class="pre">RT_CORRECT_MEAN</span></code> outputState.</li>
 </ul>
 <ul class="simple">
 <li><strong>variance of correct response time</strong> is assigned to the 6th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute

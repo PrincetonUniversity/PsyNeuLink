@@ -9,6 +9,8 @@
 # **************************************  ParameterState ******************************************************
 
 """
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
 Overview
 --------
 
@@ -59,6 +61,7 @@ parameter_modulation_operation:  ModulationOperation - list values and their mea
 """
 
 from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Components.Functions.Function import *
 
 # class ParameterStateLog(IntEnum):
@@ -354,8 +357,8 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
     def value(self, assignment):
         self._value = assignment
 
-def instantiate_parameter_states(owner, context=None):
-    """Call instantiate_state_list() to instantiate ParameterStates for subclass' function
+def _instantiate_parameter_states(owner, context=None):
+    """Call _instantiate_state_list() to instantiate ParameterStates for subclass' function
 
     Instantiate parameter states for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
@@ -389,7 +392,7 @@ def instantiate_parameter_states(owner, context=None):
         # Instantiate parameterState for each param in functionParams, using its value as the state_spec
         for param_name, param_value in function_param_specs.items():
 
-            state = instantiate_state(owner=owner,
+            state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=param_name,
                                       state_spec=param_value,
