@@ -217,7 +217,7 @@ class LearningSignal(Projection_Base):
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` and parameter assignments.
 
-    name : str : default Transfer-<index>
+    name : str : default TransferMechanism-<index>
         a string used for the name of the LearningSignal projection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -429,7 +429,7 @@ class LearningSignal(Projection_Base):
         
         Notes:
         * This must be called before _instantiate_sender since that requires access to self.receiver
-            to determine whether to use a comparatorMechanism mechanism or <Mapping>.receiverError for error signals
+            to determine whether to use a ComparatorMechanism or <Mapping>.receiverError for error signals
         * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                               and calls _add_projection_to_mechanism
         """
@@ -908,7 +908,7 @@ FROM TODO:
             for sumSquared error function:  errorDerivative = (target - sample)
             for logistic activation function: transferDerivative = sample * (1-sample)
         NEEDS:
-        - errorDerivative:  get from FUNCTION of ComparatorMechanism Mechanism
+        - errorDerivative:  get from FUNCTION of ComparatorMechanism
         - transferDerivative:  get from FUNCTION of Processing Mechanism
 
         :return: (2D np.array) self.weightChangeMatrix

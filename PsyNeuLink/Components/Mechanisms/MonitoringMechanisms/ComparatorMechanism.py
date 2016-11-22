@@ -12,16 +12,16 @@
 Overview
 --------
 
-A ComparatorMechanism mechanism monitors the outputState of a ProcessingMechanism in a :doc:`Process`,
-and compares this to a target provided as input to the ``run`` method of the process (or system to which it belongs)
-when it is executed.  The comparison can be done using subtraction or division.
+A ComparatorMechanism monitors the outputState of a ProcessingMechanism in a :doc:`Process`, and compares this to a
+target provided as input to the ``run`` method of the process (or system to which it belongs) when it is executed.
+The comparison can be done using subtraction or division.
 
 .. _Comparator_Creation:
 
 Creating a ComparatorMechanism
 ---------------------
 
-A ComparatorMechanism mechanism can be created either directly, by calling its constructor, or using the
+A ComparatorMechanism can be created either directly, by calling its constructor, or using the
 :class:`mechanism` function and specifying "ComparatorMechanism" as its ``mech_spec`` argument. The type of comparison
 is specified in the ``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.
 It can also be created by :ref:`in context specification of a LearningSignal <Projection_Creation>`
@@ -37,7 +37,7 @@ and :ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creat
 Structure
 ---------
 
-A ComparatorMechanism mechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from
+A ComparatorMechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from
 the primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`TARGET` inputState is
 assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
 It has five outputStates, described under Execution below.

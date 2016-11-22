@@ -1,5 +1,5 @@
 from PsyNeuLink.Components.Process import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Function import Linear, Logistic
 import numpy as np
 

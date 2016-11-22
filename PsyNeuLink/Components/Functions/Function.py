@@ -15,7 +15,7 @@ Example function:
 Combination Components:
   * :class:`LinearCombination`
 
-Transfer Components:
+TransferMechanism Components:
   * :class:`Linear`
   * :class:`Exponential`
   * :class:`Logistic`
@@ -820,7 +820,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-#region ***********************************  TRANSFER FUNCTIONS  *******************************************************
+#region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
 #endregion
 
 class TransferFunction(Function_Base):
@@ -2165,7 +2165,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
      - variable (list or np.array): must have three 1D elements
      - params (dict): specifies
          + LEARNING_RATE: (float) - learning rate (default: 1.0)
-         + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
+         + kwTransferFunctionDerivative - (function) derivative of TransferMechanism function (default: derivative of logistic)
     """
 
     componentName = kwBackProp

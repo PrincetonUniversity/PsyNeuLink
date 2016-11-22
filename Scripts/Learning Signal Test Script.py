@@ -1,5 +1,5 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.Mapping import Mapping
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix

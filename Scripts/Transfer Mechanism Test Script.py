@@ -1,4 +1,4 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Process import process

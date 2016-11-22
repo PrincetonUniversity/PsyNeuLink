@@ -62,7 +62,7 @@ it as an output that can be used for some purpose  There are three types of mech
 COMMENT:
   MOVE TO ProcessingMechanisms overview:
   Different ProcessingMechanisms transform their input in different ways, and some allow this to be customized
-  by modifying their ``function`` parameter.  For example, a ``Transfer`` mechanism can be configured to produce a
+  by modifying their ``function`` parameter.  For example, a ``TransferMechanism`` mechanism can be configured to produce a
   linear, logistic, or exponential transform of its input.
 COMMENT
 
@@ -123,10 +123,10 @@ The core of every mechanism is its function, which transforms its input and gene
 specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
 and generally these are from the :doc:`Function` class provided by PsyNeuLink.  Components are specified
 in the same form that an object is instantiated in Python (by calling its constructor), and thus can be used to
-specify its parameters.  For example, for a Transfer mechanism, if the Logistic function is selected, then its gain
+specify its parameters.  For example, for a TransferMechanism, if the Logistic function is selected, then its gain
 and bias parameters can also be specified as shown in the following example::
 
-    my_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4))
+    my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
 
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
 functions can be any Python function, including an inline (lambda) function, so long as it generates a result

@@ -132,7 +132,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
-    name : str : default Transfer-<index>
+    name : str : default TransferMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -156,7 +156,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
 
-    name : str : default Transfer-<index>
+    name : str : default TransferMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]

@@ -4,9 +4,9 @@
 
 # 11/22/16:
 # √ AdaptiveIntegrator -> IntegratorMechanism
-#   Transfer -> TransferMechanism
+#   TransferMechanism -> TransferMechanism
 # √ WeightedErrorMechanism -> WeightedErrorMechanism
-#   ComparatorMechanism -> ComparatorMechanism
+# √ ComparatorMechanism -> ComparatorMechanism
 #   DDM -> DDMMechanism
 #   Mapping -> MappingProjection
 #   ControlSignal -> ControlSignalProjection
@@ -93,7 +93,7 @@
 
 # 11/3/16:
 
-# Transfer Execution
+# TransferMechanism Execution
 # DDM Outputs
 
 # FIX: "Learning" projection -> "LearningSignal"
@@ -129,7 +129,7 @@
 
 # IMPLEMENT DDM: noise function for TIME_STEP mode (to use non-Gaussian distributions), or implemente JumpDM
 
-# FIX: Transfer:
+# FIX: TransferMechanism:
 # FIX:     - implement initial_state
 # FIX:     - add equation for rate argument
 
@@ -160,7 +160,7 @@
 
 # IMPLEMENT: __execute__ -> _execute
 
-# IMPLEMENT: parameterizable noise value for Transfer mechanism (i.e., specify function)
+# IMPLEMENT: parameterizable noise value for TransferMechanism (i.e., specify function)
 
 # FIX:  ScratchPad example
 
@@ -193,7 +193,7 @@
 
 # 10/12/16:
 # TEST: *** specify learning of individual projections in a process rather than whole process: is more than one
-#             comparatorMechanism mechanism assigned?
+#             ComparatorMechanism assigned?
 # TEST: does specifying learning for the process over-ride any that have been explicity specified w/o learning?
         # XXX TEST WHICH IS TRUE:  in the process [???] OR
         # XXX that have been assigned by default (but not ones created using either inline or stand-alone specification)
@@ -500,7 +500,7 @@
 #      i.e., one that simply passes its input through to the output unchanged
 #      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
 #      currently use LinearCombination with identityMatrix, but for a matrix this reduces it to a vector
-# IMPLEMENT: Add Integrator as Type of Function and move Integrator class from Transfer to Integrator Type
+# IMPLEMENT: Add Integrator as Type of Function and move Integrator class from TransferMechanism to Integrator Type
 # IMPLEMENT: ComparatorMechanism Processing Mechanism TYPE, ComparatorMechanism SUBTYPE
 # IMPLEMENT: PreferenceLevel SUBTYPE
 #            For Function Components:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
@@ -593,7 +593,7 @@
 #
 # 7/24/16:
 #
-# FIX:  TEST FOR FUNCTION CATEGORY == TRANSFER
+# FIX:  TEST FOR FUNCTION CATEGORY == TransferMechanism
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 
 # FIX:
@@ -818,7 +818,7 @@
 #region PNL JAMBOREE
 #
 # DEVELOPMENT:
-# TimeStep time scale (DDM & Transfer Mechanisms)
+# TimeStep time scale (DDM & TransferMechanism Mechanisms)
 # Implement single centralized registry
 # Learning execution sequence
 # Cyclic system
@@ -1059,7 +1059,7 @@
 #  ! Run
 #  √ State
 #  ! System
-#  ! Transfer
+#  ! TransferMechanism
 #    Utilities
 #  √ WeightedErrorMechanism
 
@@ -2282,7 +2282,7 @@
 # for sumSquared error function:  errorDerivative = (target - sample)
 # for logistic activation function: transferDerivative = sample * (1-sample)
 # NEEDS:
-# - errorDerivative:  get from FUNCTION of ComparatorMechanism Mechanism
+# - errorDerivative:  get from FUNCTION of ComparatorMechanism
 # - transferDerivative:  get from FUNCTION of Process Processing Mechanism
 
 # LearningSignal instantiation
@@ -2343,7 +2343,7 @@
 # ------------------------------------------------------------------------------------------------------
 #
 # Implement name arg to individual functions, and manage in __init__()
-# Implement abstract Types (aggregate, transfer, tranform, objective)
+# Implement abstract Types (aggregate, TransferMechanism, tranform, objective)
 # Implement subtypes of above
 # Implement:  shortcircuit LinearCombination and Linear and LinearMatrix if params => identity
 # LinearMatrix:
@@ -2367,7 +2367,7 @@
 #endregion
 
 # EXAMPLES:
-# my_input_layer = Transfer(default_input_value=[0,0,0], function=Linear)
-# my_hidden_layer = Transfer(default_input_value=[0,0,0], function=Logistic)
+# my_input_layer = TransferMechanism(default_input_value=[0,0,0], function=Linear)
+# my_hidden_layer = TransferMechanism(default_input_value=[0,0,0], function=Logistic)
 # my_decision_layer = DDM(default_input_value=[0], function=BogaczEtAl)
 

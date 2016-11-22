@@ -223,10 +223,10 @@ The first mechanism is specified as a reference to an instance, the second as a 
 and the third in tuple format (specifying a reference to a mechanism that should receive some_params at runtime;
 note: the phase is omitted and so will be assigned the default value of 0)::
 
-    mechanism_1 = Transfer()
+    mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
     some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
-    my_process = process(pathway=[mechanism_1, Transfer, (mechanism_2, some_params)])
+    my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
 *Default projection specification:*
 
@@ -266,9 +266,9 @@ This pathway implements a series of mechanisms with projections between them all
 using backpropagation (the default learning algorithm).  Note that it uses the logistic function, which is compatible
 with backpropagation::
 
-    mechanism_1 = Transfer(function=Logistic)
-    mechanism_2 = Transfer(function=Logistic)
-    mechanism_3 = Transfer(function=Logistic)
+    mechanism_1 = TransferMechanism(function=Logistic)
+    mechanism_2 = TransferMechanism(function=Logistic)
+    mechanism_3 = TransferMechanism(function=Logistic)
 
 .. XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
@@ -280,9 +280,9 @@ with backpropagation::
 .. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
    *Process with individual projections that implement learning:*
 
-    mechanism_1 = Transfer(function=Logistic)
-    mechanism_2 = Transfer(function=Logistic)
-    mechanism_3 = Transfer(function=Logistic)
+    mechanism_1 = TransferMechanism(function=Logistic)
+    mechanism_2 = TransferMechanism(function=Logistic)
+    mechanism_3 = TransferMechanism(function=Logistic)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
     #                      learning=LEARNING_SIGNAL)
 
@@ -1725,7 +1725,7 @@ class Process_Base(Process):
                     self._monitoring__mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
-        """Check for and assign comparatorMechanism mechanism to use for reporting error during learning.
+        """Check for and assign ComparatorMechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
          Check that there is one and only one ComparatorMechanism for the process

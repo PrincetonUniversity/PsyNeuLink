@@ -218,7 +218,7 @@ class Mapping(Projection_Base):
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
 
-    name : str : default Transfer-<index>
+    name : str : default TransferMechanism-<index>
         a string used for the name of the mapping projection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
