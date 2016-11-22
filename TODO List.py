@@ -3,14 +3,18 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/19/16:
-# FIX:  RECONICLE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
+# FIX: AdaptiveIntegrator MECHANISM:
+# FIX:         CAN IT HANLDE AN ARRAY?  IF NOT, ADJUST DOCUMENTATION ACCORDINGLY
+# FIX:         EITHER CORRECT THE NAMES OF LINEAR AND SCALED, OR CORRECT THE COMPUTATIONS
+# FIX: WHAT IS ITS NAME:  AdaptiveIntegrator or AdpativeIntegratorMechanism?
+# FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??
+# FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
 
-# TEST:  How does DDM currently handle len(default_input_value) > 1?
-# IMPLEMENT: DDM: if len(default_input_value) > 1, each item of outputValue and outputState.value is 1d array
-#
+# DOCUMENTATION: XXX_Creating_A_XXX --> XXX_Creation
+# DOCUMENTATION: State:  XXXX COORDINATE THIS TO MECHANISM DOCUMENTATION REGARDING MECHANISM-SPECIFIC STATE REGISTRIES
 # DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
 #                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
 # DOCUMENTATION:  singularize first statement in overview of all objects
@@ -173,6 +177,7 @@
 
 # FIX: Process: Identify recurrent projections, designate mechanisms as INITIALIZE_CYCLE,
 # FIX:          and in implement initialization of them in execution
+#           OPTIONS:  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 
 # 10/17/16:
 # IMPLEMENT: Process: phases in execution
@@ -542,8 +547,8 @@
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 # FIX: IN COMPARATOR _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
-# FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
-# FIX: IN Projection:  (_instantiate_attributes_before_function() and instantiate_parameter_states())
+# FIX: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
+# FIX: IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
 #       EVC should be assigned its own phase, and then assign its input to the process inputstates,
 #            with the phase assigned to the EVC phase
@@ -563,7 +568,7 @@
 #        the length of the error_signal from the LearningSignal.sender is compatible with the dim of the weight matrix
 
 # PROBLEM with parsing of (paramValue, projection_spec) tuples:
-#    currently, used for mechanisms, and get parsed by instantiate_state when instantiating their parameter states;
+#    currently, used for mechanisms, and get parsed by _instantiate_state when instantiating their parameter states;
 #        paramValue is assigned to value of state, and that is used for function of the *mechanism*
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
@@ -669,7 +674,7 @@
 #         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
 #         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
 #                        LENGTH OF EITHER LIST OF NAMES OR SPECIFICATION DICT (I.E., # ENTRIES)
-#                        DO THIS IN instantiate_state IF PARAM_STATE_IDENTIFIER IS InputState
+#                        DO THIS IN _instantiate_state IF PARAM_STATE_IDENTIFIER IS InputState
 #                        OR HAVE InputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
 #     * constraint_value in Mechanism.instantiate_state_lists (2D)
@@ -838,26 +843,17 @@
 # -------------------
 
 # QUESTION: DDM:
-#            DOES NAVARRO AND FUSS ACTALLY RETURN ER (I ASSUMED IT DID)
+#            MULTIPLE PROCESSES AND AVERAGED OUTPUT VALUES IDEA
+#            t0 BUISINESS (ms or secs?)
+#            DOES NAVARRO AND FUSS ACTUALLY RETURN ER (I ASSUMED IT DID)
 #            DOES NAVARRO AND FUSS ACTUALLY RETURN MEAN RT FOR CORRECT RESPONSE?  SHOULD THIS TOO BE UPPER BOUND??
 #            HOW TO DESCRIBE RESULTS OF INTERROGATOIN PROTOCOL (IN TIME_STEP MODE)
 #            IS t0 MS OR SECONDS?
 
-# QUESTION: HOW DO SRN'S INITIALIZE THE CONTEXT LAYER?  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
-#           HOW DO BAYESIAN BELIEF NETS INITIAL INTERNAL BELIEFS
+# -------------------------------------------
 
 # FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
 #      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
-
-# IMPLEMENT: Rename Function -> Component or PNL_Component (or Block or Module or Structure)
-# IMPLEMENT: Refactoring of DDM (solutions are now functions.. see DDM Test Script for example)
-# IMPLEMENT [DONE!]:  BP
-#                     random weight matrix
-#                     can specify which outputstate to use for learning (see DDM Learning Test Script)
-#                        (example: learning drift rate input for given threshold:  nonmonotonic!)
-#                     fixed process factory method (can now call process instead of Process_Base)
-#                     flattened DDM arg structure (see DDM Test Script)
-#                         QUESTION: should defaults be numbers or values??
 
 # QUESTION: When executing a mechanism, and updating its projections (to get their input),
 #               should update only those from mechanisms that belong to the process currently being executed?
@@ -1053,7 +1049,7 @@
 #    ProcessingMechanism
 #  ~ Projection
 #  ! Run
-#    State
+#  √ State
 #  ! System
 #  ! Transfer
 #    Utilities
@@ -1317,7 +1313,7 @@
 #    for all of the projections associated with the mechanism in its pathway,
 #    beginning with the last and moving backward though the pathway
 # 5) When finally instantiating deferred projections, be sure to do validation of their variable with sender's output:
-#          State.instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
+#          State._instantiate_state:  elif iscompatible(self.variable, projection_spec.value):
 # 6) update() method should test for self.value and if it is DEFERRED_INITIALIZATION it should return self.value
 # 7) Objects that call execute method of ones with deferred init should test for return value of DEFERRED_INITIALIZATION
 #     and handle appropriately
@@ -1410,7 +1406,7 @@
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
 #           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_SIGNAL)
 #     - Clean up ControlSignal InstanceAttributes
-# DOCUMENT instantiate_state_list() in Mechanism
+# DOCUMENT _instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
@@ -1615,8 +1611,8 @@
 #    NEED TO IMPLEMENT 1/x NOTATION FOR WEIGHTS IN LinearCombination
 #
 # REFACTORING NEEDED:
-# ? MODIFY State.instantiate_projections_to_state TO TAKE A LIST OF PROJECTIONS AS ITS ARG
-# √ ADD METHOD TO Mechanism:  instantiate_projections_to_state:
+# ? MODIFY State._instantiate_projections_to_state TO TAKE A LIST OF PROJECTIONS AS ITS ARG
+# √ ADD METHOD TO Mechanism:  _instantiate_projections_to_state:
 #      default:  ADD PROJECTION TO (PRIMARY) inputState
 #      optional arg:  inputState (REFERENCED BY NAME OR INDEX) TO RECEIVE PROJECTION,
 #                     OR CREATE NEW inputState (INDEX = -1 OR NAME)
@@ -1704,7 +1700,7 @@
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
 #             _instantiate_control_signal_projection() for current controller
-#                 instantiate_state() [Mechanism]
+#                 _instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
 
@@ -1897,7 +1893,7 @@
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
 #                - FUNCTION_PARAMS: {kwParameterState: None}}:  suppresses ParameterStates
-#                - handled in Mechanism.instantiate_parameter_states()
+#                - handled in Mechanism._instantiate_parameter_states()
 #                - add DOCUMENTATION in Components and/or Mechanisms or ParameterStates;
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
 #                      there are just not any parameterStates instantiated for them
@@ -1975,7 +1971,7 @@
 #            required if self.execute is not implemented and return value of FUNCTION is len > 1
 #
 # IMPLEMENT: 7/3/16 inputValue (== self.variable) WHICH IS 2D NP.ARRAY OF inputState.value FOR ALL inputStates
-# FIX: IN instantiate_state:
+# FIX: IN _instantiate_state:
 # FIX: - check that constraint_value IS NOW ONLY EVER A SINGLE VALUE
 # FIX:  CHANGE ITS NAME TO constraint_value
 # Search & Replace: constraint_value -> constraint_value
@@ -2029,11 +2025,11 @@
 #             assign this Function.__init__
 
 #
-# In instantiate_state (re: 2-item tuple and Projection cases):
+# In _instantiate_state (re: 2-item tuple and Projection cases):
         # IMPLEMENTATION NOTE:
         #    - need to do some checking on state_spec[1] to see if it is a projection
         #      since it could just be a numeric tuple used for the variable of a state;
-        #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
+        #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     # IMPLEMENTATION NOTE:
     #    - should create list of valid projection keywords and limit validation below to that (instead of just str)
 #
@@ -2050,6 +2046,12 @@
 #       Currently solved by embedding the value of a projection to a matrix parameterState of a mapping projection
 #           in a list (see "is_matrix_mapping").  Should probably do some more general check on dimensionality
 #           of value and/or coordinate this with (e.g,. specify relevant parameter for) LinearCombination function
+#
+# IMPLEMENT:  OutputState functions (per following from DOCUMENTATION under Mechanism docsring:
+#    Usually the ``function`` of the primary outputState transfers the result of the mechanism's function to the primary
+#    outputState's ``value`` attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other
+#    outputStates may use other functions to transform the result of the mechanism's function in various ways (e.g.,
+#    generate its mean, variance, etc.)
 
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
 # IMPLEMENT: ability to redefine primary input and output states (i.e., to be other than the first)
@@ -2070,9 +2072,9 @@
          #  - MOVE STATE_PROJECTIONS out of kwStateParams:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
-         #    and process in __init__ (instantiate_projections_to_state()) rather than in _validate_params
+         #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params
          # - if so, then correct in _instantiate_function_params under Mechanism
-         # - ADD instantiate_projection akin to instantiate_state in Mechanism
+         # - ADD instantiate_projection akin to _instantiate_state in Mechanism
          # - ADD validate_projection() to subclass, that checks projection type is OK for state
 #
 ## ******* MOVE THIS TO State
@@ -2129,7 +2131,7 @@
 #               (AS ControlSignal AND Mapping BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
 # FIX: clean up _instantiate_sender -- better integrate versions for Mapping, ControlSignal, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
-# FIX:  Move marked section of instantiate_projections_to_state(), check_projection_receiver(), and parse_projection_ref
+# FIX:  Move marked section of _instantiate_projections_to_state(), _check_projection_receiver(), and _parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender

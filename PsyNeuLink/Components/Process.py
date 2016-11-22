@@ -313,7 +313,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, mechanism
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Components.Projections.Mapping import Mapping
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
-from PsyNeuLink.Components.States.State import instantiate_state_list, instantiate_state
+from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import *
 
@@ -1192,7 +1192,7 @@ class Process_Base(Process):
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
                             except AttributeError:
                                 # Instantiate parameterStates Ordered dict with ParameterState and self.learning
-                                preceding_item.parameterStates = instantiate_state_list(
+                                preceding_item.parameterStates = _instantiate_state_list(
                                                                                 owner=preceding_item,
                                                                                 state_list=[(MATRIX,
                                                                                              self.learning)],
@@ -1205,7 +1205,7 @@ class Process_Base(Process):
                             # preceding_item has parameterStates but not (yet!) one for MATRIX, so instantiate it
                             except KeyError:
                                 # Instantiate ParameterState for MATRIX
-                                preceding_item.parameterStates[MATRIX] = instantiate_state(
+                                preceding_item.parameterStates[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
                                                                                 state_name=MATRIX,
@@ -1244,7 +1244,7 @@ class Process_Base(Process):
                                 # projection doesn't have a parameterStates attrib, so assign one with self.learning
                                 except AttributeError:
                                     # Instantiate parameterStates Ordered dict with ParameterState for self.learning
-                                    projection.parameterStates = instantiate_state_list(
+                                    projection.parameterStates = _instantiate_state_list(
                                                                                 owner=preceding_item,
                                                                                 state_list=[(MATRIX,
                                                                                              self.learning)],
@@ -1258,7 +1258,7 @@ class Process_Base(Process):
                                 #    so instantiate it with self.learning
                                 except KeyError:
                                     # Instantiate ParameterState for MATRIX
-                                    projection.parameterStates[MATRIX] = instantiate_state(
+                                    projection.parameterStates[MATRIX] = _instantiate_state(
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
                                                                                 state_name=MATRIX,
@@ -1309,8 +1309,8 @@ class Process_Base(Process):
 
                     # FIX: PARSE/VALIDATE ALL FORMS OF PROJECTION SPEC (ITEM PART OF TUPLE) HERE:
                     # FIX:                                                          CLASS, OBJECT, DICT, STR, TUPLE??
-                    # IMPLEMENT: MOVE State.instantiate_projections_to_state(), check_projection_receiver()
-                    #            and parse_projection_ref() all to Projection_Base.__init__() and call that
+                    # IMPLEMENT: MOVE State._instantiate_projections_to_state(), _check_projection_receiver()
+                    #            and _parse_projection_ref() all to Projection_Base.__init__() and call that
                     #           VALIDATION OF PROJECTION OBJECT:
                     #                MAKE SURE IT IS A Mapping PROJECTION
                     #                CHECK THAT SENDER IS pathway[i-1][OBJECT]

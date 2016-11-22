@@ -9,6 +9,9 @@
 # *******************************************  InputState *****************************************************
 #
 """
+
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
 Overview
 --------
 
@@ -73,7 +76,7 @@ INPUT_STATES (value, list, dict):
                 value will be used as variable to instantiate a default InputState
                 projection will be assigned as projection to InputState
             + value: will be used as variable to instantiate a default InputState
-        * note: inputStates can also be added using State.instantiate_state()
+        * note: inputStates can also be added using State._instantiate_state()
 
 Function
 --------
@@ -83,6 +86,7 @@ Accepts inputs from projections, combines them, and provides them as an item in 
 """
 
 from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.State import _instantiate_state_list
 from PsyNeuLink.Components.Functions.Function import *
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
@@ -280,7 +284,7 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   # self.owner.variable))
 
 def _instantiate_input_states(owner, context=None):
-    """Call State.instantiate_state_list() to instantiate orderedDict of inputState(s)
+    """Call State._instantiate_state_list() to instantiate orderedDict of inputState(s)
 
     Create OrderedDict of inputState(s) specified in paramsCurrent[INPUT_STATES]
     If INPUT_STATES is not specified, use self.variable to create a default input state
@@ -291,16 +295,16 @@ def _instantiate_input_states(owner, context=None):
         - each inputState corresponds to an item in the variable of the owner's function
         - if there is only one inputState, it is assigned the full value
 
-    Note: State.instantiate_state_list()
+    Note: State._instantiate_state_list()
               parses self.variable (2D np.array, passed in constraint_value)
               into individual 1D arrays, one for each input state
 
-    (See State.instantiate_state_list() for additional details)
+    (See State._instantiate_state_list() for additional details)
 
     :param context:
     :return:
     """
-    owner.inputStates = instantiate_state_list(owner=owner,
+    owner.inputStates = _instantiate_state_list(owner=owner,
                                                state_list=owner.paramsCurrent[INPUT_STATES],
                                                state_type=InputState,
                                                state_param_identifier=INPUT_STATES,

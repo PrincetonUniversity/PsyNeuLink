@@ -4,10 +4,80 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 #  *********************************************  State ********************************************************
-#
+
+"""
+
+Overview
+--------
+
+A State is a component that provides an interface to a :doc:`projection <Projection>`, and represents the value
+associated with that projection.  There are three types of states, all of which are used by
+:doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below.
+
+* **InputState**:
+     used by a mechanism to represent the input provided by one or more :doc:`Mapping` projections.
+
+* **ParameterState**:
+    * used by a mechanism to represent the value of a parameter of its ``function``,
+      possibly regulated by a :doc:`ControlSignal` projection;
+    * used by a Mapping projection to represent the ``matrix`` parameter of its ``function``,
+      possibly regulated by a :doc:`LearningSignal` projection.
+
+* **OutputState**:
+    * used by a mechanism to represent its output, and as the source of any outgoing projection(s):
+
+      * :doc:`Mapping` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
+      * :doc:`ControlSignal` for a :doc:`ControlMechanism <ControlMechanism>`;
+      * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
+
+.. _State_Creating_A_State:
+
+Creating a State
+----------------
+
+States can be created used the constructor for one of the subclasses.  However, in general, they are created
+automatically by the objects to which they belong, and/or through specification in context (e.g., when specifying
+the parameters of a mechanism's function to be controlled [LINK], or Mapping projections to be learned [LINK]).
+
+Structure
+---------
+
+Every state is owned by either a :doc:`mechanism <Mechanism>` or a :doc:`projection <Projection>`. Like all PsyNeuLink
+components, a state has the three following fundamental attributes:
+
+* ``variable``:  for an inputState and parameterState, the value of this is determined by the value(s) of the
+  projection(s) that it receives (and that are listed in its ``receivesFromProjections`` attribute);  for an
+  outputState, it is the value returned by the owner mechanism's ``function`` (that is also assigned as the
+  ``value`` of the state).
+
+* ``function``:  for an inputState and parameterState, this aggregates the values of the projections it receives
+  (the default is a :any:`LinearCombination` function that sums those values); at present, outputState ``functions``
+  are not used (the value of outputStates is assigned directly by the mechanism's ``execute`` method [LINK]).
+
+* ``value``:  for an inputState and parameterState, this is the aggregated value of the projections it receives;
+  for an outputState, this is a value associated with the output of the mechanism's ``function`` (all of which are
+  also represented in the mechanism's ``outputValue`` attribute [LINK]).
+
+Execution
+---------
+
+A state cannot be executed directly.  It is executed when the component to which it belongs is executed.
+When this occurs, each inputState and parameterState belonging to the object executes any projections it  receives,
+calls its ``function`` to aggregate their values, and then assigns this as that state's ``value`` -- this conforms to a
+"lazy evaluation" protocol (see :ref:`Lazy_Evaluation` for a more detailed discussion).  The ``value`` of an outputState
+is assigned after the ``function`` of the mechanism that owns it has been called
+(see :ref:`Mechanism OutputStates <Mechanism_OutputStates>`).
+
+.. _State_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
 #
 from collections import OrderedDict
 
@@ -54,44 +124,91 @@ class StateError(Exception):
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE STATE'S NAME + kwValueSuffix
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class State_Base(State):
-    """Implement abstract class for State category of class types that compute and represent mechanism states
+    """
+    State_Base(  \
+    owner        \
+    value=None,  \
+    params=None, \
+    name=None,   \
+    prefs=None)
 
-    Description:
-        Represents and updates the state of an input, output or parameter of a mechanism
-            - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
-            - combines inputs from all projections (mapping and/or control) and uses this as variable of
-                function to update the value attribute
-        Value attribute:
-             - is updated by the execute method (which calls state's function)
-             - can be used as sender (input) to one or more projections
-             - can be accessed by KVO
-        Constraints:
-            - value must be compatible with variable of function
-            - value must be compatible with receiver.value for all projections it receives
 
-    Subclasses:
-        Must implement:
-            componentType
-            ParamClassDefaults with:
-                + FUNCTION (or <subclass>.function
-                + FUNCTION_PARAMS (optional)
-                + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
-        Standard subclasses and constraints:
-            InputState - used as input state for Mechanism;  additional constraint:
-                - value must be compatible with variable of owner's function method
-            OutputState - used as output state for Mechanism;  additional constraint:
-                - value must be compatible with the output of the owner's function
-            MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
-                - output of function must be compatible with the parameter's value
 
-    Instantiation:
-        States should NEVER be instantiated by a direct call to the class
-           (since there is no obvious default), but rather by calls to the subclass
-        Subclasses can be instantiated in one of two ways:
-            - call to __init__ with args to subclass with args for owner, value and params:
-            - as part of the instantiation of a Mechanism (see Mechanism.intantiate_mechanism_state for details)
+    Abstract class for State.
 
-    Initialization arguments:
+    .. note::
+       States should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated by calling the constructor for the desired subclass,
+       or using other methods for specifying a state (see :ref:`State_Creating_A_State`).
+
+    COMMENT:
+        Description
+        -----------
+            Represents and updates the state of an input, output or parameter of a mechanism
+                - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
+                - inputStates and parameterStates: combines inputs from all projections (mapping, control or learning)
+                    and uses this as variable of function to update the value attribute
+                - outputStates: represent values of output of function
+            Value attribute:
+                 - is updated by the execute method (which calls state's function)
+                 - can be used as sender (input) to one or more projections
+                 - can be accessed by KVO
+            Constraints:
+                - value must be compatible with variable of function
+                - value must be compatible with receiver.value for all projections it receives
+
+            Subclasses:
+                Must implement:
+                    componentType
+                    ParamClassDefaults with:
+                        + FUNCTION (or <subclass>.function
+                        + FUNCTION_PARAMS (optional)
+                        + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
+                Standard subclasses and constraints:
+                    InputState - used as input state for Mechanism;  additional constraint:
+                        - value must be compatible with variable of owner's function method
+                    OutputState - used as output state for Mechanism;  additional constraint:
+                        - value must be compatible with the output of the owner's function
+                    MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
+                        - output of function must be compatible with the parameter's value
+
+        Class attributes
+        ----------------
+            + componentCategory = kwStateFunctionCategory
+            + className = kwState
+            + suffix
+            + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + variableClassDefault (value): [0]
+            + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
+                                               PROJECTION_TYPE: [str, Projection]})   # Default projection type
+            + paramClassDefaults (dict): {STATE_PROJECTIONS: []}             # Projections to States
+            + paramNames (dict)
+            + owner (Mechansim)
+            + FUNCTION (Function class or object, or method)
+
+        Class methods
+        -------------
+            - set_value(value) -
+                validates and assigns value, and updates observers
+                returns None
+            - update_state(context) -
+                updates self.value by combining all projections and using them to compute new value
+                return None
+
+        StateRegistry
+        -------------
+            Used by .__init__.py to assign default projection types to each state subclass
+            Note:
+            * All states that belong to a given owner are registered in the owner's _stateRegistry,
+                which maintains a dict for each state type that it uses, a count for all instances of that type,
+                and a dictionary of those instances;  NONE of these are registered in the StateRegistry
+                This is so that the same name can be used for instances of a state type by different owners
+                    without adding index suffixes for that name across owners,
+                    while still indexing multiple uses of the same base name within an owner
+
+        Arguments
+        ---------
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
@@ -114,59 +231,44 @@ class State_Base(State):
              dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
+    COMMENT
 
-    StateRegistry:
-        Used by .__init__.py to assign default projection types to each state subclass
-        Note:
-        * All states that belong to a given owner are registered in the owner's _stateRegistry,
-            which maintains a dict for each state type that it uses, a count for all instances of that type,
-            and a dictionary of those instances;  NONE of these are registered in the StateRegistry
-            This is so that the same name can be used for instances of a state type by different owners
-                without adding index suffixes for that name across owners,
-                while still indexing multiple uses of the same base name within an owner
+    Attributes
+    ----------
 
-    Naming:
-        States can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
-        it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
+    owner : Mechanism or Projection
+        object to which the state belongs.
 
-    Execution:
+    baseValue : number, list or np.ndarray
+        value with which the state was initialized.
 
+    receivesFromProjections : Optional[List[Projection]]
+        list of projections for which the state is a ``receiver``.
 
-    Class attributes:
-        + componentCategory = kwStateFunctionCategory
-        + className = kwState
-        + suffix
-        + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
-                                           PROJECTION_TYPE: [str, Projection]})   # Default projection type
-        + paramClassDefaults (dict): {STATE_PROJECTIONS: []}             # Projections to States
-        + paramNames (dict)
-        + owner (Mechansim)
-        + FUNCTION (Function class or object, or method)
+    sendsToProjections : Optional[List[Projection]]
+        list of projections for which the state is a ``sender``.
 
-    Class methods:
-        - set_value(value) -
-            validates and assigns value, and updates observers
-            returns None
-        - update_state(context) -
-            updates self.value by combining all projections and using them to compute new value
-            return None
+    value : number, list or np.ndarray
+        current value of the state (updated by ``update_state`` method).
 
-    Instance attributes:
-        + owner (Mechanism): object to which State belongs
-        + value (value): current value of the State (updated by update_state method)
-        + baseValue (value): value with which it was initialized (e.g., from params in call to __init__)
-        + receivesFromProjections (list): list of projections for which State is a receiver
-        + sendsToProjections (list): list of projections for which State is a sender
-        + params (dict)
-        + value (value - output of function
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying StatePreferenceSet
+    name : str : default <State subclass>-<index>
+        Name of the state.
+        Specified in the name argument of the call to create the state;  if not is specified,
+        a default is assigned by StateRegistry based on the states's subclass
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
 
-    Instance methods:
-        none
+        .. note::
+            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
+            mechanism: states within a mechanism with the same base name are appended an index in the order of
+            creation).
+
+    prefs : PreferenceSet or specification dict : State.classPreferences
+        the PreferenceSet for the state.
+        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     """
 
     #region CLASS ATTRIBUTES
@@ -303,7 +405,7 @@ class State_Base(State):
             pass
         else:
             if projections:
-                self.instantiate_projections_to_state(projections=projections, context=context)
+                self._instantiate_projections_to_state(projections=projections, context=context)
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
@@ -439,7 +541,7 @@ class State_Base(State):
                                              self.variable.__class__.__name__,
                                              self.variable))
 
-    def instantiate_projections_to_state(self, projections, context=None):
+    def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
 
         For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
@@ -496,7 +598,7 @@ class State_Base(State):
 
             # INSTANTIATE PROJECTION_SPEC
             # If projection_spec is a Projection object:
-            # - call check_projection_receiver() to check that receiver is self; if not, it:
+            # - call _check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
             #     else, returns new (default) PROJECTION_TYPE object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
@@ -520,7 +622,7 @@ class State_Base(State):
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec._deferred_init()
-                projection_object, default_class_name = self.check_projection_receiver(
+                projection_object, default_class_name = self._check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,
                                                                                               item_suffix_string,
@@ -555,7 +657,7 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
                 else:
                     # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                    projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
+                    projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
                                                                            context=self)
                     if error_str:
                         print("{0}{1} {2}; default {4} will be assigned".
@@ -582,7 +684,7 @@ class State_Base(State):
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.receivesFromProjections list
             else:
-                projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
+                projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str:
                     print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -649,7 +751,7 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-    def instantiate_projection_from_state(self, projection_spec, receiver, context=None):
+    def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate projection from a state and assign it to self.sendsToProjections
 
         Check that projection_spec is one of the following:
@@ -702,12 +804,12 @@ class State_Base(State):
 
         # INSTANTIATE PROJECTION_SPEC
         # If projection_spec is a Projection object:
-        # - call check_projection_sender() to check that sender is self; if not, it:
+        # - call _check_projection_sender() to check that sender is self; if not, it:
         #     returns object with sender reassigned to self if chosen by user
         #     else, returns new (default) PROJECTION_TYPE object with self as sender
         #     note: in that case, projection will be in self.sendsToProjections list
         if isinstance(projection_spec, Projection_Base):
-            projection_object, default_class_name = self.check_projection_sender(projection_spec=projection_spec,
+            projection_object, default_class_name = self._check_projection_sender(projection_spec=projection_spec,
                                                                                  receiver=receiver,
                                                                                  messages=[item_prefix_string,
                                                                                            item_suffix_string,
@@ -742,7 +844,7 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
             else:
                 # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
+                projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
                                                                        context=self)
                 if error_str:
                     print("{0}{1} {2}; default {4} will be assigned".
@@ -769,7 +871,7 @@ class State_Base(State):
         # Note: this gets projection_type but does NOT instantiate the projection,
         #       so projection is NOT yet in self.sendsToProjections list
         else:
-            projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
+            projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
             if err_str:
                 print("{0}{1} {2}; default {4} will be assigned".
                       format(item_prefix_string,
@@ -830,7 +932,7 @@ class State_Base(State):
             if not projection_spec in self.sendsToProjections:
                 self.sendsToProjections.append(projection_spec)
 
-    def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
+    def _check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
 
         Arguments:
@@ -883,7 +985,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
+    def _check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
         """Check whether Projection object references State as sender and, if not, return default Projection object
 
         Arguments:
@@ -937,7 +1039,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def parse_projection_ref(self,
+    def _parse_projection_ref(self,
                              projection_spec,
                              # messages=NotImplemented,
                              context=None):
@@ -1032,7 +1134,7 @@ class State_Base(State):
     :return: None
     """
 
-        #regions GET STATE-SPECIFIC PARAM_SPECS
+        #region GET STATE-SPECIFIC PARAM_SPECS
         try:
             # Get outputState params
             self.stateParams = params[self.paramsType]
@@ -1224,16 +1326,16 @@ class State_Base(State):
 
 # Module functions:
 #
-# - instantiate_state_list(state_type,
+# - _instantiate_state_list(state_type,
 #                                    state_param_identifier,
 #                                    constraint_value,
 #                                    constraint_value_name,
 #                                    context)
 #     instantiates states of type specified from list in paramsCurrent specified by state_param_identifier;
-#     passes state_type and constraints to State.instantiate_state
+#     passes state_type and constraints to State._instantiate_state
 #         for instantiating each individual state
 #
-# - instantiate_state(owner,
+# - _instantiate_state(owner,
 #                               state_type
 #                               state_name,
 #                               state_spec,
@@ -1243,7 +1345,7 @@ class State_Base(State):
 #                               context):
 #     instantiates state of type specified by state_type and state_spec, using constraints
 
-def instantiate_state_list(owner,
+def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
                            state_type,              # StateType subclass
                            state_param_identifier,  # used to specify state_type state(s) in params[]
@@ -1266,7 +1368,7 @@ def instantiate_state_list(owner,
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
-    - constraint_value_name (str):  passed to State.instantiate_state(), used in error messages
+    - constraint_value_name (str):  passed to State._instantiate_state(), used in error messages
     - context (str)
 
     If state_list is None:
@@ -1423,7 +1525,7 @@ def instantiate_state_list(owner,
                     # Note: state_spec has already been assigned to item in state_entries list by enumeration above
                     state_constraint_value = constraint_value[key]
 
-            state = instantiate_state(owner=owner,
+            state = _instantiate_state(owner=owner,
                                                 state_type=state_type,
                                                 state_name=state_name,
                                                 state_spec=state_spec,
@@ -1443,7 +1545,7 @@ def instantiate_state_list(owner,
                          format(state_entries, state_param_identifier, owner.__class__.__name__))
 
 
-def instantiate_state(owner,                   # Object to which state will belong
+def _instantiate_state(owner,                   # Object to which state will belong
                       state_type,              # State subclass
                       state_name,              # Name used to refer to subclass in prompts
                       state_spec,              # State subclass, object, spec dict or value
@@ -1460,7 +1562,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     + State class:
         implement default using constraint_value
     + State object:
-        check owner is owner (if not, user is given options in check_state_ownership)
+        check owner is owner (if not, user is given options in _check_state_ownership)
         check compatibility of value with constraint_value
     + Projection object:
         assign constraint_value to value
@@ -1500,13 +1602,13 @@ def instantiate_state(owner,                   # Object to which state will belo
 
     #region VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
-        raise StateError("state_type arg ({0}) to instantiate_state "
+        raise StateError("state_type arg ({0}) to _instantiate_state "
                              "must be a State subclass".format(state_type))
     if not isinstance(state_name, str):
-        raise StateError("state_name arg ({0}) to instantiate_state must be a string".
+        raise StateError("state_name arg ({0}) to _instantiate_state must be a string".
                              format(state_name))
     if not isinstance(constraint_value_name, str):
-        raise StateError("constraint_value_name arg ({0}) to instantiate_state must be a string".
+        raise StateError("constraint_value_name arg ({0}) to _instantiate_state must be a string".
                              format(constraint_value_name))
     #endregion
 
@@ -1576,9 +1678,9 @@ def instantiate_state(owner,                   # Object to which state will belo
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
             # # MODIFIED 10/28 OLD:
-            # state =  owner.check_state_ownership(state_name, state_spec)
+            # state =  owner._check_state_ownership(state_name, state_spec)
             # MODIFIED 10/28 NEW:
-            state =  check_state_ownership(owner, state_name, state_spec)
+            state =  _check_state_ownership(owner, state_name, state_spec)
             # MODIFIED 10/28 END
             if state:
                 return state
@@ -1630,7 +1732,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - check that ParamValueProjection.value matches constraint_value and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State.instantiate_projections_to_state
+    #       with state value is handled in State._instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
@@ -1658,11 +1760,11 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State.instantiate_projections_to_state
+    #       with state value is handled in State._instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
     #    - need to do some checking on state_spec[PROJECTION_SPEC] to see if it is a projection
     #      since it could just be a numeric tuple used for the variable of a state;
-    #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
+    #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
             (state_spec[PROJECTION_SPEC] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                  isinstance(state_spec[PROJECTION_SPEC], Projection) or
@@ -1712,7 +1814,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - assign constraint_value to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State.instantiate_projections_to_state
+    #       with state value is handled in State._instantiate_projections_to_state
     try:
         issubclass(state_spec, Projection)
     except TypeError:
@@ -1785,7 +1887,7 @@ def instantiate_state(owner,                   # Object to which state will belo
 
     return state
 
-def check_parameter_state_value(owner, param_name, value):
+def _check_parameter_state_value(owner, param_name, value):
     """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
 
     :param param_name: (str)
@@ -1801,7 +1903,7 @@ def check_parameter_state_value(owner, param_name, value):
                   format(value, param_name, owner.name, default_value))
         return default_value
 
-def check_state_ownership(owner, param_name, mechanism_state):
+def _check_state_ownership(owner, param_name, mechanism_state):
     """Check whether State's owner is owner and if not offer options how to handle it
 
     If State's owner is not owner, options offered to:
