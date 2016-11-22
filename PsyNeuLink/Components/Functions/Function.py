@@ -1713,7 +1713,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
             old_value = self.oldValue
 
         old_value = np.atleast_2d(old_value)
-
         new_value = self.variable
 
         # Compute function based on weighting param
