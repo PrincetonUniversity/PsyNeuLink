@@ -130,9 +130,7 @@ def optional_parameter_spec(param):
 
 def parameter_spec(param):
     # if is_numerical(param):
-    if isinstance(param, numbers.Number):
-        return True
-    if isinstance(param, (tuple, function_type, ParamValueProjection)):
+    if isinstance(param, (numbers.Number, np.ndarray, list, tuple, function_type, ParamValueProjection)):
         return True
     return False
 
@@ -1665,9 +1663,16 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self.oldValue = self.paramsCurrent[kwInitializer]
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+
+        # Handle list or array for rate specification
+        if isinstance(request_set[RATE], (list, np.ndarray)):
+            self.paramClassDefaults[RATE] = np.zeros_like(np.array(request_set[RATE]))
+
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+        # Make sure initializer is compatible with variable
         try:
             if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
                 raise FunctionError("kwInitializer param {0} for {1} must be same type as variable {2}".
@@ -1676,6 +1681,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                           self.variable))
         except KeyError:
             pass
+
 
     # def function(self, old_value, new_value, param_list=NotImplemented):
 
@@ -1699,7 +1705,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         self._check_args(variable, params, context)
 
-        rate = float(self.paramsCurrent[RATE])
+        rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
 
         try:
