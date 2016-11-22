@@ -6,35 +6,35 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **************************************  AdaptiveIntegrator Mechanism *************************************************
+# **************************************  IntegratorMechanism *************************************************
 
 """
 Overview
 --------
 
-An AdaptiveIntegrator mechanism integrates its input, possibly based on its prior values.  The input can be a single
+An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
 independently integrated.  The default function (:any:`Integrator`) can be parameterized to implement either a simple
 increment rate, additive accumulator, or an (exponentially weighted) time-averaging of its input.  It can also be
 assigned a custom function.
 
-.. _AdaptiveIntegrator_Creation:
+.. _IntegratorMechanism_Creation:
 
-Creating an AdaptiveIntegrator
-------------------------------
+Creating an IntegratorMechanism
+-------------------------------
 
-An AdaptiveIntegrator mechanism can be created either directly, by calling its constructor, or using the
-:class:`mechanism` function and specifying "AdaptiveIntegrator" as its ``mech_spec`` argument.  Its function is
+An IntegratorMechanism can be created either directly, by calling its constructor, or using the
+:class:`mechanism` function and specifying "IntegratorMechanism" as its ``mech_spec`` argument.  Its function is
 specified in the ``function`` argument, which can be parameterized by calling to its constructor with parameter values::
 
-    my_time_averaging_mechanism = AdaptiveIntegrator(function=Integrator(weighting=ADAPTIVE, rate=0.5))
+    my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(weighting=ADAPTIVE, rate=0.5))
 
-.. _AdaptiveIntegrator_Structure
+.. _IntegratorMechanism_Structure
 
 Structure
 ---------
 
-An AdaptiveIntegrator mechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its
+An IntegratorMechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its
 ``function``.   The ``default_input_value`` argument specifies the format of the ``value`` (i.e., whether it is a
 single scalar or an array), as well as the value to use if none is provided when mechanism is executed.  The default
 ``function`` is Integrator, with ``weighting=:keyword`ADAPTIVE```  and ``rate=0.5``.  However a custom function
@@ -43,12 +43,12 @@ returns a value of the same type and format.  The default function -- :any:`Inte
 (``weighting`` and ``rate``) that determine the type and,  well, yes, the *rate* of integration.  The mechanism has a
 single outputState, the ``value`` of which is assigned the result of the call to the mechanism's ``function``.
 
-.. _AdaptiveIntegrator_Execution
+.. _IntegratorMechanism_Execution
 
 Execution
 ---------
 
-When an AdaptiveIntegrator mechanism is executed, it carries out the specified integration, and assigns the
+When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
 result to the ``value`` of its (primary) outputState.  For the default function (:any:`Integrator`), if the
 value specified for ``default_input_value`` is a list or array, each element of the array will be independently
 integrated.  If its ``rate`` parameter is a single value, that rate will be used for integrating each element.  If
@@ -56,7 +56,7 @@ the ``rate`` parameter is a list or array, then each element will be used as the
 of the input (in this case, ``rate`` must be the same length as the value specified for ``default_input_value``).
 
 
-.. _AdaptiveIntegrator_Class_Reference:
+.. _IntegratorMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -65,10 +65,10 @@ Class Reference
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 
-# AdaptiveIntegrator parameter keywords:
+# IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5
 
-class AdaptiveIntegratorMechanismError(Exception):
+class IntegratorMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -76,9 +76,9 @@ class AdaptiveIntegratorMechanismError(Exception):
         return repr(self.error_value)
 
 
-class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
+class IntegratorMechanism(ProcessingMechanism_Base):
     """
-    AdaptiveIntegratorMechanism(                            \
+    IntegratorMechanism(                            \
     default_input_value=None,                               \
     function=Integrator(weighting=ADAPTIVE, rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
@@ -86,7 +86,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     name=None,                                              \
     prefs=None)
 
-    Implements AdaptiveIntegrator subclass of Mechanism.
+    Implements IntegratorMechanism subclass of Mechanism.
 
     COMMENT:
         Description:
@@ -173,7 +173,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
-        kwPreferenceSetName: 'AdaptiveIntegratorMechanismCustomClassPreferences',
+        kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
     # Sets template for variable (input)
@@ -215,7 +215,7 @@ class AdaptiveIntegratorMechanism(ProcessingMechanism_Base):
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
 
-        super(AdaptiveIntegratorMechanism, self).__init__(variable=default_input_value,
+        super(IntegratorMechanism, self).__init__(variable=default_input_value,
                                   params=params,
                                   name=name,
                                   prefs=prefs,

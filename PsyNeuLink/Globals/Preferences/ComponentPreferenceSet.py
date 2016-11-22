@@ -138,7 +138,7 @@ class ComponentPreferenceSet(PreferenceSet):
                     DDM.classPreferences
                     Linear.classPreferences
                     SigmoidLayer.classPreferences
-                    AdaptiveIntegrator.classPreferences
+                    IntegratorMechanism.classPreferences
             - INSTANCE: returns the setting specified in the PreferenceSetEntry of the specified object itself
 
     Initialization arguments:

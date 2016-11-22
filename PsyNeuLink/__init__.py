@@ -11,7 +11,7 @@
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Components.Process import process
@@ -27,7 +27,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPrefe
 __all__ = ['System',
            'process',
            'Transfer',
-           'AdaptiveIntegratorMechanism',
+           'IntegratorMechanism',
            'DDM',
            'EVCMechanism',
            'Comparator',

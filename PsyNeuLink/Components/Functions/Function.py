@@ -1673,8 +1673,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 #    and assign variableClassDefault accordingly
                 # Note: this situation can arise when the rate is parameterized (e.g., as an array)
                 #       in the Integrator's constructor, where that is used as a specification for a function parameter
-                #       (e.g., for an AdaptiveIntegratorMechanism), whereas the input is specified as part of the
-                #       object to which the function parameter belongs (e.g., the AdaptiveIntegratorMechanism);
+                #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                 #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
                 #       the object itself, thus does not see the array specification for the input.
                 if self._variable_not_specified:

@@ -3,7 +3,7 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/22/16:
-# AdaptiveIntegrator -> IntegratorMechanism
+# IntegratorMechanism -> IntegratorMechanism
 # Transfer -> TranferMechanism
 # WeightedError -> WeightedErrorMechanism
 # Comparator -> ComparatorMechanism
@@ -13,9 +13,9 @@
 # LearningSignal -> LearningSignalProjection
 
 # 11/19/16:
-# FIX: AdaptiveIntegrator MECHANISM:
+# FIX: IntegratorMechanism:
 # FIX:         EITHER CORRECT THE NAMES OF LINEAR AND SIMPLE, OR CORRECT THE COMPUTATIONS
-# FIX: WHAT IS ITS NAME:  AdaptiveIntegrator or AdpativeIntegratorMechanism?
+# FIX: WHAT IS ITS NAME:  IntegratorMechanism or AdpativeIntegratorMechanism?
 #
 # FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??
 #
@@ -1036,7 +1036,7 @@
 
 # DOC LIST:
 
-#    AdaptiveIntegrator
+#    IntegratorMechanism
 #  √ Comparator
 #  ~ ControlMechanism
 #  √ ControlSignal
@@ -1880,7 +1880,7 @@
 #              but something different in subclasses, so not recognized; need to standardize across all classes
 
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER FUNCTION
-#                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  AdaptiveIntegratorMechanism
+#                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  IntegratorMechanism
 # IMPLEMENT:  change specification of params[FUNCTION] from class to instance (as in ControlSignal functions)
 # IMPLEMENT:  change _validate_variable (and all overrides of it) to:
 #              _validate_variable(request_value, target_value, context)

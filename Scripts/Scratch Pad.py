@@ -8,7 +8,7 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Components.Projections.Mapping import Mapping
@@ -42,7 +42,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 #
 # TEST = True
 
-my_adaptive_integrator = AdaptiveIntegratorMechanism(default_input_value=[0],
+my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
                                                      function=Integrator(
                                                                          # variable_default=[0,0],
                                                                          weighting=SIMPLE,
@@ -61,10 +61,10 @@ print(my_adaptive_integrator.execute([3]))
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Components.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+# from Components.Mechanisms.IntegratorMechanism import IntegratorMechanism
 # from Components.Function import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
+# a = IntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
