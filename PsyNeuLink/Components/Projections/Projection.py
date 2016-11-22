@@ -41,9 +41,9 @@ to another mechanism (its ``receiver``).  There are three types of projections t
 ..
 * :doc:`LearningSignal`
     These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
-    transmit this to the parameterState of a :doc:`MappingProjection` projection, which uses this to modify its ``matrix``
-    parameter. LearningSignal projections are used in the context of a :doc:`System` or :doc:`Process` that uses
-    learning.
+    transmit this to the parameterState of a :doc:`MappingProjection` projection, which uses this to modify its
+    ``matrix`` parameter. LearningSignal projections are used in the context of a :doc:`System` or :doc:`Process`
+    that uses learning.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
@@ -70,14 +70,15 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
 
   *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` projection with the :doc:`DefaultMechanism` as its ``sender``.
+  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` projection with the :doc:`DefaultMechanism` as its
+    ``sender``.
   * :keyword:`CONTROL_SIGNAL` - a :doc:`ControlSignal` projection  with the :doc:`DefaultControlMechanism` as its
-  ``sender``.
+    ``sender``.
   * :keyword:`LEARNING_SIGNAL` - a :doc:`LearningSignal` projection.  This can only be used for a projection to the
     ``matrix`` parameterState of a :doc:`MappingProjection` projection.  If the ``receiver`` for the MappingProjection
     (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningSignal.
-    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a MappingProjection
-    projection from the error source to the MonitoringMechanism
+    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a
+    MappingProjection projection from the error source to the MonitoringMechanism
     (see :ref:`Automatic Instantiation` <LearningSignal_Automatic_Creation>` of a LearningSignal for details).
 
   *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the

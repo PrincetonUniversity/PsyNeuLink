@@ -1392,7 +1392,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     #                         format(matrix_cols, self.name, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
-                # Note:  assume that these will be properly processed by caller (e.g., MappingProjection._instantiate_receiver)
+                # Note:  assume that these will be properly processed by caller
+                #        (e.g., MappingProjection._instantiate_receiver)
                 elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 

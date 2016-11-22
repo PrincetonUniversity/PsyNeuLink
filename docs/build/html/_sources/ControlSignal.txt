@@ -1,5 +1,5 @@
-Control Signal
-==============
+ControlSignal
+=============
 
 .. automodule:: ControlSignal
    :members:
