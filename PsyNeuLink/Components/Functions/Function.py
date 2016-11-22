@@ -1617,8 +1617,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              Note: self.oldValue stores previous value with which new value is integrated
          + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
          + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
-                CONSTANT -- returns old_value incremented by rate parameter (simple accumulator)
-                SCALED -- returns old_value incremented by rate * new_value
+                CONSTANT -- returns old_value incremented by rate parameter (ignores input)
+                SIMPLE -- returns old_value incremented by rate * new_value
                 TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
@@ -1641,7 +1641,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     def __init__(self,
                  variable_default=None,
                  rate:parameter_spec=1.0,
-                 weighting:tc.enum(CONSTANT, SCALED, TIME_AVERAGED)=CONSTANT,
+                 weighting:tc.enum(CONSTANT, SIMPLE, TIME_AVERAGED)=CONSTANT,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
@@ -1743,7 +1743,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         if weighting is CONSTANT:
             value = old_value + rate
             # return value
-        elif weighting is SCALED:
+        elif weighting is SIMPLE:
             value = old_value + (new_value * rate)
             # return value
         elif weighting is TIME_AVERAGED:
