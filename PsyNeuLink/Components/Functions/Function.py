@@ -1639,7 +1639,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 variable_default=None,
                  rate:parameter_spec=1.0,
                  weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
                  params:tc.optional(dict)=None,
@@ -1664,14 +1664,32 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
 
+        # MODIFIED 11/22/16 NEW:
         # Handle list or array for rate specification
         rate = request_set[RATE]
         if isinstance(rate, (list, np.ndarray)):
-            if len(rate) != self.variable.size:
-                raise FunctionError("The length of the array specified for the rate parameter of {} ({}) "
-                                    "must be the same as the length of its input ({})".
-                                    format(self.name, len(rate), self.variable.size))
+            if len(rate) != np.array(self.variable).size:
+                # If the variable was not specified, then reformat it to match rate specification
+                #    and assign variableClassDefault accordingly
+                # Note: this situation can arise when the rate is parameterized (e.g., as an array)
+                #       in the Integrator's constructor, where that is used as a specification for a function parameter
+                #       (e.g., for an AdaptiveIntegratorMechanism), whereas the input is specified as part of the
+                #       object to which the function parameter belongs (e.g., the AdaptiveIntegratorMechanism);
+                #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
+                #       the object itself, thus does not see the array specification for the input.
+                if self._variable_not_specified:
+                    self.assign_defaults(variable=np.zeros_like(np.array(rate)))
+                    if self.verbosePref:
+                        warnings.warn("The length of the array specified for the rate parameter of {} ({}) "
+                                      "did not match the length of the default input ({});  the latter has been "
+                                      " updated to mach".
+                                      format(self.name, len(rate), self.variable.size))
+                else:
+                    raise FunctionError("The length of the array specified for the rate parameter of {} ({}) "
+                                        "must be the same as the length of its input ({})".
+                                        format(self.name, len(rate), self.variable.size))
             self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+        # MODIFIED 11/22/16 END
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
