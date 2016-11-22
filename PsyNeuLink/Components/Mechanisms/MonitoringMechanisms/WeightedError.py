@@ -18,14 +18,14 @@ another mechanism in a :doc:`Process`.  It computes the contribution of each ele
 The WeightedError ``function``returns an error array that can be used by a :doc:`LearningSignal` to adjust a Mapping
 projection the ``errorSource``, so as to reduce its future contribution to the weightedErrorSignal.
 
-.. _WeightedError_Creating_A_WeightedError:
+.. _WeightedError_Creation:
 
 Creating A WeightedError Mechanism
 ----------------------------------
 
 A WeightedError mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying "WeightedError" as its ``mech_spec`` argument.  It can also be created by :ref:`in context
-specification of a LearningSignal <_Projection_Creating_A_Projection>` for a projection  to a ProcessingMechanism in
+specification of a LearningSignal <_Projection_Creation>` for a projection  to a ProcessingMechanism in
 a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
 are also created automatically when a process system is created for which learning is specified; each is
 assigned a projection from the outputState of a ProcessingMechanism that receives a Mapping projection being
@@ -162,7 +162,7 @@ class WeightedError(MonitoringMechanism_Base):
         specifies the weighted contribution made by each element of the ``value`` of the error source to the
         ``error_signal`` received from the next mechanism in the process (the one to which ``next_level_projection``
         projects.
-    
+
     outputValue : List[1d np.array]
         single item in list is ``errorSignal`` (output of ``function``;  same as ``value``).
 

@@ -33,7 +33,7 @@ associated with that projection.  There are three types of states, all of which 
       * :doc:`ControlSignal` for a :doc:`ControlMechanism <ControlMechanism>`;
       * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
 
-.. _State_Creating_A_State:
+.. _State_Creation:
 
 Creating a State
 ----------------
@@ -139,7 +139,7 @@ class State_Base(State):
     .. note::
        States should NEVER be instantiated by a direct call to the base class.
        They should be instantiated by calling the constructor for the desired subclass,
-       or using other methods for specifying a state (see :ref:`State_Creating_A_State`).
+       or using other methods for specifying a state (see :ref:`State_Creation`).
 
     COMMENT:
         Description

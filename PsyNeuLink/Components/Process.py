@@ -15,7 +15,7 @@
 ..
     Sections:
       * :ref:`Process_Overview`
-      * :ref:`Process_Creating_A_Process`
+      * :ref:`Process_Creation`
       * :ref:`Process_Structure`
          * :ref:`Process_Pathway`
          * :ref:`Process_Mechanisms`
@@ -40,7 +40,7 @@ have an effect if all of the processes involved are members of a single system (
 between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
 
-.. _Process_Creating_A_Process:
+.. _Process_Creation:
 
 Creating a Process
 ------------------
@@ -85,7 +85,7 @@ process. (Note:: The :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a p
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)
 
 Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
-use any supported format for specifying a mechanism (see :ref:`Mechanism_Creating_A_Mechanism`).  Alternatively,
+use any supported format for specifying a mechanism (see :ref:`Mechanism_Creation`).  Alternatively,
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
 specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
 belongs) is executed, but otherwise they do not remain associated with the mechanism
@@ -110,7 +110,7 @@ Projections between mechanisms in the ``pathway`` of a process are specified in 
     can be an instance of a :doc:`Mapping` projection, the class name Mapping, a :ref:`keyword <Matrix_Keywords>`
     for a type of Mapping projection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
     :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
-    (see :ref:`Projection <Projection_Creating_A_Projection>` for details of how to specify projections).
+    (see :ref:`Projection <Projection_Creation>` for details of how to specify projections).
 
 * Stand-alone projection
     When a projection is created on its own, it can be assigned a sender and receiver mechanism (see Projection).
@@ -162,7 +162,7 @@ Learning
 ~~~~~~~~
 
 Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for a :ref:`projection <LearningSignal_Creating_A_LearningSignal_Projection>` to a
+Learning can be configured for a :ref:`projection <LearningSignal_Creation>` to a
 particular mechanism, or for the entire process (using its ''learning'' attribute).  Specifying learning for a
 process will implement it for all eligible projections the process (i.e., all Mapping projections, excluding
 projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the
@@ -430,7 +430,7 @@ def process(process_spec=None,
         the type of matrix used for default projections (see ''matrix'' parameter for ''Mapping()'' projection) [LINK]
 
     learning : Optional[LearningSignal spec]
-        implements :ref:`learning <LearningSignal_Creating_A_LearningSignal_ProjectionLearningSignal>` for all
+        implements :ref:`learning <LearningSignal_CreationLearningSignal>` for all
         eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes

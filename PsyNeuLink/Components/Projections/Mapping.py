@@ -19,7 +19,7 @@ another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, 
 parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
 ``receiver``.
 
-.. _Mapping_Creating_A_Mapping_Projection:
+.. _Mapping_Creation:
 
 Creating a Mapping Projection
 -----------------------------
@@ -32,7 +32,7 @@ COMMENT:
 COMMENT
 
 A mapping projection can be created in any of the ways that can be used to create a
-:ref:`projection <_Projection_Creating_A_Projection>) or by specifying it in the:ref:`pathway <_Process_Projections>`
+:ref:`projection <_Projection_Creation>) or by specifying it in the:ref:`pathway <_Process_Projections>`
 of a process. Mapping projections are also generated automatically by PsyNeuLink in a number of circumstances,
 using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
 
@@ -40,7 +40,7 @@ using a ``matrix`` appropriate to the circumstance  (matrix types are described 
   the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.
 ..
 * by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
-  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creating_A_ControlMechanism`);  a
+  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creation`);  a
   :keyword:`IDENTITY_MATRIX` will be used.
 
 * by a **LearningSignal**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`

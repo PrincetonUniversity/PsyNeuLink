@@ -1616,8 +1616,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
          + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
-         + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
+         + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
+                CONSTANT -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
                 TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
@@ -1641,7 +1641,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     def __init__(self,
                  variable_default=None,
                  rate:parameter_spec=1.0,
-                 weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
+                 weighting:tc.enum(CONSTANT, SCALED, TIME_AVERAGED)=CONSTANT,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
@@ -1719,7 +1719,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
                         RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        WEIGHTING: Integrator.Weightings - type of weighting (default = LINEAR)
+                        WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)
         :return number:
         """
 
@@ -1740,7 +1740,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         new_value = self.variable
 
         # Compute function based on weighting param
-        if weighting is LINEAR:
+        if weighting is CONSTANT:
             value = old_value + rate
             # return value
         elif weighting is SCALED:
@@ -1753,7 +1753,12 @@ class Integrator(IntegratorFunction): # ----------------------------------------
             # return new_value
             value = new_value
 
-        self.oldValue = value
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if not INITIALIZING in context:
+            self.oldValue = value
+
         return value
 
 

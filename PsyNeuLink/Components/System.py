@@ -13,7 +13,7 @@
 ..
     Sections:
       * :ref:`System_Overview`
-      * :ref:`System_Creating_A_System`
+      * :ref:`System_Creation`
       * :ref:`System_Structure`
          * :ref:`System_Graph`
          * :ref:`System_Mechanisms`
@@ -46,7 +46,7 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 * :doc:`ControlMechanism`
     These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms
 
-.. _System_Creating_A_System:
+.. _System_Creation:
 
 Creating a System
 -----------------

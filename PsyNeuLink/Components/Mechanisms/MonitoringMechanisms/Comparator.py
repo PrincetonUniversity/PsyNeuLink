@@ -24,7 +24,7 @@ Creating a Comparator
 A Comparator mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying "Comparator" as its ``mech_spec`` argument. The type of comparison is specified in the
 ``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.  It can also be
-created by :ref:`in context specification of a LearningSignal <Projection_Creating_A_Projection>` for a projection
+created by :ref:`in context specification of a LearningSignal <Projection_Creation>` for a projection
 to the  :keyword:`TERMINAL` mechanism [LINK] of a process.  One or more Comparators are also created
 automatically when a process or system is created for which learning is specified; each is assigned a projection
 from the outputState of a :keyword:`TERMINAL` mechanism that receives a Mapping projection being learned,

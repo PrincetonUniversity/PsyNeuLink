@@ -14,7 +14,7 @@
 Overview
 --------
 
-.. _ParameterState_Creating_A_ParameterState:
+.. _ParameterState_Creation:
 
 Creating a ParameterState
 ~~~~~~~~~~~~~~~~~~~~~~~~~
