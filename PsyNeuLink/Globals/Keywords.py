@@ -370,7 +370,7 @@ OPERATION = "operation"
 OFFSET = "offset"
 LINEAR = 'linear'
 CONSTANT = 'constant'
-SCALED = 'scaled'
+SIMPLE = 'scaled'
 TIME_AVERAGED = 'time_averaged'
 
 

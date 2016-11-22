@@ -45,18 +45,17 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 my_adaptive_integrator = AdaptiveIntegratorMechanism(default_input_value=[0],
                                                      function=Integrator(
                                                                          # variable_default=[0,0],
-                                                                         weighting=CONSTANT,
-                                                                         rate=[0.1]
+                                                                         weighting=SIMPLE,
+                                                                         rate=[1]
                                                                          )
                                                      )
 print(my_adaptive_integrator.execute([1]))
 print(my_adaptive_integrator.execute([1]))
 print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
+print(my_adaptive_integrator.execute([3]))
+print(my_adaptive_integrator.execute([3]))
+print(my_adaptive_integrator.execute([3]))
+print(my_adaptive_integrator.execute([3]))
 
 #endregion
 
@@ -378,7 +377,7 @@ import typecheck as tc
 # # class Weightings(AutoNumber):
 # class Weightings(Enum):
 #     CONSTANT        = 'hello'
-#     SCALED        = 'goodbye'
+#     SIMPLE        = 'goodbye'
 #     TIME_AVERAGED = 'you say'
 #
 # @tc.typecheck
@@ -390,7 +389,7 @@ import typecheck as tc
 # # foo3(test=3)
 #
 # @tc.typecheck
-# def foo4(test:Weightings=Weightings.SCALED):
+# def foo4(test:Weightings=Weightings.SIMPLE):
 #     a = test
 #
 # # foo4(test=Weightings.LINEAR)
