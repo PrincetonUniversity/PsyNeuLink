@@ -211,6 +211,7 @@ class Component(object):
         + variableClassDefault (value)
         + variableClassDefault_np_info (ndArrayInfo)
         + variableInstanceDefault (value)
+        + _variable_not_specified
         + variable (value)
         + variable_np_info (ndArrayInfo)
         + function (method)
@@ -293,7 +294,11 @@ class Component(object):
         context = context + INITIALIZING + ": " + kwFunctionInit
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
-        self.variableInstanceDefault = NotImplemented
+        # # MODIFIED  OLD:
+        # self.variableInstanceDefault = NotImplemented
+        # # MODIFIED  NEW:
+        self.variableInstanceDefault = None
+        # MODIFIED  END
         self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
@@ -707,7 +712,11 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        if not variable is NotImplemented:
+        # MODIFIED 11/22/16 OLD:
+        # if not variable is NotImplemented:
+        # MODIFIED 11/22/16 NEW:
+        if not variable is None and not variable is NotImplemented:
+        # MODIFIED 11/22/16 END
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as first argument")
         if request_set and not request_set is NotImplemented:
@@ -893,8 +902,12 @@ class Component(object):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
 
         # If variable is not specified, then assign to (np-converted version of) variableClassDefault and return
+        self._variable_not_specified = False
         if variable is None or variable is NotImplemented:
             self.variable = self.variableClassDefault
+            # MODIFIED 11/22/16 NEW:
+            self._variable_not_specified = True
+            # MODIFIED 11/22/16 END
             return
 
         # Otherwise, do some checking on variable before converting to np.ndarray
