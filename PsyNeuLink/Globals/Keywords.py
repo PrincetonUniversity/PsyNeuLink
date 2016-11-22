@@ -213,7 +213,7 @@ kwComparatorMechanism = "ComparatorMechanism"
 kwDDM = "DDM"
 kwLinearMechanism = "LinearMechanism"
 kwSigmoidLayer = "SigmoidLayer"
-kwAdaptiveIntegrator = "AdaptiveIntegrator"
+kwIntegratorMechanism = "IntegratorMechanism"
 
 # Function:
 kwContradiction = "Contradiction"

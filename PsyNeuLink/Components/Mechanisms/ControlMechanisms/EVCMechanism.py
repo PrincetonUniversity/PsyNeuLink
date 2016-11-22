@@ -103,7 +103,7 @@ assigning a params dictionary to the controller's ``params`` attribute using the
     ..
     * :keyword:`PREDICTION_MECHANISM_TYPE` - the type of prediction mechanism to use for generating the input
       to the system in each simulation run (see :ref:`EVCMechanism_Execution`).  The default is a
-      :class:`AdaptiveIntegratorMechanism`, which exponentially time-averages its inputs.
+      :class:`IntegratorMechanism`, which exponentially time-averages its inputs.
     ..
     * :keyword:`PREDICTION_MECHANISM_PARAMS` - parameters to use for the prediction mechanism.
     ..
@@ -213,7 +213,7 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.ShellClasses import *
 
 PY_MULTIPROCESSING = False
@@ -241,7 +241,7 @@ class EVCError(Exception):
 
 class EVCMechanism(ControlMechanism_Base):
     """EVCMechanism(                                                                    \
-    prediction_mechanism_type=AdaptiveIntegratorMechanism,                              \
+    prediction_mechanism_type=IntegratorMechanism,                              \
     prediction_mechanism_params=None,                                                   \
     monitor_for_control=None,                                                       \
     function=LinearCombination(offset=0.0,scale=1,operation=SUM),                       \
@@ -301,7 +301,7 @@ class EVCMechanism(ControlMechanism_Base):
     Arguments
     ---------
 
-    prediction_mechanism_type : CombinationFunction: default AdaptiveIntegratorMechanism
+    prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
         the mechanism class used for prediction mechanism(s).
         Each instance is named using the name of the :keyword:`ORIGIN` mechanism + PREDICTION_MECHANISM
         and assigned an outputState named based on the same.
@@ -404,7 +404,7 @@ class EVCMechanism(ControlMechanism_Base):
         an array of the control signal values (value of ControlSignal projections) for the control allocation policy
         that generated ``EVCmax``.
 
-    prediction_mechanism_type : ProcessingMechanism : default AdaptiveIntegratorMechanism
+    prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
         the processingMechanism class used for prediction mechanism(s).
         Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
               and assigned an outputState named based on the same
@@ -441,7 +441,7 @@ class EVCMechanism(ControlMechanism_Base):
     def __init__(self,
                  # system:System,
                  # default_input_value=None,
-                 prediction_mechanism_type=AdaptiveIntegratorMechanism,
+                 prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
                  function=LinearCombination(offset=0.0,

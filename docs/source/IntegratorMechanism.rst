@@ -1,12 +1,12 @@
-Adaptive Integrator
+IntegratorMechanism
 ===================
 
 .. toctree::
    :maxdepth: 3
 
-   AdaptiveIntegrator
+   IntegratorMechanism
 
 
-.. automodule:: AdaptiveIntegrator
+.. automodule:: IntegratorMechanism
    :members:
    :exclude-members: Integrator, random

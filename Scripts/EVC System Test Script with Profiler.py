@@ -1,6 +1,6 @@
 import profile
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Components.Mechanisms.IntegratorMechanism import *
 from PsyNeuLink.Components.Mechanisms.LinearMechanism import *
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *

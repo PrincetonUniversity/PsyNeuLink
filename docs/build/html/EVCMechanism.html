@@ -317,14 +317,14 @@ and then divide that by the value of the RESPONSE_TIME outputState of the DDM me
 <span id="evcmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="EVCMechanism.EVCMechanism">
-<em class="property">class </em><code class="descclassname">EVCMechanism.</code><code class="descname">EVCMechanism</code><span class="sig-paren">(</span><em>prediction_mechanism_type=AdaptiveIntegratorMechanism</em>, <em>prediction_mechanism_params=None</em>, <em>monitor_for_control=None</em>, <em>function=LinearCombination(offset=0.0</em>, <em>scale=1</em>, <em>operation=SUM)</em>, <em>outcome_aggregation_function=LinearCombination(offset=0</em>, <em>scale=1</em>, <em>operation=PRODUCT)</em>, <em>cost_aggregation_function=LinearCombination(offset=0.0</em>, <em>scale=1.0</em>, <em>operation=SUM)</em>, <em>save_all_values_and_policies:bool=:keyword:`False`</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVCMechanism.EVCMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">EVCMechanism.</code><code class="descname">EVCMechanism</code><span class="sig-paren">(</span><em>prediction_mechanism_type=IntegratorMechanism</em>, <em>prediction_mechanism_params=None</em>, <em>monitor_for_control=None</em>, <em>function=LinearCombination(offset=0.0</em>, <em>scale=1</em>, <em>operation=SUM)</em>, <em>outcome_aggregation_function=LinearCombination(offset=0</em>, <em>scale=1</em>, <em>operation=PRODUCT)</em>, <em>cost_aggregation_function=LinearCombination(offset=0.0</em>, <em>scale=1.0</em>, <em>operation=SUM)</em>, <em>save_all_values_and_policies:bool=:keyword:`False`</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVCMechanism.EVCMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimizes the ControlSignals for a System.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>prediction_mechanism_type</strong> (<em>CombinationFunction: default AdaptiveIntegratorMechanism</em>) &#8211; the mechanism class used for prediction mechanism(s).
+<li><strong>prediction_mechanism_type</strong> (<em>CombinationFunction: default IntegratorMechanism</em>) &#8211; the mechanism class used for prediction mechanism(s).
 Each instance is named using the name of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism + PREDICTION_MECHANISM
 and assigned an outputState named based on the same.</li>
 <li><strong>prediction_mechanism_params</strong> (<em>Optional[Dict[param keyword, param value]] : default None</em>) &#8211; a parameter dictionary passed to <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> constructor.
@@ -455,7 +455,7 @@ that generated <code class="docutils literal"><span class="pre">EVCmax</span></c
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.prediction_mechanism_type">
 <code class="descname">prediction_mechanism_type</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.prediction_mechanism_type" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ProcessingMechanism : default AdaptiveIntegratorMechanism</em> &#8211; the processingMechanism class used for prediction mechanism(s).
+<dd><p><em>ProcessingMechanism : default IntegratorMechanism</em> &#8211; the processingMechanism class used for prediction mechanism(s).
 Note: each instance will be named based on origin mechanism + kwPredictionMechanism,</p>
 <blockquote>
 <div>and assigned an outputState named based on the same</div></blockquote>
