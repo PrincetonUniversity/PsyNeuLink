@@ -9,8 +9,6 @@
 #  *********************************************  State ********************************************************
 
 """
-TEST
-
 
 Overview
 --------
@@ -35,6 +33,8 @@ associated with that projection.  There are three types of states, all of which 
       * :doc:`ControlSignal` for a :doc:`ControlMechanism <ControlMechanism>`;
       * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
 
+.. _State_Creating_A_State:
+
 Creating a State
 ----------------
 
@@ -57,19 +57,18 @@ fundamental attributes:
   ``functions`` are not used (the value of outputStates is assigned directly by the mechanism's ``execute`` method).
 
 * ``value``:  for an inputState and parameterState, this is the aggregated value of the projections it receives;
-  for an outputState, this is assigned by the owner mechanism's ``execute`` method
-
-XXXXX ARE THE ABOVE STATEMENTS ABOUT OUTPUT FUNCTION AND VALUES CORRECT??
+  for an outputState, this is a value associated with the output of the mechanism's ``function`` (all of which are
+  also represented in the mechanism's ``outputValue`` attribute).
 
 Execution
 ---------
 
 States cannot be executed directly.  They are executed when the component to which they belong is executed.
-When an inputState or parameterState is executed, it executes any projections it receives, calls its ``function`` to
-aggregate their values, and then assigns this as its own ``value``.  This conforms to a "lazy evaluation" protocol (
-see [LINK] for a more detailed discussion).
-
-XXXXX WHAT HAPPENS WHEN AN OUTPUTSTATE UPDATES?
+When this occurs: each inputState and parameterState executes any projections it receives, calls its ``function`` to
+aggregate their values, and then assigns this as its ``value`` -- this conforms to a "lazy evaluation" protocol
+(see :ref:`Lazy_Evaluation` for a more detailed discussion).  When a mechanism is executed, after calling
+its ``function``, each of its outputStates is assigned a value associated with the output of the ``function``
+(see :ref:`Mechanism OutputStates <Mechanism_OutputStates>`).
 
 .. _State_Class_Reference:
 
@@ -124,44 +123,91 @@ class StateError(Exception):
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE STATE'S NAME + kwValueSuffix
 #            THAT IS UPDATED BY THE STATE'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class State_Base(State):
-    """Implement abstract class for State category of class types that compute and represent mechanism states
+    """
+    State_Base(  \
+    owner        \
+    value=None,  \
+    params=None, \
+    name=None,   \
+    prefs=None)
 
-    Description:
-        Represents and updates the state of an input, output or parameter of a mechanism
-            - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
-            - combines inputs from all projections (mapping and/or control) and uses this as variable of
-                function to update the value attribute
-        Value attribute:
-             - is updated by the execute method (which calls state's function)
-             - can be used as sender (input) to one or more projections
-             - can be accessed by KVO
-        Constraints:
-            - value must be compatible with variable of function
-            - value must be compatible with receiver.value for all projections it receives
 
-    Subclasses:
-        Must implement:
-            componentType
-            ParamClassDefaults with:
-                + FUNCTION (or <subclass>.function
-                + FUNCTION_PARAMS (optional)
-                + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
-        Standard subclasses and constraints:
-            InputState - used as input state for Mechanism;  additional constraint:
-                - value must be compatible with variable of owner's function method
-            OutputState - used as output state for Mechanism;  additional constraint:
-                - value must be compatible with the output of the owner's function
-            MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
-                - output of function must be compatible with the parameter's value
 
-    Instantiation:
-        States should NEVER be instantiated by a direct call to the class
-           (since there is no obvious default), but rather by calls to the subclass
-        Subclasses can be instantiated in one of two ways:
-            - call to __init__ with args to subclass with args for owner, value and params:
-            - as part of the instantiation of a Mechanism (see Mechanism.intantiate_mechanism_state for details)
+    Abstract class for State
 
-    Initialization arguments:
+    .. note::
+       States should NEVER be instantiated by a direct call to the base class.
+       They should be instantiated by calling the constructor for the desired subclass,
+       or using other methods for specifying a state (see :ref:`State_Creating_A_State`).
+
+    COMMENT:
+        Description
+        -----------
+            Represents and updates the state of an input, output or parameter of a mechanism
+                - receives inputs from projections (self.receivesFromProjections, STATE_PROJECTIONS)
+                - inputStates and parameterStates: combines inputs from all projections (mapping, control or learning)
+                    and uses this as variable of function to update the value attribute
+                - outputStates: represent values of output of function
+            Value attribute:
+                 - is updated by the execute method (which calls state's function)
+                 - can be used as sender (input) to one or more projections
+                 - can be accessed by KVO
+            Constraints:
+                - value must be compatible with variable of function
+                - value must be compatible with receiver.value for all projections it receives
+
+            Subclasses:
+                Must implement:
+                    componentType
+                    ParamClassDefaults with:
+                        + FUNCTION (or <subclass>.function
+                        + FUNCTION_PARAMS (optional)
+                        + PROJECTION_TYPE - specifies type of projection to use for instantiation of default subclass
+                Standard subclasses and constraints:
+                    InputState - used as input state for Mechanism;  additional constraint:
+                        - value must be compatible with variable of owner's function method
+                    OutputState - used as output state for Mechanism;  additional constraint:
+                        - value must be compatible with the output of the owner's function
+                    MechanismsParameterState - used as state for Mechanism parameter;  additional constraint:
+                        - output of function must be compatible with the parameter's value
+
+        Class attributes
+        ----------------
+            + componentCategory = kwStateFunctionCategory
+            + className = kwState
+            + suffix
+            + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
+            + variableClassDefault (value): [0]
+            + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
+                                               PROJECTION_TYPE: [str, Projection]})   # Default projection type
+            + paramClassDefaults (dict): {STATE_PROJECTIONS: []}             # Projections to States
+            + paramNames (dict)
+            + owner (Mechansim)
+            + FUNCTION (Function class or object, or method)
+
+        Class methods
+        -------------
+            - set_value(value) -
+                validates and assigns value, and updates observers
+                returns None
+            - update_state(context) -
+                updates self.value by combining all projections and using them to compute new value
+                return None
+
+        StateRegistry
+        -------------
+            Used by .__init__.py to assign default projection types to each state subclass
+            Note:
+            * All states that belong to a given owner are registered in the owner's _stateRegistry,
+                which maintains a dict for each state type that it uses, a count for all instances of that type,
+                and a dictionary of those instances;  NONE of these are registered in the StateRegistry
+                This is so that the same name can be used for instances of a state type by different owners
+                    without adding index suffixes for that name across owners,
+                    while still indexing multiple uses of the same base name within an owner
+
+        Arguments
+        ---------
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
@@ -184,59 +230,41 @@ class State_Base(State):
              dict entries must have a preference keyPath as their key, and a PreferenceEntry or setting as their value
              (see Description under PreferenceSet for details)
         - context (str): must be a reference to a subclass, or an exception will be raised
+    COMMENT
 
-    StateRegistry:
-        Used by .__init__.py to assign default projection types to each state subclass
-        Note:
-        * All states that belong to a given owner are registered in the owner's _stateRegistry,
-            which maintains a dict for each state type that it uses, a count for all instances of that type,
-            and a dictionary of those instances;  NONE of these are registered in the StateRegistry
-            This is so that the same name can be used for instances of a state type by different owners
-                without adding index suffixes for that name across owners,
-                while still indexing multiple uses of the same base name within an owner
+    Attributes
+    ----------
 
-    Naming:
-        States can be named explicitly (using the name='<name>' argument).  If the argument is omitted,
-        it will be assigned the subclass name with a hyphenated, indexed suffix ('subclass.name-n')
+    owner : Mechanism or Projection
+        object to which the state belongs.
 
-    Execution:
+    baseValue : number, list or np.ndarray
+        value with which the state was initialized.
 
+    receivesFromProjections : Optional[List[Projection]]
+        list of projections for which the state is a ``receiver``.
 
-    Class attributes:
-        + componentCategory = kwStateFunctionCategory
-        + className = kwState
-        + suffix
-        + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
-        + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault (value): [0]
-        + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
-                                           PROJECTION_TYPE: [str, Projection]})   # Default projection type
-        + paramClassDefaults (dict): {STATE_PROJECTIONS: []}             # Projections to States
-        + paramNames (dict)
-        + owner (Mechansim)
-        + FUNCTION (Function class or object, or method)
+    sendsToProjections : Optional[List[Projection]]
+        list of projections for which the state is a ``sender``.
 
-    Class methods:
-        - set_value(value) -
-            validates and assigns value, and updates observers
-            returns None
-        - update_state(context) -
-            updates self.value by combining all projections and using them to compute new value
-            return None
+    value : number, list or np.ndarray
+        current value of the state (updated by ``update_state`` method).
 
-    Instance attributes:
-        + owner (Mechanism): object to which State belongs
-        + value (value): current value of the State (updated by update_state method)
-        + baseValue (value): value with which it was initialized (e.g., from params in call to __init__)
-        + receivesFromProjections (list): list of projections for which State is a receiver
-        + sendsToProjections (list): list of projections for which State is a sender
-        + params (dict)
-        + value (value - output of function
-        + name (str) - if it is not specified as an arg, a default based on the class is assigned in register_category
-        + prefs (PreferenceSet) - if not specified as an arg, default is created by copying StatePreferenceSet
+    name : str : default <State subclass>-<index>
+        Name of the state.
+        Specified in the name argument of the call to create the state;  if not is specified,
+        a default is assigned by StateRegistry based on the states's subclass
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
+        Note: states names are "scoped" within a mechanism, meaning that states with the same name are permitted
+        in different mechanisms but not the same mechanism (states within a mechanism with the same base name
+        are appended an index in the order of creation).
 
-    Instance methods:
-        none
+    prefs : PreferenceSet or specification dict : State.classPreferences
+        the PreferenceSet for the state.
+        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     """
 
     #region CLASS ATTRIBUTES
@@ -1102,7 +1130,7 @@ class State_Base(State):
     :return: None
     """
 
-        #regions GET STATE-SPECIFIC PARAM_SPECS
+        #region GET STATE-SPECIFIC PARAM_SPECS
         try:
             # Get outputState params
             self.stateParams = params[self.paramsType]

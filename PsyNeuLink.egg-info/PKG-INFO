@@ -334,9 +334,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          instantiate_input_states; InputState._validate_variable]
                      c) self.paramsCurrent[param] <: ParameterState.value
                          [Mechanism._instantiate_attributes_before_function  /
-                          instantiate_parameter_states]
+                          _instantiate_parameter_states]
                      d) output of self.function <: self.outputState.value (OutputState value)
-                         [Mechanism._instantiate_attributes_after_function/instantiate_output_states;
+                         [Mechanism._instantiate_attributes_after_function/_instantiate_output_states;
                           OutputState._validate_variable]
         
              2) States value <: execute method
@@ -517,7 +517,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  - if number of inputStates > 1, must equal length of mechanism's variable
                                      each state is assigned to an item of the mechanism's variable
                                      if there is only one state, it is assigned to the full variable
-                         ii) instantiate_parameter_states
+                         ii) _instantiate_parameter_states
                              - assigns parameter state for each param in FUNCTION_PARAMS
                      [super: _instantiate_function]
                      d) _instantiate_attributes_after_function

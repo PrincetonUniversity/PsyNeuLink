@@ -215,7 +215,7 @@ class Comparator(MonitoringMechanism_Base):
 
     name : str : default Comparator-<index>
         the name of the mechanism.
-        Specified in the name argument of the call to create the projection;
+        Specified in the name argument of the call to create the mechanism;
         if not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
