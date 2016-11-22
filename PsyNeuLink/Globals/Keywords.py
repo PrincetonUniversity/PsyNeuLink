@@ -371,7 +371,7 @@ OFFSET = "offset"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-TIME_AVERAGED = 'time_averaged'
+ADAPTIVE = 'time_averaged'
 
 
 
