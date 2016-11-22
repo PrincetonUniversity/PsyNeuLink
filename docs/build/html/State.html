@@ -96,6 +96,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
@@ -202,7 +203,7 @@ the parameters of a mechanism&#8217;s function to be controlled [LINK], or Mappi
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, they have the three
+<p>Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, a state has the three
 fundamental attributes:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">variable</span></code>:  for an inputState and parameterState, this is determined by the value(s) received from the
@@ -223,6 +224,9 @@ When an inputState or parameterState is executed, it executes any projections it
 aggregate their values, and then assigns this as its own <code class="docutils literal"><span class="pre">value</span></code>.  This conforms to a &#8220;lazy evaluation&#8221; protocol (
 see [LINK] for a more detailed discussion).</p>
 <p>XXXXX WHAT HAPPENS WHEN AN OUTPUTSTATE UPDATES?</p>
+</div>
+<div class="section" id="class-reference">
+<span id="state-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
