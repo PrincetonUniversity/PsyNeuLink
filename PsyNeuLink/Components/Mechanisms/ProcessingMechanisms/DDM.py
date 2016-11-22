@@ -163,9 +163,12 @@ The parameters for the DDM are:
   is :keyword:`TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean normal (Gaussian)
   distribution on every call of ``function``, and added to the decision variable.
 ..
-* :keyword:`NON_DECISION_TIME` (default 200)
-  specifies the ``t0`` parameter of the decision process;  when ``time_scale`` is :keyword:`TIME_STEP`, it is added to
-  the number of time steps taken to complete the decision process when reporting the response time.
+* :keyword:`NON_DECISION_TIME` (default 0.2)
+  specifies the ``t0`` parameter of the decision process (in units of seconds).
+  COMMENT:
+  when ``time_scale`` is  :keyword:`TIME_STEP`, it is added to the number of time steps
+  taken to complete the decision process when reporting the response time.
+  COMMENT
 
 .. _DDM_Execution:
 
@@ -210,8 +213,8 @@ After each execution of the mechanism:
       item of its ``outputValue`` attribute, and as the value of its :keyword:`DDM_DECISION_VARIABLE` outputState;
     ..
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
-      the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`, the value is
-      the mean response time (in milliseconds) estimated by the analytic solution used in ``function``.
+      the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
+      the value is the mean response time (in seconds) estimated by the analytic solution used in ``function``.
       COMMENT:
         [TBI:]
         If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
@@ -257,8 +260,8 @@ After each execution of the mechanism:
     attribute have a 6th item (if another function is assigned) or they are asssigned :keyword:`None` if ``time_scale``
     is :keyword:`TimeScale.TIME_STEP`.
 
-    * **mean correct response time** is assigned to the 5th item of the mechanism's ``outputValue`` attribute and as
-      the value of its ``RT_CORRECT_MEAN`` outputState.  It is reported as milliseconds.
+    * **mean correct response time** (in seconds) is assigned to the 5th item of the mechanism's ``outputValue``
+      attribute and as  the value of its ``RT_CORRECT_MEAN`` outputState.
     ..
     * **variance of correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute
       and as the value of its ``RT_CORRECT_VARIANCE`` outputState.

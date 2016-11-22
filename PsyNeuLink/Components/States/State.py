@@ -4,10 +4,67 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 #  *********************************************  State ********************************************************
-#
+
+"""
+Overview
+--------
+
+A State is a component that provides an interface to a :doc:`projection <Projection>`, and represents the value
+associated with that projection.  There are three types of states, all of which are used by
+:doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below:
+
+* :doc:`**inputState** <InputState>`: used by a mechanism to represent its input, as provided by a
+  :doc:`Mapping` projection;
+
+* :doc:`**parameterStates** <ParameterState>`: used by a mechanism to represent the value of a parameter of its
+  ``function``, possibly regulated by a :doc:`ControlSignal` projection;  and used by a Mapping projection to represent
+  the ``matrix`` parameter of its ``function``, possibly regulated by a :doc:`LearningSignal` projection.
+
+* :doc:`**outputState** <OutputState>`: used by a mechanism to represent its output, and as the source of an outgoing
+  projection (:doc:`Mapping` for a :doc:`ProcessingMechanism`; :doc:`ControlSignal` for a :doc:`ControlMechanism`;
+  and :doc:`LearningSignal` for a :doc:`MonitoringMechanism`).
+
+Creating a State
+----------------
+
+States can be created used the constructor for one of the subclasses.  However, in general, they are created
+automatically by the mechanisms to which they belong, and/or through specification in context (e.g., when specifying
+the parameters of a mechanism's function to be controlled [LINK], or Mapping projections to be learned [LINK]).
+
+Structure
+---------
+
+Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, they have the three
+fundamental attributes:
+
+* ``variable``:  for an inputState and parameterState, this is determined by the value(s) received from the
+  projection(s) that it receives, listed in it the ``receivesFromProjections`` attribute;  for an outputState,
+  this is the value returned by owner mechanism's ``function`` (and also assigned as the ``value`` of the state).
+
+* ``function``:  for an inputState and parameterState, this aggregates the values received by the projections it
+  receives (the default is a :any:`LinearCombination` function that sums the values); at present, outputState
+  ``functions`` are not used (the value of outputStates is assigned directly by the mechanism's ``execute`` method).
+
+* ``value``:  for an inputState and parameterState, this is the aggregated value of the projections it receives;
+  for an outputState, this is assigned by the owner mechanism's ``execute`` method
+
+XXXXX ARE THE ABOVE STATEMENTS ABOUT OUTPUT FUNCTION AND VALUES CORRECT??
+
+Execution
+---------
+
+States cannot be executed directly.  They are executed when the component to which they belong is executed.
+When an inputState or parameterState is executed, it executes any projections it receives, calls its ``function`` to
+aggregate their values, and then assigns this as its own ``value``.  This conforms to a "lazy evaluation" protocol (
+see [LINK] for a more detailed discussion).
+
+XXXXX WHAT HAPPENS WHEN AN OUTPUTSTATE UPDATES?
+
+"""
+
 #
 from collections import OrderedDict
 
@@ -303,7 +360,7 @@ class State_Base(State):
             pass
         else:
             if projections:
-                self.instantiate_projections_to_state(projections=projections, context=context)
+                self._instantiate_projections_to_state(projections=projections, context=context)
 
 # # FIX LOG: EITHER GET RID OF THIS NOW THAT @property HAS BEEN IMPLEMENTED, OR AT LEAST INTEGRATE WITH IT
 #         # add state to KVO observer dict
@@ -439,7 +496,7 @@ class State_Base(State):
                                              self.variable.__class__.__name__,
                                              self.variable))
 
-    def instantiate_projections_to_state(self, projections, context=None):
+    def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a state and assign them to self.receivesFromProjections
 
         For each projection spec in STATE_PROJECTIONS, check that it is one or a list of any of the following:
@@ -496,7 +553,7 @@ class State_Base(State):
 
             # INSTANTIATE PROJECTION_SPEC
             # If projection_spec is a Projection object:
-            # - call check_projection_receiver() to check that receiver is self; if not, it:
+            # - call _check_projection_receiver() to check that receiver is self; if not, it:
             #     returns object with receiver reassigned to self if chosen by user
             #     else, returns new (default) PROJECTION_TYPE object with self as receiver
             #     note: in that case, projection will be in self.receivesFromProjections list
@@ -520,7 +577,7 @@ class State_Base(State):
                         # FIX: REINSTATE:
                         # projection_spec.init_args['context'] = context
                         projection_spec._deferred_init()
-                projection_object, default_class_name = self.check_projection_receiver(
+                projection_object, default_class_name = self._check_projection_receiver(
                                                                                     projection_spec=projection_spec,
                                                                                     messages=[item_prefix_string,
                                                                                               item_suffix_string,
@@ -555,7 +612,7 @@ class State_Base(State):
                                      default_projection_type.__class__.__name__))
                 else:
                     # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                    projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
+                    projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
                                                                            context=self)
                     if error_str:
                         print("{0}{1} {2}; default {4} will be assigned".
@@ -582,7 +639,7 @@ class State_Base(State):
             # Note: this gets projection_type but does NOT instantiate the projection (that happens below),
             #       so projection is NOT yet in self.receivesFromProjections list
             else:
-                projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
+                projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
                 if err_str:
                     print("{0}{1} {2}; default {4} will be assigned".
                           format(item_prefix_string,
@@ -649,7 +706,7 @@ class State_Base(State):
                              self.value,
                              item_suffix_string))
 
-    def instantiate_projection_from_state(self, projection_spec, receiver, context=None):
+    def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate projection from a state and assign it to self.sendsToProjections
 
         Check that projection_spec is one of the following:
@@ -702,12 +759,12 @@ class State_Base(State):
 
         # INSTANTIATE PROJECTION_SPEC
         # If projection_spec is a Projection object:
-        # - call check_projection_sender() to check that sender is self; if not, it:
+        # - call _check_projection_sender() to check that sender is self; if not, it:
         #     returns object with sender reassigned to self if chosen by user
         #     else, returns new (default) PROJECTION_TYPE object with self as sender
         #     note: in that case, projection will be in self.sendsToProjections list
         if isinstance(projection_spec, Projection_Base):
-            projection_object, default_class_name = self.check_projection_sender(projection_spec=projection_spec,
+            projection_object, default_class_name = self._check_projection_sender(projection_spec=projection_spec,
                                                                                  receiver=receiver,
                                                                                  messages=[item_prefix_string,
                                                                                            item_suffix_string,
@@ -742,7 +799,7 @@ class State_Base(State):
                                  default_projection_type.__class__.__name__))
             else:
                 # IMPLEMENTATION NOTE:  can add more informative reporting here about reason for failure
-                projection_type, error_str = self.parse_projection_ref(projection_spec=projection_type,
+                projection_type, error_str = self._parse_projection_ref(projection_spec=projection_type,
                                                                        context=self)
                 if error_str:
                     print("{0}{1} {2}; default {4} will be assigned".
@@ -769,7 +826,7 @@ class State_Base(State):
         # Note: this gets projection_type but does NOT instantiate the projection,
         #       so projection is NOT yet in self.sendsToProjections list
         else:
-            projection_type, err_str = self.parse_projection_ref(projection_spec=projection_spec,context=self)
+            projection_type, err_str = self._parse_projection_ref(projection_spec=projection_spec,context=self)
             if err_str:
                 print("{0}{1} {2}; default {4} will be assigned".
                       format(item_prefix_string,
@@ -830,7 +887,7 @@ class State_Base(State):
             if not projection_spec in self.sendsToProjections:
                 self.sendsToProjections.append(projection_spec)
 
-    def check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
+    def _check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
 
         Arguments:
@@ -883,7 +940,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
+    def _check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
         """Check whether Projection object references State as sender and, if not, return default Projection object
 
         Arguments:
@@ -937,7 +994,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def parse_projection_ref(self,
+    def _parse_projection_ref(self,
                              projection_spec,
                              # messages=NotImplemented,
                              context=None):
@@ -1460,7 +1517,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     + State class:
         implement default using constraint_value
     + State object:
-        check owner is owner (if not, user is given options in check_state_ownership)
+        check owner is owner (if not, user is given options in _check_state_ownership)
         check compatibility of value with constraint_value
     + Projection object:
         assign constraint_value to value
@@ -1576,9 +1633,9 @@ def instantiate_state(owner,                   # Object to which state will belo
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
             # # MODIFIED 10/28 OLD:
-            # state =  owner.check_state_ownership(state_name, state_spec)
+            # state =  owner._check_state_ownership(state_name, state_spec)
             # MODIFIED 10/28 NEW:
-            state =  check_state_ownership(owner, state_name, state_spec)
+            state =  _check_state_ownership(owner, state_name, state_spec)
             # MODIFIED 10/28 END
             if state:
                 return state
@@ -1630,7 +1687,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - check that ParamValueProjection.value matches constraint_value and assign to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State.instantiate_projections_to_state
+    #       with state value is handled in State._instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if not issubclass(state_type, ParameterState):
@@ -1658,11 +1715,11 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State.instantiate_projections_to_state
+    #       with state value is handled in State._instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
     #    - need to do some checking on state_spec[PROJECTION_SPEC] to see if it is a projection
     #      since it could just be a numeric tuple used for the variable of a state;
-    #      could check string against ProjectionRegistry (as done in parse_projection_ref in State)
+    #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
             (state_spec[PROJECTION_SPEC] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                  isinstance(state_spec[PROJECTION_SPEC], Projection) or
@@ -1712,7 +1769,7 @@ def instantiate_state(owner,                   # Object to which state will belo
     # - assign constraint_value to state_value
     # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
-    #       with state value is handled in State.instantiate_projections_to_state
+    #       with state value is handled in State._instantiate_projections_to_state
     try:
         issubclass(state_spec, Projection)
     except TypeError:
@@ -1785,7 +1842,7 @@ def instantiate_state(owner,                   # Object to which state will belo
 
     return state
 
-def check_parameter_state_value(owner, param_name, value):
+def _check_parameter_state_value(owner, param_name, value):
     """Check that parameter value (<ParameterState>.value) is compatible with value in paramClassDefault
 
     :param param_name: (str)
@@ -1801,7 +1858,7 @@ def check_parameter_state_value(owner, param_name, value):
                   format(value, param_name, owner.name, default_value))
         return default_value
 
-def check_state_ownership(owner, param_name, mechanism_state):
+def _check_state_ownership(owner, param_name, mechanism_state):
     """Check whether State's owner is owner and if not offer options how to handle it
 
     If State's owner is not owner, options offered to:

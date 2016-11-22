@@ -250,9 +250,8 @@ is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_ST
 distribution on every call of <code class="docutils literal"><span class="pre">function</span></code>, and added to the decision variable.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">NON_DECISION_TIME</span></code> (default 200)
-specifies the <code class="docutils literal"><span class="pre">t0</span></code> parameter of the decision process;  when <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code>, it is added to
-the number of time steps taken to complete the decision process when reporting the response time.</li>
+<li><code class="xref std std-keyword docutils literal"><span class="pre">NON_DECISION_TIME</span></code> (default 0.2)
+specifies the <code class="docutils literal"><span class="pre">t0</span></code> parameter of the decision process (in units of seconds).</li>
 </ul>
 </div>
 </div>
@@ -277,8 +276,8 @@ item of its <code class="docutils literal"><span class="pre">outputValue</span><
 </ul>
 <ul class="simple">
 <li><strong>response time</strong> is assigned as the value of the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute and as
-the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, the value is
-the mean response time (in milliseconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
+the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>,
+the value is the mean response time (in seconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
 </ul>
 <p>The following assignments are made only if time_scale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>;  otherwise the value of the
 corresponding attributes is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
@@ -303,8 +302,8 @@ and <code class="docutils literal"><span class="pre">time_scale</span></code> is
 attribute have a 6th item (if another function is assigned) or they are asssigned <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> if <code class="docutils literal"><span class="pre">time_scale</span></code>
 is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>.</p>
 <ul class="simple">
-<li><strong>mean correct response time</strong> is assigned to the 5th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute and as
-the value of its <code class="docutils literal"><span class="pre">RT_CORRECT_MEAN</span></code> outputState.  It is reported as milliseconds.</li>
+<li><strong>mean correct response time</strong> (in seconds) is assigned to the 5th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>
+attribute and as  the value of its <code class="docutils literal"><span class="pre">RT_CORRECT_MEAN</span></code> outputState.</li>
 </ul>
 <ul class="simple">
 <li><strong>variance of correct response time</strong> is assigned to the 6th item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute
@@ -314,12 +313,6 @@ and as the value of its <code class="docutils literal"><span class="pre">RT_CORR
 </div>
 <div class="section" id="class-reference">
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="DDM.DDM_Output">
-<em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM_Output</code><a class="headerlink" href="#DDM.DDM_Output" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
 <dl class="class">
 <dt id="DDM.DDM">
 <em class="property">class </em><code class="descclassname">DDM.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=BogaczEtAl</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DDM.DDM" title="Permalink to this definition">¶</a></dt>
