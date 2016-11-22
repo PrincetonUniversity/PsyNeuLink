@@ -39,35 +39,36 @@ Creating a State
 ----------------
 
 States can be created used the constructor for one of the subclasses.  However, in general, they are created
-automatically by the mechanisms to which they belong, and/or through specification in context (e.g., when specifying
+automatically by the objects to which they belong, and/or through specification in context (e.g., when specifying
 the parameters of a mechanism's function to be controlled [LINK], or Mapping projections to be learned [LINK]).
 
 Structure
 ---------
 
-Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, a state has the three
-fundamental attributes:
+Every state is owned by either a :doc:`mechanism <Mechanism>` or a :doc:`projection <Projection>`. Like all PsyNeuLink
+components, a state has the three following fundamental attributes:
 
-* ``variable``:  for an inputState and parameterState, this is determined by the value(s) received from the
-  projection(s) that it receives, listed in it the ``receivesFromProjections`` attribute;  for an outputState,
-  this is the value returned by owner mechanism's ``function`` (and also assigned as the ``value`` of the state).
+* ``variable``:  for an inputState and parameterState, the value of this is determined by the value(s) of the
+  projection(s) that it receives (and that are listed in its ``receivesFromProjections`` attribute);  for an
+  outputState, it is the value returned by the owner mechanism's ``function`` (that is also assigned as the
+  ``value`` of the state).
 
-* ``function``:  for an inputState and parameterState, this aggregates the values received by the projections it
-  receives (the default is a :any:`LinearCombination` function that sums the values); at present, outputState
-  ``functions`` are not used (the value of outputStates is assigned directly by the mechanism's ``execute`` method).
+* ``function``:  for an inputState and parameterState, this aggregates the values of the projections it receives
+  (the default is a :any:`LinearCombination` function that sums those values); at present, outputState ``functions``
+  are not used (the value of outputStates is assigned directly by the mechanism's ``execute`` method [LINK]).
 
 * ``value``:  for an inputState and parameterState, this is the aggregated value of the projections it receives;
   for an outputState, this is a value associated with the output of the mechanism's ``function`` (all of which are
-  also represented in the mechanism's ``outputValue`` attribute).
+  also represented in the mechanism's ``outputValue`` attribute [LINK]).
 
 Execution
 ---------
 
-States cannot be executed directly.  They are executed when the component to which they belong is executed.
-When this occurs: each inputState and parameterState executes any projections it receives, calls its ``function`` to
-aggregate their values, and then assigns this as its ``value`` -- this conforms to a "lazy evaluation" protocol
-(see :ref:`Lazy_Evaluation` for a more detailed discussion).  When a mechanism is executed, after calling
-its ``function``, each of its outputStates is assigned a value associated with the output of the ``function``
+A state cannot be executed directly.  It is executed when the component to which it belongs is executed.
+When this occurs, each inputState and parameterState belonging to the object executes any projections it  receives,
+calls its ``function`` to aggregate their values, and then assigns this as that state's ``value`` -- this conforms to a
+"lazy evaluation" protocol (see :ref:`Lazy_Evaluation` for a more detailed discussion).  The ``value`` of an outputState
+is assigned after the ``function`` of the mechanism that owns it has been called
 (see :ref:`Mechanism OutputStates <Mechanism_OutputStates>`).
 
 .. _State_Class_Reference:
@@ -133,7 +134,7 @@ class State_Base(State):
 
 
 
-    Abstract class for State
+    Abstract class for State.
 
     .. note::
        States should NEVER be instantiated by a direct call to the base class.
@@ -255,9 +256,12 @@ class State_Base(State):
         Specified in the name argument of the call to create the state;  if not is specified,
         a default is assigned by StateRegistry based on the states's subclass
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
-        Note: states names are "scoped" within a mechanism, meaning that states with the same name are permitted
-        in different mechanisms but not the same mechanism (states within a mechanism with the same base name
-        are appended an index in the order of creation).
+
+        .. note::
+            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
+            mechanism: states within a mechanism with the same base name are appended an index in the order of
+            creation).
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the PreferenceSet for the state.
