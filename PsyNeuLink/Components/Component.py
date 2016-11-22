@@ -796,7 +796,7 @@ class Component(object):
             #     C) no default function, default functionParams
             #         example: DDM
             #     D) no default function, no default functionParams
-            #         example: System, Process, MonitoringMechanism, WeightedError
+            #         example: System, Process, MonitoringMechanism, WeightedErrorMechanism
 
             self.assign_default_kwFunctionParams = True
 

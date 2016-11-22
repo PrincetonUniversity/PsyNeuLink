@@ -111,7 +111,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                               prefs])
                          [TBI: PDP]
                      MonitoringMechanism
-                         Comparator
+                         ComparatorMechanism
                      ControlMechanism
                          DefaultControlMechanism
                          EVCMechanism
@@ -607,7 +607,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          d) _instantiate_attributes_before_function:
                              - calls _instantiate_receiver and _instantiate_sender (which both must be done before _validate_function)
                                  * _instantiate_receiver must be called before _instantiate_sender since the latter requires access to
-                                     self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+                                     self.receiver to determine whether to use a comparatorMechanism mechanism or <Mapping>.receiverError for error signals
                              i) _instantiate_receiver:
                                  * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls _add_projection_to_mechanism
         
@@ -620,7 +620,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                 
                 Note:
                 * This must be called before _instantiate_sender since that requires access to self.receiver
-                    to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+                    to determine whether to use a comparatorMechanism mechanism or <Mapping>.receiverError for error signals
                 * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                                       and calls _add_projection_to_mechanism
         

@@ -107,7 +107,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             None
 
         MechanismRegistry:
-            All instances of SigmoidLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
+           All instances of SigmoidLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
     COMMENT

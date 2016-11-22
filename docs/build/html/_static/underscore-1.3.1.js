@@ -286,7 +286,7 @@
     return result;
   };
 
-  // Use a comparator function to figure out at what index an object should
+  // Use a comparatorMechanism function to figure out at what index an object should
   // be inserted so as to maintain order. Uses binary search.
   _.sortedIndex = function(array, obj, iterator) {
     iterator || (iterator = _.identity);

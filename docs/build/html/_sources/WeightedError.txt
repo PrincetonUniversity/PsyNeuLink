@@ -1,6 +1,6 @@
 Weighted Error
 ==============
 
-.. automodule:: WeightedError
+.. automodule:: WeightedErrorMechanism
    :members:
    :exclude-members: random

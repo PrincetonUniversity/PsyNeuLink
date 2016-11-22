@@ -163,7 +163,7 @@ InputStates
 ^^^^^^^^^^^
 
 These represent the input(s) to a mechanism. A mechanism usually has only one InputState,
-stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, Comparator
+stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, ComparatorMechanism
 mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
 more than one inputState, they are stored in an OrderedDict in the mechanisms ``inputStates`` attribute;  the key of
 each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple

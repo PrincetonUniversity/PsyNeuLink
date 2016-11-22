@@ -12,7 +12,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism i
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 from PsyNeuLink.Components.Projections.Mapping import Mapping
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
@@ -25,7 +25,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
 # my_mech1 = Transfer(function=Logistic)
 # my_mech2 = Transfer(function=Logistic)
-# my_monitor = Comparator()
+# my_monitor = ComparatorMechanism()
 # my_learning_signal = LearningSignal()
 # my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
 # # my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)

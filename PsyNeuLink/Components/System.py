@@ -204,7 +204,7 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -965,8 +965,8 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a Comparator or
-            #     it projects only to Comparator(s)
+            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a ComparatorMechanism or
+            #     it projects only to ComparatorMechanism(s)
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and

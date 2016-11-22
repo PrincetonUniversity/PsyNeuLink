@@ -6,26 +6,27 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  WeightedError *******************************************************
+# ******************************************  WeightedErrorMechanism ***************************************************
 
 """
 Overview
 --------
 
-A WeightedError mechanism monitors the outputState of it's ``errorSource``: a ProcessingMechanism that projects to
+A WeightedErrorMechanism monitors the outputState of it's ``errorSource``: a ProcessingMechanism that projects to
 another mechanism in a :doc:`Process`.  It computes the contribution of each element of the output of the
-``errorSource`` to the error in the output of the mechanism to which the ``errorSource`` projects (the ``weightedErrorSignal``).
-The WeightedError ``function``returns an error array that can be used by a :doc:`LearningSignal` to adjust a Mapping
-projection the ``errorSource``, so as to reduce its future contribution to the weightedErrorSignal.
+``errorSource`` to the error in the output of the mechanism to which the ``errorSource`` projects
+(the ``weightedErrorSignal``).  The WeightedErrorMechanism ``function``returns an error array that can be used by a
+:doc:`LearningSignal` to adjust a Mapping projection the ``errorSource``, so as to reduce its future contribution to
+the weightedErrorSignal.
 
 .. _WeightedError_Creation:
 
-Creating A WeightedError Mechanism
-----------------------------------
+Creating A WeightedErrorMechanism
+---------------------------------
 
-A WeightedError mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
-function and specifying "WeightedError" as its ``mech_spec`` argument.  It can also be created by :ref:`in context
-specification of a LearningSignal <_Projection_Creation>` for a projection  to a ProcessingMechanism in
+A WeightedErrorMechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
+function and specifying "WeightedErrorMechanism" as its ``mech_spec`` argument.  It can also be created by :ref:`in
+context specification of a LearningSignal <_Projection_Creation>` for a projection  to a ProcessingMechanism in
 a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
 are also created automatically when a process system is created for which learning is specified; each is
 assigned a projection from the outputState of a ProcessingMechanism that receives a Mapping projection being
@@ -38,13 +39,13 @@ learned, and a LearningSignal projection to that Mapping projection
 Structure
 ---------
 
-A WeightedError mechanism has a single inputState, a :keyword:`NEXT_LEVEL_PROJECTION` parameter, and a single
+A WeightedErrorMechanism has a single inputState, a :keyword:`NEXT_LEVEL_PROJECTION` parameter, and a single
 (:keyword:`WEIGHTED_ERROR`) outputState.  The **inputState** receives a Mapping projection from its ``errorSource`` --
 the Processing mechanism for which it computes the error.  :keyword:`NEXT_LEVEL_PROJECTION` is assigned to the Mapping
 projection from the primary outputState of the ``errorSource`` to the next mechanism in the process.  Each row of it's
 ``matrix`` parameter corresponds to an element of the ``value`` of the ``errorSource``, each column corresponds to an
 element of the ``value`` of the mechanism to which it projects, and each element of the matrix is the weight of the
-association between the two.  The **outputState** of a WeightedError mechanism is typically assigned a
+association between the two.  The **outputState** of a WeightedErrorMechanism is typically assigned a
 :doc:`LearningSignal` projection that is used to modify the ``matrix`` parameter of a Mapping projection to the
 ``errorSource`` (as shown in :ref:`this figure <Process_Learning_Figure>`).
 
@@ -53,7 +54,7 @@ association between the two.  The **outputState** of a WeightedError mechanism i
 Execution
 ---------
 
-A WeightedError mechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
+A WeightedErrorMechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
 contribution of each element of the ``value`` of the ``errorSource`` to the ``error_signal``:  the error associated
 with each element of the ``value`` of the mechanism to which the ``errorSource`` projects, scaled both by the weight of
 its association to that element  specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
@@ -75,11 +76,11 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 # from PsyNeuLink.Components.States.InputState import InputState
 
-# WeightedError output (used to create and name outputStates):
+# WeightedErrorMechanism output (used to create and name outputStates):
 WEIGHTED_ERRORS = 'WeightedErrors'
 NEXT_LEVEL_PROJECTION = 'next_level_projection'
 
-# WeightedError output indices (used to index output values):
+# WeightedErrorMechanism output indices (used to index output values):
 class WeightedErrorOutput(AutoNumber):
     ERROR_SIGNAL = ()
 
@@ -91,27 +92,28 @@ class WeightedErrorError(Exception):
         return repr(self.error_value)
 
 
-class WeightedError(MonitoringMechanism_Base):
+class WeightedErrorMechanism(MonitoringMechanism_Base):
     """
-    WeightedError(     \
+    WeightedErrorMechanism(     \
     error_signal=None, \
     params=None,       \
     name=None,         \
     prefs=None)
 
-    Implements WeightedError subclass of MonitoringMechanism.
+    Implements WeightedErrorMechanism subclass of MonitoringMechanism.
 
     COMMENT:
         Description:
-            WeightedError is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
+            WeightedErrorMechanism is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the
+            Function class
             It's function computes the contribution of each sender element (rows of the NEXT_LEVEL_PROJECTION param)
-                to the error values of the receivers
+               to the error values of the receivers
                  (elements of the error_signal array, columns of the matrix of the NEXT_LEVEL_PROJECTION param),
-                weighted by the association of each sender with each receiver (specified in NEXT_LEVEL_PROJECTION.matrix)
+               weighted by the association of each sender with each receiver (specified in NEXT_LEVEL_PROJECTION.matrix)
             The function returns an array with the weighted errors for each sender element
 
         Class attributes:
-            + componentType (str): WeightedError
+            + componentType (str): WeightedErrorMechanism
             + classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (1D np.array):
@@ -122,8 +124,8 @@ class WeightedError(MonitoringMechanism_Base):
             None
 
         MechanismRegistry:
-            All instances of WeightedError are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+            All instances of WeightedErrorMechanism are registered in MechanismRegistry, which maintains an
+                entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
 
@@ -145,7 +147,8 @@ class WeightedError(MonitoringMechanism_Base):
     ----------
 
     errorSource : ProcessingMechanism
-        the mechanism that projects to the WeightedError mechanism, and for which it calculates the ``weightedErrorSignal``.
+        the mechanism that projects to the WeightedErrorMechanism,
+        and for which it calculates the ``weightedErrorSignal``.
         
     next_level_projection : Mapping projection
         projection from the ``errorSource to the next mechanism in the process;  its ``matrix`` parameter is 
@@ -166,7 +169,7 @@ class WeightedError(MonitoringMechanism_Base):
     outputValue : List[1d np.array]
         single item in list is ``errorSignal`` (output of ``function``;  same as ``value``).
 
-    name : str : default WeightedError-<index>
+    name : str : default WeightedErrorMechanism-<index>
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
@@ -180,7 +183,7 @@ class WeightedError(MonitoringMechanism_Base):
 
     """
 
-    componentType = "WeightedError"
+    componentType = "WeightedErrorMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -190,7 +193,7 @@ class WeightedError(MonitoringMechanism_Base):
 
     variableClassDefault = [0]  # error_signal
 
-    # WeightedError parameter assignments):
+    # WeightedErrorMechanism parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         NEXT_LEVEL_PROJECTION: None,

@@ -315,7 +315,7 @@ from PsyNeuLink.Components.Projections.Mapping import Mapping
 from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import *
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
 
 # *****************************************    PROCESS CLASS    ********************************************************
 
@@ -1725,11 +1725,11 @@ class Process_Base(Process):
                     self._monitoring__mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
-        """Check for and assign comparator mechanism to use for reporting error during learning.
+        """Check for and assign comparatorMechanism mechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
-         Check that there is one and only one Comparator for the process
-         Assign comparator to self.comparator, assign self to comparator.processes, and report assignment if verbose
+         Check that there is one and only one ComparatorMechanism for the process
+         Assign comparatorMechanism to self.comparatorMechanism, assign self to comparatorMechanism.processes, and report assignment if verbose
         """
 
         if not self.learning:
@@ -1737,22 +1737,22 @@ class Process_Base(Process):
                                " for a process if it has a learning specification")
 
         comparators = list(mech_tuple.mechanism
-                           for mech_tuple in self._mech_tuples if isinstance(mech_tuple.mechanism, Comparator))
+                           for mech_tuple in self._mech_tuples if isinstance(mech_tuple.mechanism, ComparatorMechanism))
 
         if not comparators:
             raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
-                               "but no Comparator mechanism".format(self.name, self.learning))
+                               "but no ComparatorMechanism mechanism".format(self.name, self.learning))
 
         elif len(comparators) > 1:
-            comparator_names = list(comparator.name for comparator in comparators)
-            raise ProcessError("PROGRAM ERROR: {} has more than one comparator mechanism: {}".
+            comparator_names = list(comparatorMechanism.name for comparatorMechanism in comparators)
+            raise ProcessError("PROGRAM ERROR: {} has more than one comparatorMechanism mechanism: {}".
                                format(self.name, comparator_names))
 
         else:
-            self.comparator = comparators[0]
-            self.comparator.processes[self] = COMPARATOR
+            self.comparatorMechanism = comparators[0]
+            self.comparatorMechanism.processes[self] = ComparatorMechanism
             if self.prefs.verbosePref:
-                print("\'{}\' assigned as Comparator for output of \'{}\'".format(self.comparator.name, self.name))
+                print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".format(self.comparatorMechanism.name, self.name))
 
     def _instantiate_target_input(self):
 
@@ -1762,12 +1762,12 @@ class Process_Base(Process):
         target = np.atleast_1d(self.target)
         # MODIFIED 9/20/16 END
 
-        # Create ProcessInputState for target and assign to comparator's target inputState
-        comparator_target = self.comparator.inputStates[TARGET]
+        # Create ProcessInputState for target and assign to comparatorMechanism's target inputState
+        comparator_target = self.comparatorMechanism.inputStates[TARGET]
 
-        # Check that length of process' target input matches length of comparator's target input
+        # Check that length of process' target input matches length of comparatorMechanism's target input
         if len(target) != len(comparator_target.variable):
-            raise ProcessError("Length of target ({}) does not match length of input for comparator in {}".
+            raise ProcessError("Length of target ({}) does not match length of input for comparatorMechanism in {}".
                                format(len(target), len(comparator_target.variable)))
 
         target_input_state = ProcessInputState(owner=self,
@@ -2019,7 +2019,7 @@ class Process_Base(Process):
 
         if self.learning:
             print("\n- MSE: {}".
-                  format(self.comparator.outputValue[ComparatorOutput.COMPARISON_MSE.value]))
+                  format(self.comparatorMechanism.outputValue[ComparatorOutput.COMPARISON_MSE.value]))
 
         elif separator:
             print("\n\n****************************************\n")

@@ -3,14 +3,14 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/22/16:
-# IntegratorMechanism -> IntegratorMechanism
-# Transfer -> TranferMechanism
-# WeightedError -> WeightedErrorMechanism
-# Comparator -> ComparatorMechanism
-# DDM -> DDMMechanism
-# Mapping -> MappingProjection
-# ControlSignal -> ControlSignalProjection
-# LearningSignal -> LearningSignalProjection
+# √ AdaptiveIntegrator -> IntegratorMechanism
+#   Transfer -> TransferMechanism
+# √ WeightedErrorMechanism -> WeightedErrorMechanism
+#   ComparatorMechanism -> ComparatorMechanism
+#   DDM -> DDMMechanism
+#   Mapping -> MappingProjection
+#   ControlSignal -> ControlSignalProjection
+#   LearningSignal -> LearningSignalProjection
 
 # 11/19/16:
 # FIX: IntegratorMechanism:
@@ -193,7 +193,7 @@
 
 # 10/12/16:
 # TEST: *** specify learning of individual projections in a process rather than whole process: is more than one
-#             comparator mechanism assigned?
+#             comparatorMechanism mechanism assigned?
 # TEST: does specifying learning for the process over-ride any that have been explicity specified w/o learning?
         # XXX TEST WHICH IS TRUE:  in the process [???] OR
         # XXX that have been assigned by default (but not ones created using either inline or stand-alone specification)
@@ -304,7 +304,7 @@
 # IMPLEMENT mechanismTuple as named tuple type
 
 # DOCUMENT:
-    #     COMPARATORS ARE INCLUDED FOR EXECUTION DURING LEARNING,
+    #     ComparatorMechanisms ARE INCLUDED FOR EXECUTION DURING LEARNING,
     #     BUT NOT FOR REPORTING, AND SHOULD NOT BE CONSIDERED TERMINALS FOR EVC MONITORING
     #      FOR OPTIONAL INPUT, AND ADD ARGUMENT TO SYSTEM FOR ASSIGNING INPUT AT EXECUTE TIME
 
@@ -457,8 +457,8 @@
 #                0) Linear layer as penultimate layer (one for which output weights will be modified);
 #                       (note: slope gets parameterState that is controlled by learning_rate of LearningSignal)
 #                1) Use Softmax as final output layer
-#                2) Comparator:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
-#                3) FullConnectivity Mapping from terminalMechanism->Comparator
+#                2) ComparatorMechanism:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
+#                3) FullConnectivity Mapping from terminalMechanism->ComparatorMechanism
 #                4) LearningSignal.learningRate sets slope of Linear layer
 #                ----------------
 #
@@ -501,7 +501,7 @@
 #      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
 #      currently use LinearCombination with identityMatrix, but for a matrix this reduces it to a vector
 # IMPLEMENT: Add Integrator as Type of Function and move Integrator class from Transfer to Integrator Type
-# IMPLEMENT: Comparator Processing Mechanism TYPE, Comparator SUBTYPE
+# IMPLEMENT: ComparatorMechanism Processing Mechanism TYPE, ComparatorMechanism SUBTYPE
 # IMPLEMENT: PreferenceLevel SUBTYPE
 #            For Function Components:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
 # IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
@@ -553,7 +553,7 @@
 # FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
 # FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
-# FIX: IN COMPARATOR _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
+# FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
 # FIX: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
 # FIX: IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
@@ -586,7 +586,7 @@
 
 # 7/25/16:
 #
-# FIX handling of inputStates (SAMPLE and TARGET) in Comparator:
+# FIX handling of inputStates (SAMPLE and TARGET) in ComparatorMechanism:
 #              requirecParamClassDefaults
 #              _instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
@@ -860,7 +860,7 @@
 
 # -------------------------------------------
 
-# FIX: PROCESS INPUT, AND TARGET INPUT TO COMPARATOR, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
+# FIX: PROCESS INPUT, AND TARGET INPUT TO ComparatorMechanism, ARE RESTRICTED TO PROCESS TO WHICH MECHANISM BELONGS
 #      ?SHOULD SAME BE TRUE FOR ALL PROJECTIONS:  ONLY UPDATE THOSE BELONGING TO MECHANISMS WITHIN THE PROCESS?
 
 # QUESTION: When executing a mechanism, and updating its projections (to get their input),
@@ -875,7 +875,7 @@
 #               - how to provide reward for outcome of first trial, if it is selected probabilistically
 #               - must process trial, get reward from environment, then execute learning
 #               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#           Option 2 - Provide Process with reward vector, and let comparator choose reward based on action vector
+#           Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
 #               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
 #               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
 #               - system should be take functions that specify values to use as inputs based on outputs
@@ -1037,7 +1037,7 @@
 # DOC LIST:
 
 #    IntegratorMechanism
-#  √ Comparator
+#  √ ComparatorMechanism
 #  ~ ControlMechanism
 #  √ ControlSignal
 #  ! DDM
@@ -1061,7 +1061,7 @@
 #  ! System
 #  ! Transfer
 #    Utilities
-#  √ WeightedError
+#  √ WeightedErrorMechanism
 
 # SPHINX / RST ***********************************************************
 
@@ -2204,7 +2204,7 @@
 #             - assign LearningSignal projection to all Mapping projections
 # IMPLEMENT: NEW DESIGN:
 #
-# 0) Make sure Mapping projection from terminal Mechanism in Process is to Comparator using IDENTITY_MATRIX
+# 0) Make sure Mapping projection from terminal Mechanism in Process is to ComparatorMechanism using IDENTITY_MATRIX
 #    In System terminal mechanism search, don't include MonitoringMechanisms
 #
 # 1) LearningSignal:
@@ -2214,11 +2214,11 @@
 #        - examine mechanism to which Mapping project (receiver) projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - Comparator ErrorMonitoringMechanism
-#                        - ProcessInputState for Comparator (name it??) with projection to target inputState
+#                    - ComparatorMechanism ErrorMonitoringMechanism
+#                        - ProcessInputState for ComparatorMechanism (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
-#                    - WeightedError ErrorMonitoringMechanism
+#                    - WeightedErrorMechanism ErrorMonitoringMechanism
 #                        - Mapping projection from preceding ErrorMonitoringMechanism:
 #                            preceding processing mechanism (ppm):
 #                                ppm = self.receiver.owner.receiver.owner
@@ -2239,7 +2239,7 @@
 #        preceding ones (associated with antecedent ProcessingMechanisms in the Process) get it from
 #            the ErrorMonitor associated with the next ProcessingMechanism in the process:
 #    - get weightMatrix for the output of its associated ProcessingMechanism
-#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to Comparator)
+#        last one:  this should be identityMatrix (for Mapping projection from terminal mechanism to ComparatorMechanism)
 #        preceding ones: get from self.receiver.owner.outputState.projections.params[MATRIX]
 #    - ErrorMonitoring Mechanism computes the error for each element of its variable ("activation vector"):
 #        last one (LinearCompartor) simply computes difference between its two inputs (target and sample)
@@ -2255,15 +2255,15 @@
 #    ?? coordinate with updating for Mechanisms?
 #
 # Two object types:
-# 1) Comparator (MonioringMechanism):
+# 1) ComparatorMechanism (MonioringMechanism):
 #     - has two inputStates:  i) system output;  ii) training input
 #     - computes some objective function on them (default:  Hadamard difference)
-#     - default Comparator that is associated with default LearningSignal
+#     - default ComparatorMechanism that is associated with default LearningSignal
 #
 # 2) LearnningSignal (Projection):
 #     - sender:  output of Monitoring Mechanism
 #         default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
-#                  else default Comparator
+#                  else default ComparatorMechanism
 #     - receiver: Mapping Projection parameterState (or some equivalent thereof)
 #
 # Need to add parameterState to Projection class;  composition options:
@@ -2282,7 +2282,7 @@
 # for sumSquared error function:  errorDerivative = (target - sample)
 # for logistic activation function: transferDerivative = sample * (1-sample)
 # NEEDS:
-# - errorDerivative:  get from FUNCTION of Comparator Mechanism
+# - errorDerivative:  get from FUNCTION of ComparatorMechanism Mechanism
 # - transferDerivative:  get from FUNCTION of Process Processing Mechanism
 
 # LearningSignal instantiation
@@ -2293,7 +2293,7 @@
 #                  PROBLEMS:
 #                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - the output (terminal) layer of a process
-#                  in this case, the comparator would receive a projection from the output layer,
+#                  in this case, the comparatorMechanism would receive a projection from the output layer,
 #                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
 #                  ADVANTAGES:
 #                    - keeps the errorSignal exclusively in the ProcessingMechanism
@@ -2302,7 +2302,7 @@
 #                    - need to deal with recurrence in the System graph
 #                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
-#                  two input states (one for processing input, another for training signal, and a comparator method)
+#                  two input states (one for processing input, another for training signal, and a comparatorMechanism method)
 #                  ADVANTAGES:
 #                    - more compact/efficient
 #                    - no recurrence
@@ -2310,7 +2310,7 @@
 #                    - leaves the output layer is the terminal mechanism of the Process
 #                  PROBLEMS:
 #                    - overspecialization (i.e., less modular)
-#                    - needs additional "function" (comparator function)
+#                    - needs additional "function" (comparatorMechanism function)
 #            IMPLEMENTED: MonitoringMechanism
 
 #endregion

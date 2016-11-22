@@ -33,7 +33,7 @@ Execution
 
 A MonitoringMechanism always executes after the mechanism it is monitoring.  The ``value`` of the outputState of the
 mechanism being monitored is assigned as an item in the ``variable`` for the MonitoringMechanism's ``function``.
-Other items may be also be assigned (for example, a :doc:`Comparator` takes an additional input against which it
+Other items may be also be assigned (for example, a :doc:`ComparatorMechanism` takes an additional input against which it
 compares the monitored value).
 
 .. _MonitoringMechanism_Class_Reference:
@@ -48,21 +48,21 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import defaultControlAllocation
 
-COMPARATOR = 'Comparator'
+ComparatorMechanism = 'ComparatorMechanism'
 
-# Comparator parameter keywords:
+# ComparatorMechanism parameter keywords:
 SAMPLE = "comparatorSampleSource"
 TARGET = "comparatorTargetSource"
 COMPARISON_OPERATION = "comparison_operation"
 
-# Comparator outputs (used to create and name outputStates):
+# ComparatorMechanism outputs (used to create and name outputStates):
 COMPARISON_RESULT = 'ComparisonArray'
 COMPARISON_MEAN = 'ComparisonMean'
 COMPARISON_SUM = 'ComparisonSum'
 COMPARISON_SSE = 'ComparisonSumSquares'
 COMPARISON_MSE = 'ComparisonMSE'
 
-# Comparator output indices (used to index output values):
+# ComparatorMechanism output indices (used to index output values):
 class ComparatorOutput(AutoNumber):
     COMPARISON_RESULT = ()
     COMPARISON_MEAN = ()

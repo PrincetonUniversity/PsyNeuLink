@@ -9,8 +9,8 @@
 # ***********************************************  Init ****************************************************************
 
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
@@ -30,8 +30,8 @@ __all__ = ['System',
            'IntegratorMechanism',
            'DDM',
            'EVCMechanism',
-           'Comparator',
-           'WeightedError',
+           'ComparatorMechanism',
+           'WeightedErrorMechanism',
            'Mapping',
            'ControlSignal',
            'LearningSignal',

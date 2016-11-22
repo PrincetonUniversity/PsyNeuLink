@@ -6,30 +6,30 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  Comparator *******************************************************
+# *******************************************  ComparatorMechanism *****************************************************
 
 """
 Overview
 --------
 
-A Comparator mechanism monitors the outputState of a ProcessingMechanism in a :doc:`Process` , and compares this to a
-target provided as input to the ``run`` method of the process (or system to which it belongs) when it is executed.
-The comparison can be done using subtraction or division.
+A ComparatorMechanism mechanism monitors the outputState of a ProcessingMechanism in a :doc:`Process`,
+and compares this to a target provided as input to the ``run`` method of the process (or system to which it belongs)
+when it is executed.  The comparison can be done using subtraction or division.
 
 .. _Comparator_Creation:
 
-Creating a Comparator
+Creating a ComparatorMechanism
 ---------------------
 
-A Comparator mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
-function and specifying "Comparator" as its ``mech_spec`` argument. The type of comparison is specified in the
-``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.  It can also be
-created by :ref:`in context specification of a LearningSignal <Projection_Creation>` for a projection
-to the  :keyword:`TERMINAL` mechanism [LINK] of a process.  One or more Comparators are also created
-automatically when a process or system is created for which learning is specified; each is assigned a projection
-from the outputState of a :keyword:`TERMINAL` mechanism that receives a Mapping projection being learned,
-and a LearningSignal projection to that Mapping projection  (see :ref:`learning in a process <Process_Learning>`, and
-:ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creation> for details).
+A ComparatorMechanism mechanism can be created either directly, by calling its constructor, or using the
+:class:`mechanism` function and specifying "ComparatorMechanism" as its ``mech_spec`` argument. The type of comparison
+is specified in the ``comparison_operation``, which can be the keyword :keyword:`SUBTRACTION` or :keyword:`DIVISION`.
+It can also be created by :ref:`in context specification of a LearningSignal <Projection_Creation>`
+for a projection to the  :keyword:`TERMINAL` mechanism [LINK] of a process.  One or more ComparatorMechanisms are also
+created automatically when a process or system is created for which learning is specified; each is assigned a
+projection from the outputState of a :keyword:`TERMINAL` mechanism that receives a Mapping projection being learned,
+and a LearningSignal projection to that Mapping projection  (see :ref:`learning in a process <Process_Learning>`,
+and :ref:`automatic creation of LearningSignals  <LearningSignal_Automatic_Creation> for details).
 
 
 .. _Comparator_Structure
@@ -37,9 +37,9 @@ and a LearningSignal projection to that Mapping projection  (see :ref:`learning 
 Structure
 ---------
 
-A Comparator mechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from the
-primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`TARGET` inputState
-is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
+A ComparatorMechanism mechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a Mapping projection from
+the primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`TARGET` inputState is
+assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
 It has five outputStates, described under Execution below.
 
 
@@ -48,10 +48,10 @@ It has five outputStates, described under Execution below.
 Execution
 ---------
 
-A Comparator always executes after the mechanism it is monitoring.  The ``value`` of the primary outputState of the
-mechanism being monitored is assigned as the value of the Comparator's :keyword:`SAMPLE` inputState;  the
+A ComparatorMechanism always executes after the mechanism it is monitoring.  The ``value`` of the primary outputState of
+the mechanism being monitored is assigned as the value of the ComparatorMechanism's :keyword:`SAMPLE` inputState;  the
 value of the :keyword:`TARGET` inputState is received from the process (or system to which it belongs) when it is run.
-When the Comparator is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`, then its ``function``
+When the ComparatorMechanism is executed, if ``comparison_operation`` is :keyword:`SUBTRACTION`, then its ``function``
 subtracts the  :keyword:`SAMPLE` from the :keyword:`TARGET`; if ``comparison_operation`` is :keyword:`DIVISION`,
 the :keyword:`TARGET` is divided by the :keyword:`SAMPLE`.  After each execution of the mechanism:
 
@@ -97,28 +97,29 @@ class ComparatorError(Exception):
         return repr(self.error_value)
 
 
-class Comparator(MonitoringMechanism_Base):
+class ComparatorMechanism(MonitoringMechanism_Base):
     """
-    Comparator(                       \
+    ComparatorMechanism(                       \
     default_sample_and_target=None,   \
     comparison_operation=SUBTRACTION, \
     params=None,                      \
     name=None,                        \
     prefs=None)
 
-    Implements Comparator subclass of MonitoringMechanism
+    Implements ComparatorMechanism subclass of MonitoringMechanism
 
     COMMENT:
 
         Description:
-            Comparator is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
+            ComparatorMechanism is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the
+                Function class
             It's function uses the LinearCombination Function to compare two input variables
             COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
             The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
                 as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
 
         Class attributes:
-            + componentType (str): Comparator
+            + componentType (str): ComparatorMechanism
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
@@ -130,8 +131,8 @@ class Comparator(MonitoringMechanism_Base):
             None
 
         MechanismRegistry:
-            All instances of Comparator are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+            All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
+              entry for the subclass, a count for all instances of it, and a dictionary of those instances
 
     COMMENT
 
@@ -139,8 +140,8 @@ class Comparator(MonitoringMechanism_Base):
     ---------
 
     default_sample_and_target : Optional[List[array, array] or 2d np.array]
-        the input to the Comparator to use if none is provided in a call to its ``execute`` or ``run`` methods.  The
-        first item is the :keyword:`SAMPLE` input and the second is the :keyword:`TARGET` input, which must be the
+        the input to the ComparatorMechanism to use if none is provided in a call to its ``execute`` or ``run`` methods.
+        The first item is the :keyword:`SAMPLE` input and the second is the :keyword:`TARGET` input, which must be the
         same length.  This also serves as a template to specify the length of inputs to the ``function``.
 
     comparison_operation : keyword[SUBTRACTION or DIVISION] : default SUBTRACTION
@@ -163,7 +164,7 @@ class Comparator(MonitoringMechanism_Base):
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
-    name : str : default Comparator-<index>
+    name : str : default ComparatorMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -213,7 +214,7 @@ class Comparator(MonitoringMechanism_Base):
         * **sum of squares** of the result's elements (``value`` of :keyword:`COMPARISON_SSE` outputState)
         * **mean of squares** of the result's elements (``value`` of :keyword:`COMPARISON_MSE` outputState)
 
-    name : str : default Comparator-<index>
+    name : str : default ComparatorMechanism-<index>
         the name of the mechanism.
         Specified in the name argument of the call to create the mechanism;
         if not is specified, a default is assigned by MechanismRegistry
@@ -227,7 +228,7 @@ class Comparator(MonitoringMechanism_Base):
 
     """
 
-    componentType = "Comparator"
+    componentType = "ComparatorMechanism"
     # onlyFunctionOnInit = True
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
@@ -238,9 +239,9 @@ class Comparator(MonitoringMechanism_Base):
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = [[0],[0]]  # Comparator compares two 1D np.array inputStates
+    variableClassDefault = [[0],[0]]  # ComparatorMechanism compares two 1D np.array inputStates
 
-    # Comparator parameter and control signal assignments):
+    # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
@@ -444,13 +445,13 @@ class Comparator(MonitoringMechanism_Base):
 
         # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.TIME_STEP:
-            raise MechanismError("TIME_STEP mode not yet implemented for Comparator")
+            raise MechanismError("TIME_STEP mode not yet implemented for ComparatorMechanism")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
             # Implement terminate() below
 
-        #region EXECUTE COMPARISON FUNCTION (TRIAL TIME SCALE) ------------------------------------------------------------------
+        #region EXECUTE COMPARISON FUNCTION (TRIAL TIME SCALE) ---------------------------------------------------------
         elif time_scale == TimeScale.TRIAL:
 
             # Calculate comparision and stats
@@ -481,7 +482,7 @@ class Comparator(MonitoringMechanism_Base):
             return self.outputValue
 
         else:
-            raise MechanismError("time_scale not specified for Comparator")
+            raise MechanismError("time_scale not specified for ComparatorMechanism")
 
 
     def terminate_function(self, context=None):
@@ -492,6 +493,6 @@ class Comparator(MonitoringMechanism_Base):
 
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
-        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Comparator
+        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for ComparatorMechanism
 
 
