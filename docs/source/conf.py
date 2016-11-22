@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PsyNeuLink'
-copyright = u'2016, Jon Cohen'
+copyright = u'2016, Jonathan D. Cohen'
 author = u'Jon Cohen'
 
 # The version info for the project you're documenting, acts as replacement for
