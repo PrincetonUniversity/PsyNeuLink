@@ -49,12 +49,11 @@ Execution
 ---------
 
 When an AdaptiveIntegrator mechanism is executed, it carries out the specified integration, and assigns the
-result to the ``value`` of its (primary) outputState.  For the default function -- :any:`Integrator` --   if the
+result to the ``value`` of its (primary) outputState.  For the default function (:any:`Integrator`), if the
 value specified for ``default_input_value`` is a list or array, each element of the array will be independently
 integrated.  If its ``rate`` parameter is a single value, that rate will be used for integrating each element.  If
 the ``rate`` parameter is a list or array, then each element will be used as the rate for the corresponding element
-of the input (note:  in this case, ``rate`` must be the same length as the value specified for
-``default_input_value``.)
+of the input (in this case, ``rate`` must be the same length as the value specified for ``default_input_value``).
 
 
 .. _AdaptiveIntegrator_Class_Reference:
