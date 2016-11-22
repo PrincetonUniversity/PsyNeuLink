@@ -1617,7 +1617,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              - must be same type and format as variable
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
-         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
+         + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
          + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
                 LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
                 SCALED -- returns old_value incremented by rate * new_value
@@ -1689,7 +1689,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
                         RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        WEIGHTING: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
+                        WEIGHTING: Integrator.Weightings - type of weighting (default = LINEAR)
         :return number:
         """
 

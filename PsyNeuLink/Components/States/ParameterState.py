@@ -9,6 +9,8 @@
 # **************************************  ParameterState ******************************************************
 
 """
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
 Overview
 --------
 
@@ -355,7 +357,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
     def value(self, assignment):
         self._value = assignment
 
-def instantiate_parameter_states(owner, context=None):
+def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_state_list() to instantiate ParameterStates for subclass' function
 
     Instantiate parameter states for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
