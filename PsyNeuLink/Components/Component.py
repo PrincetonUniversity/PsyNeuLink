@@ -901,13 +901,14 @@ class Component(object):
         # Convert variableClassDefault to list of np.ndarrays
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
 
-        # If variable is not specified, then assign to (np-converted version of) variableClassDefault and return
+        # If variable is not specified, then:
+        #    - assign to (??now np-converted version of) variableClassDefault
+        #    - mark as not having been specified
+        #    - return
         self._variable_not_specified = False
         if variable is None or variable is NotImplemented:
             self.variable = self.variableClassDefault
-            # MODIFIED 11/22/16 NEW:
             self._variable_not_specified = True
-            # MODIFIED 11/22/16 END
             return
 
         # Otherwise, do some checking on variable before converting to np.ndarray

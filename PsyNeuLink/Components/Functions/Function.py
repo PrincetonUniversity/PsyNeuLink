@@ -1680,14 +1680,15 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 if self._variable_not_specified:
                     self.assign_defaults(variable=np.zeros_like(np.array(rate)))
                     if self.verbosePref:
-                        warnings.warn("The length of the array specified for the rate parameter of {} ({}) "
-                                      "did not match the length of the default input ({});  the latter has been "
-                                      " updated to mach".
-                                      format(self.name, len(rate), self.variable.size))
+                        warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
+                                      "matach the length ({}) of the default input ({});  the default input has been "
+                                      "updated to match".
+                                      format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
                 else:
-                    raise FunctionError("The length of the array specified for the rate parameter of {} ({}) "
-                                        "must be the same as the length of its input ({})".
-                                        format(self.name, len(rate), self.variable.size))
+                    raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                        "must match the length ({}) of the default input ({})".
+                                        format(len(rate), rate, self.name,np.array(self.variable).size, self.variable))
+
             self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
         # MODIFIED 11/22/16 END
 
