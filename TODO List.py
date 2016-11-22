@@ -3,11 +3,13 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # 11/19/16:
+# FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??
 # FIX:  RECONCILE DOCUMENTATION WITH ACTUALITY:  value == outputValue or just 1st item of outputValue
 #       CURRENTLY:  value = outputValue (DDM doesn't even have an outputValue
 # FIX:  MAKE IT SO THAT value = output of function, and outputValue is what is returned by execute
 # FIX:                  check that outputValue is concatenation of outputState values
 
+# DOCUMENTATION: State:  XXXX COORDINATE THIS TO MECHANISM DOCUMENTATION REGARDING MECHANISM-SPECIFIC STATE REGISTRIES
 # DOCUMENTATION:  add Structure section to Transfer and DDM (listing inputStates and outputStates):
 #                 MOVE DISCUSSION IN DDM OF MULTIPLE PARALLEL PROCESSES TO STRUTURE (UNDER INPUTSTATES)
 # DOCUMENTATION:  singularize first statement in overview of all objects
@@ -540,8 +542,8 @@
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 # FIX: IN COMPARATOR _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # FIX: ?? SHOULD THIS USE assign_defaults:
-# FIX: CONSOLIDATE instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
-# FIX: IN Projection:  (_instantiate_attributes_before_function() and instantiate_parameter_states())
+# FIX: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
+# FIX: IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
 #       EVC should be assigned its own phase, and then assign its input to the process inputstates,
 #            with the phase assigned to the EVC phase
@@ -1886,7 +1888,7 @@
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
 #                - FUNCTION_PARAMS: {kwParameterState: None}}:  suppresses ParameterStates
-#                - handled in Mechanism.instantiate_parameter_states()
+#                - handled in Mechanism._instantiate_parameter_states()
 #                - add DOCUMENTATION in Components and/or Mechanisms or ParameterStates;
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
 #                      there are just not any parameterStates instantiated for them
@@ -2039,6 +2041,12 @@
 #       Currently solved by embedding the value of a projection to a matrix parameterState of a mapping projection
 #           in a list (see "is_matrix_mapping").  Should probably do some more general check on dimensionality
 #           of value and/or coordinate this with (e.g,. specify relevant parameter for) LinearCombination function
+#
+# IMPLEMENT:  OutputState functions (per following from DOCUMENTATION under Mechanism docsring:
+#    Usually the ``function`` of the primary outputState transfers the result of the mechanism's function to the primary
+#    outputState's ``value`` attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other
+#    outputStates may use other functions to transform the result of the mechanism's function in various ways (e.g.,
+#    generate its mean, variance, etc.)
 
 # IMPLEMENT outputStateParams dict;  SEARCH FOR: [TBI + OUTPUT_STATE_PARAMS: dict]
 # IMPLEMENT: ability to redefine primary input and output states (i.e., to be other than the first)

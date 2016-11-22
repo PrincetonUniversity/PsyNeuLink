@@ -313,7 +313,7 @@ class DDMError(Exception):
 class DDM(ProcessingMechanism_Base):
 # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
 #                    ADD INFO ABOUT B VS. N&F
-#                    ADD instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
+#                    ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
     DDM(                       \
     default_input_value=None,  \
