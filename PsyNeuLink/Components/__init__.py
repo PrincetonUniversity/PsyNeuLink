@@ -36,7 +36,7 @@ class InitError(Exception):
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 
@@ -89,7 +89,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 
 # Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
 # Note: this must be an instantiated object
-DefaultMonitoringMechanism = Comparator(name=kwDefaultMonitoringMechanism)
+DefaultMonitoringMechanism = ComparatorMechanism(name=kwDefaultMonitoringMechanism)
 
 # Use as PROJECTION_SENDER (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
 

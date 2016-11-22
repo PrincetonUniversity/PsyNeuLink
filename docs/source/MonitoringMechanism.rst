@@ -4,8 +4,8 @@ Monitoring Mechanisms
 .. toctree::
 	:maxdepth: 2
 
-	Comparator
-	WeightedError
+	ComparatorMechanism
+	WeightedErrorMechanism
 
 .. automodule:: MonitoringMechanism
    :members:

@@ -65,9 +65,9 @@ modifies).  If the ``errorSource`` projects to a MonitoringMechanism, then that 
 ``sender``.  If the ``errorSource`` does not projection to a MonitoringMechanism, then one is created for it,
 and a Mapping projection is created that projects to it from the ``errorSource``.  The type of MonitoringMechanism
 created depends on where the ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism,
-or the :keyword:`TERMINAL` mechanism of a process or system, then a :doc:`Comparator` mechanism is created (which
+or the :keyword:`TERMINAL` mechanism of a process or system, then a :doc:`ComparatorMechanism` mechanism is created (which
 compares the output of the ``errorSource`` with a target to generate the ``errorSignal``).  If the ``errorSource``
-projects to any other mechanisms, then a ``WeightedError`` mechanism is created (which, in calculating the
+projects to any other mechanisms, then a ``WeightedErrorMechanism`` mechanism is created (which, in calculating the
 ``errorSignal``, takes account of the effect that the ``errorSource`` has on the output of the ProcessingMechanism(s)
 to which it projects).
 
@@ -105,15 +105,15 @@ ProcessingMechanism that is its ``errorSource`` will generate an error.
 
 **Target(s)**.  This specifies the value with which the output of an ``errorSource`` is compared, to calculate the
 ``errorSignal``.  It is required by the :doc:`run <Run>` method of a process or sysetm when learning is specified.
-provides to the :keyword:`TARGET` inputState of a :doc:`Comparator` mechanism.
+provides to the :keyword:`TARGET` inputState of a :doc:`ComparatorMechanism` mechanism.
 
 **Monitoring Mechanism**.  The errorSignal itself is computed by a MonitoringMechanism (the LearningSignal's
 ``sender``).  The type of MonitoringMechanism, and how it computes its errorSignal, depends on the ``errorSource``.
-If it is a :keyword:`TERMINAL` mechanism of a process or system, the MonitoringMechanism is a :doc:`Comparator`
-mechanism,  that compares the output of the ``errorSource`` (which projects to the Comparator's :keyword:`SAMPLE`
+If it is a :keyword:`TERMINAL` mechanism of a process or system, the MonitoringMechanism is a :doc:`ComparatorMechanism`
+mechanism,  that compares the output of the ``errorSource`` (which projects to the ComparatorMechanism's :keyword:`SAMPLE`
 inputState) with a target value that is provided as input to the process or system when it is :ref:`run
-<Run_Targets>` (and projects to the Comparator's :keyword:`TARGET` inputState). If the ``errorSource`` is not the
-final mechanism of a process or system, then the MonitoringMechanism is a :doc:`WeightedError` mechanism,
+<Run_Targets>` (and projects to the ComparatorMechanism's :keyword:`TARGET` inputState). If the ``errorSource`` is not the
+final mechanism of a process or system, then the MonitoringMechanism is a :doc:`WeightedErrorMechanism` mechanism,
 which uses the output of the ProcessingMechanism(s) to which the errorSource projects to calculate the ``errorSignal``.
 
 .. _LearningSignal_Execution:
@@ -136,9 +136,9 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator, SAMPLE
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError, NEXT_LEVEL_PROJECTION
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.Mapping import Mapping
 from PsyNeuLink.Components.Projections.Projection import *
@@ -153,7 +153,7 @@ kwWeightChangeParams = "weight_change_params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
-DefaultTrainingMechanism = Comparator
+DefaultTrainingMechanism = ComparatorMechanism
 
 class LearningSignalError(Exception):
     def __init__(self, error_value):
@@ -306,7 +306,7 @@ class LearningSignal(Projection_Base):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or Mapping
 
         Validate send in params[PROJECTION_SENDER] or, if not specified, sender arg:
-        - must be the outputState of a MonitoringMechanism (e.g., Comparator or WeightedError)
+        - must be the outputState of a MonitoringMechanism (e.g., ComparatorMechanism or WeightedErrorMechanism)
         - must be a list or 1D np.array (i.e., the format of an errorSignal)
 
         Validate receiver in params[PARAMETER_STATES] or, if not specified, receiver arg:
@@ -429,7 +429,7 @@ class LearningSignal(Projection_Base):
         
         Notes:
         * This must be called before _instantiate_sender since that requires access to self.receiver
-            to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+            to determine whether to use a comparatorMechanism mechanism or <Mapping>.receiverError for error signals
         * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                               and calls _add_projection_to_mechanism
         """
@@ -612,8 +612,8 @@ FROM TODO:
 #        - examine mechanism to which Mapping projection projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
-#                    - Comparator MonitoringMechanism
-#                        - ProcessInputState for Comparator (name it??) with projection to target inputState
+#                    - ComparatorMechanism MonitoringMechanism
+#                        - ProcessInputState for ComparatorMechanism (name it??) with projection to target inputState
 #                        - Mapping projection from terminal ProcessingMechanism to LinearCompator sample inputState
 #                - if not, assign:
 #                    - WeightedSum MonitoringMechanism
@@ -678,7 +678,7 @@ FROM TODO:
             monitoring_mechanism = self.sender
 
         # MonitoringMechanism class (i.e., not an instantiated object) specified for sender, so instantiate it:
-        # - for terminal mechanism of Process, instantiate Comparator MonitoringMechanism
+        # - for terminal mechanism of Process, instantiate ComparatorMechanism MonitoringMechanism
         # - for preceding mechanisms, instantiate WeightedSum MonitoringMechanism
         else:
             # Get errorSource:  ProcessingMechanism for which error is being monitored
@@ -722,11 +722,11 @@ FROM TODO:
                 # FIX:  NEED TO DEAL WITH THIS RE: RL -> DON'T CREATE BACK PROJECTIONS??
                 # NON-TERMINAL Mechanism
                 # errorSource at next level projects to a MonitoringMechanism:
-                #    instantiate WeightedError MonitoringMechanism and the back-projection for its error signal:
+                #    instantiate WeightedErrorMechanism MonitoringMechanism and the back-projection for its error signal:
                 #        (computes contribution of each element in errorSource to error at level to which it projects)
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
-                    monitoring_mechanism = WeightedError(error_signal=error_signal,
+                    monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
                                                          params={NEXT_LEVEL_PROJECTION:projection},
                                                          name=self.mappingProjection.name + " Weighted_Error")
 
@@ -752,7 +752,7 @@ FROM TODO:
                     else:
                         raise LearningSignalError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
                                                   format(self.function.name, self.name))
-                    # IMPLEMENTATION NOTE: training_signal assignment currently assumes training mech is Comparator
+                    # IMPLEMENTATION NOTE: training_signal assignment currently assumes training mech is ComparatorMechanism
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
@@ -765,7 +765,7 @@ FROM TODO:
                         monitored_state = self.errorSource
                     if self.function.componentName is kwBackProp:
                         matrix = IDENTITY_MATRIX
-                    # Force sample and target of Comparator to be scalars for RL
+                    # Force sample and target of ComparatorMechanism to be scalars for RL
                     elif self.function.componentName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = Mapping(sender=monitored_state,
@@ -894,7 +894,7 @@ FROM TODO:
         LearnningSignal (Projection):
             - sender:  output of Monitoring Mechanism
                 default: receiver.owner.outputState.sendsToProjections.<MonitoringMechanism> if specified,
-                         else default Comparator
+                         else default ComparatorMechanism
             - receiver: Mapping Projection parameterState (or some equivalent thereof)
 
         Mapping Projection should have kwLearningParam which:
@@ -908,7 +908,7 @@ FROM TODO:
             for sumSquared error function:  errorDerivative = (target - sample)
             for logistic activation function: transferDerivative = sample * (1-sample)
         NEEDS:
-        - errorDerivative:  get from FUNCTION of Comparator Mechanism
+        - errorDerivative:  get from FUNCTION of ComparatorMechanism Mechanism
         - transferDerivative:  get from FUNCTION of Processing Mechanism
 
         :return: (2D np.array) self.weightChangeMatrix

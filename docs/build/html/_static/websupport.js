@@ -101,7 +101,7 @@
   }
 
   /**
-   * Set comp, which is a comparator function used for sorting and
+   * Set comp, which is a comparatorMechanism function used for sorting and
    * inserting comments into the list.
    */
   function setComparator() {
@@ -525,7 +525,7 @@
   }
 
   /**
-   * Recursively sort a tree of comments using the comp comparator.
+   * Recursively sort a tree of comments using the comp comparatorMechanism.
    */
   function sortComments(comments) {
     comments.sort(comp);

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  Comparator *******************************************************
+# *********************************************  ComparatorMechanism *******************************************************
 
 """
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
@@ -27,29 +27,29 @@ class ComparatorError(Exception):
         return repr(self.error_value)
 
 
-class Comparator(MonitoringMechanism_Base):
-    """Implement Comparator subclass
+class ComparatorMechanism(MonitoringMechanism_Base):
+    """Implement ComparatorMechanism subclass
 
     Description:
-        Comparator is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
+        ComparatorMechanism is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the Function class
         It's function uses the LinearCombination Function Function to compare two input variables
         COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
         The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
             as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
 
     Instantiation:
-        - A Comparator Mechanism can be instantiated in several ways:
-            - directly, by calling Comparator()
+        - A ComparatorMechanism Mechanism can be instantiated in several ways:
+            - directly, by calling ComparatorMechanism()
             - as the default mechanism (by calling mechanism())
 
     Initialization arguments:
-        In addition to standard arguments params (see Mechanism), Comparator also implements the following params:
+        In addition to standard arguments params (see Mechanism), ComparatorMechanism also implements the following params:
         - variable (2D np.array): [[comparatorSample], [comparatorTarget]]
         - params (dict):
             + SAMPLE (MechanismsInputState, dict or str): (default: automatic local instantiation)
-                specifies inputState to be used for comparator sample
+                specifies inputState to be used for comparatorMechanism sample
             + TARGET (MechanismsInputState, dict or str):  (default: automatic local instantiation)
-                specifies inputState to be used for comparator target
+                specifies inputState to be used for comparatorMechanism target
             + FUNCTION (Function of method):  (default: LinearCombination)
             + FUNCTION_PARAMS (dict):
                 + COMPARISON_OPERATION (str): (default: SUBTRACTION)
@@ -64,25 +64,25 @@ class Comparator(MonitoringMechanism_Base):
             - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
     MechanismRegistry:
-        All instances of Comparator are registered in MechanismRegistry, which maintains an entry for the subclass,
+        All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an entry for the subclass,
           a count for all instances of it, and a dictionary of those instances
 
     Naming:
-        Instances of Comparator can be named explicitly (using the name='<name>' argument).
-        If this argument is omitted, it will be assigned "Comparator" with a hyphenated, indexed suffix ('Comparator-n')
+        Instances of ComparatorMechanism can be named explicitly (using the name='<name>' argument).
+        If this argument is omitted, it will be assigned "ComparatorMechanism" with a hyphenated, indexed suffix ('ComparatorMechanism-n')
 
     Execution:
         - Computes comparison of two inputStates of equal length and generates array of same length,
             as well as summary statistics (sum, sum of squares, and variance of comparison array values) 
         - self.execute returns self.value
         Notes:
-        * Comparator handles "runtime" parameters (specified in call to execute method) differently than std Components:
+        * ComparatorMechanism handles "runtime" parameters (specified in call to execute method) differently than std Components:
             any specified params are kept separate from paramsCurrent (Which are not overridden)
             if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
                 corresponding ParameterState;  that is, they are combined additively with controlSignal output
 
     Class attributes:
-        + componentType (str): Comparator
+        + componentType (str): ComparatorMechanism
         + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
         + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
@@ -110,7 +110,7 @@ class Comparator(MonitoringMechanism_Base):
 
     """
 
-    componentType = "Comparator"
+    componentType = "ComparatorMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -118,9 +118,9 @@ class Comparator(MonitoringMechanism_Base):
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = [[0],[0]]  # Comparator compares two 1D np.array inputStates
+    variableClassDefault = [[0],[0]]  # ComparatorMechanism compares two 1D np.array inputStates
 
-    # Comparator parameter and control signal assignments):
+    # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
@@ -354,7 +354,7 @@ class Comparator(MonitoringMechanism_Base):
 
         # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.TIME_STEP:
-            raise MechanismError("TIME_STEP mode not yet implemented for Comparator")
+            raise MechanismError("TIME_STEP mode not yet implemented for ComparatorMechanism")
             # IMPLEMENTATION NOTES:
             # Implement with calls to a step_function, that does not reset output
             # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
@@ -380,7 +380,7 @@ class Comparator(MonitoringMechanism_Base):
             return self.outputValue
 
         else:
-            raise MechanismError("time_scale not specified for Comparator")
+            raise MechanismError("time_scale not specified for ComparatorMechanism")
 
 
     def terminate_function(self, context=None):
@@ -391,6 +391,6 @@ class Comparator(MonitoringMechanism_Base):
 
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
-        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Comparator
+        # IMPLEMENTATION NOTE:  TBI when time_step is implemented for ComparatorMechanism
 
 

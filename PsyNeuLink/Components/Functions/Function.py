@@ -2103,7 +2103,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                     format(self.variable[ACTIVATION_OUTPUT], self.componentName))
             if len(self.variable[ACTIVATION_ERROR]) != 1:
                 raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
-                                    "(variable of Comparator mechanism may need to be specified as an array of length 1)".
+                                    "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
                                     format(self.name, self.variable[ACTIVATION_ERROR]))
 
 

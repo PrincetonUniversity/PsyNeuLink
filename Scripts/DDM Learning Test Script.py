@@ -44,7 +44,7 @@ z = process(default_input_value=[0, 0],
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
 # Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import TARGET
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import TARGET
 # Learned_Weights.monitoringMechanism.paramsCurrent[TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],

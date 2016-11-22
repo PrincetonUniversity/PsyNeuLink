@@ -712,7 +712,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
             target_len = np.size(target_array[0])
             num_targets = np.size(target_array, 0)
 
-            if target_len != np.size(object.comparator.target):
+            if target_len != np.size(object.comparatorMechanism.target):
                 if num_targets > 1:
                     plural = 's'
                 else:
@@ -720,7 +720,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparator.target)))
+                                          np.size(object.comparatorMechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".

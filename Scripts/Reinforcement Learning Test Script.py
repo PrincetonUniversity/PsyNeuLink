@@ -17,7 +17,7 @@ p = process(default_input_value=[0, 0, 0],
             target=0)
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
-print ('comparator weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
+print ('comparatorMechanism weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
 
 actions = ['left', 'middle', 'right']
 reward_values = [15, 7, 13]
