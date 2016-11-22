@@ -14,18 +14,23 @@ Overview
 
 A State is a component that provides an interface to a :doc:`projection <Projection>`, and represents the value
 associated with that projection.  There are three types of states, all of which are used by
-:doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below:
+:doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below.
 
-* :doc:`**inputState** <InputState>`: used by a mechanism to represent its input, as provided by a
-  :doc:`Mapping` projection;
+* **InputState**:
+     used by a mechanism to represent the input provided by one or more :doc:`Mapping` projections.
 
-* :doc:`**parameterStates** <ParameterState>`: used by a mechanism to represent the value of a parameter of its
-  ``function``, possibly regulated by a :doc:`ControlSignal` projection;  and used by a Mapping projection to represent
-  the ``matrix`` parameter of its ``function``, possibly regulated by a :doc:`LearningSignal` projection.
+* **ParameterState**:
+    * used by a mechanism to represent the value of a parameter of its ``function``,
+      possibly regulated by a :doc:`ControlSignal` projection;
+    * used by a Mapping projection to represent the ``matrix`` parameter of its ``function``,
+      possibly regulated by a :doc:`LearningSignal` projection.
 
-* :doc:`**outputState** <OutputState>`: used by a mechanism to represent its output, and as the source of an outgoing
-  projection (:doc:`Mapping` for a :doc:`ProcessingMechanism`; :doc:`ControlSignal` for a :doc:`ControlMechanism`;
-  and :doc:`LearningSignal` for a :doc:`MonitoringMechanism`).
+* **OutputState**:
+    * used by a mechanism to represent its output, and as the source of any outgoing projection(s):
+
+      * :doc:`Mapping` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
+      * :doc:`ControlSignal` for a :doc:`ControlMechanism <ControlMechanism>`;
+      * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
 
 Creating a State
 ----------------
@@ -37,7 +42,7 @@ the parameters of a mechanism's function to be controlled [LINK], or Mapping pro
 Structure
 ---------
 
-Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, they have the three
+Every state is owned by either a mechanism or a projection. Like all PsyNeuLink components, a state has the three
 fundamental attributes:
 
 * ``variable``:  for an inputState and parameterState, this is determined by the value(s) received from the
@@ -62,6 +67,11 @@ aggregate their values, and then assigns this as its own ``value``.  This confor
 see [LINK] for a more detailed discussion).
 
 XXXXX WHAT HAPPENS WHEN AN OUTPUTSTATE UPDATES?
+
+.. _State_Class_Reference:
+
+Class Reference
+---------------
 
 """
 
