@@ -12,13 +12,13 @@
 Overview
 --------
 
-Comparator mechanisms monitor the outputState of a ProcessingMechanism in a :doc:`Process` , and compare this to a
+A Comparator mechanism monitors the outputState of a ProcessingMechanism in a :doc:`Process` , and compares this to a
 target provided as input to the ``run`` method of the process (or system to which it belongs) when it is executed.
 The comparison can be done using subtraction or division.
 
-.. _Comparator_Creating_A_Comparator:
+.. _Comparator_Creation:
 
-Creating A Comparator
+Creating a Comparator
 ---------------------
 
 A Comparator mechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`

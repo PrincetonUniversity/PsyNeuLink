@@ -12,7 +12,7 @@
 ..
     Sections:
       * :ref:`Transfer_Overview`
-      * :ref:`Transfer_Creating_A_Transfer_Mechanism`
+      * :ref:`Transfer_Creation`
       * :ref:`Transfer_Execution`
       * :ref:`Transfer_Class_Reference`
 
@@ -22,11 +22,11 @@ Overview
 --------
 
 A Transfer mechanism transforms its input using a simple mathematical function.  The input can be a single scalar
-value or an an array (list or 1d np.array).  The function used can be selected from a standard set, or specified
-using a custom function.
+value or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set
+of PsyNeuLink Functions (:any:`Linear`, :anay:`Exponential` or :any:`Logistic`), or specified using a custom function.
 
 
-.. _Transfer_Creating_A_Transfer_Mechanism:
+.. _Transfer_Creation:
 
 Creating a Transfer Mechanism
 -----------------------------
@@ -48,8 +48,8 @@ Structure
 ---------
 
 A Transfer mechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its ``function``.
-The function can be selected from one of three standard PsyNeuLink :doc:`Functions`: :any:`Linear`, :any:`Logistic` or
-:any:`Exponential`; or a custom function can be specified, so long as it returns a numeric value or list or
+The ``function`` can be selected from one of three standard PsyNeuLink :doc:`Functions`: :any:`Linear`, :any:`Logistic`
+or :any:`Exponential`; or a custom function can be specified, so long as it returns a numeric value or list or
 np.ndarray of numeric values.  A Transfer mechanism has three outputStates, described under Execution  below.
 
 
@@ -79,14 +79,6 @@ the range.  After each execution of the mechanism:
     * **variance** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_VARIANCE` outputState,
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
-
-COMMENT:
-    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
-    Notes:
-    * Transfer handles "runtime" parameters (specified in call to function) differently than standard functions:
-        any specified params are kept separate from paramsCurrent (Which are not overridden)
-        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-            corresponding ParameterState;  that is, they are combined additively with controlSignal output
 COMMENT
 
 .. _Transfer_Class_Reference:
@@ -145,7 +137,7 @@ class Transfer(ProcessingMechanism_Base):
     name=None,                   \
     prefs=None)
 
-    Implements Transfer subclass of Mechanism
+    Implements Transfer subclass of Mechanism.
 
     COMMENT:
         Description
@@ -175,7 +167,7 @@ class Transfer(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    default_input_value : number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
         the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
         of the mechanism.
@@ -183,10 +175,6 @@ class Transfer(ProcessingMechanism_Base):
     function : TransferFunction : default Linear
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
-
-    function_params : Dict[str, value]
-        contains one entry for each parameter of the mechanism's function.
-        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
         specifies the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
@@ -237,7 +225,7 @@ class Transfer(ProcessingMechanism_Base):
     ----------
 
     variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        the input to mechanism's function.
+        the input to mechanism's ``function``.
 
     function : Function :  default Linear
         the function used to transform the input.
@@ -261,6 +249,9 @@ class Transfer(ProcessingMechanism_Base):
         * **result** of the ``function`` calculation (value of :keyword:`TRANSFER_RESULT` outputState);
         * **mean** of the result (``value`` of :keyword:`TRANSFER_MEAN` outputState)
         * **variance** of the result (``value`` of :keyword:`TRANSFER_VARIANCE` outputState)
+
+    time_scale :  TimeScale : defaul tTimeScale.TRIAL
+        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
 
     name : str : default Transfer-<index>
         the name of the mechanism.
