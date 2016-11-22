@@ -93,7 +93,7 @@ In addition to its ``function``, mapping projections use the following two the p
   * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
     is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
   * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
-    assigns an keyword:`IDENTITY_MATRIX`.
+    assigns an :keyword:`IDENTITY_MATRIX`.
   ..
   :class:`random_matrix`.  This is a convenience function that provides more flexibility than
   :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
