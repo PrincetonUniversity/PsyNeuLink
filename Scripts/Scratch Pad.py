@@ -44,6 +44,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
 my_adaptive_integrator = AdaptiveIntegratorMechanism(default_input_value=[0,0],
                                                      function=Integrator(
+                                                         variable_default=[0,0],
                                                          weighting=TIME_AVERAGED,
                                                          rate=[0.1, 0.5]
                                                      )

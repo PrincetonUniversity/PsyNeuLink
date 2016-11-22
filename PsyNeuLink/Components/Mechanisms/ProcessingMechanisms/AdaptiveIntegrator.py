@@ -13,9 +13,10 @@ Overview
 --------
 
 An AdaptiveIntegrator mechanism integrates its input, possibly based on its prior values.  The input can be a single
-scalar value or an array of scalars (list or 1d np.array).  The default function (:any:`Integrator`) can be
-parameterized to implement either a simple increment rate, additive accumulator, or an (exponentially weighted)
-time-averaging of its input.  It can also be assigned a custom function.
+scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
+independently integrated.  The default function (:any:`Integrator`) can be parameterized to implement either a simple
+increment rate, additive accumulator, or an (exponentially weighted) time-averaging of its input.  It can also be
+assigned a custom function.
 
 .. _AdaptiveIntegrator_Creation:
 
@@ -37,10 +38,10 @@ An AdaptiveIntegrator mechanism has a single inputState, the ``value`` of which 
 ``function``.   The ``default_input_value`` argument specifies the format of the ``value`` (i.e., whether it is a
 single scalar or an array), as well as the value to use if none is provided when mechanism is executed.  The default
 ``function`` is Integrator, with ``weighting=:keyword`TIME_AVERAGED```  and ``rate=0.5``.  However a custom function
-can also be specified,  so long as it  takes a numeric value or  list or np.ndarray of numeric values as its input and
-returns a value of the same type  and format.  The :any:`Integrator` function has two parameters (``weighting`` and
-``rate``) that determine the type and,  well, yes, the *rate* of integration.  An AdaptiveIntegrator mechanism has a
-single outputState that contains the result of the call to its ``function``.
+can also be specified,  so long as it  takes a numeric value or  list or np.ndarray of numeric values as its input, and
+returns a value of the same type and format.  The default function -- :any:`Integrator` -- has two parameters
+(``weighting`` and ``rate``) that determine the type and,  well, yes, the *rate* of integration.  The mechanism has a
+single outputState, the ``value`` of which is assigned the result of the call to the mechanism's ``function``.
 
 .. _AdaptiveIntegrator_Execution
 
@@ -48,7 +49,12 @@ Execution
 ---------
 
 When an AdaptiveIntegrator mechanism is executed, it carries out the specified integration, and assigns the
-result to the ``value`` of its (primary) outputState.
+result to the ``value`` of its (primary) outputState.  For the default function -- :any:`Integrator` --   if the
+value specified for ``default_input_value`` is a list or array, each element of the array will be independently
+integrated.  If its ``rate`` parameter is a single value, that rate will be used for integrating each element.  If
+the ``rate`` parameter is a list or array, then each element will be used as the rate for the corresponding element
+of the input (note:  in this case, ``rate`` must be the same length as the value specified for
+``default_input_value``.)
 
 
 .. _AdaptiveIntegrator_Class_Reference:

@@ -1665,8 +1665,13 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
 
         # Handle list or array for rate specification
-        if isinstance(request_set[RATE], (list, np.ndarray)):
-            self.paramClassDefaults[RATE] = np.zeros_like(np.array(request_set[RATE]))
+        rate = request_set[RATE]
+        if isinstance(rate, (list, np.ndarray)):
+            if len(rate) != self.variable.size:
+                raise FunctionError("The length of the array specified for the rate parameter of {} ({}) "
+                                    "must be the same as the length of its input ({})".
+                                    format(self.name, len(rate), self.variable.size))
+            self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
