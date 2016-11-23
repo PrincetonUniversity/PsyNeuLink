@@ -1,5 +1,0 @@
-Mapping
-=======
-
-.. automodule:: Mapping
-	:members:

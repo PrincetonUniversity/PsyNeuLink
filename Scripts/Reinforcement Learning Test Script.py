@@ -1,7 +1,7 @@
 import numpy as np
 
 from PsyNeuLink import *
-from PsyNeuLink.Functions.Utilities.Utility import SoftMax, Reinforcement
+from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
 input_layer = Transfer(default_input_value=[0,0,0],
                        name='Input Layer')
@@ -17,7 +17,7 @@ p = process(default_input_value=[0, 0, 0],
             target=0)
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
-print ('comparator weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
+print ('comparatorMechanism weights: \n', action_selection.outputState.sendsToProjections[0].matrix)
 
 actions = ['left', 'middle', 'right']
 reward_values = [15, 7, 13]

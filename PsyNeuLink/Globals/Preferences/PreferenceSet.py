@@ -13,7 +13,7 @@ from collections import namedtuple
 from enum import Enum, IntEnum
 
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Main import iscompatible, kwCompatibilityType
+from PsyNeuLink.Globals.Utilities import iscompatible, kwCompatibilityType
 
 # from Globals.Defaults import *
 
@@ -48,8 +48,8 @@ class PreferenceSet(object):
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Function hierarchy is assigned a PreferenceLevel:
             - System:  reserved for the Function class
-            - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Utility)
-            - Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Utility subclasses)
+            - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
+            - Type: Category subclasses (e.g., MappingProjection and ControlSignal subclasses of Projection, Function subclasses)
             - Instance: an instance of an object of any class
         Each class level in a hierarchy should be assigned a PreferenceSet object as a class attribute,
             that specifies default settings at that class-level for objects in that class and its subclasses
@@ -599,7 +599,7 @@ class PreferenceSet(object):
         :param reference_setting:
         :return:
         """
-        # from Globals.Preferences.FunctionPreferenceSet import kpLogPref
+        # from Globals.Preferences.ComponentPreferenceSet import kpLogPref
         # if pref_ivar_name is kpLogPref:
         #     self.validate_log(candidate_setting, self)
 
@@ -702,8 +702,8 @@ class PreferenceSet(object):
                     next_level.classPreferences
                 except AttributeError:
                     # If classPreferences for level have not been assigned, assign them
-                    from PsyNeuLink.Globals.Preferences.FunctionPreferenceSet import FunctionPreferenceSet
-                    FunctionPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
+                    from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+                    ComponentPreferenceSet(owner=next_level, level=next_level.classPreferenceLevel)
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                     requested_level)
                 return return_val[0],return_val[1]
@@ -736,20 +736,20 @@ class PreferenceSet(object):
             # If requested level is higher than current one:
             if requested_level > self.owner.classPreferenceLevel:
                 # Call class at next level
-                from PsyNeuLink.Functions.Function import Function
+                from PsyNeuLink.Components.Component import Component
                 # THis is needed to skip ShellClass, which has no classPreferences, to get to Function (System) level
                 if 'ShellClass' in repr(self.owner.__bases__[0]):
                     try:
                         # Store current class pref set (in case class at next level doesn't have the preference)
                         self.previous_level_pref_set = self.owner.classPreferences
-                        return_val = Function.classPreferences.get_pref_setting_for_level(pref_ivar_name,
+                        return_val = Component.classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                     requested_level)
                         return return_val[0], return_val[1]
                     # Pref not found at current level, so use pref from previous level (and report error)
                     except AttributeError:
                         pref_value = getattr(self.previous_level_pref_set, pref_ivar_name).setting
 # FIX:  replace level setting??
-#                         from Main import get_modulationOperation_name
+#                         from Utilities import get_modulationOperation_name
                         err_msg = ("{0} not found at {1}; replaced with value ({2}) from next lower level ({3})".
                                    format(pref_ivar_name,
                                           requested_level.__class__.__name__+'.'+requested_level.name,
@@ -791,7 +791,7 @@ class PreferenceSet(object):
         for pref_name in pref_names_sorted:
             if '_pref' in pref_name:
 
-                from PsyNeuLink.Globals.Main import get_modulationOperation_name
+                from PsyNeuLink.Globals.Utilities import get_modulationOperation_name
 
                 # GET TABLE INFO
                 # Get base_value of pref

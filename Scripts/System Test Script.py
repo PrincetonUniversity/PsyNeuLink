@@ -1,10 +1,10 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import Process_Base
+from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 
-# DDM_prefs = FunctionPreferenceSet(
+# DDM_prefs = ComponentPreferenceSet(
 #                 prefs = {
 #                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
@@ -37,7 +37,7 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 #                     name='My_DDM_3'
 #                     )
 #
-# process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
+# process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #
 # process_prefs.show()

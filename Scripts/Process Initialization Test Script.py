@@ -1,6 +1,6 @@
-from PsyNeuLink.Functions.Process import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Utility import Linear, Logistic
+from PsyNeuLink.Components.Process import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Function import Linear, Logistic
 import numpy as np
 
 linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
