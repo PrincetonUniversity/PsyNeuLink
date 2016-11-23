@@ -83,11 +83,11 @@ print(my_adaptive_integrator.execute([3]))
 #
 # from PsyNeuLink.Components.System import System_Base
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 #
 # mech = DDM()
 #
-# mcs = ControlSignal(receiver=mech)
+# mcs = ControlProjection(receiver=mech)
 #
 #
 # mech.execute([0])
@@ -1907,7 +1907,7 @@ import typecheck as tc
 
 # ***************************************** OLD TEST SCRIPT ************************************************************
 
-# from Components.Projections.ControlSignal import *
+# from Components.Projections.ControlProjection import *
 #
 # # Initialize controlSignal with some settings
 # settings = ControlSignalSettings.DEFAULTS | \
@@ -1916,7 +1916,7 @@ import typecheck as tc
 # identity = []
 # log_profile = ControlSignalLog.ALL
 #
-# # Set up ControlSignal
+# # Set up ControlProjection
 # x = ControlSignal_Base("Test Control Signal",
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
@@ -1924,7 +1924,7 @@ import typecheck as tc
 #                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
-# # Can also change settings on the fly (note:  ControlSignal.OFF is just an enum defined in the ControlSignal module)
+# # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)
 # x.set_adjustment_cost(OFF)
 #
 # # Display some values in controlSignal (just to be sure it is set up OK)
@@ -1932,8 +1932,8 @@ import typecheck as tc
 # print("Initial Intensity: ", x.intensity)
 #
 # # Add KVO:
-# #  Utilities will observe ControlSignal.kpIntensity;
-# #  the observe_value_at_keypath method in Utilities will be called each time ControlSignal.kpIntensity changes
+# #  Utilities will observe ControlProjection.kpIntensity;
+# #  the observe_value_at_keypath method in Utilities will be called each time ControlProjection.kpIntensity changes
 # x.add_observer_for_keypath(Utilities,kpIntensity)
 #
 #

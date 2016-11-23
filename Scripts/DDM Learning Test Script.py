@@ -20,7 +20,7 @@ Output_Layer = DDM(name='Output Layer DDM',
 Input_Weights = MappingProjection(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
-                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
                                   params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
                                   )
 
@@ -29,7 +29,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                                   receiver=Output_Layer,
                                   # params={FUNCTION_PARAMS:{MATRIX:IDENTITY_MATRIX}}
                                   params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
-                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
                                   )
 
 z = process(default_input_value=[0, 0],

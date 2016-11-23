@@ -194,24 +194,24 @@ ParameterStates
 These represent the parameters of a mechanism's function, and used to control the parameters of its ``function``.
 PsyNeuLink assigns one parameterState for each parameter of the mechanism's ``function`` (which correspond to the
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
-from the :doc:`ControlSignal` projection(s) of a :doc:`ControlMechanism<ControlMechanism>`, that is used to modify the
+from the :doc:`ControlProjection` projection(s) of a :doc:`ControlMechanism<ControlMechanism>`, that is used to modify the
 function's parameter value in response to the outcome(s) of processing.
 
-  .. _Mechanism_Assigning_A_Control_Signal:
+  .. _Mechanism_Assigning_A_Control_Projection:
 
-  *Assigning a Control Signal*
+  *Assigning a ControlProjection*
 
   A control signal can be assigned to a parameter, wherever the parameter value is specified, by using a tuple with
-  two items. The first item is the value of the parameter, and the second item is either :keyword:`CONTROL_SIGNAL`,
-  the name of the ControlSignal class, or a call to its constructor.  In the following example, a mechanism is
+  two items. The first item is the value of the parameter, and the second item is either :keyword:`CONTROL_PROJECTION`,
+  the name of the ControlProjection class, or a call to its constructor.  In the following example, a mechanism is
   created with a function that has three parameters::
 
     my_mechanism = SomeMechanism(function=SomeFunction(param_1=1.0,
-                                                       param_2=(0.5, ControlSignal))
-                                                       param_3=(36, ControlSignal(function=Logistic)))
+                                                       param_2=(0.5, ControlProjection))
+                                                       param_3=(36, ControlProjection(function=Logistic)))
 
   The first parameter of the mechanism's function is assigned a value directly, the second parameter is assigned a
-  ControlSignal, and the third is assigned a :ref:`ControlSignal with a specified function <ControlSignal_Structure>`.
+  ControlProjection, and the third is assigned a :ref:`ControlProjection with a specified function <ControlProjection_Structure>`.
 
 The value of function parameters can also be modified using a runtime parameters dictionary where a mechanism is
 specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's ``execute`` or ``run``
@@ -226,19 +226,19 @@ parameterState to determine the paramter value for a function.
 
        ..
 
-       +--------------+------------------------------------------------------------------+
-       | Component    | Impact on Parameter Value                                        |
-       +==============+==================================================================+
-       | Brown (A)    | baseValue of drift rate parameter of DDM function                |
-       +--------------+------------------------------------------------------------------+
-       | Purple (B)   | runtime specification of drift rate parameter                    |
-       +--------------+------------------------------------------------------------------+
-       | Red (C)      | runtime parameter influences controlSignal-modulated baseValue   |
-       +--------------+------------------------------------------------------------------+
-       | Green (D)    | combined controlSignals modulate baseValue                       |
-       +--------------+------------------------------------------------------------------+
-       | Blue (E)     | parameterState function combines controlSignals                  |
-       +--------------+------------------------------------------------------------------+
+       +--------------+--------------------------------------------------------------------+
+       | Component    | Impact on Parameter Value                                          |
+       +==============+====================================================================+
+       | Brown (A)    | baseValue of drift rate parameter of DDM function                  |
+       +--------------+--------------------------------------------------------------------+
+       | Purple (B)   | runtime specification of drift rate parameter                      |
+       +--------------+--------------------------------------------------------------------+
+       | Red (C)      | runtime parameter influences ControlProjection-modulated baseValue |
+       +--------------+--------------------------------------------------------------------+
+       | Green (D)    | combined controlSignals modulate baseValue                         |
+       +--------------+--------------------------------------------------------------------+
+       | Blue (E)     | parameterState function combines ControlProjection                 |
+       +--------------+--------------------------------------------------------------------+
 
 .. _Mechanism_OutputStates:
 
@@ -252,10 +252,10 @@ key for each entry is the name of an outputState, and the value is the outputSta
 a mechanism's ``execute`` method assigns the output of its ``function`` to the value of the primary outputState.
 Other outputStates are assigned other values associated with the output of the ``function`` (e.g., its mean,
 variance, etc.).  OutputStates may also be used for other purposes.  For example, :doc:`ControlMechanisms` can have
-multiple outputStates, one for each of their :doc:`ControlSignals`.  Each outputState can serve as a sender for
-projections, to transmit its value to other mechanisms and/or the output of a process or system.  The ``value``
-attributes of all of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the mechanism's
-``outputValue`` attribute.
+multiple outputStates, one for each of their :doc:`ControlProjections <ControlProjection>`.  Each outputState can serve
+as a sender for projections, to transmit its value to other mechanisms and/or the output of a process or system.
+The ``value`` attributes of all of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the
+ mechanism's ``outputValue`` attribute.
 
 COMMENT:
 [TBI:]
@@ -295,7 +295,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
       * a parameter state, the value of which specifies the parameter's value
         (see :ref:`ParameterState_Creation`).
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
-        :doc:`ControlSignal` or a :doc:`LearningSignal`
+        :doc:`ControlProjection` or a :doc:`LearningSignal`
         (a :class:`ParamValueProjection` namedtuple can be used for clarity).
 
       ..
@@ -1180,7 +1180,7 @@ class Mechanism_Base(Mechanism):
                 + store the result in self.inputState.value
             - Call every self.params[<ParameterState>].execute(); for each:
                 + execute self.params[<ParameterState>].receivesFromProjections.[<Projection>.execute()...]
-                    (usually this is just a single ControlSignal)
+                    (usually this is just a single ControlProjection)
                 + aggregate results (if > one) using self.params[<ParameterState>].params[FUNCTION]()
                 + apply the result to self.params[<ParameterState>].value
             - Call subclass' self.execute(params):
@@ -1219,7 +1219,7 @@ class Mechanism_Base(Mechanism):
             entries that are themselves dictionaries containing parameters for the state's function or its projections.
             The key for each entry is a keyword indicating whether it is for the state's function
             (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`), a particular type of
-            projection (:keyword:`MAPPING_PARAMS` or :keyword:`CONTROL_SIGNAL_PARAMS`), or to a specific projection
+            projection (:keyword:`MAPPING_PARAMS` or :keyword:`CONTROL_PROJECTION_PARAMS`), or to a specific projection
             (using its name), and the value of each entry is a dictionary containing the parameters for the function,
             projection, or set of projections (keys of which are parameter names, and values the values to be assigned).
 
@@ -1247,12 +1247,12 @@ class Mechanism_Base(Mechanism):
                         + MAPPING_PARAMS:<dict>:
                              entry will be passed to all of the State's MappingProjections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
-                        + CONTROL_SIGNAL_PARAMS:<dict>:
-                             entry will be passed to all of the State's ControlSignal projections,
+                        + CONTROL_PROJECTION_PARAMS:<dict>:
+                             entry will be passed to all of the State's ControlProjections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + <projectionName>:<dict>:
                              entry will be passed to the State's projection with the key's name,
-                             along with any in the PROJECTION_PARAMS and MappingProjection or ControlSignal dicts
+                             along with any in the PROJECTION_PARAMS and MappingProjection or ControlProjection dicts
           COMMENT
 
         time_scale : TimeScale :  default TimeScale.TRIAL
