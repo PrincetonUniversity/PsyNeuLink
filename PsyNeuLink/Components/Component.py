@@ -26,7 +26,7 @@ It also contains:
     Projection
         types:
             MappingProjection
-            ControlSignal
+            ControlProjection
             LearningSignal
     Function
 
@@ -192,8 +192,8 @@ class Component(object):
         + className
         + suffix - " " + className (used to create subclass and instance names)
         + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
-        + componentType - type of component within a category (e.g., TransferMechanism, distribution, mapping, controlSignal,
-        etc.)
+        + componentType - type of component within a category
+                             (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Component must
         implement;
 
@@ -1316,7 +1316,7 @@ class Component(object):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec.value
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                                    (param_spec[1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+                                    (param_spec[1] in {MAPPING, CONTROL_PROJECTION, LEARNING_SIGNAL} or
                                          isinstance(param_spec[1], Projection) or
                                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
                                 ):
@@ -1535,7 +1535,7 @@ def get_function_param(param):
     if isinstance(param, ParamValueProjection):
         value =  param.value
     elif (isinstance(param, tuple) and len(param) is 2 and
-            (param[1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+            (param[1] in {MAPPING, CONTROL_PROJECTION, LEARNING_SIGNAL} or
                  isinstance(param[1], Projection) or
                  (inspect.isclass(param[1]) and issubclass(param[1], Projection)))
           ):

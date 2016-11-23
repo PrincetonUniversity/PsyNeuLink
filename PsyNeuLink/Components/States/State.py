@@ -22,7 +22,7 @@ associated with that projection.  There are three types of states, all of which 
 
 * **ParameterState**:
     * used by a mechanism to represent the value of a parameter of its ``function``,
-      possibly regulated by a :doc:`ControlSignal` projection;
+      possibly regulated by a :doc:`ControlProjection` projection;
     * used by a MappingProjection to represent the ``matrix`` parameter of its ``function``,
       possibly regulated by a :doc:`LearningSignal` projection.
 
@@ -30,7 +30,7 @@ associated with that projection.  There are three types of states, all of which 
     * used by a mechanism to represent its output, and as the source of any outgoing projection(s):
 
       * :doc:`MappingProjection` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
-      * :doc:`ControlSignal` for a :doc:`ControlMechanism <ControlMechanism>`;
+      * :doc:`ControlProjection` for a :doc:`ControlMechanism <ControlMechanism>`;
       * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
 
 .. _State_Creation:
@@ -612,7 +612,7 @@ class State_Base(State):
                         # Skip any further initialization for now
                         #   (remainder will occur as part of deferred init for LearningSignal)
                         continue
-                    # Complete init for other projections (e.g., ControlSignal)
+                    # Complete init for other projections (e.g., ControlProjection)
                     else:
                         # Assume init was deferred because receiver could not be determined previously
                         #  (e.g., specified in function arg for receiver object, or as standalone projection in script)
@@ -735,7 +735,7 @@ class State_Base(State):
 
             # Projection specification is valid, so assign projection to State's receivesFromProjections list
             elif iscompatible(self.variable, projection_spec.value):
-                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlSignal)
+                # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
                 #    may have already called this method and assigned projection to self.receivesFromProjections list
                 if not projection_spec in self.receivesFromProjections:
                     self.receivesFromProjections.append(projection_spec)
@@ -1181,13 +1181,13 @@ class State_Base(State):
 
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-            from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+            from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
             from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
 
             # Merge with relevant projection type-specific params
             if isinstance(projection, MappingProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, mapping_params, )
-            elif isinstance(projection, ControlSignal):
+            elif isinstance(projection, ControlProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, control_signal_params)
             elif isinstance(projection, LearningSignal):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, learning_signal_params)
@@ -1755,7 +1755,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     PROJECTION_SPEC = 1
     #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL or class ref to one of those), allow it
+    #    projection specification (MAPPING, CONTROL_PROJECTION, LEARNING_SIGNAL or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
@@ -1766,7 +1766,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION_SPEC] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+            (state_spec[PROJECTION_SPEC] in {MAPPING, CONTROL_PROJECTION, LEARNING_SIGNAL} or
                  isinstance(state_spec[PROJECTION_SPEC], Projection) or
                  (inspect.isclass(state_spec[PROJECTION_SPEC]) and issubclass(state_spec[PROJECTION_SPEC], Projection)))
         ):

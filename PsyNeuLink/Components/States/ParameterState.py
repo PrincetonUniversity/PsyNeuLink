@@ -135,7 +135,7 @@ class ParameterState(State_Base):
         + paramClassDefaults (dict)
             + FUNCTION (LinearCombination)
             + FUNCTION_PARAMS  (Operation.PRODUCT)
-            + PROJECTION_TYPE (CONTROL_SIGNAL)
+            + PROJECTION_TYPE (CONTROL_PROJECTION)
             + PARAMETER_MODULATION_OPERATION   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
@@ -173,7 +173,7 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_SIGNAL})
+    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_PROJECTION})
     #endregion
 
     tc.typecheck
