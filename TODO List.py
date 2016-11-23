@@ -8,7 +8,7 @@
 # √ WeightedErrorMechanism -> WeightedErrorMechanism
 # √ ComparatorMechanism -> ComparatorMechanism
 #   DDM -> DDMMechanism
-# √ MappingProjection -> MappingProjection
+# √ Mapping -> MappingProjection
 # √ ControlSignal -> ControlProjection
 #   LearningSignal -> LearningProjection
 
