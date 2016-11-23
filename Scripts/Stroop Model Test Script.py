@@ -25,7 +25,7 @@ color_naming_process = process(
     default_input_value=[1, 2.5],
     # pathway=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
     pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
-    learning=LEARNING_SIGNAL,
+    learning=LEARNING_PROJECTION,
     target=[2,2],
     name='Color Naming',
     prefs=process_prefs
@@ -35,7 +35,7 @@ word_reading_process = process(
     default_input_value=[.5, 3],
     pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
     name='Word Reading',
-    learning=LEARNING_SIGNAL,
+    learning=LEARNING_PROJECTION,
     target=[3,3],
     prefs=process_prefs
 )

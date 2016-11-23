@@ -1,7 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
@@ -53,7 +53,7 @@ z = process(default_input_value=[0, 0],
                            Hidden_Layer_1,
                            Hidden_Layer_2,
                            Output_Layer],
-            learning=LearningSignal,
+            learning=LearningProjection,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
