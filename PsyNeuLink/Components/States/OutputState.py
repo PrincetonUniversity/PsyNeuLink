@@ -165,7 +165,7 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
     #endregion
 
     tc.typecheck

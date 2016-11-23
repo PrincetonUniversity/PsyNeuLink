@@ -734,11 +734,11 @@ FROM TODO:
                     # Instantiate mapping projection to provide monitoring_mechanism with error signal
                     MappingProjection(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
-                            # name=monitoring_mechanism.name+'_'+MAPPING)
+                            # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
                             matrix=IDENTITY_MATRIX,
                             name=next_level_monitoring_mechanism.name +
                                  ' to '+monitoring_mechanism.name +
-                                 ' ' + MAPPING + ' Projection')
+                                 ' ' + MAPPING_PROJECTION + ' Projection')
 
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to a MonitoringMechanism:
@@ -774,7 +774,7 @@ FROM TODO:
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +
-                                                              MAPPING+' Projection',
+                                                              MAPPING_PROJECTION+' Projection',
                                                          matrix=matrix)
 
             self.sender = monitoring_mechanism.outputState
