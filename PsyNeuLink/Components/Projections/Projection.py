@@ -36,7 +36,7 @@ to another mechanism (its ``receiver``).  There are three types of projections t
 * :doc:`ControlProjection`
     Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
     <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
-    modulate the value of the corresponding parameter of the mechanism's function.  ControlSignals projections are
+    modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
     typically used in the context of a :doc:`System`.
 ..
 * :doc:`LearningSignal`
@@ -681,7 +681,7 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-# from PsyNeuLink.Components.Projections.ControlProjection import is_control_signal
+# from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
 # from PsyNeuLink.Components.Projections.LearningSignal import is_learning_signal
 
 def _is_projection_spec(spec):

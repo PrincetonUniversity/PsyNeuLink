@@ -167,7 +167,7 @@
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
-# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_SIGNAL_PARAMS
+# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_PROJECTION_PARAMS
 
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
@@ -850,6 +850,12 @@
 
 # -------------------
 # TERMINOLOGY:  ControlSignal -> ControlProjection (or should it be ControlSignalProjection
+# QUESTION:     Should ControlSignal "intelligence" (e.g., intensity, costs, etc.)
+#                   be in EVC mechanism rather than ControlProjection?
+#                   EVCMechanism makes more sense theoretically
+#                      e.g., seems better to talk about the cost of a control signal, rather than ControlProjection
+#                   Projection is easier to manage (as it is its own object, can be parameterized, etc.)
+#                   Maybe they should be assigned to OutputStates of the EVCMechanism?
 #
 # QUESTION: DDM:
 #            MULTIPLE PROCESSES AND AVERAGED OUTPUT VALUES IDEA
@@ -1443,7 +1449,7 @@
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
 #              MAPPING_PARAMS
-#              CONTROL_SIGNAL_PARAMS
+#              CONTROL_PROJECTION_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
@@ -1685,7 +1691,7 @@
 #           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
 #                then the class's _take_over_as_default_controller() method
 #                     is called in _instantiate_attributes_after_function
-# it moves all ControlProjection Projections from DefaultController to itself
+# it moves all ControlProjections from DefaultController to itself
 #
 # FIX: IN ControlProjection._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
@@ -1703,12 +1709,12 @@
 # BACKGROUND INFO:
 # _instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
-# _instantiate_control_signal_projection normally called from ControlProjection in _instantiate_sender
+# _instantiate_control_projection normally called from ControlProjection in _instantiate_sender
 #
 # Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
-#             _instantiate_control_signal_projection() for current controller
+#             _instantiate_control_projection() for current controller
 #                 _instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 

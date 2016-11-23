@@ -143,7 +143,7 @@ The parameters for the DDM are:
 
 * :keyword:`DRIFT_RATE` (default 0.0)
   - multiplies the input to the mechanism before assigning it to the ``variable`` on each call of ``function``.
-  The resulting value is further multiplied by the value of any ControlProjection projections to the  ``DRIFT_RATE``
+  The resulting value is further multiplied by the value of any ControlProjections to the  ``DRIFT_RATE``
   parameterState. The ``drift_rate`` parameter can be thought of as the "automatic" component (baseline strength)
   of the decision process, the value received from a ControlProjection as the "attentional" component,
   and the input its "stimulus" component.  The product of all three determines the drift rate in effect for each

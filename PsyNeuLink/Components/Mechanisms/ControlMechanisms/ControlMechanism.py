@@ -27,7 +27,7 @@ and assigned as the controller for that system (see :ref:`_System_Execution_Cont
 by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can be specified in a number of
 ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
 outputStates it monitors, and assigns a :doc:`MappingProjection` projection from that outputState to the newly created
-inputState.  How a ControlMechanism creates its ControlProjection projections depends on the subclass.
+inputState.  How a ControlMechanism creates its ControlProjections depends on the subclass.
 
 .. _ControlMechanism_Monitored_OutputStates:
 
@@ -162,7 +162,7 @@ class ControlMechanism_Base(Mechanism_Base):
     COMMENT:
         Description:
             # DOCUMENTATION NEEDED:
-              ._instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
+              ._instantiate_control_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
              INSTANCE
             .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
             WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
@@ -171,7 +171,7 @@ class ControlMechanism_Base(Mechanism_Base):
                Initial assignment is to SystemDefaultController (instantiated and assigned in Components.__init__.py)
                When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
                    then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
-                   which moves all ControlProjection Projections from DefaultController to itself, and deletes them there
+                   which moves all ControlProjections from DefaultController to itself, and deletes them there
 
             MONITOR_FOR_CONTROL param determines which states will be monitored.
                 specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
@@ -198,7 +198,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
             NOT CURRENTLY IN USE:
             default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
-                the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
+                the default allocation for the ControlMechanism;
+                it length should equal the number of ``controlSignals``.
 
         monitor_for_control : List[OutputState specification] : default None
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
@@ -226,15 +227,15 @@ class ControlMechanism_Base(Mechanism_Base):
     Attributes
     ----------
 
-    controlSignals : List[ControlProjection]
+    controlProjections : List[ControlProjection]
         list of :class:`ControlProjection` projections managed by the ControlMechanism.  There is one for each ouputState
         in the ``outputStates`` dictionary.
 
-    controlSignalCosts : 2d np.array
-        array of costs associated with each of the control signals in the ``controlSignals`` attribute.
+    controlProjectionCosts : 2d np.array
+        array of costs associated with each of the control signals in the ``controlProjections`` attribute.
 
     allocationPolicy : 2d np.array
-        array of values currently assigned to each control signal in the ``controlSignals`` attribute.
+        array of values currently assigned to each control signal in the ``controlProjections`` attribute.
 
 
     """
@@ -397,12 +398,12 @@ class ControlMechanism_Base(Mechanism_Base):
         return input_state
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default controller (if specified) and implement any specified ControlProjection projections
+        """Take over as default controller (if specified) and implement any specified ControlProjections
 
         """
 
         try:
-            # If specified as DefaultController, reassign ControlProjection projections from DefaultController
+            # If specified as DefaultController, reassign ControlProjections from DefaultController
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
         except KeyError:
@@ -412,7 +413,7 @@ class ControlMechanism_Base(Mechanism_Base):
         try:
             if self.paramsCurrent[CONTROL_PROJECTIONS]:
                 for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
-                    self._instantiate_control_signal_projection(projection, context=self.name)
+                    self._instantiate_control_projection(projection, context=self.name)
         except:
             pass
 
@@ -430,13 +431,13 @@ class ControlMechanism_Base(Mechanism_Base):
                 # Move ControlProjection to self (by creating new outputState)
                 # IMPLEMENTATION NOTE: Method 1 -- Move old ControlProjection to self
                 #    Easier to implement
-                #    - call _instantiate_control_signal_projection directly here (which takes projection as arg)
+                #    - call _instantiate_control_projection directly here (which takes projection as arg)
                 #        instead of instantiating a new ControlProjection (more efficient, keeps any settings);
                 #    - however, this bypasses call to Projection._instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(),
-                #        so need to do that in _instantiate_control_signal_projection
+                #        so need to do that in _instantiate_control_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                self._instantiate_control_signal_projection(projection, context=context)
+                self._instantiate_control_projection(projection, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
@@ -456,8 +457,8 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def _instantiate_control_signal_projection(self, projection, context=None):
-        """Add outputState and assign as sender to requesting controlSignal projection
+    def _instantiate_control_projection(self, projection, context=None):
+        """Add outputState and assign as sender to requesting ControlProjection
 
         Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
 
@@ -475,7 +476,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                               "that is not a ControlProjection, to outputState of {1}".
                                               format(projection, self.name))
 
-        output_name = projection.receiver.name + '_ControlSignal' + '_Output'
+        output_name = projection.receiver.name + '_ControlProjection' + '_Output'
 
         #  Update self.value by evaluating function
         self._update_value(context=context)
@@ -517,11 +518,11 @@ class ControlMechanism_Base(Mechanism_Base):
         # Add projection to list of outgoing projections
         state.sendsToProjections.append(projection)
 
-        # Add projection to list of controlSignals
+        # Add projection to list of ControlProjections
         try:
-            self.controlSignals.append(projection)
+            self.controlProjections.append(projection)
         except AttributeError:
-            self.controlSignals = []
+            self.controlProjections = []
 
         # Update controlSignalCosts to accommodate instantiated projection
         try:
@@ -532,7 +533,7 @@ class ControlMechanism_Base(Mechanism_Base):
         return state
 
     def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
-        """Updates controlSignals based on inputs
+        """Updates ControlProjections based on inputs
 
         Must be overriden by subclass
         """
