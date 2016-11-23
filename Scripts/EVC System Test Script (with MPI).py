@@ -1,7 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Components.Functions.Function import Exponential, Linear
 from PsyNeuLink.Globals.Keywords import *
@@ -28,22 +28,22 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
 Decision = DDM(
-               # drift_rate=(2.0, CONTROL_SIGNAL),
-               # drift_rate=(2.0, ControlSignal),
-               # drift_rate=(2.0, ControlSignal()),
-               # drift_rate=(2.0, ControlSignal(function=Linear)),
-               drift_rate=(2.0, ControlSignal(function=Linear(slope=2, intercept=10),
+               # drift_rate=(2.0, CONTROL_PROJECTION),
+               # drift_rate=(2.0, ControlProjection),
+               # drift_rate=(2.0, ControlProjection()),
+               # drift_rate=(2.0, ControlProjection(function=Linear)),
+               drift_rate=(2.0, ControlProjection(function=Linear(slope=2, intercept=10),
                                               # allocation_samples=np.arange(.1, 1.01, .1))),
                                               allocation_samples=[0, .1, .5, 1.0])),
-               # drift_rate=(2.0, ControlSignal(function=Exponential)),
-               # drift_rate=(2.0, ControlSignal(function=Exponential(rate=2, scale=10))),
-               # threshold=(5.0, CONTROL_SIGNAL),
-               # threshold=(5.0, ControlSignal()),
-               # threshold=(5.0, ControlSignal(function=Exponential)),
-               # threshold=(5.0, ControlSignal(function=Exponential(slope=2, intercept=10))),
-               threshold=(5.0, ControlSignal(function=Exponential(rate=2, scale=10))),
-               # threshold=(5.0, ControlSignal(function=Exponential)),
-               # threshold=(5.0, CONTROL_SIGNAL),
+               # drift_rate=(2.0, ControlProjection(function=Exponential)),
+               # drift_rate=(2.0, ControlProjection(function=Exponential(rate=2, scale=10))),
+               # threshold=(5.0, CONTROL_PROJECTION),
+               # threshold=(5.0, ControlProjection()),
+               # threshold=(5.0, ControlProjection(function=Exponential)),
+               # threshold=(5.0, ControlProjection(function=Exponential(slope=2, intercept=10))),
+               threshold=(5.0, ControlProjection(function=Exponential(rate=2, scale=10))),
+               # threshold=(5.0, ControlProjection(function=Exponential)),
+               # threshold=(5.0, CONTROL_PROJECTION),
                analytic_solution=kwBogaczEtAl,
                prefs = DDM_prefs,
                name='Decision'

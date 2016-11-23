@@ -27,7 +27,7 @@ Learned_Weights = MappingProjection(name='Learned Weights',
                           # NOTE: MUST REMOVE FEEDBACK FROM PROCESS INPUT (SEE z.execute BELOW)
                           matrix=random_weight_matrix
                           # params={FUNCTION_PARAMS: {MATRIX: IDENTITY_MATRIX}}
-                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,CONTROL_PROJECTION)}}
 
                           # NOTE: THESE REQUIRE THAT FEEDBACK BE INCLUDED IN PROCESS INPUT:  (SEE z.execute BELOW)
                           # matrix=(DEFAULT_MATRIX, LEARNING_SIGNAL)

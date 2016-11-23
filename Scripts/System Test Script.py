@@ -16,8 +16,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # my_DDM.prefs.show()
 #
 # #region MAIN SCRIPT
-# myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-#                                                  THRESHOLD:(10.0, CONTROL_SIGNAL)},
+# myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+#                                                  THRESHOLD:(10.0, CONTROL_PROJECTION)},
 #                           kwDDM_AnalyticSolution:kwBogaczEtAl},
 #                   prefs = DDM_prefs,
 #                   name='My_DDM'

@@ -226,7 +226,7 @@ NUM_PHASES_PER_TRIAL = 'num_phases'
 MONITORING_MECHANISMS = 'monitoring_mechanisms'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 CONTROL_MECHANISMS = 'control_mechanisms'
-CONTROL_PROJECTION_RECEIVERS = 'control_projections_receivers'
+CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
 
 SystemRegistry = {}
 
@@ -309,7 +309,7 @@ def system(default_input_value=None,
 
     controller : ControlMechanism : default DefaultController
         the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        monitor_for_control, and specify the value of ControlSignal projections in the system.
+        monitor_for_control, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the ``controller`` is executed during system execution.
@@ -1684,7 +1684,7 @@ class System_Base(System):
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
 
-        from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
         learning_projections = []
         controlled_parameters = []
@@ -1692,7 +1692,7 @@ class System_Base(System):
             for parameter_state in mech.parameterStates:
                 try:
                     for projection in parameter_state.receivesFromProjections:
-                        if isinstance(projection, ControlSignal):
+                        if isinstance(projection, ControlProjection):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
                     pass

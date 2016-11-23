@@ -9,7 +9,7 @@
 # √ ComparatorMechanism -> ComparatorMechanism
 #   DDM -> DDMMechanism
 # √ MappingProjection -> MappingProjection
-#   ControlSignal -> ControlSignalProjection
+# √ ControlSignal -> ControlProjection
 #   LearningSignal -> LearningSignalProjection
 
 # 11/19/16:
@@ -36,7 +36,7 @@
 
 # 11/18/16:
 
-# TEST: DOES ASSIGNING A MappingProjection OR ControlSignal PROJECTION TO THE Matrix ParameterState OF A MappingProjection work?
+# TEST: DOES ASSIGNING A MappingProjection OR ControlProjection TO THE Matrix ParameterState OF A MappingProjection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_SIGNAL.
 #
 # DOCUMENTATION: MONITOR_FOR_LEARNING (in LearningSignal AND ??WHERE ELSE:
@@ -49,7 +49,7 @@
 
 # 11/17/16:
 # IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING SIGNAL (OR ANY PROJECTION??):
-#            IF LEARNING SIGNAL IS ASSIGNED TO MAPPING_PROJECTION PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
+#            IF LEARNING SIGNAL IS ASSIGNED TO MAPPING PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
 #            CHECK IF THIS COMPLETES THE ASSIGNMENT OF ITS SENDER AND/OR RECEIVER AND, IF SO, CALL DEFERRED_INIT
 #            ONCE IMPLEMENTED, UPDATE LearningSignal DOCUMENTATION, TO REMOVE REQUIREMENT THAT DEFERRED INIT BE CALLED
 
@@ -57,10 +57,10 @@
 # DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
 #                   (see :doc:`Mechanism` for specification of a parms dict)
-# FIX: ControlSignal._instantiate_receiver has to be called before _instantiate_fucntion (like LearningSignal)
+# FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_fucntion (like LearningSignal)
 #              since execute (called in _instantiate_function) uses self.receiver.
 #              COULD CATCH IT IN EXECUTE, AND CALL _instantiate_receiver.
-# FIX: make ControlSignal functions arguments in __init__, and get them out of a dictionary
+# FIX: make ControlProjection functions arguments in __init__, and get them out of a dictionary
 
 # 11/13/16:
 # FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
@@ -167,7 +167,7 @@
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
-# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_SIGNAL_PARAMS
+# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_PROJECTION_PARAMS
 
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
@@ -239,7 +239,7 @@
 #                     # FIX: THESE NEED TO BE PROPERLY MAPPED
 #                     return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
 
-# IMPLEMENT: MappingProjection -> MappingProjection, ControlSignal->ControlProjection; LearningSignal-> TrainingProjection
+# IMPLEMENT: MappingProjection -> MappingProjection, ControlProjection->ControlProjection; LearningSignal-> TrainingProjection
 # FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT:  INTEGRATE TED'S TOPOSORT
@@ -418,7 +418,7 @@
 
 # FIX: DDM:  Deal with NavarroAndFuss, including extra outputStates
 #
-#  FIX: ControlSignal: FINISH FLATTENNING
+#  FIX: ControlProjection: FINISH FLATTENNING
 #
 # IMPLEMENT:  ParamsDict - > .<param>:
 #             In update parameter states, assign self.param.value == parameterState[<param>].value
@@ -543,8 +543,8 @@
 #     Flattening of matrix param of function arg for MappingProjection
 #
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
-#       USE EVC System Test Script and delete CONTROL_SIGNAL for drift_rate param in DDM.__init__()
-# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
+#       USE EVC System Test Script and delete CONTROL_PROJECTION for drift_rate param in DDM.__init__()
+# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
 # FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
 # FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
@@ -566,7 +566,7 @@
 # DOCUMENT:
 # ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
-# _deferred_init FOR LEARNING SIGNALS, MAPPING_PROJECTION PROJECTIONS W/O RECEIEVERS, ETC.
+# _deferred_init FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
 #    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningSignal's receiver, and thus that _instantiate_receiver be called first;
@@ -653,17 +653,17 @@
 # FIX (FUNCTIONS / LinearMatrix): MOVE KEYWORD DEFINITIONS OUT OF CLASS (CONFUSING) AND REPLACE self.kwXXX with kwXXX
 # -------------
 # FIX (PROJECTION): FIX MESS CONCERNING VARIABLE AND SENDER ASSIGNMENTS:
-#         SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlSignal??
+#         SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 #                     MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                      (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
+#                      (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
 # --------------
 # FIX: (OutputState 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlSignal._instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlSignal._instantiate_sender),
+        # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
 # -------------
 # FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
-# FIX: (CATEGORY CLASES): IMPLEMENT .metaValue (LIST OF 1D ARRAYS), AND USE FOR ControlSignal AND DDM EXTRA OUTPUTS
+# FIX: (CATEGORY CLASES): IMPLEMENT .metaValue (LIST OF 1D ARRAYS), AND USE FOR ControlProjection AND DDM EXTRA OUTPUTS
 # FIX: IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
 #                                                                         - REPRESENT OUTPUT FORMAT OF function
 #                                                                         - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
@@ -686,7 +686,7 @@
 #                        OR HAVE InputState OVERRIDE THE METHOD
 #     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
 #     * constraint_value in Mechanism.instantiate_state_lists (2D)
-#     * entries (for logs) in State.value setter (1D) and ControlSignal.update (1D)
+#     * entries (for logs) in State.value setter (1D) and ControlProjection.update (1D)
 #     * Add Function.metaValue as alternative to multple outputState:
 #               - should parallel .value in overridable setter/getter structure
 #               - should log specified values
@@ -712,8 +712,8 @@
 #                               PARAMETER_STATE_PARAMS in Process Pathway list
 # CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
 # FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
-# CONFIRM:  ControlSignal.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
-# QUESTION: WHAT DOES SETTING ControlSignal.set_intensity() DO NOW??
+# CONFIRM:  ControlProjection.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
+# QUESTION: WHAT DOES SETTING ControlProjection.set_intensity() DO NOW??
 # IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE
 #                              (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #endregion
@@ -849,7 +849,14 @@
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # -------------------
-
+# TERMINOLOGY:  ControlSignal -> ControlProjection (or should it be ControlSignalProjection
+# QUESTION:     Should ControlSignal "intelligence" (e.g., intensity, costs, etc.)
+#                   be in EVC mechanism rather than ControlProjection?
+#                   EVCMechanism makes more sense theoretically
+#                      e.g., seems better to talk about the cost of a control signal, rather than ControlProjection
+#                   Projection is easier to manage (as it is its own object, can be parameterized, etc.)
+#                   Maybe they should be assigned to OutputStates of the EVCMechanism?
+#
 # QUESTION: DDM:
 #            MULTIPLE PROCESSES AND AVERAGED OUTPUT VALUES IDEA
 #            t0 BUISINESS (ms or secs?)
@@ -903,7 +910,7 @@
 #
 # NEED FOR EVC MODEL:
 # - Sequential adjust effects:
-#   "Reactive":  simple controlMechanism that maps input values into ControlSignal intensities
+#   "Reactive":  simple controlMechanism that maps input values into ControlProjection intensities
 #   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
 #   "Feature-based model learning" (Falk & Tom)
 #   "Exhaustive Search + learning":
@@ -913,11 +920,11 @@
 #       automatic component of the drift for each stimulus (== weight matrix)
 #    *  d(parameter_value)/d(control signal intensity) for each control signal ==
 #                                                          differential of the parameterModulationFunction
-#       NOTE:  THIS IS DISTINCT FROM THE ControlSignal.function
-#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlSignal Intensity
-#              BUT IS ISOMORPHIC IF ControlSignal.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
+#       NOTE:  THIS IS DISTINCT FROM THE ControlProjection.function
+#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlProjection Intensity
+#              BUT IS ISOMORPHIC IF ControlProjection.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
 #       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
-#                       OR ControlSignal Intensity -> parameter_value (i.e., parameterModulation function)??
+#                       OR ControlProjection Intensity -> parameter_value (i.e., parameterModulation function)??
 #        SEBASTIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
 #    *  Parameters of parameterModulation function should be accessible
 
@@ -931,7 +938,7 @@
 #
 # Search & Replace:
 #   show() -> show()
-#   ControlSignal -> ControlProjection
+#   ControlProjection -> ControlProjection
 #   LearningSignal -> LearningProjection
 #   "execute method" -> function:  BUT NEED TO BE CAREFUL, SINCE "<object>.execute method" SHOULD *NOT* BE REPLACED
 #   <>.paramsCurrent = <>.params
@@ -1039,7 +1046,7 @@
 #    IntegratorMechanism
 #  √ ComparatorMechanism
 #  ~ ControlMechanism
-#  √ ControlSignal
+#  √ ControlProjection
 #  ! DDM
 #    DefaultControlMechanism
 #  √ EVCMechanism
@@ -1172,7 +1179,7 @@
 # from which they expect input, but cannot "impose" the creation of "downstream" objects.
 
 # DOCUMENT: Deferred Initialization
-#   For LearingSignal, ??ControlSignal
+#   For LearingSignal, ??ControlProjection
 
 # DOCUMENT: TARGETED FOR / INTENDED USES/USERS:
 #                     OVERALL STRUCTURE, INCLUDING:  COMPONENTS MADE UP OF VARIABLE, FUNCTION AND OUTPUT
@@ -1202,14 +1209,14 @@
 #                   to what is received by, represented, or output by a mechanism or state
 #           MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
 #           MappingProjection -> MappingProjection
-#           ControlSignal -> ControlSignalProjection
+#           ControlProjection -> ControlSignalProjection
 #           LearningSignal -> LearningSignalProjection
 #           MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
 #           arguments "specify";  attributes "determine"
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
-#              Function, MappingProjection, ControlSignal, and DDM documentation:
+#              Function, MappingProjection, ControlProjection, and DDM documentation:
 
 # DOCUMENT: SYSTEM:
 #           ORIGIN: origin mechanism of a process in a system that does not receive projections from any other mechanisms
@@ -1241,7 +1248,7 @@
 #           To use keywords for params, Function Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Function Function must implement .lambda method that resolves it to value
 
-# DOCUMENT:  PROJECTION MAPPING_PROJECTION:  different types of weight assignments
+# DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
 #            (in MappingProjection _instantiate_receiver and Function LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
@@ -1250,7 +1257,7 @@
 #                      as well as any explicity specified (except for ones that already have a LearningSignal specified)
 
 # DOCUMENT:  PROJECTIONS:  deferred init -> lazy instantiation:
-#                          for MappingProjection and ControlSignal, if receiver is not specified in __init__,
+#                          for MappingProjection and ControlProjection, if receiver is not specified in __init__,
 #                              then iniit is deferred until State.instantiate_projection_to? from? is called on it
 #                          for LearningSignal, at end of Process._instantiate_pathway
 # DOCUMENT:  ARGS & PARAMS
@@ -1259,11 +1266,11 @@
 #    - assign_args_to_params makes specified args in __init__() available in <>.params (with keyword = arg's name)
 #    SCRIPT:
 #    - _assign_args_to_param_dicts() and _validate_params() now handle the following formats:
-#                drift_rate=(2.0, CONTROL_SIGNAL),
-#                drift_rate=(2.0, ControlSignal),
-#                drift_rate=(2.0, ControlSignal()),
-#                drift_rate=(2.0, ControlSignal(function=Linear)),
-#                drift_rate=(2.0, ControlSignal(function=Linear(slope=2, intercept=10))),
+#                drift_rate=(2.0, CONTROL_PROJECTION),
+#                drift_rate=(2.0, ControlProjection),
+#                drift_rate=(2.0, ControlProjection()),
+#                drift_rate=(2.0, ControlProjection(function=Linear)),
+#                drift_rate=(2.0, ControlProjection(function=Linear(slope=2, intercept=10))),
 #
 # DOCUMENT: ASSIGNMENT OF DEFAULT PARAM VALUES:
 #               For params not accessible to user:  assign params and default values in paramClassDefaults
@@ -1356,7 +1363,7 @@
 # DOCUMENT: Function subclasses must be explicitly registered in Components.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any FUNCTION params
 #                unless suppressed by params[FUNCTION_PARAMS][PARAMETER_STATES] = None
-#           Currently, ControlSignal and LearningSignal projections suppress parameterStates
+#           Currently, ControlProjection and LearningSignal projections suppress parameterStates
 #                by assigning paramClassDefaults = {FUNCTION_PARAMS: {PARAMETER_STATES:None}}
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
@@ -1396,7 +1403,7 @@
 #             output of projections should always be 1D array, since each corresponds to a single state
 #     variable AND Mechanism output specification:
 #     [0, 1, 2] (i.e., 1D array) => one value for the object
-#                                (e.g., input state for a mapping projection, or param value for a ControlSignal projection)
+#                                (e.g., input state for a mapping projection, or param value for a ControlProjection)
 #     [[0, 1, 2]] (i.e., 2D array) => multiple values for the objectn (e.g., states for a mechanism)
 #     CONTEXTUALIZE BY # OF INPUT STATES:  IF ONLY ONE, THEN SPECIFY AS LIST OF NUMBERS;  IF MULITPLE, SPECIFIY EACH AS A LIST
 
@@ -1412,22 +1419,22 @@
 #                 - what gets called
 #
 # DOCUMENT: ControlSignals are now NEVER specified for params by default;
-#           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_SIGNAL)
-#     - Clean up ControlSignal InstanceAttributes
+#           they must be explicitly specified using ParamValueProjection tuple: (paramValue, CONTROL_PROJECTION)
+#     - Clean up ControlProjection InstanceAttributes
 # DOCUMENT _instantiate_state_list() in Mechanism
 # DOCUMENT: change comment in DDM re: FUNCTION_RUN_TIME_PARAM
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
 #                  - role of  FunctionRuntimeParamsPref / ModulationOperation
-# DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlSignal CREATES A NEW outputState FOR DefaultController
+# DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlProjection CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
 #                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
 #             HOW ITEMS OF variable AND owner.value ARE REFERENCED
-#             HOW "EXTERNAL" INSTANTIATION OF States IS DONE (USING ControlSignal.instantiateSender AS E.G.)
+#             HOW "EXTERNAL" INSTANTIATION OF States IS DONE (USING ControlProjection.instantiateSender AS E.G.)
 #             ADD CALL TO Mechanism._update_value SEQUENCE LIST
 # DOCUMENT: DefaultController
 # DOCUMENT: Finish documenting def __init__'s
@@ -1442,7 +1449,7 @@
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
 #              MAPPING_PARAMS
-#              CONTROL_SIGNAL_PARAMS
+#              CONTROL_PROJECTION_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
     #    A - ONES FOR EXECUTE METHOD (AGGREGATION FUNCTION) OF inputState
@@ -1658,7 +1665,7 @@
 #        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
 #                      it is applied to just that mechanism
 #
-# IMPLEMENT: call ControlMechanism should call ControlSignal._instantiate_sender()
+# IMPLEMENT: call ControlMechanism should call ControlProjection._instantiate_sender()
 #                to instantaite new outputStates and Projections in _take_over_as_default_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
@@ -1669,7 +1676,7 @@
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
-# FIX:                   ControlSignal.paramClassDefaults[PROJECTION_SENDER]
+# FIX:                   ControlProjection.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
@@ -1684,9 +1691,9 @@
 #           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
 #                then the class's _take_over_as_default_controller() method
 #                     is called in _instantiate_attributes_after_function
-# it moves all ControlSignal Projections from DefaultController to itself
+# it moves all ControlProjections from DefaultController to itself
 #
-# FIX: IN ControlSignal._instantiate_sender:
+# FIX: IN ControlProjection._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
 #
 # FIX: ControlMechanism._take_over_as_default_controller() IS NOT FULLY DELETING DefaultController.outputStates
@@ -1695,19 +1702,19 @@
 # FIX:           NOT SETTING sendsToProjections IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
-# 1) CLEANER: use _instantiate_sender on ControlSignal to instantiate both outputState and projection
+# 1) CLEANER: use _instantiate_sender on ControlProjection to instantiate both outputState and projection
 # 2) EASIER: add self.sendsToProjections.append() statement in _take_over_as_default_controller()
 
 
 # BACKGROUND INFO:
 # _instantiate_sender normally called from Projection in _instantiate_attributes_before_function
 #      calls sendsToProjection.append
-# _instantiate_control_signal_projection normally called from ControlSignal in _instantiate_sender
+# _instantiate_control_projection normally called from ControlProjection in _instantiate_sender
 #
 # Instantiate EVC:  __init__ / _instantiate_attributes_after_function:
 #     take_over_as_default(): [ControlMechanism]
 #         iterate through old controller’s outputStates
-#             _instantiate_control_signal_projection() for current controller
+#             _instantiate_control_projection() for current controller
 #                 _instantiate_state() [Mechanism]
 #                     state_type() [OutputState]
 
@@ -1881,7 +1888,7 @@
 
 # IMPLEMENT: MODIFY SO THAT self.execute (IF IT IS IMPLEMENTED) TAKES PRECEDENCE OVER FUNCTION
 #                 BUT CALLS IT BY DEFAULT);  EXAMPLE:  IntegratorMechanism
-# IMPLEMENT:  change specification of params[FUNCTION] from class to instance (as in ControlSignal functions)
+# IMPLEMENT:  change specification of params[FUNCTION] from class to instance (as in ControlProjection functions)
 # IMPLEMENT:  change _validate_variable (and all overrides of it) to:
 #              _validate_variable(request_value, target_value, context)
 #              to parallel _validate_params, and then:
@@ -1953,7 +1960,7 @@
 #     - coordinate execution of multiple processes (in particular, mechanisms that appear in more than one process)
 #     - deal with different time scales
 #     - response completion criterion (for TIME_STEP mode) + accuracy function
-#     - include settings and log (as in ControlSignal)
+#     - include settings and log (as in ControlProjection)
 #
 # - implement:  add pathway arg to call, so can be called with a config
 #
@@ -1985,7 +1992,7 @@
 # Search & Replace: constraint_value -> constraint_value
 #
 # - Clean up Documentation
-# - add settings and log (as in ControlSignal)
+# - add settings and log (as in ControlProjection)
 # - Fix: name arg in init__() is ignored
 #
 # - MODIFY add_projection
@@ -2072,7 +2079,7 @@
 #                 FOR MechainismInputState SET self.value = self.variable of owner
 #                 FOR MechanismiOuptuState, SET variableClassDefault = self.value of owner
 #
-# - State, ControlSignal and MappingProjection:
+# - State, ControlProjection and MappingProjection:
 # - if "senderValue" is in **args dict, assign to variable in init
 # - clean up documentation
 #
@@ -2136,21 +2143,21 @@
 #region PROJECTION: ----------------------------------------------------------------------------------------------------------
 #
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT _instantiate_receiver
-#               (AS ControlSignal AND MappingProjection BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
-# FIX: clean up _instantiate_sender -- better integrate versions for MappingProjection, ControlSignal, and LearningSignal
+#               (AS ControlProjection AND MappingProjection BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
+# FIX: clean up _instantiate_sender -- better integrate versions for MappingProjection, ControlProjection, and LearningSignal
 # FIX: Move sender arg to params, and make receiver (as projection's "variable") required
 # FIX:  Move marked section of _instantiate_projections_to_state(), _check_projection_receiver(), and _parse_projection_ref
 # FIX:      all to Projection_Base.__init__()
 # - add kwFull to specification, and as default for non-square matrices
 # - IMPLEMENTATION NOTE:  *** NEED TO SPECIFY TYPE OF MECHANIMSM_STATE HERE:  SHOULD BE DETERMINABLE FROM self.Sender
 # - Implement generic paramProjection subclass of Projection:
-#       stripped down version of ControlSignal, that has free-floating default inputState
+#       stripped down version of ControlProjection, that has free-floating default inputState
 #       used to control execute method params on a trial-by-trial basis (akin to use of tuples in pathway)
 # - Fix: name arg in init__() is ignored
 #
 #endregion
 
-#region MAPPING_PROJECTION: ------------------------------------------------------------------------------------------------------
+#region MAPPING: ------------------------------------------------------------------------------------------------------
 #
 # DOCUMENT:
 # If the sender outputState and/or the receiver inputState are not specified:
@@ -2159,34 +2166,34 @@
 #
 #endregion
 
-#region CONTROL_SIGNAL: ------------------------------------------------------------------------------------------------------
+#region CONTROL_PROJECTION: ------------------------------------------------------------------------------------------------------
 #
 #      controlModulatedParamValues
 #
 # 0) MAKE SURE THAT PROJECTION_SENDER_VALUE IS NOT PARSED AS PARAMS
 #      NEEDING THEIR OWN PROJECTIONS (HOW ARE THEY HANDLED IN PROJECTIONS?) -- ARE THEWE EVEN USED??
 #      IF NOT, WHERE ARE DEFAULTS SET??
-# 2) Handle assignment of default ControlSignal sender (DefaultController)
+# 2) Handle assignment of default ControlProjection sender (DefaultController)
 #
 # FIX ************************************************
 # FIX: controlSignal prefs not getting assigned
 
 # Fix: rewrite this all with @property:
 #
-# IMPLEMENT: when instantiating a ControlSignal:
+# IMPLEMENT: when instantiating a ControlProjection:
 #                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 #
 # IMPLEMENT:  re-work cost functions as FUNCTION_PARAMS
 #
-# IMPLEMENT: when instantiating a ControlSignal:
+# IMPLEMENT: when instantiating a ControlProjection:
 #                   include kwDefaultController as param for assigning sender to DefaultController
 #                   if it is not otherwise specified
 #
-#  IMPLEMENT option to add dedicated outputState for ControlSignal projection??
+#  IMPLEMENT option to add dedicated outputState for ControlProjection??
 #
 #
-# IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlSignal CHANNELS:  ADDED TO ANY SENDER OF A ControlSignal Projection:
+# IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlProjection CHANNELS:  ADDED TO ANY SENDER OF A ControlProjection:
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)

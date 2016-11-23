@@ -415,7 +415,7 @@ class Component(object):
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
         self.assign_defaults(variable=variable_default,
                              request_set=param_defaults, # requested set
-                             assign_missing=True,      # assign missing params from classPreferences to instanceDefaults
+                             assign_missing=True,        # assign missing params from classPreferences to instanceDefaults
                              target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
                              default_set=self.paramClassDefaults,   # source set from which missing params are assigned
                              context=context
@@ -718,7 +718,7 @@ class Component(object):
         if not variable is None and not variable is NotImplemented:
         # MODIFIED 11/22/16 END
             if isinstance(variable,dict):
-                raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
+                raise ComponentError("Dictionary passed as variable; probably trying to use param set as first argument")
         if request_set and not request_set is NotImplemented:
             if not isinstance(request_set, dict):
                 raise ComponentError("requested parameter set must be a dictionary")
@@ -1316,7 +1316,7 @@ class Component(object):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec.value
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                                    (param_spec[1] in {MAPPING_PROJECTION, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+                                    (param_spec[1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                                          isinstance(param_spec[1], Projection) or
                                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
                                 ):
@@ -1535,7 +1535,7 @@ def get_function_param(param):
     if isinstance(param, ParamValueProjection):
         value =  param.value
     elif (isinstance(param, tuple) and len(param) is 2 and
-            (param[1] in {MAPPING_PROJECTION, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+            (param[1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
                  isinstance(param[1], Projection) or
                  (inspect.isclass(param[1]) and issubclass(param[1], Projection)))
           ):

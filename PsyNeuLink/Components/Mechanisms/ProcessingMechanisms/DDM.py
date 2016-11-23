@@ -36,14 +36,14 @@ A DDM Mechanism can be instantiated directly by calling its constructor, or by u
 :class:`mechanism`[LINK] function and specifying DDM as its ``mech_spec`` argument.  The analytic solution used in
 :keyword:`TRIAL` mode is selected using the ``function`` argument.  The ``function`` argument can be simply the name
 of a DDM function (first example below), or a call to the function with arguments specifying its parameters
-(see :ref:`DDM_Execution` below for a description of DDM function parameters) and, optionally, a :doc:`ControlSignal`
+(see :ref:`DDM_Execution` below for a description of DDM function parameters) and, optionally, a :doc:`ControlProjection`
 (second example)::
 
     my_DDM = DDM(function=BogaczEtAl)
-    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
+    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlProjection))
     COMMENT:
     my_DDM = DDM(default_input_value=[0, 0, 0]
-                 function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlSignal))
+                 function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlProjection))
     COMMENT
 
 .. _DDM_Input:
@@ -125,7 +125,7 @@ for the functions used in :keyword:`TRIAL` mode, or in a params dictionary assig
 using the keywords in the list below, as in the following example::
 
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1,
-                 params={DRIFT_RATE:(0.2, ControlSignal),
+                 params={DRIFT_RATE:(0.2, ControlProjection),
                          STARTING_POINT:-0.5),
                  time_scale=TimeScale.TIME_STEP}
 
@@ -143,9 +143,9 @@ The parameters for the DDM are:
 
 * :keyword:`DRIFT_RATE` (default 0.0)
   - multiplies the input to the mechanism before assigning it to the ``variable`` on each call of ``function``.
-  The resulting value is further multiplied by the value of any ControlSignal projections to the  ``DRIFT_RATE``
+  The resulting value is further multiplied by the value of any ControlProjections to the  ``DRIFT_RATE``
   parameterState. The ``drift_rate`` parameter can be thought of as the "automatic" component (baseline strength)
-  of the decision process, the value received from a ControlSignal projection as the "attentional" component,
+  of the decision process, the value received from a ControlProjection as the "attentional" component,
   and the input its "stimulus" component.  The product of all three determines the drift rate in effect for each
   time_step of the decision process.
 ..
@@ -196,7 +196,7 @@ COMMENT
    DDM handles "runtime" parameters (specified in a call to its ``execute`` or ``run`` methods) differently than
    standard Components: runtime parameters are added to the mechanism's current value of the corresponding
    parameterState (rather than overriding it);  that is, they are combined additively with the value of
-   any :doc:`ControlSignal` it receives to determine the parameter's value for that execution.  The parameterState's
+   any :doc:`ControlProjection` it receives to determine the parameter's value for that execution.  The parameterState's
    value is then restored to its original value (i.e., either its default value or the one assigned when it was
    created) for the next execution.
 

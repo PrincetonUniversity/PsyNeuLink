@@ -6,117 +6,119 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  ControlSignal *********************************************************
+# *********************************************  ControlProjection *********************************************************
 
 """
-.. _ControlSignal_Overview:
+.. _ControlProjection_Overview:
 
 Overview
 --------
 
-A ControlSignal projection takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to
-compute its ``intensity`` that is assigned as the ControlSignal's value.  Its value is used to modify the value of a
-parameterState (its ''receiver'') associated with the parameter of a function of a ProcessingMechanism.  A
-ControlSignal also has an associated ``cost`` that is calculated based on its intensity and/or its time course, and
-used by a ControlMechanism to adapt the ControlSignal's ``allocation``.[LINK]
+A ControlProjection implements a control signal used to modify the value of a parameter of a mechanism's function.  It
+takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to compute the control signal's
+``intensity``, which is assigned as the ControlProjection's value.  The parameterState that receives the
+ControlProjection uses its value to regulate the value of a parameter of a mechanism's ``function``. A ControlProjection
+also calculates a ``cost`` for the control signal, based on its intensity  and/or its time course, that can be used
+by a ControlMechanism to adapt the ControlProjection's ``allocation``.[LINK]
 
-.. _ControlSignal_Creation:
+.. _ControlProjection_Creation:
 
-Creating a ControlSignal Projection
------------------------------------
+Creating a ControlProjection
+----------------------------
 
-A ControlSignal projection can be created in any of the ways that can be used to
+A ControlProjection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creation>`, or by including it in the specification for the
-:ref:`parameter of a mechanism's function <Mechanism_Assigning_A_Control_Signal>`.  If the constructor is used,
+:ref:`parameter of a mechanism's function <Mechanism_Assigning_A_ControlProjection>`.  If the constructor is used,
 the ``receiver`` argument must be specified.  If it is included in a parameter specification, its ``receiver`` will be
 assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
-the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the ControlSignal's
+the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the ControlProjection's
 ``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
 Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
 
-The cost of a ControlSignal is calculated from its ``intensity``, using four
-:ref:`cost functions <ControlSignal_Cost_Functions>` that can be specified  either in arguments to its constructor,
+The cost of a ControlProjection is calculated from its control signal ``intensity``, using four
+:ref:`cost functions <ControlProjection_Cost_Functions>` that can be specified  either in arguments to its constructor,
 or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
 so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost functions
-can be :ref:`enabled or disabled <ControlSignal_Toggle_Costs>`, to select which make contributions to the
-ControlSignal's ``cost``.  A cost function can also be permanently disabled for its ControlSignal by assigning
+can be :ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
+ControlProjection's ``cost``.  A cost function can also be permanently disabled for its ControlProjection by assigning
 :keyword:`None` to the argument for that function in its constructor (or the appropriate entry in its params
 dictionary). Cost functions that are permanently disabled in this way cannot be re-enabled.
 
-A ControlSignal projection takes an ``allocation_samples`` specification as its input.  This must be an array that
+A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
 specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust
-ControlSignal allocations (e.g., :doc:`EVCMechanism`).  The default is an array of values from 0.1 to 1.0
+ControlProjection allocations (e.g., :doc:`EVCMechanism`).  The default is an array of values from 0.1 to 1.0
 in steps of 0.1.
 
-.. _ControlSignal_Structure:
+.. _ControlProjection_Structure:
 
 Structure
 ---------
 
-*Intensity*. The ControlSignal's ``function`` uses its ``allocation`` to calculate an ``intensity``.  The default is an
-identity function (Linear(slope=1, intercept=0)), in which case the ControlSignal's ``intensity`` is equal to its
-``allocation``. The ``function`` can be assigned another :class:`TransferFunction`, or any other function that takes
-and returns a scalar value.
+*Intensity*. The ControlProjection's ``function`` uses its ``allocation`` to calculate a control signal ``intensity``.
+The default is an identity function (Linear(slope=1, intercept=0)): the ControlProjection sets its control signal
+``intensity`` equal to its ``allocation``.  The ``function`` can be assigned another :class:`TransferFunction`,
+or any other function that takes and returns a scalar value.
 
-*Costs*. A ControlSignal has four cost functions that determine how the ControlSignal computes its cost, all of which
-can be customized, and the first three of which can be enabled or disabled:
+*Costs*. A ControlProjection has four cost functions that determine how the ControlProjection computes the cost of
+its control signal, all of which can be customized, and the first three of which can be enabled or disabled:
 
-.. _ControlSignal_Cost_Functions:
+.. _ControlProjection_Cost_Functions:
 
 * :keyword:`INTENSTITY_COST_FUNCTION`
-    Calculates a cost based on the ControlSignal's ``intensity``.
+    Calculates a cost based on the control signal ``intensity``.
     It can be any :class:`TransferFunction`, or any other function  that takes and returns a scalar value.
     The default is :class:`Exponential`.
 
 * :keyword:`ADJUSTMENT_COST_FUNCTION`
-    Calculates a cost based on a change in the ControlSignal's ``intensity`` from its last value.
+    Calculates a cost based on a change in the control signal ``intensity`` from its last value.
     It can be any :class:`TransferFunction`, or any other function that takes and returns a scalar value.
     The default is :class:`Linear`.
 
 * :keyword:`DURATION_COST_FUNCTION`
-    Calculates an integral of the ControlSignal's ``cost``.
+    Calculates an integral of the ControlProjection's ``cost``.
     It can be any :class:`IntegratorFunction`, or any other function  that takes a list or array of two values and
     returns a scalar value. The default is :class:`Integrator`.
 
 * :keyword:`COST_COMBINATION_FUNCTION`
-    Combines the results of any cost functions that are enabled, and assigns the result as the ControlSignal's
+    Combines the results of any cost functions that are enabled, and assigns the result as the ControlProjection's
     ``cost``.  It can be any function that takes an array and returns a scalar value.  The default is :class:`Reduce`.
 
 An attribute is assigned for each component of the cost (``intensityCost``, ``adjustmentCost``, and ``durationCost``),
 the total cost (``cost``).
 
-.. _ControlSignal_Toggle_Costs:
+.. _ControlProjection_Toggle_Costs:
 
 *Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
 enabled or disabled using the ``toggle_cost_function`` method to turn it :keyword:`ON` or :keyword:`OFF`.  If it is
-disabled, that component of the cost is not included in the ControlSignal's ``cost`` attribute. A cost function  can
-also be permanently disabled for the ControlSignal by assigning :keyword:`None` to its argument in the constructor
-(or the corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlSignal,
+disabled, that component of the cost is not included in the ControlProjection's ``cost`` attribute. A cost function  can
+also be permanently disabled for the ControlProjection by assigning :keyword:`None` to its argument in the constructor
+(or the corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlProjection,
 it cannot be re-enabled using ``toggle_cost_function``.
 
-*Additional Attributes*.  In addition to the ``intensity`` and cost attributes described above, a ControlSignal has
+*Additional Attributes*.  In addition to the ``intensity`` and cost attributes described above, a ControlProjection has
 ``last_allocation`` and ``last_intensity`` attributes that store the values associated with its previous execution.
 Finally, it has an ``allocation_samples`` attribute, that is a  list of used by
-:ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of ``allocation`` for the ControlSignal,
+:ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of ``allocation`` for the ControlProjection,
 in order to adaptively adjust the parameters that it controls (e.g., :doc:`EVCMechanism`). The default value is an
 array that ranges from 0.1 to 1.0 in steps of 0.1.
 
-.. _ControlSignal_Execution:
+.. _ControlProjection_Execution:
 
 Execution
 ---------
 
-A ControlSignal projection uses its ``function`` to compute its ``intensity``, and its :ref:`cost functions
-<ControlSignal_Cost_Functions> use the ``intensity`` to compute the its ``cost``.  The ``intensity`` is assigned as
-the ControlSignal projection's ``value``, which is used by the parmaterState to which it projects to modify the
-corresponding parameter of the owner mechanism's function.
+A ControlProjection uses its ``function`` to compute the ``intensity`` of its control signal, and its :ref:`cost
+functions <ControlProjection_Cost_Functions> use that to compute the its ``cost``.  The ``intensity`` is assigned to
+the ControlProjection's ``value`` attribute, which is used by the parmaterState to which it projects to modify the
+corresponding parameter of the owner mechanism's function.  The ``cost`` is used by the :doc:`EVCMechanism` to determine
+the ControlProjection's ``allocation`` in future executions.
 
 .. note::
-   The changes in a parameter in response to the execution of a ControlSignal projection are not applied until the
+   The changes in a parameter in response to the execution of a ControlProjection are not applied until the
    mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of "lazy"
    updating).
 
-.. _ControlSignal_Class_Reference:
+.. _ControlProjection_Class_Reference:
 
 
 Class Reference
@@ -139,7 +141,7 @@ DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
-# ControlSignal Function Names
+# ControlProjection Function Names
 CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
 
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
@@ -175,7 +177,7 @@ ControlSignalChannel = namedtuple('ControlSignalChannel',
                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
-class ControlSignalError(Exception):
+class ControlProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -184,17 +186,16 @@ class ControlSignalError(Exception):
 
 
 
-# IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlSignal CHANNELS:  ADDED TO ANY SENDER OF A ControlSignal Projection:
+# IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlProjection CHANNELS:  ADDED TO ANY SENDER OF A ControlProjection:
     # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
     #                      ?? AND SAME FOR FOR outputStates WITH value
     # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
     #     IN OVERRIDES OF _validate_variable AND
     #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
 
-# class ControlSignal_Base(Projection_Base):
-class ControlSignal(Projection_Base):
+class ControlProjection(Projection_Base):
     """
-    ControlSignal(                                    \
+    ControlProjection(                                    \
      sender=None,                                     \
      receiver=None,                                   \
      function=Linear                                  \
@@ -211,7 +212,7 @@ class ControlSignal(Projection_Base):
 
     COMMENT:
         Description:
-            The ControlSignal class is a type in the Projection category of Component.
+            The ControlProjection class is a type in the Projection category of Component.
             It implements a projection to the parameterState of a mechanism that modifies a parameter of its function.
             It:
                - takes an allocation (scalar) as its input (self.variable)
@@ -220,17 +221,17 @@ class ControlSignal(Projection_Base):
 
         ** MOVE:
         ProjectionRegistry:
-            All ControlSignal projections are registered in ProjectionRegistry, which maintains an entry for the subclass,
+            All ControlProjections are registered in ProjectionRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
         Class attributes:
             + color (value): for use in interface design
-            + classPreference (PreferenceSet): ControlSignalPreferenceSet, instantiated in __init__()
+            + classPreference (PreferenceSet): ControlProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + paramClassDefaults:
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-                PROJECTION_SENDER: DefaultController, # ControlSignal (assigned to class ref in __init__ module)
+                PROJECTION_SENDER: DefaultController, # ControlProjection (assigned to class ref in __init__ module)
                 PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
                 kwControlSignalLogProfile: ControlSignalLog.DEFAULTS,
@@ -243,28 +244,28 @@ class ControlSignal(Projection_Base):
     ---------
 
     sender : Optional[Mechanism or OutputState]
-        the source of the allocation for the ControlSignal;  usually an outputState of a :doc:`ControlMechanism`.
+        the source of the allocation for the ControlProjection;  usually an outputState of a :doc:`ControlMechanism`.
         If it is not specified, the :doc:`DefaultControlMechanism` for the system to which the receiver belongs
         will be assigned.
 
     receiver : Optional[Mechanism or ParameterState]
         the parameterState associated with the parameter of a function to be controlled.  This must be specified,
-        or be able to be determined by the context in which the ControlSignal is created or assigned.
+        or be able to be determined by the context in which the ControlProjection is created or assigned.
 
     function : TransferFunction : default Linear
-        converts the ControlSignal's ``allocation`` into its ``intensity`` (equal to its ``value``).
+        converts the ControlProjection's ``allocation`` into its control signal ``intensity`` (equal to its ``value``).
 
     intensity_cost_function : Optional[TransferFuntion] : default Exponential
-        calculates a cost based on the ControlSignal's ``intensity``.
-        It can be disabled permanently for the ControlSignal by assigning :keyword:`None`.
+        calculates a cost based on the control signal ``intensity``.
+        It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
 
     adjustment_cost_function : Optiona[TransferFunction] : default Linear
-        calculates a cost based on a change in the ControlSignal's ``intensity`` from its last value.
-        It can be disabled permanently for the ControlSignal by assigning :keyword:`None`.
+        calculates a cost based on a change in the control signal ``intensity`` from its last value.
+        It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
 
     duration_cost_function : Optional[TransferFunction] : default Linear
-        Calculates an integral of the ControlSignal's ``cost``.
-        It can be disabled permanently for the ControlSignal by assigning :keyword:`None`.
+        Calculates an integral of the ControlProjection's ``cost``.
+        It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
 
     cost_combination_function : function : default Reduce(operation=SUM)
         Combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
@@ -280,12 +281,12 @@ class ControlSignal(Projection_Base):
         By default, it contains an entry for the projection's default ``function`` and cost function assignments.
 
     name : str : default TransferMechanism-<index>
-        a string used for the name of the ControlSignal projection.
+        a string used for the name of the ControlProjection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        the PreferenceSet for the ControlSignal projection.
+        the PreferenceSet for the ControlProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -296,14 +297,14 @@ class ControlSignal(Projection_Base):
       ControlSignal_General_Attributes
     COMMENT
 
-    sender : OutputState of ControlSignal
-        mechanism that provides the current ``allocation`` for the ControlSignal.
+    sender : OutputState of ControlProjection
+        mechanism that provides the current ``allocation`` for the ControlProjection.
 
     receiver : ParameterState of Mechanism
-        parameterState for the parameter to be modified by ControlSignal.
+        parameterState for the parameter to be modified by ControlProjection.
 
     allocation : float : default: defaultControlAllocation
-        value used as ``variable`` for projection's ``function`` to determine ``intensity``.
+        value used as ``variable`` for ControlProjection's ``function`` to determine its control signal ``intensity``.
 
     allocationSamples : list : DEFAULT_SAMPLE_VALUES
         set of values used by ControlMechanisms that sample different allocation values in order to
@@ -312,7 +313,7 @@ class ControlSignal(Projection_Base):
         .. _ControlSignal_Function_Attributes:
 
     function : TransferFunction :  default Linear
-        converts ``allocation`` into ``intensity`` that is provided as output to receiver of projection.
+        converts ``allocation`` into `control signal `intensity`` that is provided as output to receiver of projection.
 
     intensityCostFunction : TransferFunction : default Exponential
         calculates "intensityCost`` from the curent value of ``intensity``.
@@ -321,7 +322,7 @@ class ControlSignal(Projection_Base):
         calculates ``adjustmentCost`` based on the change in ``intensity`` from its last value.
 
     durationCostFunction : IntegratorFunction : default Linear
-        calculates an integral of the ControlSignal's ``cost``.
+        calculates an integral of the ControlProjection's ``cost``.
 
     costCombinationFunction : function : default Reduce(operation=SUM)
         combines the results of any cost functions that are enabled, and assigns the result to ``cost``.
@@ -347,25 +348,25 @@ class ControlSignal(Projection_Base):
         intregral of ``cost``.
 
     cost : float
-        current value of ControlSignal's ``cost``;  combined result of all cost functions that are enabled.
+        current value of ControlProjection's ``cost``;  combined result of all cost functions that are enabled.
 
     COMMENT:
         ControlSignal_History_Attributes:
     COMMENT
 
     last_allocation : float
-        ``allocation`` for last execution of the ControlSignal.
+        ``allocation`` for last execution of the ControlProjection.
 
     last_intensity : float
-        ``intensity`` for last execution of the ControlSignal.
+        ``intensity`` for last execution of the ControlProjection.
 
-        .. _ControlSignal_Cost_Functions:
+        .. _ControlProjection_Cost_Functions:
 
     """
 
     color = 0
 
-    componentType = CONTROL_SIGNAL
+    componentType = CONTROL_PROJECTION
     className = componentType
     suffix = " " + className
 
@@ -422,7 +423,7 @@ class ControlSignal(Projection_Base):
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
-        super(ControlSignal, self).__init__(sender=sender,
+        super(ControlProjection, self).__init__(sender=sender,
                                             receiver=receiver,
                                             params=params,
                                             name=name,
@@ -435,7 +436,7 @@ class ControlSignal(Projection_Base):
         Checks if:
         - cost functions are all appropriate
         - allocation_samples is a list with 2 numbers
-        - all cost functions are references to valid ControlSignal costFunctions (listed in self.costFunctions)
+        - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
         :param request_set:
@@ -464,14 +465,14 @@ class ControlSignal(Projection_Base):
             if isinstance(cost_function, Function):
                 if cost_function_name == COST_COMBINATION_FUNCTION:
                     if not isinstance(cost_function, CombinationFunction):
-                        raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
+                        raise ControlProjectionError("Assignment of Function to {} ({}) must be a CombinationFunction".
                                                  format(COST_COMBINATION_FUNCTION, cost_function))
                 elif cost_function_name == DURATION_COST_FUNCTION:
                     if not isinstance(cost_function, IntegratorFunction):
-                        raise ControlSignalError("Assignment of Function to {} ({}) must be an IntegratorFunction".
+                        raise ControlProjectionError("Assignment of Function to {} ({}) must be an IntegratorFunction".
                                                  format(DURATION_COST_FUNCTION, cost_function))
                 elif not isinstance(cost_function, TransferFunction):
-                    raise ControlSignalError("Assignment of Function to {} ({}) must be a TransferFunction".
+                    raise ControlProjectionError("Assignment of Function to {} ({}) must be a TransferFunction".
                                              format(cost_function_name, cost_function))
 
             # cost_function is custom-specified function
@@ -485,15 +486,15 @@ class ControlSignal(Projection_Base):
                     test_value = 1
                 try:
                     if not is_numerical(cost_function(test_value)):
-                        raise ControlSignalError("Function assigned to {} ({}) must return a scalar".
+                        raise ControlProjectionError("Function assigned to {} ({}) must return a scalar".
                                                  format(cost_function_name, cost_function))
                 except:
-                    raise ControlSignalError("Function assigned to {} ({}) must accept {}".
+                    raise ControlProjectionError("Function assigned to {} ({}) must accept {}".
                                              format(cost_function_name, cost_function, type(test_value)))
 
             # Unrecognized function assignment
             else:
-                raise ControlSignalError("Unrecognized function ({}) assigned to {}".
+                raise ControlProjectionError("Unrecognized function ({}) assigned to {}".
                                          format(cost_function, cost_function_name))
 
         # Validate allocation samples list:
@@ -511,7 +512,7 @@ class ControlSignal(Projection_Base):
         elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
             pass
         else:
-            raise ControlSignalError("allocation_samples argument ({}) in {} must be a list or 1D np.array of number".
+            raise ControlProjectionError("allocation_samples argument ({}) in {} must be a list or 1D np.array of number".
                                      format(allocation_samples, self.name))
 
 
@@ -519,13 +520,13 @@ class ControlSignal(Projection_Base):
                                                    target_set=target_set,
                                                    context=context)
 
-        # ControlSignal Cost Functions
+        # ControlProjection Cost Functions
         for cost_function_name in costFunctionNames:
             cost_function = target_set[cost_function_name]
             if not cost_function:
                 continue
             if (not isinstance(cost_function, (Function, function_type)) and not issubclass(cost_function, Function)):
-                raise ControlSignalError("{0} not a valid Function".format(cost_function))
+                raise ControlProjectionError("{0} not a valid Function".format(cost_function))
 
     def _instantiate_attributes_before_function(self, context=None):
 
@@ -550,7 +551,7 @@ class ControlSignal(Projection_Base):
                 pass
             # safeguard/sanity check (should never happen if validation is working properly)
             else:
-                raise ControlSignalError("{} is not a valid cost function for {}".
+                raise ControlProjectionError("{} is not a valid cost function for {}".
                                          format(cost_function, cost_function_name))
 
             setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
@@ -591,7 +592,7 @@ class ControlSignal(Projection_Base):
 
     def _instantiate_sender(self, context=None):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
-        """Check if DefaultController is being assigned and if so configures it for the requested ControlSignal
+        """Check if DefaultController is being assigned and if so configures it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
         Insure that sender.value = self.variable
@@ -600,7 +601,7 @@ class ControlSignal(Projection_Base):
             DefaultController is being assigned as sender and, if so:
             - creates projection-dedicated inputState, outputState and ControlSignalChannel in DefaultController
             - puts them in DefaultController's inputStates, outputStates, and ControlSignalChannels attributes
-            - lengthens variable of DefaultController to accommodate the ControlSignal channel
+            - lengthens variable of DefaultController to accommodate the ControlProjection channel
             - updates value of DefaultController (in resposne to new variable)
         Note: the default execute method of DefaultController simply maps the inputState value to the outputState
 
@@ -608,7 +609,7 @@ class ControlSignal(Projection_Base):
         """
 
         if isinstance(self.sender, Process):
-            raise ProjectionError("Illegal attempt to add a ControlSignal projection from a Process {0} "
+            raise ProjectionError("Illegal attempt to add a ControlProjection from a Process {0} "
                                   "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
 
         # If sender is a class:
@@ -622,16 +623,16 @@ class ControlSignal(Projection_Base):
 # FIX:  THE FOLLOWING CAN BE CONDENSED:
 # FIX:      ONLY TEST FOR ControlMechanism_Base (TO IMPLEMENT PROJECTION)
 # FIX:      INSTANTATION OF OutputState WILL BE HANDLED IN CALL TO super._instantiate_sender
-# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_signal_projection FOR ControlMechanism)
+# FIX:      (CHECK TO BE SURE THAT THIS DOES NOT MUCK UP _instantiate_control_projection FOR ControlMechanism)
         # If sender is a Mechanism (rather than a State) object, get (or instantiate) its State
         #    (Note:  this includes ControlMechanism)
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
             from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
             if isinstance(self.sender, ControlMechanism_Base):
-                self.sender._instantiate_control_signal_projection(self, context=context)
+                self.sender._instantiate_control_projection(self, context=context)
         # Call super to instantiate sender
-        super(ControlSignal, self)._instantiate_sender(context=context)
+        super(ControlProjection, self)._instantiate_sender(context=context)
 
     def _instantiate_receiver(self, context=None):
         # FIX: THIS NEEDS TO BE PUT BEFORE _instantate_function SINCE THAT USES self.receiver
@@ -660,12 +661,12 @@ class ControlSignal(Projection_Base):
                 # # MODIFIED 6/22/16 NEW:
                 # self.receiver.add_projection(projection=self, state=receiver_parameter_state, context=context)
             else:
-                raise ControlSignalError("Unable to assign ControlSignal projection ({0}) from {1} to {2}, "
+                raise ControlProjectionError("Unable to assign ControlProjection ({0}) from {1} to {2}, "
                                          "as it has several parameterStates;  must specify one (or each) of them"
                                          " as receiver(s)".
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:
-        super(ControlSignal, self)._instantiate_receiver(context=context)
+        super(ControlProjection, self)._instantiate_receiver(context=context)
 
     def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
@@ -806,7 +807,7 @@ class ControlSignal(Projection_Base):
             sample_range = samples
         elif samples == AUTO:
             # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
-            raise ControlSignalError("AUTO not yet supported for {} param of ControlSignal; default will be used".
+            raise ControlProjectionError("AUTO not yet supported for {} param of ControlProjection; default will be used".
                                      format(ALLOCATION_SAMPLES))
         else:
             sample_range = DEFAULT_ALLOCATION_SAMPLES
@@ -834,7 +835,7 @@ class ControlSignal(Projection_Base):
     def toggle_cost_function(self, cost_function_name, assignment=ON):
         """Enables/disables use of a cost function.
 
-        ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlSignal_Structure>`).
+        ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
         """
 
         if cost_function_name == INTENSITY_COST_FUNCTION:
@@ -844,13 +845,13 @@ class ControlSignal(Projection_Base):
         elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
             cost_option = ControlSignalCostOptions.ADJUSTMENT_COST
         elif cost_function_name == COST_COMBINATION_FUNCTION:
-            raise ControlSignalError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
+            raise ControlProjectionError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
         else:
-            raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
+            raise ControlProjectionError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
 
         if assignment:
             if not self.paramsCurrent[cost_function_name]:
-                raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
+                raise ControlProjectionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             self.controlSignalCostOptions |= cost_option
         else:
@@ -892,4 +893,4 @@ class ControlSignal(Projection_Base):
 
 
 # def RegisterControlSignal():
-#     ProjectionRegistry(ControlSignal)
+#     ProjectionRegistry(ControlProjection)
