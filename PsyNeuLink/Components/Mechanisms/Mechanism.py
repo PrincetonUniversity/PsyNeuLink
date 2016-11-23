@@ -102,7 +102,7 @@ in either of the ways mentioned above, or one of the following ways:
           for the :class:`mechanism`, or where it is specified in the ``pathway`` of a :class:`process`.
 
   * **automatically** -- PsyNeuLink will automatically create one or more mechanisms under some circumstances.
-    For example, :class:`MonitoringMechanisms` (and associated :class:`LearningSignal` projections) will be created
+    For example, :class:`MonitoringMechanisms` (and associated :class:`LearningProjection`) will be created
     automtically when :ref:`Process_Learning` is specified for a process.
 
 COMMENT:
@@ -194,7 +194,8 @@ ParameterStates
 These represent the parameters of a mechanism's function, and used to control the parameters of its ``function``.
 PsyNeuLink assigns one parameterState for each parameter of the mechanism's ``function`` (which correspond to the
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
-from the :doc:`ControlProjection` projection(s) of a :doc:`ControlMechanism<ControlMechanism>`, that is used to modify the
+from the :doc:`ControlProjections <ControlProjection>` of a :doc:`ControlMechanism<ControlMechanism>`, that is used to
+modify the
 function's parameter value in response to the outcome(s) of processing.
 
   .. _Mechanism_Assigning_A_Control_Projection:
@@ -295,7 +296,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
       * a parameter state, the value of which specifies the parameter's value
         (see :ref:`ParameterState_Creation`).
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
-        :doc:`ControlProjection` or a :doc:`LearningSignal`
+        :doc:`ControlProjection` or a :doc:`LearningProjection`
         (a :class:`ParamValueProjection` namedtuple can be used for clarity).
 
       ..

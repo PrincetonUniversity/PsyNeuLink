@@ -21,14 +21,14 @@ Input_Weights = MappingProjection(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
                                   # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
-                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
+                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
                                   )
 
 Output_Weights = MappingProjection(name='Output Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Output_Layer,
                                   # params={FUNCTION_PARAMS:{MATRIX:IDENTITY_MATRIX}}
-                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
+                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
                                   # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
                                   )
 

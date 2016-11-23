@@ -39,10 +39,10 @@ to another mechanism (its ``receiver``).  There are three types of projections t
     modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
     typically used in the context of a :doc:`System`.
 ..
-* :doc:`LearningSignal`
+* :doc:`LearningProjection`
     These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
     transmit this to the parameterState of a :doc:`MappingProjection` projection, which uses this to modify its
-    ``matrix`` parameter. LearningSignal projections are used in the context of a :doc:`System` or :doc:`Process`
+    ``matrix`` parameter. LearningProjection projections are used in the context of a :doc:`System` or :doc:`Process`
     that uses learning.
 
 COMMENT:
@@ -58,7 +58,7 @@ Projections can be created in several ways.  The simplest is to use the standard
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the ``pathway`` attribute of a process, or when a tuple is used to specify the parameter of a function
 (such as a :ref:`ControlProjection for a mechanism <Mechanism_Assigning_A_ControlProjection>`,
-or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`).
+or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specification>`).
 
 .. _Projection_In_Context_Specification:
 
@@ -74,12 +74,12 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
     ``sender``.
   * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` projection  with the :doc:`DefaultControlMechanism` as its
     ``sender``.
-  * :keyword:`LEARNING_SIGNAL` - a :doc:`LearningSignal` projection.  This can only be used for a projection to the
+  * :keyword:`LEARNING_PROJECTION` - a :doc:`LearningProjection`.  This can only be used for a projection to the
     ``matrix`` parameterState of a :doc:`MappingProjection` projection.  If the ``receiver`` for the MappingProjection
-    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningSignal.
+    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningProjection.
     Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a
     MappingProjection projection from the error source to the MonitoringMechanism
-    (see :ref:`Automatic Instantiation` <LearningSignal_Automatic_Creation>` of a LearningSignal for details).
+    (see :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
 
   *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
   specified type.
@@ -106,7 +106,7 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
 
 *Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
 a process automatically generates a  :doc:`MappingProjection` projection between adjacent mechanisms in its ``pathway`` if
-none is specified; and :doc:`LearningSignal`  projections are automatically generated when
+none is specified; and :doc:`LearningProjection`  projections are automatically generated when
 :ref:`learning <Process_Learning>` is specified for a process.  Creating a :doc:`state <State>` will also
 automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
 projection and its sender mechanism depend on the type of state -- see :doc:`state subclasses <States>` for details).
@@ -172,7 +172,7 @@ COMMENT:
         ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
-        LearningSignal projection:
+        LearningProjection projection:
             sender = <Mechanism>.outputState
             receiver = <MappingProjection>.parameterState IF AND ONLY IF there is a single one
                         that is a ParameterState;  otherwise, an exception is raised
@@ -208,7 +208,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING_SIGNAL,
+                            LEARNING_PROJECTION,
                             CONTROL_PROJECTION}
 
 class ProjectionError(Exception):
@@ -579,7 +579,7 @@ class Projection_Base(Projection):
         Notes:
         * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
             if so, it assigns a ControlProjection-specific inputState, outputState and ControlSignalChannel to it
-        [TBI: * LearningSignal overrides this method to check if sender is kwDefaultSender;
+        [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
             if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 
         :param context: (str)
@@ -682,7 +682,7 @@ class Projection_Base(Projection):
 
 
 # from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
-# from PsyNeuLink.Components.Projections.LearningSignal import is_learning_signal
+# from PsyNeuLink.Components.Projections.LearningProjection import is_learning_signal
 
 def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification
@@ -712,7 +712,7 @@ def _is_projection_spec(spec):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
             if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
                 return True
-            if _is_projection_subclass(spec[1], LEARNING_SIGNAL):
+            if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
                 return True
     return False
 

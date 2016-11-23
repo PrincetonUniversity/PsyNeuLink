@@ -1685,7 +1685,7 @@ class System_Base(System):
         output_value_array = np.array(output_value_array)
 
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
@@ -1701,7 +1701,7 @@ class System_Base(System):
                     for projection in output_state.sendsToProjections:
                         for parameter_state in projection.paramaterStates:
                             for sender in parameter_state.receivesFromProjections:
-                                if isinstance(sender, LearningSignal):
+                                if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
                     pass
