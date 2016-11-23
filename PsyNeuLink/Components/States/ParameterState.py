@@ -121,7 +121,8 @@ class ParameterState(State_Base):
 
     Parameters:
         The default for FUNCTION is LinearCombination using kwAritmentic.Operation.PRODUCT:
-           self.value is multiplied by  the output of each of the  projections it receives (generally ControlSignals)
+           self.value is multiplied by  the output of each of the  projections it receives
+               (generally ControlProjections)
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
         FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
         The parameters of FUNCTION can be set:
@@ -135,7 +136,7 @@ class ParameterState(State_Base):
         + paramClassDefaults (dict)
             + FUNCTION (LinearCombination)
             + FUNCTION_PARAMS  (Operation.PRODUCT)
-            + PROJECTION_TYPE (CONTROL_SIGNAL)
+            + PROJECTION_TYPE (CONTROL_PROJECTION)
             + PARAMETER_MODULATION_OPERATION   (ModulationOperation.MULTIPLY)
         + paramNames (dict)
     Class methods:
@@ -173,7 +174,7 @@ class ParameterState(State_Base):
 
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_SIGNAL})
+    paramClassDefaults.update({PROJECTION_TYPE: CONTROL_PROJECTION})
     #endregion
 
     tc.typecheck
