@@ -4,10 +4,9 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # ***********************************************  RUN MODULE **********************************************************
-#
 
 """
 
@@ -213,7 +212,7 @@ for the corresponding inputState.
 Targets
 ~~~~~~~
 
-If a process or system uses learning, then target values must be provided (in the ``targets`` argument of ``run``)*[]:
+If a process or system uses learning, then target values must be provided (in the ``targets`` argument of ``run``).
 Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
 must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.
@@ -225,16 +224,22 @@ COMMENT:
        System_Base: class definition
 COMMENT
 
+
+.. _Run_Class_Reference:
+
+Class Reference
+---------------
+
 """
 
 
 import numpy as np
 from collections import Iterable
-from PsyNeuLink.Globals.Main import *
-from PsyNeuLink.Functions.Function import function_type
-from PsyNeuLink.Functions.System import System
-from PsyNeuLink.Functions.Process import Process
-from PsyNeuLink.Functions.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Globals.Utilities import *
+from PsyNeuLink.Components.Component import function_type
+from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.Process import Process
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 
 class RunError(Exception):
      def __init__(object, error_value):
@@ -289,48 +294,48 @@ def run(object,
     The targets argument must be the same length as the inputs argument.
 
     .. note::
-        * if num_executions is ``None``, a number of executions is run equal to the length of the input 
+        * if num_executions is :keyword:`None`, a number of executions is run equal to the length of the input
           (i.e., size of axis 0)
 
     Arguments
     ---------
 
     inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-        input for each execution in a sequence (see ``run`` function [LINK] for detailed description of formatting 
+        the input for each execution in a sequence (see :doc:`Run` for detailed description of formatting
         requirements and options).
 
-    reset_clock : bool : default True
-        reset ``CentralClock`` to 0 before a sequence of executions.
+    reset_clock : bool : default :keyword:`True`
+        if :keyword:`True`, resets ``CentralClock`` to 0 before a sequence of executions.
 
-    initialize : bool default False
+    initialize : bool default :keyword:`False`
         calls the ``initialize`` method of the system prior to a sequence of executions.
 
-    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default ``None``
-        initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK].
+    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default :keyword:`None`
+        the initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK].
 
-    targets : List[input] or np.ndarray(input) : default ``None``
-        target values for monitoring mechanisms for each execution (used for learning).  
+    targets : List[input] or np.ndarray(input) : default :keyword:`None`
+        the target values for monitoring mechanisms for each execution (used for learning).
         The length must be equal to inputs.
 
-    learning : bool :  default ``None``
+    learning : bool :  default :keyword:`None`
         enables or disables learning during execution.
         If it is not specified, current state is left intact.
-        If True, learning is forced on; if False, learning is forced off.
+        If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
-    call_before_trial : Function : default= ``None``
+    call_before_trial : Function : default= :keyword:`None`
         called before each trial in the sequence is executed.
 
-    call_after_trial : Function : default= ``None``
+    call_after_trial : Function : default= :keyword:`None`
         called after each trial in the sequence is executed.
 
-    call_before_time_step : Function : default= ``None``
+    call_before_time_step : Function : default= `:keyword:`None`
         called before each time_step is executed.
 
-    call_after_time_step : Function : default= ``None``
+    call_after_time_step : Function : default= :keyword:`None`
         called after each time_step is executed.
 
     time_scale : TimeScale :  default TimeScale.TRIAL
-        determines whether mechanisms are executed for a single time step or a trial
+        specifies whether mechanisms are executed for a single time step or a trial
 
     Returns
     -------
@@ -707,7 +712,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
             target_len = np.size(target_array[0])
             num_targets = np.size(target_array, 0)
 
-            if target_len != np.size(object.comparator.target):
+            if target_len != np.size(object.comparatorMechanism.target):
                 if num_targets > 1:
                     plural = 's'
                 else:
@@ -715,7 +720,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparator.target)))
+                                          np.size(object.comparatorMechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".

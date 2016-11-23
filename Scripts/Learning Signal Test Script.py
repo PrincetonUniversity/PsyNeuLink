@@ -1,8 +1,9 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
@@ -14,7 +15,7 @@ Output_Layer = Transfer(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0])
 
-Learned_Weights = Mapping(name='Learned Weights',
+Learned_Weights = MappingProjection(name='Learned Weights',
                           sender=Input_Layer,
                           receiver=Output_Layer,
 
@@ -52,11 +53,11 @@ z = process(name="TEST LEARNER",
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
 # Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
-# Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import TARGET
+# Learned_Weights.monitoringMechanism.paramsCurrent[TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],
-#           runtime_params={COMPARATOR_TARGET: [1, 1]})
+#           runtime_params={TARGET: [1, 1]})
 
 for i in range(10):
 

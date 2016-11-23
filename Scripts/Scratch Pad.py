@@ -8,23 +8,63 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
-# from PsyNeuLink.Functions.Utilities.Utility import Linear
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Process import process
-#
-# linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+
+# linear_transfer_mechanism = TransferMechanism(function=Linear(slope = 1, intercept = 0))
 # linear_transfer_process = process(pathway = [linear_transfer_mechanism])
 # print(linear_transfer_process.execute())
 # print ('Done')
+
+# my_mech1 = TransferMechanism(function=Logistic)
+# my_mech2 = TransferMechanism(function=Logistic)
+# my_monitor = ComparatorMechanism()
+# my_learning_signal = LearningSignal()
+# my_mapping_projection = MappingProjection(sender=my_mech1, receiver=my_mech2)
+# # my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
+# # my_learning_signal = LearningSignal(receiver=my_mapping_projection)
+# my_learning_signal._deferred_init(context="TEST")
+
+# my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
+#                                  threshold=20.0),
+#              params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
+#                                       THRESHOLD:30.0}}
+#              )
+# # my_DDM.execute(time_scale=TimeScale.TIME_STEP)
+# my_DDM.execute()
 #
+# TEST = True
+
+my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
+                                                     function=Integrator(
+                                                                         # variable_default=[0,0],
+                                                                         weighting=SIMPLE,
+                                                                         rate=[1]
+                                                                         )
+                                                     )
+print(my_adaptive_integrator.execute([1]))
+print(my_adaptive_integrator.execute([1]))
+print(my_adaptive_integrator.execute([1]))
+print(my_adaptive_integrator.execute([3]))
+print(my_adaptive_integrator.execute([3]))
+print(my_adaptive_integrator.execute([3]))
+print(my_adaptive_integrator.execute([3]))
+
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
-# from Functions.Utility import Integrator
+# from Components.Mechanisms.IntegratorMechanism import IntegratorMechanism
+# from Components.Function import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
+# a = IntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
@@ -41,12 +81,17 @@ class ScratchPadError(Exception):
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.System import System_Base
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import DDM
-
-mech = DDM()
-mech.execute([0])
-
+# from PsyNeuLink.Components.System import System_Base
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+# from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+#
+# mech = DDM()
+#
+# mcs = ControlSignal(receiver=mech)
+#
+#
+# mech.execute([0])
+#
 # a = System_Base()
 # a.execute()
 #
@@ -54,15 +99,15 @@ mech.execute([0])
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-# from PsyNeuLink.Functions.States.InputState import InputState
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+# from PsyNeuLink.Components.States.InputState import InputState
 #
-# x = Transfer([0,0,0],
+# x = TransferMechanism([0,0,0],
 #              name='x')
 #
 # i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 #
-# y = Transfer(default_input_value=[0],
+# y = TransferMechanism(default_input_value=[0],
 #              params={INPUT_STATES:i},
 #              name='y')
 #
@@ -74,9 +119,9 @@ mech.execute([0])
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import *
-# from PsyNeuLink.Functions.Process import process
-# from PsyNeuLink.Functions.System import system
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.System import system
 #
 #
 # # UNEQUAL INPUT LENGTHS:
@@ -86,9 +131,9 @@ mech.execute([0])
 # # inputs=[[[2,2],[0]],[[2,2],[0]]]
 # # inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
 #
-# a = Transfer(name='a',default_input_value=[0,0])
-# b = Transfer(name='b')
-# c = Transfer(name='c')
+# a = TransferMechanism(name='a',default_input_value=[0,0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
 #
 #
 # print(a.execute([2,2]))
@@ -114,19 +159,19 @@ mech.execute([0])
 
 #region TEST INSTANTATION OF Cyclic and Acyclic Systems @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.System import system
-# from PsyNeuLink.Functions.Process import process
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Process import Mapping
+# from PsyNeuLink.Components.System import system
+# from PsyNeuLink.Components.Process import process
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Process import MappingProjection
 #
-# a = Transfer(name='a')
-# b = Transfer(name='b')
-# c = Transfer(name='c')
-# d = Transfer(name='d')
-# e = Transfer(name='e')
+# a = TransferMechanism(name='a')
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+# e = TransferMechanism(name='e')
 #
-# fb1 = Mapping(sender=c, receiver=b, name='fb1')
-# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+# fb1 = MappingProjection(sender=c, receiver=b, name='fb1')
+# fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 #
 # p1 = process(pathway=[a, b, c, d], name='p1')
 # p2 = process(pathway=[e, b, c, d], name='p2')
@@ -141,8 +186,8 @@ mech.execute([0])
 
 #region TEST MECHANISM @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from Functions.Mechanisms.Mechanism import Mechanism, mechanism
-# from Functions.Mechanisms.DDM import DDM
+# from Components.Mechanisms.Mechanism import Mechanism, mechanism
+# from Components.Mechanisms.DDM import DDM
 
 # x = Mechanism(context=kwValidate)
 # test = isinstance(x,Mechanism)
@@ -152,11 +197,11 @@ mech.execute([0])
 
 #region TEST PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # #
-# from Functions.Process import *
-# # from Functions.Mechanisms.DDM import DDM
-# from Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from Components.Process import *
+# # from Components.Mechanisms.DDM import DDM
+# from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 #
-# my_transfer = Transfer()
+# my_transfer = TransferMechanism()
 #
 # x = Process_Base(params={PATHWAY:[my_transfer]})
 #
@@ -167,7 +212,7 @@ mech.execute([0])
 
 #region TEST LinearCombination FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Utility import *
+# from Components.Function import *
 # #
 # x = LinearCombination()
 # print (x.execute(([1, 1],[2, 2])))
@@ -176,7 +221,7 @@ mech.execute([0])
 
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Utilities.Utility import *
+# from PsyNeuLink.Components.Functions.Function import *
 #
 # rl = Reinforcement([[0,0,0], [0,0,0], [0]])
 # print(rl.execute([[0,0,0], [0, 0, 1], [7]]))
@@ -186,7 +231,7 @@ mech.execute([0])
 
 #region TEST SoftMax FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Utilities.Utility import *
+# from PsyNeuLink.Components.Functions.Function import *
 # #
 # x = SoftMax(output=SoftMax.PROB)
 # y = x.execute([-11, 2, 3])
@@ -202,7 +247,7 @@ mech.execute([0])
 
 #region TEST BackProp FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Utility import *
+# from Components.Function import *
 #
 # x = BackPropagation()
 # print (x.execute(variable=[[1, 2],[0.5, 0],[5, 6]]))
@@ -215,11 +260,11 @@ mech.execute([0])
 
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Process import *
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Utilities.Utility import Linear
+# from PsyNeuLink.Components.Process import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Functions.Function import Linear
 #
-# my_mech = Transfer(function=Linear())
+# my_mech = TransferMechanism(function=Linear())
 #
 # my_process = process(pathway=[my_mech])
 #
@@ -234,16 +279,16 @@ mech.execute([0])
 #endregion
 
 
-#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from PsyNeuLink.Functions.Process import *
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Utilities.Utility import Linear
-# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Process import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Functions.Function import Linear
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 #
-# my_mech = Transfer(function=Linear())
-# my_mech2 = Transfer(function=Linear())
-# my_projection = Mapping(sender=my_mech,
+# my_mech = TransferMechanism(function=Linear())
+# my_mech2 = TransferMechanism(function=Linear())
+# my_projection = MappingProjection(sender=my_mech,
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
@@ -272,31 +317,31 @@ mech.execute([0])
 
 #endregion
 
-#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# from PsyNeuLink.Functions.Process import *
-# from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Functions.Utilities.Utility import Linear, Logistic
-# from PsyNeuLink.Functions.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Process import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Functions.Function import Linear, Logistic
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 #
-# color_naming = Transfer(default_input_value=[0,0],
+# color_naming = TransferMechanism(default_input_value=[0,0],
 #                         function=Linear,
 #                         name="Color Naming"
 #                         )
 #
-# word_reading = Transfer(default_input_value=[0,0],
+# word_reading = TransferMechanism(default_input_value=[0,0],
 #                         function=Logistic,
 #                         name="Word Reading")
 #
-# verbal_response = Transfer(default_input_value=[0,0],
+# verbal_response = TransferMechanism(default_input_value=[0,0],
 #                            function=Logistic)
 #
-# color_pathway = Mapping(sender=color_naming,
+# color_pathway = MappingProjection(sender=color_naming,
 #                         receiver=verbal_response,
 #                         matrix=IDENTITY_MATRIX,
 #                         )
 #
-# word_pathway = Mapping(sender=word_reading,
+# word_pathway = MappingProjection(sender=word_reading,
 #                        receiver=verbal_response,
 #                         matrix=IDENTITY_MATRIX
 #                        )
@@ -331,9 +376,9 @@ import typecheck as tc
 # from enum import Enum
 # # class Weightings(AutoNumber):
 # class Weightings(Enum):
-#     LINEAR        = 'hello'
-#     SCALED        = 'goodbye'
-#     TIME_AVERAGED = 'you say'
+#     CONSTANT        = 'hello'
+#     SIMPLE        = 'goodbye'
+#     ADAPTIVE = 'you say'
 #
 # @tc.typecheck
 # def foo3(test:tc.re('hello')):
@@ -344,7 +389,7 @@ import typecheck as tc
 # # foo3(test=3)
 #
 # @tc.typecheck
-# def foo4(test:Weightings=Weightings.SCALED):
+# def foo4(test:Weightings=Weightings.SIMPLE):
 #     a = test
 #
 # # foo4(test=Weightings.LINEAR)
@@ -584,19 +629,19 @@ import typecheck as tc
 #
 # MonitoredOutputStatesOption = dict
 # target_set = {
-#     MONITORED_OUTPUT_STATES:'state that is monitored',
+#     MONITOR_FOR_CONTROL:'state that is monitored',
 #     # FUNCTION_PARAMS:{WEIGHTS:[1]}
 #               }
 #
 # try:
 #     # It IS a MonitoredOutputStatesOption specification
-#     if isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
+#     if isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
 #         # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-#         # target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
+#         # target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
 #         print ("Assign monitored States")
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
-#         # for item in target_set[MONITORED_OUTPUT_STATES]:
+#         # for item in target_set[MONITOR_FOR_CONTROL]:
 #         #     self._validate_monitored_state(item, context=context)
 #         # Insure that number of weights specified in WEIGHTS functionParams equals the number of monitored states
 #         print ('Validated monitored states')
@@ -606,7 +651,7 @@ import typecheck as tc
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass
 #         else:
-#             # num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
+#             # num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
 #             # if not True:
 #             if True:
 #                 raise ScratchPadError("Weights not equal")
@@ -1079,7 +1124,7 @@ import typecheck as tc
 # # x = DDM()
 # # x.prefs.show()
 #
-# DDM_prefs = FunctionPreferenceSet(
+# DDM_prefs = ComponentPreferenceSet(
 #                 reportOutput_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 verbose_pref=PreferenceEntry(True,PreferenceLevel.SYSTEM),
 #                 kpFunctionRuntimeParams_pref=PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.TYPE)
@@ -1431,11 +1476,11 @@ import typecheck as tc
 
 #region TEST:  add a parameterState to a param after an object is instantiated @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Functions.Mechanisms.DDM import DDM
-# from Functions.States.ParameterState import ParameterState
+# from Components.Mechanisms.DDM import DDM
+# from Components.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_state(state_type=ParameterState,
+# state = x._instantiate_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_value=0.0,
@@ -1443,7 +1488,7 @@ import typecheck as tc
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_state_list(state_type=ParameterState,
+# x._instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_value=0.0,
 #                                    constraint_value_name='DDM T0 CONSTRAINT',
@@ -1577,12 +1622,12 @@ import typecheck as tc
 
 #
 # from Globals.Preferences.PreferenceSet import *
-# from Globals.Preferences.FunctionPreferenceSet import *
+# from Globals.Preferences.ComponentPreferenceSet import *
 #
 # class a(object):
 #     prefs = None
 #     def __init__(self):
-#         a.prefs = FunctionPreferenceSet(owner=a,
+#         a.prefs = ComponentPreferenceSet(owner=a,
 #                                         log_pref=PreferenceEntry(1,PreferenceLevel.SYSTEM),
 #                                         level=PreferenceLevel.SYSTEM)
 #
@@ -1590,7 +1635,7 @@ import typecheck as tc
 #     prefs = None
 #     def __init__(self):
 #         super(b, self).__init__()
-#         b.prefs = FunctionPreferenceSet(owner=b,
+#         b.prefs = ComponentPreferenceSet(owner=b,
 #                                         log_pref=PreferenceEntry(5,PreferenceLevel.CATEGORY),
 #                                         level=PreferenceLevel.CATEGORY)
 #
@@ -1598,7 +1643,7 @@ import typecheck as tc
 #     prefs = None
 #     def __init__(self):
 #         super(c, self).__init__()
-#         c.prefs = FunctionPreferenceSet(owner=self,
+#         c.prefs = ComponentPreferenceSet(owner=self,
 #                                         log_pref=PreferenceEntry(3,PreferenceLevel.INSTANCE),
 #                                         level=PreferenceLevel.INSTANCE)
 #         self.prefs = c.prefs
@@ -1651,7 +1696,7 @@ import typecheck as tc
 # print (a.q)
 
 
-# from Functions.States.InputState import InputState
+# from Components.States.InputState import InputState
 #
 # test = InputState(value=1)
 # x = 1
@@ -1731,7 +1776,7 @@ import typecheck as tc
 #                         xxx
 #                     except AttributeError:
 # # IMPLEMENTATION NOTE:  *** PARSE ERROR HERE:  WARN IF KEY ERROR, AND ASSIGN FUNCTION;  EXCEPT IF ATTRIBUTE ERROR
-#                         raise FunctionError("Either {0} must be specified in paramClassDefaults or"
+#                         raise ComponentError("Either {0} must be specified in paramClassDefaults or"
 #                                             " <class.function> must be implemented for {1}".
 #                                             format(required_param, self.name))
 #                     else:
@@ -1862,7 +1907,7 @@ import typecheck as tc
 
 # ***************************************** OLD TEST SCRIPT ************************************************************
 
-# from Functions.Projections.ControlSignal import *
+# from Components.Projections.ControlSignal import *
 #
 # # Initialize controlSignal with some settings
 # settings = ControlSignalSettings.DEFAULTS | \
@@ -1882,31 +1927,14 @@ import typecheck as tc
 # # Can also change settings on the fly (note:  ControlSignal.OFF is just an enum defined in the ControlSignal module)
 # x.set_adjustment_cost(OFF)
 #
-# # Assign transfer_functions for cost functions
-# x.assign_function(kwControlSignalIntensityFunction,
-#                   Function.Linear(NotImplemented,
-#                                   {SLOPE : 1,
-#                                    INTERCEPT : 0})
-#                   )
-# x.assign_function(kwControlSignalIntensityCostFunction,
-#                   Function.Linear(NotImplemented,
-#                                   {SLOPE : 1,
-#                                    INTERCEPT : 1})
-#                   )
-# x.assign_function(kwControlSignalDurationCostFunction,
-#                   Function.Integrator(NotImplemented,
-#                                       {Function.Integrator.RATE : 0.5,
-#                                        Function.Integrator.WEIGHTING : Function.Integrator.Weightings.SCALED})
-#                   )
-#
 # # Display some values in controlSignal (just to be sure it is set up OK)
 # print("Intensity Function: ", x.functions[kwControlSignalIntensityFunction].name)
 # print("Initial Intensity: ", x.intensity)
 #
 # # Add KVO:
-# #  Main will observe ControlSignal.kpIntensity;
-# #  the observe_value_at_keypath method in Main will be called each time ControlSignal.kpIntensity changes
-# x.add_observer_for_keypath(Main,kpIntensity)
+# #  Utilities will observe ControlSignal.kpIntensity;
+# #  the observe_value_at_keypath method in Utilities will be called each time ControlSignal.kpIntensity changes
+# x.add_observer_for_keypath(Utilities,kpIntensity)
 #
 #
 # # Assign testFunction to be a linear function, that returns the current value of an object property (intensity_cost)
@@ -1927,7 +1955,7 @@ import typecheck as tc
 # # Initial allocation value
 # z = 3
 #
-# Main.CentralClock.time_step = 0
+# Utilities.CentralClock.time_step = 0
 # x.update_control_signal(z)
 # getVersion = testFunction_getVersion.function()
 # print("{0}: {1}\n".format(label, getVersion))
@@ -1935,7 +1963,7 @@ import typecheck as tc
 # print("{0}: {1}\n".format(label, lambdaVersion))
 #
 # #Update control signal with new allocation value
-# Main.CentralClock.time_step = 1
+# Utilities.CentralClock.time_step = 1
 # x.update_control_signal(z+1)
 # getVersion = testFunction_getVersion.function()
 # print("{0}: {1}\n".format(label, getVersion))
@@ -1944,7 +1972,7 @@ import typecheck as tc
 #
 #
 # #Update control signal with new allocation value
-# Main.CentralClock.time_step = 2
+# Utilities.CentralClock.time_step = 2
 # x.update_control_signal(z-2)
 # getVersion = testFunction_getVersion.function()
 # print("{0}: {1}\n".format(label, getVersion))

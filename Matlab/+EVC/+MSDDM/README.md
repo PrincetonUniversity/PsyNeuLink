@@ -13,7 +13,7 @@ Script describing example calls to MSDDM_wrapper
 
 ****************************************************************************************************************
 MSDDM_wrapper.m
-Function for using multi_stage_ddm_metrics and multistage_ddm_fpt_dist to generate expected ER/DT and upper/lower threshold CDFs for analytic MSDDM process, and compare that to MC simulations of the same. Includes rudimentary plots.
+Component for using multi_stage_ddm_metrics and multistage_ddm_fpt_dist to generate expected ER/DT and upper/lower threshold CDFs for analytic MSDDM process, and compare that to MC simulations of the same. Includes rudimentary plots.
 
 *USAGE:
 [aRT, aER, aRT_plus, aRT_minus, aCDF_T, aCDF_Y, aCDF_Y_plus, aCDF_Y_minus,simMeanRT, simMeanER,simMeanRT_plus,simMeanRT_minus, simCDF_T, simCDF_Y, simCDF_Y_plus, simCDF_Y_minus] = MSDDM_wrapper(a,s,varthresh,deadlines,thresh,x0,x0dist,runSimulations,doPlots)
@@ -36,7 +36,7 @@ Function for using multi_stage_ddm_metrics and multistage_ddm_fpt_dist to genera
 
 ****************************************************************************************************************
 multi_stage_ddm_metrics.m 
-Function for generating expected (average) RT/ER overall and mean RTs for upper and lower bounds. Iteratively computes and compiles CDFs for each stage conditional on no threshold crossing in prior stage
+Component for generating expected (average) RT/ER overall and mean RTs for upper and lower bounds. Iteratively computes and compiles CDFs for each stage conditional on no threshold crossing in prior stage
 
 *USAGE:
 [mean_RT, mean_ER, mean_RT_plus, mean_RT_minus]=multi_stage_ddm_metrics(a ,s, deadlines, thresholds, x0, x0dist)
@@ -58,7 +58,7 @@ Function for generating expected (average) RT/ER overall and mean RTs for upper 
 
 ****************************************************************************************************************
 multistage_ddm_fpt_dist.m
-Function for computing CDF overall (Y) and for upper/lower bounds (Yplus, Yminus) separately. Iteratively computes and compiles CDFs for each stage conditional on no threshold crossing in prior stage
+Component for computing CDF overall (Y) and for upper/lower bounds (Yplus, Yminus) separately. Iteratively computes and compiles CDFs for each stage conditional on no threshold crossing in prior stage
 
 *USAGE:
 [T,Y, Yplus, Yminus]=multistage_ddm_fpt_dist(a,s,threshold,x0,x0dist,deadlines,tfinal)
@@ -79,7 +79,7 @@ Function for computing CDF overall (Y) and for upper/lower bounds (Yplus, Yminus
 
 ****************************************************************************************************************
 dist_deadline.m
-Function for computing particle density, mean, MGF, and no decision probability for a given deadline. (The computed density can be assigned as the density of initial condition for next stage.)    
+Component for computing particle density, mean, MGF, and no decision probability for a given deadline. (The computed density can be assigned as the density of initial condition for next stage.)
 
 *USAGE:
 [x,prob,pnd,mean_dead,mgf_dead,sec_dead] = dist_deadline(a,s,x0, x0dist,deadline,z, theta) 

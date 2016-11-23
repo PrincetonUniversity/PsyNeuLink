@@ -1,9 +1,9 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.ControlSignal import ControlSignal
-from PsyNeuLink.Functions.System import System_Base
-from PsyNeuLink.Functions.Utilities.Utility import Exponential, Linear
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Components.System import System_Base
+from PsyNeuLink.Components.Functions.Function import Exponential, Linear
 from PsyNeuLink.Globals.Keywords import *
 
 if MPI_IMPLEMENTATION:
@@ -15,12 +15,12 @@ if MPI_IMPLEMENTATION:
     Comm.Barrier()
 
 #region Preferences
-DDM_prefs = FunctionPreferenceSet(
+DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
-process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #endregion
 
@@ -65,7 +65,7 @@ RewardProcess = process(default_input_value=[0],
 
 #region System
 mySystem = System_Base(processes=[TaskExecutionProcess, RewardProcess],
-                       monitored_output_states=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
+                       monitor_for_control=[Reward, ERROR_RATE, (RESPONSE_TIME, -1, 1)],
                        name='Test System')
 #endregion
 

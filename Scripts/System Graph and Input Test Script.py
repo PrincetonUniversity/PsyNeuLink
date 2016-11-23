@@ -1,8 +1,8 @@
-from PsyNeuLink.Functions.System import system
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 # from PsyNeuLink.Globals.Run import run, construct_inputs
-# from PsyNeuLink.Functions.Process import Mapping
+# from PsyNeuLink.Components.Process import MappingProjection
 
 # INPUT SEQUENCES FOR TESTING:
 # FACTORS (# levels to test):
@@ -39,9 +39,9 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 
 
 # FEEDBACK CONNECTIONS:
-# fb1 = Mapping(sender=c, receiver=b, name='fb1')
-# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
-# fb3 = Mapping(sender=e, receiver=a, name = 'fb3')
+# fb1 = MappingProjection(sender=c, receiver=b, name='fb1')
+# fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
+# fb3 = MappingProjection(sender=e, receiver=a, name = 'fb3')
 
 print ('*****************************************************************************')
 

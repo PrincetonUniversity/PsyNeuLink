@@ -1,9 +1,10 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Utilities.Utility import Logistic, random_matrix
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+# from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
+from PsyNeuLink.Components.Functions.Function import Logistic
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = Transfer(name='Input Layer',
@@ -36,7 +37,7 @@ Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 # This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
-Input_Weights = Mapping(name='Input Weights',
+Input_Weights = MappingProjection(name='Input Weights',
                         # sender=Input_Layer,
                         # receiver=Hidden_Layer_1,
                         # matrix=(random_weight_matrix, LearningSignal()),
@@ -49,7 +50,7 @@ Input_Weights = Mapping(name='Input Weights',
 
 # This projection will be used by the process below by assigning its sender and receiver args
 #    to mechanismss in the pathway
-Middle_Weights = Mapping(name='Middle Weights',
+Middle_Weights = MappingProjection(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
                          # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
@@ -58,7 +59,7 @@ Middle_Weights = Mapping(name='Middle Weights',
                          )
 
 # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
-Output_Weights = Mapping(name='Output Weights',
+Output_Weights = MappingProjection(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
                          # matrix=random_weight_matrix,
@@ -71,7 +72,6 @@ Output_Weights = Mapping(name='Output Weights',
                          # matrix=FULL_CONNECTIVITY_MATRIX
                          matrix=Output_Weights_matrix
                          )
-
 
 z = process(default_input_value=[0, 0],
             pathway=[Input_Layer,
@@ -110,6 +110,8 @@ def show_target():
     # print ('MSE: \n', Output_Layer.outputValue[])
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+
+# z.execute()
 
 z.run(num_executions=10,
       # inputs=stim_list,
