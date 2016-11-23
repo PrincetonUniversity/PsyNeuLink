@@ -205,7 +205,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                  params=params)
 
-        # # FIX: ZZZ 10/28/16 IF PARAMETER STATE IS FOR A MAPPING_PROJECTION PROJECTION,
+        # # FIX: ZZZ 10/28/16 IF PARAMETER STATE IS FOR A MAPPING_PROJECTION,
         # # FIX:              REFERENCE VALUE IS MATRIX (WHICH IS CORRECT)
         # # FIX:              BUT FUNCTION IS LINEAR COMBINATION;  SHOULDN'T IT BE JUST LINEAR (TO RETURN THE MATRIX)?
         # # FIX:              OR PARAMETER_MODULATION_OPERATION SHOULD JUST BE ADD

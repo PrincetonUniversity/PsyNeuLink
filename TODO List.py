@@ -49,7 +49,7 @@
 
 # 11/17/16:
 # IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING SIGNAL (OR ANY PROJECTION??):
-#            IF LEARNING SIGNAL IS ASSIGNED TO MAPPING PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
+#            IF LEARNING SIGNAL IS ASSIGNED TO MAPPING_PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
 #            CHECK IF THIS COMPLETES THE ASSIGNMENT OF ITS SENDER AND/OR RECEIVER AND, IF SO, CALL DEFERRED_INIT
 #            ONCE IMPLEMENTED, UPDATE LearningSignal DOCUMENTATION, TO REMOVE REQUIREMENT THAT DEFERRED INIT BE CALLED
 
@@ -544,7 +544,7 @@
 #
 # FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
 #       USE EVC System Test Script and delete CONTROL_PROJECTION for drift_rate param in DDM.__init__()
-# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
+# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningSignal:
 # FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
 # FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
@@ -566,7 +566,7 @@
 # DOCUMENT:
 # ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
 # ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
-# _deferred_init FOR LEARNING SIGNALS, MAPPING PROJECTIONS W/O RECEIEVERS, ETC.
+# _deferred_init FOR LEARNING SIGNALS, MAPPING_PROJECTION PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
 #    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningSignal's receiver, and thus that _instantiate_receiver be called first;
@@ -1248,7 +1248,7 @@
 #           To use keywords for params, Function Function must implement .keyword method that resolves it to value
 #           To use lambda functions for params, Function Function must implement .lambda method that resolves it to value
 
-# DOCUMENT:  PROJECTION MAPPING:  different types of weight assignments
+# DOCUMENT:  PROJECTION MAPPING_PROJECTION:  different types of weight assignments
 #            (in MappingProjection _instantiate_receiver and Function LinearCombination)
 #            AUTO_ASSIGN_MATRIX: if square, use identity matrix, otherwise use full
 #                                differs from full, in that it will use identity if square;  full always assigns all 1s
@@ -1448,7 +1448,7 @@
 #              PARAMETER_STATE_PARAMS,
 #              OUTPUT_STATE_PARAMS
 #              PROJECTION_PARAMS
-#              MAPPING_PARAMS
+#              MAPPING_PROJECTION_PARAMS
 #              CONTROL_PROJECTION_PARAMS
 #              <projection name-specific> params
     # SORT OUT RUNTIME PARAMS PASSED IN BY MECHANISM:
@@ -2157,7 +2157,7 @@
 #
 #endregion
 
-#region MAPPING: ------------------------------------------------------------------------------------------------------
+#region MAPPING_PROJECTION: ------------------------------------------------------------------------------------------------------
 #
 # DOCUMENT:
 # If the sender outputState and/or the receiver inputState are not specified:
