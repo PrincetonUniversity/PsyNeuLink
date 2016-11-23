@@ -2122,7 +2122,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
 
         Note: assume variable is a 2D np.array with three items (input, output, error)
-              for compatibility with other learning functions (and calls from LearningSignal)
+              for compatibility with other learning functions (and calls from LearningProjection)
 
         :var variable: 2D np.array with three items (input array, output array, error array)
         :parameter params: (dict) with entry specifying:

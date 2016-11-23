@@ -16,7 +16,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Functions.Function import *
@@ -34,7 +34,7 @@ __all__ = ['System',
            'WeightedErrorMechanism',
            'MappingProjection',
            'ControlProjection',
-           'LearningSignal',
+           'LearningProjection',
            'LinearCombination',
            'Linear',
            'Exponential',

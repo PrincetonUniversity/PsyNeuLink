@@ -13,7 +13,7 @@ action_selection = Transfer(default_input_value=[0,0,0],
 
 p = process(default_input_value=[0, 0, 0],
             pathway=[input_layer,action_selection],
-            learning=LearningSignal(function=Reinforcement(learning_rate=.05)),
+            learning=LearningProjection(function=Reinforcement(learning_rate=.05)),
             target=0)
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)

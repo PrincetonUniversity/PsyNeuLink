@@ -24,14 +24,14 @@ associated with that projection.  There are three types of states, all of which 
     * used by a mechanism to represent the value of a parameter of its ``function``,
       possibly regulated by a :doc:`ControlProjection` projection;
     * used by a MappingProjection to represent the ``matrix`` parameter of its ``function``,
-      possibly regulated by a :doc:`LearningSignal` projection.
+      possibly regulated by a :doc:`LearningProjection`.
 
 * **OutputState**:
     * used by a mechanism to represent its output, and as the source of any outgoing projection(s):
 
       * :doc:`MappingProjection` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
       * :doc:`ControlProjection` for a :doc:`ControlMechanism <ControlMechanism>`;
-      * :doc:`LearningSignal` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
+      * :doc:`LearningProjection` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
 
 .. _State_Creation:
 
@@ -604,13 +604,13 @@ class State_Base(State):
             #     note: in that case, projection will be in self.receivesFromProjections list
             if isinstance(projection_spec, Projection_Base):
                 if projection_spec.value is DEFERRED_INITIALIZATION:
-                    from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-                    if isinstance(projection_spec, LearningSignal):
+                    from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+                    if isinstance(projection_spec, LearningProjection):
                         # Assign projection to parameterState
                         self.receivesFromProjections.append(projection_spec)
                         projection_spec.init_args[kwReceiver] = self
                         # Skip any further initialization for now
-                        #   (remainder will occur as part of deferred init for LearningSignal)
+                        #   (remainder will occur as part of deferred init for LearningProjection)
                         continue
                     # Complete init for other projections (e.g., ControlProjection)
                     else:
@@ -1163,7 +1163,7 @@ class State_Base(State):
         #region Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        learning_signal_params = merge_param_dicts(self.stateParams, kwLearningSignalParams, PROJECTION_PARAMS)
+        learning_signal_params = merge_param_dicts(self.stateParams, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         #endregion
 
         #region For each projection: get its params, pass them to it, and get the projection's value
@@ -1182,14 +1182,14 @@ class State_Base(State):
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-            from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+            from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 
             # Merge with relevant projection type-specific params
             if isinstance(projection, MappingProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, mapping_params, )
             elif isinstance(projection, ControlProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, control_projection_params)
-            elif isinstance(projection, LearningSignal):
+            elif isinstance(projection, LearningProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, learning_signal_params)
             if not projection_params:
                 # # MODIFIED 9/4/16 OLD:
@@ -1200,7 +1200,7 @@ class State_Base(State):
 
             # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
-            if isinstance(projection, LearningSignal):
+            if isinstance(projection, LearningProjection):
                 # # MODIFIED 9/4/16 OLD:
                 # if context is kwLearning:
                 # MODIFIED 9/4/16 NEW:
@@ -1212,7 +1212,7 @@ class State_Base(State):
                     projection_value = projection.value
 
             else:
-                # Update all non-LearningSignal projections and get value
+                # Update all non-LearningProjection projections and get value
                 projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
@@ -1755,7 +1755,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     PROJECTION_SPEC = 1
     #region 2-item tuple (param_value, projection_spec) [convenience notation for projection to parameterState]:
     # If state_type is ParameterState, and state_spec is a tuple with two items, the second of which is a
-    #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_SIGNAL or class ref to one of those), allow it
+    #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
     # - assign second item as projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
@@ -1766,7 +1766,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #      since it could just be a numeric tuple used for the variable of a state;
     #      could check string against ProjectionRegistry (as done in _parse_projection_ref in State)
     if (isinstance(state_spec, tuple) and len(state_spec) is 2 and
-            (state_spec[PROJECTION_SPEC] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_SIGNAL} or
+            (state_spec[PROJECTION_SPEC] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
                  isinstance(state_spec[PROJECTION_SPEC], Projection) or
                  (inspect.isclass(state_spec[PROJECTION_SPEC]) and issubclass(state_spec[PROJECTION_SPEC], Projection)))
         ):

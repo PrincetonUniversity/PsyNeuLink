@@ -24,7 +24,7 @@ Creating A MonitoringMechanism
 a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
 type. One or more MonitoringMechanisms are also created automatically when a process or system is created for
 which learning is specified (see :ref:`learning in a process <Process_Learning>`,
-and :ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
+and :ref:`automatic creation of LearningSignals <LearningProjection_Automatic_Creation> for details).
 Different types of MonitoringMechanisms monitor  different types of information, and therefore have varying input
 reqirements. See :doc:`subclasses  <MonitoringMechanisms>` for the specific requirements of each type.
 
