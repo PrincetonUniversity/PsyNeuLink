@@ -187,8 +187,8 @@ OUTPUT_STATE = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
-MAPPING_PROJECTION = "MappingProjection"
-CONTROL_SIGNAL = "ControlSignal"
+MAPPING = "MappingProjection"
+CONTROL_PROJECTION = "ControlProjection"
 LEARNING_SIGNAL = "LearningSignal"
 
 # Function:
