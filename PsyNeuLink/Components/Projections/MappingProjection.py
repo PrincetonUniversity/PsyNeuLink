@@ -454,7 +454,7 @@ class MappingProjection(Projection_Base):
         # a projection keyword, projection subclass, or instance of a projection subclass
         elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
                       len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
-                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL}
+                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_PROJECTION, LEARNING_SIGNAL}
                    or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
                        (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
                             issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))

@@ -128,7 +128,7 @@ class ComponentPreferenceSet(PreferenceSet):
                     ParameterState.classPreferences
                     OutputState.classPreferences
                 Projection types:             
-                    ControlSignal.classPreferences
+                    ControlProjection.classPreferences
                     MappingProjection.classPreferences
             - SUBTYPE: subtype-level default settings (if one exists for the type, else type-level settings are used):
                 ControlMechanism subtypes:

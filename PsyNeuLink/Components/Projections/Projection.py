@@ -33,7 +33,7 @@ to another mechanism (its ``receiver``).  There are three types of projections t
     the projection's ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically,
     MappingProjections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
-* :doc:`ControlSignal`
+* :doc:`ControlProjection`
     Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
     <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
     modulate the value of the corresponding parameter of the mechanism's function.  ControlSignals projections are
@@ -57,7 +57,7 @@ Creating a Projection
 Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the ``pathway`` attribute of a process, or when a tuple is used to specify the parameter of a function
-(such as a :ref:`ControlSignal for a mechanism <Mechanism_Assigning_A_Control_Signal>`,
+(such as a :ref:`ControlProjection for a mechanism <Mechanism_Assigning_A_ControlProjection>`,
 or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`).
 
 .. _Projection_In_Context_Specification:
@@ -72,7 +72,7 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
 
   * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` projection with the :doc:`DefaultMechanism` as its
     ``sender``.
-  * :keyword:`CONTROL_SIGNAL` - a :doc:`ControlSignal` projection  with the :doc:`DefaultControlMechanism` as its
+  * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` projection  with the :doc:`DefaultControlMechanism` as its
     ``sender``.
   * :keyword:`LEARNING_SIGNAL` - a :doc:`LearningSignal` projection.  This can only be used for a projection to the
     ``matrix`` parameterState of a :doc:`MappingProjection` projection.  If the ``receiver`` for the MappingProjection
@@ -90,7 +90,7 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
   * :keyword:`PROJECTION_TYPE`: <name of a projection type>
 
       if this entry is absent, a default projection will be created that is appropriate for the context
-      (for example, a MappingProjection for an inputState, and a ControlSignal projection for a parameterState).
+      (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
 
   * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
 
@@ -169,7 +169,7 @@ COMMENT:
     to the mechanism depends on the type of projection:
         MappingProjection:
             receiver = <Mechanism>.inputState
-        ControlSignal projection:
+        ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
         LearningSignal projection:
@@ -209,7 +209,7 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
                             LEARNING_SIGNAL,
-                            CONTROL_SIGNAL}
+                            CONTROL_PROJECTION}
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
@@ -378,7 +378,7 @@ class Projection_Base(Projection):
             MappingProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.inputState
-            ControlSignal projection:
+            ControlProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
@@ -448,10 +448,10 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlSignal??
+# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
+#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(variable_default=variable,
@@ -577,8 +577,8 @@ class Projection_Base(Projection):
         If self.value / self.variable is None, set to sender.value
 
         Notes:
-        * ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it
+        * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
+            if so, it assigns a ControlProjection-specific inputState, outputState and ControlSignalChannel to it
         [TBI: * LearningSignal overrides this method to check if sender is kwDefaultSender;
             if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 
@@ -681,7 +681,7 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-# from PsyNeuLink.Components.Projections.ControlSignal import is_control_signal
+# from PsyNeuLink.Components.Projections.ControlProjection import is_control_signal
 # from PsyNeuLink.Components.Projections.LearningSignal import is_learning_signal
 
 def _is_projection_spec(spec):
@@ -710,7 +710,7 @@ def _is_projection_spec(spec):
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], CONTROL_SIGNAL):
+            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
                 return True
             if _is_projection_subclass(spec[1], LEARNING_SIGNAL):
                 return True
