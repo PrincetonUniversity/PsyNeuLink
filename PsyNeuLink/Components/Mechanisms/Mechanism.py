@@ -197,7 +197,7 @@ arguments in its constructor method). Like other states, parameterStates can rec
 from the :doc:`ControlProjection` projection(s) of a :doc:`ControlMechanism<ControlMechanism>`, that is used to modify the
 function's parameter value in response to the outcome(s) of processing.
 
-  .. _Mechanism_Assigning_A_Control_Signal:
+  .. _Mechanism_Assigning_A_Control_Projection:
 
   *Assigning a ControlProjection*
 
@@ -252,10 +252,10 @@ key for each entry is the name of an outputState, and the value is the outputSta
 a mechanism's ``execute`` method assigns the output of its ``function`` to the value of the primary outputState.
 Other outputStates are assigned other values associated with the output of the ``function`` (e.g., its mean,
 variance, etc.).  OutputStates may also be used for other purposes.  For example, :doc:`ControlMechanisms` can have
-multiple outputStates, one for each of their :doc:`ControlSignals`.  Each outputState can serve as a sender for
-projections, to transmit its value to other mechanisms and/or the output of a process or system.  The ``value``
-attributes of all of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the mechanism's
-``outputValue`` attribute.
+multiple outputStates, one for each of their :doc:`ControlProjections <ControlProjection>`.  Each outputState can serve
+as a sender for projections, to transmit its value to other mechanisms and/or the output of a process or system.
+The ``value`` attributes of all of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the
+ mechanism's ``outputValue`` attribute.
 
 COMMENT:
 [TBI:]
@@ -1219,7 +1219,7 @@ class Mechanism_Base(Mechanism):
             entries that are themselves dictionaries containing parameters for the state's function or its projections.
             The key for each entry is a keyword indicating whether it is for the state's function
             (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`), a particular type of
-            projection (:keyword:`MAPPING_PARAMS` or :keyword:`CONTROL_SIGNAL_PARAMS`), or to a specific projection
+            projection (:keyword:`MAPPING_PARAMS` or :keyword:`CONTROL_PROJECTION_PARAMS`), or to a specific projection
             (using its name), and the value of each entry is a dictionary containing the parameters for the function,
             projection, or set of projections (keys of which are parameter names, and values the values to be assigned).
 
@@ -1247,8 +1247,8 @@ class Mechanism_Base(Mechanism):
                         + MAPPING_PARAMS:<dict>:
                              entry will be passed to all of the State's MappingProjections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
-                        + CONTROL_SIGNAL_PARAMS:<dict>:
-                             entry will be passed to all of the State's ControlProjection projections,
+                        + CONTROL_PROJECTION_PARAMS:<dict>:
+                             entry will be passed to all of the State's ControlProjections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + <projectionName>:<dict>:
                              entry will be passed to the State's projection with the key's name,

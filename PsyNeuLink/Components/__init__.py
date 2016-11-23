@@ -91,10 +91,10 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 # Note: this must be an instantiated object
 DefaultMonitoringMechanism = ComparatorMechanism(name=kwDefaultMonitoringMechanism)
 
-# Use as PROJECTION_SENDER (default sender for ControlProjection projections) if sender is not specified (in ControlProjection)
+# Use as PROJECTION_SENDER (default sender for ControlProjections) if sender is not specified (in ControlProjection)
 
 # Instantiates DefaultController (ControlMechanism):
-# - automatically assigned as the sender of default ControlProjection Projections (that use the CONTROL_PROJECTION keyword)
+# - automatically assigned as the sender of default ControlProjections (that use the CONTROL_PROJECTION keyword)
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlProjection intensities
@@ -105,7 +105,7 @@ DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 #    in place of DefaultController, when instantiating a System for which an existing control mech is specified
 # - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
 # - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
-#     existing ControlProjection projections from DefaultController to that instance of the specified subclass
+#     existing ControlProjections from DefaultController to that instance of the specified subclass
 # Note: must be a class
 # SystemDefaultControlMechanism = EVCMechanism
 SystemDefaultControlMechanism = DefaultControlMechanism

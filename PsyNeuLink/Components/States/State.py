@@ -1162,7 +1162,7 @@ class State_Base(State):
 
         #region Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PARAMS, PROJECTION_PARAMS)
-        control_signal_params = merge_param_dicts(self.stateParams, CONTROL_SIGNAL_PARAMS, PROJECTION_PARAMS)
+        control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
         learning_signal_params = merge_param_dicts(self.stateParams, kwLearningSignalParams, PROJECTION_PARAMS)
         #endregion
 
@@ -1188,7 +1188,7 @@ class State_Base(State):
             if isinstance(projection, MappingProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, mapping_params, )
             elif isinstance(projection, ControlProjection):
-                projection_params = merge_param_dicts(self.stateParams, projection.name, control_signal_params)
+                projection_params = merge_param_dicts(self.stateParams, projection.name, control_projection_params)
             elif isinstance(projection, LearningSignal):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, learning_signal_params)
             if not projection_params:

@@ -124,7 +124,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # # MODIFIED 9/15/16 END
 
 
-    def _instantiate_control_signal_projection(self, projection, context=None):
+    def _instantiate_control_projection(self, projection, context=None):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
         """
 
@@ -140,7 +140,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         self.instantiate_control_signal_channel(projection=projection, context=context)
 
         # Call super to instantiate outputStates
-        super()._instantiate_control_signal_projection(projection=projection,
+        super()._instantiate_control_projection(projection=projection,
                                                       context=context)
 
     def instantiate_control_signal_channel(self, projection, context=None):

@@ -309,7 +309,7 @@ def system(default_input_value=None,
 
     controller : ControlMechanism : default DefaultController
         the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        monitor_for_control, and specify the value of ControlProjection projections in the system.
+        monitor_for_control, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the ``controller`` is executed during system execution.
