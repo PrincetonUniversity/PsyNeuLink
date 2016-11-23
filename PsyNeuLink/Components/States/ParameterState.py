@@ -189,7 +189,7 @@ class ParameterState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
         """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
+IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
 
         :param owner: (Mechanism)
         :param reference_value: (value)
@@ -209,7 +209,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         # # FIX:              REFERENCE VALUE IS MATRIX (WHICH IS CORRECT)
         # # FIX:              BUT FUNCTION IS LINEAR COMBINATION;  SHOULDN'T IT BE JUST LINEAR (TO RETURN THE MATRIX)?
         # # FIX:              OR PARAMETER_MODULATION_OPERATION SHOULD JUST BE ADD
-        # # FIX:              (SET THAT WAY BY LEARNING SIGNAL, BUT NOT YET IN INIT??)
+        # # FIX:              (SET THAT WAY BY LEARNING PROJECTION, BUT NOT YET IN INIT??)
         # # ParameterState is for a matrix of a mapping projection,
         # #     so its function (LinearCombination) should use SUM (rather than PRODUCT)
         # #     so that weight changes can be added (e.g., by learningSignals)
@@ -219,7 +219,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #              (isinstance(reference_value, np.ndarray) and reference_value.ndim == 2))):
         #     params[FUNCTION] = Linear
         #     params[FUNCTION_PARAMS] = {SLOPE:1, INTERCEPT:0}
-        #     # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING SIGNAL
+        #     # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
         #     params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
         #     # params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
         #     # params[FUNCTION_PARAMS][OPERATION]=SUM
@@ -253,7 +253,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
         #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
         #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
         if self.name == MATRIX:
-            # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING SIGNAL
+            # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
             self.params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
 
         super()._instantiate_function(context=context)

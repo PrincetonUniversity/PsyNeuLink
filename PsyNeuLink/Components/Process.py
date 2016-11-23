@@ -64,13 +64,13 @@ at least to the next one in the pathway, though it can project to others, and al
 projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
 a :doc:`System`.  the mechanisms in a process pathway are generally :doc:`ProcessingMechanisms`, which receive an input,
 transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
-in a process must be  :doc:`MappingProjection` projections (see Projections).  These transmit the output of a mechanism
-(the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a pathway
-requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
-of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
-interposing them in the list between the pair.  When no projection appears between two adjacent mechanisms in the
-pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default projection.
-Specifying the components of a pathway is described in more detail below.
+in a process must be :doc:`MappingProjections <MappingProjection>` (see Projections).  These transmit the output of a
+mechanism (the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a
+``pathway`` requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also
+contains a set of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be
+specified by interposing them in the list between the pair.  When no projection appears between two adjacent
+mechanisms in the pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default
+projection. Specifying the components of a pathway is described in more detail below.
 
 .. _Process_Mechanisms:
 
@@ -105,9 +105,9 @@ Projections
 Projections between mechanisms in the ``pathway`` of a process are specified in one of three ways:
 
 * Inline specification
-    Projection specifications can be interposed between any two mechanisms in the ``pathway`` list.  This creates
-    a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
-    can be an instance of a :doc:`MappingProjection` projection, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
+    Projection specifications can be interposed between any two mechanisms in the ``pathway`` list.  This creates a
+    projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
+    be an instance of a :doc:`MappingProjection`, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
     for a type of MappingProjection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
     :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
     (see :ref:`Projection <Projection_Creation>` for details of how to specify projections).
@@ -173,10 +173,10 @@ In either case, all mechanisms that receive projections for which learning has b
 with learning (see :doc:`LearningProjection`).
 
 When learning is specified, the following objects are automatically created (see figure below):
-* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value.
-* :doc:`MappingProjection` projection from the mechanism being monitored to the MonitoringMechanism
-* :doc:`LearningProjection` that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
-  projects to the mechanism being monitored).
+* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value;
+* :doc:`MappingProjection` from the mechanism being monitored to the MonitoringMechanism;
+* :doc:`LearningProjection` from the MonitoringMechanism to the projection being learned
+  (i.e., the one that projects to the mechanism being monitored).
 
 Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation[LINK]), that will
 implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
@@ -188,7 +188,7 @@ be compatible with learning.
 **Figure: Learning in PsyNeuLink**
 
 .. figure:: _static/PNL_learning_fig.png
-   :alt: Schematic of learning mechanisms and LearningProjection projections in a process
+   :alt: Schematic of learning mechanisms and LearningProjections in a process
 
    Learning in a connectionist network with two layers
 
@@ -403,7 +403,7 @@ def process(process_spec=None,
     pathway : List[mechanism spec[, projection spec], mechanism spec...] : default List[``DefaultMechanism``]
         the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
         must a  :doc:`ProcessingMechanism`.  The specification for each can be an instance, a class name (creates a
-        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`MappingProjection` projection.
+        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`MappingProjection`.
         The specification for each can be the class name (creates a default instance), an instance, or a specification
         dictionary [LINK].
 
@@ -582,7 +582,7 @@ class Process_Base(Process):
         Entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
         a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
         the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningProjection
-        spec can be a LearningProjection projection object, the class (which specifies a default instance) or a function
+        spec can be a LearningProjection object, the class (which specifies a default instance) or a function
         call to instantiate a LearningProjection (including parameters).  The second and third items of mechanism tuples,
         and the second item of projection tuples are optional and therefore may be :keyword:`None`.
         The third item of projection tuples is currenlty not used and is always :keyword:`None`.
@@ -700,8 +700,8 @@ class Process_Base(Process):
         .. note::
         If an existing instance of a LearningProjection used for the specification, or a call to the LearningProjection
         constructor, that object itself, or the one created by the constructor, will **not** be used as the actual
-        LearningProjection projection for the process. Rather it will be used as a template (including any parameters that
-        are specified) for creating LearningProjection projections for all the MappingProjections in the process.
+        LearningProjection for the process. Rather it will be used as a template (including any parameters that
+        are specified) for creating LearningProjections for all the MappingProjections in the process.
 
       .. _learning_enabled : bool
              indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
@@ -1694,7 +1694,7 @@ class Process_Base(Process):
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
-                    # Initialize each LearningProjection projection
+                    # Initialize each LearningProjection
                     for LEARNING_PROJECTION in parameter_state.receivesFromProjections:
                         LEARNING_PROJECTION._deferred_init(context=context)
             # Not all Projection subclasses instantiate parameterStates

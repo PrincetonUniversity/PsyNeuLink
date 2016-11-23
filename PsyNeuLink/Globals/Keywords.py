@@ -189,7 +189,7 @@ kwParameterState = "ParameterState"
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
 CONTROL_PROJECTION = "ControlProjection"
-LEARNING_SIGNAL = "LearningProjection"
+LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
@@ -311,7 +311,7 @@ PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
-CONTROL_PROJECTIONS = 'ControlSignalProjections'
+CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
 COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'

@@ -28,7 +28,7 @@ It can also be created by :ref:`in context specification of a LearningProjection
 for a projection to the  :keyword:`TERMINAL` mechanism [LINK] of a process.  One or more ComparatorMechanisms are also
 created automatically when a process or system is created for which learning is specified; each is assigned a
 projection from the outputState of a :keyword:`TERMINAL` mechanism that receives a MappingProjection being learned,
-and a LearningProjection projection to that MappingProjection  (see :ref:`learning in a process <Process_Learning>`,
+and a LearningProjection to that MappingProjection  (see :ref:`learning in a process <Process_Learning>`,
 and :ref:`automatic creation of LearningSignals  <LearningProjection_Automatic_Creation> for details).
 
 
