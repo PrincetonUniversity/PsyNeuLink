@@ -200,7 +200,7 @@ class InputState(State_Base):
     valueEncodingDim = 1
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
 
     #endregion
 

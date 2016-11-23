@@ -1362,7 +1362,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING._instantiate_receiver)
+# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING_PROJECTION._instantiate_receiver)
 # FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
                 #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 elif isinstance(param_value, (np.ndarray, np.matrix)):

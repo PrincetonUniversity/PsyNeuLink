@@ -595,7 +595,7 @@ class Projection_Base(Projection):
             if issubclass(self.sender, OutputState):
                 # MODIFIED 9/12/16 NEW:
                 # self.paramsCurrent['function_params']['matrix']
-                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING PROJECTION??
+                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION PROJECTION??
                 # MODIFIED 9/12/16 END
                 self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
