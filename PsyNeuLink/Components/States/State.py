@@ -18,11 +18,11 @@ associated with that projection.  There are three types of states, all of which 
 :doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below.
 
 * **InputState**:
-     used by a mechanism to represent the input provided by one or more :doc:`MappingProjection` projections.
+     used by a mechanism to represent the input provided by one or more :doc:`MappingProjections <MappingProjection>`.
 
 * **ParameterState**:
     * used by a mechanism to represent the value of a parameter of its ``function``,
-      possibly regulated by a :doc:`ControlProjection` projection;
+      possibly regulated by a :doc:`ControlProjection`;
     * used by a MappingProjection to represent the ``matrix`` parameter of its ``function``,
       possibly regulated by a :doc:`LearningProjection`.
 
@@ -1163,7 +1163,7 @@ class State_Base(State):
         #region Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = merge_param_dicts(self.stateParams, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        learning_signal_params = merge_param_dicts(self.stateParams, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        learning_projection_params = merge_param_dicts(self.stateParams, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         #endregion
 
         #region For each projection: get its params, pass them to it, and get the projection's value
@@ -1190,7 +1190,7 @@ class State_Base(State):
             elif isinstance(projection, ControlProjection):
                 projection_params = merge_param_dicts(self.stateParams, projection.name, control_projection_params)
             elif isinstance(projection, LearningProjection):
-                projection_params = merge_param_dicts(self.stateParams, projection.name, learning_signal_params)
+                projection_params = merge_param_dicts(self.stateParams, projection.name, learning_projection_params)
             if not projection_params:
                 # # MODIFIED 9/4/16 OLD:
                 # projection_params = NotImplemented
@@ -1212,7 +1212,7 @@ class State_Base(State):
                     projection_value = projection.value
 
             else:
-                # Update all non-LearningProjection projections and get value
+                # Update all non-LearningProjections and get value
                 projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass

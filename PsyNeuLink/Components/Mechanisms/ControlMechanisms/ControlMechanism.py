@@ -13,8 +13,9 @@ Overview
 --------
 
 ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` to assess the
-outcome of processing by those mechanisms, and use this to regulate the value of :doc:`ControlProjection` projections to
-other ProcessingMechanisms in the system for which the ControlMechanism is a ``controller``.
+outcome of processing by those mechanisms, and use this to regulate the value of
+:doc:`ControlProjections <ControlProjection>` to other ProcessingMechanisms in the system for which the
+ControlMechanism is a ``controller``.
 
 .. _ControlMechanism_Creation:
 
@@ -26,8 +27,8 @@ A ControlMechanism is also created automatically whenever a system is created (s
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates to be monitored
 by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can be specified in a number of
 ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a :doc:`MappingProjection` projection from that outputState to the newly created
-inputState.  How a ControlMechanism creates its ControlProjections depends on the subclass.
+outputStates it monitors, and assigns a :doc:`MappingProjection` from that outputState to the newly created inputState.
+How a ControlMechanism creates its ControlProjections depends on the subclass.
 
 .. _ControlMechanism_Monitored_OutputStates:
 
@@ -114,7 +115,7 @@ projections. In the next round of execution, each ControlProjection's value is u
 projects, to update the corresponding parameter of the recieving mechanism's function.
 
 .. note::
-   A :doc:`ParameterState` that receives a :doc:`ControlProjection` projection does not update its value until its owner
+   A :doc:`ParameterState` that receives a :doc:`ControlProjection` does not update its value until its owner
    mechanism executes (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
    receiver mechanism has executed.
@@ -228,8 +229,8 @@ class ControlMechanism_Base(Mechanism_Base):
     ----------
 
     controlProjections : List[ControlProjection]
-        list of :class:`ControlProjection` projections managed by the ControlMechanism.  There is one for each ouputState
-        in the ``outputStates`` dictionary.
+        list of :doc:`ControlProjections <ControlProjection>` managed by the ControlMechanism.
+        There is one for each ouputState in the ``outputStates`` dictionary.
 
     controlProjectionCosts : 2d np.array
         array of costs associated with each of the control signals in the ``controlProjections`` attribute.

@@ -198,7 +198,7 @@ from the :doc:`ControlProjections <ControlProjection>` of a :doc:`ControlMechani
 modify the
 function's parameter value in response to the outcome(s) of processing.
 
-  .. _Mechanism_Assigning_A_Control_Projection:
+  .. _Mechanism_Assigning_A_ControlProjection:
 
   *Assigning a ControlProjection*
 

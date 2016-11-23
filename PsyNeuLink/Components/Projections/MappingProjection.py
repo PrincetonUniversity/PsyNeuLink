@@ -104,7 +104,8 @@ In addition to its ``function``, mapping projections use the following two the p
   The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
   :ref:`projection specification <Projection_In_Context_Specification>`.
   COMMENT:
-      XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING SIGNAL, BUT ALSO A CONTROL SIGNAL OR A MAPPING_PROJECTION
+      XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
+                BUT ALSO A CONTROL_PROJECTION OR A MAPPING_PROJECTION
       XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
   COMMENT
 
@@ -211,7 +212,7 @@ class MappingProjection(Projection_Base):
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
         the operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
-        Most commonly used with LearningProjection projections.
+        Most commonly used with LearningProjections.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,

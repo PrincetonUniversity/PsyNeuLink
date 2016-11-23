@@ -44,8 +44,8 @@
 #       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
 # 11/17/16:
-# IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING SIGNAL (OR ANY PROJECTION??):
-#            IF LEARNING SIGNAL IS ASSIGNED TO MAPPING_PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
+# IMPLEMENT: DEFERRED INSTANTIATION OF LEARNING PROJECTION (OR ANY PROJECTION??):
+#            IF LEARNING PROJECTION IS ASSIGNED TO MAPPING_PROJECTION AND/OR AS PROJECTION FOR A MONITORING MECHANISM,
 #            CHECK IF THIS COMPLETES THE ASSIGNMENT OF ITS SENDER AND/OR RECEIVER AND, IF SO, CALL DEFERRED_INIT
 #            ONCE IMPLEMENTED, UPDATE LearningProjection DOCUMENTATION, TO REMOVE REQUIREMENT THAT DEFERRED INIT BE CALLED
 
@@ -163,7 +163,7 @@
 
 # FIX: If reset_clock and/or initialize == True, set object.result = []
 
-# IMPLEMENT: LEARNING_SIGNAL_PARAMS to parallel CONTROL_PROJECTION_PARAMS
+# IMPLEMENT: LEARNING_PROJECTION_PARAMS to parallel CONTROL_PROJECTION_PARAMS
 
 # FIX:
 #     run() SHOULD ALSO BE INCLUDED IN DOCUMENTATION OF EXECUTE METHOD FOR PROCESS AND SYSTEM:
@@ -360,7 +360,7 @@
 
 # 8/25/16:
 
-# FIX: MAKE SURE LEARNING SIGNALS ON PROCESS ARE ALWAYS ADDED AS COPIES
+# FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
                 # FIX: ?? SHOULD THIS USE assign_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
@@ -561,8 +561,8 @@
 # DOCUMENT: Update ReadMe
 # DOCUMENT:
 # ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
-# ORDER INSTANTIATION OF LEARNING SIGNAL COMPONENTS:
-# _deferred_init FOR LEARNING SIGNALS, MAPPING_PROJECTION PROJECTIONS W/O RECEIEVERS, ETC.
+# ORDER INSTANTIATION OF LEARNING PROJECTION COMPONENTS:
+# _deferred_init FOR LEARNING PROJECTIONS, MAPPING_PROJECTIONS W/O RECEIEVERS, ETC.
 # PROBLEM:
 #    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
 #        this reqiures access to LearningProjection's receiver, and thus that _instantiate_receiver be called first;
@@ -1359,7 +1359,7 @@
 # DOCUMENT: Function subclasses must be explicitly registered in Components.__init__.py
 # DOCUMENT: ParameterStates are instantiated by default for any FUNCTION params
 #                unless suppressed by params[FUNCTION_PARAMS][PARAMETER_STATES] = None
-#           Currently, ControlProjection and LearningProjection projections suppress parameterStates
+#           Currently, ControlProjection and LearningProjection suppress parameterStates
 #                by assigning paramClassDefaults = {FUNCTION_PARAMS: {PARAMETER_STATES:None}}
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
@@ -1671,7 +1671,7 @@
 # DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
 #                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 
-# FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL CONTROL SIGNAL PROJECTIONS IN
+# FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL ControlProjections IN
 # FIX:                   ControlProjection.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
 # FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
@@ -2204,7 +2204,7 @@
 #             - implement self.errorSignal attribute
 # IMPLEMENT: LEARNING_PROJECTION for Process:
 #             - assign self.errorSignal attribute to all mechanisms
-#             - assign LearningProjection projection to all MappingProjections
+#             - assign LearningProjection to all MappingProjections
 # IMPLEMENT: NEW DESIGN:
 #
 # 0) Make sure MappingProjection from terminal Mechanism in Process is to ComparatorMechanism using IDENTITY_MATRIX
@@ -2277,7 +2277,7 @@
 # MappingProjection should have kwLearningParam which:
 #    - specifies LearningProjection
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
-#    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningProjection Projection with BP
+#    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningProjection with BP
 #
 # Projection mechanism:
 # Generalized delta rule:

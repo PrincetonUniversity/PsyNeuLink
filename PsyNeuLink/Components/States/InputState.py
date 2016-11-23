@@ -215,7 +215,7 @@ class InputState(State_Base):
                  prefs:is_pref_set=None,
                  context=None):
         """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
+IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
 reference_value is component of owner.variable that corresponds to the current State
 
         :param owner: (Function object)

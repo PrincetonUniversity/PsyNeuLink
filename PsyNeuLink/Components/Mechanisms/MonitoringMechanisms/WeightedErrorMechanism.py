@@ -30,7 +30,7 @@ context specification of a LearningProjection <_Projection_Creation>` for a proj
 a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
 are also created automatically when a process system is created for which learning is specified; each is
 assigned a projection from the outputState of a ProcessingMechanism that receives a MappingProjection being
-learned, and a LearningProjection projection to that MappingProjection
+learned, and a LearningProjection to that MappingProjection
 (see :ref:`learning in a process <Process_Learning>`, and
 :ref:`automatic creation of LearningSignals <LearningProjection_Automatic_Creation> for details).
 

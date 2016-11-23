@@ -49,7 +49,7 @@ it is generated automatically when a system is created and an EVCMechanism is sp
   * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
     EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
     is added to the EVCMechanism for each outputState specified in its ``monitor_for_control`` parameter, and a
-    :doc:`MappingProjection` projection is created that projects from that outputState to the EVCMechanism's inputState
+    :doc:`MappingProjection` is created that projects from that outputState to the EVCMechanism's inputState
     (see _ControlMechanism_Monitored_OutputStates for specifying :keyword:`MONITOR_FOR_CONTROL`).
   ..
   * **Prediction Mechanisms** -- these are used to generate the input for each simulation (execution) of the system

@@ -41,9 +41,8 @@ to another mechanism (its ``receiver``).  There are three types of projections t
 ..
 * :doc:`LearningProjection`
     These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
-    transmit this to the parameterState of a :doc:`MappingProjection` projection, which uses this to modify its
-    ``matrix`` parameter. LearningProjection projections are used in the context of a :doc:`System` or :doc:`Process`
-    that uses learning.
+    transmit this to the parameterState of a :doc:`MappingProjection`, which uses this to modify its ``matrix``
+    parameter. LearningProjections are used in the context of a :doc:`System` or :doc:`Process` that uses learning.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
@@ -70,15 +69,14 @@ or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specificati
 
   *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` projection with the :doc:`DefaultMechanism` as its
-    ``sender``.
-  * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` projection  with the :doc:`DefaultControlMechanism` as its
-    ``sender``.
+  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` with the :doc:`DefaultMechanism` as its ``sender``.
+  * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` with the :doc:`DefaultControlMechanism`
+    as its ``sender``.
   * :keyword:`LEARNING_PROJECTION` - a :doc:`LearningProjection`.  This can only be used for a projection to the
-    ``matrix`` parameterState of a :doc:`MappingProjection` projection.  If the ``receiver`` for the MappingProjection
-    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningProjection.
-    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a
-    MappingProjection projection from the error source to the MonitoringMechanism
+    ``matrix`` parameterState of a :doc:`MappingProjection`.  If the ``receiver`` for the MappingProjection
+    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the
+    LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
+    as will a MappingProjection from the error source to the MonitoringMechanism
     (see :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
 
   *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
@@ -105,7 +103,7 @@ or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specificati
 .. _Projection_Automatic_Creation:
 
 *Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
-a process automatically generates a  :doc:`MappingProjection` projection between adjacent mechanisms in its ``pathway`` if
+a process automatically generates a :doc:`MappingProjection` between adjacent mechanisms in its ``pathway`` if
 none is specified; and :doc:`LearningProjection`  projections are automatically generated when
 :ref:`learning <Process_Learning>` is specified for a process.  Creating a :doc:`state <State>` will also
 automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
@@ -172,7 +170,7 @@ COMMENT:
         ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
-        LearningProjection projection:
+        LearningProjection:
             sender = <Mechanism>.outputState
             receiver = <MappingProjection>.parameterState IF AND ONLY IF there is a single one
                         that is a ParameterState;  otherwise, an exception is raised

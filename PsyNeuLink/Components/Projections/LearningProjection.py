@@ -14,18 +14,18 @@
 Overview
 --------
 
-A LearningProjection projection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
+A LearningProjection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
 and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.  This is used to modify the
-:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection` projection.  A LearningProjection can be
-assigned different functions[LINK] to implement different learning algorithms, which are associated with
-corresponding types of MonitoringMechanisms.
+:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection`.  A LearningProjection can be assigned
+different functions[LINK] to implement different learning algorithms, which are associated with corresponding types
+of MonitoringMechanisms.
 
 .. _LearningProjection_Creation:
 
-Creating a LearningProjection Projection
+Creating a LearningProjection
 ------------------------------------
 
-A LearningProjection projection can be created in any of the ways that can be used to
+A LearningProjection can be created in any of the ways that can be used to
 :ref:`create a projection <Projection_Creation>`, or by including it in the specification of a
 :ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <_Process_Projections>`
 of a process.  Its ``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver``
@@ -218,12 +218,12 @@ class LearningProjection(Projection_Base):
         By default, it contains an entry for the projection's default ``function`` and parameter assignments.
 
     name : str : default TransferMechanism-<index>
-        a string used for the name of the LearningProjection projection.
+        a string used for the name of the LearningProjection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        the PreferenceSet for the LearningProjection projection.
+        the PreferenceSet for the LearningProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -415,7 +415,7 @@ class LearningProjection(Projection_Base):
         """
         # pass
         # MODIFIED 8/14/16: MOVED FROM _instantiate_sender
-        # Add LearningProjection projection to MappingProjection's parameterState
+        # Add LearningProjection to MappingProjection's parameterState
         # Note: needs to be done after _instantiate_function, since validation requires self.value be assigned
         self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
