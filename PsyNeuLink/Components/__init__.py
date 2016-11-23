@@ -13,7 +13,7 @@
 #            'kwParameterState',
 #            'MAPPING',
 #            'CONTROL_SIGNAL',
-#            'LEARNING_SIGNAL']
+#            'LEARNING_PROJECTION']
 
 import inspect
 import warnings
@@ -206,13 +206,13 @@ register_category(entry=ControlSignal,
                   context=kwInitPy)
 # CONTROL_SIGNAL = ControlSignal.__name__
 
-# LearningSignal
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-register_category(entry=LearningSignal,
+# LearningProjection
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# LEARNING_SIGNAL = LearningSignal.__name__
+# LEARNING_PROJECTION = LearningProjection.__name__
 
 #endregion
 

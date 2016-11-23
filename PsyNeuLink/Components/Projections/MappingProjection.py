@@ -43,9 +43,9 @@ using a ``matrix`` appropriate to the circumstance  (matrix types are described 
   inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creation`);  a
   :keyword:`IDENTITY_MATRIX` will be used.
 
-* by a **LearningSignal**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
+* by a **LearningProjection**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
   that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
-  depends on the ``function`` parameter of the :doc:`LearningSignal`.[LINK]
+  depends on the ``function`` parameter of the :doc:`LearningProjection`.[LINK]
 
 When a mapping projection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
 or they can be assigned by default (see below).
@@ -56,7 +56,7 @@ Structure
 ---------
 
 COMMENT:
-    XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningSignal CAN BE SPECIFIED HERE:
+    XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningProjection CAN BE SPECIFIED HERE:
             IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
             SEE BELOW:  If there is a params[FUNCTION_PARAMS][MATRIX][1]
     SPECIFIED IN TUPLE ASSIGNED TO MATRIX PARAM (MATRIX ENTRY OF PARAMS DICT)
@@ -111,7 +111,7 @@ In addition to its ``function``, mapping projections use the following two the p
 ``parameter_modulation_operation``
 
   Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
-  influence it.  For example, this is used for a :doc:`LearningSignal` projection to apply weight changes to
+  influence it.  For example, this is used for a :doc:`LearningProjection` to apply weight changes to
   ``matrix`` during learning.  ``parameter_modulation_operation`` must be assigned a value of
   :class:`ModulationOperation`, and the operation is always applied in an element-wise (Hadamard[LINK]) fashion.
   The default operation is ``ADD``.
@@ -123,7 +123,7 @@ Execution
 
 A mapping projection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
 and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
-cause the value of any projections (e.g., a LearningSignal) it receives to be applied to the matrix. This will bring
+cause the value of any projections (e.g., a LearningProjection) it receives to be applied to the matrix. This will bring
 into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
 Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
 ``matrix`` will not show the effects of projections to its parameterState until the mapping projection has been
@@ -211,7 +211,7 @@ class MappingProjection(Projection_Base):
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
         the operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
-        Most commonly used with LearningSignal projections.
+        Most commonly used with LearningProjection projections.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
@@ -232,7 +232,7 @@ class MappingProjection(Projection_Base):
     ----------
 
     monitoringMechanism : MonitoringMechanism
-        source of error signal for matrix weight changes when :doc:`learning <LearningSignal>` is used.
+        source of error signal for matrix weight changes when :doc:`learning <LearningProjection>` is used.
 
     matrix : 2d np.array
         matrix used by ``function`` to transform input from ``sender`` and to ``value`` used by ``receiver``.
@@ -383,7 +383,7 @@ class MappingProjection(Projection_Base):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
-        If there is a functionParameterStates[LEARNING_SIGNAL], update the matrix parameterState:
+        If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix parameterState:
                  it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
                  and then call its super().execute
            - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
@@ -398,16 +398,16 @@ class MappingProjection(Projection_Base):
         if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
 
             # Assume that if monitoringMechanism attribute is assigned,
-            #    both a LearningSignal and parameterState[MATRIX] to receive it have been instantiated
+            #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
             matrix_parameter_state = self.parameterStates[MATRIX]
 
             # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix
 
-            # Pass params for parameterState's funtion specified by instantiation in LearningSignal
+            # Pass params for parameterState's funtion specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent
 
-            # Update parameter state: combines weightChangeMatrix from LearningSignal with matrix baseValue
+            # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix baseValue
             matrix_parameter_state.update(weight_change_params, context=context)
 
             # Update MATRIX
@@ -454,7 +454,7 @@ class MappingProjection(Projection_Base):
         # a projection keyword, projection subclass, or instance of a projection subclass
         elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
                       len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
-                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL}
+                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING, CONTROL_SIGNAL, LEARNING_PROJECTION}
                    or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
                        (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
                             issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))

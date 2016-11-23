@@ -1,7 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
@@ -40,9 +40,9 @@ Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 Input_Weights = MappingProjection(name='Input Weights',
                         # sender=Input_Layer,
                         # receiver=Hidden_Layer_1,
-                        # matrix=(random_weight_matrix, LearningSignal()),
+                        # matrix=(random_weight_matrix, LearningProjection()),
                         # matrix=random_weight_matrix,
-                        # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal()),
+                        # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection()),
                         # matrix=RANDOM_CONNECTIVITY_MATRIX
                         # matrix=FULL_CONNECTIVITY_MATRIX,
                         matrix=Input_Weights_matrix
@@ -53,7 +53,7 @@ Input_Weights = MappingProjection(name='Input Weights',
 Middle_Weights = MappingProjection(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
-                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal())
+                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
                          # matrix=FULL_CONNECTIVITY_MATRIX
                          matrix=Middle_Weights_matrix
                          )
@@ -63,12 +63,12 @@ Output_Weights = MappingProjection(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
                          # matrix=random_weight_matrix,
-                         # matrix=(random_weight_matrix, LEARNING_SIGNAL),
-                         # matrix=(random_weight_matrix, LearningSignal),
-                         # matrix=(random_weight_matrix, LearningSignal()),
+                         # matrix=(random_weight_matrix, LEARNING_PROJECTION),
+                         # matrix=(random_weight_matrix, LearningProjection),
+                         # matrix=(random_weight_matrix, LearningProjection()),
                          # matrix=(RANDOM_CONNECTIVITY_MATRIX),
-                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal),
-                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningSignal)
+                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection),
+                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection)
                          # matrix=FULL_CONNECTIVITY_MATRIX
                          matrix=Output_Weights_matrix
                          )
@@ -89,7 +89,7 @@ z = process(default_input_value=[0, 0],
                            # Output_Weights,
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
-            learning=LearningSignal,
+            learning=LearningProjection,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})

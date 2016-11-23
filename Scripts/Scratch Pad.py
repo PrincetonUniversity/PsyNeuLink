@@ -10,7 +10,7 @@ class ScratchPadError(Exception):
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
@@ -26,11 +26,11 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # my_mech1 = TransferMechanism(function=Logistic)
 # my_mech2 = TransferMechanism(function=Logistic)
 # my_monitor = ComparatorMechanism()
-# my_learning_signal = LearningSignal()
+# my_LEARNING_PROJECTION = LearningProjection()
 # my_mapping_projection = MappingProjection(sender=my_mech1, receiver=my_mech2)
-# # my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
-# # my_learning_signal = LearningSignal(receiver=my_mapping_projection)
-# my_learning_signal._deferred_init(context="TEST")
+# # my_LEARNING_PROJECTION = LearningProjection(sender=my_monitor, receiver=my_mapping_projection)
+# # my_LEARNING_PROJECTION = LearningProjection(receiver=my_mapping_projection)
+# my_LEARNING_PROJECTION._deferred_init(context="TEST")
 
 # my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
 #                                  threshold=20.0),
