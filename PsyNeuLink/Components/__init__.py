@@ -196,7 +196,7 @@ register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# MAPPING = MappingProjection.__name__
+# MAPPING_PROJECTION = MappingProjection.__name__
 
 # ControlProjection
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection

@@ -187,7 +187,7 @@ OUTPUT_STATE = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
-MAPPING = "MappingProjection"
+MAPPING_PROJECTION = "MappingProjection"
 CONTROL_PROJECTION = "ControlProjection"
 LEARNING_SIGNAL = "LearningSignal"
 
@@ -347,8 +347,8 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
 PROJECTION_PARAMS = "ProjectionParams"
-MAPPING_PARAMS = "MappingParams"
-CONTROL_PROJECTION_PARAMS = "ControlSignalParams"
+MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
+CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
 kwLearningSignalParams = 'LearningSignalParams'
 PROJECTION_SENDER = 'projectionSender'
 kwSenderArg = 'sender'

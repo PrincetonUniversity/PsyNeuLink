@@ -1207,21 +1207,21 @@ class Mechanism_Base(Mechanism):
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the object,
-            its function, or projection(s) to any of its states.  Any value assigned to a parameter
-            will override the current value of that parameter for this -- but only this execution of the mechanism;
-            it will return to its previous value following execution.
-            Each entry is either the specification for one of the mechanism's params (in which case the key
-            is the name of the param, and its value the value to be assigned to that param), or a dictionary
-            for a specified type of state (in which case, the key is the name of a specific state or a keyword
-            indicating the type of state (:keyword:`INPUT_STATE_PARAMS`, :keyword:`OUTPUT_STATE_PARAMS` or
-            :keyword:`PARAMETER_STATE_PARAMS`), and the value is a dictionary containing parameter dictionaries for that
-            state or all states of the specified type).  The latter (state dictionaries) contain
-            entries that are themselves dictionaries containing parameters for the state's function or its projections.
-            The key for each entry is a keyword indicating whether it is for the state's function
-            (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`), a particular type of
-            projection (:keyword:`MAPPING_PARAMS` or :keyword:`CONTROL_PROJECTION_PARAMS`), or to a specific projection
-            (using its name), and the value of each entry is a dictionary containing the parameters for the function,
-            projection, or set of projections (keys of which are parameter names, and values the values to be assigned).
+            its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
+            the current value of that parameter for this -- but only this execution of the mechanism; it will return
+            to its previous value following execution.  Each entry is either the specification for one of the
+            mechanism's params (in which case the key is the name of the param, and its value the value to be
+            assigned to that param), or a dictionary for a specified type of state (in which case, the key is the
+            name of a specific state or a keyword indicating the type of state (:keyword:`INPUT_STATE_PARAMS`,
+            :keyword:`OUTPUT_STATE_PARAMS` or :keyword:`PARAMETER_STATE_PARAMS`), and the value is a dictionary
+            containing parameter dictionaries for that state or all states of the specified type).  The latter
+            (state dictionaries) contain entries that are themselves dictionaries containing parameters for the
+            state's function or its projections. The key for each entry is a keyword indicating whether it is for
+            the state's function (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`),
+            a particular type of projection (:keyword:`MAPPING_PROJECTION_PARAMS` or
+            :keyword:`CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
+            each entry is a dictionary containing the parameters for the function, projection, or set of projections
+            (keys of which are parameter names, and values the values to be assigned).
 
           COMMENT:
             ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
@@ -1244,7 +1244,7 @@ class Mechanism_Base(Mechanism):
                         + PROJECTION_PARAMS:<dict>:
                              entry will be passed to all of the State's projections, and used by
                              by their execute methods, overriding their paramInstanceDefaults for that call
-                        + MAPPING_PARAMS:<dict>:
+                        + MAPPING_PROJECTION_PARAMS:<dict>:
                              entry will be passed to all of the State's MappingProjections,
                              along with any in a PROJECTION_PARAMS dict, and override paramInstanceDefaults
                         + CONTROL_PROJECTION_PARAMS:<dict>:

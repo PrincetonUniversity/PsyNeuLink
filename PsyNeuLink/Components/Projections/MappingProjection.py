@@ -104,7 +104,7 @@ In addition to its ``function``, mapping projections use the following two the p
   The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
   :ref:`projection specification <Projection_In_Context_Specification>`.
   COMMENT:
-      XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING SIGNAL, BUT ALSO A CONTROL SIGNAL OR A MAPPING_PROJECTION PROJECTION
+      XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING SIGNAL, BUT ALSO A CONTROL SIGNAL OR A MAPPING_PROJECTION
       XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
   COMMENT
 
@@ -171,7 +171,7 @@ class MappingProjection(Projection_Base):
                 AUGMENT SO THAT SENDER CAN BE A Mechanism WITH MULTIPLE OUTPUT STATES, IN WHICH CASE:
                     RECEIVER MUST EITHER BE A MECHANISM WITH SAME NUMBER OF INPUT STATES AS SENDER HAS OUTPUTSTATES
                         (FOR WHICH SENDER OUTPUTSTATE IS MAPPED TO THE CORRESPONDING RECEIVER INPUT STATE
-                            USING THE SAME MAPPING_PROJECTION PROJECTION MATRIX, OR AN ARRAY OF THEM)
+                            USING THE SAME MAPPING_PROJECTION MATRIX, OR AN ARRAY OF THEM)
                     OR BOTH MUST BE 1D ARRAYS (I.E., SINGLE VECTOR)
                     SHOULD BE CHECKED IN OVERRIDE OF _validate_variable
                         THEN HANDLED IN _instantiate_sender and _instantiate_receiver
@@ -454,7 +454,9 @@ class MappingProjection(Projection_Base):
         # a projection keyword, projection subclass, or instance of a projection subclass
         elif (isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX], tuple) and
                       len(self.paramsCurrent[FUNCTION_PARAMS][MATRIX]) is 2 and
-                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING_PROJECTION, CONTROL_SIGNAL, LEARNING_SIGNAL}
+                  (self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1] in {MAPPING_PROJECTION,
+                                                                      CONTROL_PROJECTION,
+                                                                      LEARNING_SIGNAL}
                    or isinstance(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection) or
                        (inspect.isclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1]) and
                             issubclass(self.paramsCurrent[FUNCTION_PARAMS][MATRIX][1], Projection)))
