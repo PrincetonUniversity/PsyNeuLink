@@ -66,10 +66,10 @@ The specification of whether an outputState is monitored by a ControlMechanism c
   :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in its ``params`` argument.  In
   either case, the value must be a list, each item of which must be one of the following:
 
-  * An  outputState or the name of one.
+  * An existing **outputState** or the name of one.
   ..
 
-  * A mechanism or the name of one. Only the mechanism's primary (first) outputState will be monitored,
+  * A **mechanism** or the name of one. Only the mechanism's primary (first) outputState will be monitored,
     unless a :class:`MonitoredOutputStatesOption` value is also in the list (see below), or the specification is
     overridden in a params dictionary specification for the mechanism (see above).
   ..
@@ -211,15 +211,15 @@ class ControlMechanism_Base(Mechanism_Base):
 
         params : Optional[Dict[param keyword, param value]]
             a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-            and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+            and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
         name : str : default TransferMechanism-<index>
             a string used for the name of the mechanism.
             If not is specified, a default is assigned by MechanismRegistry
             (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-        prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-            the PreferenceSet for process.
+        prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+            the PreferenceSet for the mechanism.
             If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
             (see Description under PreferenceSet for details) [LINK].
     COMMENT

@@ -61,6 +61,7 @@ components, a state has the three following fundamental attributes:
   for an outputState, this is a value associated with the output of the mechanism's ``function`` (all of which are
   also represented in the mechanism's ``outputValue`` attribute [LINK]).
 
+
 Execution
 ---------
 

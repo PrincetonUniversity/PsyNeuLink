@@ -101,9 +101,21 @@ in either of the ways mentioned above, or one of the following ways:
           by specifying :ref:`Mechanism_Runtime_Parameters`, either when calling the ``execute`` method
           for the :class:`mechanism`, or where it is specified in the ``pathway`` of a :class:`process`.
 
-  * **automatically** -- PsyNeuLink will automatically create one or more mechanisms under some circumstances.
+  * **automatically** -- PsyNeuLink automatically creates one or more mechanisms under some circumstances.
     For example, :class:`MonitoringMechanisms` (and associated :class:`LearningProjection`) will be created
     automtically when :ref:`Process_Learning` is specified for a process.
+
+Every mechanism has one or more :doc:`inputStates <InputState>`, :doc:`parameterStates <ParameterState>`, and
+:doc:`outputStates <OutputStates>`, that allow it to receive and send projections, and to execute its ``function``
+(see :ref:`Mechanism_Function`) --  these are summarized below under :ref:`States`.  When a mechanism is created,
+it automatically creates the parameterStates it needs to represent the parameters of its ``function``.  It also
+creates any inputStates an outputStates required for the projections it has been assigned.  However, inputStates and
+outputStates, and corresponding projections, can also be specified in the mechanism's parameter dictionary, using
+entries with the keys ``INPUT_STATES`` and ``OUTPUT_STATES``, respectively. The value of each entry can be the name
+of the state's class (to create a default), an existing state, the name of one,  a specification dictionary for one,
+or a list containing of any of these to create multiple states.  Each type of state also allows additional forms of
+specification, as described in the documentation for :ref:`InputStates <InputState_Creation>` and
+:ref:`OutputStates <OuputState_In_Context_Specification>`, respectively.
 
 COMMENT:
     PUT EXAMPLE HERE
@@ -162,29 +174,29 @@ Every mechanism has three types of states (shown schematically in the figure bel
 InputStates
 ^^^^^^^^^^^
 
-These represent the input(s) to a mechanism. A mechanism usually has only one InputState,
-stored in its ``inputState`` attribute.  However some mechanisms have more than one.  For example, ComparatorMechanism
+These receive and represent the input to a mechanism. A mechanism usually has only one InputState, kept in its
+``inputState`` attribute.  However some mechanisms have more than one.  For example, ComparatorMechanism
 mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
-more than one inputState, they are stored in an OrderedDict in the mechanisms ``inputStates`` attribute;  the key of
-each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple
+more than one inputState, they are kept in an OrderedDict in the mechanism's ``inputStates`` attribute;  the key of
+each entry is the name of an inputState and its value is that inputState.  If a mechanism has multiple
 inputStates, the first -- designated its *primary* inputState -- is also assigned to its ``inputState`` attribute.
-
-Each inputState of a mechanism can receive one or more projections from other mechanisms,
-however all must provide values that share the same format (i.e., number and type of elements).
-A list of projections received by an inputState is stored in its ``receivesFromProjections`` attribute.
-InputStates, like every other object type in PsyNeuLnk, have a ``function`` parameter.
-An inputState's function performs a Hadamard (i.e., elementwise) aggregation  of the inputs
-it receives from its projections.  The default function is ``LinearCombination`` which simply sums the values
-and assigns the result to the inputState's ``value`` attribute.  A custom function can be assigned to an inputState
-(e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long as it generates an output
-that is compatible with its inputs the value for that inputState expected by the mechanism's function.  The value
-attributes for all a mechanism's inputStates are concatenated into a 2d np.array and assigned to the mechanism's
-``variable`` attribute, which serves as the input to the mechanism's function.
-
 COMMENT:
-  • Move some of above to States module (or individual state types), and condense??
-  • Define ``inputValue`` attribute??
+[TBI:]
+If the inputState are created automatically, or are not assigned a name when specified, then each is named
+using the following template: ???XXXX
 COMMENT
+
+.. _Mechanism_Variable:
+
+Each inputState of a mechanism can receive one or more projections from other mechanisms or, if the mechanism is an
+:keyword:`ORIGIN` mechanism [LINK], from the input to the process to which it belongs.  Each inputState's ``function``
+aggregates the values received from its projections (usually by summing them), and assigns the result to its
+``value`` attribute.  The ``value`` attributes for all of a mechanism's inputStates are kept in a 2d np.array assigned
+to the mechanism's ``inputValue`` attribute, and to its ``variable`` attribute which serves as the input
+to the  mechanism's ``function``.  Therefore, the number of inputStates for the mechanism must match the number of
+items specified for the mechanism's ``variable`` (that is, its size along its first dimension, axis 0).  An exception
+is if the mechanism's ``variable`` has more than one item, but only a single inputState;  in that case,
+the ``value`` of that inputState must have the same number of items as the mechanisms's ``variable``.
 
 .. _Mechanism_ParameterStates:
 
@@ -282,7 +294,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
 
     * :keyword:`INPUT_STATES` : Dict[str, InputState] -
       used to specify specialized inputStates required by a mechanism subclass
-      (see :ref:`InputStates_Creation` for details of specification).
+      (see :ref:`inputState specification <InputState_Creation>` for details of specification).
     ..
     * :keyword:`FUNCTION` : function or method :  default method implemented by subclass -
       specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
@@ -439,7 +451,7 @@ def mechanism(mech_spec=None, params=None, context=None):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
         It is passed to the relevant subclass to instantiate the mechanism. Entries can be any parameters described
         in :ref:`Mechanism_Specifying_Parameters` that are relevant to the mechanism's subclass, and/or any defined
         by a :doc:`Mechanism` subclass itself.

@@ -136,7 +136,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
         Includes the following entry:
 
         * :keyword:`NEXT_LEVEL_PROJECTION`:  MappingProjection;

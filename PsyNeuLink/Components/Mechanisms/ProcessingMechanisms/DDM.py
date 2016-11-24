@@ -389,7 +389,7 @@ class DDM(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.

@@ -2,6 +2,8 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# TERMINOLOGY: Stored -> kept/held
+
 # 11/22/16:
 # √ AdaptiveIntegrator -> IntegratorMechanism
 # √ TransferMechanism -> TransferMechanism
@@ -11,6 +13,9 @@
 # √ Mapping -> MappingProjection
 # √ ControlSignal -> ControlProjection
 #   LearningSignal -> LearningProjection
+
+# 11/12/16:
+# FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORKTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
 
 # 11/19/16:
 # FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??
