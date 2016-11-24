@@ -13,9 +13,10 @@
 Overview
 --------
 
-An inputState of a mechanism accepts inputs from projections comming from other mechanisms in a process or system,
+An inputState of a mechanism accepts inputs from projections coming from other mechanisms in a process or system,
 and/or the input to the process or system itself (if the mechanism to which the inputState belongs is the
-:keyword:`ORIGIN` mechanism [LINK] of that process or system).  It's ``function`` combines the values of these inputs,
+:keyword:`ORIGIN` mechanism [LINK] of that process or system).  A list of projections received by an inputState is
+kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs,
 and the result is assigned to a corresponding item in the owner mechanism's ``variable``.
 
 .. _InputState_Creation:
@@ -23,10 +24,10 @@ and the result is assigned to a corresponding item in the owner mechanism's ``va
 Creating an InputState
 ----------------------
 
-An inputState can be created by calling its constructor, but in general this is not necessary as mechanisms can
-usually automatically construct the inputStates they need when they are created.  For example, if the mechanism is
+An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
+usually automatically construct the inputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will created and assigned as
-the receiver of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
+the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
 need to be specified when a mechanism is created, or added to an existing mechanism, this can be done using the
 mechanism's parameter dictionary, in an entry with the key :keyword:`INPUT_STATES` [LINK] and a value that is one or
 a list of any of the following:
