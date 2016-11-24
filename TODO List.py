@@ -3,6 +3,7 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # TERMINOLOGY: Stored -> kept/held
+#              params dict <-> parameter dictionary??
 
 # 11/22/16:
 # √ AdaptiveIntegrator -> IntegratorMechanism

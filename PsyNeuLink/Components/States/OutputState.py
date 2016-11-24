@@ -31,56 +31,57 @@ outputState must be owned by a mechanism.  If the outputState is created directl
 must be specified in the ``owner`` argument when calling the constructor;  if the outputState is specified in the
 :keyword:`OUTPUT_STATES` entry of a parameter dictionary for a mechanism, then the owner is inferred from the context.
 
-
 An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically construct the outputState(s) it needs when it is created.  For example, if the mechanism is
-being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will created and assigned as
-the ``sender`` of a MappingProjection to the next mechanism in the pathway. If one or more custom outputStates
-need to be specified when a mechanism is created, or added to an existing mechanism, this can be done using the
-mechanism's parameter dictionary, in an entry with the key :keyword:`OUTPUT_STATES` [LINK] and a value that is one or
-a list of any of the following:
+being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will be created and assigned
+as the ``sender`` of a MappingProjection to the next mechanism in the pathway. If one or more custom outputStates
+need to be specified when a mechanism is created, or added to an existing mechanism, this can be in an entry of the
+mechanism's parameter dictionary, using the key :keyword:`OUTPUT_STATES` [LINK] and a value that specifies one or
+more outputStates.  For a single outputState, the value can be any of the specifications in the the list below.  To
+create multiple outputStates, the value of the :keyword:`OUTPUT_STATES` entry can be either a list, each item of
+which can be any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a
+string  specifying the name for the outputState to be created, and its value is one of the specifications below:
+
+    * An existing **outputState** object or the name of one.  Its ``value`` must be compatible with the item of the
+      owner mechanism's ``outputValue`` that will be assigned to it (see [LINK]).
+    ..
+    * The :class:`OutputState` **class** or a string.  This creates a default outputState using the owner
+      mechanism's ``value`` as the template for the outputState's ``variable``. [LINK]  If :keyword:`OutputState`
+      is used, a default name is assigned to the state;  if a string is, it is assigned as the name
+      of the outputState (see [LINK] for naming conventions).
+    ..
+    * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
+      This must be compatible with the items of the owner mechanism's ``outputValue`` that will be assigned to the
+      outputState (see [LINK]).
+    ..
+    * A **specification dictionary**.  This creates the specified outputState using the items of the owner mechanism's
+    ``outputValue`` that will be assigned to it as the template for the outputState's ``variable`` [LINK].
+
+XXX CHECK THIS:
+Assigning outputStates using the :keyword:`OUTPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
+automatic generation of outputStates for that mechanism.  If the mechanism requires multiple outputStates (i.e.,
+it's ``outputValue`` attribute has more than on item), it assigns each item to its own outputState (see [LINK]).
+Therefore, the number of outputStates specified must equal the number of items in the mechanisms's ``outputValue``.
+The exepction
 
 
-+ OUTPUT_STATES (value, list, dict):
-    supports the ability of a subclass to define specialized outputStates;
-    only used if OUTPUT_STATES is an argument in the subclass' __init__ or
-    is specified as a parameter in the subclass' paramClassDefaults.
-    In those cases:
-        if param is absent or is a str:
-            a default OutputState will be instantiated using output of mechanism's execute method (EMO)
-            (and the str, if provided used as its name);
-            it will be placed as the single entry in an OrderedDict
-        if param is a single value:
-            it will (if necessary) be instantiated and placed as the single entry in an OrderedDict
-        if param is a list:
-            each item will (if necessary) be instantiated and placed in an OrderedDict
-        if param is an OrderedDict:
-            each entry will (if necessary) be instantiated as a OutputState
-        in each case, the result will be an OrderedDict of one or more entries:
-            the key for the entry will be the name of the outputState if provided, otherwise
-                OUTPUT_STATES-n will used (with n incremented for each entry)
-            the value of the outputState in each entry will be assigned to the corresponding item of the EMO
-            the dict will be assigned to both self.outputStates and paramsCurrent[OUTPUT_STATES]
-            self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)
+Furthermore, the order of the outputStates in the list or OrderedDict used to specify them must parallel the order
+in which the corresponding items appear in the ``outputValue`` attribute; and, as noted above, the ``variable``
+for each outputState must match (in number and types of elements) the item from ``outputValue`` that it will be
+assigned.  Finally, an outputState must be owned by a mechanism. Therefore, if the inputState is created directly,
+the mechanism to which it belongs must be specified in the ``owner`` argument of its constructor; if the inputState
+is specified in the :keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is
+inferred from the context.
+
+
         notes:
             * if there is only one outputState, but the EMV has more than one item, it is assigned to the
                 the sole outputState, which is assumed to have a multi-item value
             * if there is more than one outputState, the number must match length of EMO,
               or an exception is raised
-        specification of the param value, list item, or dict entry value can be any of the following, a
-        long as it is compatible with the relevant item of the output of the mechanism's function (EMO):
-            + OutputState class: default outputState will be instantiated using EMO as its value
-            + OutputState object: its value must be compatible with EMO
-            + specification dict:  OutputState will be instantiated using EMO as its value;
-                must contain the following entries: (see Initialization arguments for State):
-                    + FUNCTION (method)
-                    + FUNCTION_PARAMS (dict)
-            + str:
-                will be used as name of a default outputState (and key for its entry in self.outputStates)
-                value must match value of the corresponding item of the mechanism's EMO
-            + value:
-                will be used a variable to instantiate a OutputState; value must be compatible with EMO
-        * note: inputStates can also be added using State._instantiate_state()
+
+
+
 
 Execution
 ---------
