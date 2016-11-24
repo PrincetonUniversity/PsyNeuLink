@@ -258,6 +258,10 @@ parameterState to determine the paramter value for a function.
 OutputStates
 ^^^^^^^^^^^^
 
+COMMENT:
+   XXXXX UPDATE THIS BASED ON OUTPUTSTATE DOCSTRING
+COMMENT
+
 These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates,
 the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState`` attribute, while all of
 its outputStates (including the primary one) are stored in an OrderedDict in its ``outputStates`` attribute;  the

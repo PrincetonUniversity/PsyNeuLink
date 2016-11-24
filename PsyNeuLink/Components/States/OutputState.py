@@ -57,30 +57,48 @@ string  specifying the name for the outputState to be created, and its value is 
     * A **specification dictionary**.  This creates the specified outputState using the items of the owner mechanism's
     ``outputValue`` that will be assigned to it as the template for the outputState's ``variable`` [LINK].
 
-XXX CHECK THIS:
+COMMENT:
+   XXXXXXX CHECK ALL THIS:
+             LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
+             DICTIONARY KEY IS USED AS NAME
+             NUMBER OF STATES MUST EQUAL LENGTH OF MECHANISM'S ATTRIBUTE (VARIABLE OR OUTPUTVALUE)
+             SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
+                MULTI-ITEM ATTRIBUTE OF STATE
+             MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
+             ERROR IS GENERATED FOR NUMBER MISMATCH
+COMMENT
 Assigning outputStates using the :keyword:`OUTPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
 automatic generation of outputStates for that mechanism.  If the mechanism requires multiple outputStates (i.e.,
 it's ``outputValue`` attribute has more than on item), it assigns each item to its own outputState (see [LINK]).
 Therefore, the number of outputStates specified must equal the number of items in the mechanisms's ``outputValue``.
-The exepction
+An exception is if ``outputValue`` has more than one item, the mechanism may still be assigned a single
+outputState;  in that case, the ``variable`` of that outputState must have the same number of items as
+the  mechanisms's ``outputValue``.  For cases in which there are multiple outputStates, the order in which they are
+specified in the list or OrderedDict must parallel the order in which the corresponding items appear in the
+``outputValue`` attribute; furthemore, as noted above, the ``variable`` for each outputState must match
+(in number and types of elements) the item  from the mechanism's ``outputValue`` that it will be assigned.
 
-
-Furthermore, the order of the outputStates in the list or OrderedDict used to specify them must parallel the order
-in which the corresponding items appear in the ``outputValue`` attribute; and, as noted above, the ``variable``
-for each outputState must match (in number and types of elements) the item from ``outputValue`` that it will be
-assigned.  Finally, an outputState must be owned by a mechanism. Therefore, if the inputState is created directly,
+Finally, an outputState must be owned by a mechanism. Therefore, if the inputState is created directly,
 the mechanism to which it belongs must be specified in the ``owner`` argument of its constructor; if the inputState
 is specified in the :keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is
 inferred from the context.
 
+Structure
+---------
 
-        notes:
-            * if there is only one outputState, but the EMV has more than one item, it is assigned to the
-                the sole outputState, which is assumed to have a multi-item value
-            * if there is more than one outputState, the number must match length of EMO,
-              or an exception is raised
+Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
+mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
+:keyword:`TERMINAL` [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
+maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following
+fundamental attributes:
 
+* ``variable``:  this must match (both in number and types of elements) the value of the item it is assigned from its
+  mechanism's ``outputValue`` attribute (see LINK]).
 
+* ``function``:  this exists for structural consistency, but is not presently used by PsyNeuLink.
+
+* ``value``:  this is assigned from the outputState`s ``variable``, and used as the input for any projections that it
+  sends.
 
 
 Execution
@@ -88,10 +106,8 @@ Execution
 
 States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
 occurs, the values of each ouputState of a mechanism are updated with the results of a call to the mechanism's
-``function``.
-executes any projections it receives, calls its ``function`` to aggregate their values, and
-then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the inputState in
-the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates <_Mechanism_Variable>`.
+``function``: their values assigned the value of the corresponding item in the mechanism's ``outputValue`` attribute.
+
 
 .. _OutputState_Class_Reference:
 
