@@ -9,96 +9,16 @@
 # ******************************************  OutputState *****************************************************
 
 """
-.. _InputState_Creation:
-
-Creating an InputState
-----------------------
-
-An inputState can be created by calling its constructor, but in general this is not necessary as mechanisms can usually
-automatically construct the inputStates they need when they are created.  For example, if the mechanism is being
-created within the :ref:`pathway of a process <XXXXXXX>`, its inputState will created and assigned as the receiver of a
-MappingProjection from the  preceding mechanism in the pathway. However, if one or more custom inputStates need to be
-specified when a mechanism is created, or added to an existing mechanism, this can be done using the mechanism's
-parameter dictionary, in an entry with the key :keyword:`INPUT_STATES` and a value that is one or a list of any of the
-following:
-
-    * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with item of the owner
-      mechanism's ``variable`` to which it will be assigned (see [LINK]).
-    ..
-    * The :class:`InputState` **class** or a string.  This creates a default inputState using the owner
-      mechanism's ``variable`` as the template for the inputState's ``value``. [LINK]  If :keyword:`InputState`
-      is used, a default name[LINK] is assigned to the state;  if a string is, it is assigned as the name
-      of the inputState.
-    ..
-    * A **value**.  This creates a default inputState using the specified value as inputState's ``value``.  This must
-      be compatible with the owner mechanism's ``variable``.
-    ..
-    * A **Projection subclass**. This creates a default inputState using the owner mechanism's ``variable`` as
-      the template for the inputState's ``value`` [LINK], and a projection of the specified type to the inputState
-      also using the owner mechanism's ``variable`` as the template for its ``value``.
-    ..
-    * A **Projection object**.  This creates a default inputState using the owner mechanism's ``variable`` as
-      the template for the inputState's ``value`` [LINK], and assigns the state as the projection's ``receiver``.
-      The projection's ``value`` must be compatible with the ``variable`` of the mechanism to which the inputState
-      belongs.
-    ..
-    * A **specification dictionary**.  The inputState is created using the owner mechanism's ``variable`` as
-      the template for the inputState's ``value`` [LINK].  In addition to the standard entries of a parameter
-      dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
-      Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.
-    ..
-    * A :any:`ParamValueProjection`.  This creates a default inputState using the ``value`` item as its ``value``,
-      and assigns the state as the ``receiver`` of the ``projection`` item.
-
-    .. note::
-       In all cases, the resulting value of the inputState must be compatible (that is, have the same number and type
-       of elements) as the item of its owner mechanism's ``variable`` to which it is assigned (see [LINK]).
-
-An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, the mechanism to which it
-belongs must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
-:keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
-
-Structure
----------
-
-Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
-mechanisms, as well as from the process to which its owner belongs (if it is the :keyword:`ORIGIN` [LINK] mechanism
-for that process.  A list of projections received by an inputState is kept in its ``receivesFromProjections``
-attribute.  Like all PsyNeuLink components, it has the three following fundamental attributes:
-
-* ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
-  each must match both the number and types of elements of ``variable``.
-
-* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
-   received by the inputState.  The default function is :any:`LinearCombination` that sums the values.
-   A custom function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in
-   some way), so long as it generates an output that is compatible with the ``value`` expected for the inputState
-   by the mechanism's ``variable``.  It assigns the result to the inputState's ``value`` attribute.
-
-* ``value``:  this is the aggregated value of the projections received by the inputState, assigned to it by the
-  inputState's ``function``.  It must be compatible
-  COMMENT:
-  both with the inputState's ``variable`` (since the ``function``
-  of an inputState only combines the values of its projections, but does not otherwise transform its input),
-  COMMENT
-  with its corresponding item of the owner mechanism's ``variable``.
-
-
-
-
-
-
-
-
 
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
 Overview
 --------
 
-The outputState(s) of a mechanism represents the output of the mechanism's ``function``, that can serve as the input to
-other mechanisms, and/or as the output of a process and/or system (if the mechanism to which the inputState belongs
-is the :keyword:`TERMINAL` mechanism [LINK] of the process or system).
+The outputState(s) of a mechanism represent the output of the mechanism's ``function``, that can serve as the input to
+other mechanisms, and/or as the output of a process and/or system (if the mechanism to which the outputState belongs
+is the :keyword:`TERMINAL` mechanism [LINK] of that process or system).  A list of the outgoing projections from an
+outputState is kept in its ``sendsToProjections`` attribute.
 
 .. _OutputStates_Creation:
 
@@ -110,6 +30,16 @@ outputStates in the :keyword:`OUTPUT_STATES` entry of a params dictionary when c
 outputState must be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs
 must be specified in the ``owner`` argument when calling the constructor;  if the outputState is specified in the
 :keyword:`OUTPUT_STATES` entry of a parameter dictionary for a mechanism, then the owner is inferred from the context.
+
+
+An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
+usually automatically construct the outputState(s) it needs when it is created.  For example, if the mechanism is
+being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will created and assigned as
+the ``sender`` of a MappingProjection to the next mechanism in the pathway. If one or more custom outputStates
+need to be specified when a mechanism is created, or added to an existing mechanism, this can be done using the
+mechanism's parameter dictionary, in an entry with the key :keyword:`OUTPUT_STATES` [LINK] and a value that is one or
+a list of any of the following:
+
 
 + OUTPUT_STATES (value, list, dict):
     supports the ability of a subclass to define specialized outputStates;
