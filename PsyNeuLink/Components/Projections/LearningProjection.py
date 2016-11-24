@@ -214,7 +214,7 @@ class LearningProjection(Projection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that specifies the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` and parameter assignments.
 
     name : str : default TransferMechanism-<index>

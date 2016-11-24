@@ -216,7 +216,7 @@ class MappingProjection(Projection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
 
     name : str : default TransferMechanism-<index>

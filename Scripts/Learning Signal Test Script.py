@@ -1,5 +1,5 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
@@ -7,11 +7,11 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Input_Layer = Transfer(name='Input Layer',
+Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
                        default_input_value = [0,0])
 
-Output_Layer = Transfer(name='Output Layer',
+Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0])
 

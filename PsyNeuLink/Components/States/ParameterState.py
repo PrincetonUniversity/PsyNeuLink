@@ -46,15 +46,6 @@ Creating a ParameterState
                 + value : list of numbers (no projections will be assigned)
                     will be used as variable to instantiate a default ParameterState
 
-        COPIED FROM __init__  (RELABELED WITH PARAMETER_STATES):
-        + PARAMETER_STATES (dict): dictionary with entries for each param of the mechanism subclass.
-            The key for each entry should be the name of the param (used to name its associated projections);
-            the value for each entry MUST be one of the following (see Parameters above for details):
-                - ParameterState object
-                - dict: State specifications (see State)
-                - projection: Projection object, Projection specifications dict, or list of either)
-                - tuple: (value, projectionType)
-                - value: list of numbers (no projections will be assigned)
 
 parameter_modulation_operation:  ModulationOperation - list values and their meaning
 

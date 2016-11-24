@@ -13,7 +13,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
@@ -26,7 +26,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPrefe
 
 __all__ = ['System',
            'process',
-           'Transfer',
+           'TransferMechanism',
            'IntegratorMechanism',
            'DDM',
            'EVCMechanism',

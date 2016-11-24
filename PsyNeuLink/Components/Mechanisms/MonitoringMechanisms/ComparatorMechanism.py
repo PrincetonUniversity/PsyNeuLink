@@ -151,7 +151,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
         The following entries can be included:
         * :keyword:`SAMPLE`:  Mechanism, InputState, or the name of or specification dictionary for one;
         * :keyword:`TARGET`:  Mechanism, InputState, or the name of or specification dictionary for one;

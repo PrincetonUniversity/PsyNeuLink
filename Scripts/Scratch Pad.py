@@ -13,15 +13,21 @@ from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
-# linear_transfer_mechanism = TransferMechanism(function=Linear(slope = 1, intercept = 0))
-# linear_transfer_process = process(pathway = [linear_transfer_mechanism])
-# print(linear_transfer_process.execute())
-# print ('Done')
+transfer_mechanism_1 = TransferMechanism()
+transfer_mechanism_2 = TransferMechanism()
+transfer_mechanism_3 = TransferMechanism()
+mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
+mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+print(transfer_mechanism_3.execute())
+
+# transfer_process = process(pathway = [transfer_mechanism_1])
+# print(transfer_process.execute())
+print ('Done')
 
 # my_mech1 = TransferMechanism(function=Logistic)
 # my_mech2 = TransferMechanism(function=Logistic)
@@ -42,20 +48,20 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 #
 # TEST = True
 
-my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
-                                                     function=Integrator(
-                                                                         # variable_default=[0,0],
-                                                                         weighting=SIMPLE,
-                                                                         rate=[1]
-                                                                         )
-                                                     )
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([1]))
-print(my_adaptive_integrator.execute([3]))
-print(my_adaptive_integrator.execute([3]))
-print(my_adaptive_integrator.execute([3]))
-print(my_adaptive_integrator.execute([3]))
+# my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
+#                                                      function=Integrator(
+#                                                                          # variable_default=[0,0],
+#                                                                          weighting=SIMPLE,
+#                                                                          rate=[1]
+#                                                                          )
+#                                                      )
+# print(my_adaptive_integrator.execute([1]))
+# print(my_adaptive_integrator.execute([1]))
+# print(my_adaptive_integrator.execute([1]))
+# print(my_adaptive_integrator.execute([3]))
+# print(my_adaptive_integrator.execute([3]))
+# print(my_adaptive_integrator.execute([3]))
+# print(my_adaptive_integrator.execute([3]))
 
 #endregion
 

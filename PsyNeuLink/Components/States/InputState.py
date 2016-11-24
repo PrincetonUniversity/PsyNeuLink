@@ -4,84 +4,106 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
-#
-#
+
+
 # *******************************************  InputState *****************************************************
 #
 """
 
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
-
 Overview
 --------
 
-.. _InputStates_Creation:
+An inputState of a mechanism accepts inputs from projections comming from other mechanisms in a process or system,
+and/or the input to the process or system itself (if the mechanism to which the inputState belongs is the
+:keyword:`ORIGIN` mechanism [LINK] of that process or system).  It's ``function`` combines the values of these inputs,
+and the result is assigned to a corresponding item in the owner mechanism's ``variable``.
+
+.. _InputState_Creation:
 
 Creating an InputState
 ----------------------
 
-An inputState can be created by calling its constructor, but more commonly it is done by specifying one (or more)
-inputStates in the `INPUT_STATES` entry of a params dictionary when creating a :class:`mechanism`. An inputState must
-be owned by a mechanism.  If the inputState is created directly, the mechanism to which it belongs must be specified
-in ``owner`` argument when calling its constructor;  if the inputState is specified in the INPUT_STATES entry of
-parameter dictionary for a mechanism, then the owner is inferred from the context.
+An inputState can be created by calling its constructor, but in general this is not necessary as mechanisms can
+usually automatically construct the inputStates they need when they are created.  For example, if the mechanism is
+being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will created and assigned as
+the receiver of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
+need to be specified when a mechanism is created, or added to an existing mechanism, this can be done using the
+mechanism's parameter dictionary, in an entry with the key :keyword:`INPUT_STATES` [LINK] and a value that is one or
+a list of any of the following:
 
+    * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with item of the owner
+      mechanism's ``variable`` to which it will be assigned (see [LINK]).
+    ..
+    * The :class:`InputState` **class** or a string.  This creates a default inputState using the owner
+      mechanism's ``variable`` as the template for the inputState's ``value``. [LINK]  If :keyword:`InputState`
+      is used, a default name[LINK] is assigned to the state;  if a string is, it is assigned as the name
+      of the inputState.
+    ..
+    * A **value**.  This creates a default inputState using the specified value as inputState's ``value``.  This must
+      be compatible with the owner mechanism's ``variable``.
+    ..
+    * A **Projection subclass**. This creates a default inputState using the owner mechanism's ``variable`` as
+      the template for the inputState's ``value`` [LINK], and a projection of the specified type to the inputState
+      also using the owner mechanism's ``variable`` as the template for its ``value``.
+    ..
+    * A **Projection object**.  This creates a default inputState using the owner mechanism's ``variable`` as
+      the template for the inputState's ``value`` [LINK], and assigns the state as the projection's ``receiver``.
+      The projection's ``value`` must be compatible with the ``variable`` of the mechanism to which the inputState
+      belongs.
+    ..
+    * A **specification dictionary**.  The inputState is created using the owner mechanism's ``variable`` as
+      the template for the inputState's ``value`` [LINK].  In addition to the standard entries of a parameter
+      dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
+      Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.
+    ..
+    * A :any:`ParamValueProjection`.  This creates a default inputState using the ``value`` item as its ``value``,
+      and assigns the state as the ``receiver`` of the ``projection`` item.
 
-INPUT_STATES (value, list, dict):
-    supports the ability of a mechanism subclass to use specialized inputStates;
-    only used if INPUT_STATES is an argument in the subclass' __init__ or
-    is specified as a parameter in the subclass' paramClassDefaults.
-    In those cases:
-        if param is absent or is a str:
-           a default InputState will be instantiated as an InputState,
-            (and the str used as its name)
-            using the mechanism's variable (i.e., the input to is function),
-            and placed as the single entry in an OrderedDict
-        if param is a single value:
-            it will (if necessary) be instantiated as an InputState and
-            placed as the single entry in an OrderedDict
-        if param is a list:
-            each item will (if necessary) be instantiated as an InputState and
-            placed as the single entry in an OrderedDict
-        if param is an OrderedDict:
-            each entry will (if necessary) be instantiated as an InputState
-        in each case, the result will be an OrderedDict of one or more entries:
-            the key for the entry will be the name of the inputState if provided, otherwise
-                INPUT_STATES-n will used (with n incremented for each entry)
-            the value of the InputState in each entry will be used as the corresponding value of the EMV
-            the dict will be assigned to both self.inputStates and paramsCurrent[kwInputState]
-            self.inputState will be pointed to self.inputStates[0] (the first entry of the dict)
-        notes:
-            * if there is only one inputState, but the EMV has more than one item, it is assigned to the
-                the sole inputState, which is assumed to have a multi-item value
-            * if there is more than one inputState, the number must match length of EMV
-                 or an exception is raised
-        specification of the param value, list item, or dict enrty value can be any of the following,
-            as long as it is compatible with the variable of the mechanism's execute method (EMV):
-            + InputState class: default will be instantiated using EMV as its value
-            + InputState object: its value must be compatible with EMV
-            + Projection subclass ref:
-                default InputState will be instantiated using EMV as its value
-                default projection (for InputState) will be instantiated using EMV as its variable
-                    and assigned to InputState
-            + Projection object:
-                InputState will be instantiated using output of projection as its value;
-                this must be compatible with EMV
-            + specification dict:  InputState will be instantiated using EMV as its value;
-                must contain the following entries: (see Initialization arguments for State):
-                    + FUNCTION (method)
-                    + FUNCTION_PARAMS (dict)
-                    + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
-            + ParamValueProjection:
-                value will be used as variable to instantiate a default InputState
-                projection will be assigned as projection to InputState
-            + value: will be used as variable to instantiate a default InputState
-        * note: inputStates can also be added using State._instantiate_state()
+    .. note::
+       In all cases, the resulting value of the inputState must be compatible (that is, have the same number and type
+       of elements) as the item of its owner mechanism's ``variable`` to which it is assigned (see [LINK]).
 
-Function
---------
+An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, the mechanism to which it
+belongs must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
+:keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
 
-Accepts inputs from projections, combines them, and provides them as an item in the owner mechanism's variable.
+Structure
+---------
+
+Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
+mechanisms, as well as from the process to which its owner belongs (if it is the :keyword:`ORIGIN` [LINK] mechanism
+for that process.  A list of projections received by an inputState is kept in its ``receivesFromProjections``
+attribute.  Like all PsyNeuLink components, it has the three following fundamental attributes:
+
+* ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
+  each must match both the number and types of elements of ``variable``.
+
+* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
+   received by the inputState.  The default function is :any:`LinearCombination` that sums the values.
+   A custom function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in
+   some way), so long as it generates an output that is compatible with the ``value`` expected for the inputState
+   by the mechanism's ``variable``.  It assigns the result to the inputState's ``value`` attribute.
+
+* ``value``:  this is the aggregated value of the projections received by the inputState, assigned to it by the
+  inputState's ``function``.  It must be compatible
+  COMMENT:
+  both with the inputState's ``variable`` (since the ``function``
+  of an inputState only combines the values of its projections, but does not otherwise transform its input),
+  COMMENT
+  with its corresponding item of the owner mechanism's ``variable``.
+
+Execution
+---------
+
+States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
+occurs, each inputState executes any projections it receives, calls its ``function`` to aggregate their values, and
+then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the inputState in
+the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates <_Mechanism_Variable>`.
+
+.. _InputState_Class_Reference:
+
+Class Reference
+---------------
 
 """
 
@@ -112,75 +134,87 @@ class InputStateError(Exception):
 
 
 class InputState(State_Base):
-    """Implement subclass type of State that calculates and represents the input of a Function object
+    """Implements subclass of State that calculates and represents the input of a Mechanism
 
-    Description:
-        The InputState class is a Component type in the State category of Function,
-        Its FUNCTION executes the projections that it receives and updates the InputState's value
+    COMMENT:
 
-    Instantiation:
-        - kwInputState can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and owner
-            - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the owner
-                - the value of the owner's variable will be used as its value
-        - self.value is set to self.variable (enforced in State_Base._validate_variable)
-        - self.value must be compatible with self.owner.variable (enforced in _validate_variable)
-            note: although it may receive multiple projections, the output of each must conform to self.variable,
-                  as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
-        - output of self.function must be compatible with self.value (enforced in _validate_params)
-        - if owner is being instantiated within a pathway:
-            - InputState will be assigned as the receiver of a MappingProjection from the preceding mechanism
-            - if it is the first mechanism in the list, it will receive a MappingProjection from process.input
+        Description
+        -----------
+            The InputState class is a Component type in the State category of Function,
+            Its FUNCTION executes the projections that it receives and updates the InputState's value
 
-    Parameters:
-        The default for FUNCTION is LinearCombination using kwAritmentic.Operation.SUM:
-            the output of all projections it receives are summed
-# IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
-        FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
+        Class attributes
+        ----------------
+            + componentType (str) = kwInputState
+            + paramClassDefaults (dict)
+                + FUNCTION (LinearCombination, Operation.SUM)
+                + FUNCTION_PARAMS (dict)
+                # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
+                # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
+            + paramNames (dict)
 
-    StateRegistry:
-        All kwInputState are registered in StateRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+        Class methods
+        -------------
+            _instantiate_function: insures that function is ARITHMETIC)
+            update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
 
-    Naming:
-        kwInputState can be named explicitly (using the name='<name>' argument). If this argument is omitted,
-         it will be assigned "InputState" with a hyphenated, indexed suffix ('InputState-n')
+        StateRegistry
+        -------------
+            All kwInputState are registered in StateRegistry, which maintains an entry for the subclass,
+              a count for all instances of it, and a dictionary of those instances
 
 
-    Class attributes:
-        + componentType (str) = kwInputState
-        + paramClassDefaults (dict)
-            + FUNCTION (LinearCombination, Operation.SUM)
-            + FUNCTION_PARAMS (dict)
-            # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
-            # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
-        + paramNames (dict)
+    Arguments
+    ---------
+    owner : Mechanism
+        mechanism to which inputState belongs;  must be specified or determinable from the context in which
+        the state is created
 
-    Class methods:
-        _instantiate_function: insures that function is ARITHMETIC)
-        update_state: gets InputStateParams and passes to super (default: LinearCombination with Operation.SUM)
+    reference_value : number, list or np.ndarray
+        component of owner mechanism's ``variable`` attribute that corresponds to the inputState.
+
+    value : number, list or np.ndarray
+        used as template for ``variable``*[]:
+
+    function : Function or method : default LinearCombination(operation=SUM),
+
+    params : Optional[Dict[param keyword, param value]]
+        a dictionary that can be used to specify the parameters for the inputState, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
+
+    name : str : default InputState-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by StateRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+        the PreferenceSet for the inputState.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
 
+    COMMENT
 
-    Instance attributes:
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + params (dict) - set currently in effect
-        + paramNames (list) - list of keys for the params dictionary
-        + owner (Function object)
-        + value (value)
-        + projections (list)
-        + params (dict)
-        + name (str)
-        + prefs (dict)
+    Attributes
+    ----------
 
-    Instance methods:
-        none
+    owner : Mechanism
+        mechanism to which inputState belongs.
+
+    receivesFromProjections : Optional[List[Projection]]
+        a list of the projections received by the inputState.
+
+    variable : number, list or np.ndarray
+        the template for the ``value`` of each projection that the inputState receives, each of which must match
+        its number and types of elements.
+
+    function : CombinationFunction : default LinearCombination(operation=SUM))
+        performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections received by the
+        inputState.
+
+    value : number, list or np.ndarray
+        the aggregated value of the projections received by the inputState, output of ``function``.
+
     """
 
     #region CLASS ATTRIBUTES
@@ -214,21 +248,6 @@ class InputState(State_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
-reference_value is component of owner.variable that corresponds to the current State
-
-        :param owner: (Function object)
-        :param reference_value: (value)
-        :param value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
-        :param context: (str)
-        :return:
-
-
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function, params=params)

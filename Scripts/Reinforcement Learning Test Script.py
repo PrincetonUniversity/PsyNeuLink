@@ -3,10 +3,10 @@ import numpy as np
 from PsyNeuLink import *
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
-input_layer = Transfer(default_input_value=[0,0,0],
+input_layer = TransferMechanism(default_input_value=[0,0,0],
                        name='Input Layer')
 
-action_selection = Transfer(default_input_value=[0,0,0],
+action_selection = TransferMechanism(default_input_value=[0,0,0],
                             function=SoftMax(output=PROB,
                                              gain=1.0),
                             name='Action Selection')
