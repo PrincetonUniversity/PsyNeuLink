@@ -25,7 +25,7 @@ Creating an InputState
 ----------------------
 
 An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
-usually automatically construct the inputState(s) it needs when it is created.  For example, if the mechanism is
+usually automatically create the inputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as
 the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
 need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
@@ -34,9 +34,6 @@ more inputStates. For a single inputState, the value can be any of the specifica
 create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry can be either a list, each item of
 which is any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string
 specifying the name for the inputState to be created, and its value is one of the specifications below:
-
-is one or a list
-of any of the following:
 
     * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with item of the owner
       mechanism's ``variable`` to which it will be assigned (see [LINK]).
@@ -290,8 +287,8 @@ class InputState(State_Base):
     @tc.typecheck
     def __init__(self,
                  owner,
-                 reference_value=NotImplemented,
-                 value=NotImplemented,
+                 reference_value=None,
+                 value=None,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
