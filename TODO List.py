@@ -2,7 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# TERMINOLOGY: Stored -> kept/held
+# TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
 
 # 11/22/16:

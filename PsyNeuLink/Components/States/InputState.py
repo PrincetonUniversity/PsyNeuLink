@@ -70,8 +70,29 @@ of any of the following:
        In all cases, the resulting value of the inputState must be compatible (that is, have the same number and type
        of elements) as the item of its owner mechanism's ``variable`` to which it is assigned (see [LINK]).
 
-An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, the mechanism to which it
-belongs must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
+COMMENT:
+   XXXXXXX CHECK ALL THIS:
+             LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
+             DICTIONARY KEY IS USED AS NAME
+             NUMBER OF STATES MUST EQUAL LENGTH OF MECHANISM'S ATTRIBUTE (VARIABLE OR OUTPUTVALUE)
+             SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
+                MULTI-ITEM ATTRIBUTE OF STATE
+             MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
+             ERROR IS GENERATED FOR NUMBER MISMATCH
+COMMENT
+Assigning inputStates using the :keyword:`INPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
+automatic generation of inputStates for that mechanism.  If the mechanism requires multiple inputStates (i.e.,
+it's ``variable`` attribute has more than on item), it assigns the ``value`` of each inputState to an item of its
+``variable`` (see [LINK]). Therefore, the number of inputStates specified must equal the number of items in the
+mechanisms's ``variable``.  An exception is if the mechanism's ``variable`` has more than one item, it may still be
+assigned a single inputState;  in that case, the ``value`` of that inputState must have the same number of items as
+the  mechanisms's ``variable``.  For cases in which there are multiple inputStates, the order in which they are
+specified in the list or OrderedDict must parallel the order of the items to which they will be assined in the
+mechanism's ``variable``; furthemore, as noted above, the ``value`` for each inputState must match (in number and
+types of elements) the item of ``variable`` to which it will be assigned.
+
+Finally, an inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
+must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
 :keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
 
 Structure
@@ -79,7 +100,7 @@ Structure
 
 Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
 mechanisms, as well as from the process to which its owner belongs (if it is the :keyword:`ORIGIN` [LINK] mechanism
-for that process.  A list of projections received by an inputState is kept in its ``receivesFromProjections``
+for that process.  A list of projections received by an inputState is maintained in its ``receivesFromProjections``
 attribute.  Like all PsyNeuLink components, it has the three following fundamental attributes:
 
 * ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
