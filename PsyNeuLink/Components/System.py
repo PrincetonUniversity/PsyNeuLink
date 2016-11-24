@@ -1254,7 +1254,7 @@ class System_Base(System):
 
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
-        #    the input to the mapping projection to the first (origin) Mechanism in that Process' pathway
+        #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
         if inputs is None:
             pass
         else:

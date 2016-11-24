@@ -2,6 +2,10 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
+#            each entry is the name of an inputState or outputState;  value is tuple with:
+#
+
 # TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
 
@@ -1236,7 +1240,7 @@
 # DOCUMENT: PROCESS:
 #           If either the sender and/or receiver arg of a MappingProjection are not specified,
 #               initialization of the projection is delayed.  This has the following consequence:
-#           If the mapping projection is defined outside the Process pathway and not explicitly listed in it,
+#           If the MappingProjection is defined outside the Process pathway and not explicitly listed in it,
 #               it will not be included in the Process;  this is because deferring intialization means that
 #               even if the sender or the receiver is specified, the projection will not be assigned to the
 #               specified mechanism's projection list (sendsToProjections, receivesFromProjections), and thus not
@@ -1405,7 +1409,7 @@
 #             output of projections should always be 1D array, since each corresponds to a single state
 #     variable AND Mechanism output specification:
 #     [0, 1, 2] (i.e., 1D array) => one value for the object
-#                                (e.g., input state for a mapping projection, or param value for a ControlProjection)
+#                                (e.g., input state for a MappingProjection, or param value for a ControlProjection)
 #     [[0, 1, 2]] (i.e., 2D array) => multiple values for the objectn (e.g., states for a mechanism)
 #     CONTEXTUALIZE BY # OF INPUT STATES:  IF ONLY ONE, THEN SPECIFY AS LIST OF NUMBERS;  IF MULITPLE, SPECIFIY EACH AS A LIST
 
@@ -2060,7 +2064,7 @@
 #region STATE: -----------------------------------------------------------------------------------------------------
 #
 # FIX:  Generalize solution to problem of combining projection values when they are matrices:
-#       Currently solved by embedding the value of a projection to a matrix parameterState of a mapping projection
+#       Currently solved by embedding the value of a projection to a matrix parameterState of a MappingProjection
 #           in a list (see "is_matrix_mapping").  Should probably do some more general check on dimensionality
 #           of value and/or coordinate this with (e.g,. specify relevant parameter for) LinearCombination function
 #

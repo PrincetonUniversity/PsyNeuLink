@@ -79,6 +79,7 @@ COMMENT:
                 MULTI-ITEM ATTRIBUTE OF STATE
              MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
              ERROR IS GENERATED FOR NUMBER MISMATCH
+             reference_value IS THE ITEM OF variable CORRESPONDING TO THE inputState
 COMMENT
 Assigning inputStates using the :keyword:`INPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
 automatic generation of inputStates for that mechanism.  If the mechanism requires multiple inputStates (i.e.,
@@ -162,7 +163,7 @@ class InputStateError(Exception):
 
 
 class InputState(State_Base):
-    """Implements subclass of State that calculates and represents the input of a Mechanism
+    """Implements subclass of State that calculates and represents the input of a mechanism
 
     COMMENT:
 
@@ -191,9 +192,13 @@ class InputState(State_Base):
             All kwInputState are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
+    COMMENT
 
+
+    COMMENT:
     Arguments
     ---------
+
     owner : Mechanism
         mechanism to which inputState belongs;  must be specified or determinable from the context in which
         the state is created
@@ -202,25 +207,23 @@ class InputState(State_Base):
         component of owner mechanism's ``variable`` attribute that corresponds to the inputState.
 
     value : number, list or np.ndarray
-        used as template for ``variable``*[]:
+        used as template for ``variable``.
 
     function : Function or method : default LinearCombination(operation=SUM),
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the inputState, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
 
     name : str : default InputState-<index>
-        a string used for the name of the mechanism.
-        If not is specified, a default is assigned by StateRegistry
+        a string used for the name of the inputState.
+        If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
         the PreferenceSet for the inputState.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
-
-
     COMMENT
 
     Attributes
@@ -230,7 +233,7 @@ class InputState(State_Base):
         mechanism to which inputState belongs.
 
     receivesFromProjections : Optional[List[Projection]]
-        a list of the projections received by the inputState.
+        a list of the projections received by the inputState (i.e., for which it is a ``receiver``).
 
     variable : number, list or np.ndarray
         the template for the ``value`` of each projection that the inputState receives, each of which must match
@@ -242,6 +245,24 @@ class InputState(State_Base):
 
     value : number, list or np.ndarray
         the aggregated value of the projections received by the inputState, output of ``function``.
+
+    name : str : default <State subclass>-<index>
+        Name of the inputState.
+        Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+        .. note::
+            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
+            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            creation).
+
+    prefs : PreferenceSet or specification dict : State.classPreferences
+        the PreferenceSet for the outputState.
+        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
     """
 

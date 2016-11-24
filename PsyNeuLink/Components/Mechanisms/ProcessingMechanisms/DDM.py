@@ -387,21 +387,21 @@ class DDM(ProcessingMechanism_Base):
         that the MatLab engine is installed). If ``time_scale`` is set to :keyword:`TimeScale.TIME_STEP`,
         ``function`` is automatically assigned to :class:`Integrator`.
 
-    params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
-
-    time_scale :  TimeScale : defaul tTimeScale.TRIAL
+    time_scale :  TimeScale : default TimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TRIAL` to use one of the analytic solutions specified by ``function``.
         This must be set to :keyword:`TimeScale.TIME_STEP` to numerically integrate the decision variable.
+
+    params : Optional[Dict[param keyword, param value]]
+        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
+        and/or  a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
     name : str : default DDM-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for the process.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].

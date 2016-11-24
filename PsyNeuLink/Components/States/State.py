@@ -38,7 +38,7 @@ associated with that projection.  There are three types of states, all of which 
 Creating a State
 ----------------
 
-States can be created used the constructor for one of the subclasses.  However, in general, they are created
+States can be created using the constructor for one of the subclasses.  However, in general, they are created
 automatically by the objects to which they belong, and/or through specification in context (e.g., when specifying
 the parameters of a mechanism's function to be controlled [LINK], or MappingProjections to be learned [LINK]).
 
@@ -261,7 +261,7 @@ class State_Base(State):
         .. note::
             Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
             the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of
+            mechanism: states within a mechanism with the same base name are appended an index in the order of their
             creation).
 
     prefs : PreferenceSet or specification dict : State.classPreferences
@@ -507,7 +507,7 @@ class State_Base(State):
         """
 
         is_matrix = False
-        # If variable is a matrix (e.g., for the MATRIX parameterState of a mapping projection),
+        # If variable is a matrix (e.g., for the MATRIX parameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled in by LinearCombination
         #     (i.e., solo matrix is returned intact, rather than treated as arrays to be combined);
         # Notes:

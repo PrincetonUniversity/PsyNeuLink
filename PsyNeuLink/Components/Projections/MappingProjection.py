@@ -31,7 +31,7 @@ COMMENT:
             if the mechanism is being instantiated on its own, the sender must be explicity specified
 COMMENT
 
-A mapping projection can be created in any of the ways that can be used to create a
+A MappingProjection can be created in any of the ways that can be used to create a
 :ref:`projection <_Projection_Creation>) or by specifying it in the:ref:`pathway <_Process_Projections>`
 of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
 using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
@@ -47,7 +47,7 @@ using a ``matrix`` appropriate to the circumstance  (matrix types are described 
   that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
   depends on the ``function`` parameter of the :doc:`LearningProjection`.[LINK]
 
-When a mapping projection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
+When a MappingProjection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
 or they can be assigned by default (see below).
 
 .. _Mapping_Structure:
@@ -63,7 +63,7 @@ COMMENT:
 
 COMMENT
 
-In addition to its ``function``, mapping projections use the following two the primary parameters:
+In addition to its ``function``, MappingProjections use the following two the primary parameters:
 
 .. _Mapping_Matrix:
 
@@ -122,12 +122,12 @@ In addition to its ``function``, mapping projections use the following two the p
 Execution
 ---------
 
-A mapping projection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
+A MappingProjection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
 and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
 cause the value of any projections (e.g., a LearningProjection) it receives to be applied to the matrix. This will bring
 into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
 Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
-``matrix`` will not show the effects of projections to its parameterState until the mapping projection has been
+``matrix`` will not show the effects of projections to its parameterState until the MappingProjection has been
 executed).
 
 .. _Projection_Class_Reference:
@@ -216,16 +216,16 @@ class MappingProjection(Projection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
 
-    name : str : default TransferMechanism-<index>
-        a string used for the name of the mapping projection.
+    name : str : default MappingProjection-<index>
+        a string used for the name of the MappingProjection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        the Preference set for the mapping projection.
+    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
+        the PreferenceSet for the MappingProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -237,6 +237,18 @@ class MappingProjection(Projection_Base):
 
     matrix : 2d np.array
         matrix used by ``function`` to transform input from ``sender`` and to ``value`` used by ``receiver``.
+
+    name : str : default MappingProjection-<index>
+        the name of the MappingProjection.
+        Specified in the name argument of the call to create the projection;
+        if not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the PreferenceSet for projection.
+        Specified in the prefs argument of the call to create the projection;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
     """
 

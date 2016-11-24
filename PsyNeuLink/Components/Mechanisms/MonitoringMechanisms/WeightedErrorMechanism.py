@@ -143,6 +143,16 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
           its ``matrix`` parameter is used to calculate the ``weightedErrorSignal``;
           it's width (number of columns) must match the length of ``error_signal``.
 
+    name : str : default WeightedErrorMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the PreferenceSet for mechanism.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     Attributes
     ----------
 
@@ -180,6 +190,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
+
 
     """
 
