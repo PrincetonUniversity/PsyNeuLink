@@ -10,8 +10,6 @@
 
 """
 
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
-
 Overview
 --------
 

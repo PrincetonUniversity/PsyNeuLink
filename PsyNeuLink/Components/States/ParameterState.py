@@ -14,6 +14,12 @@
 Overview
 --------
 
+A parameterState of a mechanism accepts one or more ControlProjections and/or LearningProjections that modify the
+parameters of the mechanism's ``function``.   A list of the projections received by an parameterState is
+kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs,
+and uses the result to modify the ``function`` parameter for which it is responsible.
+
+
 .. _ParameterState_Creation:
 
 Creating a ParameterState
