@@ -26,19 +26,25 @@ Creating an InputState
 
 An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically construct the inputState(s) it needs when it is created.  For example, if the mechanism is
-being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will created and assigned as
+being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as
 the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
-need to be specified when a mechanism is created, or added to an existing mechanism, this can be done using the
-mechanism's parameter dictionary, in an entry with the key :keyword:`INPUT_STATES` [LINK] and a value that is one or
-a list of any of the following:
+need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
+the mechanism's parameter dictionary, using the key :keyword:`INPUT_STATES` [LINK] and a value that specifies one or
+more inputStates. For a single inputState, the value can be any of the specifications in the the list below.  To
+create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry can be either a list, each item of
+which is any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string
+specifying the name for the inputState to be created, and its value is one of the specifications below:
+
+is one or a list
+of any of the following:
 
     * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with item of the owner
       mechanism's ``variable`` to which it will be assigned (see [LINK]).
     ..
     * The :class:`InputState` **class** or a string.  This creates a default inputState using the owner
       mechanism's ``variable`` as the template for the inputState's ``value``. [LINK]  If :keyword:`InputState`
-      is used, a default name[LINK] is assigned to the state;  if a string is, it is assigned as the name
-      of the inputState.
+      is used, a default name is assigned to the state;  if a string is, it is assigned as the name
+      of the inputState (see [LINK] for naming conventions).
     ..
     * A **value**.  This creates a default inputState using the specified value as inputState's ``value``.  This must
       be compatible with the owner mechanism's ``variable``.
@@ -52,8 +58,8 @@ a list of any of the following:
       The projection's ``value`` must be compatible with the ``variable`` of the mechanism to which the inputState
       belongs.
     ..
-    * A **specification dictionary**.  The inputState is created using the owner mechanism's ``variable`` as
-      the template for the inputState's ``value`` [LINK].  In addition to the standard entries of a parameter
+    * A **specification dictionary**.  This creates the specified inputState using the owner mechanism's ``variable``
+      as the template for the inputState's ``value`` [LINK].  In addition to the standard entries of a parameter
       dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
       Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.
     ..
