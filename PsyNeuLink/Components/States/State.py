@@ -297,8 +297,8 @@ class State_Base(State):
 
     def __init__(self,
                  owner,
-                 value=NotImplemented,
-                 params=NotImplemented,
+                 value=None,
+                 params=None,
                  name=None,
                  prefs=None,
                  context=None,

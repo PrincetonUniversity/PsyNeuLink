@@ -23,14 +23,8 @@ outputState is kept in its ``sendsToProjections`` attribute.
 Creating an OutputState
 -----------------------
 
-An outputState can be created by calling its constructor, but more commonly it is done by specifying one (or more)
-outputStates in the :keyword:`OUTPUT_STATES` entry of a params dictionary when creating a mechanism. An
-outputState must be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs
-must be specified in the ``owner`` argument when calling the constructor;  if the outputState is specified in the
-:keyword:`OUTPUT_STATES` entry of a parameter dictionary for a mechanism, then the owner is inferred from the context.
-
 An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
-usually automatically construct the outputState(s) it needs when it is created.  For example, if the mechanism is
+usually automatically create the outputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will be created and assigned
 as the ``sender`` of a MappingProjection to the next mechanism in the pathway, or to the process's ``output`` if it is
 the :keyword:`TERMINAL` mechanism of the process. If one or more custom outputStates need to be specified when a
@@ -257,9 +251,9 @@ class OutputState(State_Base):
     def __init__(self,
                  owner,
                  reference_value,
-                 value=NotImplemented,
+                 value=None,
                  function=LinearCombination(operation=SUM),
-                 params=NotImplemented,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):

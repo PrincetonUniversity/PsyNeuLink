@@ -14,16 +14,35 @@
 Overview
 --------
 
-A parameterState of a mechanism accepts one or more ControlProjections and/or LearningProjections that modify the
-parameters of the mechanism's ``function``.   A list of the projections received by an parameterState is
+A parameterState accepts one or more ControlProjections and/or LearningProjections that modify the
+parameters of its owner's ``function``.   A list of the projections received by an parameterState is
 kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs,
-and uses the result to modify the ``function`` parameter for which it is responsible.
+and uses the result to modify the value of the ``function`` parameter for which it is responsible.
 
 
 .. _ParameterState_Creation:
 
 Creating a ParameterState
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
+
+ParameterStates cannot be created directly.
+are created automatically by the object to which they belong when that object is created;  they
+cannot be constructed directly  one
+ParameterState is created for each parameter of the object's ``function``.
+for each
+parameter of the mechanis'ms
+
+  For example,
+if the mechanism is
+being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as
+the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
+need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
+the mechanism's parameter dictionary, using the key :keyword:`INPUT_STATES` [LINK] and a value that specifies one or
+more inputStates. For a single inputState, the value can be any of the specifications in the the list below.  To
+create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry can be either a list, each item of
+which is any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string
+specifying the name for the inputState to be created, and its value is one of the specifications below:
+
 
                 + ParameterState class ref: default will be instantiated using param with same name in EMP
                 + ParameterState object: its value must be compatible with param of same name in EMP
@@ -177,25 +196,14 @@ class ParameterState(State_Base):
     tc.typecheck
     def __init__(self,
                  owner,
-                 reference_value=NotImplemented,
-                 value=NotImplemented,
+                 reference_value=None,
+                 value=None,
                  function=LinearCombination(operation=PRODUCT),
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
-                 params=NotImplemented,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
-
-        :param owner: (Mechanism)
-        :param reference_value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
-        :param context: (str)
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,

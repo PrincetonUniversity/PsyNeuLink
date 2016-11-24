@@ -203,12 +203,11 @@ the ``value`` of that inputState must have the same number of items as the mecha
 ParameterStates
 ^^^^^^^^^^^^^^^
 
-These represent the parameters of a mechanism's function, and used to control the parameters of its ``function``.
+These represent the parameters of a mechanism's function, and are used to control the parameters of its ``function``.
 PsyNeuLink assigns one parameterState for each parameter of the mechanism's ``function`` (which correspond to the
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
 from the :doc:`ControlProjections <ControlProjection>` of a :doc:`ControlMechanism<ControlMechanism>`, that is used to
-modify the
-function's parameter value in response to the outcome(s) of processing.
+modify the function's parameter value in response to the outcome(s) of processing.
 
   .. _Mechanism_Assigning_A_ControlProjection:
 

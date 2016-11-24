@@ -17,8 +17,12 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 
 transfer_mechanism_1 = TransferMechanism()
+TM1_parameter_state = ParameterState(owner=transfer_mechanism_1,
+                                     value=22)
+
 transfer_mechanism_2 = TransferMechanism()
 transfer_mechanism_3 = TransferMechanism()
 mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
