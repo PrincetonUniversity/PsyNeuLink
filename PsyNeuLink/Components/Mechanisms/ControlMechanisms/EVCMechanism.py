@@ -345,7 +345,7 @@ class EVCMechanism(ControlMechanism_Base):
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
-    name : str : default TransferMechanism-<index>
+    name : str : default EVCMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]

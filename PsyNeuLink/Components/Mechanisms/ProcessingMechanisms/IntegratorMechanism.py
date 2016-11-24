@@ -124,29 +124,23 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
 
+    time_scale :  TimeScale : TimeScale.TRIAL
+        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
+
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
-        This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
-
-    name : str : default TransferMechanism-<index>
+    name : str : default IntegratorMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
-
-
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
-        This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
-
 
     Attributes
     ----------
@@ -156,12 +150,12 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
 
-    name : str : default TransferMechanism-<index>
+    name : str : default IntegratorMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].

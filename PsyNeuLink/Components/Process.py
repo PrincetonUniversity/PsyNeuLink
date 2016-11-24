@@ -234,7 +234,7 @@ The pathway for this process uses default projection specification::
 
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
-A mapping projection is automatically instantiated between each of the mechanisms
+A MappingProjection is automatically instantiated between each of the mechanisms
 
 *Inline projection specification using an existing projection:*
 
@@ -1282,7 +1282,7 @@ class Process_Base(Process):
                             break
 
                     if not projection_found:
-                        # No projection found, so instantiate mapping projection from preceding mech to current one;
+                        # No projection found, so instantiate MappingProjection from preceding mech to current one;
                         # Note:  If self.learning arg is specified, it has already been added to projection_params above
                         MappingProjection(sender=preceding_item,
                                 receiver=item,
@@ -1326,7 +1326,7 @@ class Process_Base(Process):
     # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 
                         # MODIFIED 9/12/16 NEW:
-                        # If initialization of mapping projection has been deferred,
+                        # If initialization of MappingProjection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
                         if item.value is DEFERRED_INITIALIZATION:
                             # Check sender arg
@@ -2091,7 +2091,7 @@ class ProcessInputState(OutputState):
 
     """
     def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
-        """Pass variable to mapping projection from Process to first Mechanism in Pathway
+        """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:
         """

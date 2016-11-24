@@ -214,15 +214,15 @@ class LearningProjection(Projection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that specifies the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` and parameter assignments.
 
-    name : str : default TransferMechanism-<index>
+    name : str : default LearningProjection-<index>
         a string used for the name of the LearningProjection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the PreferenceSet for the LearningProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
@@ -259,6 +259,19 @@ class LearningProjection(Projection_Base):
 
     value : 2d np.array
         same as ``weightChangeMatrix``
+
+    name : str : default LearningProjection-<index>
+        the name of the LearningProjection.
+        Specified in the name argument of the call to create the projection;
+        if not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the PreferenceSet for projection.
+        Specified in the prefs argument of the call to create the projection;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
 
     """
 
@@ -341,7 +354,7 @@ class LearningProjection(Projection_Base):
             for param_name, param_value in weight_change_params.items():
                 if param_name is FUNCTION:
                     raise LearningProjectionError("{} of {} contains a function specification ({}) that would override"
-                                              " the LinearCombination function of the targetted mapping projection".
+                                              " the LinearCombination function of the targeted MappingProjection".
                                               format(kwWeightChangeParams,
                                                      self.name,
                                                      param_value))
@@ -731,7 +744,7 @@ FROM TODO:
                                                          params={NEXT_LEVEL_PROJECTION:projection},
                                                          name=self.mappingProjection.name + " Weighted_Error")
 
-                    # Instantiate mapping projection to provide monitoring_mechanism with error signal
+                    # Instantiate MappingProjection to provide monitoring_mechanism with error signal
                     MappingProjection(sender=next_level_monitoring_mechanism,
                             receiver=monitoring_mechanism,
                             # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
@@ -757,7 +770,7 @@ FROM TODO:
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
-                    # Instantiate a mapping projection from the errorSource to the DefaultTrainingMechanism
+                    # Instantiate a MappingProjection from the errorSource to the DefaultTrainingMechanism
                     try:
                         monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
                         monitored_state = self.errorSource.outputStates[monitored_state]

@@ -277,15 +277,15 @@ class ControlProjection(Projection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
         By default, it contains an entry for the projection's default ``function`` and cost function assignments.
 
-    name : str : default TransferMechanism-<index>
+    name : str : default ControlProjection-<index>
         a string used for the name of the ControlProjection.
         If not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the PreferenceSet for the ControlProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
@@ -361,6 +361,19 @@ class ControlProjection(Projection_Base):
         ``intensity`` for last execution of the ControlProjection.
 
         .. _ControlProjection_Cost_Functions:
+
+    name : str : default ControlProjection-<index>
+        the name of the ControlProjection.
+        Specified in the name argument of the call to create the projection;
+        if not is specified, a default is assigned by ProjectionRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the PreferenceSet for projection.
+        Specified in the prefs argument of the call to create the projection;
+        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
 
     """
 

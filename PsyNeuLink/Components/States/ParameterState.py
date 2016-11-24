@@ -201,7 +201,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
         # # FIX:              BUT FUNCTION IS LINEAR COMBINATION;  SHOULDN'T IT BE JUST LINEAR (TO RETURN THE MATRIX)?
         # # FIX:              OR PARAMETER_MODULATION_OPERATION SHOULD JUST BE ADD
         # # FIX:              (SET THAT WAY BY LEARNING PROJECTION, BUT NOT YET IN INIT??)
-        # # ParameterState is for a matrix of a mapping projection,
+        # # ParameterState is for a matrix of a MappingProjection,
         # #     so its function (LinearCombination) should use SUM (rather than PRODUCT)
         # #     so that weight changes can be added (e.g., by learningSignals)
         # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
@@ -240,7 +240,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
         :return:
         """
 
-        # If parameterState is for a matrix of a mapping projection,
+        # If parameterState is for a matrix of a MappingProjection,
         #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
         #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
         if self.name == MATRIX:

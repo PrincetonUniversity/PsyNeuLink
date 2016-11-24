@@ -540,7 +540,7 @@ class Mechanism_Base(Mechanism):
                 these determine the operation of the function of the mechanism subclass being instantiated
             - one or more outputStates:
                 the variable of each receives the corresponding item in the output of the mechanism's function
-                the value of each is passed to corresponding mapping projections for which the mechanism is a sender
+                the value of each is passed to corresponding MappingProjections for which the mechanism is a sender
                 * Notes:
                     by default, a Mechanism has only one outputState, assigned to <mechanism>.outputState;  however:
                     if params[OUTPUT_STATES] is a list (of names) or specification dict (of MechanismOuput State

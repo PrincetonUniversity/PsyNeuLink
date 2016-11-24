@@ -34,13 +34,14 @@ must be specified in the ``owner`` argument when calling the constructor;  if th
 An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically construct the outputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will be created and assigned
-as the ``sender`` of a MappingProjection to the next mechanism in the pathway. If one or more custom outputStates
-need to be specified when a mechanism is created, or added to an existing mechanism, this can be in an entry of the
-mechanism's parameter dictionary, using the key :keyword:`OUTPUT_STATES` [LINK] and a value that specifies one or
-more outputStates.  For a single outputState, the value can be any of the specifications in the the list below.  To
-create multiple outputStates, the value of the :keyword:`OUTPUT_STATES` entry can be either a list, each item of
-which can be any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a
-string  specifying the name for the outputState to be created, and its value is one of the specifications below:
+as the ``sender`` of a MappingProjection to the next mechanism in the pathway, or to the process's ``output`` if it is
+the :keyword:`TERMINAL` mechanism of the process. If one or more custom outputStates need to be specified when a
+mechanism is created, or added to an existing mechanism, this can be in an entry of the mechanism's parameter
+dictionary, using the key :keyword:`OUTPUT_STATES` [LINK] and a value that specifies one or more outputStates.
+For a single outputState, the value can be any of the specifications in the the list below.  To create multiple
+outputStates, the value of the :keyword:`OUTPUT_STATES` entry can be either a list, each item of which can be any of
+the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string  specifying the
+name for the outputState to be created, and its value is one of the specifications below:
 
     * An existing **outputState** object or the name of one.  Its ``value`` must be compatible with the item of the
       owner mechanism's ``outputValue`` that will be assigned to it (see [LINK]).
@@ -66,6 +67,7 @@ COMMENT:
                 MULTI-ITEM ATTRIBUTE OF STATE
              MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
              ERROR IS GENERATED FOR NUMBER MISMATCH
+             reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
 COMMENT
 Assigning outputStates using the :keyword:`OUTPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
 automatic generation of outputStates for that mechanism.  If the mechanism requires multiple outputStates (i.e.,
@@ -95,10 +97,10 @@ fundamental attributes:
 * ``variable``:  this must match (both in number and types of elements) the value of the item it is assigned from its
   mechanism's ``outputValue`` attribute (see LINK]).
 
-* ``function``:  this exists for structural consistency, but is not presently used by PsyNeuLink.
+* ``function``:  this is implemented for structural consistency, but is not currently used by PsyNeuLink.
 
-* ``value``:  this is assigned from the outputState`s ``variable``, and used as the input for any projections that it
-  sends.
+* ``value``:  this is assigned the value of the outputState`s ``variable``, and used as the input for any projections
+  that it sends.
 
 
 Execution
@@ -138,65 +140,103 @@ class OutputStateError(Exception):
 
 
 class OutputState(State_Base):
-    """Implement subclass type of State, that represents output of its owner
+    """Implements subclass of State that represents the output of a mechanism
 
-    Description:
-        The OutputState class is a type in the State category of Component,
-        It is used primarily as the sender for MappingProjections
-        Its FUNCTION updates its value:
-            note:  currently, this is the identity function, that simply maps variable to self.value
+    COMMENT:
 
-    Instantiation:
-        - OutputStates can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and owner
-            - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the owner
-                - the owner's self.value will be used as its value
-        - self.value is set to self.variable (enforced in State_Base._validate_variable)
-        - self.function (= params[FUNCTION]) should be an identity function (enforced in _validate_params)
+        Description
+        -----------
+            The OutputState class is a type in the State category of Component,
+            It is used primarily as the sender for MappingProjections
+            Its FUNCTION updates its value:
+                note:  currently, this is the identity function, that simply maps variable to self.value
 
-        - if owner is being instantiated within a pathway:
-            - OutputState will be assigned as the sender of a projection to the subsequent mechanism
-            - if it is the last mechanism in the list, it will send a projection to process.output
+        Class attributes:
+            + componentType (str) = OUTPUT_STATES
+            + paramClassDefaults (dict)
+                + FUNCTION (LinearCombination)
+                + FUNCTION_PARAMS   (Operation.PRODUCT)
+            + paramNames (dict)
 
-    StateRegistry:
-        All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+        Class methods:
+            function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
 
-    Naming:
-        kwInputState can be named explicitly (using the name='<name>' argument). If this argument is omitted,
-         it will be assigned "OutputState" with a hyphenated, indexed suffix ('OutputState-n')
+        StateRegistry
+        -------------
+            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+              a count for all instances of it, and a dictionary of those instances
 
-    Parameters:
-        The default for FUNCTION is LinearMatrix using MATRIX: IDENTITY_MATRIX:
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
+    COMMENT
 
-    Class attributes:
-        + componentType (str) = OUTPUT_STATES
-        + paramClassDefaults (dict)
-            + FUNCTION (LinearCombination)
-            + FUNCTION_PARAMS   (Operation.PRODUCT)
-        + paramNames (dict)
 
-    Class methods:
-        function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
+    COMMENT:
+    Arguments
+    ---------
 
-    Instance attributes:
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + params (dict) - set currently in effect
-        + paramNames (list) - list of keys for the params dictionary
-        + owner (Mechanism)
-        + value (value)
-        + projections (list)
-        + params (dict)
-        + name (str)
-        + prefs (dict)
+    owner : Mechanism
+        mechanism to which inputState belongs;  must be specified or determinable from the context in which
+        the state is created
 
-    Instance methods:
-        none
+    reference_value : number, list or np.ndarray
+        component of owner mechanism's ``outputValue`` attribute that corresponds to the outputState.
+
+    value : number, list or np.ndarray
+        used as template for ``variable``.
+
+    function : Function or method : default LinearCombination(operation=SUM)
+        implemented for structural consistency;  not currently used by PsyNeuLink.
+
+    params : Optional[Dict[param keyword, param value]]
+        a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
+
+    name : str : default OutputState-<index>
+        a string used for the name of the outputState.
+        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        belongs (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+        the PreferenceSet for the outputState.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+    COMMENT
+
+    Attributes
+    ----------
+
+    owner : Mechanism
+        mechanism to which outputState belongs.
+
+    sendsToProjections : Optional[List[Projection]]
+        a list of the projections sent by the outputState (i.e., for which the outputState is a ``sender``).
+
+    variable : number, list or np.ndarray
+        assigned an item of the ``outputValue`` of its owner mechanism.
+
+    function : CombinationFunction : default LinearCombination(operation=SUM))
+        implemented for structural consistency;  not currently used by PsyNeuLink.
+
+    value : number, list or np.ndarray
+        assigned the value of the outputState`s ``variable``, and used as the input for any projections that it sends.
+
+    name : str : default <State subclass>-<index>
+        Name of the inputState.
+        Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+        .. note::
+            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
+            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            creation).
+
+    prefs : PreferenceSet or specification dict : State.classPreferences
+        the PreferenceSet for the outputState.
+        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     """
 
     #region CLASS ATTRIBUTES
@@ -225,11 +265,8 @@ class OutputState(State_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED
-                      *** EXPLAIN owner_output_value:
-reference_value is component of owner.variable that corresponds to the current State
 
+        # IMPLEMENTATION NOTE:
         # Potential problem:
         #    - a OutputState may correspond to a particular item of owner.value
         #        in which case there will be a mismatch here
@@ -237,16 +274,6 @@ reference_value is component of owner.variable that corresponds to the current S
         #        then the item of owner.value is known and has already been checked
         #        (in the call to _instantiate_state)
         #    - otherwise, should ignore
-
-        :param owner: (Mechanism object)
-        :param reference_value: (value)
-        :param value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
-        :param context: (str)
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function, params=params)
