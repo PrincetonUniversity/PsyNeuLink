@@ -210,25 +210,6 @@ class ParameterState(State_Base):
                                                  parameter_modulation_operation=parameter_modulation_operation,
                                                  params=params)
 
-        # # FIX: ZZZ 10/28/16 IF PARAMETER STATE IS FOR A MAPPING_PROJECTION,
-        # # FIX:              REFERENCE VALUE IS MATRIX (WHICH IS CORRECT)
-        # # FIX:              BUT FUNCTION IS LINEAR COMBINATION;  SHOULDN'T IT BE JUST LINEAR (TO RETURN THE MATRIX)?
-        # # FIX:              OR PARAMETER_MODULATION_OPERATION SHOULD JUST BE ADD
-        # # FIX:              (SET THAT WAY BY LEARNING PROJECTION, BUT NOT YET IN INIT??)
-        # # ParameterState is for a matrix of a MappingProjection,
-        # #     so its function (LinearCombination) should use SUM (rather than PRODUCT)
-        # #     so that weight changes can be added (e.g., by learningSignals)
-        # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        # if (isinstance(owner, MappingProjection) and
-        #         (isinstance(reference_value, np.matrix) or
-        #              (isinstance(reference_value, np.ndarray) and reference_value.ndim == 2))):
-        #     params[FUNCTION] = Linear
-        #     params[FUNCTION_PARAMS] = {SLOPE:1, INTERCEPT:0}
-        #     # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
-        #     params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
-        #     # params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
-        #     # params[FUNCTION_PARAMS][OPERATION]=SUM
-
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
