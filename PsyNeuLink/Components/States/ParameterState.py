@@ -14,62 +14,136 @@
 Overview
 --------
 
-A parameterState accepts one or more ControlProjections and/or LearningProjections that modify the
-parameters of its owner's ``function``.   A list of the projections received by an parameterState is
-kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs,
-and uses the result to modify the value of the ``function`` parameter for which it is responsible.
-
+A parameterState belongs to either a mechanism or a projection, and accepts one or more ControlProjections and/or
+LearningProjections that modify the parameters of its owner's ``function``.   A list of the projections received by
+a parameterState is kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of
+these inputs, and uses the result to modify the value of the ``function`` parameter for which it is responsible.
 
 .. _ParameterState_Creation:
 
 Creating a ParameterState
 -------------------------
 
-ParameterStates cannot be created directly.
-are created automatically by the object to which they belong when that object is created;  they
-cannot be constructed directly  one
-ParameterState is created for each parameter of the object's ``function``.
-for each
-parameter of the mechanis'ms
+A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
+parameterStates are created automatically when the object to which they belong (a mechanism or a projection) is
+created.  One parameterState is created for each parameter of the object's ``function``.  Each parameterState is
+created using the specification for the corresponding parameter of the ``function``, as described below.
 
-  For example,
-if the mechanism is
-being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as
-the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
-need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
-the mechanism's parameter dictionary, using the key :keyword:`INPUT_STATES` [LINK] and a value that specifies one or
-more inputStates. For a single inputState, the value can be any of the specifications in the the list below.  To
-create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry can be either a list, each item of
-which is any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string
-specifying the name for the inputState to be created, and its value is one of the specifications below:
+.. _ParameterState_Specifying_Parameters:
+
+Specifying Function Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+  XXXX EXPLAIN THAT PARAMETER SPECIFICATION CREATES ParameterState FOR IT
+  XXXX EXPLAIN baseValue (reference figure)
+
+When a function is being specified for an object, its parameters can be specified in two ways:
+in a constructor for the function, where that is used in ``function argument, as in the example below::
+
+    my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1)
+
+or in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used in ``params`` argument of the object::
+
+    my_mechanism = EXAMPLE
 
 
-                + ParameterState class ref: default will be instantiated using param with same name in EMP
-                + ParameterState object: its value must be compatible with param of same name in EMP
-                - projection: Projection object, Projection specifications dict, or list of either)
-                    + Projection subclass ref:
-                        default ParameterState will be instantiated using EMP
-                        default projection (for ParameterState) will be instantiated using EMP
-                            and assigned to ParameterState
-                    + Projection object:
-                        ParameterState will be instantiated using output of projection as its value;
-                        this must be compatible with EMP
-                    + Projection specification dict
-                    + List[any of the above]
-                + State specification dict:  ParameterState will be instantiated using EMP as its value;
-                    must contain the following entries: (see Instantiation arguments for ParameterState):
-                        + FUNCTION (method)
-                        + FUNCTION_PARAMS (dict)
-                        + STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)
-                + ParamValueProjection tuple:
-                    value will be used as variable to instantiate a default ParameterState
-                    projection will be assigned as projection to ParameterState
-                + 2-item tuple : (value, projectionType)
-                    [convenience notation;  should use ParamValueProjection for clarity]:
-                    first item will be used as variable to instantiate a default ParameterState
-                    second item will be assigned as projection to ParameterState
-                + value : list of numbers (no projections will be assigned)
-                    will be used as variable to instantiate a default ParameterState
+The parameters of a :keyword:`function` can be specified in two ways:  in a constructor for the function, where it
+use as a ``function`` argument
+
+
+ (where it is specified as a ``function`` argument;  or in the
+:keyword:`FUNCTION_PARAMS` entry of a parameter dictionary
+
+
+
+used in
+the ``function`` argument of the mechanism or projection;  or in the :keyword:`FUNCTION_PARAMS`
+entry of a parameter dictionary used for the ``params`` argument of the mechanism or projection [LINK].  The value
+must be a dictionary, the enties of which have a key
+that is the name of a function parameter, and the value of which is one of the following:
+
+    COMMENT:
+       XXXX VERIFY THAT THIS IS TRUE:
+    COMMENT
+    * A **value**.  This must be a valid the value of the parameter.  The creates a default parameterState and
+      assigns the value as its ``baseValue``. [LINK]
+    ..
+    * An existing **parameterState** object or the name of one.  It's name must be the name of a parameter of the
+      owner's ``function``, and its value must be a valid for that parameter.  This capability is provided
+      for generality and potential future use, but its use is not advised.
+    ..
+    COMMENT:
+       XXXX VERIFY THAT THIS IS TRUE:
+    COMMENT
+    * A **Projection subclass**. This creates a default parameterState, assigns the parameter's default value as
+      the parameterState's ``baseValue``, and creates and assigns a projection to it of the specified type.
+      The ``sender`` for the projection is specified by XXXX?????
+    ..
+    * A **Projection object** or **projection specification dictionary** [LINK].  This creates a default
+      parameterState, and assigns the ``value`` of projection as the parameterState's ``baseValue``.
+      This must be valid for the parameter.
+    ..
+    + ParamValueProjection tuple:
+        value will be used as variable to instantiate a default ParameterState
+        projection will be assigned as projection to ParameterState
+    ..
+    * A :any:`ParamValueProjection` or 2-item (value, projection) tuple.  This creates a default parameterState using
+      the ``value`` item as its ``baesValue``. If the projection item is an existing projection or a constructor for
+      one, it is assigned the parameter as its ``receiver``.  If the projection item is the name of a Projection
+      subclass, a default projection of the specified type is created, and assigned the parameterState as its
+      ``receiver``.
+
+    .. note::
+       In all cases, the resulting value of the parameterState must be compatible (that is, have the same number and
+       type of elements) as the parameter of the ``function`` with which it is associated.
+
+  COMMENT:
+    XXXX ??MOVE THIS TO ControlSignal
+  COMENT
+  *Assigning a ControlProjection*
+
+  A control signal can be assigned to a parameter, wherever the parameter value is specified, by using a tuple with
+  two items. The first item is the value of the parameter, and the second item is either :keyword:`CONTROL_PROJECTION`,
+  the name of the ControlProjection class, or a call to its constructor.  In the following example, a mechanism is
+  created with a function that has three parameters::
+
+    my_mechanism = SomeMechanism(function=SomeFunction(param_1=1.0,
+                                                       param_2=(0.5, ControlProjection))
+                                                       param_3=(36, ControlProjection(function=Logistic)))
+
+  The first parameter of the mechanism's function is assigned a value directly, the second parameter is assigned a
+  ControlProjection, and the third is assigned a
+  :ref:`ControlProjection with a specified function <ControlProjection_Structure>`.
+
+The value of function parameters can also be modified using a runtime parameters dictionary where a mechanism is
+specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's ``execute`` or ``run``
+methods (see :ref:`Mechanism_Runtime_Parameters`).  The figure below shows how these factors are combined by the
+parameterState to determine the paramter value for a function.
+
+    **Role of ParameterStates in Controlling the Parameter Value of a Function**
+
+    .. figure:: _static/ParameterState_fig.*
+       :alt: ParameterState
+       :scale: 75 %
+
+       ..
+
+       +--------------+--------------------------------------------------------------------+
+       | Component    | Impact on Parameter Value                                          |
+       +==============+====================================================================+
+       | Brown (A)    | baseValue of drift rate parameter of DDM function                  |
+       +--------------+--------------------------------------------------------------------+
+       | Purple (B)   | runtime specification of drift rate parameter                      |
+       +--------------+--------------------------------------------------------------------+
+       | Red (C)      | runtime parameter influences ControlProjection-modulated baseValue |
+       +--------------+--------------------------------------------------------------------+
+       | Green (D)    | combined controlSignals modulate baseValue                         |
+       +--------------+--------------------------------------------------------------------+
+       | Blue (E)     | parameterState function combines ControlProjection                 |
+       +--------------+--------------------------------------------------------------------+
+
+
 
 
 parameter_modulation_operation:  ModulationOperation - list values and their meaning
@@ -222,6 +296,19 @@ class ParameterState(State_Base):
                                              context=self)
 
         self.modulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
+
+    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+        """Insure that parameterState (as identified by its name) is for a valid parameter of its owner's function
+        """
+        if not self.name in self.owner.function_params.keys():
+            raise ParameterStateError("Name of requested parameterState ({}) does not refer to a valid parameter "
+                                      "of the function ({}) of its owner ({})".
+                                      format(self.name,
+                                             # self.owner.function_object.__class__.__name__,
+                                             self.owner.function_object.componentName,
+                                             self.owner.name))
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _instantiate_function(self, context=None):
         """Insure function is LinearCombination and that its output is compatible with param with which it is associated

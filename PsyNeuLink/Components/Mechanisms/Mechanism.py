@@ -211,6 +211,9 @@ modify the function's parameter value in response to the outcome(s) of processin
 
   .. _Mechanism_Assigning_A_ControlProjection:
 
+  COMMENT:
+    XXXX ??MOVE THIS TO ControlSignal OR ParameterState
+  COMENT
   *Assigning a ControlProjection*
 
   A control signal can be assigned to a parameter, wherever the parameter value is specified, by using a tuple with
@@ -223,7 +226,8 @@ modify the function's parameter value in response to the outcome(s) of processin
                                                        param_3=(36, ControlProjection(function=Logistic)))
 
   The first parameter of the mechanism's function is assigned a value directly, the second parameter is assigned a
-  ControlProjection, and the third is assigned a :ref:`ControlProjection with a specified function <ControlProjection_Structure>`.
+  ControlProjection, and the third is assigned a :ref:`ControlProjection with a specified
+  function <ControlProjection_Structure>`.
 
 The value of function parameters can also be modified using a runtime parameters dictionary where a mechanism is
 specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's ``execute`` or ``run``
@@ -305,7 +309,7 @@ mechanism subclass, as well as those specific to a particular subclass (document
     * :keyword:`FUNCTION_PARAMS` : Dict[str, value] -
       dictionary of parameters for the mechanism's function.
       The key of each entry must be the name of the  parameter.
-      The value of each entry can be one of the following:
+      The value of each entry can be one of the following (see :ref:`ParameterState_Specifying_Parameters` for details):
 
       * the value of the parameter itself;
       * a parameter state, the value of which specifies the parameter's value
@@ -313,7 +317,6 @@ mechanism subclass, as well as those specific to a particular subclass (document
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
         :doc:`ControlProjection` or a :doc:`LearningProjection`
         (a :class:`ParamValueProjection` namedtuple can be used for clarity).
-
       ..
       .. note::
          Many subclasses include the function parameters as arguments in the call to the mechanism subclass,

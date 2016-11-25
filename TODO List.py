@@ -4,8 +4,8 @@
 
 # IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with:
-# IMPLEMENT: For ParameterState:  allow reference_value to be the name of a parameter of the function to which it should
-#             apply
+# IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
+# FIX: name of Functions is being assigned to Type rather than subtype
 
 # TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
