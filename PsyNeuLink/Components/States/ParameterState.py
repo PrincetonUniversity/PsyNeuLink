@@ -38,38 +38,8 @@ COMMENT:
   XXXX EXPLAIN THAT PARAMETER SPECIFICATION CREATES ParameterState FOR IT
   XXXX EXPLAIN baseValue (reference figure)
 
-When a function is specified for an object, its parameters can be assigned in two ways:
-
-* in **constructor** for the function, where that is used for the ``function`` argument of the object,
-  as in the example below::
-
-    my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
-
-* or in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the ``params`` argument of the object,
-  as in the example below::
-
-    my_mechanism = SomeMechanism(function=SomeFunction
-                                 params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
-
-
-When the parameterStates for the function are created, the values specified in the ``function`` argument
-
-Why would you do the latter???:  cass in wich
-
-The parameters of a :keyword:`function` can be specified in two ways:  in a constructor for the function, where it
-use as a ``function`` argument
-
-
- (where it is specified as a ``function`` argument;  or in the
-:keyword:`FUNCTION_PARAMS` entry of a parameter dictionary
-
-
-
-used in
-the ``function`` argument of the mechanism or projection;  or in the :keyword:`FUNCTION_PARAMS`
-entry of a parameter dictionary used for the ``params`` argument of the mechanism or projection [LINK].  The value
-must be a dictionary, the enties of which have a key
-that is the name of a function parameter, and the value of which is one of the following:
+Wherever the parameters of a function can be specified (see :ref:`Component_Specifying_Functions_and_Parameters`)
+the specification can take any of the following forms:
 
     COMMENT:
        XXXX VERIFY THAT THIS IS TRUE:
