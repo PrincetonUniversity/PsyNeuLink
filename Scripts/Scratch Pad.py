@@ -20,8 +20,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 
 transfer_mechanism_1 = TransferMechanism()
-TM1_parameter_state = ParameterState(owner=transfer_mechanism_1,
-                                     value=22)
+TM1_parameter_state = ParameterState(value=22)
 
 transfer_mechanism_2 = TransferMechanism()
 transfer_mechanism_3 = TransferMechanism()
