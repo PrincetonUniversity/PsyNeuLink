@@ -34,12 +34,15 @@ created using the specification for the corresponding parameter of the ``functio
 Specifying Function Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
-  XXXX EXPLAIN THAT PARAMETER SPECIFICATION CREATES ParameterState FOR IT
-  XXXX EXPLAIN baseValue (reference figure)
-
-Wherever the parameters of a function can be specified (see :ref:`Component_Specifying_Functions_and_Parameters`)
-the specification can take any of the following forms:
+The parameter of a ``function`` can be specified in one of three ways:  as the argument for the parameter in the
+constructor for the ``function``, in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the
+``params`` argument of the object to which the ``function`` belongs or, in some cases, as an argument in the object's
+constructor itself (see :ref:`Component_Specifying_Functions_and_Parameters` for details).  The items specified
+for the parameter are used to create its ParameterState.  The value specified (either explicitly, or by default) is
+assigned to the parameterState's ``baseValue`` attribute, and any projection specified is assigned to its
+``receiveFromProjections`` attribute.  The ``baseValue`` is assigned as the value of the parameter for ``function``
+when it executes, after it is modified by any ControlProjections or LearningProjections received by the ParameterState
+(see :ref:`Execution` for details).  The specification of a parameter can take any of the following forms:
 
     COMMENT:
        XXXX VERIFY THAT THIS IS TRUE:
