@@ -13,6 +13,46 @@
 
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
+
+COMMENT:
+.. _Component_Specifying_Functions_and_Parameters:
+
+Specifying Functions and Their Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In general, the function of an object can be specified in two ways:
+* using its constructor as the value of the object's ``function`` argument, as in the example below::
+
+     EXAMPLE HERE
+
+* using the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary for the ``params`` argument of the object,
+  as in the example below::
+
+     EXAMPLE HERE
+
+EXPLAIN ABOUT "HARDCODED" FUNCTIONS (ONLY ONE STANDARD ONE SUPPORTED, ITS PARAMS APPEAR AS ARGUMENTS FOR THE OBJECT
+IN ITS CONSTRUCTOR) VS. THOSE FOR WHICH THE FUNCTION IS AN ARGUMENT (SEVERAL POSSIBLE FUNCTIONS TO CHOOSE FROM,
+THE ARGUMENTS OF WHICH MAY VARY, AND THUS MUST BE SPECIFID WITHIN ITS CONSTRUCTOR OR THE PARAMS DICT), AS EXPLAINED
+BELOW.
+
+Accordingly, parameters of a :keyword:`function` can be specified in two ways:
+
+* in the **constructor** for the function (when this is used as the value of a ``function`` argument of the object,
+  as in the example below::
+
+    my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
+
+* in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the ``params`` argument of the object,
+  as in the example below::
+
+    my_mechanism = SomeMechanism(function=SomeFunction
+                                 params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
+
+- ??WHY EVER USE FUNCTION AND FUNCTION_PARAMS:  TO CUSTOMIZE/OVERRIDE HARD-CODED FUNCTIONS OR THEIR PARAMETERS
+- SEE :ref:`ParameterState_Specifying_Parameters` for details of parameter specification.
+COMMENT
+
+
 This module defines the Component abstract class
 
 It also contains:
