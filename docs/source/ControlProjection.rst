@@ -1,6 +1,6 @@
-ControlSignal
-=============
+ControlProjection
+=================
 
-.. automodule:: ControlSignal
+.. automodule:: ControlProjection
    :members:
    :exclude-members: ControlSignalValuesTuple, ControlSignalChannel, random, execute

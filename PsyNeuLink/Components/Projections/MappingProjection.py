@@ -109,13 +109,14 @@ In addition to its ``function``, MappingProjections use the following two the pr
       XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
   COMMENT
 
+.. _Mapping_Parameter_Modulation_Operation:
+
 ``parameter_modulation_operation``
 
   Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
-  influence it.  For example, this is used for a :doc:`LearningProjection` to apply weight changes to
-  ``matrix`` during learning.  ``parameter_modulation_operation`` must be assigned a value of
-  :class:`ModulationOperation`, and the operation is always applied in an element-wise (Hadamard[LINK]) fashion.
-  The default operation is ``ADD``.
+  influence it.  For example, this is used for a :doc:`LearningProjection` to apply weight changes to ``matrix``
+  during learning.  ``parameter_modulation_operation`` must be assigned a value of :class:`ModulationOperation`
+  and the operation is always applied in an element-wise (Hadamard[LINK]) manner. The default operation is ``ADD``.
 
 .. _Projection_Execution:
 

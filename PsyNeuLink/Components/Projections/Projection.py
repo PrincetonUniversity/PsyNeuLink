@@ -314,7 +314,7 @@ class Projection_Base(Projection):
     COMMENT
 
     name : str : default <Projection subclass>-<index>
-        Name of the projection.
+        the name of the projection.
         Specified in the name argument of the call to create the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).

@@ -253,7 +253,7 @@ class State_Base(State):
         current value of the state (updated by ``update_state`` method).
 
     name : str : default <State subclass>-<index>
-        Name of the state.
+        the name of the state.
         Specified in the name argument of the call to create the state;  if not is specified,
         a default is assigned by StateRegistry based on the states's subclass
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
