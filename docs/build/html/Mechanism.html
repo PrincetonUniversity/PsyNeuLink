@@ -98,18 +98,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#states">States</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#inputstates">InputStates</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#parameterstates">ParameterStates</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#outputstates">OutputStates</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#specifying-mechanism-parameters">Specifying Mechanism Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#role-in-processes-and-systems">Role in Processes and Systems</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#runtime-parameters">Runtime Parameters</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
@@ -222,22 +214,33 @@ These should take the following form:</p>
 <li><p class="first">&lt;name of argument&gt;:&lt;value&gt;</p>
 <blockquote>
 <div><p>this can contain any of the standard parameters for instantiating a mechanism
-(see <a class="reference internal" href="#mechanism-specifying-parameters"><span class="std std-ref">Specifying Mechanism Parameters</span></a>) or ones specific to a particular type of mechanism
+(see <span class="xref std std-ref">Mechanism_Specifying_Parameters</span>) or ones specific to a particular type of mechanism
 (see documentation for subclass).  Note that parameter values in the specification dict
 will be used to instantiate the mechanism.  These can be overridden during execution
-by specifying <a class="reference internal" href="#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>, either when calling the <code class="docutils literal"><span class="pre">execute</span></code> method
+by specifying <span class="xref std std-ref">Mechanism_Runtime_Parameters</span>, either when calling the <code class="docutils literal"><span class="pre">execute</span></code> method
 for the <a class="reference internal" href="#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code></a>, or where it is specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <code class="xref py py-class docutils literal"><span class="pre">process</span></code>.</p>
 </div></blockquote>
 </li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first"><strong>automatically</strong> &#8211; PsyNeuLink will automatically create one or more mechanisms under some circumstances.
-For example, <code class="xref py py-class docutils literal"><span class="pre">MonitoringMechanisms</span></code> (and associated <a class="reference internal" href="LearningSignal.html#module-LearningSignal" title="LearningSignal"><code class="xref py py-class docutils literal"><span class="pre">LearningSignal</span></code></a> projections) will be created
+<li><p class="first"><strong>automatically</strong> &#8211; PsyNeuLink automatically creates one or more mechanisms under some circumstances.
+For example, <code class="xref py py-class docutils literal"><span class="pre">MonitoringMechanisms</span></code> (and associated <a class="reference internal" href="LearningProjection.html#module-LearningProjection" title="LearningProjection"><code class="xref py py-class docutils literal"><span class="pre">LearningProjection</span></code></a>) will be created
 automtically when <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Learning</span></a> is specified for a process.</p>
 </li>
 </ul>
 </div></blockquote>
+<p>Every mechanism has one or more <a class="reference internal" href="InputState.html"><span class="doc">inputStates</span></a>, <a class="reference internal" href="ParameterState.html"><span class="doc">parameterStates</span></a>, and
+<span class="xref doc">outputStates</span>, that allow it to receive and send projections, and to execute its <code class="docutils literal"><span class="pre">function</span></code>
+(see <a class="reference internal" href="#mechanism-function"><span class="std std-ref">Function</span></a>) &#8211;  these are summarized below under <span class="xref std std-ref">States</span>.  When a mechanism is created,
+it automatically creates the parameterStates it needs to represent the parameters of its <code class="docutils literal"><span class="pre">function</span></code>.  It also
+creates any inputStates an outputStates required for the projections it has been assigned.  However, inputStates and
+outputStates, and corresponding projections, can also be specified in the mechanism&#8217;s parameter dictionary, using
+entries with the keys <code class="docutils literal"><span class="pre">INPUT_STATES</span></code> and <code class="docutils literal"><span class="pre">OUTPUT_STATES</span></code>, respectively. The value of each entry can be the name
+of the state&#8217;s class (to create a default), an existing state, the name of one,  a specification dictionary for one,
+or a list containing of any of these to create multiple states.  Each type of state also allows additional forms of
+specification, as described in the documentation for <a class="reference internal" href="InputState.html#inputstate-creation"><span class="std std-ref">InputStates</span></a> and
+<span class="xref std std-ref">OutputStates</span>, respectively.</p>
 </div>
 <div class="section" id="structure">
 <span id="mechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -276,195 +279,73 @@ necessarily the same as the mechanism&#8217;s output;  the result of the functio
 </div>
 <div class="section" id="inputstates">
 <span id="mechanism-inputstates"></span><h4>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h4>
-<p>These represent the input(s) to a mechanism. A mechanism usually has only one InputState,
-stored in its <code class="docutils literal"><span class="pre">inputState</span></code> attribute.  However some mechanisms have more than one.  For example, ComparatorMechanism
+<p>These receive and represent the input to a mechanism. A mechanism usually has only one InputState, kept in its
+<code class="docutils literal"><span class="pre">inputState</span></code> attribute.  However some mechanisms have more than one.  For example, ComparatorMechanism
 mechanisms have one inputState for their <code class="docutils literal"><span class="pre">sample</span></code> and another for their <code class="docutils literal"><span class="pre">target</span></code> input.  If a mechanism has
-more than one inputState, they are stored in an OrderedDict in the mechanisms <code class="docutils literal"><span class="pre">inputStates</span></code> attribute;  the key of
-each entry is the name of the inputState and its value is the inputState itself.  If a mechanism has multiple
+more than one inputState, they are kept in an OrderedDict in the mechanism&#8217;s <code class="docutils literal"><span class="pre">inputStates</span></code> attribute;  the key of
+each entry is the name of an inputState and its value is that inputState.  If a mechanism has multiple
 inputStates, the first &#8211;&nbsp;designated its <em>primary</em> inputState &#8211; is also assigned to its <code class="docutils literal"><span class="pre">inputState</span></code> attribute.</p>
-<p>Each inputState of a mechanism can receive one or more projections from other mechanisms,
-however all must provide values that share the same format (i.e., number and type of elements).
-A list of projections received by an inputState is stored in its <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.
-InputStates, like every other object type in PsyNeuLnk, have a <code class="docutils literal"><span class="pre">function</span></code> parameter.
-An inputState&#8217;s function performs a Hadamard (i.e., elementwise) aggregation  of the inputs
-it receives from its projections.  The default function is <code class="docutils literal"><span class="pre">LinearCombination</span></code> which simply sums the values
-and assigns the result to the inputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.  A custom function can be assigned to an inputState
-(e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long as it generates an output
-that is compatible with its inputs the value for that inputState expected by the mechanism&#8217;s function.  The value
-attributes for all a mechanism&#8217;s inputStates are concatenated into a 2d np.array and assigned to the mechanism&#8217;s
-<code class="docutils literal"><span class="pre">variable</span></code> attribute, which serves as the input to the mechanism&#8217;s function.</p>
+<p id="mechanism-variable">Each inputState of a mechanism can receive one or more projections from other mechanisms or, if the mechanism is an
+<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism [LINK], from the input to the process to which it belongs.  Each inputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>
+aggregates the values received from its projections (usually by summing them), and assigns the result to its
+<code class="docutils literal"><span class="pre">value</span></code> attribute.  The <code class="docutils literal"><span class="pre">value</span></code> attributes for all of a mechanism&#8217;s inputStates are kept in a 2d np.array assigned
+to the mechanism&#8217;s <code class="docutils literal"><span class="pre">inputValue</span></code> attribute, and to its <code class="docutils literal"><span class="pre">variable</span></code> attribute which serves as the input
+to the  mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.  Therefore, the number of inputStates for the mechanism must match the number of
+items specified for the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> (that is, its size along its first dimension, axis 0).  An exception
+is if the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> has more than one item, but only a single inputState;  in that case,
+the <code class="docutils literal"><span class="pre">value</span></code> of that inputState must have the same number of items as the mechanisms&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.</p>
 </div>
 <div class="section" id="parameterstates">
 <span id="mechanism-parameterstates"></span><h4>ParameterStates<a class="headerlink" href="#parameterstates" title="Permalink to this headline">¶</a></h4>
-<p>These represent the parameters of a mechanism&#8217;s function, and used to control the parameters of its <code class="docutils literal"><span class="pre">function</span></code>.
+<p>These represent the parameters of a mechanism&#8217;s function, and are used to control the parameters of its <code class="docutils literal"><span class="pre">function</span></code>.
 PsyNeuLink assigns one parameterState for each parameter of the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (which correspond to the
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
-from the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> projection(s) of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, that is used to modify the
-function&#8217;s parameter value in response to the outcome(s) of processing.</p>
+from the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, that is used to
+modify the function&#8217;s parameter value in response to the outcome(s) of processing.</p>
 <blockquote>
-<div><p id="mechanism-assigning-a-control-signal"><em>Assigning a Control Signal</em></p>
-<p>A control signal can be assigned to a parameter, wherever the parameter value is specified, by using a tuple with
-two items. The first item is the value of the parameter, and the second item is either <code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_SIGNAL</span></code>,
-the name of the ControlSignal class, or a call to its constructor.  In the following example, a mechanism is
-created with a function that has three parameters:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">SomeMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">param_1</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                                                   <span class="n">param_2</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">))</span>
-                                                   <span class="n">param_3</span><span class="o">=</span><span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)))</span>
-</pre></div>
-</div>
-<p>The first parameter of the mechanism&#8217;s function is assigned a value directly, the second parameter is assigned a
-ControlSignal, and the third is assigned a <a class="reference internal" href="ControlSignal.html#controlsignal-structure"><span class="std std-ref">ControlSignal with a specified function</span></a>.</p>
+<div><blockquote id="mechanism-assigning-a-controlprojection">
+<div>XXXXX UPDATE THIS BASED ON OUTPUTSTATE DOCSTRING</div></blockquote>
 </div></blockquote>
-<p>The value of function parameters can also be modified using a runtime parameters dictionary where a mechanism is
-specified in a process <code class="docutils literal"><span class="pre">pathway</span></code> (see XXX), or in the <code class="docutils literal"><span class="pre">params</span></code> argument  of a mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code>
-methods (see <a class="reference internal" href="#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).  The figure below shows how these factors are combined by the
-parameterState to determine the paramter value for a function.</p>
+<p>[TBI:]
+Usually the <code class="docutils literal"><span class="pre">function</span></code> of the primary outputState transfers the result of the mechanism&#8217;s function to the primary
+outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other
+outputStates may use other functions to transform the result of the mechanism&#8217;s function in various ways (e.g.,
+generate its mean, variance, etc.), the results of which are stored in each outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.
+OutputStates may also be used for other purposes.  For example, ControlMechanisms can have multiple outputStates,
+one for each parameter controlled.  The <code class="docutils literal"><span class="pre">value</span></code> of each outputState can serve as a sender for projections,
+to transmit its value to other mechahnisms and/or the ouput of a process or system.  The <code class="docutils literal"><span class="pre">value</span></code> attributes of all
+of a mechanism&#8217;s outputStates are concatenated into a 2d np.array and assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>
+attribute.</p>
 <blockquote>
-<div><p><strong>Role of ParameterStates in Controlling the Parameter Value of a Function</strong></p>
-<div class="figure">
-<a class="reference internal image-reference" href="_images/ParameterState_fig.png"><img alt="ParameterState" src="_images/ParameterState_fig.png" style="width: 4356.0px; height: 2837.25px;" /></a>
-<div class="legend">
-<table border="1" class="docutils">
-<colgroup>
-<col width="18%" />
-<col width="83%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Component</th>
-<th class="head">Impact on Parameter Value</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>Brown (A)</td>
-<td>baseValue of drift rate parameter of DDM function</td>
-</tr>
-<tr class="row-odd"><td>Purple (B)</td>
-<td>runtime specification of drift rate parameter</td>
-</tr>
-<tr class="row-even"><td>Red (C)</td>
-<td>runtime parameter influences controlSignal-modulated baseValue</td>
-</tr>
-<tr class="row-odd"><td>Green (D)</td>
-<td>combined controlSignals modulate baseValue</td>
-</tr>
-<tr class="row-even"><td>Blue (E)</td>
-<td>parameterState function combines controlSignals</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div></blockquote>
-</div>
-<div class="section" id="outputstates">
-<span id="mechanism-outputstates"></span><h4>OutputStates<a class="headerlink" href="#outputstates" title="Permalink to this headline">¶</a></h4>
-<p>These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates,
-the ** <em>primary</em> (first or only) outputState** is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputState</span></code> attribute, while all of
-its outputStates (including the primary one) are stored in an OrderedDict in its <code class="docutils literal"><span class="pre">outputStates</span></code> attribute;  the
-key for each entry is the name of an outputState, and the value is the outputState itself.  By convention,
-a mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method assigns the output of its <code class="docutils literal"><span class="pre">function</span></code> to the value of the primary outputState.
-Other outputStates are assigned other values associated with the output of the <code class="docutils literal"><span class="pre">function</span></code> (e.g., its mean,
-variance, etc.).  OutputStates may also be used for other purposes.  For example, <span class="xref doc">ControlMechanisms</span> can have
-multiple outputStates, one for each of their <span class="xref doc">ControlSignals</span>.  Each outputState can serve as a sender for
-projections, to transmit its value to other mechanisms and/or the output of a process or system.  The <code class="docutils literal"><span class="pre">value</span></code>
-attributes of all of a mechanism&#8217;s outputStates are concatenated into a 2d np.array and assigned to the mechanism&#8217;s
-<code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</p>
-</div>
-</div>
-<div class="section" id="specifying-mechanism-parameters">
-<span id="mechanism-specifying-parameters"></span><h3>Specifying Mechanism Parameters<a class="headerlink" href="#specifying-mechanism-parameters" title="Permalink to this headline">¶</a></h3>
-<p>When a mechanism is created, its parameters can be specified either as arguments (where supported) or as entries
-in a specification dictionary.  The entries can contain any of the following, where appropriate to a given
-mechanism subclass, as well as those specific to a particular subclass (documented in each subclass):</p>
+<div><p>FOR DEVELOPERS:
++ FUNCTION : function or method :  method used to transform mechanism input to its output;</p>
 <blockquote>
-<div><ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> : Dict[str, InputState] -
-used to specify specialized inputStates required by a mechanism subclass
-(see <a class="reference internal" href="InputState.html#inputstates-creation"><span class="std std-ref">Creating an InputState</span></a> for details of specification).</li>
-</ul>
-<ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION</span></code> : function or method :  default method implemented by subclass -
-specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.</li>
-</ul>
+<div>This must be implemented by the subclass, or an exception will be raised;
+each item in the variable of this method must be compatible with a corresponding inputState;
+each item in the output of this method must be compatible  with the corresponding OutputState;
+for any parameter of the method that has been assigned a ParameterState,
+the output of the parameter state&#8217;s own execute method must be compatible with
+the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)</div></blockquote>
 <ul>
-<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code> : Dict[str, value] -
-dictionary of parameters for the mechanism&#8217;s function.
-The key of each entry must be the name of the  parameter.
-The value of each entry can be one of the following:</p>
-<ul class="simple">
-<li>the value of the parameter itself;</li>
-<li>a parameter state, the value of which specifies the parameter&#8217;s value
-(see <a class="reference internal" href="ParameterState.html#parameterstate-creation"><span class="std std-ref">Creating a ParameterState</span></a>).</li>
-<li>a tuple with exactly two items: the parameter value and a projection type specifying either a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
-(a <code class="xref py py-class docutils literal"><span class="pre">ParamValueProjection</span></code> namedtuple can be used for clarity).</li>
-</ul>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
-(i.e., used to create the mechanism); any values specified in the <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION__PARAMS</span></code> entry
-of the mechanism&#8217;s params dict take precedence over values specified in such arguments.</p>
-</div>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS (dict):</dt>
+<dd><p class="first">NOTE: function parameters can be specified either as arguments in the mechanism&#8217;s __init__ method
+(** EXAMPLE ??), or by assignment of the function_params attribute for paramClassDefaults (** EXMAMPLE ??).
+Only one of these methods should be used, and should be chosen using the following principle:
+- if the mechanism implements one function, then its parameters should be provided as arguments in the __init__
+- if the mechanism implements several possible functions and they do not ALL share the SAME parameters,</p>
+<blockquote>
+<div><p>then the function should be provided as an argument but not they parameters; they should be specified
+as arguments in the specification of the function</p>
+</div></blockquote>
+<p class="last">each parameter is instantiated as a ParameterState
+that will be placed in &lt;mechanism&gt;.parameterStates;  each parameter is also referenced in
+the &lt;mechanism&gt;.function_params dict, and assigned its own attribute (&lt;mechanism&gt;.&lt;param&gt;).</p>
+</dd>
+</dl>
 </li>
-<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> : Dict[str, OutputState] -
-used to specify specialized outputStates required by a mechanism subclass
-(see <span class="xref std std-ref">OutputStates_Creation</span> for details of specification).</p>
-</li>
-</ul>
-<ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> : List[OutputState] -
-used to specify mechanisms or specific outputStates to be monitored by a ControlMechanism
-(see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">specifying monitored outputStates</span></a>
-for details of specification).</li>
-</ul>
-<ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_LEARNING</span></code> : List[OutputState] -
-used to specify outputStates to be used by a MonitoringMechanism for learning
-(see <span class="xref std std-ref">MonitoringMechanisms_Monitored_For_Learning</span> for details of specification).</li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="role-in-processes-and-systems">
-<span id="mechanism-role-in-processes-and-systems"></span><h3>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
-<p>Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
-are stored in the mechanism&#8217;s <code class="docutils literal"><span class="pre">processes</span></code> and <code class="docutils literal"><span class="pre">systems</span></code> attributes, respectively (see Process
-<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and System <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> for designation labels and their meanings).
-Any mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> receives a projection to its primary inputState from the process(es)
-to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
-mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
-of a process but not of a system to which that process belongs (see the note under System <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> for
-further explanation).  The output value of any mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> is assigned to the output
-of any process or system to which it belongs.</p>
-</div>
-</div>
-<div class="section" id="execution">
-<span id="mechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A mechanism can be executed using its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods.  This can be useful in testing a mechanism
-and/or debugging.  However, more typically, mechanisms are executed as part of a process or system (see Process
-<a class="reference internal" href="Process.html#process-execution"><span class="std std-ref">Execution</span></a> and System <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a> for more details).  For either of these, the mechanism must
-be included in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process.  There, it can be specified on its own, or as the first item of a tuple
-that also has an optional set of runtime parameters (see below), and/or a phase specification for use when executed
-in a system (see System <span class="xref std std-ref">System_Phase</span> for an explanation of phases; and see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>
-for additional details about specifying a mechanism in a process <code class="docutils literal"><span class="pre">pathway</span></code>).</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Mechanisms cannot be specified directly in a system.  They must be specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process,
-and then that process must be included in the <code class="docutils literal"><span class="pre">processes</span></code> of a system.</p>
-</div>
-<div class="section" id="runtime-parameters">
-<span id="mechanism-runtime-parameters"></span><h3>Runtime Parameters<a class="headerlink" href="#runtime-parameters" title="Permalink to this headline">¶</a></h3>
-<p>The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
-when it executed.  This can be done by using the <code class="docutils literal"><span class="pre">runtime_param</span></code> argument of its <code class="docutils literal"><span class="pre">execute</span></code> method, or by specifying
-the runtime parameters in a tuple with the mechanism in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process
-(see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>). In either case, runtime parameters  are specified using a dictionary that
-contains one or more entries, each of which contains a sub-dictionary corresponding to the mechanism&#8217;s states
-(inputStates, parameterStates and/or outputStates) or its function; those dictionaries, in turn, contain
-entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
-<code class="docutils literal"><span class="pre">runtime_params</span></code> argument of the <code class="docutils literal"><span class="pre">execute</span></code> method below for more details).</p>
-</div>
-</div>
-<div class="section" id="class-reference">
-<span id="mechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Mechanism.mechanism">
 <code class="descclassname">Mechanism.</code><code class="descname">mechanism</code><span class="sig-paren">(</span><em>mech_spec=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.mechanism" title="Permalink to this definition">¶</a></dt>
@@ -485,9 +366,9 @@ if it is a dict, it must be a mechanism specification dict (see <a class="refere
 Note: if a name is not specified, the nth instance created will be named by using the mechanism&#8217;s
 <code class="docutils literal"><span class="pre">componentType</span></code> attribute as the base and adding an indexed suffix:  componentType-n.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-and/or a custom function and its parameters (see <a class="reference internal" href="#"><span class="doc">Mechanisms</span></a> for specification of a parms dict).
+and/or a custom function and its parameters (see <a class="reference internal" href="#"><span class="doc">Mechanisms</span></a> for specification of a params dict).
 It is passed to the relevant subclass to instantiate the mechanism. Entries can be any parameters described
-in <a class="reference internal" href="#mechanism-specifying-parameters"><span class="std std-ref">Specifying Mechanism Parameters</span></a> that are relevant to the mechanism&#8217;s subclass, and/or any defined
+in <span class="xref std std-ref">Mechanism_Specifying_Parameters</span> that are relevant to the mechanism&#8217;s subclass, and/or any defined
 by a <a class="reference internal" href="#"><span class="doc">Mechanisms</span></a> subclass itself.</li>
 </ul>
 </td>
@@ -652,21 +533,21 @@ or axis 0 of ndarray, must equal the number of inputStates (if there is more tha
 item must be compatible with the format (number and type of elements) of each inputState&#8217;s variable
 (see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> for details of input specification formats).</li>
 <li><strong>runtime_params</strong> (<em>Optional[Dict[str, Dict[str, Dict[str, value]]]]:</em>) &#8211; a dictionary that can include any of the parameters used as arguments to instantiate the object,
-its function, or projection(s) to any of its states.  Any value assigned to a parameter
-will override the current value of that parameter for this &#8211; but only this execution of the mechanism;
-it will return to its previous value following execution.
-Each entry is either the specification for one of the mechanism&#8217;s params (in which case the key
-is the name of the param, and its value the value to be assigned to that param), or a dictionary
-for a specified type of state (in which case, the key is the name of a specific state or a keyword
-indicating the type of state (<code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATE_PARAMS</span></code>, <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATE_PARAMS</span></code> or
-<code class="xref std std-keyword docutils literal"><span class="pre">PARAMETER_STATE_PARAMS</span></code>), and the value is a dictionary containing parameter dictionaries for that
-state or all states of the specified type).  The latter (state dictionaries) contain
-entries that are themselves dictionaries containing parameters for the state&#8217;s function or its projections.
-The key for each entry is a keyword indicating whether it is for the state&#8217;s function
-(<code class="xref std std-keyword docutils literal"><span class="pre">FUNCTON_PARAMS</span></code>), all of its projections (<code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_PARAMS</span></code>), a particular type of
-projection (<code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PARAMS</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_SIGNAL_PARAMS</span></code>), or to a specific projection
-(using its name), and the value of each entry is a dictionary containing the parameters for the function,
-projection, or set of projections (keys of which are parameter names, and values the values to be assigned).</li>
+its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
+the current value of that parameter for this &#8211; but only this execution of the mechanism; it will return
+to its previous value following execution.  Each entry is either the specification for one of the
+mechanism&#8217;s params (in which case the key is the name of the param, and its value the value to be
+assigned to that param), or a dictionary for a specified type of state (in which case, the key is the
+name of a specific state or a keyword indicating the type of state (<code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATE_PARAMS</span></code>,
+<code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATE_PARAMS</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">PARAMETER_STATE_PARAMS</span></code>), and the value is a dictionary
+containing parameter dictionaries for that state or all states of the specified type).  The latter
+(state dictionaries) contain entries that are themselves dictionaries containing parameters for the
+state&#8217;s function or its projections. The key for each entry is a keyword indicating whether it is for
+the state&#8217;s function (<code class="xref std std-keyword docutils literal"><span class="pre">FUNCTON_PARAMS</span></code>), all of its projections (<code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_PARAMS</span></code>),
+a particular type of projection (<code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PROJECTION_PARAMS</span></code> or
+<code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_PROJECTION_PARAMS</span></code>), or to a specific projection (using its name), and the value of
+each entry is a dictionary containing the parameters for the function, projection, or set of projections
+(keys of which are parameter names, and values the values to be assigned).</li>
 <li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; specifies whether mechanisms are executed for a single time step or a trial.</li>
 </ul>
 </td>
@@ -728,6 +609,8 @@ after either one time_step or the full trial</p>
 
 </dd></dl>
 
+</div>
+</div>
 </div>
 </div>
 

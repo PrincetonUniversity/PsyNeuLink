@@ -132,7 +132,17 @@ class OutputStateError(Exception):
 
 
 class OutputState(State_Base):
-    """Implements subclass of State that represents the output of a mechanism
+    """
+    OutputState(                               \
+    owner,                                     \
+    reference_value,                           \
+    value=None,                                \
+    function=LinearCombination(operation=SUM), \
+    params=None,                               \
+    name=None,                                 \
+    prefs=None)
+
+    Implements subclass of State that represents the output of a mechanism
 
     COMMENT:
 
@@ -161,19 +171,18 @@ class OutputState(State_Base):
     COMMENT
 
 
-    COMMENT:
     Arguments
     ---------
 
     owner : Mechanism
-        mechanism to which inputState belongs;  must be specified or determinable from the context in which
-        the state is created
+        the mechanism to which the outputState belongs; it must be specified or determinable from the context in which
+        the outputState is created.
 
     reference_value : number, list or np.ndarray
-        component of owner mechanism's ``outputValue`` attribute that corresponds to the outputState.
+        the component of the owner mechanism's ``outputValue`` attribute to which the outputState corresponds.
 
     value : number, list or np.ndarray
-        used as template for ``variable``.
+        used as the template for ``variable``.
 
     function : Function or method : default LinearCombination(operation=SUM)
         implemented for structural consistency;  not currently used by PsyNeuLink.
@@ -191,13 +200,13 @@ class OutputState(State_Base):
         the PreferenceSet for the outputState.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
-    COMMENT
+
 
     Attributes
     ----------
 
     owner : Mechanism
-        mechanism to which outputState belongs.
+        the mechanism to which the outputState belongs.
 
     sendsToProjections : Optional[List[Projection]]
         a list of the projections sent by the outputState (i.e., for which the outputState is a ``sender``).
@@ -212,7 +221,7 @@ class OutputState(State_Base):
         assigned the value of the outputState`s ``variable``, and used as the input for any projections that it sends.
 
     name : str : default <State subclass>-<index>
-        Name of the inputState.
+        name of the outputState.
         Specified in the name argument of the call to create the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]

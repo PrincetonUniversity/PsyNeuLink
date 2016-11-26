@@ -102,12 +102,12 @@ for that process.  A list of projections received by an inputState is maintained
 attribute.  Like all PsyNeuLink components, it has the three following fundamental attributes:
 
 * ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
-  each must match both the number and types of elements of ``variable``.
+  each must match both the number and type of elements of its ``variable``.
 
 * ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
    received by the inputState.  The default function is :any:`LinearCombination` that sums the values.
    A custom function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in
-   some way), so long as it generates an output that is compatible with the ``value`` expected for the inputState
+   some way), so long as it generates a result that is compatible with the ``value`` expected for the inputState
    by the mechanism's ``variable``.  It assigns the result to the inputState's ``value`` attribute.
 
 * ``value``:  this is the aggregated value of the projections received by the inputState, assigned to it by the
@@ -160,7 +160,17 @@ class InputStateError(Exception):
 
 
 class InputState(State_Base):
-    """Implements subclass of State that calculates and represents the input of a mechanism
+    """
+    InputState(                                \
+    owner,                                     \
+    reference_value=None,                      \
+    value=None,                                \
+    function=LinearCombination(operation=SUM), \
+    params=None,                               \
+    name=None,                                 \
+    prefs=None)
+
+    Implements subclass of State that calculates and represents the input of a mechanism
 
     COMMENT:
 
@@ -192,21 +202,22 @@ class InputState(State_Base):
     COMMENT
 
 
-    COMMENT:
     Arguments
     ---------
 
     owner : Mechanism
-        mechanism to which inputState belongs;  must be specified or determinable from the context in which
-        the state is created
+        the mechanism to which the inputState belongs;  it must be specified or determinable from the context in which
+        the inputState is created.
 
     reference_value : number, list or np.ndarray
-        component of owner mechanism's ``variable`` attribute that corresponds to the inputState.
+        the component of the owner mechanism's ``variable`` attribute that corresponds to the inputState.
 
     value : number, list or np.ndarray
-        used as template for ``variable``.
+        used as the template for ``variable``.
 
-    function : Function or method : default LinearCombination(operation=SUM),
+    function : Function or method : default LinearCombination(operation=SUM)
+        function used to aggregate the values of the projections received by the inputState.
+        It must produce a result that has the same format (number and type of elements) as its input.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the inputState, parameters for its function,
@@ -221,13 +232,13 @@ class InputState(State_Base):
         the PreferenceSet for the inputState.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
-    COMMENT
+
 
     Attributes
     ----------
 
     owner : Mechanism
-        mechanism to which inputState belongs.
+        the mechanism to which the inputState belongs.
 
     receivesFromProjections : Optional[List[Projection]]
         a list of the projections received by the inputState (i.e., for which it is a ``receiver``).
@@ -237,14 +248,14 @@ class InputState(State_Base):
         its number and types of elements.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections received by the
+        performs an element-wise (Hadamard) aggregation  of the ``values`` of the projections received by the
         inputState.
 
     value : number, list or np.ndarray
         the aggregated value of the projections received by the inputState, output of ``function``.
 
     name : str : default <State subclass>-<index>
-        Name of the inputState.
+        the name of the inputState.
         Specified in the name argument of the call to create the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -256,7 +267,7 @@ class InputState(State_Base):
             creation).
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the PreferenceSet for the outputState.
+        the PreferenceSet for the inputState.
         Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].

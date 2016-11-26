@@ -93,11 +93,11 @@ PsyNeuLink uses the following primary constructs:
                 Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
                 and then provide that as input to the receiver mechanism.
 
-            + :doc:`ControlSignal`
+            + :doc:`ControlProjection`
                 Takes an allocation (scalar), possibly transforms it,
                 and uses it to modulate the parameter(s) of another mechanism's function.
 
-            + :doc:`LearningSignal`
+            + :doc:`LearningProjection`
                 Takes an error signal (scalar or vector), possibly transforms it,
                 and uses it to modulate the parameter(s) of a projection function (e.g., the weights of a matrix).
 

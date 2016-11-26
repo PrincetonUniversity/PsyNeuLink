@@ -532,7 +532,7 @@ class System_Base(System):
         List of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-<index>
-        Name of the system;
+        the name of the system;
         Specified in the name argument of the call to create the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]

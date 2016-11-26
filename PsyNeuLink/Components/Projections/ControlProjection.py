@@ -26,23 +26,24 @@ by a ControlMechanism to adapt the ControlProjection's ``allocation``.[LINK]
 Creating a ControlProjection
 ----------------------------
 
-A ControlProjection can be created in any of the ways that can be used to
-:ref:`create a projection <Projection_Creation>`, or by including it in the specification for the
-:ref:`parameter of a mechanism's function <Mechanism_Assigning_A_ControlProjection>`.  If the constructor is used,
-the ``receiver`` argument must be specified.  If it is included in a parameter specification, its ``receiver`` will be
-assigned to the parameterState for the parameter.  If its ``sender`` is not specified, its assignment depends on
-the ``receiver``.  If the receiver belongs to a mechanism that is part of a system, then the ControlProjection's
-``sender`` is assigned to an outputState of the system's :ref:`controller <System_Execution_Control>`.
-Otherwise, the ``sender`` is assigned to the outputState of a :doc:`DefaultControlMechanism`.
+A ControlProjection can be created using any of the standard ways to  :ref:`create a projection <Projection_Creation>`,
+or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a ``function``
+belonging to a mechanism or MappingProjection.  If a ConrolProjection is created using its constructor on its own,
+the ``receiver`` argument must be specified.  If it is included in a parameter specification, the parameterState for
+the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If its ``sender`` is not
+specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism that is part of a
+system, then the ControlProjection's ``sender`` is assigned to an outputState of the system's
+:ref:`controller  <System_Execution_Control>`. Otherwise, the ``sender`` is assigned to the outputState of a
+:any:`DefaultControlMechanism`.
 
-The cost of a ControlProjection is calculated from its control signal ``intensity``, using four
-:ref:`cost functions <ControlProjection_Cost_Functions>` that can be specified  either in arguments to its constructor,
-or in a params dictionary[LINK](see below [LINK]).  A custom function can be assigned to any cost function,
-so long as it accepts the appropriate type of value (see below [LINK]) and returns a scalar.  Each of the cost functions
-can be :ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
-ControlProjection's ``cost``.  A cost function can also be permanently disabled for its ControlProjection by assigning
-:keyword:`None` to the argument for that function in its constructor (or the appropriate entry in its params
-dictionary). Cost functions that are permanently disabled in this way cannot be re-enabled.
+The four functions used to calculate the :ref:`cost of a control signal <ControlProjection_Cost_Functions>`
+can be specified  either in arguments to the ControlProjection's constructor, or in a params dictionary[LINK](see
+below [LINK]). A custom function can be assigned to any cost function, so long as it accepts the appropriate type of
+value (see below [LINK]) and returns a scalar.  Each of the cost functions can be :ref:`enabled or disabled
+<ControlProjection_Toggle_Costs>`, to select which make contributions to the ControlProjection's ``cost``.  A cost
+function can also be permanently disabled for its ControlProjection by assigning :keyword:`None` to the argument for
+that function in its constructor (or the appropriate entry in its params dictionary). Cost functions that are
+permanently disabled in this way cannot be re-enabled.
 
 A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
 specifies the values of its ``allocation`` that will be sampled by ControlMechanisms that adaptively adjust

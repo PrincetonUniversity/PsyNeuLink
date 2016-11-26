@@ -207,54 +207,8 @@ These represent the parameters of a mechanism's function, and are used to contro
 PsyNeuLink assigns one parameterState for each parameter of the mechanism's ``function`` (which correspond to the
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
 from the :doc:`ControlProjections <ControlProjection>` of a :doc:`ControlMechanism<ControlMechanism>`, that is used to
-modify the function's parameter value in response to the outcome(s) of processing.
-
-  .. _Mechanism_Assigning_A_ControlProjection:
-
-  COMMENT:
-    XXXX ??MOVE THIS TO ControlSignal OR ParameterState
-  COMENT
-  *Assigning a ControlProjection*
-
-  A control signal can be assigned to a parameter, wherever the parameter value is specified, by using a tuple with
-  two items. The first item is the value of the parameter, and the second item is either :keyword:`CONTROL_PROJECTION`,
-  the name of the ControlProjection class, or a call to its constructor.  In the following example, a mechanism is
-  created with a function that has three parameters::
-
-    my_mechanism = SomeMechanism(function=SomeFunction(param_1=1.0,
-                                                       param_2=(0.5, ControlProjection))
-                                                       param_3=(36, ControlProjection(function=Logistic)))
-
-  The first parameter of the mechanism's function is assigned a value directly, the second parameter is assigned a
-  ControlProjection, and the third is assigned a :ref:`ControlProjection with a specified
-  function <ControlProjection_Structure>`.
-
-The value of function parameters can also be modified using a runtime parameters dictionary where a mechanism is
-specified in a process ``pathway`` (see XXX), or in the ``params`` argument  of a mechanism's ``execute`` or ``run``
-methods (see :ref:`Mechanism_Runtime_Parameters`).  The figure below shows how these factors are combined by the
-parameterState to determine the paramter value for a function.
-
-    **Role of ParameterStates in Controlling the Parameter Value of a Function**
-
-    .. figure:: _static/ParameterState_fig.*
-       :alt: ParameterState
-       :scale: 75 %
-
-       ..
-
-       +--------------+--------------------------------------------------------------------+
-       | Component    | Impact on Parameter Value                                          |
-       +==============+====================================================================+
-       | Brown (A)    | baseValue of drift rate parameter of DDM function                  |
-       +--------------+--------------------------------------------------------------------+
-       | Purple (B)   | runtime specification of drift rate parameter                      |
-       +--------------+--------------------------------------------------------------------+
-       | Red (C)      | runtime parameter influences ControlProjection-modulated baseValue |
-       +--------------+--------------------------------------------------------------------+
-       | Green (D)    | combined controlSignals modulate baseValue                         |
-       +--------------+--------------------------------------------------------------------+
-       | Blue (E)     | parameterState function combines ControlProjection                 |
-       +--------------+--------------------------------------------------------------------+
+modify the function's parameter value in response to the outcome(s) of processing.  See
+:ref:`ParameterState_Specifying_Parameters` for details of specifying the parameter values of a mechanism's ``function``.
 
 .. _Mechanism_OutputStates:
 
@@ -682,7 +636,7 @@ class Mechanism_Base(Mechanism):
         Determines the default TimeScale value used by the mechanism when executed.
 
     name : str : default <Mechanism subclass>-<index>
-        Name of the mechanism.
+        the name of the mechanism.
         Specified in the name argument of the call to create the mechanism;  if not is specified,
         a default is assigned by MechanismRegistry based on the mechanism's subclass
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
