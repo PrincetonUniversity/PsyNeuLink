@@ -8,6 +8,7 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
+from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
@@ -17,16 +18,26 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 
 transfer_mechanism_1 = TransferMechanism()
-TM1_parameter_state = ParameterState(value=22)
-
+# transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
+# TM1_parameter_state = ParameterState(value=22)
 transfer_mechanism_2 = TransferMechanism()
 transfer_mechanism_3 = TransferMechanism()
-mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
-mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
-print(transfer_mechanism_3.execute())
+
+# my_process = process(pathway=[transfer_mechanism_1,
+#                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
+#                                                                                     ModulationOperation.OVERRIDE)}}),
+#                               transfer_mechanism_2])
+# my_process.run(inputs=[[[0]]])
+
+# mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
+# mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+print(transfer_mechanism_3.execute(input=1.0,
+                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+
 
 # transfer_process = process(pathway = [transfer_mechanism_1])
 # print(transfer_process.execute())

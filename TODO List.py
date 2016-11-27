@@ -5,10 +5,35 @@
 # IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with:
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
+#
+# FIX: MAKE SURE THIS WORKS (in ParameterState):
+#         default_operation = self.prefs.functionRuntimeParamsPref[0]
 # FIX: name of Functions is being assigned to Type rather than subtype
+#
+# FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
+#
+# FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
+# FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
+# FIX: RUN TIME SPECIFICATION IS NOT WORKING:  SETTING VALUE OF PARAMETER STATE, BUT THAT IS GETTING IGNORED BY FUNCTION
+# FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
+
+# DO ONE OF THE FOLLOWING:
+    # FIX: ALLOW EXECUTE/RUN OF MECHANISM TO USE RUN-TIME PARAM
+    # DOCUMENTATION: direct call to run or execute for mechanism executes its function in isolation
+    #                 (i.e., does not do any state updating), so can't use run_time params
 
 # TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
+#
+# DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
+#                       (including override)
+#
+# DOCUMENTATION:  TAKE CARE OF THE FOLLOWING:
+#         COMMENT:
+#           MOVE THE BULK OF THIS TO THE DESCRIPTION OF RUNTIME PARAMS ABOVE, AND REFERENCE THAT.
+#         COMMENT
+
+
 
 # 11/22/16:
 # √ AdaptiveIntegrator -> IntegratorMechanism
@@ -22,6 +47,7 @@
 
 # 11/12/16:
 # FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORKTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
+#    inputValue is a list, variable is a 2d np.nparray
 
 # 11/19/16:
 # FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??

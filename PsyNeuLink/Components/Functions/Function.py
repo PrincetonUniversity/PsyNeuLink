@@ -678,7 +678,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                        format(variable, self.__class__.__name__))
 
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -845,13 +845,15 @@ class Linear(TransferFunction): # ----------------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: True})
+                               kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+    })
 
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 slope:parameter_spec=1,
-                 intercept:parameter_spec=0,
+                 slope:parameter_spec=1.0,
+                 intercept:parameter_spec=0.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):

@@ -225,7 +225,7 @@ When this occurs, each inputState and parameterState belonging to the object exe
 calls its <code class="docutils literal"><span class="pre">function</span></code> to aggregate their values, and then assigns this as that state&#8217;s <code class="docutils literal"><span class="pre">value</span></code> &#8211; this conforms to a
 &#8220;lazy evaluation&#8221; protocol (see <span class="xref std std-ref">Lazy_Evaluation</span> for a more detailed discussion).  The <code class="docutils literal"><span class="pre">value</span></code> of an outputState
 is assigned after the <code class="docutils literal"><span class="pre">function</span></code> of the mechanism that owns it has been called
-(see <span class="xref std std-ref">Mechanism OutputStates</span>).</p>
+(see <a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">Mechanism OutputStates</span></a>).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="state-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -272,7 +272,7 @@ or using other methods for specifying a state (see <a class="reference internal"
 <dl class="attribute">
 <dt id="State.State_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#State.State_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; Name of the state.
+<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; the name of the state.
 Specified in the name argument of the call to create the state;  if not is specified,
 a default is assigned by StateRegistry based on the states&#8217;s subclass
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
