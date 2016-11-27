@@ -992,6 +992,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     def __execute__(self,
                     variable=NotImplemented,
+                    params=None,
                     time_scale=TimeScale.TRIAL,
                     runtime_params=NotImplemented,
                     context=None):

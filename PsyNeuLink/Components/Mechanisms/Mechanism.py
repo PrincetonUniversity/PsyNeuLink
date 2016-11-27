@@ -1350,7 +1350,8 @@ class Mechanism_Base(Mechanism):
         # MODIFIED 11/27/16 NEW:
         self.value = self.__execute__(variable=self.inputValue,
                                       params=runtime_params,
-                                      time_scale=time_scale, context=context)
+                                      time_scale=time_scale,
+                                      context=context)
         # MODIFIED 11/27/16 END
         #endregion
 
@@ -1484,7 +1485,7 @@ class Mechanism_Base(Mechanism):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             # Assign parameterState's value to parameter value in runtime_params
-            if state_name in runtime_params:
+            if runtime_params and state_name in runtime_params:
                 runtime_params[state_name] = state.value
             else:
                 self.paramsCurrent[state_name] = state.value

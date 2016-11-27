@@ -1729,7 +1729,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 # FIX:  CONVERT TO NP?
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
