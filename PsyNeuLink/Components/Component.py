@@ -1045,7 +1045,6 @@ class Component(object):
         """
 
         for param_name, param_value in request_set.items():
-
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             try:
                 self.paramClassDefaults[param_name]

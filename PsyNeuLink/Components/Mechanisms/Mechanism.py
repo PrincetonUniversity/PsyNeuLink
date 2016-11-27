@@ -1332,13 +1332,13 @@ class Mechanism_Base(Mechanism):
         # Assign current paramameterState values to params used to call mechanism's __execute__ method
         # FIX: UPDATE THIS TO USE user_params ONCE THOSE HAVE ALL BEEN ASSIGNED parameterStates IN
         # _instantiate_parameter_states
-        # FIX: MOVED TO _update_parameter_states
-        runtime_params = {}
-        for param in self.function_params:
-            try:
-                runtime_params[param] = self.parameterStates[param].value
-            except KeyError:
-                runtime_params[param] = self.paramsCurrent[FUNCTION_PARAMS][param]
+        # FIX: MOVED TO _update_parameter_states BUT NOW ScratchPad doesn't work
+        # runtime_params = {}
+        # for param in self.function_params:
+        #     try:
+        #         runtime_params[param] = self.parameterStates[param].value
+        #     except KeyError:
+        #         runtime_params[param] = self.paramsCurrent[FUNCTION_PARAMS][param]
         # MODIFIED 11/27/16 END
 
         #region CALL SUBCLASS __execute__ method AND ASSIGN RESULT TO self.value
@@ -1485,7 +1485,8 @@ class Mechanism_Base(Mechanism):
         for state_name, state in self.parameterStates.items():
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             # Assign parameterState's value to parameter value in runtime_params
-            if runtime_params and state_name in runtime_params:
+            # FIX: THIS NEEDS TO LOOK AT PARAMETER_STATE_PARAMS
+            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
                 runtime_params[state_name] = state.value
             else:
                 self.paramsCurrent[state_name] = state.value
