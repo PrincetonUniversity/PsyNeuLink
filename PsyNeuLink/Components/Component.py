@@ -466,7 +466,7 @@ class Component(object):
         #region SET CURRENT VALUES OF VARIABLE AND PARAMS
         self.variable = self.variableInstanceDefault
         self.paramsCurrent = self.paramInstanceDefaults
-        # self.runtime_params_in_use = False
+        self.runtime_params_in_use = False
         #endregion
 
         #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
@@ -725,17 +725,25 @@ class Component(object):
 
         # MODIFIED 11/27/16 NEW:
         # If params have been passed, treat as runtime params and assign to paramsCurrent
-        # Otherwise, if paramsCurrent are different from paramInstanceDefaults
-        #    (i.e., there were previously runtime params), then reassign paramsCurrent to paramInstanceDefaults
-        if params:
+        if params and not params is NotImplemented:
             for param_name in params:
                 self.paramsCurrent[param_name] = params[param_name]
-            # self.runtime_params_in_use = True
-        else:
-            self.paramsCurrent = self.paramInstanceDefaults
+            self.runtime_params_in_use = True
+        # Otherwise, reset paramsCurrent to paramInstanceDefaults
+        elif self.runtime_params_in_use:
+            # Can't do the following since function could still be a class ref rather than abound method (see below)
+            # self.paramsCurrent = self.paramInstanceDefaults
+            for param_name in self.user_params:
+                # At present, assignment of ``function`` as runtime param is not supported
+                #  (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #   i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name is FUNCTION:
+                    continue
+                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+            self.runtime_params_in_use = False
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and params and not params is target_set:
+        if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
             # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
@@ -1450,6 +1458,10 @@ class Component(object):
                                          self.paramsCurrent[FUNCTION].__self__.componentName,
                                          self.name,
                                          self.function.__self__.name))
+
+        # # MODIFIED 11/27/16 NEW:
+        # self.paramInstanceDefaults[FUNCTION] = self.function
+        # # MODIFIED 11/27/16 END
 
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value

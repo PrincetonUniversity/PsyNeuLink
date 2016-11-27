@@ -27,6 +27,18 @@
 #
 # DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
 #                       (including override)
+# DOCUMENTATION: runtime_param can be specified for the parameters of an object or of its function,
+#                but *NOT* the function itself  (COMMENT: problem is the possible need to re-instantiate the function;
+#                paramInstanceDefaults may have just has the class, not an instance; could rectify by assigning that to
+#                paramInstanceDefaults (see 11/27/16 in Component.instantiate_function)
+# DOCUMENTATION: for now, only numeric parameters can be subject to control (may change in the future)
+#                 COMMENT:  will need to:
+#                                      allow all params to be assigned in Mechanism.execute (line 1336-7):
+#                                             for param in self.function_params:
+#                                                 runtime_params[param] = self.parameterStates[param].value
+#                                      return keyword values (cf. commented out keyword method for Function.Integrator
+#                                      handle management of contraints in State._instantiate_state (line 1869):
+#                                               constraint_value = convert_to_np_array(constraint_value,1)
 #
 # DOCUMENTATION:  TAKE CARE OF THE FOLLOWING:
 #         COMMENT:
