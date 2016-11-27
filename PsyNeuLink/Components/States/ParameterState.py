@@ -14,11 +14,21 @@
 Overview
 --------
 
+COMMENT:
+  OLD VERSION
 A parameterState belongs to either a mechanism or a MappingProjection, and is used to represent and possibly modify
 the value of a parameter of it's owner's ``function``. It can receive one or more ControlProjections and/or
 LearningProjections that modify that parameter.   A list of the projections received by a parameterState is kept in
 its ``receivesFromProjections`` attribute.  It's ``function`` combines the values ofthese inputs, and uses the result
 to modify the value of the parameter of its owner's ``funtion`` for which it is responsible.
+COMMENT
+
+A parameterState belongs to either a mechanism or a MappingProjection, and is used to represent and possibly modify
+the value of a parameter of its owner or it owner's function. It can receive one or more ControlProjections and/or
+LearningProjections that modify that parameter.   A list of the projections received by a parameterState is kept in
+its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs, and uses the result
+to modify the value of the parameter for which it is responsible.
+
 
 .. _ParameterState_Creation:
 
@@ -40,11 +50,18 @@ COMMENT:
             note: although it may receive multiple projections, the output of each must conform to self.variable,
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
+
+OLD VERSION:
+A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
+parameterStates are created automatically when the mechanism or projection to which they belong is created.  One
+parameterState is created for each parameter of the object's ``function``.  Each parameterState is
+created using the specification of the parameter for which it is responsible, as described below.
+
 COMMENT
 
 A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
 parameterStates are created automatically when the mechanism or projection to which they belong is created.  One
-parameterState is created for each parameter of the object's ``function``.  Each parameterState is
+parameterState is created for each parameter of the object and its ``function``.  Each parameterState is
 created using the specification of the parameter for which it is responsible, as described below.
 
 .. _ParameterState_Specifying_Parameters:
@@ -180,6 +197,10 @@ parameter for which it is responsible:
   parameter for which it is responsible (see :ref:`figure <ParameterState_Figure>` below).  This must be a value of
   :any:`ModulationOperation`;  the default is :keyword:`PRODUCT`.
 
+COMMENT:
+   XXXX DOCUMENT THAT THIS CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
+COMMMENT
+
 .. _ParameterState_Execution:
 
 Execution
@@ -196,6 +217,9 @@ projections it receives.  The way in which it is modified is determined by
 The value of function parameters can also be modified when the function's object is executed.  This can be done by
 specifying runtime parameters for a mechanism where it is specified in the ``pathway`` of a process or in mechanism's
 ``execute`` or ``run`` methods (see :ref:`Mechanism_Runtime_Parameters`).
+COMMENT:
+   XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
+COMMENT
 
 COMMENT:
 .. ParameterState_Parameter_Modulation_Operation:
@@ -222,7 +246,7 @@ COMMENT
 The figure below shows how these factors are combined by the parameterState to determine the parameter value for a
 function:
 
-    **Role of ParameterStates in Determining the Parameter Value of a Function**
+    **How a ParameterState Determines the Value of a Parameter of its Owner's Function**
 
     .. figure:: _static/ParameterState_fig.*
        :alt: ParameterState
@@ -231,17 +255,17 @@ function:
        ..
 
        +--------------+--------------------------------------------------------------------+
-       | Component    | Impact on Parameter Value                                          |
+       | Component    | Impact of ParameterState on Parameter Value                        |
        +==============+====================================================================+
-       | A (brown)    | baseValue of drift rate parameter of DDM function                  |
+       | A (brown)    | ``baseValue`` (default value of parameter of owner's ``function``) |
        +--------------+--------------------------------------------------------------------+
-       | B (purple)   | runtime specification of drift rate parameter                      |
+       | B (purple)   | runtime specification of parameter value                           |
        +--------------+--------------------------------------------------------------------+
-       | C (red)      | runtime parameter influences ControlProjection-modulated baseValue |
+       | C (red)      | runtime parameter influences projection-modulated ``baseValue``    |
        +--------------+--------------------------------------------------------------------+
-       | D (green)    | combined controlSignals modulate baseValue                         |
+       | D (green)    | combined projection values modulate ``baseValue``                  |
        +--------------+--------------------------------------------------------------------+
-       | E (blue)     | parameterState function combines ControlProjection                 |
+       | E (blue)     | parameterState's ``function`` combines ``value`` of  projections   |
        +--------------+--------------------------------------------------------------------+
 
 
@@ -484,7 +508,8 @@ class ParameterState(State_Base):
 
         #region COMBINE PROJECTIONS INPUT WITH BASE PARAM VALUE
         try:
-            # Check whether modulationOperation has been specified at runtime
+            # Check whether ModulationOperation for projections has been specified at runtime
+            # Note: this is distinct from ModulationOperation for runtime parameter (handled below)
             self.modulationOperation = self.stateParams[PARAMETER_MODULATION_OPERATION]
         except (KeyError, TypeError):
             # If not, try to get from params (possibly passed from projection to ParameterState)
@@ -519,8 +544,13 @@ class ParameterState(State_Base):
             return
 
         # Assign class-level pref as default operation
-        default_operation = self.prefs.functionRuntimeParamsPref
+        # # MODIFIED 11/27/16 OLD:
+        # default_operation = self.prefs.functionRuntimeParamsPref
+        # MODIFIED 11/27/16 NEW:
+        default_operation = self.prefs.functionRuntimeParamsPref[0]
+        # MODIFIED 11/27/16 END
 
+        # If there is a runtime param specified, could be a (parameter value, ModulationOperation) tuple
         try:
             value, operation = self.stateParams[self.name]
 
@@ -535,8 +565,10 @@ class ParameterState(State_Base):
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
-            # Assign class-level pref as default operation
-            default_operation = self.prefs.functionRuntimeParamsPref
+            # # Assign class-level pref as default operation
+            # # # MODIFIED 11/27/16 OLD: [REDUNDANT WITH ABOVE
+            # # default_operation = self.prefs.functionRuntimeParamsPref
+            # # MODIFIED 11/27/16 END
         #endregion
 
     @property
@@ -556,6 +588,8 @@ def _instantiate_parameter_states(owner, context=None):
     :param context:
     :return:
     """
+
+    # FIX: MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
     owner.parameterStates = {}
 

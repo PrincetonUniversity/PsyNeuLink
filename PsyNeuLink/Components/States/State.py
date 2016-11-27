@@ -1137,7 +1137,7 @@ class State_Base(State):
 
         #region GET STATE-SPECIFIC PARAM_SPECS
         try:
-            # Get outputState params
+            # Get State params
             self.stateParams = params[self.paramsType]
         except (KeyError, TypeError):
             self.stateParams = NotImplemented

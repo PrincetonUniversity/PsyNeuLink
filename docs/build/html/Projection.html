@@ -199,7 +199,7 @@ parameter. LearningProjections are used in the context of a <a class="reference 
 <p>Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of projection.  However, projections can also be specified &#8220;in context,&#8221; for example
 in the <code class="docutils literal"><span class="pre">pathway</span></code> attribute of a process, or when a tuple is used to specify the parameter of a function
-(such as a <a class="reference internal" href="Mechanism.html#mechanism-assigning-a-controlprojection"><span class="std std-ref">ControlProjection for a mechanism</span></a>,
+(such as a <span class="xref std std-ref">ControlProjection for a mechanism</span>,
 or a <a class="reference internal" href="MappingProjection.html#mapping-tuple-specification"><span class="std std-ref">LearningProjection for a MappingProjection</span></a>).</p>
 <p id="projection-in-context-specification"><em>In context specification</em>.  Any of the following can be used:</p>
 <blockquote>
@@ -235,7 +235,7 @@ below), and the value should be the value of the parameter.  It can contain any 
 for instantiating a projection (see <code class="xref py py-class docutils literal"><span class="pre">Projection_Base</span></code>) or ones specific to a particular type of
 projection (see documentation for subclass).  Note that parameter values in the specification dict will be
 used to instantiate the projection.  These can be overridden during execution by specifying
-<span class="xref std std-ref">Mechanism_Runtime_parameters</span> for the projection, either when calling the * <code class="docutils literal"><span class="pre">execute</span></code> method for a
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for the projection, either when calling the * <code class="docutils literal"><span class="pre">execute</span></code> method for a
 <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code> directly, or where it is specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a <code class="xref py py-class docutils literal"><span class="pre">process</span></code>.</p>
 </div></blockquote>
 </li>

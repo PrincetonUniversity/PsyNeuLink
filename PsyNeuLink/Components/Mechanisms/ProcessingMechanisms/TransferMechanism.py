@@ -405,8 +405,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute TransferMechanism function and return transform of input

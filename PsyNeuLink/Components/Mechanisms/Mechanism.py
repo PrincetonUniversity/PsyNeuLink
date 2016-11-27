@@ -354,7 +354,7 @@ The parameters of a mechanism are usually specified when the mechanism is create
 when it executed.  This can be done by using the ``runtime_param`` argument of its ``execute`` method, or by specifying
 the runtime parameters in a tuple with the mechanism in the ``pathway`` of a process
 (see Process :ref:`Process_Mechanisms`). In either case, runtime parameters  are specified using a dictionary that
-contains one or more entries, each of which contains a sub-dictionary corresponding to the mechanism's states
+contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism's states
 (inputStates, parameterStates and/or outputStates) or its function; those dictionaries, in turn, contain
 entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
 ``runtime_params`` argument of the ``execute`` method below for more details).
@@ -1178,6 +1178,9 @@ class Mechanism_Base(Mechanism):
             item must be compatible with the format (number and type of elements) of each inputState's variable
             (see :ref:`Run_Inputs` for details of input specification formats).
 
+        COMMENT:
+          MOVE THE BULK OF THIS TO THE DESCRIPTION OF RUNTIME PARAMS ABOVE, AND REFERENCE THAT.
+        COMMENT
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the object,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
@@ -1265,25 +1268,26 @@ class Mechanism_Base(Mechanism):
                                      time_scale=time_scale,
                                      context=context)
 
-        # Direct call to execute mechanism with specified input,
-        #    so call subclass __execute__ method with input and runtime_params (if specified), and return
-        elif not input is None:
-            self._assign_input(input)
-            if runtime_params:
-                for param_set in runtime_params:
-                    if not (INPUT_STATE_PARAMS in param_set or
-                            PARAMETER_STATE_PARAMS in param_set or
-                            OUTPUT_STATE_PARAMS in param_set):
-                        raise MechanismError("{0} is not a valid parameter set for runtime specification".
-                                             format(param_set))
-            return self.__execute__(variable=input,
-                                 params=runtime_params,
-                                 time_scale=time_scale,
-                                 context=context)
-        else:
-            pass
-            TEST = True
-        # Execute
+        # # Direct call to execute mechanism with specified input,
+        # #    so call subclass __execute__ method with input and runtime_params (if specified), and return
+        # elif not input is None:
+        #     self._assign_input(input)
+        #     if runtime_params:
+        #         for param_set in runtime_params:
+        #             if not param_set in {INPUT_STATE_PARAMS,
+        #                                  PARAMETER_STATE_PARAMS,
+        #                                  OUTPUT_STATE_PARAMS}:
+        #                 raise MechanismError("{0} is not a valid parameter set for runtime specification".
+        #                                      format(param_set))
+        #         # FIX: NEED TO UPATE PARAMETER_STATE HERE TO ACTIVATE RUNTIME PARAMS
+        #     return self.__execute__(variable=input,
+        #                          params=runtime_params,
+        #                          time_scale=time_scale,
+        #                          context=context)
+        # else:
+        #     pass
+        # # Execute
+
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -1305,7 +1309,13 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE INPUT STATE(S)
-        self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        # Executing process or system, update inputStates
+        if input is None:
+            self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        else:
+        # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
+            self._assign_input(input)
+
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
@@ -1315,11 +1325,29 @@ class Mechanism_Base(Mechanism):
         self._update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
+        # MODIFIED 11/27/16 NEW:
+        # FIX ASSIGN PARAMETERSTATE PARAMETER VALUES TO PARAMS HERE AND PASS TO __EXECUTE__()
+        # # If any runtime_params were assigned, assign values to params used to call mechanism's __execute__ method
+        # if runtime_params:
+        # Assign current paramameterState values to params used to call mechanism's __execute__ method
+        # FIX: UPDATE THIS TO USE user_params ONCE THOSE HAVE ALL BEEN ASSIGNED parameterStates IN
+        # _instantiate_parameter_states
+        runtime_params = {}
+        for param in self.function_params:
+            runtime_params[param] = self.parameterStates[param].value
+        # MODIFIED 11/27/16 END
+
         #region CALL SUBCLASS __execute__ method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
-        self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
+        # # MODIFIED 11/27/16 OLD:
+        # self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
+        # MODIFIED 11/27/16 NEW:
+        self.value = self.__execute__(variable=self.inputValue,
+                                      params=runtime_params,
+                                      time_scale=time_scale, context=context)
+        # MODIFIED 11/27/16 END
         #endregion
 
         #region UPDATE OUTPUT STATE(S)

@@ -263,6 +263,7 @@ class Component(object):
         + paramsCurrent
         # + parameter_validation
         + user_params
+        + runtime_params_in_use
         + recording
 
     Instance methods:
@@ -465,6 +466,7 @@ class Component(object):
         #region SET CURRENT VALUES OF VARIABLE AND PARAMS
         self.variable = self.variableInstanceDefault
         self.paramsCurrent = self.paramInstanceDefaults
+        # self.runtime_params_in_use = False
         #endregion
 
         #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
@@ -671,11 +673,20 @@ class Component(object):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def _check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
-        """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
+    def _check_args(self, variable, params=NotImplemented, target_set=None, context=None):
+        """validate variable and params, instantiate variable (if necessary) and assign any runtime params
 
-        Called by execute methods to validate variable and params
-        Can be suppressed by turning parameter_validation attribute off
+        Called by functions to validate variable and params
+        Validation can be suppressed by turning parameter_validation attribute off
+        target_set is a params dictionary to which params should be assigned;
+           otherwise, they are assigned to paramsCurrent;
+
+        Does the following:
+        - instantiate variable (if missing or callable)
+        - validate variable if PARAM_VALIDATION is set
+        - assign runtime params to paramsCurrent
+        - validate params if PARAM_VALIDATION is set
+
 
         :param variable: (anything but a dict) - variable to validate
         :param params: (dict) - params to validate
@@ -691,7 +702,7 @@ class Component(object):
         if callable(variable):
             variable = variable()
 
-        # If parameter_validation is set and the function was called with a variable
+        # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
             if context:
                 context = context + kwSeparatorBar + kwFunctionCheckArgs
@@ -702,14 +713,34 @@ class Component(object):
             self.variable = variable
 
         # If target_set is not specified, use paramsCurrent
-        if target_set is NotImplemented:
+        if target_set is None:
             target_set = self.paramsCurrent
 
-        # If parameter_validation is set, the function was called with params,
-        #   and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        # # MODIFIED 11/27/16 OLD:
+        # # If parameter_validation is set, the function was called with params,
+        # #   and they have changed, then validate requested values and assign to target_set
+        # if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        #     # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
+        #     self._validate_params(request_set=params, target_set=target_set, context=context)
+
+        # MODIFIED 11/27/16 NEW:
+        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        # Otherwise, if paramsCurrent are different from paramInstanceDefaults
+        #    (i.e., there were previously runtime params), then reassign paramsCurrent to paramInstanceDefaults
+        if params:
+            for param_name in params:
+                self.paramsCurrent[param_name] = params[param_name]
+            # self.runtime_params_in_use = True
+        else:
+            self.paramsCurrent = self.paramInstanceDefaults
+
+        # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
+        if self.prefs.paramValidationPref and params and params and not params is target_set:
             # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
             self._validate_params(request_set=params, target_set=target_set, context=context)
+
+        # MODIFIED 11/27/16 END
+
 
     def assign_defaults(self,
                         variable=NotImplemented,
@@ -983,7 +1014,7 @@ class Component(object):
 
         self.variable = variable
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign validated values to targets,
 
         This performs top-level type validation of params against the paramClassDefaults specifications:
@@ -1114,7 +1145,7 @@ class Component(object):
                                 #     target_set[param_name][entry_name] = entry_value
 
 
-                elif not target_set is NotImplemented:
+                elif not target_set is None and not target_set is NotImplemented:
                     target_set[param_name] = param_value
 
             # Parameter is not a valid type
