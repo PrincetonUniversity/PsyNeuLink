@@ -70,7 +70,6 @@ print(transfer_mechanism_3.execute(input=1.0,
                                                                                       }}))
 
 
-
 # transfer_process = process(pathway = [transfer_mechanism_1])
 # print(transfer_process.execute())
 print ('Done')
