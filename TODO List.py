@@ -12,12 +12,13 @@
 # IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
-# FIX: is_numerical -> is_numberic
+# FIX: is_numerical -> is_numeric
+
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
+# FIX:                  that function_params are changed too
 
 # CLEANUP:
 
-# DOCUMENT:
-#
 # DOCUMENT UNDER ParameterStates
 #     If parameter default value is set to None (or a non-numeric value),
 #           either in paramClassDefaults, as default in constructor argument, or specified as such,
@@ -35,19 +36,9 @@
 #            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
 
 # DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
-# IMPLEMENT: add sticky-assignment option for runtimeParams (make it a pref)
-
+#
 # FIX: GET RID OF NotImplemented
 #
-# FIX: "MODIFIED RUNTIME_PARAMS":
-#       As it currenly stands ("NEW" - 11/27/16):
-#       FUNCTION_PARAMS ARE NOT GETTING INSTANTIATED IF NONE ARE SPECIFIED IN FUNCTION'S
-#       CONSTRUCTOR OR AS RUNTIME PARAMS; (CRASHES IN STROOP SCRIPT) (FIX IN TRANSFER MECHANISM: CHANGE TO OLD)
-#       TEST instantiate_function TO SEE WHY IT'S PARAMS ARE NOT GETTING ASSIGNED AS FUNCTION_PARAMS
-#       ALTERNATIVE:  GO BACK TO OLD VERSION OF RUNTIME_PARAMS HANDLING:  BY ASSIGNING DEDICATED RUNTIME PARAMS
-#
-# FIX: MAKE SURE THIS WORKS (in ParameterState):
-#         default_operation = self.prefs.runtimeParamModulationPref[0]
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
 # FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
@@ -1939,7 +1930,7 @@
 #
 #endregion
 
-#region COMPONENTS:
+#region COMPONENT:
 # -----------------------------------------------------------------------------------------------------------
 #
 #  _validate_function:
@@ -1963,6 +1954,17 @@
 #                 + ParamValueProjection tuple: a state will be implemented using the value and assigned the projection
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
+
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
+# FIX:                  that function_params are changed too
+#
+# FIX / IMPLEMENT: "MODIFIED RUNTIME_PARAMS":
+#       CURRENTLY FUNCTIONING ("NEW" - 11/27/16, AS OF 11/29/16)
+#       SHOULD BE MODIFIED SO THAT FUNCTION PARAMS ARE KEPT ONLY IN, AND ACCESSED DIRECTLY FROM
+#       THE FUNCTION ITSELF (function_object.user_params) USING EITHER:
+#           AN @PROPERTY FOR function_params TO GET THEM or
+#           POINT user_params.function_params TO THEM (rather than it being a dict)
+#
 
 # FIX: CHANGE PROCESSING MECHANISMS TO USE update RATHER THAN execute, AND TO IMPLEMENT FUNCTION
 # FIX: For SUBTYPES, change funtionType to functionSubType (may interacat with naming)
