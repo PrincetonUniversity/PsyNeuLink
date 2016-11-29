@@ -8,21 +8,32 @@
 #            each entry is the name of an inputState or outputState;  value is tuple with:
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
 #
-# FIX: MAKE SURE THIS WORKS (in ParameterState):
-#         default_operation = self.prefs.functionRuntimeParamsPref[0]
-# FIX: name of Functions is being assigned to Type rather than subtype
 #
-# FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
-#
-# FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
+# IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
-# FIX: RUN TIME SPECIFICATION IS NOT WORKING:  SETTING VALUE OF PARAMETER STATE, BUT THAT IS GETTING IGNORED BY FUNCTION
-# FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
 
-# FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
-#                                          (SINCE PARAM IS GOING TO GET VALIDATED)
-#                                          TEST IN ScratchPad:
-#                                                  transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
+# CLEANUP:
+# TEST:
+#         # MODIFIED 11/28/16 NEW:  TEST THAT THIS IS OK:
+#         self.paramInstanceDefaults = default_set
+#         # MODIFIED 11/28/16 END
+#
+# FIX: Add "import copy" to Utilities, then delete elsewhere
+# TEST: Component (line 464)
+#      paramInstanceDefaults used as target_set (??NOT SURE HOW USING IT AS default_set AND target_set WOULD WORK)
+# TEST/FIX: GET RID OF THIS:  Component (line 886):
+#             # MODIFIED 11/28/16 OLD:  ??GET RID OF THIS?
+#             self.paramNames = self.paramInstanceDefaults.keys()
+#             # MODIFIED 11/28/16 END
+#
+# TEST: RUN TIME SPECIFICATION IS NOT WORKING: SETTING VALUE OF PARAMETER STATE, BUT THAT IS GETTING IGNORED BY FUNCTION
+# FIX:  PUT IN CHECK THAT VARIABLE IS NEVER A CLASS!  AND IF IT IS A FUNCTION OBJECT, THAT IT RESOLVES TO A VALUE
+#
+# FIX: SEARCH FOR paramClassDefaults AND MAKE SURE THAT IS WHAT IS NEEDED, AND NOT paramInstanceDefaults
+# FIX / TEST: Component (line 344)
+#         # MODIFIED 11/28/16 OLD:  ??KEEP:
+#         self.paramClassDefaults = self.paramClassDefaults
+#         # MODIFIED 11/28/16 END
 
 # FIX: "MODIFIED RUNTIME_PARAMS":
 #       As it currenly stands ("NEW"), FUNCTION_PARAMS ARE NOT GETTING INSTANTIATED IF NONE ARE SPECIFIED IN FUNCTION'S
@@ -36,6 +47,17 @@
 #                     DIFFERENT SET ARE ASSIGNED ON THE NEXT EXECUTION,
 #                     THE LAST ONES DON'T GET RESET TO THEIR paramsCurrent VALUES.
 #                     (PROBLEM IS IN TEST FOR runtime_params_in_use in Component.check_args)
+#
+# FIX: MAKE SURE THIS WORKS (in ParameterState):
+#         default_operation = self.prefs.functionRuntimeParamsPref[0]
+# FIX: name of Functions is being assigned to Type rather than subtype
+# FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
+# FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
+#                                          (SINCE PARAM IS GOING TO GET VALIDATED)
+#                                          TEST IN ScratchPad:
+#                                                  transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
+# FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
+# END CLEANUP
 
 # DO ONE OF THE FOLLOWING:
     # FIX: ALLOW EXECUTE/RUN OF MECHANISM TO USE RUN-TIME PARAM
@@ -64,6 +86,7 @@
 #         COMMENT:
 #           MOVE THE BULK OF THIS TO THE DESCRIPTION OF RUNTIME PARAMS ABOVE, AND REFERENCE THAT.
 #         COMMENT
+
 
 
 # 11/22/16:
