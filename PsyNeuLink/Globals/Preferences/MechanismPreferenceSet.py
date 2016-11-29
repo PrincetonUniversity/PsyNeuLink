@@ -14,7 +14,7 @@ from PsyNeuLink.Globals.Utilities import ModulationOperation
 from PsyNeuLink.Globals.Preferences import *
 
 # Keypaths for preferences:
-kpRuntimeParamModulationPref = '_function_runtime_params_pref'
+kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
 
 # Default PreferenceSets:
 runtimeParamModulationPrefInstanceDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
@@ -100,7 +100,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                                                      level=level,
                                                      name=name)
         # self._report_output_pref = reportOutput_pref
-        self._function_runtime_params_pref = functionRuntimeParams_pref
+        self._runtime_param_modulation_pref = functionRuntimeParams_pref
 
     # functionRuntimeParams entry ------------------------------------------------------------------------------------
 
@@ -113,7 +113,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
         return self.get_pref_setting_for_level(kpRuntimeParamModulationPref,
-                                               self._function_runtime_params_pref.level)[0]
+                                               self._runtime_param_modulation_pref.level)[0]
 
 
     @runtimeParamModulationPref.setter
@@ -123,7 +123,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         :return:
         """
         if isinstance(setting, PreferenceEntry):
-            self._function_runtime_params_pref = setting
+            self._runtime_param_modulation_pref = setting
 
         # elif not iscompatible(setting, runtimeParamModulationPrefInstanceDefault.setting):
         elif not inspect.isfunction(runtimeParamModulationPrefInstanceDefault.setting):
@@ -131,18 +131,18 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                   " it will remain unchanged ({2})".
                   format(setting,
                          ModulationOperation.__class__.__name__,
-                         self._function_runtime_params_pref.setting))
+                         self._runtime_param_modulation_pref.setting))
             return
 
         else:
-            self._function_runtime_params_pref = self._function_runtime_params_pref._replace(setting=setting)
+            self._runtime_param_modulation_pref = self._runtime_param_modulation_pref._replace(setting=setting)
 
     @property
     def runtimeParamModulationPrefLevel(self):
         """Returns level for owner's functionRuntimeParams pref
         :return:
         """
-        return self._function_runtime_params_pref.level
+        return self._runtime_param_modulation_pref.level
 
     @runtimeParamModulationPrefLevel.setter
     def runtimeParamModulationPrefLevel(self, level):
@@ -152,16 +152,16 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         """
         if not isinstance(level, PreferenceLevel):
             print("Level of functionRuntimeParams preference ({0}) must be a PreferenceLevel setting; it will remain unchanged ({1})".
-                  format(level, self._function_runtime_params_pref.setting))
+                  format(level, self._runtime_param_modulation_pref.setting))
             return
-        self._function_runtime_params_pref = self._function_runtime_params_pref._replace(level=level)
+        self._runtime_param_modulation_pref = self._runtime_param_modulation_pref._replace(level=level)
 
     @property
     def runtimeParamModulationPrefEntry(self):
         """Returns owner's functionRuntimeParams PreferenceEntry tuple (setting, level)
         :return:
         """
-        return self._function_runtime_params_pref
+        return self._runtime_param_modulation_pref
 
     @runtimeParamModulationPrefEntry.setter
     def runtimeParamModulationPrefEntry(self, entry):
@@ -171,9 +171,9 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         """
         if not isinstance(entry, PreferenceEntry):
             print("runtimeParamModulationPrefEntry ({0}) must be a PreferenceEntry; it will remain unchanged ({1})".
-                  format(entry, self._function_runtime_params_pref))
+                  format(entry, self._runtime_param_modulation_pref))
             return
-        self._function_runtime_params_pref = entry
+        self._runtime_param_modulation_pref = entry
 
 
 

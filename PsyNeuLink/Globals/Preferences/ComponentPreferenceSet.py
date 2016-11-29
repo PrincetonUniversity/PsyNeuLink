@@ -18,7 +18,8 @@ REPORT_OPUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
 LOG_PREF = kpLogPref = '_log_pref'
 PARAM_VALIDATION_PREF = kpParamValidationPref = '_param_validation_pref'
 VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
-FUNCTION_RUNTIME_PARAMS_PREF = kpRuntimeParamModulationPref = '_function_runtime_params_pref'
+RUNTIME_PARAM_MODULATION_PREF = kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
+RUNTIME_PARAM_STICKY_ASSIGNMENT_PREF = kpRuntimeParamStickAssignmentPref = '_runtime_param_stick_assignment_pref'
 
 # Keywords for generic level default preference sets
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
@@ -401,7 +402,7 @@ class ComponentPreferenceSet(PreferenceSet):
         """Returns owner's runtimeParamModulationPref
         :return:
         """
-        return self._function_runtime_params_pref
+        return self._runtime_param_modulation_pref
 
     @runtimeParamModulationPref.setter
     def runtimeParamModulationPref(self, setting):
