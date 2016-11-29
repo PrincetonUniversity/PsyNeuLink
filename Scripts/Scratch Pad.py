@@ -59,8 +59,14 @@ transfer_mechanism_1.execute()
 # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 print(transfer_mechanism_3.execute(input=1.0,
-                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.MULTIPLY)}}))
-print(transfer_mechanism_3.execute(input=1.0))
+                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
+# print(transfer_mechanism_3.execute(input=1.0))
+print(transfer_mechanism_3.execute(input=1.0,
+                                   runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
+                                                                                   ModulationOperation.OVERRIDE),
+                                                                            # SLOPE:(6.0,
+                                                                            #        ModulationOperation.OVERRIDE
+                                                                                      }}))
 
 
 
