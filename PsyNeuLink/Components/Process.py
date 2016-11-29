@@ -1816,7 +1816,7 @@ class Process_Base(Process):
             only for the current execution.
 
         COMMENT:
-            context : str : default kwExecuting + self.name
+            context : str : default EXECUTING + self.name
                 a string used for contextualization of instantiation, hierarchical calls, executions, etc.
         COMMENT
 
@@ -1834,10 +1834,10 @@ class Process_Base(Process):
         """
 
         if not context:
-            context = kwExecuting + self.name
+            context = EXECUTING + self.name
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and kwExecuting in context
+        report_output = self.prefs.reportOutputPref and context and EXECUTING in context
 
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable

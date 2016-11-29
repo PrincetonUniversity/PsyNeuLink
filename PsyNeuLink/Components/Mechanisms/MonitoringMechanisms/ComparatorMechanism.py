@@ -438,7 +438,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         """
 
         if not context:
-            context = kwExecuting + self.name
+            context = EXECUTING + self.name
 
         self._check_args(variable=variable, params=params, context=context)
 
@@ -472,7 +472,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
             self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
 
-            # if (self.prefs.reportOutputPref and kwExecuting in context):
+            # if (self.prefs.reportOutputPref and EXECUTING in context):
             #     print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
             #                                                                  self.variable[0],
             #                                                                  self.variable[1]))

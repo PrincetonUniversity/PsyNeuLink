@@ -271,7 +271,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         """
 
         if not context:
-            context = kwExecuting + self.name
+            context = EXECUTING + self.name
 
         self._check_args(variable=variable, params=params, context=context)
 
