@@ -2,6 +2,8 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# EXECUTING -> EXECUTING
+
 # IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with:
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
@@ -16,6 +18,24 @@
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 # FIX: RUN TIME SPECIFICATION IS NOT WORKING:  SETTING VALUE OF PARAMETER STATE, BUT THAT IS GETTING IGNORED BY FUNCTION
 # FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
+
+# FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
+#                                          (SINCE PARAM IS GOING TO GET VALIDATED)
+#                                          TEST IN ScratchPad:
+#                                                  transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
+
+# FIX: "MODIFIED RUNTIME_PARAMS":
+#       As it currenly stands ("NEW"), FUNCTION_PARAMS ARE NOT GETTING INSTANTIATED IF NONE ARE SPECIFIED IN FUNCTION'S
+#       CONSTRUCTOR OR AS RUNTIME PARAMS; (CRASHES IN STROOP SCRIPT) (FIX IN TRANSFER MECHANISM: CHANGE TO OLD)
+#       TEST instantiate_function TO SEE WHY IT'S PARAMS ARE NOT GETTING ASSIGNED AS FUNCTION_PARAMS
+#       TEST ALSO WHETHER, IF THIS IS GOTTEN TO WORK, WHETHER paramsCurrent RECOVERS ON NEXT EXECUTION
+#               AFTER AN ASSIGNMENT OF runtime_params ON PREVIOUS EXECUTION
+#
+#       ALTERNATIVE:  GO BACK TO OLD VERSION OF RUNTIME_PARAMS HANDLING:  BY ASSIGNIG DEDICATED RUNTIME PARAMS
+#                     THE PROBLEM WITH THIS IS THAT IF SOME runtime_paras ARE SET ON ONE EXECTION, BUT THEN A
+#                     DIFFERENT SET ARE ASSIGNED ON THE NEXT EXECUTION,
+#                     THE LAST ONES DON'T GET RESET TO THEIR paramsCurrent VALUES.
+#                     (PROBLEM IS IN TEST FOR runtime_params_in_use in Component.check_args)
 
 # DO ONE OF THE FOLLOWING:
     # FIX: ALLOW EXECUTE/RUN OF MECHANISM TO USE RUN-TIME PARAM
@@ -44,7 +64,6 @@
 #         COMMENT:
 #           MOVE THE BULK OF THIS TO THE DESCRIPTION OF RUNTIME PARAMS ABOVE, AND REFERENCE THAT.
 #         COMMENT
-
 
 
 # 11/22/16:
