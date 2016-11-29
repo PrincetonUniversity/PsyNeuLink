@@ -581,21 +581,18 @@ class ParameterState(State_Base):
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_state_list() to instantiate ParameterStates for subclass' function
 
-    Instantiate parameterState for each param in owner.user_params
+    If owner.params[PARAMETER_STATE] is None or False, no parameterStates will be instantiated.
+    Otherwise, instantiate parameterState for each param in owner.user_params
     - including ones in owner.user_params[FUNCTION_PARAMS]
     - exclude if it is:
-       assigned a non-numeric value (including None, False or True), except a dict or tuple
-           if it is a dict, it's name must be FUNCTION_PARAMS
+       assigned a non-numeric value (including None, NotImplemented, False or True)
+          unless it is:
+              a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+              a dict with the name FUNCTION_PARAMS (otherwise exclude)
        a function
            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-
-
-    Exclude
-     for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
-    Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
-
     """
 
     # TBI / IMPLEMENT: use specs to implement paramterStates below

@@ -16,9 +16,24 @@
 
 # CLEANUP:
 
-# DOCUMENT: If parameter default value is set to None (or a non-numeric value -
-#           either in paramClassDefaults, default as constructor argument, or specified as such is
+# DOCUMENT:
+#
+# DOCUMENT UNDER ParameterStates
+#     If parameter default value is set to None (or a non-numeric value),
+#           either in paramClassDefaults, as default in constructor argument, or specified as such,
 #           then no parameter state is created and can't be used either for Control, Learning or runtime assignment
+#     Instantiate parameterState for each param in owner.user_params
+#     - including ones in owner.user_params[FUNCTION_PARAMS]
+#     - exclude if it is:
+#        assigned a non-numeric value (including None, NotImplemented, False or True)
+#           unless it is:
+#               a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+#               a dict with the name FUNCTION_PARAMS (otherwise exclude)
+#        a function
+#            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+#            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+#            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+
 # DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
 # IMPLEMENT: add sticky-assignment option for runtimeParams (make it a pref)
 
