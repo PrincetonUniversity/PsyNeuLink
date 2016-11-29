@@ -12,8 +12,13 @@
 # IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
+# FIX: is_numerical -> is_numberic
+
 # CLEANUP:
 
+# DOCUMENT: If parameter default value is set to None (or a non-numeric value -
+#           either in paramClassDefaults, default as constructor argument, or specified as such is
+#           then no parameter state is created and can't be used either for Control, Learning or runtime assignment
 # DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
 # IMPLEMENT: add sticky-assignment option for runtimeParams (make it a pref)
 

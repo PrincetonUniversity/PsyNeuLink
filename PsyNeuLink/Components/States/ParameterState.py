@@ -438,9 +438,16 @@ class ParameterState(State_Base):
         self.modulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Insure that parameterState (as identified by its name) is for a valid parameter of its owner's function
+        """Insure that parameterState (as identified by its name) is for a valid parameter for owner
+
+        Parameter can be either owner's, or owner's function_object
         """
-        if not self.name in self.owner.function_params.keys():
+
+        # # # MODIFIED 11/29/16 OLD:
+        # if not self.name in self.owner.function_params.keys():
+        # MODIFIED 11/29/16 NEW:
+        if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
+        # MODIFIED 11/29/16 END
             raise ParameterStateError("Name of requested parameterState ({}) does not refer to a valid parameter "
                                       "of the function ({}) of its owner ({})".
                                       format(self.name,
@@ -561,10 +568,6 @@ class ParameterState(State_Base):
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
-            # # Assign class-level pref as default operation
-            # # # MODIFIED 11/27/16 OLD: [REDUNDANT WITH ABOVE
-            # # default_operation = self.prefs.runtimeParamModulationPref
-            # # MODIFIED 11/27/16 END
         #endregion
 
     @property
@@ -589,29 +592,93 @@ def _instantiate_parameter_states(owner, context=None):
 
     owner.parameterStates = {}
 
+
+    # # MODIFIED 11/29/16 OLD:
+    #
+    # try:
+    #     function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
+    # except KeyError:
+    #     # No need to warn, as that already occurred in _validate_params (above)
+    #     return
+    # else:
+    #     try:
+    #         no_parameter_states = not owner.params[PARAMETER_STATES]
+    #     except KeyError:
+    #         # PARAMETER_STATES not specified, so continue
+    #         pass
+    #     else:
+    #         # PARAMETER_STATES was set to False, so do not instantiate any parameterStates
+    #         if no_parameter_states:
+    #             return
+    #         # TBI / IMPLEMENT: use specs to implement paramterStates below
+    #         # Notes:
+    #         # * functionParams are still available in paramsCurrent;
+    #         # # just no parameterStates instantiated for them.
+    #
+    #     # Instantiate parameterState for each param in functionParams, using its value as the state_spec
+    #     for param_name, param_value in function_param_specs.items():
+    #
+    #         state = _instantiate_state(owner=owner,
+    #                                   state_type=ParameterState,
+    #                                   state_name=param_name,
+    #                                   state_spec=param_value,
+    #                                   state_params=None,
+    #                                   constraint_value=param_value,
+    #                                   constraint_value_name=param_name,
+    #                                   context=context)
+    #         if state:
+    #             owner.parameterStates[param_name] = state
+
+    # MODIFIED 11/29/16 NEW:
+    #
+    # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
-        function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
+        no_parameter_states = not owner.params[PARAMETER_STATES]
+        # PARAMETER_STATES for owner was suppressed (set to False or None), so do not instantiate any parameterStates
+        if no_parameter_states:
+            return
     except KeyError:
-        # No need to warn, as that already occurred in _validate_params (above)
+        # PARAMETER_STATES not specified at all, so OK to continue and construct them
+        pass
+
+    # TBI / IMPLEMENT: use specs to implement paramterStates below
+    # Notes:
+    # * functionParams are still available in paramsCurrent;
+    # # just no parameterStates instantiated for them.
+
+    try:
+        owner.user_params
+    except AttributeError:
         return
-    else:
-        try:
-            no_parameter_states = not owner.params[PARAMETER_STATES]
-        except KeyError:
-            # PARAMETER_STATES not specified, so continue
-            pass
+
+    # Instantiate parameterState for each param in functionParams, using its value as the state_spec
+    for param_name, param_value in owner.user_params.items():
+
+        # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+        #    At present, assignment of ``function`` as runtime param is not supported
+        #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+        #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+        if param_name is FUNCTION:
+            continue
+
+        if not is_numerical(param_value) and not isinstance(param_value, (dict, tuple)):
+            continue
+
+        if param_name is FUNCTION_PARAMS:
+            for function_param_name, function_param_value in param_value.items():
+                state = _instantiate_state(owner=owner,
+                                          state_type=ParameterState,
+                                          state_name=function_param_name,
+                                          state_spec=function_param_value,
+                                          state_params=None,
+                                          constraint_value=function_param_value,
+                                          constraint_value_name=function_param_name,
+                                          context=context)
+                if state:
+                    owner.parameterStates[function_param_name] = state
+                continue
+
         else:
-            # PARAMETER_STATES was set to False, so do not instantiate any parameterStates
-            if no_parameter_states:
-                return
-            # TBI / IMPLEMENT: use specs to implement paramterStates below
-            # Notes:
-            # * functionParams are still available in paramsCurrent;
-            # # just no parameterStates instantiated for them.
-
-        # Instantiate parameterState for each param in functionParams, using its value as the state_spec
-        for param_name, param_value in function_param_specs.items():
-
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=param_name,
@@ -622,3 +689,5 @@ def _instantiate_parameter_states(owner, context=None):
                                       context=context)
             if state:
                 owner.parameterStates[param_name] = state
+    # MODIFIED 11/29/16 END
+    TEST = True

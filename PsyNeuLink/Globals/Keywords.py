@@ -108,7 +108,7 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 #region --------------------------------------------    TIME SCALE    --------------------------------------------------
 
 kwCentralClock = "CentralClock"
-TIME_SCALE = "Time Scale"
+TIME_SCALE = "time_scale"
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------

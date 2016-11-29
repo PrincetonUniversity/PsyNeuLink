@@ -729,9 +729,10 @@ class Component(object):
 
         if runtime_params and not runtime_params is NotImplemented:
             for param_name in self.user_params:
-                # At present, assignment of ``function`` as runtime param is not supported
-                #  (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #   i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                #    At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
                 if param_name is FUNCTION:
                     continue
                 # If param is specified in runtime_params, then assign it
@@ -748,9 +749,10 @@ class Component(object):
             # Can't do the following since function could still be a class ref rather than abound method (see below)
             # self.paramsCurrent = self.paramInstanceDefaults
             for param_name in self.user_params:
-                # At present, assignment of ``function`` as runtime param is not supported
-                #  (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                #   i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                #    At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
                 if param_name is FUNCTION:
                     continue
                 self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
