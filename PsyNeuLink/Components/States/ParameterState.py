@@ -538,16 +538,16 @@ class ParameterState(State_Base):
         #endregion
 
         #region APPLY RUNTIME PARAM VALUES
-        # If there are not any runtime params, or functionRuntimeParamsPref is disabled, return
+        # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
         if (self.stateParams is NotImplemented or
-                    self.prefs.functionRuntimeParamsPref is ModulationOperation.DISABLED):
+                    self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
             return
 
         # Assign class-level pref as default operation
         # # MODIFIED 11/27/16 OLD:
-        # default_operation = self.prefs.functionRuntimeParamsPref
+        # default_operation = self.prefs.runtimeParamModulationPref
         # MODIFIED 11/27/16 NEW:
-        default_operation = self.prefs.functionRuntimeParamsPref[0]
+        default_operation = self.prefs.runtimeParamModulationPref[0]
         # MODIFIED 11/27/16 END
 
         # If there is a runtime param specified, could be a (parameter value, ModulationOperation) tuple
@@ -559,7 +559,7 @@ class ParameterState(State_Base):
             return
 
         except TypeError:
-            # If single ("exposed") value, use default_operation (class-level functionRuntimeParamsPref)
+            # If single ("exposed") value, use default_operation (class-level runtimeParamModulationPref)
             self.value = default_operation(self.stateParams[self.name], self.value)
         else:
             # If tuple, use param-specific ModulationOperation as operation
@@ -567,7 +567,7 @@ class ParameterState(State_Base):
 
             # # Assign class-level pref as default operation
             # # # MODIFIED 11/27/16 OLD: [REDUNDANT WITH ABOVE
-            # # default_operation = self.prefs.functionRuntimeParamsPref
+            # # default_operation = self.prefs.runtimeParamModulationPref
             # # MODIFIED 11/27/16 END
         #endregion
 
