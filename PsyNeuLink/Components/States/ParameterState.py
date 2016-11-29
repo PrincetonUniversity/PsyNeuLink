@@ -581,55 +581,26 @@ class ParameterState(State_Base):
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_state_list() to instantiate ParameterStates for subclass' function
 
-    Instantiate parameter states for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
+    Instantiate parameterState for each param in owner.user_params
+    - including ones in owner.user_params[FUNCTION_PARAMS]
+    - exclude if it is:
+       assigned a non-numeric value (including None, False or True), except a dict or tuple
+           if it is a dict, it's name must be FUNCTION_PARAMS
+       a function
+           IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+           (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+           i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+
+
+    Exclude
+     for params specified in FUNCTION_PARAMS unless PARAMETER_STATES == False
     Use constraints (for compatibility checking) from paramsCurrent (inherited from paramClassDefaults)
 
-    :param context:
-    :return:
     """
 
-    # FIX: MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
+    # TBI / IMPLEMENT: use specs to implement paramterStates below
 
     owner.parameterStates = {}
-
-
-    # # MODIFIED 11/29/16 OLD:
-    #
-    # try:
-    #     function_param_specs = owner.paramsCurrent[FUNCTION_PARAMS]
-    # except KeyError:
-    #     # No need to warn, as that already occurred in _validate_params (above)
-    #     return
-    # else:
-    #     try:
-    #         no_parameter_states = not owner.params[PARAMETER_STATES]
-    #     except KeyError:
-    #         # PARAMETER_STATES not specified, so continue
-    #         pass
-    #     else:
-    #         # PARAMETER_STATES was set to False, so do not instantiate any parameterStates
-    #         if no_parameter_states:
-    #             return
-    #         # TBI / IMPLEMENT: use specs to implement paramterStates below
-    #         # Notes:
-    #         # * functionParams are still available in paramsCurrent;
-    #         # # just no parameterStates instantiated for them.
-    #
-    #     # Instantiate parameterState for each param in functionParams, using its value as the state_spec
-    #     for param_name, param_value in function_param_specs.items():
-    #
-    #         state = _instantiate_state(owner=owner,
-    #                                   state_type=ParameterState,
-    #                                   state_name=param_name,
-    #                                   state_spec=param_value,
-    #                                   state_params=None,
-    #                                   constraint_value=param_value,
-    #                                   constraint_value_name=param_name,
-    #                                   context=context)
-    #         if state:
-    #             owner.parameterStates[param_name] = state
-
-    # MODIFIED 11/29/16 NEW:
     #
     # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
@@ -641,10 +612,6 @@ def _instantiate_parameter_states(owner, context=None):
         # PARAMETER_STATES not specified at all, so OK to continue and construct them
         pass
 
-    # TBI / IMPLEMENT: use specs to implement paramterStates below
-    # Notes:
-    # * functionParams are still available in paramsCurrent;
-    # # just no parameterStates instantiated for them.
 
     try:
         owner.user_params
@@ -654,14 +621,21 @@ def _instantiate_parameter_states(owner, context=None):
     # Instantiate parameterState for each param in functionParams, using its value as the state_spec
     for param_name, param_value in owner.user_params.items():
 
-        # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-        #    At present, assignment of ``function`` as runtime param is not supported
-        #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-        #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-        if param_name is FUNCTION:
+        # Exclusions:
+        # Allow numbericals but omit booleans (which are treated by is_numerical as numerical)
+        if is_numerical(param_value) and not isinstance(param_value, bool):
+            pass
+        # Only allow a FUNCTION_PARAMS dict
+        elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:
+            pass
+        # Exclude function (see docstring above)
+        elif param_name in {FUNCTION, NotImplemented}:
             continue
-
-        if not is_numerical(param_value) and not isinstance(param_value, (dict, tuple)):
+        # Allow tuples (could be specification that includes a projection or ModulationOperation)
+        elif isinstance(param_value, tuple):
+            continue
+        # Exclude all others
+        else:
             continue
 
         if param_name is FUNCTION_PARAMS:
@@ -689,5 +663,3 @@ def _instantiate_parameter_states(owner, context=None):
                                       context=context)
             if state:
                 owner.parameterStates[param_name] = state
-    # MODIFIED 11/29/16 END
-    TEST = True
