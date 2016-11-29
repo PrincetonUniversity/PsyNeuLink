@@ -1617,12 +1617,12 @@ class Component(object):
         self.prefs.logPref = setting
 
     @property
-    def functionRuntimeParamsPref(self):
-        return self.params.functionRuntimeParamsPref
+    def runtimeParamModulationPref(self):
+        return self.params.runtimeParamModulationPref
 
-    @functionRuntimeParamsPref.setter
-    def functionRuntimeParamsPref(self, setting):
-        self.params.functionRuntimeParamsPref = setting
+    @runtimeParamModulationPref.setter
+    def runtimeParamModulationPref(self, setting):
+        self.params.runtimeParamModulationPref = setting
 
 
 COMPONENT_BASE_CLASS = Component

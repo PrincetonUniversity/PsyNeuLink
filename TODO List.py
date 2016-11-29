@@ -27,7 +27,7 @@
 #       ALTERNATIVE:  GO BACK TO OLD VERSION OF RUNTIME_PARAMS HANDLING:  BY ASSIGNING DEDICATED RUNTIME PARAMS
 #
 # FIX: MAKE SURE THIS WORKS (in ParameterState):
-#         default_operation = self.prefs.functionRuntimeParamsPref[0]
+#         default_operation = self.prefs.runtimeParamModulationPref[0]
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
 # FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
@@ -1491,7 +1491,7 @@
 # DOCUMENT: Change to InputState, OutputState re: owner vs. ownerValue
 # DOCUMENT: use of runtime params, including:
 #                  - specification of value (exposed or as tuple with ModulationOperation
-#                  - role of  FunctionRuntimeParamsPref / ModulationOperation
+#                  - role of  RuntimeParamModulationPref / ModulationOperation
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlProjection CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
@@ -1546,7 +1546,7 @@
 #                     prefs = {
 #                         kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
 #                         kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
-#                         kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+#                         kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
 # FIX: SOLUTION TO ALL OF THE ABOVE:  CHANGE LOG PREF TO LIST OF KW ENTRIES RATHER THAN BOOL COMBOS (SEE LOG)
 # FIX: Problems validating LogEntry / Enums:

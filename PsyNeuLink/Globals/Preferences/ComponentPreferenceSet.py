@@ -18,7 +18,7 @@ REPORT_OPUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
 LOG_PREF = kpLogPref = '_log_pref'
 PARAM_VALIDATION_PREF = kpParamValidationPref = '_param_validation_pref'
 VERBOSE_PREF = kpVerbosePref = '_verbose_pref'
-FUNCTION_RUNTIME_PARAMS_PREF = kpFunctionRuntimeParamsPref = '_function_runtime_params_pref'
+FUNCTION_RUNTIME_PARAMS_PREF = kpRuntimeParamModulationPref = '_function_runtime_params_pref'
 
 # Keywords for generic level default preference sets
 kwSystemDefaultPreferences = 'SystemDefaultPreferences'
@@ -34,7 +34,7 @@ ComponentPreferenceSetPrefs = {
     kpParamValidationPref,
     kpReportOutputPref,
     kpLogPref,
-    kpFunctionRuntimeParamsPref
+    kpRuntimeParamModulationPref
 }
 
 SystemDefaultPreferencesDict = {
@@ -43,7 +43,7 @@ SystemDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SYSTEM),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
-    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM)}
+    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM)}
 
 CategoryDefaultPreferencesDict = {
     kwPreferenceSetName: kwCategoryDefaultPreferences,
@@ -51,7 +51,7 @@ CategoryDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     kpLogPref: PreferenceEntry(LogLevel.VALUE_ASSIGNMENT, PreferenceLevel.CATEGORY),
-    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.CATEGORY)}
+    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.MULTIPLY,PreferenceLevel.CATEGORY)}
 
 TypeDefaultPreferencesDict = {
     kwPreferenceSetName: kwTypeDefaultPreferences,
@@ -59,7 +59,7 @@ TypeDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.TYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.TYPE),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.TYPE)}
+    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.TYPE)}
 
 SubtypeDefaultPreferencesDict = {
     kwPreferenceSetName: kwSubtypeDefaultPreferences,
@@ -67,7 +67,7 @@ SubtypeDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.SUBTYPE)}
+    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.ADD,PreferenceLevel.SUBTYPE)}
 
 InstanceDefaultPreferencesDict = {
     kwPreferenceSetName: kwInstanceDefaultPreferences,
@@ -75,7 +75,7 @@ InstanceDefaultPreferencesDict = {
     kpParamValidationPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
-    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE, PreferenceLevel.INSTANCE)}
+    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE, PreferenceLevel.INSTANCE)}
 
 # Dict of default dicts
 ComponentDefaultPrefDicts = {
@@ -153,7 +153,7 @@ class ComponentPreferenceSet(PreferenceSet):
                 + kpParamValidationPref: validate parameters during execution
                 + kpReportOutputPref: report object's ouptut during execution
                 + kpLogPref: record attribute data for the object during execution
-                + kpFunctionRuntimeParamsPref: modulate parameters using runtime specification (in pathway)
+                + kpRuntimeParamModulationPref: modulate parameters using runtime specification (in pathway)
             value that is either a PreferenceSet, valid setting for the preference, or a PreferenceLevel; defaults
         - level (PreferenceLevel): ??
         - name (str): name of PreferenceSet
@@ -188,11 +188,11 @@ class ComponentPreferenceSet(PreferenceSet):
         - logPref(setting=<value>):
             assigns the value of the setting arg to the logPref of the owner's PreferenceSet
                 and, if it contains log entries, it adds them to the owner's log
-        - functionRuntimeParamsPref():
+        - runtimeParamModulationPref():
             returns setting for functionRuntimeParams preference at level specified in
              functionRuntimeParams PreferenceEntry of owner's Preference object
-        - functionRuntimeParamsPref(setting=<value>):
-            assigns the value of the setting arg to the functionRuntimeParamsPref of the owner's Preference object
+        - runtimeParamModulationPref(setting=<value>):
+            assigns the value of the setting arg to the runtimeParamModulationPref of the owner's Preference object
     """
 
     # Use this as both:
@@ -204,7 +204,7 @@ class ComponentPreferenceSet(PreferenceSet):
             kpParamValidationPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.SYSTEM),
             kpLogPref: PreferenceEntry(LogLevel.OFF, PreferenceLevel.CATEGORY),
-            kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM)
+            kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.SYSTEM)
     }
 
     baseClass = NotImplemented
@@ -397,17 +397,17 @@ class ComponentPreferenceSet(PreferenceSet):
     #region functionRuntimeParams ----------------------------------------------------------------------------------
 
     @property
-    def functionRuntimeParamsPref(self):
-        """Returns owner's functionRuntimeParamsPref
+    def runtimeParamModulationPref(self):
+        """Returns owner's runtimeParamModulationPref
         :return:
         """
         return self._function_runtime_params_pref
 
-    @functionRuntimeParamsPref.setter
-    def functionRuntimeParamsPref(self, setting):
-        """Assign functionRuntimeParamsPref
+    @runtimeParamModulationPref.setter
+    def runtimeParamModulationPref(self, setting):
+        """Assign runtimeParamModulationPref
         :param entry:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=kpFunctionRuntimeParamsPref)
+        self.set_preference(candidate_info=setting, pref_ivar_name=kpRuntimeParamModulationPref)
 

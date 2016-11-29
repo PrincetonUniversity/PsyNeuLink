@@ -19,7 +19,7 @@ DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(False,PreferenceLevel.SYSTEM),
-                    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+                    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
 
 DDM_prefs.verbosePref = PreferenceEntry(True,PreferenceLevel.INSTANCE)
@@ -36,7 +36,7 @@ DDM_prefs2 = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.SYSTEM),
-                    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
+                    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
 
 my_DDM = DDM(name='my_DDM')
 my_DDM.prefs = DDM_prefs
