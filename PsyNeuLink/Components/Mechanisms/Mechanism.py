@@ -1243,7 +1243,8 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        context = context or  EXECUTING + ' ' + append_type_to_name(self)
+        # context = context or  EXECUTING + ' ' + append_type_to_name(self)
+        context = context or NO_CONTEXT
 
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
