@@ -340,7 +340,7 @@ class Component(object):
         # # MODIFIED  NEW:
         self.variableInstanceDefault = None
         # MODIFIED  END
-        self.paramClassDefaults = self.paramClassDefaults
+        # self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
         self.componentName = self.componentType
@@ -723,14 +723,29 @@ class Component(object):
         #     # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # MODIFIED 11/27/16 NEW:
         # If params have been passed, treat as runtime params and assign to paramsCurrent
-        if params and not params is NotImplemented:
-            for param_name in params:
-                self.paramsCurrent[param_name] = params[param_name]
+        #   (relabel params as runtime_params for clarity)
+        runtime_params = params
+        runtime_sticky_assignment = False
+
+        if runtime_params and not runtime_params is NotImplemented:
+            for param_name in self.user_params:
+                # At present, assignment of ``function`` as runtime param is not supported
+                #  (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #   i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name is FUNCTION:
+                    continue
+                # If param is specified in runtime_params, then assign it
+                if param_name in runtime_params:
+                    self.paramsCurrent[param_name] = runtime_params[param_name]
+                # Otherwise, (re-)assign to paramInstanceDefaults
+                #    this insures that any params that were assigned as runtime on last execution are reset here
+                #    (unless they have been assigned another runtime value)
+                elif not runtime_sticky_assignment:
+                    self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
             self.runtime_params_in_use = True
         # Otherwise, reset paramsCurrent to paramInstanceDefaults
-        elif self.runtime_params_in_use:
+        elif self.runtime_params_in_use and not runtime_sticky_assignment:
             # Can't do the following since function could still be a class ref rather than abound method (see below)
             # self.paramsCurrent = self.paramInstanceDefaults
             for param_name in self.user_params:
@@ -746,8 +761,6 @@ class Component(object):
         if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
             # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
             self._validate_params(request_set=params, target_set=target_set, context=context)
-
-        # MODIFIED 11/27/16 END
 
 
     def assign_defaults(self,
@@ -848,7 +861,9 @@ class Component(object):
         if default_set is NotImplemented:
             default_set = self.paramInstanceDefaults
 
-        self.paramNames = self.paramInstanceDefaults.keys()
+        # MODIFIED 11/28/16 OLD:
+        # self.paramNames = self.paramInstanceDefaults.keys()
+        # MODIFIED 11/28/16 END
 
         # If assign_missing option is set,
         #  assign value from specified default set to any params missing from request set
@@ -972,7 +987,10 @@ class Component(object):
         :return none:
         """
 
-        pre_converted_variable = variable
+        if inspect.isclass(variable):
+            raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
+                                 format(variable.__name__, self.name))
+
         pre_converted_variable_class_default = self.variableClassDefault
 
         # FIX: SAYS "list of np.ndarrays" BELOW, WHICH WOULD BE A 2D ARRAY, BUT CONVERSION BELOW ONLY INDUCES 1D ARRAY

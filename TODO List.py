@@ -13,40 +13,18 @@
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
 # CLEANUP:
-# TEST:
-#         # MODIFIED 11/28/16 NEW:  TEST THAT THIS IS OK:
-#         self.paramInstanceDefaults = default_set
-#         # MODIFIED 11/28/16 END
-#
-# FIX: Add "import copy" to Utilities, then delete elsewhere
-# TEST: Component (line 464)
-#      paramInstanceDefaults used as target_set (??NOT SURE HOW USING IT AS default_set AND target_set WOULD WORK)
-# TEST/FIX: GET RID OF THIS:  Component (line 886):
-#             # MODIFIED 11/28/16 OLD:  ??GET RID OF THIS?
-#             self.paramNames = self.paramInstanceDefaults.keys()
-#             # MODIFIED 11/28/16 END
-#
-# TEST: RUN TIME SPECIFICATION IS NOT WORKING: SETTING VALUE OF PARAMETER STATE, BUT THAT IS GETTING IGNORED BY FUNCTION
-# FIX:  PUT IN CHECK THAT VARIABLE IS NEVER A CLASS!  AND IF IT IS A FUNCTION OBJECT, THAT IT RESOLVES TO A VALUE
-#
-# FIX: SEARCH FOR paramClassDefaults AND MAKE SURE THAT IS WHAT IS NEEDED, AND NOT paramInstanceDefaults
-# FIX / TEST: Component (line 344)
-#         # MODIFIED 11/28/16 OLD:  ??KEEP:
-#         self.paramClassDefaults = self.paramClassDefaults
-#         # MODIFIED 11/28/16 END
 
+# DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
+# IMPLEMENT: add sticky-assignment option for runtimeParams (make it a pref)
+
+# FIX: GET RID OF NotImplemented
+#
 # FIX: "MODIFIED RUNTIME_PARAMS":
-#       As it currenly stands ("NEW"), FUNCTION_PARAMS ARE NOT GETTING INSTANTIATED IF NONE ARE SPECIFIED IN FUNCTION'S
+#       As it currenly stands ("NEW" - 11/27/16):
+#       FUNCTION_PARAMS ARE NOT GETTING INSTANTIATED IF NONE ARE SPECIFIED IN FUNCTION'S
 #       CONSTRUCTOR OR AS RUNTIME PARAMS; (CRASHES IN STROOP SCRIPT) (FIX IN TRANSFER MECHANISM: CHANGE TO OLD)
 #       TEST instantiate_function TO SEE WHY IT'S PARAMS ARE NOT GETTING ASSIGNED AS FUNCTION_PARAMS
-#       TEST ALSO WHETHER, IF THIS IS GOTTEN TO WORK, WHETHER paramsCurrent RECOVERS ON NEXT EXECUTION
-#               AFTER AN ASSIGNMENT OF runtime_params ON PREVIOUS EXECUTION
-#
-#       ALTERNATIVE:  GO BACK TO OLD VERSION OF RUNTIME_PARAMS HANDLING:  BY ASSIGNIG DEDICATED RUNTIME PARAMS
-#                     THE PROBLEM WITH THIS IS THAT IF SOME runtime_paras ARE SET ON ONE EXECTION, BUT THEN A
-#                     DIFFERENT SET ARE ASSIGNED ON THE NEXT EXECUTION,
-#                     THE LAST ONES DON'T GET RESET TO THEIR paramsCurrent VALUES.
-#                     (PROBLEM IS IN TEST FOR runtime_params_in_use in Component.check_args)
+#       ALTERNATIVE:  GO BACK TO OLD VERSION OF RUNTIME_PARAMS HANDLING:  BY ASSIGNING DEDICATED RUNTIME PARAMS
 #
 # FIX: MAKE SURE THIS WORKS (in ParameterState):
 #         default_operation = self.prefs.functionRuntimeParamsPref[0]
