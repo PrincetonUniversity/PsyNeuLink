@@ -39,6 +39,7 @@ CONTENTS:
         multi_getattr
         np_array_less_that_2d
         convert_to_np_array
+        type_match
         get_value_from_array
         is_matrix
         underscore_to_camelCase
@@ -444,6 +445,19 @@ def convert_to_np_array(value, dimension):
     if 'U' in repr(value.dtype):
         raise UtilitiesError("{0} has non-numeric entries".format(value))
     return value
+
+def type_match(value, value_type):
+    if isinstance(value, value_type):
+        return value
+    if value_type is int:
+        return int(value)
+    if value_type is float:
+        return float(value)
+    if value_type is np.ndarray:
+        return np.array(value)
+    if value_type is None:
+        return None
+    raise UtilitiesError("Type of {} not recognized".format(value))
 
 def get_value_from_array(array):
     """Extract numeric value from array, preserving numeric type
