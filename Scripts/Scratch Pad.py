@@ -21,13 +21,35 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 
-transfer_mechanism_1 = TransferMechanism()
+# ORIGINAL:
+# transfer_mechanism_1 = TransferMechanism()
+# # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
+# # TM1_parameter_state = ParameterState(value=22)
+# transfer_mechanism_2 = TransferMechanism()
+# # transfer_mechanism_3 = TransferMechanism()
+# transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
+#
+# # my_process = process(pathway=[transfer_mechanism_1,
+# #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
+# #                                                                                     ModulationOperation.OVERRIDE)}}),
+# #                               transfer_mechanism_2])
+# # my_process.run(inputs=[[[0]]])
+#
+# # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
+# # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+# print(transfer_mechanism_3.execute(input=1.0,
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+#
+
+# MORE RECENT TESTING:
+transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
 # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
 # TM1_parameter_state = ParameterState(value=22)
-transfer_mechanism_2 = TransferMechanism()
+transfer_mechanism_2 = TransferMechanism(function=Logistic)
 # transfer_mechanism_3 = TransferMechanism()
 transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
 
+transfer_mechanism_1.execute()
 # my_process = process(pathway=[transfer_mechanism_1,
 #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
 #                                                                                     ModulationOperation.OVERRIDE)}}),
@@ -38,6 +60,8 @@ transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
 # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+print(transfer_mechanism_3.execute(input=1.0))
+
 
 
 # transfer_process = process(pathway = [transfer_mechanism_1])
