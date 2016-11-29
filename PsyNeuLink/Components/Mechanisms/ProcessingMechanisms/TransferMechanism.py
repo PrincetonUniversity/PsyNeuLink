@@ -274,7 +274,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'TransferCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
 
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
