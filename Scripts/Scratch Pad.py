@@ -47,7 +47,7 @@ transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
 # TM1_parameter_state = ParameterState(value=22)
 transfer_mechanism_2 = TransferMechanism(function=Logistic)
 # transfer_mechanism_3 = TransferMechanism()
-transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
+transfer_mechanism_3 = TransferMechanism(function=Linear(slope=2))
 
 transfer_mechanism_1.execute()
 # my_process = process(pathway=[transfer_mechanism_1,
@@ -59,7 +59,7 @@ transfer_mechanism_1.execute()
 # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
 print(transfer_mechanism_3.execute(input=1.0,
-                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.MULTIPLY)}}))
 print(transfer_mechanism_3.execute(input=1.0))
 
 
