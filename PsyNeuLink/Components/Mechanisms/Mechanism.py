@@ -1514,19 +1514,9 @@ class Mechanism_Base(Mechanism):
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
         for state_name, state in self.parameterStates.items():
 
-
             state.update(params=runtime_params, time_scale=time_scale, context=context)
+
             # Assign parameterState's value to parameter value in runtime_params
-            # FIX: THIS NEEDS TO LOOK AT PARAMETER_STATE_PARAMS
-
-            # # MODIFIED 11/28/16 OLD:
-            # if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
-            #     runtime_params[state_name] = state.value
-            # else:
-            #     self.paramsCurrent[state_name] = state.value
-
-            # MODIFIED 11/28/16 NEW:
-            # Use runtime param specification if provided
             if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
                 param = param_template = runtime_params
             # Otherwise use paramsCurrent
@@ -1541,7 +1531,6 @@ class Mechanism_Base(Mechanism):
 
             # Get its type
             param_type = type(param_template[state_name])
-
             # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
             if param_type is tuple:
                 param_type = type(param_template[state_name][0])
@@ -1550,7 +1539,6 @@ class Mechanism_Base(Mechanism):
             #    to runtime param or paramsCurrent (per above)
             param[state_name] = type_match(state.value, param_type)
 
-            # MODIFIED 11/28/16 END
 
     def _update_output_states(self, time_scale=None, context=None):
         """Assign items in self.value to each outputState in outputSates
