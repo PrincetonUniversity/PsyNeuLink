@@ -25,7 +25,8 @@ transfer_mechanism_1 = TransferMechanism()
 # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
 # TM1_parameter_state = ParameterState(value=22)
 transfer_mechanism_2 = TransferMechanism()
-transfer_mechanism_3 = TransferMechanism()
+# transfer_mechanism_3 = TransferMechanism()
+transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
 
 # my_process = process(pathway=[transfer_mechanism_1,
 #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
