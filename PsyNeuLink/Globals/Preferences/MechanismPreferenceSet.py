@@ -203,6 +203,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         self._runtime_param_modulation_pref = entry
         
 
+
     # runtimeParamStickyAssignment entry -------------------------------------------------------------------------------
 
     @property
@@ -213,7 +214,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpRuntimeParamModulationPref,
+        return self.get_pref_setting_for_level(kpRuntimeParamStickyAssignmentPref,
                                                self._runtime_param_sticky_assignment_pref.level)[0]
 
 

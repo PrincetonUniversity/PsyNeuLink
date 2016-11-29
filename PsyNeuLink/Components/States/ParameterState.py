@@ -544,11 +544,7 @@ class ParameterState(State_Base):
             return
 
         # Assign class-level pref as default operation
-        # # MODIFIED 11/27/16 OLD:
-        # default_operation = self.prefs.runtimeParamModulationPref
-        # MODIFIED 11/27/16 NEW:
-        default_operation = self.prefs.runtimeParamModulationPref[0]
-        # MODIFIED 11/27/16 END
+        default_operation = self.prefs.runtimeParamModulationPref
 
         # If there is a runtime param specified, could be a (parameter value, ModulationOperation) tuple
         try:

@@ -416,7 +416,11 @@ class ComponentPreferenceSet(PreferenceSet):
         """Returns owner's runtimeParamModulationPref
         :return:
         """
-        return self._runtime_param_modulation_pref
+        # return self._runtime_param_modulation_pref
+        return self.get_pref_setting_for_level(kpRuntimeParamModulationPref,
+                                               self._runtime_param_modulation_pref.level)[0]
+
+
 
     @runtimeParamModulationPref.setter
     def runtimeParamModulationPref(self, setting):
@@ -433,7 +437,9 @@ class ComponentPreferenceSet(PreferenceSet):
         """Returns owner's runtimeParamStickyAssignmentPref
         :return:
         """
-        return self._runtime_param_sticky_assignment_pref
+        # return self._runtime_param_sticky_assignment_pref
+        return self.get_pref_setting_for_level(kpRuntimeParamStickyAssignmentPref,
+                                        self._runtime_param_sticky_assignment_pref.level)[0]
 
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):

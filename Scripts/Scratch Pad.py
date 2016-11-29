@@ -58,6 +58,7 @@ transfer_mechanism_1.execute()
 
 # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+transfer_mechanism_3.parameterStates[SLOPE].function_object.runtimeParamStickyAssignmentPref = True
 print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
 # print(transfer_mechanism_3.execute(input=1.0))
