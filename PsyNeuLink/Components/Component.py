@@ -1624,6 +1624,14 @@ class Component(object):
     def runtimeParamModulationPref(self, setting):
         self.params.runtimeParamModulationPref = setting
 
+    @property
+    def runtimeParamStickyAssignmentPref(self):
+        return self.params.runtimeParamStickyAssignmentPref
+
+    @runtimeParamStickyAssignmentPref.setter
+    def runtimeParamStickyAssignmenPref(self, setting):
+        self.params.runtimeParamStickyAssignmenPref = setting
+
 
 COMPONENT_BASE_CLASS = Component
 
