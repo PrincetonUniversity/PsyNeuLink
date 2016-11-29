@@ -77,6 +77,7 @@ kwSeparator = ': '
 kwSeparatorBar = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
+NO_CONTEXT = "NO_CONTEXT"
 INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
