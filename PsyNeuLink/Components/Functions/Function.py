@@ -602,6 +602,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     componentName = kwLinearCombination
 
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
+
     # # Operation indicators
     # class Operation(Enum):
     #     SUM = 0
@@ -840,6 +848,15 @@ class Linear(TransferFunction): # ----------------------------------------------
     """
 
     componentName = kwLinear
+
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'LinearClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
+
 
     variableClassDefault = [0]
 
