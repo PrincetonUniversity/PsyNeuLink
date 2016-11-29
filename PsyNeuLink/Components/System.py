@@ -1245,8 +1245,8 @@ class System_Base(System):
         """
 
         if not context:
-            context = kwExecuting + self.name
-        report_system_output = self.prefs.reportOutputPref and context and kwExecuting in context
+            context = EXECUTING + self.name
+        report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if report_system_output:
             report_process_output = any(process.reportOutputPref for process in self.processes)
 
@@ -1349,7 +1349,7 @@ class System_Base(System):
 
         # FIX: NEED TO CHECK PHASE HERE
         # Don't execute learning for simulation runs
-        if not kwEVCSimulation in context:
+        if not EVC_SIMULATION in context:
             for process in self.processes:
                 if process.learning and process._learning_enabled:
                     process._execute_learning(context=context)
@@ -1362,7 +1362,7 @@ class System_Base(System):
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not kwEVCSimulation in context and self.enable_controller:
+        if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
                     self.controller.execute(time_scale=TimeScale.TRIAL,

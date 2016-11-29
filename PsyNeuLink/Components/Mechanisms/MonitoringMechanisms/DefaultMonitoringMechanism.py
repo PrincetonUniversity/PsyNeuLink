@@ -347,7 +347,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         # #endregion
 
         if not context:
-            context = kwExecuting + self.name
+            context = EXECUTING + self.name
 
         self._check_args(variable=variable, params=params, context=context)
 

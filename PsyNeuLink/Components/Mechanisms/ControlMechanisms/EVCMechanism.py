@@ -1065,7 +1065,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.EVCpolicies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace('EXECUTING', '{0} {1}'.format(self.name, kwEVCSimulation))
+        context = context.replace(EXECUTING, '{0} {1}'.format(self.name, EVC_SIMULATION))
 
         if self.prefs.reportOutputPref:
             progress_bar_rate_str = ""

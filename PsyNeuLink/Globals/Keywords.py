@@ -79,7 +79,7 @@ kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
-kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
+EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
@@ -317,7 +317,7 @@ OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
 COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
-kwEVCSimulation = 'SIMULATING'
+EVC_SIMULATION = 'SIMULATING'
 
 #endregion
 

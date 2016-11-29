@@ -785,8 +785,8 @@ class ControlProjection(Projection_Base):
 
         # If context is consistent with log_pref:
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (log_pref is LogLevel.EXECUTION and kwExecuting in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (kwExecuting in context))):
+                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
+                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context))):
             # record info in log
 
 # FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING

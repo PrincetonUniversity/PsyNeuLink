@@ -1243,7 +1243,7 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        context = context or  kwExecuting + ' ' + append_type_to_name(self)
+        context = context or  EXECUTING + ' ' + append_type_to_name(self)
 
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
@@ -1308,15 +1308,44 @@ class Mechanism_Base(Mechanism):
                         target_set=runtime_params)
         #endregion
 
+
+
+
+        # #region UPDATE INPUT STATE(S)
+        # # Executing process or system, update inputStates
+        # if input is None:
+        #     self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        # else:
+        # # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
+        #     self._assign_input(input)
+        #
+        # #endregion
+
         #region UPDATE INPUT STATE(S)
-        # Executing process or system, update inputStates
-        if input is None:
+        # Executing or simulating process or system, get input by updating inputStates
+        if input is None and (EXECUTING in context or EVC_SIMULATION in context):
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
-        else:
+
+        # MODIFIED 11/27/16 OLD:
+        # else:
+        # # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
+        #     self._assign_input(input)
+        # MODIFIED 11/27/16 NEW:
         # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
+        else:
+            if context is NO_CONTEXT:
+                context = EXECUTING + ' ' + append_type_to_name(self)
+            if input is None:
+                input = self.variableClassDefault
             self._assign_input(input)
+        # MODIFIED 11/27/16 END
 
         #endregion
+
+
+
+
+
 
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
@@ -1366,7 +1395,7 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region REPORT EXECUTION
-        if self.prefs.reportOutputPref and context and kwExecuting in context:
+        if self.prefs.reportOutputPref and context and EXECUTING in context:
             self._report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
 
         #endregion
