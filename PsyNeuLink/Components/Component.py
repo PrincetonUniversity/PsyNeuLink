@@ -726,7 +726,6 @@ class Component(object):
         # If params have been passed, treat as runtime params and assign to paramsCurrent
         #   (relabel params as runtime_params for clarity)
         runtime_params = params
-        runtime_sticky_assignment = False
 
         if runtime_params and not runtime_params is NotImplemented:
             for param_name in self.user_params:
@@ -741,11 +740,11 @@ class Component(object):
                 # Otherwise, (re-)assign to paramInstanceDefaults
                 #    this insures that any params that were assigned as runtime on last execution are reset here
                 #    (unless they have been assigned another runtime value)
-                elif not runtime_sticky_assignment:
+                elif not self.runtimeParamStickyAssignmentPref:
                     self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
             self.runtime_params_in_use = True
         # Otherwise, reset paramsCurrent to paramInstanceDefaults
-        elif self.runtime_params_in_use and not runtime_sticky_assignment:
+        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
             # Can't do the following since function could still be a class ref rather than abound method (see below)
             # self.paramsCurrent = self.paramInstanceDefaults
             for param_name in self.user_params:
@@ -759,7 +758,6 @@ class Component(object):
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
-            # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
 
@@ -1618,19 +1616,19 @@ class Component(object):
 
     @property
     def runtimeParamModulationPref(self):
-        return self.params.runtimeParamModulationPref
+        return self.prefs.runtimeParamModulationPref
 
     @runtimeParamModulationPref.setter
     def runtimeParamModulationPref(self, setting):
-        self.params.runtimeParamModulationPref = setting
+        self.prefs.runtimeParamModulationPref = setting
 
     @property
     def runtimeParamStickyAssignmentPref(self):
-        return self.params.runtimeParamStickyAssignmentPref
+        return self.prefs.runtimeParamStickyAssignmentPref
 
     @runtimeParamStickyAssignmentPref.setter
-    def runtimeParamStickyAssignmenPref(self, setting):
-        self.params.runtimeParamStickyAssignmenPref = setting
+    def runtimeParamStickyAssignmentPref(self, setting):
+        self.prefs.runtimeParamStickyAssignmentPref = setting
 
 
 COMPONENT_BASE_CLASS = Component
