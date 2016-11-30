@@ -1,5 +1,7 @@
-Default Control Mechanism
-=========================
+DefaultControlMechanism
+=======================
+
+[DOCUMENTATION COMING...]
 
 .. automodule:: DefaultControlMechanism
    :members:

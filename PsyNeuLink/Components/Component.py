@@ -7,9 +7,51 @@
 
 
 # ********************************************** Component  ************************************************************
-#
+
 
 """  COMPONENT MODULE
+
+**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
+
+COMMENT:
+.. _Component_Specifying_Functions_and_Parameters:
+
+Specifying Functions and Their Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In general, the function of an object can be specified in two ways:
+* using its constructor as the value of the object's ``function`` argument, as in the example below::
+
+     EXAMPLE HERE
+
+* using the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary for the ``params`` argument of the object,
+  as in the example below::
+
+     EXAMPLE HERE
+
+EXPLAIN ABOUT "HARDCODED" FUNCTIONS (ONLY ONE STANDARD ONE SUPPORTED, ITS PARAMS APPEAR AS ARGUMENTS FOR THE OBJECT
+IN ITS CONSTRUCTOR) VS. THOSE FOR WHICH THE FUNCTION IS AN ARGUMENT (SEVERAL POSSIBLE FUNCTIONS TO CHOOSE FROM,
+THE ARGUMENTS OF WHICH MAY VARY, AND THUS MUST BE SPECIFID WITHIN ITS CONSTRUCTOR OR THE PARAMS DICT), AS EXPLAINED
+BELOW.
+
+Accordingly, parameters of a :keyword:`function` can be specified in two ways:
+
+* in the **constructor** for the function (when this is used as the value of a ``function`` argument of the object,
+  as in the example below::
+
+    my_mechanism = SomeMechanism(function=SomeFunction(SOME_PARAM=1, SOME_OTHER_PARAM=2)
+
+* in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary used for the ``params`` argument of the object,
+  as in the example below::
+
+    my_mechanism = SomeMechanism(function=SomeFunction
+                                 params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
+
+- ??WHY EVER USE FUNCTION AND FUNCTION_PARAMS:  TO CUSTOMIZE/OVERRIDE HARD-CODED FUNCTIONS OR THEIR PARAMETERS
+- SEE :ref:`ParameterState_Specifying_Parameters` for details of parameter specification.
+COMMENT
+
 
 This module defines the Component abstract class
 
@@ -23,9 +65,9 @@ It also contains:
             [PDP]
     Projection
         types:
-            Mapping
-            ControlSignal
-            LearningSignal
+            MappingProjection
+            ControlProjection
+            LearningProjection
     Function
 
 """
@@ -125,6 +167,7 @@ class Component(object):
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
          - function_object (Function): the object to which function belongs (and that defines it's parameters)
          - output (value: self.value)
+         - outputValue (return from self.execute: concatenated set of values of outputStates)
          - class and instance variable defaults
          - class and instance param defaults
         The components's execute method (<subclass>.execute is the component's primary method
@@ -189,8 +232,8 @@ class Component(object):
         + className
         + suffix - " " + className (used to create subclass and instance names)
         + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
-        + componentType - type of component within a category (e.g., transfer, distribution, mapping, controlSignal,
-        etc.)
+        + componentType - type of component within a category
+                             (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
         + requiredParamClassDefaultTypes - dict of param names and types that all subclasses of Component must
         implement;
 
@@ -208,6 +251,7 @@ class Component(object):
         + variableClassDefault (value)
         + variableClassDefault_np_info (ndArrayInfo)
         + variableInstanceDefault (value)
+        + _variable_not_specified
         + variable (value)
         + variable_np_info (ndArrayInfo)
         + function (method)
@@ -219,6 +263,7 @@ class Component(object):
         + paramsCurrent
         # + parameter_validation
         + user_params
+        + runtime_params_in_use
         + recording
 
     Instance methods:
@@ -290,8 +335,12 @@ class Component(object):
         context = context + INITIALIZING + ": " + kwFunctionInit
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
-        self.variableInstanceDefault = NotImplemented
-        self.paramClassDefaults = self.paramClassDefaults
+        # # MODIFIED  OLD:
+        # self.variableInstanceDefault = NotImplemented
+        # # MODIFIED  NEW:
+        self.variableInstanceDefault = None
+        # MODIFIED  END
+        # self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
         self.componentName = self.componentType
@@ -417,6 +466,7 @@ class Component(object):
         #region SET CURRENT VALUES OF VARIABLE AND PARAMS
         self.variable = self.variableInstanceDefault
         self.paramsCurrent = self.paramInstanceDefaults
+        self.runtime_params_in_use = False
         #endregion
 
         #region VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
@@ -602,6 +652,11 @@ class Component(object):
         if params_arg:
             try:
                 params[FUNCTION_PARAMS].update(params_arg[FUNCTION_PARAMS])
+                # This is needed so that when params is updated below,
+                #     it updates with the full and updated params[FUNCTION_PARAMS] (i.e, a complete set)
+                #     and not just whichever ones were in params_arg[FUNCTION_PARAMS]
+                #    (i.e., if the user just specified a subset)
+                params_arg[FUNCTION_PARAMS].update(params[FUNCTION_PARAMS])
             except KeyError:
                 pass
             params.update(params_arg)
@@ -618,11 +673,20 @@ class Component(object):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def _check_args(self, variable, params=NotImplemented, target_set=NotImplemented, context=None):
-        """Instantiate variable (if missing or callable) and validate variable and params if PARAM_VALIDATION is set
+    def _check_args(self, variable, params=NotImplemented, target_set=None, context=None):
+        """validate variable and params, instantiate variable (if necessary) and assign any runtime params
 
-        Called by execute methods to validate variable and params
-        Can be suppressed by turning parameter_validation attribute off
+        Called by functions to validate variable and params
+        Validation can be suppressed by turning parameter_validation attribute off
+        target_set is a params dictionary to which params should be assigned;
+           otherwise, they are assigned to paramsCurrent;
+
+        Does the following:
+        - instantiate variable (if missing or callable)
+        - validate variable if PARAM_VALIDATION is set
+        - assign runtime params to paramsCurrent
+        - validate params if PARAM_VALIDATION is set
+
 
         :param variable: (anything but a dict) - variable to validate
         :param params: (dict) - params to validate
@@ -638,7 +702,7 @@ class Component(object):
         if callable(variable):
             variable = variable()
 
-        # If parameter_validation is set and the function was called with a variable
+        # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
             if context:
                 context = context + kwSeparatorBar + kwFunctionCheckArgs
@@ -649,14 +713,55 @@ class Component(object):
             self.variable = variable
 
         # If target_set is not specified, use paramsCurrent
-        if target_set is NotImplemented:
+        if target_set is None:
             target_set = self.paramsCurrent
 
-        # If parameter_validation is set, the function was called with params,
-        #   and they have changed, then validate requested values and assign to target_set
+        # # MODIFIED 11/27/16 OLD:
+        # # If parameter_validation is set, the function was called with params,
+        # #   and they have changed, then validate requested values and assign to target_set
+        # if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        #     # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
+        #     self._validate_params(request_set=params, target_set=target_set, context=context)
+
+        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        #   (relabel params as runtime_params for clarity)
+        runtime_params = params
+
+        if runtime_params and not runtime_params is NotImplemented:
+            for param_name in self.user_params:
+                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                #    At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name is FUNCTION:
+                    continue
+                # If param is specified in runtime_params, then assign it
+                if param_name in runtime_params:
+                    self.paramsCurrent[param_name] = runtime_params[param_name]
+                # Otherwise, (re-)assign to paramInstanceDefaults
+                #    this insures that any params that were assigned as runtime on last execution are reset here
+                #    (unless they have been assigned another runtime value)
+                elif not self.runtimeParamStickyAssignmentPref:
+                    self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+            self.runtime_params_in_use = True
+        # Otherwise, reset paramsCurrent to paramInstanceDefaults
+        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
+            # Can't do the following since function could still be a class ref rather than abound method (see below)
+            # self.paramsCurrent = self.paramInstanceDefaults
+            for param_name in self.user_params:
+                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                #    At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name is FUNCTION:
+                    continue
+                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+            self.runtime_params_in_use = False
+
+        # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
-            # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
             self._validate_params(request_set=params, target_set=target_set, context=context)
+
 
     def assign_defaults(self,
                         variable=NotImplemented,
@@ -699,9 +804,13 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        if not variable is NotImplemented:
+        # MODIFIED 11/22/16 OLD:
+        # if not variable is NotImplemented:
+        # MODIFIED 11/22/16 NEW:
+        if not variable is None and not variable is NotImplemented:
+        # MODIFIED 11/22/16 END
             if isinstance(variable,dict):
-                raise ComponentError("Dictionary passed as variable; probably trying to use param set as first argument")
+                raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
         if request_set and not request_set is NotImplemented:
             if not isinstance(request_set, dict):
                 raise ComponentError("requested parameter set must be a dictionary")
@@ -752,7 +861,9 @@ class Component(object):
         if default_set is NotImplemented:
             default_set = self.paramInstanceDefaults
 
-        self.paramNames = self.paramInstanceDefaults.keys()
+        # MODIFIED 11/28/16 OLD:
+        # self.paramNames = self.paramInstanceDefaults.keys()
+        # MODIFIED 11/28/16 END
 
         # If assign_missing option is set,
         #  assign value from specified default set to any params missing from request set
@@ -779,7 +890,7 @@ class Component(object):
             #     C) no default function, default functionParams
             #         example: DDM
             #     D) no default function, no default functionParams
-            #         example: System, Process, MonitoringMechanism, WeightedError
+            #         example: System, Process, MonitoringMechanism, WeightedErrorMechanism
 
             self.assign_default_kwFunctionParams = True
 
@@ -865,7 +976,7 @@ class Component(object):
         Perform top-level type validation of variable against the variableClassDefault;
             if the type is OK, the value is assigned to self.variable (which should be used by the function)
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
-        It is called only if the parameter_validation attribute is True (which it is by default)
+        It is called only if the parameter_validation attribute is :keyword:`True` (which it is by default)
 
         IMPLEMENTATION NOTES:
            * future versions should add hierarchical/recursive content (e.g., range) checking
@@ -876,7 +987,10 @@ class Component(object):
         :return none:
         """
 
-        pre_converted_variable = variable
+        if inspect.isclass(variable):
+            raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
+                                 format(variable.__name__, self.name))
+
         pre_converted_variable_class_default = self.variableClassDefault
 
         # FIX: SAYS "list of np.ndarrays" BELOW, WHICH WOULD BE A 2D ARRAY, BUT CONVERSION BELOW ONLY INDUCES 1D ARRAY
@@ -884,9 +998,14 @@ class Component(object):
         # Convert variableClassDefault to list of np.ndarrays
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
 
-        # If variable is not specified, then assign to (np-converted version of) variableClassDefault and return
+        # If variable is not specified, then:
+        #    - assign to (??now np-converted version of) variableClassDefault
+        #    - mark as not having been specified
+        #    - return
+        self._variable_not_specified = False
         if variable is None or variable is NotImplemented:
             self.variable = self.variableClassDefault
+            self._variable_not_specified = True
             return
 
         # Otherwise, do some checking on variable before converting to np.ndarray
@@ -921,7 +1040,7 @@ class Component(object):
 
         self.variable = variable
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign validated values to targets,
 
         This performs top-level type validation of params against the paramClassDefaults specifications:
@@ -932,7 +1051,7 @@ class Component(object):
             - otherwise, an exception is raised
 
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
-        It is called only if the parameter_validation attribute is True (which it is by default)
+        It is called only if the parameter_validation attribute is :keyword:`True` (which it is by default)
 
         IMPLEMENTATION NOTES:
            * future versions should add recursive and content (e.g., range) checking
@@ -944,7 +1063,6 @@ class Component(object):
         """
 
         for param_name, param_value in request_set.items():
-
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             try:
                 self.paramClassDefaults[param_name]
@@ -1052,7 +1170,7 @@ class Component(object):
                                 #     target_set[param_name][entry_name] = entry_value
 
 
-                elif not target_set is NotImplemented:
+                elif not target_set is None and not target_set is NotImplemented:
                     target_set[param_name] = param_value
 
             # Parameter is not a valid type
@@ -1294,7 +1412,7 @@ class Component(object):
                                 from PsyNeuLink.Components.States.ParameterState import ParameterState
                                 function_param_specs[param_name] =  param_spec.value
                             if (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-                                    (param_spec[1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+                                    (param_spec[1] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
                                          isinstance(param_spec[1], Projection) or
                                          (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
                                 ):
@@ -1357,6 +1475,10 @@ class Component(object):
                                          self.paramsCurrent[FUNCTION].__self__.componentName,
                                          self.name,
                                          self.function.__self__.name))
+
+        # # MODIFIED 11/27/16 NEW:
+        # self.paramInstanceDefaults[FUNCTION] = self.function
+        # # MODIFIED 11/27/16 END
 
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
@@ -1495,12 +1617,20 @@ class Component(object):
         self.prefs.logPref = setting
 
     @property
-    def functionRuntimeParamsPref(self):
-        return self.params.functionRuntimeParamsPref
+    def runtimeParamModulationPref(self):
+        return self.prefs.runtimeParamModulationPref
 
-    @functionRuntimeParamsPref.setter
-    def functionRuntimeParamsPref(self, setting):
-        self.params.functionRuntimeParamsPref = setting
+    @runtimeParamModulationPref.setter
+    def runtimeParamModulationPref(self, setting):
+        self.prefs.runtimeParamModulationPref = setting
+
+    @property
+    def runtimeParamStickyAssignmentPref(self):
+        return self.prefs.runtimeParamStickyAssignmentPref
+
+    @runtimeParamStickyAssignmentPref.setter
+    def runtimeParamStickyAssignmentPref(self, setting):
+        self.prefs.runtimeParamStickyAssignmentPref = setting
 
 
 COMPONENT_BASE_CLASS = Component
@@ -1513,7 +1643,7 @@ def get_function_param(param):
     if isinstance(param, ParamValueProjection):
         value =  param.value
     elif (isinstance(param, tuple) and len(param) is 2 and
-            (param[1] in {MAPPING, CONTROL_SIGNAL, LEARNING_SIGNAL} or
+            (param[1] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
                  isinstance(param[1], Projection) or
                  (inspect.isclass(param[1]) and issubclass(param[1], Projection)))
           ):

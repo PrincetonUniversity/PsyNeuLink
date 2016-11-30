@@ -77,9 +77,10 @@ kwSeparator = ': '
 kwSeparatorBar = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
+NO_CONTEXT = "NO_CONTEXT"
 INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
-kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
+EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
@@ -107,7 +108,7 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 #region --------------------------------------------    TIME SCALE    --------------------------------------------------
 
 kwCentralClock = "CentralClock"
-kwTimeScale = "Time Scale"
+TIME_SCALE = "time_scale"
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
@@ -187,9 +188,9 @@ OUTPUT_STATE = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
-MAPPING = "Mapping"
-CONTROL_SIGNAL = "ControlSignal"
-LEARNING_SIGNAL = "LearningSignal"
+MAPPING_PROJECTION = "MappingProjection"
+CONTROL_PROJECTION = "ControlProjection"
+LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
@@ -213,7 +214,7 @@ kwComparatorMechanism = "ComparatorMechanism"
 kwDDM = "DDM"
 kwLinearMechanism = "LinearMechanism"
 kwSigmoidLayer = "SigmoidLayer"
-kwAdaptiveIntegrator = "AdaptiveIntegrator"
+kwIntegratorMechanism = "IntegratorMechanism"
 
 # Function:
 kwContradiction = "Contradiction"
@@ -305,19 +306,19 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
-MONITORED_OUTPUT_STATES = "monitored_output_states"
+MONITOR_FOR_CONTROL = "monitor_for_control"
 kwPredictionMechanism = "PredictionMechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
-CONTROL_SIGNAL_PROJECTIONS = 'ControlSignalProjections'
+CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
 COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
-kwEVCSimulation = 'SIMULATING'
+EVC_SIMULATION = 'SIMULATING'
 
 #endregion
 
@@ -347,16 +348,16 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
 PROJECTION_PARAMS = "ProjectionParams"
-MAPPING_PARAMS = "MappingParams"
-CONTROL_SIGNAL_PARAMS = "ControlSignalParams"
-kwLearningSignalParams = 'LearningSignalParams'
+MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
+CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
+LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
 PROJECTION_SENDER = 'projectionSender'
 kwSenderArg = 'sender'
 PROJECTION_SENDER_VALUE =  "projectionSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
-MONITOR_FOR_LEARNING = 'MonitorForLearning'
+MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 
 #endregion
@@ -369,8 +370,9 @@ EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
 LINEAR = 'linear'
-SCALED = 'scaled'
-TIME_AVERAGED = 'time_averaged'
+CONSTANT = 'constant'
+SIMPLE = 'scaled'
+ADAPTIVE = 'apaptive'
 
 
 

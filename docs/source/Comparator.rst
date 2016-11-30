@@ -1,5 +1,0 @@
-Comparator
-==========
-
-.. automodule:: Comparator
-	:members:

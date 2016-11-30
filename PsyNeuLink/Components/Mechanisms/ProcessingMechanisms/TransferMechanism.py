@@ -6,13 +6,13 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *********************************************  Transfer *******************************************************
+# ********************************************  TransferMechanism ******************************************************
 
 """
 ..
     Sections:
       * :ref:`Transfer_Overview`
-      * :ref:`Transfer_Creating_A_Transfer_Mechanism`
+      * :ref:`Transfer_Creation`
       * :ref:`Transfer_Execution`
       * :ref:`Transfer_Class_Reference`
 
@@ -21,33 +21,44 @@
 Overview
 --------
 
-Transfer mechanisms transform their input using a simple mathematical function.  The input can be a single scalar
-value or an an array (list or 1d np.array).  The following standard functions are provided:
-:class:`Linear`, :class:`Logistic` and :class:`Exponential` (see :doc:`Function`).  Custom functions can
-also be specified so long as they return a numeric value or list or np.ndarray of numeric values.
+A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar
+value or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set
+of PsyNeuLink Functions (:any:`Linear`, :anay:`Exponential` or :any:`Logistic`), or specified using a custom function.
 
 
-.. _Transfer_Creating_A_Transfer_Mechanism:
+.. _Transfer_Creation:
 
-Creating a Transfer Mechanism
+Creating a TransferMechanism
 -----------------------------
 
-A Transfer Mechanism can be instantiated either directly, by calling its constructor, or using the :class:`mechanism`
-function and specifying Transfer as its ``mech_spec`` argument.  Its function is specified in the ``function``
-argument, which can be simply the name of the class (first example below), or a call to the class which can
-include arguments specifying the function's parameters (second example)::
+A TransferMechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
+function and specifying "TransferMechanism" as its ``mech_spec`` argument.  Its function is specified in the
+``function`` argument, which can be simply the name of the class (first example below), or a call to its constructor
+which can include arguments specifying the function's parameters (second example)::
 
-    my_linear_transfer_mechanism = Transfer(function=Linear)
-    my_logistic_transfer_mechanism = Transfer(function=Logistic(gain=1.0, bias=-4)
+    my_linear_transfer_mechanism = TransferMechanism(function=Linear)
+    my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
 In addition to function-specific parameters, ``noise`` and ``rate`` parameters can be specified (see Execution below).
+
+
+.. _Transfer_Structure:
+
+Structure
+---------
+
+A TransferMechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its ``function``.
+The ``function`` can be selected from one of three standard PsyNeuLink :doc:`Functions`: :any:`Linear`, :any:`Logistic`
+or :any:`Exponential`; or a custom function can be specified, so long as it returns a numeric value or list or
+np.ndarray of numeric values.  A TransferMechanism has three outputStates, described under Execution  below.
+
 
 .. _Transfer_Execution:
 
 Execution
 ---------
 
-When a Transfer mechanism is executed, it transforms its input using the specified function and the following
+When a TransferMechanism is executed, it transforms its input using the specified function and the following
 parameters (in addition to those specified for the function):
 
 If the ``noise`` parameter is specified, it is applied element-wise to the input before transforming it.
@@ -55,25 +66,19 @@ If the ``rate`` parameter is specified and ``time_scale`` is :keyword:`TimeScale
 exponentially time-averaged before transforming it (higher value specifies faster rate); if ``time_scale`` is
 :keyword:`TimeScale.TIME_STEP` the ``rate`` parameter is ignored.
 If the ``range`` parameter is specified, all elements of the output are capped by the lower and upper values of
-the range.
-After each execution of the mechanism:
-    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`RESULT` outputState,
-      and to the 1st item of the mechanism's ``outputValue`` attribute;
+the range.  After each execution of the mechanism:
+
+.. _Transfer_Results:
+
+    * **result** is assigned to the mechanism's ``value`` attribute, the value of its :keyword:`TRANSFER_RESULT`
+      outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
-    * **mean** of the result is assigned to the value of the mechanism's :keyword:`RESULT_MEAN` outputState,
+    * **mean** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_MEAN` outputState,
       and to the 2nd item of the mechanism's ``outputValue`` attribute;
     ..
-    * **variance** of the result is assigned to the value of the mechanism's :keyword:`RESULT_VARIANCE` outputState,
+    * **variance** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_VARIANCE` outputState,
       and to the 3rd item of the mechanism's ``outputValue`` attribute.
 
-
-COMMENT:
-    ?? IS THIS TRUE, OR JUST A CARRYOVER FROM DDM??
-    Notes:
-    * Transfer handles "runtime" parameters (specified in call to function) differently than standard functions:
-        any specified params are kept separate from paramsCurrent (Which are not overridden)
-        if the FUNCTION_RUN_TIME_PARMS option is set, they are added to the current value of the
-            corresponding ParameterState;  that is, they are combined additively with controlSignal output
 COMMENT
 
 .. _Transfer_Class_Reference:
@@ -87,22 +92,22 @@ Class Reference
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.Functions.Function import Linear
 
-# Transfer parameter keywords:
+# TransferMechanism parameter keywords:
 RANGE = "range"
 INITIAL_VALUE = 'initial_value'
 
-# Transfer outputs (used to create and name outputStates):
-RESULT = "result"
-RESULT_MEAN = "result_mean "
-RESULT_VARIANCE = "result_variance"
+# TransferMechanism outputs (used to create and name outputStates):
+TRANSFER_RESULT = "transfer_result"
+TRANSFER_MEAN = "transfer_mean "
+TRANSFER_VARIANCE = "transfer_variance"
 
-# Transfer output indices (used to index output values):
+# TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
     RESULT = ()
-    RESULT_MEAN = ()
-    RESULT_VARIANCE = ()
+    MEAN = ()
+    VARIANCE = ()
 
-# Transfer default parameter values:
+# TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
@@ -118,9 +123,9 @@ class TransferError(Exception):
         return repr(self.error_value)
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
-class Transfer(ProcessingMechanism_Base):
+class TransferMechanism(ProcessingMechanism_Base):
     """
-    Transfer(                    \
+    TransferMechanism(                    \
     default_input_value=None,    \
     function=Linear,             \
     initial_value=None,          \
@@ -132,21 +137,22 @@ class Transfer(ProcessingMechanism_Base):
     name=None,                   \
     prefs=None)
 
-    Implements Transfer subclass of Mechanism
+    Implements TransferMechanism subclass of Mechanism.
 
     COMMENT:
         Description
         -----------
-            Transfer is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the Function class
+            TransferMechanism is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the
+                Function class
             It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
         Class attributes
         ----------------
-            + componentType (str): Transfer
+            + componentType (str): TransferMechanism
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Transfer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {kwTimeScale: TimeScale.TRIAL}
+            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
             + paramNames (dict): names as above
 
         Class methods
@@ -155,55 +161,55 @@ class Transfer(ProcessingMechanism_Base):
 
         MechanismRegistry
         -----------------
-            All instances of Transfer are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
+            All instances of TransferMechanism are registered in MechanismRegistry, which maintains an
+              entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    default_input_value : number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+        also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
+        of the mechanism.
 
     function : TransferFunction : default Linear
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
 
-    function_params : Dict[str, value]
-        Contains one entry for each parameter of the mechanism's function.
-        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
-
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        Specifies starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
+        specifies the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
-        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian.
+        a stochastically-sampled value added to the output of the ``function``.
+        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         If it is a function, it must return a scalar value.
 
     rate : float : default 1.0
-        Time constant for exponential time averaging of input
+        the time constant for exponential time averaging of input
         when the mechanism is executed at the time_step time scale:
         input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
 
     range : Optional[Tuple[float, float]]
-        Specifies the allowable range of the result: the first value specifies the minimum allowable value
+        specifies the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that execeeds minimum or maximum
         is set to the corresponding value.
 
     params : Optional[Dict[param keyword, param value]]
-        Dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        Determines whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
         This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
 
-    name : str : default Transfer-<index>
-        String used for the name of the mechanism.
+    name : str : default TransferMechanism-<index>
+        a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-        Preference set for process.
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
@@ -213,54 +219,76 @@ class Transfer(ProcessingMechanism_Base):
 
     Returns
     -------
-    instance of Transfer mechanism : Transfer
+    instance of TransferMechanism : TransferMechanism
 
 
     Attributes
     ----------
 
     variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        Input to mechanism's function.
+        the input to mechanism's ``function``.
 
     function : Function :  default Linear
-        Function used to transform the input.
+        the function used to transform the input.
 
-    value : List[value]
-        Output of function.
+    COMMENT:
+       THE FOLLOWING IS THE CURRENT ASSIGNMENT
+    COMMENT
 
-    name : str : default Transfer-<index>
-        Name of the mechanism.
+    value : List[1d np.array, float, float]
+        same as ``outputValue``.
+
+    COMMENT:
+        CORRECTED:
+        value : 1d np.array
+            the output of ``function``;  also assigned to ``value`` of the :keyword:`TRANSFER_RESULT` outputState
+            and the first item of ``outputValue``.
+    COMMENT
+
+    outputValue : List[1d np.array, float, float]
+        a list with the following items:
+        * **result** of the ``function`` calculation (value of :keyword:`TRANSFER_RESULT` outputState);
+        * **mean** of the result (``value`` of :keyword:`TRANSFER_MEAN` outputState)
+        * **variance** of the result (``value`` of :keyword:`TRANSFER_VARIANCE` outputState)
+
+    time_scale :  TimeScale : defaul tTimeScale.TRIAL
+        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+
+    name : str : default TransferMechanism-<index>
+        the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        Preference set for mechanism.
+        the PreferenceSet for mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
 
     """
 
-    componentType = "Transfer"
+    componentType = "TransferMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'TransferCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
 
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
 
-    # Transfer parameter and control signal assignments):
+    # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        # kwTimeScale: TimeScale.TRIAL,
+        # TIME_SCALE: TimeScale.TRIAL,
         INPUT_STATES: None,
-        OUTPUT_STATES:[RESULT,
-                       RESULT_MEAN,
-                       RESULT_VARIANCE]
+        OUTPUT_STATES:[TRANSFER_RESULT,
+                       TRANSFER_MEAN,
+                       TRANSFER_VARIANCE]
     })
 
     paramNames = paramClassDefaults.keys()
@@ -298,7 +326,7 @@ class Transfer(ProcessingMechanism_Base):
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
 
-        super(Transfer, self).__init__(variable=default_input_value,
+        super(TransferMechanism, self).__init__(variable=default_input_value,
                                        params=params,
                                        name=name,
                                        prefs=prefs,
@@ -372,27 +400,27 @@ class Transfer(ProcessingMechanism_Base):
 
         # Map indices of output to outputState(s)
         self._outputStateValueMapping = {}
-        self._outputStateValueMapping[RESULT] = Transfer_Output.RESULT.value
-        self._outputStateValueMapping[RESULT_MEAN] = Transfer_Output.RESULT_MEAN.value
-        self._outputStateValueMapping[RESULT_VARIANCE] = Transfer_Output.RESULT_VARIANCE.value
+        self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
+        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
+        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
 
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
-        """Execute Transfer function and return transform of input
+        """Execute TransferMechanism function and return transform of input
 
-        Execute Transfer function on input, and assign to outputValue:
+        Execute TransferMechanism function on input, and assign to outputValue:
             - Activation value for all units
             - Mean of the activation values across units
             - Variance of the activation values across units
         Return:
-            value of input transformed by transfer function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.RESULT_MEAN].value
-            variance of items in RESULT outputState[TransferOuput.RESULT_VARIANCE].value
+            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
+            mean of items in RESULT outputState[TransferOuput.MEAN].value
+            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
 
         Arguments:
 
@@ -402,7 +430,7 @@ class Transfer(ProcessingMechanism_Base):
             + NOISE (float)
             + RATE (float)
             + RANGE ([float, float])
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -441,7 +469,7 @@ class Transfer(ProcessingMechanism_Base):
         #endregion
 
 
-        #region EXECUTE TRANSFER FUNCTION ------------------------------------------------------------------------------
+        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
         # FIX: NOT UPDATING self.previous_input CORRECTLY
 
@@ -451,11 +479,11 @@ class Transfer(ProcessingMechanism_Base):
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
         else:
-            raise MechanismError("time_scale not specified for Transfer")
+            raise MechanismError("time_scale not specified for TransferMechanism")
 
         self.previous_input = current_input
 
-        # Apply transfer function
+        # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=params)
 
         if range:
@@ -467,8 +495,8 @@ class Transfer(ProcessingMechanism_Base):
         variance = np.var(output_vector)
 
         self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        self.outputValue[Transfer_Output.RESULT_MEAN.value] = mean
-        self.outputValue[Transfer_Output.RESULT_VARIANCE.value] = variance
+        self.outputValue[Transfer_Output.MEAN.value] = mean
+        self.outputValue[Transfer_Output.VARIANCE.value] = variance
 
         return self.outputValue
         #endregion
@@ -496,6 +524,6 @@ class Transfer(ProcessingMechanism_Base):
     #
     #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
     #     """
-    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for Transfer
+    #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
 
 

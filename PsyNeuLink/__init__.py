@@ -9,15 +9,15 @@
 # ***********************************************  Init ****************************************************************
 
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedError import WeightedError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
@@ -26,15 +26,15 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPrefe
 
 __all__ = ['System',
            'process',
-           'Transfer',
-           'AdaptiveIntegratorMechanism',
+           'TransferMechanism',
+           'IntegratorMechanism',
            'DDM',
            'EVCMechanism',
-           'Comparator',
-           'WeightedError',
-           'Mapping',
-           'ControlSignal',
-           'LearningSignal',
+           'ComparatorMechanism',
+           'WeightedErrorMechanism',
+           'MappingProjection',
+           'ControlProjection',
+           'LearningProjection',
            'LinearCombination',
            'Linear',
            'Exponential',
@@ -50,7 +50,7 @@ __all__ = ['System',
            'PARAMETER_STATES',
            'OUTPUT_STATES',
            'MAKE_DEFAULT_CONTROLLER',
-           'MONITORED_OUTPUT_STATES',
+           'MONITOR_FOR_CONTROL',
            'kwInitializer',
            'WEIGHTS',
            'EXPONENTS',

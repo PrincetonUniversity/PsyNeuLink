@@ -1,22 +1,22 @@
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Globals.Keywords import *
 
-# from Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# sample_mech = Transfer(name='Sample',
+# from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# sample_mech = TransferMechanism(name='Sample',
 #                        params={FUNCTION:kwLogistic},
 #                        default_input_value = [0,0])
 #
-# target_mech = Transfer(name='Target',
+# target_mech = TransferMechanism(name='Target',
 #                        params={FUNCTION:kwLogistic},
 #                        default_input_value = [0,0])
 
 import numpy as np
 
-# my_comparator = Comparator(default_input_value=[[0,0], [0,1]],
-#                                  name='My Comparator')
+# my_comparator = ComparatorMechanism(default_input_value=[[0,0], [0,1]],
+#                                  name='My ComparatorMechanism')
 #
 # my_comparator.execute(variable=np.array([[0,0], [0,1]]))
 #
@@ -28,8 +28,8 @@ import numpy as np
 # my_process.execute([[-1, 30],[1, 15]])
 
 
-my_comparator = Comparator(default_sample_and_target=[[0], [0]],
-                                 name='My Comparator')
+my_comparator = ComparatorMechanism(default_sample_and_target=[[0], [0]],
+                                 name='My ComparatorMechanism')
 
 
 my_process = Process_Base(default_input_value=[[0],[1]],
