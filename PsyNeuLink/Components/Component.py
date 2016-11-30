@@ -917,7 +917,13 @@ class Component(object):
             self.assign_default_kwFunctionParams = True
 
             try:
-                function = request_set[FUNCTION]
+                # # MODIFIED 11/30/16 OLD:
+                # function = request_set[FUNCTION]
+                # MODIFIED 11/30/16 NEW:
+                # Copy to keep record of request_set function for comparison below, after request_set has been updated
+                import copy
+                function = copy.deepcopy(request_set[FUNCTION])
+                # MODIFIED 11/30/16 END
             except KeyError:
                 # If there is no function specified, then allow functionParams
                 # Note: this occurs for objects that have "hard-coded" functions
@@ -947,14 +953,33 @@ class Component(object):
                     if function_class != default_function_class:
                         self.assign_default_kwFunctionParams = False
 
-            for param_name, param_value in default_set.items():
+            # Sort to be sure FUNCTION is processed before FUNCTION_PARAMS,
+            #    so that latter are evaluated in context of former
+            for param_name, param_value in sorted(default_set.items()):
+
+                # MODIFIED 11/30/16 NEW:
+                # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
+                try:
+                    if param_name is FUNCTION and function.__class__ != request_set[FUNCTION].__class__:
+                        default_set[FUNCTION_PARAMS] = function.user_params
+                # function not yet defined, so allow FUNCTION_PARAMS)
+                except UnboundLocalError:
+                    pass
+                # MODIFIED 11/30/16 END
+
                 if param_name is FUNCTION_PARAMS and not self.assign_default_kwFunctionParams:
                     continue
+
+                # IF FUNCTION HAS CHANGED, AND PARAM IS FUNCTION PARAMS, REPLACE FUNCTION_PARAMS AND CONTINUE;
+                # OTHERWISE, CONTINUE TO UPDATE RECURSIVELY
+                # MODIFIED 11/30/16 END
+
                 # MODIFIED 11/29/16 NEW:  DON'T REPLACE REQUESTED ENTRY
                 if param_name in request_set:
                     continue
                 # MODIFIED 11/29/16 END
                 request_set.setdefault(param_name, param_value)
+                # Recursively update any values in a dict
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
                         # MODIFIED 11/29/16 NEW:  DON'T REPLACE REQUESTED ENTRY
