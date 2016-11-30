@@ -8,9 +8,11 @@
 #                     First validates request_set with "validated_set" as target_set for _validateE_params
 #                     Then instantiates validated_set
 #                     Then updates target_set (= paramInstanceDefaults) with validated_set
+# FIX: RE-ASSIGNMENT OF PARAMETER STATES GENERATES INDEXED NAME OF NEW PARAMETER_STATE THAT MESSES UP TEST
+# FIX:  (IS NOT RECOGNIZED) IN PrameterState._validate_params
 
 # FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
-# FIX:  _assign_defaults -> __assign_defaults (SINCE NOW IT IS ONLY FOR INTERNAL USE; OTHERWISE USE assign_params)
+
 
 # IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with:

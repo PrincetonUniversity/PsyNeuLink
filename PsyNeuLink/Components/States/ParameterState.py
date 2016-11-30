@@ -443,7 +443,7 @@ class ParameterState(State_Base):
         Parameter can be either owner's, or owner's function_object
         """
 
-        # # # MODIFIED 11/29/16 OLD:
+        # # MODIFIED 11/29/16 OLD:
         # if not self.name in self.owner.function_params.keys():
         # MODIFIED 11/29/16 NEW:
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
@@ -579,20 +579,22 @@ class ParameterState(State_Base):
         self._value = assignment
 
 def _instantiate_parameter_states(owner, context=None):
-    """Call _instantiate_state_list() to instantiate ParameterStates for subclass' function
+    """Call _instantiate_state for all params in user_params to instantiate ParameterStates for them
 
-    If owner.params[PARAMETER_STATE] is None or False, no parameterStates will be instantiated.
+    If owner.params[PARAMETER_STATE] is None or False:
+        - no parameterStates will be instantiated.
     Otherwise, instantiate parameterState for each param in owner.user_params
-    - including ones in owner.user_params[FUNCTION_PARAMS]
-    - exclude if it is:
-       assigned a non-numeric value (including None, NotImplemented, False or True)
-          unless it is:
-              a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
-              a dict with the name FUNCTION_PARAMS (otherwise exclude)
-       a function
-           IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-           (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-           i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+        - include ones in owner.user_params[FUNCTION_PARAMS] (nested call)
+        - exclude if it is a:
+            parameterState that already exists (e.g., in case of call from Component.assign_params)
+            non-numeric value (including None, NotImplemented, False or True)
+                unless it is:
+                    a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+                    a dict with the name FUNCTION_PARAMS (otherwise exclude)
+            function
+                IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
     """
 
     # TBI / IMPLEMENT: use specs to implement paramterStates below
@@ -609,16 +611,24 @@ def _instantiate_parameter_states(owner, context=None):
         # PARAMETER_STATES not specified at all, so OK to continue and construct them
         pass
 
-
     try:
         owner.user_params
     except AttributeError:
         return
 
-    # Instantiate parameterState for each param in functionParams, using its value as the state_spec
+    # Instantiate parameterState for each param in user_params (including all params in function_params dict),
+    #     using its value as the state_spec
     for param_name, param_value in owner.user_params.items():
 
-        # Exclusions:
+
+        # EXCLUSIONS:
+
+        # MODIFIED 11/30/16 NEW:
+        # Skip if parameterState already exists (e.g., in case of call from Component.assign_params)
+        if param_name in owner.parameterStates:
+            continue
+        # MODIFIED 11/30/16 END
+
         # Allow numbericals but omit booleans (which are treated by is_numeric as numerical)
         if is_numeric(param_value) and not isinstance(param_value, bool):
             pass
