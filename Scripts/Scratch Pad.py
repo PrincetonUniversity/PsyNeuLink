@@ -8,37 +8,116 @@ class ScratchPadError(Exception):
 #
 #region DEBUG:
 
+from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.Mapping import Mapping
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 
-# linear_transfer_mechanism = Transfer(function=Linear(slope = 1, intercept = 0))
-# linear_transfer_process = process(pathway = [linear_transfer_mechanism])
-# print(linear_transfer_process.execute())
-# print ('Done')
+# ORIGINAL:
+# transfer_mechanism_1 = TransferMechanism()
+# # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
+# # TM1_parameter_state = ParameterState(value=22)
+# transfer_mechanism_2 = TransferMechanism()
+# # transfer_mechanism_3 = TransferMechanism()
+# transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
+#
+# # my_process = process(pathway=[transfer_mechanism_1,
+# #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
+# #                                                                                     ModulationOperation.OVERRIDE)}}),
+# #                               transfer_mechanism_2])
+# # my_process.run(inputs=[[[0]]])
+#
+# # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
+# # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+# print(transfer_mechanism_3.execute(input=1.0,
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+#
 
-my_mech1 = Transfer(function=Logistic)
-my_mech2 = Transfer(function=Logistic)
-my_monitor = Comparator()
-my_learning_signal = LearningSignal()
-my_mapping_projection = Mapping(sender=my_mech1, receiver=my_mech2)
-# my_learning_signal = LearningSignal(sender=my_monitor, receiver=my_mapping_projection)
-# my_learning_signal = LearningSignal(receiver=my_mapping_projection)
-my_learning_signal._deferred_init(context="TEST")
-TEST = True
+# MORE RECENT TESTING:
+transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
+# transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
+# TM1_parameter_state = ParameterState(value=22)
+transfer_mechanism_2 = TransferMechanism(function=Logistic)
+# transfer_mechanism_3 = TransferMechanism()
+transfer_mechanism_3 = TransferMechanism(function=Linear(slope=2))
+
+transfer_mechanism_1.execute()
+# my_process = process(pathway=[transfer_mechanism_1,
+#                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
+#                                                                                     ModulationOperation.OVERRIDE)}}),
+#                               transfer_mechanism_2])
+# my_process.run(inputs=[[[0]]])
+
+# mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
+# mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = True
+print(transfer_mechanism_3.execute(input=1.0,
+                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
+# print(transfer_mechanism_3.execute(input=1.0))
+print(transfer_mechanism_3.execute(input=1.0,
+                                   runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
+                                                                                   ModulationOperation.OVERRIDE),
+                                                                            # SLOPE:(6.0,
+                                                                            #        ModulationOperation.OVERRIDE
+                                                                                      }}))
+
+
+# transfer_process = process(pathway = [transfer_mechanism_1])
+# print(transfer_process.execute())
+print ('Done')
+
+print ("True is numerical: {}".format(is_numerical(True)))
+
+# my_mech1 = TransferMechanism(function=Logistic)
+# my_mech2 = TransferMechanism(function=Logistic)
+# my_monitor = ComparatorMechanism()
+# my_LEARNING_PROJECTION = LearningProjection()
+# my_mapping_projection = MappingProjection(sender=my_mech1, receiver=my_mech2)
+# # my_LEARNING_PROJECTION = LearningProjection(sender=my_monitor, receiver=my_mapping_projection)
+# # my_LEARNING_PROJECTION = LearningProjection(receiver=my_mapping_projection)
+# my_LEARNING_PROJECTION._deferred_init(context="TEST")
+
+# my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
+#                                  threshold=20.0),
+#              params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
+#                                       THRESHOLD:30.0}}
+#              )
+# # my_DDM.execute(time_scale=TimeScale.TIME_STEP)
+# my_DDM.execute()
+#
+# TEST = True
+
+# my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
+#                                                      function=Integrator(
+#                                                                          # variable_default=[0,0],
+#                                                                          weighting=SIMPLE,
+#                                                                          rate=[1]
+#                                                                          )
+#                                                      )
+# print(my_adaptive_integrator.execute([1]))
+# print(my_adaptive_integrator.execute([1]))
+# print(my_adaptive_integrator.execute([1]))
+# print(my_adaptive_integrator.execute([3]))
+# print(my_adaptive_integrator.execute([3]))
+# print(my_adaptive_integrator.execute([3]))
+# print(my_adaptive_integrator.execute([3]))
 
 #endregion
 
 #region TEST INSTANTATION OF System() @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# from Components.Mechanisms.AdaptiveIntegrator import AdaptiveIntegratorMechanism
+# from Components.Mechanisms.IntegratorMechanism import IntegratorMechanism
 # from Components.Function import Integrator
 #
-# a = AdaptiveIntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
+# a = IntegratorMechanism([[0],[0]], params={FUNCTION_PARAMS:{Integrator.RATE:0.1}})
 #
 # init = [0,0,0]
 # stim = [1,1,1]
@@ -57,11 +136,11 @@ TEST = True
 #
 # from PsyNeuLink.Components.System import System_Base
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-# from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+# from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 #
 # mech = DDM()
 #
-# mcs = ControlSignal(receiver=mech)
+# mcs = ControlProjection(receiver=mech)
 #
 #
 # mech.execute([0])
@@ -73,15 +152,15 @@ TEST = True
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.States.InputState import InputState
 #
-# x = Transfer([0,0,0],
+# x = TransferMechanism([0,0,0],
 #              name='x')
 #
 # i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 #
-# y = Transfer(default_input_value=[0],
+# y = TransferMechanism(default_input_value=[0],
 #              params={INPUT_STATES:i},
 #              name='y')
 #
@@ -93,7 +172,7 @@ TEST = True
 
 #region TEST INPUT FORMATS
 
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.Process import process
 # from PsyNeuLink.Components.System import system
 #
@@ -105,9 +184,9 @@ TEST = True
 # # inputs=[[[2,2],[0]],[[2,2],[0]]]
 # # inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
 #
-# a = Transfer(name='a',default_input_value=[0,0])
-# b = Transfer(name='b')
-# c = Transfer(name='c')
+# a = TransferMechanism(name='a',default_input_value=[0,0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
 #
 #
 # print(a.execute([2,2]))
@@ -135,17 +214,17 @@ TEST = True
 #
 # from PsyNeuLink.Components.System import system
 # from PsyNeuLink.Components.Process import process
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-# from PsyNeuLink.Components.Process import Mapping
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+# from PsyNeuLink.Components.Process import MappingProjection
 #
-# a = Transfer(name='a')
-# b = Transfer(name='b')
-# c = Transfer(name='c')
-# d = Transfer(name='d')
-# e = Transfer(name='e')
+# a = TransferMechanism(name='a')
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+# e = TransferMechanism(name='e')
 #
-# fb1 = Mapping(sender=c, receiver=b, name='fb1')
-# fb2 = Mapping(sender=d, receiver=e, name = 'fb2')
+# fb1 = MappingProjection(sender=c, receiver=b, name='fb1')
+# fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 #
 # p1 = process(pathway=[a, b, c, d], name='p1')
 # p2 = process(pathway=[e, b, c, d], name='p2')
@@ -173,9 +252,9 @@ TEST = True
 # #
 # from Components.Process import *
 # # from Components.Mechanisms.DDM import DDM
-# from Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 #
-# my_transfer = Transfer()
+# my_transfer = TransferMechanism()
 #
 # x = Process_Base(params={PATHWAY:[my_transfer]})
 #
@@ -235,10 +314,10 @@ TEST = True
 #region TEST ReportOUtput Pref @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
 #
-# my_mech = Transfer(function=Linear())
+# my_mech = TransferMechanism(function=Linear())
 #
 # my_process = process(pathway=[my_mech])
 #
@@ -253,16 +332,16 @@ TEST = True
 #endregion
 
 
-#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Process import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear
-# from PsyNeuLink.Components.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 #
-# my_mech = Transfer(function=Linear())
-# my_mech2 = Transfer(function=Linear())
-# my_projection = Mapping(sender=my_mech,
+# my_mech = TransferMechanism(function=Linear())
+# my_mech2 = TransferMechanism(function=Linear())
+# my_projection = MappingProjection(sender=my_mech,
 #                         receiver=my_mech2,
 #                         matrix=np.ones((1,1)))
 #
@@ -291,31 +370,31 @@ TEST = True
 
 #endregion
 
-#region TEST Matrix Assignment to Mapping Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST Matrix Assignment to MappingProjection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
 # from PsyNeuLink.Components.Process import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-# from PsyNeuLink.Components.Projections.Mapping import Mapping
+# from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 #
-# color_naming = Transfer(default_input_value=[0,0],
+# color_naming = TransferMechanism(default_input_value=[0,0],
 #                         function=Linear,
 #                         name="Color Naming"
 #                         )
 #
-# word_reading = Transfer(default_input_value=[0,0],
+# word_reading = TransferMechanism(default_input_value=[0,0],
 #                         function=Logistic,
 #                         name="Word Reading")
 #
-# verbal_response = Transfer(default_input_value=[0,0],
+# verbal_response = TransferMechanism(default_input_value=[0,0],
 #                            function=Logistic)
 #
-# color_pathway = Mapping(sender=color_naming,
+# color_pathway = MappingProjection(sender=color_naming,
 #                         receiver=verbal_response,
 #                         matrix=IDENTITY_MATRIX,
 #                         )
 #
-# word_pathway = Mapping(sender=word_reading,
+# word_pathway = MappingProjection(sender=word_reading,
 #                        receiver=verbal_response,
 #                         matrix=IDENTITY_MATRIX
 #                        )
@@ -350,9 +429,9 @@ import typecheck as tc
 # from enum import Enum
 # # class Weightings(AutoNumber):
 # class Weightings(Enum):
-#     LINEAR        = 'hello'
-#     SCALED        = 'goodbye'
-#     TIME_AVERAGED = 'you say'
+#     CONSTANT        = 'hello'
+#     SIMPLE        = 'goodbye'
+#     ADAPTIVE = 'you say'
 #
 # @tc.typecheck
 # def foo3(test:tc.re('hello')):
@@ -363,7 +442,7 @@ import typecheck as tc
 # # foo3(test=3)
 #
 # @tc.typecheck
-# def foo4(test:Weightings=Weightings.SCALED):
+# def foo4(test:Weightings=Weightings.SIMPLE):
 #     a = test
 #
 # # foo4(test=Weightings.LINEAR)
@@ -603,19 +682,19 @@ import typecheck as tc
 #
 # MonitoredOutputStatesOption = dict
 # target_set = {
-#     MONITORED_OUTPUT_STATES:'state that is monitored',
+#     MONITOR_FOR_CONTROL:'state that is monitored',
 #     # FUNCTION_PARAMS:{WEIGHTS:[1]}
 #               }
 #
 # try:
 #     # It IS a MonitoredOutputStatesOption specification
-#     if isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
+#     if isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
 #         # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-#         # target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
+#         # target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
 #         print ("Assign monitored States")
 #     # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
 #     else:
-#         # for item in target_set[MONITORED_OUTPUT_STATES]:
+#         # for item in target_set[MONITOR_FOR_CONTROL]:
 #         #     self._validate_monitored_state(item, context=context)
 #         # Insure that number of weights specified in WEIGHTS functionParams equals the number of monitored states
 #         print ('Validated monitored states')
@@ -625,7 +704,7 @@ import typecheck as tc
 #             # raise ScratchPadError('Key error for assigning weights')
 #             pass
 #         else:
-#             # num_monitored_states = len(target_set[MONITORED_OUTPUT_STATES])
+#             # num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
 #             # if not True:
 #             if True:
 #                 raise ScratchPadError("Weights not equal")
@@ -1454,7 +1533,7 @@ import typecheck as tc
 # from Components.States.ParameterState import ParameterState
 #
 # x = DDM()
-# state = x.instantiate_state(state_type=ParameterState,
+# state = x._instantiate_state(state_type=ParameterState,
 #                               state_name='DDM_TEST_PARAM_STATE',
 #                               state_spec=100.0,
 #                               constraint_value=0.0,
@@ -1462,7 +1541,7 @@ import typecheck as tc
 #                               context='EXOGENOUS SPEC')
 # x.parameterStates['DDM_TEST_PARAM_STATE'] = state
 
-# x.instantiate_state_list(state_type=ParameterState,
+# x._instantiate_state_list(state_type=ParameterState,
 #                                    state_param_identifier='DDM_TEST',
 #                                    constraint_value=0.0,
 #                                    constraint_value_name='DDM T0 CONSTRAINT',
@@ -1881,7 +1960,7 @@ import typecheck as tc
 
 # ***************************************** OLD TEST SCRIPT ************************************************************
 
-# from Components.Projections.ControlSignal import *
+# from Components.Projections.ControlProjection import *
 #
 # # Initialize controlSignal with some settings
 # settings = ControlSignalSettings.DEFAULTS | \
@@ -1890,7 +1969,7 @@ import typecheck as tc
 # identity = []
 # log_profile = ControlSignalLog.ALL
 #
-# # Set up ControlSignal
+# # Set up ControlProjection
 # x = ControlSignal_Base("Test Control Signal",
 #                        {kwControlSignalIdentity: identity,
 #                         kwControlSignalSettings: settings,
@@ -1898,7 +1977,7 @@ import typecheck as tc
 #                         kwControlSignalLogProfile: log_profile}
 #                        )
 #
-# # Can also change settings on the fly (note:  ControlSignal.OFF is just an enum defined in the ControlSignal module)
+# # Can also change settings on the fly (note:  ControlProjection.OFF is just an enum defined in the ControlProjection module)
 # x.set_adjustment_cost(OFF)
 #
 # # Display some values in controlSignal (just to be sure it is set up OK)
@@ -1906,8 +1985,8 @@ import typecheck as tc
 # print("Initial Intensity: ", x.intensity)
 #
 # # Add KVO:
-# #  Utilities will observe ControlSignal.kpIntensity;
-# #  the observe_value_at_keypath method in Utilities will be called each time ControlSignal.kpIntensity changes
+# #  Utilities will observe ControlProjection.kpIntensity;
+# #  the observe_value_at_keypath method in Utilities will be called each time ControlProjection.kpIntensity changes
 # x.add_observer_for_keypath(Utilities,kpIntensity)
 #
 #

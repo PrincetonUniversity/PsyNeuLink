@@ -12,4 +12,6 @@ States
    :maxdepth: 3
 
 .. automodule:: State
+   :members:
+   :exclude-members: random
 

@@ -13,18 +13,20 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Globals.Utilities import ModulationOperation
 from PsyNeuLink.Globals.Preferences import *
 
-# Keypaths for preferences:
-kpFunctionRuntimeParamsPref = '_function_runtime_params_pref'
+# MODIFIED 11/29/16 OLD:
+# # Keypaths for preferences:
+# kpRuntimeParamModulationPref = '_runtime_param_modulation_pref'
+# MODIFIED 11/29/16 END
 
 # Default PreferenceSets:
-functionRuntimeParamsPrefInstanceDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
-                                                                PreferenceLevel.INSTANCE)
-functionRuntimeParamsPrefTypeDefault = PreferenceEntry(ModulationOperation.ADD,
-                                                            PreferenceLevel.TYPE)
-# functionRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY,
-#                                                                 PreferenceLevel.CATEGORY)
-functionRuntimeParamsPrefCategoryDefault = PreferenceEntry(ModulationOperation.OVERRIDE,
-                                                                PreferenceLevel.CATEGORY)
+runtimeParamModulationPrefInstanceDefault = PreferenceEntry(ModulationOperation.OVERRIDE, PreferenceLevel.INSTANCE)
+runtimeParamModulationPrefTypeDefault = PreferenceEntry(ModulationOperation.ADD, PreferenceLevel.TYPE)
+# runtimeParamModulationPrefCategoryDefault = PreferenceEntry(ModulationOperation.MULTIPLY, PreferenceLevel.CATEGORY)
+runtimeParamModulationPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
+
+runtimeParamStickyAssignmentPrefInstanceDefault = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+runtimeParamStickyAssignmentPrefTypeDefault = PreferenceEntry(False, PreferenceLevel.TYPE)
+runtimeParamStickyAssignmentPrefCategoryDefault = PreferenceEntry(False, PreferenceLevel.CATEGORY)
 
 
 class MechanismPreferenceSet(ComponentPreferenceSet):
@@ -32,26 +34,45 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
      
     Description:
         Implements the following preference:
-            - functionRuntimeParams (bool): uses specification of run-time params to update execute method params
+            - runtimeParamModulation (bool): uses specification of run-time params to update execute method params
 
     Class methods:
-        - functionRuntimeParamsPref():
-            returns setting for functionRuntimeParams preference at level specified in functionRuntimeParams PreferenceEntry of owner's Preference object
-        - functionRuntimeParamsPref(setting=<value>):
-            assigns the value of the setting item in the functionRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        - functionRuntimeParamsPrefLevel()
-            returns level in the functionRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        - functionRuntimeParamsPrefLevel(level=<PreferenceLevel>):
-            assigns the value of the level item in the functionRuntimeParamsPref PreferenceEntry of the owner's Preference object
-        - functionRuntimeParamsPrefEntry():
-            assigns PreferenceEntry to functionRuntimeParamsPref attribute of the owner's Preference object
-        - functionRuntimeParamsPrefEntry(entry=<PreferenceEntry>):
-            returns PreferenceEntry for the functionRuntimeParamsPref attribute of the owner's Preference object
+        - runtimeParamModulationPref():
+            returns setting for runtimeParamModulation preference at level specified in runtimeParamModulation 
+            PreferenceEntry of owner's Preference object
+        - runtimeParamModulationPref(setting=<value>):
+            assigns the value of the setting item in the runtimeParamModulationPref PreferenceEntry of the 
+            owner's Preference object
+        - runtimeParamModulationPrefLevel()
+            returns level in the runtimeParamModulationPref PreferenceEntry of the owner's Preference object
+        - runtimeParamModulationPrefLevel(level=<PreferenceLevel>):
+            assigns the value of the level item in the runtimeParamModulationPref PreferenceEntry of the 
+            owner's Preference object
+        - runtimeParamModulationPrefEntry():
+            assigns PreferenceEntry to runtimeParamModulationPref attribute of the owner's Preference object
+        - runtimeParamModulationPrefEntry(entry=<PreferenceEntry>):
+            returns PreferenceEntry for the runtimeParamModulationPref attribute of the owner's Preference object
+        - RuntimeParamStickyAssignmentPref():
+            returns setting for runtimeParamStickyAssignment preference at level specified in 
+            runtimeParamStickyAssignment 
+            PreferenceEntry of owner's Preference object
+        - RuntimeParamStickyAssignmentPref(setting=<value>):
+            assigns the value of the setting item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the 
+            owner's Preference object
+        - RuntimeParamStickyAssignmentPrefLevel()
+            returns level in the RuntimeParamStickyAssignmentPref PreferenceEntry of the owner's Preference object
+        - RuntimeParamStickyAssignmentPrefLevel(level=<PreferenceLevel>):
+            assigns the value of the level item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the 
+            owner's Preference object
+        - RuntimeParamStickyAssignmentPrefEntry():
+            assigns PreferenceEntry to RuntimeParamStickyAssignmentPref attribute of the owner's Preference object
+        - RuntimeParamStickyAssignmentPrefEntry(entry=<PreferenceEntry>):
+            returns PreferenceEntry for the RuntimeParamStickyAssignmentPref attribute of the owner's Preference object
     """
     def __init__(self,
                  owner=NotImplemented,
                  reportOutput_pref=reportOutputPrefInstanceDefault,
-                 functionRuntimeParams_pref=functionRuntimeParamsPrefInstanceDefault,
+                 runtimeParamModulation_pref=runtimeParamModulationPrefInstanceDefault,
                  log_pref=logPrefInstanceDefault,
                  verbose_pref=verbosePrefInstanceDefault,
                  param_validation_pref=paramValidationPrefInstanceDefault,
@@ -68,7 +89,11 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             except (KeyError, NameError):
                 pass
             try:
-                functionRuntimeParams_pref = kargs[kpFunctionRuntimeParamsPref]
+                runtime_param_modulation_pref = kargs[kpRuntimeParamModulationPref]
+            except (KeyError, NameError):
+                pass
+            try:
+                runtime_param_sticky_assignment_pref = kargs[kpRuntimeParamStickyAssignmentPref]
             except (KeyError, NameError):
                 pass
             try:
@@ -100,80 +125,160 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                                                      level=level,
                                                      name=name)
         # self._report_output_pref = reportOutput_pref
-        self._function_runtime_params_pref = functionRuntimeParams_pref
+        self._runtime_param_modulation_pref = runtime_param_modulation_pref
+        self._runtime_param_sticky_assignment_pref = runtime_param_sticky_assignment_pref
 
-    # functionRuntimeParams entry ------------------------------------------------------------------------------------
+    # runtimeParamModulation entry ------------------------------------------------------------------------------------
 
     @property
-    def functionRuntimeParamsPref(self):
-        """Returns setting of owner's functionRuntimeParams pref at level specified in its PreferenceEntry.level
+    def runtimeParamModulationPref(self):
+        """Returns setting of owner's runtimeParamModulation pref at level specified in its PreferenceEntry.level
         :param level:
         :return:
         """
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
-        return self.get_pref_setting_for_level(kpFunctionRuntimeParamsPref,
-                                               self._function_runtime_params_pref.level)[0]
+        return self.get_pref_setting_for_level(kpRuntimeParamModulationPref,
+                                               self._runtime_param_modulation_pref.level)[0]
 
 
-    @functionRuntimeParamsPref.setter
-    def functionRuntimeParamsPref(self, setting):
-        """Assigns setting to owner's functionRuntimeParams pref
+    @runtimeParamModulationPref.setter
+    def runtimeParamModulationPref(self, setting):
+        """Assigns setting to owner's runtimeParamModulation pref
         :param setting:
         :return:
         """
         if isinstance(setting, PreferenceEntry):
-            self._function_runtime_params_pref = setting
+            self._runtime_param_modulation_pref = setting
 
-        # elif not iscompatible(setting, functionRuntimeParamsPrefInstanceDefault.setting):
-        elif not inspect.isfunction(functionRuntimeParamsPrefInstanceDefault.setting):
-            print("setting of functionRuntimeParams preference ({0}) must be a {1} or a function;"
+        # elif not iscompatible(setting, runtimeParamModulationPrefInstanceDefault.setting):
+        elif not inspect.isfunction(runtimeParamModulationPrefInstanceDefault.setting):
+            print("setting of runtimeParamModulation preference ({0}) must be a {1} or a function;"
                   " it will remain unchanged ({2})".
                   format(setting,
                          ModulationOperation.__class__.__name__,
-                         self._function_runtime_params_pref.setting))
+                         self._runtime_param_modulation_pref.setting))
             return
 
         else:
-            self._function_runtime_params_pref = self._function_runtime_params_pref._replace(setting=setting)
+            self._runtime_param_modulation_pref = self._runtime_param_modulation_pref._replace(setting=setting)
 
     @property
-    def functionRuntimeParamsPrefLevel(self):
-        """Returns level for owner's functionRuntimeParams pref
+    def runtimeParamModulationPrefLevel(self):
+        """Returns level for owner's runtimeParamModulation pref
         :return:
         """
-        return self._function_runtime_params_pref.level
+        return self._runtime_param_modulation_pref.level
 
-    @functionRuntimeParamsPrefLevel.setter
-    def functionRuntimeParamsPrefLevel(self, level):
-        """Sets level for owner's functionRuntimeParams pref
+    @runtimeParamModulationPrefLevel.setter
+    def runtimeParamModulationPrefLevel(self, level):
+        """Sets level for owner's runtimeParamModulation pref
         :param level:
         :return:
         """
         if not isinstance(level, PreferenceLevel):
-            print("Level of functionRuntimeParams preference ({0}) must be a PreferenceLevel setting; it will remain unchanged ({1})".
-                  format(level, self._function_runtime_params_pref.setting))
+            print("Level of runtimeParamModulation preference ({0}) must be a PreferenceLevel setting; "
+                  "it will remain unchanged ({1})".
+                  format(level, self._runtime_param_modulation_pref.setting))
             return
-        self._function_runtime_params_pref = self._function_runtime_params_pref._replace(level=level)
+        self._runtime_param_modulation_pref = self._runtime_param_modulation_pref._replace(level=level)
 
     @property
-    def functionRuntimeParamsPrefEntry(self):
-        """Returns owner's functionRuntimeParams PreferenceEntry tuple (setting, level)
+    def runtimeParamModulationPrefEntry(self):
+        """Returns owner's runtimeParamModulation PreferenceEntry tuple (setting, level)
         :return:
         """
-        return self._function_runtime_params_pref
+        return self._runtime_param_modulation_pref
 
-    @functionRuntimeParamsPrefEntry.setter
-    def functionRuntimeParamsPrefEntry(self, entry):
-        """Assigns functionRuntimeParams PreferenceEntry to owner
+    @runtimeParamModulationPrefEntry.setter
+    def runtimeParamModulationPrefEntry(self, entry):
+        """Assigns runtimeParamModulation PreferenceEntry to owner
         :param entry:
         :return:
         """
         if not isinstance(entry, PreferenceEntry):
-            print("functionRuntimeParamsPrefEntry ({0}) must be a PreferenceEntry; it will remain unchanged ({1})".
-                  format(entry, self._function_runtime_params_pref))
+            print("runtimeParamModulationPrefEntry ({0}) must be a PreferenceEntry; it will remain unchanged ({1})".
+                  format(entry, self._runtime_param_modulation_pref))
             return
-        self._function_runtime_params_pref = entry
+        self._runtime_param_modulation_pref = entry
+        
+
+
+    # runtimeParamStickyAssignment entry -------------------------------------------------------------------------------
+
+    @property
+    def runtimeParamStickyAssignmentPref(self):
+        """Returns setting of owner's runtimeParamStickyAssignment pref at level specified in its PreferenceEntry.level
+        :param level:
+        :return:
+        """
+        # If the level of the object is below the Preference level,
+        #    recursively calls base (super) classes to get preference at specified level
+        return self.get_pref_setting_for_level(kpRuntimeParamStickyAssignmentPref,
+                                               self._runtime_param_sticky_assignment_pref.level)[0]
+
+
+    @runtimeParamStickyAssignmentPref.setter
+    def runtimeParamStickyAssignmentPref(self, setting):
+        """Assigns setting to owner's runtimeParamStickyAssignment pref
+        :param setting:
+        :return:
+        """
+        if isinstance(setting, PreferenceEntry):
+            self._runtime_param_sticky_assignment_pref = setting
+
+        # elif not iscompatible(setting, runtimeParamStickyAssignmentPrefInstanceDefault.setting):
+        elif not inspect.isfunction(runtimeParamStickyAssignmentPrefInstanceDefault.setting):
+            print("setting of runtimeParamStickyAssignment preference ({0}) must be a {1} or a function;"
+                  " it will remain unchanged ({2})".
+                  format(setting,
+                         ModulationOperation.__class__.__name__,
+                         self._runtime_param_sticky_assignment_pref.setting))
+            return
+
+        else:
+            self._runtime_param_sticky_assignment_pref = \
+                self._runtime_param_sticky_assignment_pref._replace(setting=setting)
+
+    @property
+    def runtimeParamStickyAssignmentPrefLevel(self):
+        """Returns level for owner's runtimeParamStickyAssignment pref
+        :return:
+        """
+        return self._runtime_param_sticky_assignment_pref.level
+
+    @runtimeParamStickyAssignmentPrefLevel.setter
+    def runtimeParamStickyAssignmentPrefLevel(self, level):
+        """Sets level for owner's runtimeParamStickyAssignment pref
+        :param level:
+        :return:
+        """
+        if not isinstance(level, PreferenceLevel):
+            print("Level of runtimeParamStickyAssignment preference ({0}) must be a PreferenceLevel setting; "
+                  "it will remain unchanged ({1})".
+                  format(level, self._runtime_param_sticky_assignment_pref.setting))
+            return
+        self._runtime_param_sticky_assignment_pref = self._runtime_param_sticky_assignment_pref._replace(level=level)
+
+    @property
+    def runtimeParamStickyAssignmentPrefEntry(self):
+        """Returns owner's runtimeParamStickyAssignment PreferenceEntry tuple (setting, level)
+        :return:
+        """
+        return self._runtime_param_sticky_assignment_pref
+
+    @runtimeParamStickyAssignmentPrefEntry.setter
+    def runtimeParamStickyAssignmentPrefEntry(self, entry):
+        """Assigns runtimeParamStickyAssignment PreferenceEntry to owner
+        :param entry:
+        :return:
+        """
+        if not isinstance(entry, PreferenceEntry):
+            print("runtimeParamStickyAssignmentPrefEntry ({0}) must be a PreferenceEntry; "
+                  "it will remain unchanged ({1})".
+                  format(entry, self._runtime_param_sticky_assignment_pref))
+            return
+        self._runtime_param_sticky_assignment_pref = entry
 
 
 

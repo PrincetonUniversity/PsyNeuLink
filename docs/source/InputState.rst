@@ -1,4 +1,4 @@
-Input State
-===========
+InputState
+==========
 
 .. automodule:: InputState

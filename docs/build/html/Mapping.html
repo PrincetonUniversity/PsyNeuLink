@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mapping &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -91,9 +91,9 @@
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mapping</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">MappingProjection</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-mapping-projection">Creating a Mapping Projection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-mapping-projection">Creating a MappingProjection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
@@ -108,6 +108,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 
             
@@ -140,11 +141,11 @@
       
           <li><a href="Projection.html">Projections</a> &raquo;</li>
       
-    <li>Mapping</li>
+    <li>MappingProjection</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/Mapping.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/MappingProjection.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -154,20 +155,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-Mapping">
-<span id="mapping"></span><h1>Mapping<a class="headerlink" href="#module-Mapping" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-MappingProjection">
+<span id="mapping"></span><h1>MappingProjection<a class="headerlink" href="#module-MappingProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="mapping-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Mapping projections transmit value from an outputState of one ProcessingMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>) to the inputState of
+<p>MappingProjections transmit value from an outputState of one ProcessingMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>) to the inputState of
 another (its <code class="docutils literal"><span class="pre">receiver</span></code>).  Its default <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref py py-class docutils literal"><span class="pre">LinearMatrix</span></code>, which uses the projection&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code>
 parameter to transform an array received from its <code class="docutils literal"><span class="pre">sender</span></code>, transforms it, and transmits the result to its
 <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </div>
 <div class="section" id="creating-a-mapping-projection">
-<span id="mapping-creating-a-mapping-projection"></span><h2>Creating a Mapping Projection<a class="headerlink" href="#creating-a-mapping-projection" title="Permalink to this headline">¶</a></h2>
+<span id="mapping-creating-a-mapping-projection"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mapping-projection" title="Permalink to this headline">¶</a></h2>
 <p>A mapping projection can be created in any of the ways that can be used to create a
 <span class="xref std std-ref">projection</span>
-of a process. Mapping projections are also generated automatically by PsyNeuLink in a number of circumstances,
+of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
 using a <code class="docutils literal"><span class="pre">matrix</span></code> appropriate to the circumstance  (matrix types are described in :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>Mapping_Structure):</p>
 <ul class="simple">
 <li>in a <strong>process</strong>, between adjacent mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> for which none has been assigned;
@@ -189,10 +190,16 @@ or they can be assigned by default (see below).</p>
 <p>In addition to its <code class="docutils literal"><span class="pre">function</span></code>, mapping projections use the following two the primary parameters:</p>
 <p id="mapping-matrix"><code class="docutils literal"><span class="pre">matrix</span></code></p>
 <blockquote>
-<div><p>Used by the Mapping projection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to execute a matrix transformation of its input.
-It can be assigned a list of 1d arrays, an np.ndarray, np.matrix, a function that resolves to one of these,
-or one of the following keywords:</p>
-<ul class="simple" id="matrix-keywords">
+<div><p>Used by the MappingProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to execute a matrix transformation of its input.
+It can be specified using any of the following formats:</p>
+<p><em>List, array or matrix</em>.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
+it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+or matrix rows) corresponds to the elements of the <code class="docutils literal"><span class="pre">sender</span></code>, and the inner dimension (inner list items,
+array axis 1, or matrix columns) corresponds to the weighting of the conribution that a given <code class="docutils literal"><span class="pre">sender</span></code>
+makes to the <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<p id="matrix-keywords"><em>Matrix keyword</em>.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
+of the following keywords can be use:</p>
+<ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> - a square matrix of 1&#8217;s; this requires that the length of the sender and receiver
 values are the same.</li>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code> - a matrix that has a number of rows equal to the length of the sender&#8217;s value,
@@ -205,9 +212,12 @@ is assigned;  otherwise, it a <code class="xref std std-keyword docutils literal
 <li><code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code> - used if no matrix specification is provided in the constructor;  it presently
 assigns an keyword:<cite>IDENTITY_MATRIX</cite>.</li>
 </ul>
-<p>PsyNeuLink also provides a convenience function, <code class="xref py py-class docutils literal"><span class="pre">random_matrix</span></code>, that can be used to generate a random matrix
-sized for a sender, receiver, with random numbers drawn from a uniform distribution within a specified range and
-with a specified offset.</p>
+<p><code class="xref py py-class docutils literal"><span class="pre">random_matrix</span></code>.  This is a convenience function that provides more flexibility than
+<code class="xref std std-keyword docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>.  It generates a random matrix sized for a sender, receiver,
+with random numbers drawn from a uniform distribution within a specified range and with a specified offset.</p>
+<p><em>Tuple</em>.  This is used to specify a projection to the parameterState of a <code class="docutils literal"><span class="pre">matrix</span></code> along with the <code class="docutils literal"><span class="pre">matrix</span></code> itself.
+The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
+<a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection specification</span></a>.</p>
 </div></blockquote>
 <p><code class="docutils literal"><span class="pre">parameter_modulation_operation</span></code></p>
 <blockquote>
@@ -230,28 +240,28 @@ executed).</p>
 <div class="section" id="class-reference">
 <span id="projection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="Mapping.Mapping">
-<em class="property">class </em><code class="descclassname">Mapping.</code><code class="descname">Mapping</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>param_modulation_operation=ModulationOperation.ADD</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mapping.Mapping" title="Permalink to this definition">¶</a></dt>
+<dt id="MappingProjection.MappingProjection">
+<em class="property">class </em><code class="descclassname">MappingProjection.</code><code class="descname">MappingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>param_modulation_operation=ModulationOperation.ADD</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MappingProjection.MappingProjection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a projection that transmits the output of one mechanism to the input of another.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; Source of projection input.  If a mechanism is specified, its primary outputState will be used.  If it is not
-specified, it will be assigned in the context in which the projection is used.</li>
-<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; Destination of projection output.  If a mechanism is specified, its primary inputState will be used.  If it
-is not specified, it will be assigned in the context in which the projection is used.</li>
-<li><strong>matrix</strong> (list, np.ndarray, np.matrix, function or keyword : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code>) &#8211; Matrix used by <code class="docutils literal"><span class="pre">function</span></code> (default: LinearCombination) to transform value of <code class="docutils literal"><span class="pre">sender</span></code></li>
-<li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; Operation used to combine the value of any projections to the matrix&#8217;s parameterState with the <code class="docutils literal"><span class="pre">matrix</span></code>.
+<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; the source of the projection&#8217;s input.  If a mechanism is specified, its primary outputState will be used.
+If it is not specified, it will be assigned in the context in which the projection is used.</li>
+<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; the destination of the projection&#8217;s output.  If a mechanism is specified, its primary inputState will be used.
+If it is not specified, it will be assigned in the context in which the projection is used.</li>
+<li><strong>matrix</strong> (list, np.ndarray, np.matrix, function or keyword : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code>) &#8211; the matrix used by <code class="docutils literal"><span class="pre">function</span></code> (default: LinearCombination) to transform the value of the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+<li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the <code class="docutils literal"><span class="pre">matrix</span></code>.
 Most commonly used with LearningSignal projections.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; Dictionary that can be used to specify the parameters for the projection, parameters for its function,
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the projection, parameters for its function,
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).[LINK]
 By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> assignment (LinearCombination);</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; String used for the name of the mapping projection.
+<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mapping projection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; Preference set for the mapping projection.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the Preference set for the mapping projection.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 </ul>
@@ -260,9 +270,15 @@ If it is not specified, a default is assigned using <code class="docutils litera
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="Mapping.Mapping.monitoringMechanism">
-<code class="descname">monitoringMechanism</code><a class="headerlink" href="#Mapping.Mapping.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when :ref:<a href="#id3"><span class="problematic" id="id4">`</span></a>learning &lt;LearningSignal&gt; is used.</p>
+<dt id="MappingProjection.MappingProjection.monitoringMechanism">
+<code class="descname">monitoringMechanism</code><a class="headerlink" href="#MappingProjection.MappingProjection.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when <a class="reference internal" href="LearningSignal.html"><span class="doc">learning</span></a> is used.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="MappingProjection.MappingProjection.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#MappingProjection.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform input from <code class="docutils literal"><span class="pre">sender</span></code> and to <code class="docutils literal"><span class="pre">value</span></code> used by <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
