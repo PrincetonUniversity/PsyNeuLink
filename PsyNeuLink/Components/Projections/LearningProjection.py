@@ -547,7 +547,7 @@ class LearningProjection(Projection_Base):
             # receiver has parameterState for MATRIX, so update its params with ones specified by LearningProjection
             else:
                 # MODIFIED 8/13/16:
-                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # FIX: ?? SHOULD THIS USE _assign_defaults:
                 self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
             # Assign self.receiver to parameterState used for weight matrix param

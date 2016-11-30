@@ -542,7 +542,7 @@ class Mechanism_Base(Mechanism):
                 updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
             - adjust(params, context)
-                modifies specified mechanism params (by calling Function.assign_defaults)
+                modifies specified mechanism params (by calling Function._assign_defaults)
                 returns output
 
         MechanismRegistry
@@ -1644,7 +1644,7 @@ class Mechanism_Base(Mechanism):
 #         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
 #         """
 #
-#         self.assign_defaults(self.inputState, params)
+#         self._assign_defaults(self.inputState, params)
 # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
 #         return self.outputState.value
 
