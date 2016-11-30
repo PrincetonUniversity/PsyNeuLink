@@ -58,5 +58,5 @@ __pycache__
 .idea
 *.iml
 *.DS_Store
-
+docs/build/*
 .doctrees/
