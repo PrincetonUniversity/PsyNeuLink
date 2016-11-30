@@ -1043,6 +1043,8 @@ class Component(object):
             self._instantiate_attributes_before_function()
 
         # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
+        # AS IT IS NOW, _instantiate_parameter_states ignores existing parameterStates
+        #               but this may cause it to ignore FUNCTION_PARAMS when FUNCTION has changed
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
         # for param in request_set_param_names:
         _instantiate_parameter_states(owner=self, context=COMMAND_LINE)
