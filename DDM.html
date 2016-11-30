@@ -35,8 +35,8 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
-        <link rel="next" title="Transfer" href="Transfer.html"/>
-        <link rel="prev" title="Adaptive Integrator" href="AdaptiveIntegrator.html"/> 
+        <link rel="next" title="Control Mechanisms" href="ControlMechanism.html"/>
+        <link rel="prev" title="IntegratorMechanism" href="IntegratorMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,7 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveIntegrator.html">Adaptive Integrator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">DDM</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-a-ddm-mechanism">Creating a DDM Mechanism</a></li>
@@ -99,11 +99,10 @@
 <li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="Transfer.html">Transfer</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -190,15 +189,15 @@ forced choice (TAFC) decision making ([REF]).  It can be executed analytically u
 <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode), or integrated numerically (in <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> mode).</p>
 </div>
 <div class="section" id="creating-a-ddm-mechanism">
-<span id="ddm-creating-a-ddm-mechanism"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
+<span id="ddm-creation"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
 <p>A DDM Mechanism can be instantiated directly by calling its constructor, or by using the PsyNeuLink
 <code class="xref py py-class docutils literal"><span class="pre">mechanism`[LINK]</span> <span class="pre">function</span> <span class="pre">and</span> <span class="pre">specifying</span> <span class="pre">DDM</span> <span class="pre">as</span> <span class="pre">its</span> <span class="pre">``mech_spec`</span></code> argument.  The analytic solution used in
 <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode is selected using the <code class="docutils literal"><span class="pre">function</span></code> argument.  The <code class="docutils literal"><span class="pre">function</span></code> argument can be simply the name
 of a DDM function (first example below), or a call to the function with arguments specifying its parameters
-(see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below for a description of DDM function parameters) and, optionally, a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a>
+(see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below for a description of DDM function parameters) and, optionally, a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
 (second example):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">)</span>
-<span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">))</span>
+<span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ControlProjection</span><span class="p">))</span>
 </pre></div>
 </div>
 <p id="ddm-input"><strong>Input</strong>.  The <code class="docutils literal"><span class="pre">default_input_value</span></code> argument specifies the default value to use as the stimulus component of the
@@ -229,7 +228,7 @@ mean correct response time and accuracy.</p>
 for the functions used in <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> mode, or in a params dictionary assigned to the <code class="docutils literal"><span class="pre">params</span></code> argument,
 using the keywords in the list below, as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
-             <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">DRIFT_RATE</span><span class="p">:(</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">),</span>
+             <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">DRIFT_RATE</span><span class="p">:(</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">ControlProjection</span><span class="p">),</span>
                      <span class="n">STARTING_POINT</span><span class="p">:</span><span class="o">-</span><span class="mf">0.5</span><span class="p">),</span>
              <span class="n">time_scale</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TIME_STEP</span><span class="p">}</span>
 </pre></div>
@@ -248,9 +247,9 @@ the params dictionary, the value specified for those in the function will be use
 <ul class="simple" id="ddm-drift-rate">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">DRIFT_RATE</span></code> (default 0.0)
 - multiplies the input to the mechanism before assigning it to the <code class="docutils literal"><span class="pre">variable</span></code> on each call of <code class="docutils literal"><span class="pre">function</span></code>.
-The resulting value is further multiplied by the value of any ControlSignal projections to the  <code class="docutils literal"><span class="pre">DRIFT_RATE</span></code>
+The resulting value is further multiplied by the value of any ControlProjections to the  <code class="docutils literal"><span class="pre">DRIFT_RATE</span></code>
 parameterState. The <code class="docutils literal"><span class="pre">drift_rate</span></code> parameter can be thought of as the &#8220;automatic&#8221; component (baseline strength)
-of the decision process, the value received from a ControlSignal projection as the &#8220;attentional&#8221; component,
+of the decision process, the value received from a ControlProjection as the &#8220;attentional&#8221; component,
 and the input its &#8220;stimulus&#8221; component.  The product of all three determines the drift rate in effect for each
 time_step of the decision process.</li>
 </ul>
@@ -286,7 +285,7 @@ or by step-wise integration (in <code class="xref std std-keyword docutils liter
 <p class="last">DDM handles &#8220;runtime&#8221; parameters (specified in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods) differently than
 standard Components: runtime parameters are added to the mechanism&#8217;s current value of the corresponding
 parameterState (rather than overriding it);  that is, they are combined additively with the value of
-any <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> it receives to determine the parameter&#8217;s value for that execution.  The parameterState&#8217;s
+any <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> it receives to determine the parameter&#8217;s value for that execution.  The parameterState&#8217;s
 value is then restored to its original value (i.e., either its default value or the one assigned when it was
 created) for the next execution.</p>
 </div>
@@ -354,21 +353,21 @@ when <code class="docutils literal"><span class="pre">time_scale</span></code> i
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_input_value</strong> (value, list or np.ndarray : keyword:<cite>FUNCTION_PARAMS`[keyword:`STARTING_POINT</cite>] [LINK]) &#8211; the input to the mechanism to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods;
 also serves as a template to specify the length of <code class="docutils literal"><span class="pre">variable</span></code> for <code class="docutils literal"><span class="pre">function</span></code>, and the primary  outputState
-of the mechanism (see <span class="xref std std-ref">Input</span> &lt;DDM_Creating_A_DDM_Mechanism&gt;` for how an input with a length of greater
+of the mechanism (see <span class="xref std std-ref">Input</span> &lt;DDM_Creation&gt;` for how an input with a length of greater
 than 1 is handled).</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) &#8211; specifies the analytic solution to use for the decision process if <code class="docutils literal"><span class="pre">time_scale</span></code> is set to
 <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>; can be <code class="xref py py-class docutils literal"><span class="pre">BogaczEtAl</span></code> or <code class="xref py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code> (note:  the latter requires
 that the MatLab engine is installed). If <code class="docutils literal"><span class="pre">time_scale</span></code> is set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
 <code class="docutils literal"><span class="pre">function</span></code> is automatically assigned to <code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code>.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
-<li><strong>time_scale</strong> (<em>TimeScale : defaul tTimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
 This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code> to use one of the analytic solutions specified by <code class="docutils literal"><span class="pre">function</span></code>.
 This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> to numerically integrate the decision variable.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
+and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a params dict).</li>
 <li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Process.classPreferences]</em>) &#8211; the PreferenceSet for the process.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for the process.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see Description under PreferenceSet for details) [LINK].</li>
 <li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
@@ -474,10 +473,10 @@ returns output</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Transfer.html" class="btn btn-neutral float-right" title="Transfer" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="AdaptiveIntegrator.html" class="btn btn-neutral" title="Adaptive Integrator" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="IntegratorMechanism.html" class="btn btn-neutral" title="IntegratorMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -486,7 +485,7 @@ returns output</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

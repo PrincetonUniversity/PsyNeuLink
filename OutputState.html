@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Output State &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>OutputState &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="Projections" href="Projection.html"/>
-        <link rel="prev" title="Parameter State" href="ParameterState.html"/> 
+        <link rel="prev" title="ParameterState" href="ParameterState.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,11 +90,14 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Output State</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">OutputState</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-an-outputstate">Creating an OutputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
@@ -139,7 +142,7 @@
       
           <li><a href="State.html">States</a> &raquo;</li>
       
-    <li>Output State</li>
+    <li>OutputState</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -154,109 +157,86 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-OutputState">
-<span id="output-state"></span><h1>Output State<a class="headerlink" href="#module-OutputState" title="Permalink to this headline">¶</a></h1>
-<p id="outputstates-creating-an-outputstate"><strong>[DOCUMENTATION STILL UNDER CONSTRUCTION]</strong></p>
+<span id="outputstate"></span><h1>OutputState<a class="headerlink" href="#module-OutputState" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The outputState(s) of a mechanism represent the output of the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, that can serve as the input to
+other mechanisms, and/or as the output of a process and/or system (if the mechanism to which the outputState belongs
+is the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism [LINK] of that process or system).  A list of the outgoing projections from an
+outputState is kept in its <code class="docutils literal"><span class="pre">sendsToProjections</span></code> attribute.</p>
 </div>
 <div class="section" id="creating-an-outputstate">
-<h2>Creating an OutputState<a class="headerlink" href="#creating-an-outputstate" title="Permalink to this headline">¶</a></h2>
-<p>An outputState can be created by calling its constructor, but more commonly it is done by specifying one (or more)
-outputStates in the <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry of a params dictionary when creating a mechanism. An
-outputState must be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs
-must be specified in the <code class="docutils literal"><span class="pre">owner</span></code> argument when calling the constructor;  if the outputState is specified in the
-<code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry of a parameter dictionary for a mechanism, then the owner is inferred from the context.</p>
-<ul>
-<li><dl class="first docutils">
-<dt>OUTPUT_STATES (value, list, dict):</dt>
-<dd><p class="first">supports the ability of a subclass to define specialized outputStates;
-only used if OUTPUT_STATES is an argument in the subclass&#8217; __init__ or
-is specified as a parameter in the subclass&#8217; paramClassDefaults.
-In those cases:</p>
-<blockquote class="last">
-<div><dl class="docutils">
-<dt>if param is absent or is a str:</dt>
-<dd><p class="first last">a default OutputState will be instantiated using output of mechanism&#8217;s execute method (EMO)
-(and the str, if provided used as its name);
-it will be placed as the single entry in an OrderedDict</p>
-</dd>
-<dt>if param is a single value:</dt>
-<dd><p class="first last">it will (if necessary) be instantiated and placed as the single entry in an OrderedDict</p>
-</dd>
-<dt>if param is a list:</dt>
-<dd><p class="first last">each item will (if necessary) be instantiated and placed in an OrderedDict</p>
-</dd>
-<dt>if param is an OrderedDict:</dt>
-<dd><p class="first last">each entry will (if necessary) be instantiated as a OutputState</p>
-</dd>
-<dt>in each case, the result will be an OrderedDict of one or more entries:</dt>
-<dd><dl class="first docutils">
-<dt>the key for the entry will be the name of the outputState if provided, otherwise</dt>
-<dd><p class="first last">OUTPUT_STATES-n will used (with n incremented for each entry)</p>
-</dd>
-</dl>
-<p class="last">the value of the outputState in each entry will be assigned to the corresponding item of the EMO
-the dict will be assigned to both self.outputStates and paramsCurrent[OUTPUT_STATES]
-self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)</p>
-</dd>
-<dt>notes:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>if there is only one outputState, but the EMV has more than one item, it is assigned to the</dt>
-<dd><p class="first last">the sole outputState, which is assumed to have a multi-item value</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">if there is more than one outputState, the number must match length of EMO,
-or an exception is raised</p>
-</li>
-</ul>
-</dd>
-</dl>
-<p>specification of the param value, list item, or dict entry value can be any of the following, a
-long as it is compatible with the relevant item of the output of the mechanism&#8217;s function (EMO):</p>
+<span id="outputstates-creation"></span><h2>Creating an OutputState<a class="headerlink" href="#creating-an-outputstate" title="Permalink to this headline">¶</a></h2>
+<p>An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
+usually automatically create the outputState(s) it needs when it is created.  For example, if the mechanism is
+being created within the <a class="reference internal" href="Process.html#process-pathway"><span class="std std-ref">pathway of a process</span></a>, its outputState will be created and assigned
+as the <code class="docutils literal"><span class="pre">sender</span></code> of a MappingProjection to the next mechanism in the pathway, or to the process&#8217;s <code class="docutils literal"><span class="pre">output</span></code> if it is
+the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process. If one or more custom outputStates need to be specified when a
+mechanism is created, or added to an existing mechanism, this can be in an entry of the mechanism&#8217;s parameter
+dictionary, using the key <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> [LINK] and a value that specifies one or more outputStates.
+For a single outputState, the value can be any of the specifications in the the list below.  To create multiple
+outputStates, the value of the <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry can be either a list, each item of which can be any of
+the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string  specifying the
+name for the outputState to be created, and its value is one of the specifications below:</p>
 <blockquote>
-<div><ul>
-<li><p class="first">OutputState class: default outputState will be instantiated using EMO as its value</p>
-</li>
-<li><p class="first">OutputState object: its value must be compatible with EMO</p>
-</li>
-<li><dl class="first docutils">
-<dt>specification dict:  OutputState will be instantiated using EMO as its value;</dt>
-<dd><dl class="first last docutils">
-<dt>must contain the following entries: (see Initialization arguments for State):</dt>
-<dd><ul class="first last simple">
-<li>FUNCTION (method)</li>
-<li>FUNCTION_PARAMS (dict)</li>
+<div><ul class="simple">
+<li>An existing <strong>outputState</strong> object or the name of one.  Its <code class="docutils literal"><span class="pre">value</span></code> must be compatible with the item of the
+owner mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> that will be assigned to it (see [LINK]).</li>
 </ul>
-</dd>
-</dl>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>str:</dt>
-<dd><p class="first last">will be used as name of a default outputState (and key for its entry in self.outputStates)
-value must match value of the corresponding item of the mechanism&#8217;s EMO</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>value:</dt>
-<dd><p class="first last">will be used a variable to instantiate a OutputState; value must be compatible with EMO</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
 <ul class="simple">
-<li>note: inputStates can also be added using State._instantiate_state()</li>
+<li>The <a class="reference internal" href="#module-OutputState" title="OutputState"><code class="xref py py-class docutils literal"><span class="pre">OutputState</span></code></a> <strong>class</strong> or a string.  This creates a default outputState using the owner
+mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> as the template for the outputState&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>. [LINK]  If <code class="xref std std-keyword docutils literal"><span class="pre">OutputState</span></code>
+is used, a default name is assigned to the state;  if a string is, it is assigned as the name
+of the outputState (see [LINK] for naming conventions).</li>
 </ul>
+<ul class="simple">
+<li>A <strong>value</strong>.  This creates a default outputState using the specified value as the outputState&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.
+This must be compatible with the items of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> that will be assigned to the
+outputState (see [LINK]).</li>
+</ul>
+<ul class="simple">
+<li>A <strong>specification dictionary</strong>.  This creates the specified outputState using the items of the owner mechanism&#8217;s</li>
+</ul>
+<p><code class="docutils literal"><span class="pre">outputValue</span></code> that will be assigned to it as the template for the outputState&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> [LINK].</p>
 </div></blockquote>
-</dd>
-</dl>
-</li>
+<p>Assigning outputStates using the <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry of a mechanism&#8217;s parameter dictionary supercedes the
+automatic generation of outputStates for that mechanism.  If the mechanism requires multiple outputStates (i.e.,
+it&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute has more than on item), it assigns each item to its own outputState (see [LINK]).
+Therefore, the number of outputStates specified must equal the number of items in the mechanisms&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.
+An exception is if <code class="docutils literal"><span class="pre">outputValue</span></code> has more than one item, the mechanism may still be assigned a single
+outputState;  in that case, the <code class="docutils literal"><span class="pre">variable</span></code> of that outputState must have the same number of items as
+the  mechanisms&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.  For cases in which there are multiple outputStates, the order in which they are
+specified in the list or OrderedDict must parallel the order in which the corresponding items appear in the
+<code class="docutils literal"><span class="pre">outputValue</span></code> attribute; furthemore, as noted above, the <code class="docutils literal"><span class="pre">variable</span></code> for each outputState must match
+(in number and types of elements) the item  from the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> that it will be assigned.</p>
+<p>Finally, an outputState must be owned by a mechanism. Therefore, if the inputState is created directly,
+the mechanism to which it belongs must be specified in the <code class="docutils literal"><span class="pre">owner</span></code> argument of its constructor; if the inputState
+is specified in the <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry of the parameter dictionary for a mechanism, then the owner is
+inferred from the context.</p>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>Every outputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>. It can send one or more MappingProjections to other
+mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
+<code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
+maintained in its <code class="docutils literal"><span class="pre">sendsToProjections</span></code> attribute.  Like all PsyNeuLink components, it has the three following
+fundamental attributes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">variable</span></code>:  this must match (both in number and types of elements) the value of the item it is assigned from its
+mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute (see LINK]).</li>
+<li><code class="docutils literal"><span class="pre">function</span></code>:  this is implemented for structural consistency, but is not currently used by PsyNeuLink.</li>
+<li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the value of the outputState`s <code class="docutils literal"><span class="pre">variable</span></code>, and used as the input for any projections
+that it sends.</li>
 </ul>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
+occurs, the values of each ouputState of a mechanism are updated with the results of a call to the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">function</span></code>: their values assigned the value of the corresponding item in the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="outputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -270,7 +250,7 @@ value must match value of the corresponding item of the mechanism&#8217;s EMO</p
         <a href="Projection.html" class="btn btn-neutral float-right" title="Projections" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="ParameterState.html" class="btn btn-neutral" title="Parameter State" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="ParameterState.html" class="btn btn-neutral" title="ParameterState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -279,7 +259,7 @@ value must match value of the corresponding item of the mechanism&#8217;s EMO</p
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

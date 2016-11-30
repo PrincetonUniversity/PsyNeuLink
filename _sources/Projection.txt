@@ -4,9 +4,9 @@ Projections
 .. toctree::
    :maxdepth: 1
 
-   Mapping
-   ControlSignal
-   LearningSignal
+   MappingProjection
+   ControlProjection
+   LearningProjection
 
 .. automodule:: Projection
 

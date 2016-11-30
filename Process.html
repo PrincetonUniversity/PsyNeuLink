@@ -183,7 +183,7 @@ between mechanisms can also be trained, by assigning learning signals to those p
 also be specified for the entire process, in which case the projections between all of its mechanisms are trained.</p>
 </div>
 <div class="section" id="creating-a-process">
-<span id="process-creating-a-process"></span><h2>Creating a Process<a class="headerlink" href="#creating-a-process" title="Permalink to this headline">¶</a></h2>
+<span id="process-creation"></span><h2>Creating a Process<a class="headerlink" href="#creating-a-process" title="Permalink to this headline">¶</a></h2>
 <p>Processes are created by calling the <code class="docutils literal"><span class="pre">process</span></code> &#8220;factory&#8221; method.  If no arguments are provided, a process with a
 single default mechanism will be returned (see [LINK for default] for default mechanism).</p>
 </div>
@@ -197,13 +197,13 @@ at least to the next one in the pathway, though it can project to others, and al
 projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
 a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  the mechanisms in a process pathway are generally <span class="xref doc">ProcessingMechanisms</span>, which receive an input,
 transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
-in a process must be  <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projections (see Projections).  These transmit the output of a mechanism
-(the projection&#8217;s sender)  to the input of another mechanism (the projection&#8217;s receiver).  Specification of a pathway
-requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
-of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
-interposing them in the list between the pair.  When no projection appears between two adjacent mechanisms in the
-pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default projection.
-Specifying the components of a pathway is described in more detail below.</p>
+in a process must be <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> (see Projections).  These transmit the output of a
+mechanism (the projection&#8217;s sender)  to the input of another mechanism (the projection&#8217;s receiver).  Specification of a
+<code class="docutils literal"><span class="pre">pathway</span></code> requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also
+contains a set of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be
+specified by interposing them in the list between the pair.  When no projection appears between two adjacent
+mechanisms in the pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default
+projection. Specifying the components of a pathway is described in more detail below.</p>
 </div>
 <div class="section" id="mechanisms">
 <span id="process-mechanisms"></span><h3>Mechanisms<a class="headerlink" href="#mechanisms" title="Permalink to this headline">¶</a></h3>
@@ -214,7 +214,7 @@ process. (Note:: The <code class="xref std std-keyword docutils literal"><span c
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)</p>
 <p>Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
-use any supported format for specifying a mechanism (see <span class="xref std std-ref">Mechanism_Creating_A_Mechanism</span>).  Alternatively,
+use any supported format for specifying a mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">Creating a Mechanism</span></a>).  Alternatively,
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
 specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
 belongs) is executed, but otherwise they do not remain associated with the mechanism
@@ -232,12 +232,12 @@ and can be accessed in the process&#8217; <code class="docutils literal"><span c
 <ul>
 <li><dl class="first docutils">
 <dt>Inline specification</dt>
-<dd><p class="first last">Projection specifications can be interposed between any two mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> list.  This creates
-a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
-can be an instance of a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection, the class name Mapping, a <a class="reference internal" href="Mapping.html#matrix-keywords"><span class="std std-ref">keyword</span></a>
-for a type of Mapping projection (<code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code>, <code class="xref std std-keyword docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code>,
+<dd><p class="first last">Projection specifications can be interposed between any two mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> list.  This creates a
+projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
+be an instance of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the class name MappingProjection, a <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">keyword</span></a>
+for a type of MappingProjection (<code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code>, <code class="xref std std-keyword docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code>,
 <code class="xref std std-keyword docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>), or a dictionary with specifications for the projection
-(see <a class="reference internal" href="Projection.html#projection-creating-a-projection"><span class="std std-ref">Projection</span></a> for details of how to specify projections).</p>
+(see <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">Projection</span></a> for details of how to specify projections).</p>
 </dd>
 </dl>
 </li>
@@ -255,7 +255,7 @@ pathway list.</p>
 <li><dl class="first docutils">
 <dt>Default assignment</dt>
 <dd><p class="first last">For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
-the methods above), a Mapping projection is automatically created from the mechanism that precedes it in the
+the methods above), a MappingProjection is automatically created from the mechanism that precedes it in the
 pathway.  If the format of the preceding mechanism&#8217;s output matches that of the next mechanism, then
 <code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> is used for the projection;  if the formats do not match, or learning has been specified
 either for the projection or the process, then <code class="xref std std-keyword docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code> is used. If the mechanism is
@@ -270,12 +270,12 @@ and <code class="xref std std-keyword docutils literal"><span class="pre">IDENTI
 <div class="section" id="process-input-and-output">
 <span id="process-input-and-ouput"></span><h3>Process input and output<a class="headerlink" href="#process-input-and-output" title="Permalink to this headline">¶</a></h3>
 <p>The input to a process is a list or 2D np.array provided as an arg in its execute() method or the run() function,
-and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and Mapping projections
+and assigned to its input attribute.  When a process is created, a set of ProcessInputStates and MappingProjections
 are automatically generated to transmit the process&#8217; input to its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, as follows:</p>
 <ul>
 <li><dl class="first docutils">
 <dt>if the number of items in the input is the same as the number of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> inputStates:</dt>
-<dd><p class="first last">a Mapping projection is created for each value of the input to an inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism</p>
+<dd><p class="first last">a MappingProjection is created for each value of the input to an inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism</p>
 </dd>
 </dl>
 </li>
@@ -305,28 +305,28 @@ mapping from the Process&#8217; input value to <code class="xref std std-keyword
 <div class="section" id="learning">
 <span id="process-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>Learning modifies projections so that the input to a given mechanism generates a desired output (&#8220;target&#8221;).
-Learning can be configured for a <a class="reference internal" href="LearningSignal.html#learningsignal-creating-a-learningsignal-projection"><span class="std std-ref">projection</span></a> to a
+Learning can be configured for a <a class="reference internal" href="LearningProjection.html#learningprojection-creation"><span class="std std-ref">projection</span></a> to a
 particular mechanism, or for the entire process (using its &#8216;&#8217;learning&#8217;&#8217; attribute).  Specifying learning for a
-process will implement it for all eligible projections the process (i.e., all Mapping projections, excluding
+process will implement it for all eligible projections the process (i.e., all MappingProjections, excluding
 projections from the process&#8217; inputState to its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and projections from the
 <code class="xref std std-keyword docutils literal"><span class="pre">TERIMINAL</span></code> mechanism to the process&#8217; outputState). When learning is specified for the process, all
 projections in the process will be trained so that input to the process (i.e., its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism)
 will generate the specified target value as its output (i.e., the output of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism).
 In either case, all mechanisms that receive projections for which learning has been specified must be compatiable
-with learning (see <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>).</p>
+with learning (see <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>).</p>
 <p>When learning is specified, the following objects are automatically created (see figure below):
-* <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a>, used to evaluate the output of a mechanism against a target value.
-* <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection from the mechanism being monitored to the MonitoringMechanism
-* <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> that projects from the MonitoringMechanism to the projection being learned (i.e., the one that</p>
+* <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a>, used to evaluate the output of a mechanism against a target value;
+* <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the mechanism being monitored to the MonitoringMechanism;
+* <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> from the MonitoringMechanism to the projection being learned</p>
 <blockquote>
-<div>projects to the mechanism being monitored).</div></blockquote>
+<div>(i.e., the one that projects to the mechanism being monitored).</div></blockquote>
 <p>Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation[LINK]), that will
 implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
 specified type of learning.  However, as noted above, all mechanisms that receive projections being learned must
 be compatible with learning.</p>
 <p id="process-learning-figure"><strong>Figure: Learning in PsyNeuLink</strong></p>
 <div class="figure" id="id1">
-<img alt="Schematic of learning mechanisms and LearningSignal projections in a process" src="_images/PNL_learning_fig.png" />
+<img alt="Schematic of learning mechanisms and LearningProjections in a process" src="_images/PNL_learning_fig.png" />
 <p class="caption"><span class="caption-text">Learning in a connectionist network with two layers</span></p>
 </div>
 </div>
@@ -355,10 +355,10 @@ projections are next executed; see Lazy_Evaluation for an explanation of &#8220;
 <p>The first mechanism is specified as a reference to an instance, the second as a default instance of a mechanism type,
 and the third in tuple format (specifying a reference to a mechanism that should receive some_params at runtime;
 note: the phase is omitted and so will be assigned the default value of 0):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">()</span>
 <span class="n">some_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">PARAMETER_STATE_PARAMS</span><span class="p">:{</span><span class="n">FUNCTION_PARAMS</span><span class="p">:{</span><span class="n">THRESHOLD</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="n">NOISE</span><span class="p">:</span><span class="mf">0.1</span><span class="p">}}}</span>
-<span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">Transfer</span><span class="p">,</span> <span class="p">(</span><span class="n">mechanism_2</span><span class="p">,</span> <span class="n">some_params</span><span class="p">)])</span>
+<span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">TransferMechanism</span><span class="p">,</span> <span class="p">(</span><span class="n">mechanism_2</span><span class="p">,</span> <span class="n">some_params</span><span class="p">)])</span>
 </pre></div>
 </div>
 <p><em>Default projection specification:</em></p>
@@ -366,11 +366,11 @@ note: the phase is omitted and so will be assigned the default value of 0):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>A mapping projection is automatically instantiated between each of the mechanisms</p>
+<p>A MappingProjection is automatically instantiated between each of the mechanisms</p>
 <p><em>Inline projection specification using an existing projection:</em></p>
 <p>In this pathway, projection_A is specified as the projection between the first and second mechanisms; a
 default projection will be created between mechanism_2 and mechanism_3:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">()</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">projection_A</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -384,7 +384,7 @@ mechanisms:</p>
 <p>In this pathway, projection_A is explicilty specified as a projection between mechansim_1 and mechanism_2,
 and so will be used as the projection between them in my_process; a default projection will be created between
 mechanism_2 and mechanism_3:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">Mapping</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">projection_A</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">mechanism_2</span><span class="p">)</span>
 <span class="n">my_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">mechanism_1</span><span class="p">,</span> <span class="n">mechanism_2</span><span class="p">,</span> <span class="n">mechanism_3</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -392,9 +392,9 @@ mechanism_2 and mechanism_3:</p>
 <p>This pathway implements a series of mechanisms with projections between them all of which will be learned
 using backpropagation (the default learning algorithm).  Note that it uses the logistic function, which is compatible
 with backpropagation:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">mechanism_3</span> <span class="o">=</span> <span class="n">Transfer</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="n">mechanism_3</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -423,7 +423,7 @@ Note: if a name is not specified, the nth instance created will be named by usin
 Must the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s input.</li>
 <li><strong>pathway</strong> (List[mechanism spec[, projection spec], mechanism spec...] : default List[<code class="docutils literal"><span class="pre">DefaultMechanism</span></code>]) &#8211; the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
 must a  <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>.  The specification for each can be an instance, a class name (creates a
-default instance), or a specification dictionary [LINK].  Each projection must be a <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection.
+default instance), or a specification dictionary [LINK].  Each projection must be a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.
 The specification for each can be the class name (creates a default instance), an instance, or a specification
 dictionary [LINK].</li>
 <li><strong>initial_values</strong> (Optional[Dict[mechanism, param value]] : default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; a dictionary of values used to initialize the specified mechanisms. The key for each entry is a mechanism
@@ -439,10 +439,10 @@ in a round of executions.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
 </li>
-<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; the type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;Mapping()&#8217;&#8217; projection) [LINK]</li>
-<li><strong>learning</strong> (<em>Optional[LearningSignal spec]</em>) &#8211; implements <span class="xref std std-ref">learning</span> for all
+<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; the type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;MappingProjection()&#8217;&#8217; projection) [LINK]</li>
+<li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <span class="xref std std-ref">learning</span> for all
 eligible projections in the process.</li>
-<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">Monitoring Mechanisms</span></a> to which a
+<li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> to which a
 <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a process or system projects (used for learning[LINK]).
 It must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s output.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]</em>) &#8211; a dictionary that can include any of the parameters above. Use the parameter&#8217;s name as the keyword for its
@@ -476,12 +476,12 @@ They should be instantiated using the <a class="reference internal" href="#Proce
 <dl class="attribute">
 <dt id="Process.Process_Base.pathway">
 <code class="descname">pathway</code><a class="headerlink" href="#Process.Process_Base.pathway" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]</em> &#8211; specifies the list of mechanisms that are executed when the process executes.
+<dd><p><em>List[(mechanism, dict, int), (projection, LearningProjection spec, None), (mechanism, dict, int)...]</em> &#8211; specifies the list of mechanisms that are executed when the process executes.
 Entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
 a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
-the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
-spec can be a LearningSignal projection object, the class (which specifies a default instance) or a function
-call to instantiate a LearningSignal (including parameters).  The second and third items of mechanism tuples,
+the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningProjection
+spec can be a LearningProjection object, the class (which specifies a default instance) or a function
+call to instantiate a LearningProjection (including parameters).  The second and third items of mechanism tuples,
 and the second item of projection tuples are optional and therefore may be <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.
 The third item of projection tuples is currenlty not used and is always <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
 <div class="admonition note">
@@ -499,7 +499,7 @@ the third is optional for mechanism tuples (0 is the default) and ignored for pr
 <dt id="Process.Process_Base.processInputStates">
 <code class="descname">processInputStates</code><a class="headerlink" href="#Process.Process_Base.processInputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[List[ProcessInputState]]</em> &#8211; used to represent the input to the process, and transmit this to the inputState(s) of its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
-mechanism.  Each processInputState sends a Mapping projection to one or more inputStates of the
+mechanism.  Each processInputState sends a MappingProjection to one or more inputStates of the
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</p>
 </dd></dl>
 
@@ -595,12 +595,12 @@ in a round of execution.</p>
 <dt id="Process.Process_Base.learning">
 <code class="descname">learning</code><a class="headerlink" href="#Process.Process_Base.learning" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
-<dt><em>Optional[LearningSignal]</em> &#8211;   determines whether the process is configured for learning.  The value can be the name of the</dt>
-<dd><p class="first">LearningSignal class, a call to its constructor, or the name of or reference to an existing LearningSignal.</p>
-<p class="last">If an existing instance of a LearningSignal used for the specification, or a call to the LearningSignal
+<dt><em>Optional[LearningProjection]</em> &#8211;   determines whether the process is configured for learning.  The value can be the name of the</dt>
+<dd><p class="first">LearningProjection class, a call to its constructor, or the name of or reference to an existing LearningProjection.</p>
+<p class="last">If an existing instance of a LearningProjection used for the specification, or a call to the LearningProjection
 constructor, that object itself, or the one created by the constructor, will <strong>not</strong> be used as the actual
-LearningSignal projection for the process. Rather it will be used as a template (including any parameters that
-are specified) for creating LearningSignal projections for all the Mapping projections in the process.</p>
+LearningProjection for the process. Rather it will be used as a template (including any parameters that
+are specified) for creating LearningProjections for all the MappingProjections in the process.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -731,7 +731,7 @@ each execution.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

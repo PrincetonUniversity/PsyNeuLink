@@ -1,4 +1,4 @@
-Parameter State
-===============
+ParameterState
+==============
 
 .. automodule:: ParameterState

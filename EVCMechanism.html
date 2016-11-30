@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EVC Mechanism &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>EVCMechanism &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Control Mechanisms" href="ControlMechanism.html"/>
-        <link rel="next" title="Monitoring Mechanisms" href="MonitoringMechanism.html"/>
-        <link rel="prev" title="Default Control Mechanism" href="DefaultControlMechanism.html"/> 
+        <link rel="next" title="MonitoringMechanisms" href="MonitoringMechanism.html"/>
+        <link rel="prev" title="DefaultControlMechanism" href="DefaultControlMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -91,8 +91,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="DefaultControlMechanism.html">Default Control Mechanism</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">EVC Mechanism</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="DefaultControlMechanism.html">DefaultControlMechanism</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">EVCMechanism</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
@@ -105,7 +105,7 @@
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -151,7 +151,7 @@
       
           <li><a href="ControlMechanism.html">Control Mechanisms</a> &raquo;</li>
       
-    <li>EVC Mechanism</li>
+    <li>EVCMechanism</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -166,30 +166,34 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-EVCMechanism">
-<span id="evc-mechanism"></span><h1>EVC Mechanism<a class="headerlink" href="#module-EVCMechanism" title="Permalink to this headline">¶</a></h1>
+<span id="evcmechanism"></span><h1>EVCMechanism<a class="headerlink" href="#module-EVCMechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An EVCMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that seeks to optimize a &#8220;portfolio&#8221; of control signals
-so as to maximize the performance of the system to which it belongs.  Each control signal is implemented as a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection, that regulates the parameter of a mechanism in the system;  collectively,
-the control signals govern the system&#8217;s behavior.  A particular combination of control signal values is called a
-<em>control allocation policy</em>.  The EVCMechanism evaluates the system&#8217;s performance under each control allocation policy,
-selects the one that generates the best performance, and then assigns the allocation values designated by that policy
-to  each of its control signals.  Those are then used when the system is next executed. This implements a form of the
-EVC Theory described in Shenhav et al. (2013).</p>
-<p>The set of control allocation policies that are tested is contained in the EVCMechanism&#8217;s <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code>
-attribute (see <a class="reference internal" href="#evcmechanism-controlsignalsearchspace"><span class="std std-ref">Constructing the ControlSignalSearchSpace</span></a>. The performance of the system is tested for each
-control allocation policy in the <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code>, and the outcome of performance is used to calculate the
-expected value of control (EVC) for that policy.  The EVC can be thought of as the cost-benefit ratio for a given
-policy, calculated as the difference between the outcome of performance and the cost of the control signals used to
-generate that outcome. The outcome is assessed by aggregating the <code class="docutils literal"><span class="pre">value</span></code> of each outputState listed in
+so as to maximize the performance of the system to which it belongs. It implements a form of the EVC Theory described
+in Shenhav et al. (2013).  The <em>intensity</em> of each control signal determines the value of a parameter that influences
+processing in the system, and the EVCMechanism searchs for the configuration of control signals that yields the best
+performance according to some <em>objective function</em>.</p>
+<p>Each control signal is implemented as a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>, that regulates the parameter of a <code class="docutils literal"><span class="pre">function</span></code> of a
+mechanism in the system, with the <code class="docutils literal"><span class="pre">value</span></code> of the projection representing the intensity of the control signal.
+Collectively,the control signals govern the system&#8217;s behavior.  A particular combination of control signal values is
+called a <em>control allocation policy</em>.  The EVCMechanism evaluates the system&#8217;s performance under each control allocation
+policy, selects the one that generates the best performance,  and then assigns the control signal values designated by
+that policy to the corresponding control projections.  Those are then used when the system is next executed.</p>
+<p>The set of control allocation policies that are tested is held in the EVCMechanism&#8217;s <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code>
+attribute (see <a class="reference internal" href="#evcmechanism-controlsignalsearchspace"><span class="std std-ref">Constructing the ControlSignalSearchSpace</span></a>. The EVCMechanism executes the system using
+each control allocation policy in the <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code>, evaluates its performance under that policy and,
+from that, calculates the expected value of control (EVC) for that policy. The EVC is a cost-benefit analysis for the
+given policy, calculated as the difference between the outcome of performance and the cost of the control signals
+used to generate that outcome.  The outcome is assessed by aggregating the <code class="docutils literal"><span class="pre">value</span></code> of each outputState listed in
 the <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> attribute.  The cost of the control signals is assessed by aggregating the cost
-associated with each ControlSignal projection (based on its <code class="docutils literal"><span class="pre">value</span></code> for the policy,  and contained in its
-<code class="docutils literal"><span class="pre">cost</span></code> attribute).  The policy that generates the maximum EVC is implemented, and used on the next round of
-execution.</p>
+associated with each ControlProjection (based on its <code class="docutils literal"><span class="pre">value</span></code> for the policy,  and contained in its <code class="docutils literal"><span class="pre">cost</span></code>
+attribute).  The policy that generates the maximum EVC is implemented, and used on the next round of execution.
+The calculation of the EVC can be customized as described in <a class="reference internal" href="#evcmechanism-parameters"><span class="std std-ref">EVC Mechanism Parameters</span></a> and
+<span class="xref std std-ref">EVCMechanism_Parameterizing_EVC_Calculation&gt;</span> below.</p>
 </div>
 <div class="section" id="creating-an-evcmechanism">
-<span id="evcmechanism-creating-an-evcmechanism"></span><h2>Creating an EVCMechanism<a class="headerlink" href="#creating-an-evcmechanism" title="Permalink to this headline">¶</a></h2>
+<span id="evcmechanism-creation"></span><h2>Creating an EVCMechanism<a class="headerlink" href="#creating-an-evcmechanism" title="Permalink to this headline">¶</a></h2>
 <p>An EVCMechanism can be created using the standard Python method of calling its constructor.  However,  more commonly,
 it is generated automatically when a system is created and an EVCMechanism is specified as its
 <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>). When this occurs, PsyNeuLink configures the EVCMechanism as follows:</p>
@@ -198,23 +202,23 @@ it is generated automatically when a system is created and an EVCMechanism is sp
 <li><strong>Monitored OutputStates</strong> &#8211; these are the outputStates of the system&#8217;s mechanisms that are monitored by the
 EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
 is added to the EVCMechanism for each outputState specified in its <code class="docutils literal"><span class="pre">monitor_for_control</span></code> parameter, and a
-<a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projection is created that projects from that outputState to the EVCMechanism&#8217;s inputState
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects from that outputState to the EVCMechanism&#8217;s inputState
 (see _ControlMechanism_Monitored_OutputStates for specifying <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code>).</li>
 </ul>
 <ul class="simple">
-<li><strong>Prediction Mechanisms</strong> &#8211; these are used to generate the input for each simulation of the system run by the
-EVCMechanism (see <a class="reference internal" href="#evcmechanism-execution"><span class="std std-ref">Execution</span></a>).  A prediction mechanism is created for each <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
-(input) mechanism in the system; a Mapping projection is created that projects to it from the corresponding
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism; and the pair are assigned to their own <em>prediction process</em>.  The prediction mechanisms
-and prediction processes for an EVCMechanism are listed in its <code class="docutils literal"><span class="pre">predictionMechanisms</span></code> and <code class="docutils literal"><span class="pre">predictionProcesses</span></code>
-attributes, respectively.</li>
+<li><strong>Prediction Mechanisms</strong> &#8211; these are used to generate the input for each simulation (execution) of the system
+run by the EVCMechanism (see <a class="reference internal" href="#evcmechanism-execution"><span class="std std-ref">Execution</span></a>).  A prediction mechanism is created for each
+<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> (input) mechanism in the system; a MappingProjection is created that projects to it from the
+corresponding <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism; and the pair are assigned to their own <em>prediction process</em>.  The
+prediction mechanisms and prediction processes for an EVCMechanism are listed in its <code class="docutils literal"><span class="pre">predictionMechanisms</span></code>
+and <code class="docutils literal"><span class="pre">predictionProcesses</span></code> attributes, respectively.</li>
 </ul>
 <ul class="simple">
-<li><strong>ControlSignal Projections</strong> &#8211; these are used by the EVCMechanism to regulate the parameters of mechanism
-functions that have been specified for control.  A control signal can be assigned to a parameter where its function
-is specified (see <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates</span></a>). When an EVCMechanism is created for a system system,
-it assumes the control signals for those parameters:  For each, an outputState is added to the EVCMechanism and a
-ControlSignal projection is assigned from that outputState to the parameterState for the parameter to be controlled.</li>
+<li><strong>ControlProjections</strong> &#8211; these are used by the EVCMechanism to regulate the parameters of mechanism functions
+that have been specified for control.  A ControlProjection can be assigned to a parameter where its function
+is specified (see <a class="reference internal" href="Mechanism.html#mechanism-parameterstates"><span class="std std-ref">ParameterStates</span></a>). When an EVCMechanism is created for a system, it is assigned
+the ControlProjections for those parameters:  For each, an outputState is added to the EVCMechanism and a
+ControlProjection is assigned from that outputState to the parameterState for the parameter to be controlled.</li>
 </ul>
 </div></blockquote>
 <div class="section" id="evc-mechanism-parameters">
@@ -228,25 +232,25 @@ assigning a params dictionary to the controller&#8217;s <code class="docutils li
 (see <a class="reference internal" href="Mechanism.html#mechanism-specifying-parameters"><span class="std std-ref">Specifying Mechanism Parameters</span></a> for details of parameter specification):</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> - the outputStates of the system&#8217;s mechanisms used  to evaluate the outcome
+<li><code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> - the outputStates of the system&#8217;s mechanisms used to evaluate the outcome
 of performance for the EVC calculation (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying
 monitored outputStates).  The default is: <code class="xref std std-keyword docutils literal"><span class="pre">MonitoredOutputStateOption.PRIMARY_OUTPUT_STATES</span></code>,
 which uses the value of the primary outputState of every <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism in the system (see
 <span class="xref std std-ref">_Mechanism_Role_In_Processes_And_Systems</span>).  Each outputState in <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> can be
 assigned an exponent and a weight to parameterize its contribution to the aggregate value (see
-<span class="xref std std-ref">EVCMechanism_Parameterizing_EVC_Objective_Function</span>).</li>
+<a class="reference internal" href="#evcmechanism-parameterizing-evc-calculation"><span class="std std-ref">Parameterizing the EVC Calculation</span></a>).</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="constructing-the-controlsignalsearchspace">
 <span id="evcmechanism-controlsignalsearchspace"></span><h3>Constructing the ControlSignalSearchSpace<a class="headerlink" href="#constructing-the-controlsignalsearchspace" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code> is constructed from the <code class="docutils literal"><span class="pre">allocationSamples</span></code> attribute of each of the
-EVCMechanism&#8217;s control signals (that is, the ControlSignal projections in each of its outputState
-<code class="docutils literal"><span class="pre">sendToProjections</span></code> attribute).  The <code class="docutils literal"><span class="pre">allocationSamples</span></code> attribute of a control signal is an array of
-values to sample for the parameter controlled by a given control signal.  A control allocation policy is made up of
-one value from the <code class="docutils literal"><span class="pre">allocationSamples</span></code> attribute of each of the EVCMechanism&#8217;s control signals.  When an
-EVCMechanism is created, it constructs all possible control allocation policies (i.e., all possible combinations of
-values for its control signals), which is placed in its <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code> attribute.</p>
+EVCMechanism&#8217;s control signals (corresponding to each of its ControlProjections).  The <code class="docutils literal"><span class="pre">allocationSamples</span></code>
+attribute of a control signal is an array of values to sample for the parameter controlled by a given
+ControlProjection.   A control allocation policy is made up of one value from the <code class="docutils literal"><span class="pre">allocationSamples</span></code> attribute of
+each of the EVCMechanism&#8217;s control signals.  When an EVCMechanism is created, it constructs all possible control
+allocation policies (i.e., all possible combinations of values for its control signals), which is placed in its
+<code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code> attribute.</p>
 </div>
 <div class="section" id="parameterizing-the-evc-calculation">
 <span id="evcmechanism-parameterizing-evc-calculation"></span><h3>Parameterizing the EVC Calculation<a class="headerlink" href="#parameterizing-the-evc-calculation" title="Permalink to this headline">¶</a></h3>
@@ -296,7 +300,7 @@ aggregated value for the policy.</li>
 Otherwise, only the <code class="docutils literal"><span class="pre">EVCMax</span></code> value is stored.</li>
 </ul>
 <p>Once the all control allocation policies in the controlSignalSearchSpace have been evaluated, the policy generating the
-maximum EVC is implemented, by assigning the value it specifies for each control signal.  These are then used by the
+maximum EVC is implemented, by assigning the value it specifies for each ControlProjection.  These are then used by the
 parameterStates to which they project in the next execution of the system.</p>
 <p class="rubric">Examples</p>
 <p>The following example implements a system with an EVCMechanism (and two processes not shown):</p>
@@ -317,14 +321,14 @@ and then divide that by the value of the RESPONSE_TIME outputState of the DDM me
 <span id="evcmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="EVCMechanism.EVCMechanism">
-<em class="property">class </em><code class="descclassname">EVCMechanism.</code><code class="descname">EVCMechanism</code><span class="sig-paren">(</span><em>prediction_mechanism_type=AdaptiveIntegratorMechanism</em>, <em>prediction_mechanism_params=None</em>, <em>monitor_for_control=None</em>, <em>function=LinearCombination(offset=0.0</em>, <em>scale=1</em>, <em>operation=SUM)</em>, <em>outcome_aggregation_function=LinearCombination(offset=0</em>, <em>scale=1</em>, <em>operation=PRODUCT)</em>, <em>cost_aggregation_function=LinearCombination(offset=0.0</em>, <em>scale=1.0</em>, <em>operation=SUM)</em>, <em>save_all_values_and_policies:bool=:keyword:`False`</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVCMechanism.EVCMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">EVCMechanism.</code><code class="descname">EVCMechanism</code><span class="sig-paren">(</span><em>prediction_mechanism_type=IntegratorMechanism</em>, <em>prediction_mechanism_params=None</em>, <em>monitor_for_control=None</em>, <em>function=LinearCombination(offset=0.0</em>, <em>scale=1</em>, <em>operation=SUM)</em>, <em>outcome_aggregation_function=LinearCombination(offset=0</em>, <em>scale=1</em>, <em>operation=PRODUCT)</em>, <em>cost_aggregation_function=LinearCombination(offset=0.0</em>, <em>scale=1.0</em>, <em>operation=SUM)</em>, <em>save_all_values_and_policies:bool=:keyword:`False`</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVCMechanism.EVCMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimizes the ControlSignals for a System.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>prediction_mechanism_type</strong> (<em>CombinationFunction: default AdaptiveIntegratorMechanism</em>) &#8211; the mechanism class used for prediction mechanism(s).
+<li><strong>prediction_mechanism_type</strong> (<em>CombinationFunction: default IntegratorMechanism</em>) &#8211; the mechanism class used for prediction mechanism(s).
 Each instance is named using the name of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism + PREDICTION_MECHANISM
 and assigned an outputState named based on the same.</li>
 <li><strong>prediction_mechanism_params</strong> (<em>Optional[Dict[param keyword, param value]] : default None</em>) &#8211; a parameter dictionary passed to <code class="docutils literal"><span class="pre">prediction_mechanism_type</span></code> constructor.
@@ -341,12 +345,12 @@ in <code class="docutils literal"><span class="pre">monitoredOutputStates</span>
 <li><strong>cost_aggregation_function</strong> (<em>CombinationFunction : LinearCombination(offset=0.0,scale=1.0,operation=SUM)</em>) &#8211; specifies the function used to aggregate the cost of the EVCMechanism&#8217;s control signals.
 The <code class="docutils literal"><span class="pre">weight</span></code> and/or the <code class="docutils literal"><span class="pre">exponent</span></code> arguments can be used to parameterize the contribution that each
 control signal makes to the aggregated value;  the length of each argument must equal the number of
-control signals in <code class="docutils literal"><span class="pre">controlSignals</span></code>.</li>
+ControlProjections in <code class="docutils literal"><span class="pre">controlProjections</span></code>.</li>
 <li><strong>save_all_values_and_policies</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; when <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, saves all control allocation policies in <code class="docutils literal"><span class="pre">controlSignalSearchSpace</span></code>
 and associated EVC values (in addition to the max).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a parms dict).</li>
-<li><strong>name</strong> (<em>str : default Transfer-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a params dict).</li>
+<li><strong>name</strong> (<em>str : default EVCMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict] : default Process.classPreferences</em>) &#8211; the PreferenceSet for the mechanism.
@@ -418,7 +422,7 @@ the control signal values for a given control allocation policy, to determine th
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.cost_aggregation_function">
 <code class="descname">cost_aggregation_function</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.cost_aggregation_function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,operation=SUM)</em> &#8211; the function used to combine the cost of the mechanism&#8217;s ControlSignal projections.  The :keyword:<code class="docutils literal"><span class="pre">weights</span></code>
+<dd><p><em>CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,operation=SUM)</em> &#8211; the function used to combine the cost of the mechanism&#8217;s ControlProjections.  The :keyword:<code class="docutils literal"><span class="pre">weights</span></code>
 argument can be used to scale the contribution of the cost of each control signal;  it must be an array of
 scalar values, the length of which is equal to the number of the EVCMechanism&#8217;s outputStates.</p>
 </dd></dl>
@@ -427,7 +431,7 @@ scalar values, the length of which is equal to the number of the EVCMechanism&#8
 <dt id="EVCMechanism.EVCMechanism.controlSignalSearchSpace">
 <code class="descname">controlSignalSearchSpace</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.controlSignalSearchSpace" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> &#8211; an array that contains arrays of control allocation policies.  Each control allocation policy contains one
-value for each of the mechanism&#8217;s control signals (i.e., ControlSignal projections).  By default,
+value for each of the mechanism&#8217;s control signals (i.e., ControlProjections).  By default,
 it is assigned a set of all possible control allocation policies (using np.meshgrid to construct all
 permutations of control signal values).</p>
 </dd></dl>
@@ -448,14 +452,14 @@ that generated <code class="docutils literal"><span class="pre">EVCmax</span></c
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.EVCmaxPolicy">
 <code class="descname">EVCmaxPolicy</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.EVCmaxPolicy" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; an array of the control signal values (value of ControlSignal projections) for the control allocation policy
+<dd><p><em>1d np.array</em> &#8211; an array of the control signal values (value of ControlProjections) for the control allocation policy
 that generated <code class="docutils literal"><span class="pre">EVCmax</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="EVCMechanism.EVCMechanism.prediction_mechanism_type">
 <code class="descname">prediction_mechanism_type</code><a class="headerlink" href="#EVCMechanism.EVCMechanism.prediction_mechanism_type" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ProcessingMechanism : default AdaptiveIntegratorMechanism</em> &#8211; the processingMechanism class used for prediction mechanism(s).
+<dd><p><em>ProcessingMechanism : default IntegratorMechanism</em> &#8211; the processingMechanism class used for prediction mechanism(s).
 Note: each instance will be named based on origin mechanism + kwPredictionMechanism,</p>
 <blockquote>
 <div>and assigned an outputState named based on the same</div></blockquote>
@@ -486,10 +490,10 @@ The same dictionary will be passed to all instances of <code class="docutils lit
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MonitoringMechanism.html" class="btn btn-neutral float-right" title="Monitoring Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="MonitoringMechanism.html" class="btn btn-neutral float-right" title="MonitoringMechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="DefaultControlMechanism.html" class="btn btn-neutral" title="Default Control Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="DefaultControlMechanism.html" class="btn btn-neutral" title="DefaultControlMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -498,7 +502,7 @@ The same dictionary will be passed to all instances of <code class="docutils lit
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameter State &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>ParameterState &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="States" href="State.html"/>
-        <link rel="next" title="Output State" href="OutputState.html"/>
-        <link rel="prev" title="Input State" href="InputState.html"/> 
+        <link rel="next" title="OutputState" href="OutputState.html"/>
+        <link rel="prev" title="InputState" href="InputState.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,15 +90,17 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Parameter State</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ParameterState</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-function-parameters">Specifying Function Parameters</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
@@ -141,7 +143,7 @@
       
           <li><a href="State.html">States</a> &raquo;</li>
       
-    <li>Parameter State</li>
+    <li>ParameterState</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -156,104 +158,181 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-ParameterState">
-<span id="parameter-state"></span><h1>Parameter State<a class="headerlink" href="#module-ParameterState" title="Permalink to this headline">¶</a></h1>
+<span id="parameterstate"></span><h1>ParameterState<a class="headerlink" href="#module-ParameterState" title="Permalink to this headline">¶</a></h1>
 <p><strong>[DOCUMENTATION STILL UNDER CONSTRUCTION]</strong></p>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A parameterState belongs to either a mechanism or a MappingProjection, and is used to represent and possibly modify
+the value of a parameter of its owner or it owner&#8217;s function. It can receive one or more ControlProjections and/or
+LearningProjections that modify that parameter.   A list of the projections received by a parameterState is kept in
+its <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines the values of these inputs, and uses the result
+to modify the value of the parameter for which it is responsible.</p>
+</div>
 <div class="section" id="creating-a-parameterstate">
-<span id="parameterstate-creating-a-parameterstate"></span><h3>Creating a ParameterState<a class="headerlink" href="#creating-a-parameterstate" title="Permalink to this headline">¶</a></h3>
+<span id="parameterstate-creation"></span><h2>Creating a ParameterState<a class="headerlink" href="#creating-a-parameterstate" title="Permalink to this headline">¶</a></h2>
+<p>A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
+parameterStates are created automatically when the mechanism or projection to which they belong is created.  One
+parameterState is created for each parameter of the object and its <code class="docutils literal"><span class="pre">function</span></code>.  Each parameterState is
+created using the specification of the parameter for which it is responsible, as described below.</p>
+<div class="section" id="specifying-function-parameters">
+<span id="parameterstate-specifying-parameters"></span><h3>Specifying Function Parameters<a class="headerlink" href="#specifying-function-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The parameter of a <code class="docutils literal"><span class="pre">function</span></code> can be specified in one of three ways:  in the constructor for its <code class="docutils literal"><span class="pre">function</span></code>;  in
+the <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code> entry of a parameter dictionary for the object to which the <code class="docutils literal"><span class="pre">function</span></code> belongs; or,
+in some cases, as an argument in the constructor for the object to which the <code class="docutils literal"><span class="pre">function</span></code> belongs (see
+<span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for details).  The items specified for the parameter are used
+to create its ParameterState.  The value specified (either explicitly, or by default) is assigned to the
+parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code> attribute, and any projection specified is assigned to its <code class="docutils literal"><span class="pre">receiveFromProjections</span></code>
+attribute.  The <code class="docutils literal"><span class="pre">baseValue</span></code> is assigned as the value of the parameter for <code class="docutils literal"><span class="pre">function</span></code> when it executes,
+after it is modified by any ControlProjections or LearningProjections received by the ParameterState (see
+<span class="xref std std-ref">Execution</span> for details).  The specification of a parameter can take any of the following forms:</p>
+<blockquote>
+<div><ul class="simple">
+<li>A <strong>value</strong>.  This must be a valid the value of the parameter.  The creates a default parameterState and
+assigns the value as its <code class="docutils literal"><span class="pre">baseValue</span></code>. [LINK]</li>
+</ul>
+<ul class="simple">
+<li>An existing <strong>parameterState</strong> object or the name of one.  It&#8217;s name must be the name of a parameter of the
+owner&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, and its value must be a valid for that parameter.  This capability is provided
+for generality and potential future use, but its use is not advised.</li>
+</ul>
+<ul class="simple">
+<li>A <strong>Projection subclass</strong>.  This creates a default parameterState, assigns the parameter&#8217;s default value as
+the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and creates and assigns a projection to it of the specified type.
+The projection must be a ControlProjection or LearningProjection.</li>
+</ul>
+<ul class="simple">
+<li>A <strong>Projection object</strong> or <strong>projection specification dictionary</strong> [LINK].  This creates a default
+parameterState, assigns the <code class="docutils literal"><span class="pre">value</span></code> of projection as the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and assigns the
+parameter state as the <code class="docutils literal"><span class="pre">receiver</span></code> for the projection.  The projection must be a ControlProjection or
+LearningProjection, and its value must be a valid one for the parameter.</li>
+</ul>
+<ul class="simple">
+<li>A <code class="xref any docutils literal"><span class="pre">ParamValueProjection</span></code> or 2-item (value, projection) tuple.  This creates a default parameterState using
+the <code class="docutils literal"><span class="pre">value</span></code> (1st) item of the tuple as its <code class="docutils literal"><span class="pre">baesValue</span></code>. If the <code class="docutils literal"><span class="pre">projection</span></code> (2nd) item of the tuple is an
+existing projection or a constructor for one, it is assigned the parameter as its <code class="docutils literal"><span class="pre">receiver</span></code>, and the
+projection is assigned to the parameterState&#8217;s <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute. If the projection item
+is the name of a Projection subclass, a default projection of the specified type is created, and assigned the
+parameterState as its <code class="docutils literal"><span class="pre">receiver</span></code>.  In either case, the projection must be a ControlProjection or
+LearningProjection, and its value must be a valid one for the parameter.</li>
+</ul>
+</div></blockquote>
+<p class="rubric">Examples</p>
+<p>In the following example, a mechanism is created with a function that has four parameters,
+each of which is specified using a different format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">SomeMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">param_a</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                                                   <span class="n">param_b</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">ControlProjection</span><span class="p">),</span>
+                                                   <span class="n">param_c</span><span class="o">=</span><span class="p">(</span><span class="mi">36</span><span class="p">,</span> <span class="n">ControlProjection</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">),</span>
+                                                   <span class="n">param_d</span><span class="o">=</span><span class="n">ControlProjection</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>The first parameter of the mechanism&#8217;s function (<code class="docutils literal"><span class="pre">param_a</span></code>) is assigned a value directly; the second (<code class="docutils literal"><span class="pre">param_b</span></code>) is
+assigned a value and a ControlProjection; the third (<code class="docutils literal"><span class="pre">param_c</span></code>) is assigned a value and a <a class="reference internal" href="ControlProjection.html#controlprojection-structure"><span class="std std-ref">ControlProjection
+with a specified function</span></a>; and the fourth (<code class="docutils literal"><span class="pre">param_d</span></code>) is assigned just a
+ControlProjection (the default vaue for the parameter will be used).</p>
+<p>In this example, a MappingProjection is created in which its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is assigned a
+a random weight matrix (using a <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">matrix keyword</span></a>) and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mapping_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">my_input_mechanism</span><span class="p">,</span>
+                                          <span class="n">receiver</span><span class="o">=</span><span class="n">my_output_mechanism</span><span class="p">,</span>
+                                          <span class="n">matrix</span><span class="o">=</span><span class="p">(</span><span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">LearningProjection</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the <code class="docutils literal"><span class="pre">matrix</span></code> parameter belongs to the MappingProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code>;  however, since it has only one
+standard function, its arguments are available in the constructor for the projection
+(see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for a more detailed explanation).</p>
+</div>
+</div>
+</div>
+<div class="section" id="structure">
+<span id="parameterstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>function vs. parameter_modulation_operation</dt>
+<dd><dl class="first last docutils">
+<dt>Parameters:</dt>
+<dd><dl class="first last docutils">
+<dt>The default for FUNCTION is LinearCombination using kwAritmentic.Operation.PRODUCT:</dt>
+<dd><dl class="first last docutils">
+<dt>self.value is multiplied by  the output of each of the  projections it receives</dt>
+<dd>(generally ControlProjections)</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+<dt># IMPLEMENTATION NOTE:  <a href="#id1"><span class="problematic" id="id2">**</span></a>* CONFIRM THAT THIS IS TRUE:</dt>
+<dd><p class="first">FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
+The parameters of FUNCTION can be set:</p>
+<blockquote class="last">
+<div><ul class="simple">
+<li>by including them at initialization (param[FUNCTION] = &lt;function&gt;(sender, params)</li>
+<li>calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)</li>
+<li>at run time, which changes their values for just for that call (self.execute(sender, params)</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<p>Every parameterState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. It can receive one or more
+<span class="xref std std-ref">ControlProjections</span> or <span class="xref std std-ref">LearningProjections</span> from other mechanisms.
+A list of projections received by a parameterState is maintained in its <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.
+Like all PsyNeuLink components, it has the three following fundamental attributes:</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">variable</span></code>:  this serves as a template for the <code class="docutils literal"><span class="pre">value</span></code> of each projection that the parameterState receives;
+each must match both the number and type of elements of its <code class="docutils literal"><span class="pre">variable</span></code>.</p>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">function</span></code>:  this performs an elementwise (Hadamard) aggregation  of the <code class="docutils literal"><span class="pre">values</span></code> of the projections</dt>
+<dd><p class="first last">received by the parameterState.  The default function is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that multiplies the values.
+A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
+some way), so long as it generates a result that is compatible with the <code class="docutils literal"><span class="pre">value</span></code> expected for the parameterState</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="docutils">
+<dt>XXX IS THIS TRUE:</dt>
+<dd>It assigns the result to the parameterState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.</dd>
+</dl>
+<p>XXX DOES THIS COMBINE WITH BASEVALUE, OR IS THAT DONE AFTETWARDS?</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">value</span></code>:  this is the aggregated value of the projections received by the parameterState, assigned to it by the
+parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.  It must be compatible
+with its corresponding item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.</li>
+</ul>
+<p>In addition, a parameterState has two other attributes that are used to determine the value of the <code class="docutils literal"><span class="pre">function</span></code>
+parameter for which it is responsible:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">baseValue</span></code>:  this is the default value of the <code class="docutils literal"><span class="pre">function</span></code> parameter for which the parameterState is responsible.
+It is combined with the parameterState&#8217;s value (i.e., the aggregated values received from its projections) to
+determine the value of the <code class="docutils literal"><span class="pre">function</span></code> parameter for which the parameterState is responsible
+(see <span class="xref std std-ref">figure</span> below).</li>
+</ul>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">parameterModulationOperation</span></code>: determines how the parameterState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> (i.e., the aggregrated values
+received from its projections) is combined with its <code class="docutils literal"><span class="pre">baseValue</span></code> to generate the value assigned to the <code class="docutils literal"><span class="pre">function</span></code>
+parameter for which it is responsible (see <span class="xref std std-ref">figure</span> below).  This must be a value of
+<code class="xref any docutils literal"><span class="pre">ModulationOperation</span></code>;  the default is <code class="xref std std-keyword docutils literal"><span class="pre">PRODUCT</span></code>.</p>
+<blockquote>
+<div><p>XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)</p>
+</div></blockquote>
+</li>
+</ul>
+<p>XXXX EXPLAIN:
+parameter_modulation_operation:  ModulationOperation - list values and their meaning
+see ref:<cite>Mapping_Parameter_Modulation_Operation</cite></p>
 <blockquote>
 <div><blockquote>
 <div><ul class="simple">
-<li>ParameterState class ref: default will be instantiated using param with same name in EMP</li>
-<li>ParameterState object: its value must be compatible with param of same name in EMP</li>
-</ul>
-<ul>
-<li><dl class="first docutils">
-<dt>projection: Projection object, Projection specifications dict, or list of either)</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>Projection subclass ref:</dt>
-<dd><p class="first">default ParameterState will be instantiated using EMP
-default projection (for ParameterState) will be instantiated using EMP</p>
-<blockquote class="last">
-<div><p>and assigned to ParameterState</p>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>Projection object:</dt>
-<dd><p class="first last">ParameterState will be instantiated using output of projection as its value;
-this must be compatible with EMP</p>
-</dd>
-</dl>
-</li>
-<li><p class="first">Projection specification dict</p>
-</li>
-<li><p class="first">List[any of the above]</p>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-<ul>
-<li><dl class="first docutils">
-<dt>State specification dict:  ParameterState will be instantiated using EMP as its value;</dt>
-<dd><dl class="first last docutils">
-<dt>must contain the following entries: (see Instantiation arguments for ParameterState):</dt>
-<dd><ul class="first last simple">
-<li>FUNCTION (method)</li>
-<li>FUNCTION_PARAMS (dict)</li>
-<li>STATE_PROJECTIONS (Projection, specifications dict, or list of either of these)</li>
-</ul>
-</dd>
-</dl>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>ParamValueProjection tuple:</dt>
-<dd><p class="first last">value will be used as variable to instantiate a default ParameterState
-projection will be assigned as projection to ParameterState</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>2-item tuple</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">(value, projectionType)</span><dd><p class="first last">[convenience notation;  should use ParamValueProjection for clarity]:
-first item will be used as variable to instantiate a default ParameterState
-second item will be assigned as projection to ParameterState</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>value</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">list of numbers (no projections will be assigned)</span><dd><p class="first last">will be used as variable to instantiate a default ParameterState</p>
-</dd>
-</dl>
-</li>
+<li>get ParameterStateParams</li>
+<li>pass params to super, which aggregates inputs from projections</li>
+<li>combine input from projections (processed in super) with baseValue using paramModulationOperation</li>
+<li>combine result with value specified at runtime in PARAMETER_STATE_PARAMS</li>
+<li>assign result to self.value</li>
 </ul>
 </div></blockquote>
-<p>COPIED FROM __init__  (RELABELED WITH PARAMETER_STATES):
-+ PARAMETER_STATES (dict): dictionary with entries for each param of the mechanism subclass.</p>
-<blockquote>
-<div><p>The key for each entry should be the name of the param (used to name its associated projections);
-the value for each entry MUST be one of the following (see Parameters above for details):</p>
-<blockquote>
-<div><ul class="simple">
-<li>ParameterState object</li>
-<li>dict: State specifications (see State)</li>
-<li>projection: Projection object, Projection specifications dict, or list of either)</li>
-<li>tuple: (value, projectionType)</li>
-<li>value: list of numbers (no projections will be assigned)</li>
-</ul>
+<p>XXXXX NEED TO MODIFY DESCRIPTION AND/OR FIGURE TO DEAL WITH LEARNING SIGNALS</p>
 </div></blockquote>
-</div></blockquote>
-</div></blockquote>
-<p>parameter_modulation_operation:  ModulationOperation - list values and their meaning</p>
-</div>
 </div>
 </div>
 
@@ -264,10 +343,10 @@ the value for each entry MUST be one of the following (see Parameters above for 
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="OutputState.html" class="btn btn-neutral float-right" title="Output State" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="OutputState.html" class="btn btn-neutral float-right" title="OutputState" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="InputState.html" class="btn btn-neutral" title="Input State" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="InputState.html" class="btn btn-neutral" title="InputState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -276,7 +355,7 @@ the value for each entry MUST be one of the following (see Parameters above for 
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

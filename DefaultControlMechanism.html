@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Default Control Mechanism &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>DefaultControlMechanism &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Control Mechanisms" href="ControlMechanism.html"/>
-        <link rel="next" title="EVC Mechanism" href="EVCMechanism.html"/>
+        <link rel="next" title="EVCMechanism" href="EVCMechanism.html"/>
         <link rel="prev" title="Control Mechanisms" href="ControlMechanism.html"/> 
 
   
@@ -91,15 +91,15 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Default Control Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVC Mechanism</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">DefaultControlMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#creating-a-controlmechanism">Creating A ControlMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#execution">Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">Monitoring Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
@@ -145,7 +145,7 @@
       
           <li><a href="ControlMechanism.html">Control Mechanisms</a> &raquo;</li>
       
-    <li>Default Control Mechanism</li>
+    <li>DefaultControlMechanism</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -159,8 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="default-control-mechanism">
-<h1>Default Control Mechanism<a class="headerlink" href="#default-control-mechanism" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="defaultcontrolmechanism">
+<h1>DefaultControlMechanism<a class="headerlink" href="#defaultcontrolmechanism" title="Permalink to this headline">¶</a></h1>
 <p>[DOCUMENTATION COMING...]</p>
 <span class="target" id="module-DefaultControlMechanism"></span><p><strong>[DOCUMENTATION STILL UNDER CONSTRUCTION]</strong></p>
 <dl class="class">
@@ -206,13 +206,13 @@
 
 <dl class="class">
 <dt id="DefaultControlMechanism.DefaultControlMechanism">
-<em class="property">class </em><code class="descclassname">DefaultControlMechanism.</code><code class="descname">DefaultControlMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bc77ae8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">DefaultControlMechanism.</code><code class="descname">DefaultControlMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bd86b70&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement default control mechanism</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>Description:</dt>
 <dd>Implement default source of control signals, with one inputState and outputState for each
-Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and controlSignal(s)</dd>
+Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and ControlProjection(s)</dd>
 </dl>
 </div></blockquote>
 <dl class="docutils">
@@ -221,9 +221,9 @@ Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputSta
 <li><dl class="first docutils">
 <dt>EXPLAIN WHAT ControlSignalChannel IS:</dt>
 <dd><blockquote class="first">
-<div><p>A ControlSignalChannel is instantiated for each ControlSignal projection assigned to DefaultController</p>
+<div><p>A ControlSignalChannel is instantiated for each ControlProjection assigned to DefaultController</p>
 </div></blockquote>
-<p class="last">It simply passes the defaultControlAllocation value to the ControlSignal projection</p>
+<p class="last">It simply passes the defaultControlAllocation value to the ControlProjection</p>
 </dd>
 </dl>
 </li>
@@ -267,7 +267,7 @@ Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputSta
 <dl class="method">
 <dt id="DefaultControlMechanism.DefaultControlMechanism.instantiate_control_signal_channel">
 <code class="descname">instantiate_control_signal_channel</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.instantiate_control_signal_channel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate inputState that passes defaultControlAllocation to ControlSignal projection</p>
+<dd><p>Instantiate inputState that passes defaultControlAllocation to ControlProjection</p>
 <p>Instantiate an inputState with defaultControlAllocation as its value</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -286,7 +286,7 @@ Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputSta
 
 <dl class="class">
 <dt id="DefaultControlMechanism.DefaultControlMechanism.Linear">
-<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10bc97400&gt; = 1, intercept: &lt;function parameter_spec at 0x10bc97400&gt; = 0, params=None, prefs: &lt;function is_pref_set at 0x10bc77ae8&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descname">Linear</code><span class="sig-paren">(</span><em>variable_default=[0], slope: &lt;function parameter_spec at 0x10bdad730&gt; = 1.0, intercept: &lt;function parameter_spec at 0x10bdad730&gt; = 0.0, params=None, prefs: &lt;function is_pref_set at 0x10bd86b70&gt; = None, context='Linear INITIALIZING '</em><span class="sig-paren">)</span><a class="headerlink" href="#DefaultControlMechanism.DefaultControlMechanism.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate a linear transform of input variable (SLOPE, INTERCEPT)</p>
 <dl class="docutils">
 <dt>Initialization arguments:</dt>
@@ -320,7 +320,7 @@ Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputSta
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="AdaptiveIntegrator.html#AdaptiveIntegrator.AdaptiveIntegratorMechanism.variable" title="AdaptiveIntegrator.AdaptiveIntegratorMechanism.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.variable" title="ComparatorMechanism.ComparatorMechanism.variable"><strong>variable</strong></a> &#8211; (number) - value to be &#8220;plotted&#8221; (default: 0</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>params</strong> &#8211; (dict) with entries specifying:
 SLOPE: number - slope (default: 1)
@@ -345,7 +345,7 @@ INTERCEPT: number - intercept (default: 0)</td>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="EVCMechanism.html" class="btn btn-neutral float-right" title="EVC Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="EVCMechanism.html" class="btn btn-neutral float-right" title="EVCMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ControlMechanism.html" class="btn btn-neutral" title="Control Mechanisms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -357,7 +357,7 @@ INTERCEPT: number - intercept (default: 0)</td>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>

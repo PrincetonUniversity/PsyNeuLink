@@ -34,8 +34,8 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Input State" href="InputState.html"/>
-        <link rel="prev" title="Weighted Error" href="WeightedError.html"/> 
+        <link rel="next" title="InputState" href="InputState.html"/>
+        <link rel="prev" title="WeightedErrorMechanism" href="WeightedErrorMechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -89,9 +89,9 @@
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">States</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">Output State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
@@ -150,9 +150,9 @@
 <h1>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="InputState.html">Input State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ParameterState.html">Parameter State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="OutputState.html">Output State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OutputState.html">OutputState</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
@@ -165,7 +165,7 @@ associated with that projection.  There are three types of states, all of which 
 <ul>
 <li><dl class="first docutils">
 <dt><strong>InputState</strong>:</dt>
-<dd><p class="first last">used by a mechanism to represent the input provided by one or more <a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> projections.</p>
+<dd><p class="first last">used by a mechanism to represent the input provided by one or more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.</p>
 </dd>
 </dl>
 </li>
@@ -173,9 +173,9 @@ associated with that projection.  There are three types of states, all of which 
 <dt><strong>ParameterState</strong>:</dt>
 <dd><ul class="first last simple">
 <li>used by a mechanism to represent the value of a parameter of its <code class="docutils literal"><span class="pre">function</span></code>,
-possibly regulated by a <a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> projection;</li>
-<li>used by a Mapping projection to represent the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of its <code class="docutils literal"><span class="pre">function</span></code>,
-possibly regulated by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> projection.</li>
+possibly regulated by a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>;</li>
+<li>used by a MappingProjection to represent the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of its <code class="docutils literal"><span class="pre">function</span></code>,
+possibly regulated by a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</li>
 </ul>
 </dd>
 </dl>
@@ -184,9 +184,9 @@ possibly regulated by a <a class="reference internal" href="LearningSignal.html"
 <dt><strong>OutputState</strong>:</dt>
 <dd><ul class="first last simple">
 <li>used by a mechanism to represent its output, and as the source of any outgoing projection(s):<ul>
-<li><a class="reference internal" href="Mapping.html"><span class="doc">Mapping</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>;</li>
-<li><a class="reference internal" href="ControlSignal.html"><span class="doc">Control Signal</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>;</li>
-<li><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> for a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a>.</li>
+<li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>;</li>
+<li><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>;</li>
+<li><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> for a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a>.</li>
 </ul>
 </li>
 </ul>
@@ -196,10 +196,10 @@ possibly regulated by a <a class="reference internal" href="LearningSignal.html"
 </ul>
 </div>
 <div class="section" id="creating-a-state">
-<span id="state-creating-a-state"></span><h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
-<p>States can be created used the constructor for one of the subclasses.  However, in general, they are created
+<span id="state-creation"></span><h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
+<p>States can be created using the constructor for one of the subclasses.  However, in general, they are created
 automatically by the objects to which they belong, and/or through specification in context (e.g., when specifying
-the parameters of a mechanism&#8217;s function to be controlled [LINK], or Mapping projections to be learned [LINK]).</p>
+the parameters of a mechanism&#8217;s function to be controlled [LINK], or MappingProjections to be learned [LINK]).</p>
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -237,7 +237,7 @@ is assigned after the <code class="docutils literal"><span class="pre">function<
 <p class="first admonition-title">Note</p>
 <p class="last">States should NEVER be instantiated by a direct call to the base class.
 They should be instantiated by calling the constructor for the desired subclass,
-or using other methods for specifying a state (see <a class="reference internal" href="#state-creating-a-state"><span class="std std-ref">Creating a State</span></a>).</p>
+or using other methods for specifying a state (see <a class="reference internal" href="#state-creation"><span class="std std-ref">Creating a State</span></a>).</p>
 </div>
 <dl class="attribute">
 <dt id="State.State_Base.owner">
@@ -272,7 +272,7 @@ or using other methods for specifying a state (see <a class="reference internal"
 <dl class="attribute">
 <dt id="State.State_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#State.State_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; Name of the state.
+<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; the name of the state.
 Specified in the name argument of the call to create the state;  if not is specified,
 a default is assigned by StateRegistry based on the states&#8217;s subclass
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
@@ -280,7 +280,7 @@ a default is assigned by StateRegistry based on the states&#8217;s subclass
 <p class="first admonition-title">Note</p>
 <p class="last">Unlike other PsyNeuLink components, states names are &#8220;scoped&#8221; within a mechanism, meaning that states with
 the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
-mechanism: states within a mechanism with the same base name are appended an index in the order of
+mechanism: states within a mechanism with the same base name are appended an index in the order of their
 creation).</p>
 </div>
 </dd></dl>
@@ -329,10 +329,10 @@ Assign result to self.value</div></blockquote>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="InputState.html" class="btn btn-neutral float-right" title="Input State" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="InputState.html" class="btn btn-neutral float-right" title="InputState" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="WeightedError.html" class="btn btn-neutral" title="Weighted Error" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="WeightedErrorMechanism.html" class="btn btn-neutral" title="WeightedErrorMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -341,7 +341,7 @@ Assign result to self.value</div></blockquote>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, Jon Cohen.
+        &copy; Copyright 2016, Jonathan D. Cohen.
 
     </p>
   </div>
