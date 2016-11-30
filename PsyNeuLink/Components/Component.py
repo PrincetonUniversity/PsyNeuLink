@@ -959,12 +959,21 @@ class Component(object):
 
                 # MODIFIED 11/30/16 NEW:
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
-                try:
-                    if param_name is FUNCTION and function.__class__ != request_set[FUNCTION].__class__:
-                        default_set[FUNCTION_PARAMS] = function.user_params
-                # function not yet defined, so allow FUNCTION_PARAMS)
-                except UnboundLocalError:
-                    pass
+                if param_name is FUNCTION:
+                    try:
+                        if inspect.isclass(function):
+                            function_class = function
+                        else:
+                            function_class = function.__class__
+                        if inspect.isclass(request_set[FUNCTION]):
+                            request_set_function_class = request_set[FUNCTION]
+                        else:
+                            request_set_function_class = request_set[FUNCTION].__class__
+                        if function_class != request_set_function_class:
+                            default_set[FUNCTION_PARAMS] = function.user_params
+                    # function not yet defined, so allow FUNCTION_PARAMS)
+                    except UnboundLocalError:
+                        pass
                 # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_kwFunctionParams:
@@ -997,19 +1006,13 @@ class Component(object):
             self._validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
 
-        # INSTANTIATE ANY NEW FUNCTION AND/OR STATES SPECIFIED
-        # if not context:
-        #     xxx
-
 
     def assign_params(self, request_set:dict=None):
         """Validates specified params, adds to them paramsInstanceDefaults, and instantiates any if necessary
 
-        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set, and assign_missing = False
+        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set
         Update paramInstanceDefaults with validated_set so that any instantiations (next) are done in proper context
-        Instantiate validated_set (not target_set, as that is now paramInstanceDefaults, and would involve unnecessary
-                                   and would invole uncessary, ??and possibly harmful?? reinstantiation of existing
-                                   ones
+        Instantiate any items in request set that require it (i.e, function or states);
 
         """
 
@@ -1018,19 +1021,35 @@ class Component(object):
                 warnings.warn("No params specified")
             return
 
+        import copy
+        request_set_param_names = list(request_set.keys())
         validated_set = {}
 
         self._assign_defaults(request_set=request_set,
                              target_set=validated_set,
-                             assign_missing=False,
+                             # assign_missing=False,
                              context=COMMAND_LINE)
 
         self.paramInstanceDefaults.update(validated_set)
 
-        if {INPUT_STATES, PARAMETER_STATES} in validated_set:
+        # FIX: THIS NEEDS TO BE HANDLED BETTER:
+        # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
+        # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_STATES
+        # FIX: FOR PARAMETER_STATES:
+        #        CALL THE FOLLOWING FOR EACH PARAM:
+        # FIX: NEED TO CALL
+
+        if INPUT_STATES in request_set_param_names:
             self._instantiate_attributes_before_function()
+
+        # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        # for param in request_set_param_names:
+        _instantiate_parameter_states(owner=self, context=COMMAND_LINE)
+
         if FUNCTION in validated_set:
             self._instantiate_function()
+
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function()
 
