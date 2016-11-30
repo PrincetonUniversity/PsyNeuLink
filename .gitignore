@@ -59,4 +59,3 @@ __pycache__
 *.iml
 *.DS_Store
 docs/build/*
-.doctrees/
