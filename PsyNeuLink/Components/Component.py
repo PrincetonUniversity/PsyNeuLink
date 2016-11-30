@@ -193,7 +193,7 @@ class Component(object):
         The component can be called with a params argument, which should contain entries for one or more of its params;
             - those values will be assigned to paramsCurrent at run time (overriding previous values in paramsCurrent)
             - if the component is called without a variable and/or params argument, it uses paramInstanceDefaults
-        The instance defaults can be assigned at initialization or using the assign_defaults class method;
+        The instance defaults can be assigned at initialization or using the _assign_defaults class method;
             - if instance defaults are not assigned on initialization, the corresponding class defaults are assigned
         Parameters can be REQUIRED to be in paramClassDefaults (for which there is no default value to assign)
             - for all classes, by listing the name and type in requiredParamClassDefaultTypes dict of the Function class
@@ -240,7 +240,7 @@ class Component(object):
     Class methods:
         - _validate_variable(variable)
         - _validate_params(request_set, target_set, context)
-        - assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
+        - _assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
         - reset_params()
         - _check_args(variable, params)
         - _assign_args_to_param_dicts(params, param_names, function_param_names)
@@ -454,7 +454,7 @@ class Component(object):
         #region ASSIGN DEFAULTS
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
-        self.assign_defaults(variable=variable_default,
+        self._assign_defaults(variable=variable_default,
                              request_set=param_defaults, # requested set
                              assign_missing=True,        # assign missing params from classPreferences to instanceDefaults
                              target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
@@ -763,7 +763,7 @@ class Component(object):
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
 
-    def assign_defaults(self,
+    def _assign_defaults(self,
                         variable=NotImplemented,
                         request_set=NotImplemented,
                         assign_missing=True,
@@ -794,6 +794,9 @@ class Component(object):
           Class defaults can not be passed as target_set
               IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;
                                     could be changed in the future simply by commenting out code below
+
+          If not context:  instantiates function and any states specified in request set
+                           (if they have changed from the previous value(s))
 
         :param variable: (anything but a dict (variable) - value to assign as variableInstanceDefault
         :param request_set: (dict) - params to be assigned
@@ -865,6 +868,25 @@ class Component(object):
         # self.paramNames = self.paramInstanceDefaults.keys()
         # MODIFIED 11/28/16 END
 
+        # IMPLEMENT: IF not context, DO RECURSIVE UPDATE OF DEFAULT WITH REQUEST, THEN SKIP NEXT IF (MAKE IT elif)
+        #            (update default_set with request_set)
+        #            BUT STILL NEED TO ADDRESS POSSIBLE MISMATCH OF FUNCTION AND FUNCTION_PARAMS (PER BELOW)
+        #            IF FUNCTION_PARAMS ARE NOT IN REQUEST SET, AS ONES FROM DEFAULT WILL BE FOR DIFFERENT FUNCTION
+        #            AND SHOULD BE CHECKED ANYHOW
+        #
+        # FROM: http://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
+        # import collections
+        #
+        # def update(d, u):
+        #     for k, v in u.items():
+        #         if isinstance(v, collections.Mapping):
+        #             r = update(d.get(k, {}), v)
+        #             d[k] = r
+        #         else:
+        #             d[k] = u[k]
+        #     return d
+
+
         # If assign_missing option is set,
         #  assign value from specified default set to any params missing from request set
         # Note:  do this before validating execute method and params, as some params may depend on others being present
@@ -888,7 +910,7 @@ class Component(object):
             #     B) default function, no default functionParams
             #         example: none??
             #     C) no default function, default functionParams
-            #         example: DDM
+            #         example: ??DDM
             #     D) no default function, no default functionParams
             #         example: System, Process, MonitoringMechanism, WeightedErrorMechanism
 
@@ -898,7 +920,7 @@ class Component(object):
                 function = request_set[FUNCTION]
             except KeyError:
                 # If there is no function specified, then allow functionParams
-                # Note: this occurs for objects that have "hard-coded" functions (e.g., DDM)
+                # Note: this occurs for objects that have "hard-coded" functions
                 self.assign_default_kwFunctionParams = True
             else:
                 # Get function class:
@@ -928,10 +950,19 @@ class Component(object):
             for param_name, param_value in default_set.items():
                 if param_name is FUNCTION_PARAMS and not self.assign_default_kwFunctionParams:
                     continue
+                # MODIFIED 11/29/16 NEW:  DON'T REPLACE REQUESTED ENTRY
+                if param_name in request_set:
+                    continue
+                # MODIFIED 11/29/16 END
                 request_set.setdefault(param_name, param_value)
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
+                        # MODIFIED 11/29/16 NEW:  DON'T REPLACE REQUESTED ENTRY
+                        if dict_entry_name in request_set[param_name]:
+                            continue
+                        # MODIFIED 11/29/16 END
                         request_set[param_name].setdefault(dict_entry_name, dict_entry_value)
+
 
 
         # VALIDATE PARAMS
@@ -940,6 +971,43 @@ class Component(object):
         if request_set and request_set != NotImplemented:
             self._validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
+
+        # INSTANTIATE ANY NEW FUNCTION AND/OR STATES SPECIFIED
+        # if not context:
+        #     xxx
+
+
+    def assign_params(self, request_set:dict=None):
+        """Validates specified params, adds to them paramsInstanceDefaults, and instantiates any if necessary
+
+        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set, and assign_missing = False
+        Update paramInstanceDefaults with validated_set so that any instantiations (next) are done in proper context
+        Instantiate validated_set (not target_set, as that is now paramInstanceDefaults, and would involve unnecessary
+                                   and would invole uncessary, ??and possibly harmful?? reinstantiation of existing
+                                   ones
+
+        """
+
+        if not request_set:
+            if self.verbosePref:
+                warnings.warn("No params specified")
+            return
+
+        validated_set = {}
+
+        self._assign_defaults(request_set=request_set,
+                             target_set=validated_set,
+                             assign_missing=False,
+                             context=COMMAND_LINE)
+
+        self.paramInstanceDefaults.update(validated_set)
+
+        if {INPUT_STATES, PARAMETER_STATES} in validated_set:
+            self._instantiate_attributes_before_function()
+        if FUNCTION in validated_set:
+            self._instantiate_function()
+        if OUTPUT_STATES in validated_set:
+            self._instantiate_attributes_after_function()
 
     def reset_params(self, mode):
         """Reset current and/or instance defaults
@@ -1118,7 +1186,7 @@ class Component(object):
                             function = request_set[FUNCTION]
                         except KeyError:
                             # If no function is specified, self.assign_default_kwFunctionParams should be True
-                            # (see assign_defaults above)
+                            # (see _assign_defaults above)
                             raise ComponentError("PROGRAM ERROR: No function params for {} so should be able to "
                                                 "validate {}".format(self.name, FUNCTION_PARAMS))
                         else:

@@ -2,7 +2,15 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# EXECUTING -> EXECUTING
+# IMPLEMENT:  Command line call to _assign_defaults:
+#                     def assign_params
+#                     context = COMMAND_LINE or SCRIPT CALL
+#                     First validates request_set with "validated_set" as target_set for _validateE_params
+#                     Then instantiates validated_set
+#                     Then updates target_set (= paramInstanceDefaults) with validated_set
+
+# FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
+# FIX:  _assign_defaults -> __assign_defaults (SINCE NOW IT IS ONLY FOR INTERNAL USE; OTHERWISE USE assign_params)
 
 # IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with:
@@ -12,13 +20,19 @@
 # IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
-# FIX: is_numeric -> is_numeric
-
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
 # FIX:                  that function_params are changed too
+# FIX / IMPLMENT:  change .function to a property, that refers to ivar ._function;
+#                  make any internal direct assignments to ._function
+#                  make setter for .function that insures function_params have also been appropriately changed
+#                  by comparing them with new function's user_params,
+#                  deleting any that don't match (presumably from old function that are still there)
+#                  and assigning defaults for new function's params that are not missing / not yet there
 
 # CLEANUP:
 
+# FIX: Keywords: persistent use "Function" under COMPONENTS section
+#
 # DOCUMENT UNDER ParameterStates
 #     If parameter default value is set to None (or a non-numeric value),
 #           either in paramClassDefaults, as default in constructor argument, or specified as such,
@@ -38,13 +52,8 @@
 # DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
 #
 # FIX: GET RID OF NotImplemented
-#
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
-# FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
-#                                          (SINCE PARAM IS GOING TO GET VALIDATED)
-#                                          TEST IN ScratchPad:
-#                                                  transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
 # FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
 # END CLEANUP
 
@@ -409,7 +418,7 @@
 
 # FIX: get rid of is_numeric_or_none; replace throughout with tc.optional(is_numeric)
 
-# FIX: implement assign_defaults where flagged
+# FIX: implement _assign_defaults where flagged
 
 # 9/18/16:
 
@@ -442,7 +451,7 @@
 
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
-                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # FIX: ?? SHOULD THIS USE _assign_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
 # IMPLEMENT: Change "Function" to Component, and Function to Function
@@ -630,7 +639,7 @@
 # FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 # FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
-# FIX: ?? SHOULD THIS USE assign_defaults:
+# FIX: ?? SHOULD THIS USE _assign_defaults:
 # FIX: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
 # FIX: IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
@@ -909,7 +918,7 @@
 #      - need to make sure all parses of function can now handle this
 #      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
 # - add @property for all params, so they can be addressed directly as attributes
-#      setter method should call assign_defaults
+#      setter method should call _assign_defaults
 #
 
 #endregion
@@ -1209,7 +1218,7 @@
     # *  params can be set in the standard way for any Function subclass:
     #     - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
     #          and used for paramsCurrent unless and until the latter are changed in a function call
-    #     - paramInstanceDefaults can be later modified using assign_defaults
+    #     - paramInstanceDefaults can be later modified using _assign_defaults
     #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
 # FIX: Figures: need higher rez
@@ -1955,7 +1964,7 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
 # FIX:                  that function_params are changed too
 #
 # FIX / IMPLEMENT: "MODIFIED RUNTIME_PARAMS":

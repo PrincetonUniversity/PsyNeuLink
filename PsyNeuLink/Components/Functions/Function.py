@@ -160,7 +160,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION
 IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
         - Parameters can be assigned and/or changed individually or in sets, by:
           - including them in the initialization call
-          - calling the assign_defaults method (which changes their default values)
+          - calling the _assign_defaults method (which changes their default values)
           - including them in a call the function method (which changes their values for just for that call)
         - Parameters must be specified in a params dictionary:
           - the key for each entry should be the name of the parameter (used also to name associated projections)
@@ -330,7 +330,7 @@ class Contradiction(Function_Base): # Example
 
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
-    #  in the initialization call or later (using either assign_defaults or during a function call)
+    #  in the initialization call or later (using either _assign_defaults or during a function call)
     kwPropensity = "PROPENSITY"
     kwPertinacity = "PERTINACITY"
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -1698,7 +1698,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
                 #       the object itself, thus does not see the array specification for the input.
                 if self._variable_not_specified:
-                    self.assign_defaults(variable=np.zeros_like(np.array(rate)))
+                    self._assign_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                     if self.verbosePref:
                         warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
                                       "matach the length ({}) of the default input ({});  the default input has been "
