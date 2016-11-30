@@ -1,5 +1,5 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
@@ -7,11 +7,11 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
-Input_Layer = Transfer(name='Input Layer',
+Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
                        default_input_value = [0,0])
 
-Output_Layer = Transfer(name='Output Layer',
+Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0])
 
@@ -20,33 +20,33 @@ Learned_Weights = MappingProjection(name='Learned Weights',
                           receiver=Output_Layer,
 
                           # DEPRECATED:
-                          # function=LinearMatrix(matrix=(DEFAULT_MATRIX,LEARNING_SIGNAL)) # FUNCTION NO LONGER A PARAM
+                          # function=LinearMatrix(matrix=(DEFAULT_MATRIX,LEARNING_PROJECTION)) # FUNCTION NO LONGER A PARAM
 
                           # THESE ALL WORK:
 
                           # NOTE: MUST REMOVE FEEDBACK FROM PROCESS INPUT (SEE z.execute BELOW)
                           matrix=random_weight_matrix
                           # params={FUNCTION_PARAMS: {MATRIX: IDENTITY_MATRIX}}
-                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,CONTROL_PROJECTION)}}
 
                           # NOTE: THESE REQUIRE THAT FEEDBACK BE INCLUDED IN PROCESS INPUT:  (SEE z.execute BELOW)
-                          # matrix=(DEFAULT_MATRIX, LEARNING_SIGNAL)
-                          # matrix=(DEFAULT_MATRIX, LearningSignal)
-                          # matrix=(DEFAULT_MATRIX, LEARNING_SIGNAL)
-                          # matrix=(DEFAULT_MATRIX, LearningSignal())
-                          # matrix=(FULL_CONNECTIVITY_MATRIX, LEARNING_SIGNAL)
-                          # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal())
-                          # matrix=(random_weight_matrix, LEARNING_SIGNAL)
-                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LEARNING_SIGNAL)}},
-                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LearningSignal)}}
-                          # params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
-                          # params={FUNCTION_PARAMS: {MATRIX: (random_weight_matrix, LEARNING_SIGNAL)}}
+                          # matrix=(DEFAULT_MATRIX, LEARNING_PROJECTION)
+                          # matrix=(DEFAULT_MATRIX, LearningProjection)
+                          # matrix=(DEFAULT_MATRIX, LEARNING_PROJECTION)
+                          # matrix=(DEFAULT_MATRIX, LearningProjection())
+                          # matrix=(FULL_CONNECTIVITY_MATRIX, LEARNING_PROJECTION)
+                          # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection())
+                          # matrix=(random_weight_matrix, LEARNING_PROJECTION)
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LEARNING_PROJECTION)}},
+                          # params={FUNCTION_PARAMS: {MATRIX: (IDENTITY_MATRIX,LearningProjection)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
+                          # params={FUNCTION_PARAMS: {MATRIX: (random_weight_matrix, LEARNING_PROJECTION)}}
                           )
 
 z = process(name="TEST LEARNER",
             default_input_value=[0, 0],
             pathway=[Input_Layer, Learned_Weights, Output_Layer],
-            learning=LEARNING_SIGNAL,
+            learning=LEARNING_PROJECTION,
             prefs={VERBOSE_PREF: True,
                    REPORT_OPUTPUT_PREF: True})
 

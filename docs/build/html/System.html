@@ -328,7 +328,7 @@ INITIALIZE_CYCLE).
 The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
 compatible with the format of the first item of the mechanism&#8217;s value (i.e., mechanism.value[0]).</li>
 <li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-monitor_for_control, and specify the value of ControlSignal projections in the system.</li>
+monitor_for_control, and specify the value of ControlProjections in the system.</li>
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <code class="docutils literal"><span class="pre">controller</span></code> is executed during system execution.</li>
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms in the system to be monitored by its controller
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying the <code class="docutils literal"><span class="pre">monitor_for_control</span></code> parameter).</li>
@@ -470,7 +470,7 @@ must be the same length as the list of <code class="xref std std-keyword docutil
 <dl class="attribute">
 <dt id="System.System_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#System.System_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default System-&lt;index&gt;</em> &#8211; Name of the system;
+<dd><p><em>str : default System-&lt;index&gt;</em> &#8211; the name of the system;
 Specified in the name argument of the call to create the system;
 if not is specified, a default is assigned by SystemRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>

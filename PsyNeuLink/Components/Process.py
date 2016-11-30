@@ -64,13 +64,13 @@ at least to the next one in the pathway, though it can project to others, and al
 projections from them.  However, pathways cannot be used to construct branching patterns;  that requires the use of
 a :doc:`System`.  the mechanisms in a process pathway are generally :doc:`ProcessingMechanisms`, which receive an input,
 transform it in some way, and make the transformed value available as their output.  The projections between mechanisms
-in a process must be  :doc:`MappingProjection` projections (see Projections).  These transmit the output of a mechanism
-(the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a pathway
-requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also contains a set
-of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be specified by
-interposing them in the list between the pair.  When no projection appears between two adjacent mechanisms in the
-pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default projection.
-Specifying the components of a pathway is described in more detail below.
+in a process must be :doc:`MappingProjections <MappingProjection>` (see Projections).  These transmit the output of a
+mechanism (the projection's sender)  to the input of another mechanism (the projection's receiver).  Specification of a
+``pathway`` requires, at the least, a list of mechanisms.  These can be specified directly, or in a tuple that also
+contains a set of runtime parameters and/or a phase specification.  Projections between a pair of mechanisms can be
+specified by interposing them in the list between the pair.  When no projection appears between two adjacent
+mechanisms in the pathway, and there is no otherwise specified projection between them, PsyNeuLink assigns a default
+projection. Specifying the components of a pathway is described in more detail below.
 
 .. _Process_Mechanisms:
 
@@ -105,9 +105,9 @@ Projections
 Projections between mechanisms in the ``pathway`` of a process are specified in one of three ways:
 
 * Inline specification
-    Projection specifications can be interposed between any two mechanisms in the ``pathway`` list.  This creates
-    a projection from the preceding mechanism in the list to the one that follows it.  The projection specification
-    can be an instance of a :doc:`MappingProjection` projection, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
+    Projection specifications can be interposed between any two mechanisms in the ``pathway`` list.  This creates a
+    projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
+    be an instance of a :doc:`MappingProjection`, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
     for a type of MappingProjection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
     :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
     (see :ref:`Projection <Projection_Creation>` for details of how to specify projections).
@@ -162,7 +162,7 @@ Learning
 ~~~~~~~~
 
 Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for a :ref:`projection <LearningSignal_Creation>` to a
+Learning can be configured for a :ref:`projection <LearningProjection_Creation>` to a
 particular mechanism, or for the entire process (using its ''learning'' attribute).  Specifying learning for a
 process will implement it for all eligible projections the process (i.e., all MappingProjections, excluding
 projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the
@@ -170,13 +170,13 @@ projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and
 projections in the process will be trained so that input to the process (i.e., its :keyword:`ORIGIN` mechanism)
 will generate the specified target value as its output (i.e., the output of the :keyword:`TERMINAL` mechanism).
 In either case, all mechanisms that receive projections for which learning has been specified must be compatiable
-with learning (see :doc:`LearningSignal`).
+with learning (see :doc:`LearningProjection`).
 
 When learning is specified, the following objects are automatically created (see figure below):
-* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value.
-* :doc:`MappingProjection` projection from the mechanism being monitored to the MonitoringMechanism
-* :doc:`LearningSignal` that projects from the MonitoringMechanism to the projection being learned (i.e., the one that
-  projects to the mechanism being monitored).
+* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value;
+* :doc:`MappingProjection` from the mechanism being monitored to the MonitoringMechanism;
+* :doc:`LearningProjection` from the MonitoringMechanism to the projection being learned
+  (i.e., the one that projects to the mechanism being monitored).
 
 Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation[LINK]), that will
 implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
@@ -188,7 +188,7 @@ be compatible with learning.
 **Figure: Learning in PsyNeuLink**
 
 .. figure:: _static/PNL_learning_fig.png
-   :alt: Schematic of learning mechanisms and LearningSignal projections in a process
+   :alt: Schematic of learning mechanisms and LearningProjections in a process
 
    Learning in a connectionist network with two layers
 
@@ -234,7 +234,7 @@ The pathway for this process uses default projection specification::
 
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
-A mapping projection is automatically instantiated between each of the mechanisms
+A MappingProjection is automatically instantiated between each of the mechanisms
 
 *Inline projection specification using an existing projection:*
 
@@ -272,9 +272,9 @@ with backpropagation::
 
 .. XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=LEARNING_SIGNAL)
+    #                      learning=LEARNING_PROJECTION)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-                         learning=LEARNING_SIGNAL,
+                         learning=LEARNING_PROJECTION,
                          target=[0])
 
 .. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
@@ -284,7 +284,7 @@ with backpropagation::
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=LEARNING_SIGNAL)
+    #                      learning=LEARNING_PROJECTION)
 
 
 
@@ -312,7 +312,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal, kwWeightChangeParams
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, kwWeightChangeParams
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
@@ -353,7 +353,7 @@ def process(process_spec=None,
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(_is_projection_spec)=None,
-            target:tc.optional(is_numerical)=None,
+            target:tc.optional(is_numeric)=None,
             params=None,
             name=None,
             prefs:is_pref_set=None,
@@ -403,7 +403,7 @@ def process(process_spec=None,
     pathway : List[mechanism spec[, projection spec], mechanism spec...] : default List[``DefaultMechanism``]
         the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
         must a  :doc:`ProcessingMechanism`.  The specification for each can be an instance, a class name (creates a
-        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`MappingProjection` projection.
+        default instance), or a specification dictionary [LINK].  Each projection must be a :doc:`MappingProjection`.
         The specification for each can be the class name (creates a default instance), an instance, or a specification
         dictionary [LINK].
 
@@ -429,8 +429,8 @@ def process(process_spec=None,
     default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
         the type of matrix used for default projections (see ''matrix'' parameter for ''MappingProjection()'' projection) [LINK]
 
-    learning : Optional[LearningSignal spec]
-        implements :ref:`learning <LearningSignal_CreationLearningSignal>` for all
+    learning : Optional[LearningProjection spec]
+        implements :ref:`learning <LearningProjection_CreationLearningSignal>` for all
         eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
@@ -577,13 +577,13 @@ class Process_Base(Process):
     Attributes
     ----------
 
-    pathway : List[(mechanism, dict, int), (projection, LearningSignal spec, None), (mechanism, dict, int)...]
+    pathway : List[(mechanism, dict, int), (projection, LearningProjection spec, None), (mechanism, dict, int)...]
         specifies the list of mechanisms that are executed when the process executes.
         Entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
         a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase at which
-        the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningSignal
-        spec can be a LearningSignal projection object, the class (which specifies a default instance) or a function
-        call to instantiate a LearningSignal (including parameters).  The second and third items of mechanism tuples,
+        the mechanism should be executed in a round of executions [LINK].  For projection tuples, the LearningProjection
+        spec can be a LearningProjection object, the class (which specifies a default instance) or a function
+        call to instantiate a LearningProjection (including parameters).  The second and third items of mechanism tuples,
         and the second item of projection tuples are optional and therefore may be :keyword:`None`.
         The third item of projection tuples is currenlty not used and is always :keyword:`None`.
 
@@ -693,15 +693,15 @@ class Process_Base(Process):
       .. _isControllerProcess : bool : :keyword:`False`
              identifies whether the process is an internal one created by a ControlMechanism.
 
-    learning : Optional[LearningSignal]
+    learning : Optional[LearningProjection]
         determines whether the process is configured for learning.  The value can be the name of the
-        LearningSignal class, a call to its constructor, or the name of or reference to an existing LearningSignal.
+        LearningProjection class, a call to its constructor, or the name of or reference to an existing LearningProjection.
 
         .. note::
-        If an existing instance of a LearningSignal used for the specification, or a call to the LearningSignal
+        If an existing instance of a LearningProjection used for the specification, or a call to the LearningProjection
         constructor, that object itself, or the one created by the constructor, will **not** be used as the actual
-        LearningSignal projection for the process. Rather it will be used as a template (including any parameters that
-        are specified) for creating LearningSignal projections for all the MappingProjections in the process.
+        LearningProjection for the process. Rather it will be used as a template (including any parameters that
+        are specified) for creating LearningProjections for all the MappingProjections in the process.
 
       .. _learning_enabled : bool
              indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
@@ -762,7 +762,7 @@ class Process_Base(Process):
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  # learning:tc.optional(_is_projection_spec)=None,
                  learning=None,
-                 target:tc.optional(is_numerical)=None,
+                 target:tc.optional(is_numeric)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1018,17 +1018,17 @@ class Process_Base(Process):
                                                " is neither a params dict nor phaseSpec (int or float)".
                                                format(second_tuple_item, i, self.name))
                     # Projection
-                    #     check that second item is a projection spec for a LearningSignal
+                    #     check that second item is a projection spec for a LearningProjection
                     #     if so, leave it there, and pad third item with None
                     elif _is_projection_spec(config_item[0]):
                         if (_is_projection_spec(second_tuple_item) and
-                                _is_projection_subclass(second_tuple_item, LEARNING_SIGNAL)):
+                                _is_projection_subclass(second_tuple_item, LEARNING_PROJECTION)):
                             pathway[i] = MechanismTuple(config_item[0],
                                                               second_tuple_item,
                                                               DEFAULT_PHASE_SPEC)
                         else:
                             raise ProcessError("Second item of tuple ({}) in item {} of pathway for {}"
-                                               " should be 'LearningSignal' or absent".
+                                               " should be 'LearningProjection' or absent".
                                                format(second_tuple_item, i, self.name))
                     else:
                         raise ProcessError("First item of tuple ({}) in item {} of pathway for {}"
@@ -1136,8 +1136,8 @@ class Process_Base(Process):
 
         # If learning is specified for the Process, add to default projection params
         if self.learning:
-            # FIX: IF self.learning IS AN ACTUAL LearningSignal OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
-            # FIX:     OR CAN THE SAME LearningSignal OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
+            # FIX: IF self.learning IS AN ACTUAL LearningProjection OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
+            # FIX:     OR CAN THE SAME LearningProjection OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
             # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
             # FIX:     MAKE IT A COPY?
 
@@ -1181,13 +1181,13 @@ class Process_Base(Process):
                         if self.learning:
 
                             # Check if preceding_item has a matrix parameterState and, if so, it has any learningSignals
-                            # If it does, assign them to learning_signals
+                            # If it does, assign them to LEARNING_PROJECTIONs
                             try:
-                                # learning_signals = None
-                                learning_signals = list(projection for
+                                # LEARNING_PROJECTIONs = None
+                                LEARNING_PROJECTIONs = list(projection for
                                                         projection in
                                                         preceding_item.parameterStates[MATRIX].receivesFromProjections
-                                                        if isinstance(projection, LearningSignal))
+                                                        if isinstance(projection, LearningProjection))
 
                             # preceding_item doesn't have a parameterStates attrib, so assign one with self.learning
                             except AttributeError:
@@ -1199,7 +1199,7 @@ class Process_Base(Process):
                                                                                 state_type=ParameterState,
                                                                                 state_param_identifier=kwParameterState,
                                                                                 constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
+                                                                                constraint_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                             # preceding_item has parameterStates but not (yet!) one for MATRIX, so instantiate it
@@ -1212,11 +1212,11 @@ class Process_Base(Process):
                                                                                 state_spec=kwParameterState,
                                                                                 state_params=self.learning,
                                                                                 constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
+                                                                                constraint_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
                             # preceding_item has parameterState for MATRIX,
                             else:
-                                if not learning_signals:
+                                if not LEARNING_PROJECTIONs:
                                     # Add learning signal to projection if it doesn't have one
                                     _add_projection_to(preceding_item,
                                                       preceding_item.parameterStates[MATRIX],
@@ -1251,7 +1251,7 @@ class Process_Base(Process):
                                                                                 state_type=ParameterState,
                                                                                 state_param_identifier=kwParameterState,
                                                                                 constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
+                                                                                constraint_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                                 # projection has parameterStates but not (yet!) one for MATRIX,
@@ -1265,24 +1265,24 @@ class Process_Base(Process):
                                                                                 state_spec=kwParameterState,
                                                                                 state_params=self.learning,
                                                                                 constraint_value=self.learning,
-                                                                                constraint_value_name=LEARNING_SIGNAL,
+                                                                                constraint_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
 
                                 # Check if projection's matrix param has a learningSignal
                                 else:
-                                    if not (any(isinstance(projection, LearningSignal) for
+                                    if not (any(isinstance(projection, LearningProjection) for
                                                 projection in matrix_param_state.receivesFromProjections)):
                                         _add_projection_to(projection,
                                                           matrix_param_state,
                                                           projection_spec=self.learning)
 
                                 if self.prefs.verbosePref:
-                                    print("LearningSignal added to projection from mechanism {0} to mechanism {1} "
+                                    print("LearningProjection added to projection from mechanism {0} to mechanism {1} "
                                           "in pathway of {2}".format(preceding_item.name, item.name, self.name))
                             break
 
                     if not projection_found:
-                        # No projection found, so instantiate mapping projection from preceding mech to current one;
+                        # No projection found, so instantiate MappingProjection from preceding mech to current one;
                         # Note:  If self.learning arg is specified, it has already been added to projection_params above
                         MappingProjection(sender=preceding_item,
                                 receiver=item,
@@ -1326,7 +1326,7 @@ class Process_Base(Process):
     # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
 
                         # MODIFIED 9/12/16 NEW:
-                        # If initialization of mapping projection has been deferred,
+                        # If initialization of MappingProjection has been deferred,
                         #    check sender and receiver, assign them if they have not been assigned, and initialize it
                         if item.value is DEFERRED_INITIALIZATION:
                             # Check sender arg
@@ -1399,17 +1399,17 @@ class Process_Base(Process):
                                              receiver=receiver_mech,
                                              params=projection_params)
 
-                    # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningSignal) tuple
+                    # projection spec is a matrix specification, a keyword for one, or a (matrix, LearningProjection) tuple
                     # Note: this is tested above by call to _is_projection_spec()
                     elif (isinstance(item, (np.matrix, str, tuple) or
                               (isinstance(item, np.ndarray) and item.ndim == 2))):
-                        # If a LearningSignal is explicitly specified for this projection, use it
+                        # If a LearningProjection is explicitly specified for this projection, use it
                         if params:
                             matrix_spec = (item, params)
-                        # If a LearningSignal is not specified for this projection but self.learning is, use that
+                        # If a LearningProjection is not specified for this projection but self.learning is, use that
                         elif self.learning:
                             matrix_spec = (item, self.learning)
-                        # Otherwise, do not include any LearningSignal
+                        # Otherwise, do not include any LearningProjection
                         else:
                             matrix_spec = item
                         projection = MappingProjection(sender=sender_mech,
@@ -1653,7 +1653,7 @@ class Process_Base(Process):
             add _monitoring__mech_tuples to the Process' _mech_tuples
             assign input projection from Process to first mechanism in _monitoring__mech_tuples
 
-        IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningSignal
+        IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningProjection
 
         IMPLEMENTATION NOTE: this is implemented to be fully general, but at present may be overkill
                              since the only objects that currently use deferred initialization are LearningSignals
@@ -1694,16 +1694,16 @@ class Process_Base(Process):
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
-                    # Initialize each LearningSignal projection
-                    for learning_signal in parameter_state.receivesFromProjections:
-                        learning_signal._deferred_init(context=context)
+                    # Initialize each LearningProjection
+                    for LEARNING_PROJECTION in parameter_state.receivesFromProjections:
+                        LEARNING_PROJECTION._deferred_init(context=context)
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
                 if 'parameterStates' in e.args[0]:
                     pass
                 else:
                     error_msg = 'Error in attempt to initialize learningSignal ({}) for {}: \"{}\"'.\
-                        format(learning_signal.name, projection.name, e.args[0])
+                        format(LEARNING_PROJECTION.name, projection.name, e.args[0])
                     raise ProcessError(error_msg)
 
             # Check if projection has monitoringMechanism attribute
@@ -1816,7 +1816,7 @@ class Process_Base(Process):
             only for the current execution.
 
         COMMENT:
-            context : str : default kwExecuting + self.name
+            context : str : default EXECUTING + self.name
                 a string used for contextualization of instantiation, hierarchical calls, executions, etc.
         COMMENT
 
@@ -1834,10 +1834,10 @@ class Process_Base(Process):
         """
 
         if not context:
-            context = kwExecuting + self.name
+            context = EXECUTING + self.name
 
         # Report output if reporting preference is on and this is not an initialization run
-        report_output = self.prefs.reportOutputPref and context and kwExecuting in context
+        report_output = self.prefs.reportOutputPref and context and EXECUTING in context
 
 
         # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable
@@ -1892,7 +1892,7 @@ class Process_Base(Process):
         return self.outputState.value
 
     def _execute_learning(self, context=None):
-        """ Update each LearningSignal for mechanisms in _mech_tuples of process
+        """ Update each LearningProjection for mechanisms in _mech_tuples of process
 
         Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
 
@@ -1910,7 +1910,7 @@ class Process_Base(Process):
                         for parameter_state in projection.parameterStates.values():
                             # Call parameter_state.update with kwLearning in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
-                            #       since parameter_state.update() handles parsing of LearningSignal-specific params
+                            #       since parameter_state.update() handles parsing of LearningProjection-specific params
                             context = context + kwSeparatorBar + kwLearning
                             parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
 
@@ -2091,7 +2091,7 @@ class ProcessInputState(OutputState):
 
     """
     def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
-        """Pass variable to mapping projection from Process to first Mechanism in Pathway
+        """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:
         """

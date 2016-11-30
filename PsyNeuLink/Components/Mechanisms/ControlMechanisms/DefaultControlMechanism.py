@@ -28,13 +28,13 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     Description:
         Implement default source of control signals, with one inputState and outputState for each
-        Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and controlSignal(s)
+        Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and ControlProjection(s)
 
 
 # DOCUMENTATION NEEDED
     - EXPLAIN WHAT ControlSignalChannel IS:
-            A ControlSignalChannel is instantiated for each ControlSignal projection assigned to DefaultController
-        It simply passes the defaultControlAllocation value to the ControlSignal projection
+            A ControlSignalChannel is instantiated for each ControlProjection assigned to DefaultController
+        It simply passes the defaultControlAllocation value to the ControlProjection
 
 
     - EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER
@@ -124,7 +124,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # # MODIFIED 9/15/16 END
 
 
-    def _instantiate_control_signal_projection(self, projection, context=None):
+    def _instantiate_control_projection(self, projection, context=None):
         # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
         """
 
@@ -140,11 +140,11 @@ class DefaultControlMechanism(ControlMechanism_Base):
         self.instantiate_control_signal_channel(projection=projection, context=context)
 
         # Call super to instantiate outputStates
-        super()._instantiate_control_signal_projection(projection=projection,
+        super()._instantiate_control_projection(projection=projection,
                                                       context=context)
 
     def instantiate_control_signal_channel(self, projection, context=None):
-        """Instantiate inputState that passes defaultControlAllocation to ControlSignal projection
+        """Instantiate inputState that passes defaultControlAllocation to ControlProjection
 
         Instantiate an inputState with defaultControlAllocation as its value
 

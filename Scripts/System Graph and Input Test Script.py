@@ -1,6 +1,6 @@
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 # from PsyNeuLink.Components.Process import MappingProjection
 
@@ -47,10 +47,10 @@ print ('************************************************************************
 
 # A) BRANCH -----------------------------------------------------------------------------
 
-a = Transfer(name='test a',default_input_value=[0,0])
-b = Transfer(name='b')
-c = Transfer(name='c')
-d = Transfer(name='d')
+a = TransferMechanism(name='test a',default_input_value=[0,0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
 
 p1 = process(pathway=[a, b, c], name='p1')
 p2 = process(pathway=[a, b, d], name='p2')
@@ -74,10 +74,10 @@ print ('************************************************************************
 
 # B) BYPASS -----------------------------------------------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
-c = Transfer(name='c')
-d = Transfer(name='d')
+a = TransferMechanism(name='a',default_input_value=[0,0])
+b = TransferMechanism(name='b',default_input_value=[0,0])
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
 
 p1 = process(pathway=[a, b, c, d], name='p1')
 p2 = process(pathway=[a, b, d], name='p2')
@@ -100,11 +100,11 @@ print ('************************************************************************
 
 # C) CHAIN -----------------------------------------------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0,0])
-b = Transfer(name='b')
-c = Transfer(name='c')
-d = Transfer(name='d')
-e = Transfer(name='e')
+a = TransferMechanism(name='a',default_input_value=[0,0,0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
+e = TransferMechanism(name='e')
 
 p1 = process(pathway=[a, b, c], name='p1')
 p2 = process(pathway=[c, d, e], name='p2')
@@ -129,12 +129,12 @@ print ('************************************************************************
 
 # D) CONVERGENT -----------------------------------------------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b')
-c = Transfer(name='c')
-c = Transfer(name='c',default_input_value=[0])
-d = Transfer(name='d')
-e = Transfer(name='e')
+a = TransferMechanism(name='a',default_input_value=[0,0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+c = TransferMechanism(name='c',default_input_value=[0])
+d = TransferMechanism(name='d')
+e = TransferMechanism(name='e')
 
 p1 = process(pathway=[a, b, e], name='p1')
 p2 = process(pathway=[c, d, e], name='p2')
@@ -162,8 +162,8 @@ print ('************************************************************************
 
 # E) CYCLIC INCLUDING ORIGIN IN CYCLE (ONE PROCESS) ------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_input_value=[0,0])
+b = TransferMechanism(name='b',default_input_value=[0,0])
 
 p1 = process(pathway=[a, b, a], name='p1')
 
@@ -184,9 +184,9 @@ print ('************************************************************************
 
 # F) CYCLIC INCLUDING ORIGIN IN CYCLE (TWO PROCESSES) -----------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b',default_input_value=[0,0])
-c = Transfer(name='c',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_input_value=[0,0])
+b = TransferMechanism(name='b',default_input_value=[0,0])
+c = TransferMechanism(name='c',default_input_value=[0,0])
 
 p1 = process(pathway=[a, b, a], name='p1')
 p2 = process(pathway=[a, c, a], name='p2')
@@ -207,12 +207,12 @@ print ('C: ',c.systems[s])
 
 # G) CYCLIC WITH TWO PROCESSES AND AN EXTENDED LOOP ------------------------------------
 
-a = Transfer(name='a',default_input_value=[0,0])
-b = Transfer(name='b')
-c = Transfer(name='c')
-d = Transfer(name='d')
-e = Transfer(name='e',default_input_value=[0])
-f = Transfer(name='f')
+a = TransferMechanism(name='a',default_input_value=[0,0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
+e = TransferMechanism(name='e',default_input_value=[0])
+f = TransferMechanism(name='f')
 
 p1 = process(pathway=[a, b, c, d], name='p1')
 p2 = process(pathway=[e, c, f, b, d], name='p2')

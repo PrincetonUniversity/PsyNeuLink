@@ -19,7 +19,7 @@ DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(False,PreferenceLevel.SYSTEM),
-                    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
+                    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.CATEGORY)})
 
 
 DDM_prefs.verbosePref = PreferenceEntry(True,PreferenceLevel.INSTANCE)
@@ -36,14 +36,14 @@ DDM_prefs2 = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.SYSTEM),
-                    kpFunctionRuntimeParamsPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
+                    kpRuntimeParamModulationPref: PreferenceEntry(ModulationOperation.OVERRIDE,PreferenceLevel.INSTANCE)})
 
 my_DDM = DDM(name='my_DDM')
 my_DDM.prefs = DDM_prefs
 my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
 # my_DDM.prefs.verbosePref = PreferenceLevel.SYSTEM
-# from Components.Projections.ControlSignal import LogEntry
+# from Components.Projections.ControlProjection import LogEntry
 # my_DDM.prefs.logPref = LogEntry.TIME_STAMP
 
 # FIX: SHOULDN'T BE ABLE TO ASSIGN enum TO PREF THAT DOESN'T REQUIRE ONE:
@@ -52,9 +52,9 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 my_DDM.prefs.show()
 
 #region MAIN SCRIPT
-myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_SIGNAL),
-                                                 THRESHOLD:(10.0, CONTROL_SIGNAL),
-                                                 kwKwDDM_StartingPoint:(0.5, CONTROL_SIGNAL)},
+myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(2.0, CONTROL_PROJECTION),
+                                                 THRESHOLD:(10.0, CONTROL_PROJECTION),
+                                                 kwKwDDM_StartingPoint:(0.5, CONTROL_PROJECTION)},
 # myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:2.0,
 #                                                  THRESHOLD:10.0},
                           # kwDDM_AnalyticSolution:kwNavarrosAndFuss  # Note: this requires matlab engine be installed

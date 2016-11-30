@@ -25,8 +25,8 @@ def run():
     #region Mechanisms
     Input = LinearMechanism(name='Input')
     Reward = LinearMechanism(name='Reward')
-    Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-                                                     # THRESHOLD:(10.0, CONTROL_SIGNAL)
+    Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+                                                     # THRESHOLD:(10.0, CONTROL_PROJECTION)
                                                   },
                            kwDDM_AnalyticSolution:kwBogaczEtAl},
                       prefs = DDM_prefs,

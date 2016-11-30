@@ -16,7 +16,7 @@ A WeightedErrorMechanism monitors the outputState of it's ``errorSource``: a Pro
 another mechanism in a :doc:`Process`.  It computes the contribution of each element of the output of the
 ``errorSource`` to the error in the output of the mechanism to which the ``errorSource`` projects
 (the ``weightedErrorSignal``).  The WeightedErrorMechanism ``function``returns an error array that can be used by a
-:doc:`LearningSignal` to adjust a MappingProjection the ``errorSource``, so as to reduce its future contribution to
+:doc:`LearningProjection` to adjust a MappingProjection the ``errorSource``, so as to reduce its future contribution to
 the weightedErrorSignal.
 
 .. _WeightedError_Creation:
@@ -26,13 +26,13 @@ Creating A WeightedErrorMechanism
 
 A WeightedErrorMechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
 function and specifying "WeightedErrorMechanism" as its ``mech_spec`` argument.  It can also be created by :ref:`in
-context specification of a LearningSignal <_Projection_Creation>` for a projection  to a ProcessingMechanism in
+context specification of a LearningProjection <_Projection_Creation>` for a projection  to a ProcessingMechanism in
 a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
 are also created automatically when a process system is created for which learning is specified; each is
 assigned a projection from the outputState of a ProcessingMechanism that receives a MappingProjection being
-learned, and a LearningSignal projection to that MappingProjection
+learned, and a LearningProjection to that MappingProjection
 (see :ref:`learning in a process <Process_Learning>`, and
-:ref:`automatic creation of LearningSignals <LearningSignal_Automatic_Creation> for details).
+:ref:`automatic creation of LearningSignals <LearningProjection_Automatic_Creation> for details).
 
 .. _WeightedError_Structure
 
@@ -46,7 +46,7 @@ projection from the primary outputState of the ``errorSource`` to the next mecha
 ``matrix`` parameter corresponds to an element of the ``value`` of the ``errorSource``, each column corresponds to an
 element of the ``value`` of the mechanism to which it projects, and each element of the matrix is the weight of the
 association between the two.  The **outputState** of a WeightedErrorMechanism is typically assigned a
-:doc:`LearningSignal` projection that is used to modify the ``matrix`` parameter of a MappingProjection to the
+:doc:`LearningProjection` that is used to modify the ``matrix`` parameter of a MappingProjection to the
 ``errorSource`` (as shown in :ref:`this figure <Process_Learning_Figure>`).
 
 .. _WeightedError_Execution
@@ -136,12 +136,22 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
         Includes the following entry:
 
         * :keyword:`NEXT_LEVEL_PROJECTION`:  MappingProjection;
           its ``matrix`` parameter is used to calculate the ``weightedErrorSignal``;
           it's width (number of columns) must match the length of ``error_signal``.
+
+    name : str : default WeightedErrorMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by MechanismRegistry
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the PreferenceSet for mechanism.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
 
     Attributes
     ----------
@@ -180,6 +190,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
+
 
     """
 
@@ -260,7 +271,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         """
 
         if not context:
-            context = kwExecuting + self.name
+            context = EXECUTING + self.name
 
         self._check_args(variable=variable, params=params, context=context)
 

@@ -33,17 +33,16 @@ to another mechanism (its ``receiver``).  There are three types of projections t
     the projection's ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically,
     MappingProjections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
-* :doc:`ControlSignal`
+* :doc:`ControlProjection`
     Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
     <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
-    modulate the value of the corresponding parameter of the mechanism's function.  ControlSignals projections are
+    modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
     typically used in the context of a :doc:`System`.
 ..
-* :doc:`LearningSignal`
+* :doc:`LearningProjection`
     These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
-    transmit this to the parameterState of a :doc:`MappingProjection` projection, which uses this to modify its
-    ``matrix`` parameter. LearningSignal projections are used in the context of a :doc:`System` or :doc:`Process`
-    that uses learning.
+    transmit this to the parameterState of a :doc:`MappingProjection`, which uses this to modify its ``matrix``
+    parameter. LearningProjections are used in the context of a :doc:`System` or :doc:`Process` that uses learning.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
@@ -57,8 +56,8 @@ Creating a Projection
 Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the ``pathway`` attribute of a process, or when a tuple is used to specify the parameter of a function
-(such as a :ref:`ControlSignal for a mechanism <Mechanism_Assigning_A_Control_Signal>`,
-or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`).
+(such as a :ref:`ControlProjection for a mechanism <Mechanism_Assigning_A_ControlProjection>`,
+or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specification>`).
 
 .. _Projection_In_Context_Specification:
 
@@ -70,16 +69,15 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
 
   *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` projection with the :doc:`DefaultMechanism` as its
-    ``sender``.
-  * :keyword:`CONTROL_SIGNAL` - a :doc:`ControlSignal` projection  with the :doc:`DefaultControlMechanism` as its
-    ``sender``.
-  * :keyword:`LEARNING_SIGNAL` - a :doc:`LearningSignal` projection.  This can only be used for a projection to the
-    ``matrix`` parameterState of a :doc:`MappingProjection` projection.  If the ``receiver`` for the MappingProjection
-    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the LearningSignal.
-    Otherwise, a MonitoringMechanism will be created that is appropriate for the error source, as will a
-    MappingProjection projection from the error source to the MonitoringMechanism
-    (see :ref:`Automatic Instantiation` <LearningSignal_Automatic_Creation>` of a LearningSignal for details).
+  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` with the :doc:`DefaultMechanism` as its ``sender``.
+  * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` with the :doc:`DefaultControlMechanism`
+    as its ``sender``.
+  * :keyword:`LEARNING_PROJECTION` - a :doc:`LearningProjection`.  This can only be used for a projection to the
+    ``matrix`` parameterState of a :doc:`MappingProjection`.  If the ``receiver`` for the MappingProjection
+    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the
+    LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
+    as will a MappingProjection from the error source to the MonitoringMechanism
+    (see :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
 
   *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
   specified type.
@@ -90,7 +88,7 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
   * :keyword:`PROJECTION_TYPE`: <name of a projection type>
 
       if this entry is absent, a default projection will be created that is appropriate for the context
-      (for example, a MappingProjection for an inputState, and a ControlSignal projection for a parameterState).
+      (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
 
   * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
 
@@ -105,8 +103,8 @@ or a :ref:`LearningSignal for a MappingProjection <Mapping_Tuple_Specification>`
 .. _Projection_Automatic_Creation:
 
 *Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
-a process automatically generates a  :doc:`MappingProjection` projection between adjacent mechanisms in its ``pathway`` if
-none is specified; and :doc:`LearningSignal`  projections are automatically generated when
+a process automatically generates a :doc:`MappingProjection` between adjacent mechanisms in its ``pathway`` if
+none is specified; and :doc:`LearningProjection`  projections are automatically generated when
 :ref:`learning <Process_Learning>` is specified for a process.  Creating a :doc:`state <State>` will also
 automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
 projection and its sender mechanism depend on the type of state -- see :doc:`state subclasses <States>` for details).
@@ -169,10 +167,10 @@ COMMENT:
     to the mechanism depends on the type of projection:
         MappingProjection:
             receiver = <Mechanism>.inputState
-        ControlSignal projection:
+        ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
-        LearningSignal projection:
+        LearningProjection:
             sender = <Mechanism>.outputState
             receiver = <MappingProjection>.parameterState IF AND ONLY IF there is a single one
                         that is a ParameterState;  otherwise, an exception is raised
@@ -208,8 +206,8 @@ PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING_SIGNAL,
-                            CONTROL_SIGNAL}
+                            LEARNING_PROJECTION,
+                            CONTROL_PROJECTION}
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
@@ -316,7 +314,7 @@ class Projection_Base(Projection):
     COMMENT
 
     name : str : default <Projection subclass>-<index>
-        Name of the projection.
+        the name of the projection.
         Specified in the name argument of the call to create the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
@@ -378,7 +376,7 @@ class Projection_Base(Projection):
             MappingProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.inputState
-            ControlSignal projection:
+            ControlProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
@@ -448,10 +446,10 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlSignal??
+# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
+#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(variable_default=variable,
@@ -577,9 +575,9 @@ class Projection_Base(Projection):
         If self.value / self.variable is None, set to sender.value
 
         Notes:
-        * ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it
-        [TBI: * LearningSignal overrides this method to check if sender is kwDefaultSender;
+        * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
+            if so, it assigns a ControlProjection-specific inputState, outputState and ControlSignalChannel to it
+        [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
             if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 
         :param context: (str)
@@ -595,7 +593,7 @@ class Projection_Base(Projection):
             if issubclass(self.sender, OutputState):
                 # MODIFIED 9/12/16 NEW:
                 # self.paramsCurrent['function_params']['matrix']
-                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION PROJECTION??
+                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
                 # MODIFIED 9/12/16 END
                 self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
@@ -639,7 +637,7 @@ class Projection_Base(Projection):
                              self.sender.function.__class__.__name__,
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
-            self.assign_defaults(variable=self.sender.value, context=context)
+            self._assign_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)
@@ -681,8 +679,8 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-# from PsyNeuLink.Components.Projections.ControlSignal import is_control_signal
-# from PsyNeuLink.Components.Projections.LearningSignal import is_learning_signal
+# from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
+# from PsyNeuLink.Components.Projections.LearningProjection import is_learning_signal
 
 def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification
@@ -710,9 +708,9 @@ def _is_projection_spec(spec):
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], CONTROL_SIGNAL):
+            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
                 return True
-            if _is_projection_subclass(spec[1], LEARNING_SIGNAL):
+            if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
                 return True
     return False
 
