@@ -129,7 +129,7 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 def parameter_spec(param):
-    # if is_numerical(param):
+    # if is_numeric(param):
     if isinstance(param, (numbers.Number, np.ndarray, list, tuple, function_type, ParamValueProjection)):
         return True
     return False
@@ -523,7 +523,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
             context:
         """
         super()._validate_variable(variable=variable, context=context)
-        if not is_numerical(variable):
+        if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
 
@@ -630,8 +630,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
-                 exponents:is_numerical_or_none=None,
-                 weights:is_numerical_or_none=None,
+                 exponents:is_numeric_or_none=None,
+                 weights:is_numeric_or_none=None,
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,

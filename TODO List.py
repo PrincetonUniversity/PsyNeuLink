@@ -12,7 +12,7 @@
 # IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
-# FIX: is_numerical -> is_numeric
+# FIX: is_numeric -> is_numeric
 
 # FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
 # FIX:                  that function_params are changed too
@@ -407,7 +407,7 @@
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 # IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
-# FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numerical)
+# FIX: get rid of is_numeric_or_none; replace throughout with tc.optional(is_numeric)
 
 # FIX: implement assign_defaults where flagged
 
@@ -431,7 +431,7 @@
 
 # IMPLEMENT: consolidate parameter validation into a single method
 #            test DDM with drift_rate specified as lambda function
-#            is_numerical_or_none -> optional_numerical
+#            is_numeric_or_none -> optional_numerical
 #            typecheck function for matrix
 # FIX: Get rid of NotImplemented in:
 #      prefs must be a specification dict or NotImplemented or None
