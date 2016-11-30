@@ -1,0 +1,518 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ControlProjection &mdash; PsyNeuLink 0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Projections" href="Projection.html"/>
+        <link rel="next" title="LearningProjection" href="LearningProjection.html"/>
+        <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ControlProjection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-controlprojection">Creating a ControlProjection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Projection.html">Projections</a> &raquo;</li>
+      
+    <li>ControlProjection</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/ControlProjection.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-ControlProjection">
+<span id="controlprojection"></span><h1>ControlProjection<a class="headerlink" href="#module-ControlProjection" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="controlprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A ControlProjection implements a control signal used to modify the value of a parameter of a mechanism&#8217;s function.  It
+takes a value (an <em>allocation</em>) from a ControlMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>), and uses this to compute the control signal&#8217;s
+<code class="docutils literal"><span class="pre">intensity</span></code>, which is assigned as the ControlProjection&#8217;s value.  The parameterState that receives the
+ControlProjection uses its value to regulate the value of a parameter of a mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>. A ControlProjection
+also calculates a <code class="docutils literal"><span class="pre">cost</span></code> for the control signal, based on its intensity  and/or its time course, that can be used
+by a ControlMechanism to adapt the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">allocation</span></code>.[LINK]</p>
+</div>
+<div class="section" id="creating-a-controlprojection">
+<span id="controlprojection-creation"></span><h2>Creating a ControlProjection<a class="headerlink" href="#creating-a-controlprojection" title="Permalink to this headline">¶</a></h2>
+<p>A ControlProjection can be created using any of the standard ways to  <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a projection</span></a>,
+or by including it in the <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">specification of a parameter</span></a> for a <code class="docutils literal"><span class="pre">function</span></code>
+belonging to a mechanism or MappingProjection.  If a ConrolProjection is created using its constructor on its own,
+the <code class="docutils literal"><span class="pre">receiver</span></code> argument must be specified.  If it is included in a parameter specification, the parameterState for
+the parameter being specified will be assigned as the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code>.  If its <code class="docutils literal"><span class="pre">sender</span></code> is not
+specified, its assignment depends on the <code class="docutils literal"><span class="pre">receiver</span></code>.  If the receiver belongs to a mechanism that is part of a
+system, then the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">sender</span></code> is assigned to an outputState of the system&#8217;s
+<a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>. Otherwise, the <code class="docutils literal"><span class="pre">sender</span></code> is assigned to the outputState of a
+<a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">DefaultControlMechanism</span></a>.</p>
+<p>The four functions used to calculate the <span class="xref std std-ref">cost of a control signal</span>
+can be specified  either in arguments to the ControlProjection&#8217;s constructor, or in a params dictionary[LINK](see
+below [LINK]). A custom function can be assigned to any cost function, so long as it accepts the appropriate type of
+value (see below [LINK]) and returns a scalar.  Each of the cost functions can be <a class="reference internal" href="#controlprojection-toggle-costs"><span class="std std-ref">enabled or disabled</span></a>, to select which make contributions to the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.  A cost
+function can also be permanently disabled for its ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> to the argument for
+that function in its constructor (or the appropriate entry in its params dictionary). Cost functions that are
+permanently disabled in this way cannot be re-enabled.</p>
+<p>A ControlProjection takes an <code class="docutils literal"><span class="pre">allocation_samples</span></code> specification as its input.  This must be an array that
+specifies the values of its <code class="docutils literal"><span class="pre">allocation</span></code> that will be sampled by ControlMechanisms that adaptively adjust
+ControlProjection allocations (e.g., <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>).  The default is an array of values from 0.1 to 1.0
+in steps of 0.1.</p>
+</div>
+<div class="section" id="structure">
+<span id="controlprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p><em>Intensity</em>. The ControlProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> uses its <code class="docutils literal"><span class="pre">allocation</span></code> to calculate a control signal <code class="docutils literal"><span class="pre">intensity</span></code>.
+The default is an identity function (Linear(slope=1, intercept=0)): the ControlProjection sets its control signal
+<code class="docutils literal"><span class="pre">intensity</span></code> equal to its <code class="docutils literal"><span class="pre">allocation</span></code>.  The <code class="docutils literal"><span class="pre">function</span></code> can be assigned another <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>,
+or any other function that takes and returns a scalar value.</p>
+<p><em>Costs</em>. A ControlProjection has four cost functions that determine how the ControlProjection computes the cost of
+its control signal, all of which can be customized, and the first three of which can be enabled or disabled:</p>
+<ul id="controlprojection-cost-functions">
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">INTENSTITY_COST_FUNCTION</span></code></dt>
+<dd><p class="first last">Calculates a cost based on the control signal <code class="docutils literal"><span class="pre">intensity</span></code>.
+It can be any <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function  that takes and returns a scalar value.
+The default is <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">ADJUSTMENT_COST_FUNCTION</span></code></dt>
+<dd><p class="first last">Calculates a cost based on a change in the control signal <code class="docutils literal"><span class="pre">intensity</span></code> from its last value.
+It can be any <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and returns a scalar value.
+The default is <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">DURATION_COST_FUNCTION</span></code></dt>
+<dd><p class="first last">Calculates an integral of the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.
+It can be any <code class="xref py py-class docutils literal"><span class="pre">IntegratorFunction</span></code>, or any other function  that takes a list or array of two values and
+returns a scalar value. The default is <code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="xref std std-keyword docutils literal"><span class="pre">COST_COMBINATION_FUNCTION</span></code></dt>
+<dd><p class="first last">Combines the results of any cost functions that are enabled, and assigns the result as the ControlProjection&#8217;s
+<code class="docutils literal"><span class="pre">cost</span></code>.  It can be any function that takes an array and returns a scalar value.  The default is <code class="xref py py-class docutils literal"><span class="pre">Reduce</span></code>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>An attribute is assigned for each component of the cost (<code class="docutils literal"><span class="pre">intensityCost</span></code>, <code class="docutils literal"><span class="pre">adjustmentCost</span></code>, and <code class="docutils literal"><span class="pre">durationCost</span></code>),
+the total cost (<code class="docutils literal"><span class="pre">cost</span></code>).</p>
+<p id="controlprojection-toggle-costs"><em>Toggling Cost Functions</em>.  Any of the cost functions (except the <code class="xref std std-keyword docutils literal"><span class="pre">COST_COMBINATION_FUNCTION</span></code>) can be
+enabled or disabled using the <code class="docutils literal"><span class="pre">toggle_cost_function</span></code> method to turn it <code class="xref std std-keyword docutils literal"><span class="pre">ON</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">OFF</span></code>.  If it is
+disabled, that component of the cost is not included in the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">cost</span></code> attribute. A cost function  can
+also be permanently disabled for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> to its argument in the constructor
+(or the corresponding entry in its params dictionary).  If a cost function is permanently disabled for a ControlProjection,
+it cannot be re-enabled using <code class="docutils literal"><span class="pre">toggle_cost_function</span></code>.</p>
+<p><em>Additional Attributes</em>.  In addition to the <code class="docutils literal"><span class="pre">intensity</span></code> and cost attributes described above, a ControlProjection has
+<code class="docutils literal"><span class="pre">last_allocation</span></code> and <code class="docutils literal"><span class="pre">last_intensity</span></code> attributes that store the values associated with its previous execution.
+Finally, it has an <code class="docutils literal"><span class="pre">allocation_samples</span></code> attribute, that is a  list of used by
+<span class="xref std std-ref">ControlMechanisms</span> for sampling different values of <code class="docutils literal"><span class="pre">allocation</span></code> for the ControlProjection,
+in order to adaptively adjust the parameters that it controls (e.g., <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>). The default value is an
+array that ranges from 0.1 to 1.0 in steps of 0.1.</p>
+</div>
+<div class="section" id="execution">
+<span id="controlprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A ControlProjection uses its <code class="docutils literal"><span class="pre">function</span></code> to compute the <code class="docutils literal"><span class="pre">intensity</span></code> of its control signal, and its <span class="xref std std-ref">cost
+functions &lt;ControlProjection_Cost_Functions&gt; use that to compute the its ``cost`</span>.  The <code class="docutils literal"><span class="pre">intensity</span></code> is assigned to
+the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, which is used by the parmaterState to which it projects to modify the
+corresponding parameter of the owner mechanism&#8217;s function.  The <code class="docutils literal"><span class="pre">cost</span></code> is used by the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> to determine
+the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">allocation</span></code> in future executions.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The changes in a parameter in response to the execution of a ControlProjection are not applied until the
+mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of &#8220;lazy&#8221;
+updating).</p>
+</div>
+</div>
+<div class="section" id="class-reference">
+<span id="controlprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ControlProjection.ControlSignalCostOptions">
+<em class="property">class </em><code class="descclassname">ControlProjection.</code><code class="descname">ControlSignalCostOptions</code><a class="headerlink" href="#ControlProjection.ControlSignalCostOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="ControlProjection.ControlProjection">
+<em class="property">class </em><code class="descclassname">ControlProjection.</code><code class="descname">ControlProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear                                       intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Implements a projection that controls the parameter of a mechanism&#8217;s function.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sender</strong> (<em>Optional[Mechanism or OutputState]</em>) &#8211; the source of the allocation for the ControlProjection;  usually an outputState of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>.
+If it is not specified, the <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">DefaultControlMechanism</span></a> for the system to which the receiver belongs
+will be assigned.</li>
+<li><strong>receiver</strong> (<em>Optional[Mechanism or ParameterState]</em>) &#8211; the parameterState associated with the parameter of a function to be controlled.  This must be specified,
+or be able to be determined by the context in which the ControlProjection is created or assigned.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; converts the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">allocation</span></code> into its control signal <code class="docutils literal"><span class="pre">intensity</span></code> (equal to its <code class="docutils literal"><span class="pre">value</span></code>).</li>
+<li><strong>intensity_cost_function</strong> (<em>Optional[TransferFuntion] : default Exponential</em>) &#8211; calculates a cost based on the control signal <code class="docutils literal"><span class="pre">intensity</span></code>.
+It can be disabled permanently for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>adjustment_cost_function</strong> (<em>Optiona[TransferFunction] : default Linear</em>) &#8211; calculates a cost based on a change in the control signal <code class="docutils literal"><span class="pre">intensity</span></code> from its last value.
+It can be disabled permanently for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>duration_cost_function</strong> (<em>Optional[TransferFunction] : default Linear</em>) &#8211; Calculates an integral of the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.
+It can be disabled permanently for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</li>
+<li><strong>cost_combination_function</strong> (<em>function : default Reduce(operation=SUM)</em>) &#8211; Combines the results of any cost functions that are enabled, and assigns the result to <code class="docutils literal"><span class="pre">cost</span></code>.</li>
+<li><strong>allocation_samples</strong> (list : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_ALLOCATION_SAMPLES</span></code>) &#8211; Set of values used by ControlMechanisms that sample different allocation values in order to adaptively adjust
+the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in steps
+of 0.1.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the projection, parameters for its function,
+and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).[LINK]
+By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> and cost function assignments.</li>
+<li><strong>name</strong> (<em>str : default ControlProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the ControlProjection.
+If not is specified, a default is assigned by ProjectionRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the PreferenceSet for the ControlProjection.
+If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.sender">
+<code class="descname">sender</code><a class="headerlink" href="#ControlProjection.ControlProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState of ControlProjection</em> &#8211; mechanism that provides the current <code class="docutils literal"><span class="pre">allocation</span></code> for the ControlProjection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.receiver">
+<code class="descname">receiver</code><a class="headerlink" href="#ControlProjection.ControlProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ParameterState of Mechanism</em> &#8211; parameterState for the parameter to be modified by ControlProjection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.allocation">
+<code class="descname">allocation</code><a class="headerlink" href="#ControlProjection.ControlProjection.allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default: defaultControlAllocation</em> &#8211; value used as <code class="docutils literal"><span class="pre">variable</span></code> for ControlProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to determine its control signal <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.allocationSamples">
+<code class="descname">allocationSamples</code><a class="headerlink" href="#ControlProjection.ControlProjection.allocationSamples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list : DEFAULT_SAMPLE_VALUES</em> &#8211; set of values used by ControlMechanisms that sample different allocation values in order to
+adaptively adjust the function of mechanisms in their systems.</p>
+<span class="target" id="controlsignal-function-attributes"></span></dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.function">
+<code class="descname">function</code><a class="headerlink" href="#ControlProjection.ControlProjection.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction :  default Linear</em> &#8211; converts <code class="docutils literal"><span class="pre">allocation</span></code> into <cite>control signal `intensity`</cite> that is provided as output to receiver of projection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.intensityCostFunction">
+<code class="descname">intensityCostFunction</code><a class="headerlink" href="#ControlProjection.ControlProjection.intensityCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction : default Exponential</em> &#8211; calculates &#8220;intensityCost`` from the curent value of <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.adjustmentCostFunction">
+<code class="descname">adjustmentCostFunction</code><a class="headerlink" href="#ControlProjection.ControlProjection.adjustmentCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction : default Linear</em> &#8211; calculates <code class="docutils literal"><span class="pre">adjustmentCost</span></code> based on the change in <code class="docutils literal"><span class="pre">intensity</span></code> from its last value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.durationCostFunction">
+<code class="descname">durationCostFunction</code><a class="headerlink" href="#ControlProjection.ControlProjection.durationCostFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IntegratorFunction : default Linear</em> &#8211; calculates an integral of the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.costCombinationFunction">
+<code class="descname">costCombinationFunction</code><a class="headerlink" href="#ControlProjection.ControlProjection.costCombinationFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function : default Reduce(operation=SUM)</em> &#8211; combines the results of any cost functions that are enabled, and assigns the result to <code class="docutils literal"><span class="pre">cost</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.value">
+<code class="descname">value</code><a class="headerlink" href="#ControlProjection.ControlProjection.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; during initialization, assigned keyword string (either INITIALIZING or DEFERRED_INITIALIZATION);
+during execution, returns value of <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.intensity">
+<code class="descname">intensity</code><a class="headerlink" href="#ControlProjection.ControlProjection.intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>, used to determine controlled parameter of task.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.intensityCost">
+<code class="descname">intensityCost</code><a class="headerlink" href="#ControlProjection.ControlProjection.intensityCost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; cost associated with current <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.adjustmentCost">
+<code class="descname">adjustmentCost</code><a class="headerlink" href="#ControlProjection.ControlProjection.adjustmentCost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; cost associated with last change to <code class="docutils literal"><span class="pre">intensity</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.durationCost">
+<code class="descname">durationCost</code><a class="headerlink" href="#ControlProjection.ControlProjection.durationCost" title="Permalink to this definition">¶</a></dt>
+<dd><p>intregral of <code class="docutils literal"><span class="pre">cost</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.cost">
+<code class="descname">cost</code><a class="headerlink" href="#ControlProjection.ControlProjection.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; current value of ControlProjection&#8217;s <code class="docutils literal"><span class="pre">cost</span></code>;  combined result of all cost functions that are enabled.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.last_allocation">
+<code class="descname">last_allocation</code><a class="headerlink" href="#ControlProjection.ControlProjection.last_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; <code class="docutils literal"><span class="pre">allocation</span></code> for last execution of the ControlProjection.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.last_intensity">
+<code class="descname">last_intensity</code><a class="headerlink" href="#ControlProjection.ControlProjection.last_intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; <code class="docutils literal"><span class="pre">intensity</span></code> for last execution of the ControlProjection.</p>
+<span class="target" id="id1"></span></dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.name">
+<code class="descname">name</code><a class="headerlink" href="#ControlProjection.ControlProjection.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default ControlProjection-&lt;index&gt;</em> &#8211; the name of the ControlProjection.
+Specified in the name argument of the call to create the projection;
+if not is specified, a default is assigned by ProjectionRegistry
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlProjection.ControlProjection.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#ControlProjection.ControlProjection.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the PreferenceSet for projection.
+Specified in the prefs argument of the call to create the projection;
+if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlProjection.ControlProjection.toggle_cost_function">
+<code class="descname">toggle_cost_function</code><span class="sig-paren">(</span><em>cost_function_name</em>, <em>assignment=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection.toggle_cost_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables/disables use of a cost function.</p>
+<p><code class="docutils literal"><span class="pre">cost_function_name</span></code> should be a keyword (list under <a class="reference internal" href="#controlprojection-structure"><span class="std std-ref">Structure</span></a>).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="ControlProjection.ControlProjection.get_costs">
+<code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection.get_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensityCost</span></code>, <code class="docutils literal"><span class="pre">adjustmentCost</span></code> and <code class="docutils literal"><span class="pre">durationCost</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LearningProjection.html" class="btn btn-neutral float-right" title="LearningProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
