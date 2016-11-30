@@ -1,14 +1,14 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import Logistic
 
-Input_Layer = Transfer(name='Input Layer',
+Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
                        default_input_value = [0,0])
 
-Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
+Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
                           default_input_value = [0,0,0,0,0])
 
@@ -20,16 +20,16 @@ Output_Layer = DDM(name='Output Layer DDM',
 Input_Weights = MappingProjection(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
-                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
-                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
+                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
+                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
                                   )
 
 Output_Weights = MappingProjection(name='Output Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Output_Layer,
                                   # params={FUNCTION_PARAMS:{MATRIX:IDENTITY_MATRIX}}
-                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
-                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
+                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
                                   )
 
 z = process(default_input_value=[0, 0],

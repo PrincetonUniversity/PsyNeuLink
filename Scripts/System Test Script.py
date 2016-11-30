@@ -2,7 +2,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 
 # DDM_prefs = ComponentPreferenceSet(
 #                 prefs = {
@@ -16,8 +16,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # my_DDM.prefs.show()
 #
 # #region MAIN SCRIPT
-# myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-#                                                  THRESHOLD:(10.0, CONTROL_SIGNAL)},
+# myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+#                                                  THRESHOLD:(10.0, CONTROL_PROJECTION)},
 #                           kwDDM_AnalyticSolution:kwBogaczEtAl},
 #                   prefs = DDM_prefs,
 #                   name='My_DDM'
@@ -42,9 +42,9 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # process_prefs.show()
 
-Layer_1 = Transfer(default_input_value=[0,0], name='Layer 1')
-Layer_2 = Transfer(default_input_value=[0,0], name='Layer 2')
-Layer_3 = Transfer(default_input_value=[0,0], name='Layer 3')
+Layer_1 = TransferMechanism(default_input_value=[0,0], name='Layer 1')
+Layer_2 = TransferMechanism(default_input_value=[0,0], name='Layer 2')
+Layer_3 = TransferMechanism(default_input_value=[0,0], name='Layer 3')
 
 
 myProcess_1 = Process_Base(default_input_value=[0, 0],

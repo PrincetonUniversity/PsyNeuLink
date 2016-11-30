@@ -2,7 +2,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
@@ -19,14 +19,14 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Mechanisms:
-Input = Transfer(name='Input',
+Input = TransferMechanism(name='Input',
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
-Reward = Transfer(name='Reward',
+Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
-Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
-                                   threshold=(1.0, ControlSignal(function=Linear)),
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear)),
+                                   threshold=(1.0, ControlProjection(function=Linear)),
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),

@@ -9,8 +9,8 @@ DDM_prefs = ComponentPreferenceSet(
 
 # my_DDM = DDM(name='my_DDM')
 
-my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
-                                 threshold=(10.0, CONTROL_SIGNAL),
+my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_PROJECTION),
+                                 threshold=(10.0, CONTROL_PROJECTION),
                                  starting_point=0.0),
              name='My_DDM',
              prefs = DDM_prefs
@@ -21,8 +21,8 @@ my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
 my_DDM.prefs.show()
 
-myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_SIGNAL),
-                                      threshold=(10.0, CONTROL_SIGNAL),
+myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_PROJECTION),
+                                      threshold=(10.0, CONTROL_PROJECTION),
                                       starting_point=0.0),
                   prefs = DDM_prefs,
                   name='My_DDM'

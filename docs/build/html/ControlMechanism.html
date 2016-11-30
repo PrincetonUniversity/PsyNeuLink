@@ -177,8 +177,9 @@
 <span class="target" id="module-ControlMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> to assess the
-outcome of processing by those mechanisms, and use this to regulate the value of <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> projections to
-other ProcessingMechanisms in the system for which the ControlMechanism is a <code class="docutils literal"><span class="pre">controller</span></code>.</p>
+outcome of processing by those mechanisms, and use this to regulate the value of
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to other ProcessingMechanisms in the system for which the
+ControlMechanism is a <code class="docutils literal"><span class="pre">controller</span></code>.</p>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
@@ -187,8 +188,8 @@ A ControlMechanism is also created automatically whenever a system is created (s
 and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>). The outputStates to be monitored
 by a ControlMechanism are specified in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> argument, which can be specified in a number of
 ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> projection from that outputState to the newly created
-inputState.  How a ControlMechanism creates its ControlSignal projections depends on the subclass.</p>
+outputStates it monitors, and assigns a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from that outputState to the newly created inputState.
+How a ControlMechanism creates its ControlProjections depends on the subclass.</p>
 <div class="section" id="monitored-outputstates">
 <span id="controlmechanism-monitored-outputstates"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <p>The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
@@ -228,10 +229,10 @@ can be in the controlMechanism or system&#8217;s <code class="docutils literal">
 <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="docutils literal"><span class="pre">params</span></code> argument.  In
 either case, the value must be a list, each item of which must be one of the following:</p>
 <ul class="simple">
-<li>An  outputState or the name of one.</li>
+<li>An existing <strong>outputState</strong> or the name of one.</li>
 </ul>
 <ul class="simple">
-<li>A mechanism or the name of one. Only the mechanism&#8217;s primary (first) outputState will be monitored,
+<li>A <strong>mechanism</strong> or the name of one. Only the mechanism&#8217;s primary (first) outputState will be monitored,
 unless a <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> value is also in the list (see below), or the specification is
 overridden in a params dictionary specification for the mechanism (see above).</li>
 </ul>
@@ -277,12 +278,12 @@ must have the three following items in the order listed:</p>
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The ControlMechanism of a system is always the last to be executed (see System <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">Control</span></a>).  A
 ControlMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> takes as its input the values of the outputStates specified in its
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> parameter, and uses those to determine the value of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>
-projections. In the next round of execution, each ControlSignal&#8217;s value is used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> parameter, and uses those to determine the value of its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
+projections. In the next round of execution, each ControlProjection&#8217;s value is used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it
 projects, to update the corresponding parameter of the recieving mechanism&#8217;s function.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> projection does not update its value until its owner
+<p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner
 mechanism executes (see <span class="xref std std-ref">Lazy_Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).  This means that even if a
 ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
 receiver mechanism has executed.</p>
@@ -300,22 +301,22 @@ receiver mechanism has executed.</p>
 They should be instantiated using the constructor for a <a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
 </div>
 <dl class="attribute">
-<dt id="ControlMechanism.ControlMechanism_Base.controlSignals">
-<code class="descname">controlSignals</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlSignals" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[ControlSignal]</em> &#8211; list of <a class="reference internal" href="ControlSignal.html#module-ControlSignal" title="ControlSignal"><code class="xref py py-class docutils literal"><span class="pre">ControlSignal</span></code></a> projections managed by the ControlMechanism.  There is one for each ouputState
-in the <code class="docutils literal"><span class="pre">outputStates</span></code> dictionary.</p>
+<dt id="ControlMechanism.ControlMechanism_Base.controlProjections">
+<code class="descname">controlProjections</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlProjections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[ControlProjection]</em> &#8211; list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> managed by the ControlMechanism.
+There is one for each ouputState in the <code class="docutils literal"><span class="pre">outputStates</span></code> dictionary.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlMechanism.ControlMechanism_Base.controlSignalCosts">
-<code class="descname">controlSignalCosts</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlSignalCosts" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the <code class="docutils literal"><span class="pre">controlSignals</span></code> attribute.</p>
+<dt id="ControlMechanism.ControlMechanism_Base.controlProjectionCosts">
+<code class="descname">controlProjectionCosts</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlProjectionCosts" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the <code class="docutils literal"><span class="pre">controlProjections</span></code> attribute.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ControlMechanism.ControlMechanism_Base.allocationPolicy">
 <code class="descname">allocationPolicy</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.allocationPolicy" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array of values currently assigned to each control signal in the <code class="docutils literal"><span class="pre">controlSignals</span></code> attribute.</p>
+<dd><p><em>2d np.array</em> &#8211; array of values currently assigned to each control signal in the <code class="docutils literal"><span class="pre">controlProjections</span></code> attribute.</p>
 </dd></dl>
 
 </dd></dl>

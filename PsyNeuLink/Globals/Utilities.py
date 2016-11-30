@@ -22,8 +22,8 @@
 CONTENTS:
 
     TYPE CHECKING and VALUE COMPARISON:
-        is_numerical_or_none
-        is_numerical
+        is_numeric_or_none
+        is_numeric
         iscompatible
 
     ENUM:
@@ -39,6 +39,7 @@ CONTENTS:
         multi_getattr
         np_array_less_that_2d
         convert_to_np_array
+        type_match
         get_value_from_array
         is_matrix
         underscore_to_camelCase
@@ -123,12 +124,12 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
-def is_numerical_or_none(x):
+def is_numeric_or_none(x):
     if not x:
         return True
-    return is_numerical(x)
+    return is_numeric(x)
 
-def is_numerical(x):
+def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 kwCompatibilityType = "type"
@@ -444,6 +445,19 @@ def convert_to_np_array(value, dimension):
     if 'U' in repr(value.dtype):
         raise UtilitiesError("{0} has non-numeric entries".format(value))
     return value
+
+def type_match(value, value_type):
+    if isinstance(value, value_type):
+        return value
+    if value_type is int:
+        return int(value)
+    if value_type is float:
+        return float(value)
+    if value_type is np.ndarray:
+        return np.array(value)
+    if value_type is None:
+        return None
+    raise UtilitiesError("Type of {} not recognized".format(value))
 
 def get_value_from_array(array):
     """Extract numeric value from array, preserving numeric type

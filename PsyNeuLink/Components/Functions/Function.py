@@ -129,7 +129,7 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 def parameter_spec(param):
-    # if is_numerical(param):
+    # if is_numeric(param):
     if isinstance(param, (numbers.Number, np.ndarray, list, tuple, function_type, ParamValueProjection)):
         return True
     return False
@@ -160,7 +160,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION
 IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
         - Parameters can be assigned and/or changed individually or in sets, by:
           - including them in the initialization call
-          - calling the assign_defaults method (which changes their default values)
+          - calling the _assign_defaults method (which changes their default values)
           - including them in a call the function method (which changes their values for just for that call)
         - Parameters must be specified in a params dictionary:
           - the key for each entry should be the name of the parameter (used also to name associated projections)
@@ -330,7 +330,7 @@ class Contradiction(Function_Base): # Example
 
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
-    #  in the initialization call or later (using either assign_defaults or during a function call)
+    #  in the initialization call or later (using either _assign_defaults or during a function call)
     kwPropensity = "PROPENSITY"
     kwPertinacity = "PERTINACITY"
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -523,7 +523,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
             context:
         """
         super()._validate_variable(variable=variable, context=context)
-        if not is_numerical(variable):
+        if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
 
@@ -602,6 +602,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     componentName = kwLinearCombination
 
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
+
     # # Operation indicators
     # class Operation(Enum):
     #     SUM = 0
@@ -622,8 +630,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
-                 exponents:is_numerical_or_none=None,
-                 weights:is_numerical_or_none=None,
+                 exponents:is_numeric_or_none=None,
+                 weights:is_numeric_or_none=None,
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,
@@ -678,7 +686,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                        format(variable, self.__class__.__name__))
 
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -841,17 +849,28 @@ class Linear(TransferFunction): # ----------------------------------------------
 
     componentName = kwLinear
 
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'LinearClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
+
+
     variableClassDefault = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: True})
+                               kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+    })
 
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 slope:parameter_spec=1,
-                 intercept:parameter_spec=0,
+                 slope:parameter_spec=1.0,
+                 intercept:parameter_spec=0.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
@@ -1679,7 +1698,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
                 #       the object itself, thus does not see the array specification for the input.
                 if self._variable_not_specified:
-                    self.assign_defaults(variable=np.zeros_like(np.array(rate)))
+                    self._assign_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                     if self.verbosePref:
                         warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
                                       "matach the length ({}) of the default input ({});  the default input has been "
@@ -1727,7 +1746,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 # FIX:  CONVERT TO NP?
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
@@ -1762,6 +1781,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         return value
 
+    # def keyword(self, keyword):
+    #     return keyword
 
 # region DDM
 #
@@ -2122,7 +2143,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
 
         Note: assume variable is a 2D np.array with three items (input, output, error)
-              for compatibility with other learning functions (and calls from LearningSignal)
+              for compatibility with other learning functions (and calls from LearningProjection)
 
         :var variable: 2D np.array with three items (input array, output array, error array)
         :parameter params: (dict) with entry specifying:

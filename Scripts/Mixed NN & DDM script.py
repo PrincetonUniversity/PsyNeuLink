@@ -6,11 +6,11 @@ from PsyNeuLink.Globals.Run import run
 
 
 
-myInputLayer = Transfer(name='Input Layer',
+myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
                         default_input_value = [0,0])
 
-myHiddenLayer = Transfer(name='Hidden Layer 1',
+myHiddenLayer = TransferMechanism(name='Hidden Layer 1',
                          function=Logistic(gain=1.0, bias=0),
                          default_input_value = np.zeros((5,)))
 

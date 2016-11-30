@@ -3,17 +3,17 @@ import numpy as np
 from PsyNeuLink import *
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
-input_layer = Transfer(default_input_value=[0,0,0],
+input_layer = TransferMechanism(default_input_value=[0,0,0],
                        name='Input Layer')
 
-action_selection = Transfer(default_input_value=[0,0,0],
+action_selection = TransferMechanism(default_input_value=[0,0,0],
                             function=SoftMax(output=PROB,
                                              gain=1.0),
                             name='Action Selection')
 
 p = process(default_input_value=[0, 0, 0],
             pathway=[input_layer,action_selection],
-            learning=LearningSignal(function=Reinforcement(learning_rate=.05)),
+            learning=LearningProjection(function=Reinforcement(learning_rate=.05)),
             target=0)
 
 print ('reward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)

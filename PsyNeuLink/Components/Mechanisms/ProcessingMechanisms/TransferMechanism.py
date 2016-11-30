@@ -123,7 +123,7 @@ class TransferError(Exception):
         return repr(self.error_value)
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
-class Transfer(ProcessingMechanism_Base):
+class TransferMechanism(ProcessingMechanism_Base):
     """
     TransferMechanism(                    \
     default_input_value=None,    \
@@ -197,7 +197,7 @@ class Transfer(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
     time_scale :  TimeScale : TimeScale.TRIAL
         specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
@@ -208,7 +208,7 @@ class Transfer(ProcessingMechanism_Base):
         If not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-    prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
@@ -268,13 +268,15 @@ class Transfer(ProcessingMechanism_Base):
 
     """
 
-    componentType = "Transfer"
+    componentType = "TransferMechanism"
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'TransferCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
 
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
@@ -324,7 +326,7 @@ class Transfer(ProcessingMechanism_Base):
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
 
-        super(Transfer, self).__init__(variable=default_input_value,
+        super(TransferMechanism, self).__init__(variable=default_input_value,
                                        params=params,
                                        name=name,
                                        prefs=prefs,
@@ -405,8 +407,8 @@ class Transfer(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute TransferMechanism function and return transform of input
@@ -477,7 +479,7 @@ class Transfer(ProcessingMechanism_Base):
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
         else:
-            raise MechanismError("time_scale not specified for Transfer")
+            raise MechanismError("time_scale not specified for TransferMechanism")
 
         self.previous_input = current_input
 

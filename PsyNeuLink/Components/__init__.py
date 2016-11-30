@@ -12,8 +12,8 @@
 #            'OUTPUT_STATES',
 #            'kwParameterState',
 #            'MAPPING_PROJECTION',
-#            'CONTROL_SIGNAL',
-#            'LEARNING_SIGNAL']
+#            'CONTROL_PROJECTION',
+#            'LEARNING_PROJECTION']
 
 import inspect
 import warnings
@@ -91,13 +91,13 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=kwDefaultProce
 # Note: this must be an instantiated object
 DefaultMonitoringMechanism = ComparatorMechanism(name=kwDefaultMonitoringMechanism)
 
-# Use as PROJECTION_SENDER (default sender for ControlSignal projections) if sender is not specified (in ControlSignal)
+# Use as PROJECTION_SENDER (default sender for ControlProjections) if sender is not specified (in ControlProjection)
 
 # Instantiates DefaultController (ControlMechanism):
-# - automatically assigned as the sender of default ControlSignal Projections (that use the CONTROL_SIGNAL keyword)
+# - automatically assigned as the sender of default ControlProjections (that use the CONTROL_PROJECTION keyword)
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
 # - can be overridden in System by kwControlMechanism
-# - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlSignal intensities
+# - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlProjection intensities
 # Note: this is an instantiated object
 DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 
@@ -105,7 +105,7 @@ DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
 #    in place of DefaultController, when instantiating a System for which an existing control mech is specified
 # - if it is either not specified or is None, DefaultController will (continue to) be used (see above)
 # - if it is assigned to another subclass of ControlMechanism, its instantiation moves all of the
-#     existing ControlSignal projections from DefaultController to that instance of the specified subclass
+#     existing ControlProjections from DefaultController to that instance of the specified subclass
 # Note: must be a class
 # SystemDefaultControlMechanism = EVCMechanism
 SystemDefaultControlMechanism = DefaultControlMechanism
@@ -198,21 +198,21 @@ register_category(entry=MappingProjection,
                   context=kwInitPy)
 # MAPPING_PROJECTION = MappingProjection.__name__
 
-# ControlSignal
-from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
-register_category(entry=ControlSignal,
+# ControlProjection
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+register_category(entry=ControlProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# CONTROL_SIGNAL = ControlSignal.__name__
+# CONTROL_PROJECTION = ControlProjection.__name__
 
-# LearningSignal
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-register_category(entry=LearningSignal,
+# LearningProjection
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
-# LEARNING_SIGNAL = LearningSignal.__name__
+# LEARNING_PROJECTION = LearningProjection.__name__
 
 #endregion
 
@@ -334,7 +334,7 @@ State.classPreferences = ComponentPreferenceSet(owner=State,
                                                level=PreferenceLevel.CATEGORY,
                                                context=".__init__.py")
 
-ControlSignal.classPreferences = ComponentPreferenceSet(owner=ControlSignal,
+ControlProjection.classPreferences = ComponentPreferenceSet(owner=ControlProjection,
                                                        prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
                                                        level=PreferenceLevel.TYPE,
                                                        context=".__init__.py")

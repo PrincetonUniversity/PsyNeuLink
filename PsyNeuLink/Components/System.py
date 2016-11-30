@@ -226,7 +226,7 @@ NUM_PHASES_PER_TRIAL = 'num_phases'
 MONITORING_MECHANISMS = 'monitoring_mechanisms'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 CONTROL_MECHANISMS = 'control_mechanisms'
-CONTROL_PROJECTION_RECEIVERS = 'control_projections_receivers'
+CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
 
 SystemRegistry = {}
 
@@ -309,7 +309,7 @@ def system(default_input_value=None,
 
     controller : ControlMechanism : default DefaultController
         the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        monitor_for_control, and specify the value of ControlSignal projections in the system.
+        monitor_for_control, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the ``controller`` is executed during system execution.
@@ -532,7 +532,7 @@ class System_Base(System):
         List of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-<index>
-        Name of the system;
+        the name of the system;
         Specified in the name argument of the call to create the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
@@ -812,7 +812,7 @@ class System_Base(System):
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
                 if not input is None:
-                    process.assign_defaults(input)
+                    process._assign_defaults(variable=input, context=context)
 
             # Otherwise, instantiate Process
             if not isinstance(process, Process):
@@ -1245,8 +1245,8 @@ class System_Base(System):
         """
 
         if not context:
-            context = kwExecuting + self.name
-        report_system_output = self.prefs.reportOutputPref and context and kwExecuting in context
+            context = EXECUTING + self.name
+        report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if report_system_output:
             report_process_output = any(process.reportOutputPref for process in self.processes)
 
@@ -1254,7 +1254,7 @@ class System_Base(System):
 
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
-        #    the input to the mapping projection to the first (origin) Mechanism in that Process' pathway
+        #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
         if inputs is None:
             pass
         else:
@@ -1349,7 +1349,7 @@ class System_Base(System):
 
         # FIX: NEED TO CHECK PHASE HERE
         # Don't execute learning for simulation runs
-        if not kwEVCSimulation in context:
+        if not EVC_SIMULATION in context:
             for process in self.processes:
                 if process.learning and process._learning_enabled:
                     process._execute_learning(context=context)
@@ -1362,7 +1362,7 @@ class System_Base(System):
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not kwEVCSimulation in context and self.enable_controller:
+        if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
                     self.controller.execute(time_scale=TimeScale.TRIAL,
@@ -1684,15 +1684,15 @@ class System_Base(System):
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
 
-        from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
-        from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
             for parameter_state in mech.parameterStates:
                 try:
                     for projection in parameter_state.receivesFromProjections:
-                        if isinstance(projection, ControlSignal):
+                        if isinstance(projection, ControlProjection):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
                     pass
@@ -1701,7 +1701,7 @@ class System_Base(System):
                     for projection in output_state.sendsToProjections:
                         for parameter_state in projection.paramaterStates:
                             for sender in parameter_state.receivesFromProjections:
-                                if isinstance(sender, LearningSignal):
+                                if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
                     pass

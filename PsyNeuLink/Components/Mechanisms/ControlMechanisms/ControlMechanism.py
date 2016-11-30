@@ -13,8 +13,9 @@ Overview
 --------
 
 ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` to assess the
-outcome of processing by those mechanisms, and use this to regulate the value of :doc:`ControlSignal` projections to
-other ProcessingMechanisms in the system for which the ControlMechanism is a ``controller``.
+outcome of processing by those mechanisms, and use this to regulate the value of
+:doc:`ControlProjections <ControlProjection>` to other ProcessingMechanisms in the system for which the
+ControlMechanism is a ``controller``.
 
 .. _ControlMechanism_Creation:
 
@@ -26,8 +27,8 @@ A ControlMechanism is also created automatically whenever a system is created (s
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates to be monitored
 by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can be specified in a number of
 ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a :doc:`MappingProjection` projection from that outputState to the newly created
-inputState.  How a ControlMechanism creates its ControlSignal projections depends on the subclass.
+outputStates it monitors, and assigns a :doc:`MappingProjection` from that outputState to the newly created inputState.
+How a ControlMechanism creates its ControlProjections depends on the subclass.
 
 .. _ControlMechanism_Monitored_OutputStates:
 
@@ -65,10 +66,10 @@ The specification of whether an outputState is monitored by a ControlMechanism c
   :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in its ``params`` argument.  In
   either case, the value must be a list, each item of which must be one of the following:
 
-  * An  outputState or the name of one.
+  * An existing **outputState** or the name of one.
   ..
 
-  * A mechanism or the name of one. Only the mechanism's primary (first) outputState will be monitored,
+  * A **mechanism** or the name of one. Only the mechanism's primary (first) outputState will be monitored,
     unless a :class:`MonitoredOutputStatesOption` value is also in the list (see below), or the specification is
     overridden in a params dictionary specification for the mechanism (see above).
   ..
@@ -109,12 +110,12 @@ Execution
 
 The ControlMechanism of a system is always the last to be executed (see System :ref:`System_Execution_Control`).  A
 ControlMechanism's ``function`` takes as its input the values of the outputStates specified in its
-:keyword:`MONITOR_FOR_CONTROL` parameter, and uses those to determine the value of its :doc:`ControlSignal`
-projections. In the next round of execution, each ControlSignal's value is used by the :doc:`ParameterState` to which it
+:keyword:`MONITOR_FOR_CONTROL` parameter, and uses those to determine the value of its :doc:`ControlProjection`
+projections. In the next round of execution, each ControlProjection's value is used by the :doc:`ParameterState` to which it
 projects, to update the corresponding parameter of the recieving mechanism's function.
 
 .. note::
-   A :doc:`ParameterState` that receives a :doc:`ControlSignal` projection does not update its value until its owner
+   A :doc:`ParameterState` that receives a :doc:`ControlProjection` does not update its value until its owner
    mechanism executes (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
    receiver mechanism has executed.
@@ -162,7 +163,7 @@ class ControlMechanism_Base(Mechanism_Base):
     COMMENT:
         Description:
             # DOCUMENTATION NEEDED:
-              ._instantiate_control_signal_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
+              ._instantiate_control_projection INSTANTIATES OUTPUT STATE FOR EACH CONTROL SIGNAL ASSIGNED TO THE
              INSTANCE
             .EXECUTE MUST BE OVERRIDDEN BY SUBCLASS
             WHETHER AND HOW MONITORING INPUT STATES ARE INSTANTIATED IS UP TO THE SUBCLASS
@@ -171,7 +172,7 @@ class ControlMechanism_Base(Mechanism_Base):
                Initial assignment is to SystemDefaultController (instantiated and assigned in Components.__init__.py)
                When any other ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
                    then its _take_over_as_default_controller method is called in _instantiate_attributes_after_function()
-                   which moves all ControlSignal Projections from DefaultController to itself, and deletes them there
+                   which moves all ControlProjections from DefaultController to itself, and deletes them there
 
             MONITOR_FOR_CONTROL param determines which states will be monitored.
                 specifies the outputStates of the terminal mechanisms in the System to be monitored by ControlMechanism
@@ -198,7 +199,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
             NOT CURRENTLY IN USE:
             default_input_value : value, list or np.ndarray : ``defaultControlAllocation`` [LINK]
-                the default allocation for the ControlMechanism;  it length should equal the number of ``controlSignals``.
+                the default allocation for the ControlMechanism;
+                it length should equal the number of ``controlSignals``.
 
         monitor_for_control : List[OutputState specification] : default None
             specifies set of outputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
@@ -209,15 +211,15 @@ class ControlMechanism_Base(Mechanism_Base):
 
         params : Optional[Dict[param keyword, param value]]
             a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-            and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a parms dict).
+            and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
 
-        name : str : default TransferMechanism-<index>
+        name : str : default ControlMechanism-<index>
             a string used for the name of the mechanism.
             If not is specified, a default is assigned by MechanismRegistry
             (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
-        prefs : Optional[PreferenceSet or specification dict : Process.classPreferences]
-            the PreferenceSet for process.
+        prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+            the PreferenceSet for the mechanism.
             If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
             (see Description under PreferenceSet for details) [LINK].
     COMMENT
@@ -226,15 +228,15 @@ class ControlMechanism_Base(Mechanism_Base):
     Attributes
     ----------
 
-    controlSignals : List[ControlSignal]
-        list of :class:`ControlSignal` projections managed by the ControlMechanism.  There is one for each ouputState
-        in the ``outputStates`` dictionary.
+    controlProjections : List[ControlProjection]
+        list of :doc:`ControlProjections <ControlProjection>` managed by the ControlMechanism.
+        There is one for each ouputState in the ``outputStates`` dictionary.
 
-    controlSignalCosts : 2d np.array
-        array of costs associated with each of the control signals in the ``controlSignals`` attribute.
+    controlProjectionCosts : 2d np.array
+        array of costs associated with each of the control signals in the ``controlProjections`` attribute.
 
     allocationPolicy : 2d np.array
-        array of values currently assigned to each control signal in the ``controlSignals`` attribute.
+        array of values currently assigned to each control signal in the ``controlProjections`` attribute.
 
 
     """
@@ -257,7 +259,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({CONTROL_SIGNAL_PROJECTIONS: None})
+    paramClassDefaults.update({CONTROL_PROJECTIONS: None})
 
     @tc.typecheck
     def __init__(self,
@@ -397,22 +399,22 @@ class ControlMechanism_Base(Mechanism_Base):
         return input_state
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Take over as default controller (if specified) and implement any specified ControlSignal projections
+        """Take over as default controller (if specified) and implement any specified ControlProjections
 
         """
 
         try:
-            # If specified as DefaultController, reassign ControlSignal projections from DefaultController
+            # If specified as DefaultController, reassign ControlProjections from DefaultController
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._take_over_as_default_controller(context=context)
         except KeyError:
             pass
 
-        # If controlSignal projections were specified, implement them
+        # If ControlProjections were specified, implement them
         try:
-            if self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS]:
-                for key, projection in self.paramsCurrent[CONTROL_SIGNAL_PROJECTIONS].items():
-                    self._instantiate_control_signal_projection(projection, context=self.name)
+            if self.paramsCurrent[CONTROL_PROJECTIONS]:
+                for key, projection in self.paramsCurrent[CONTROL_PROJECTIONS].items():
+                    self._instantiate_control_projection(projection, context=self.name)
         except:
             pass
 
@@ -427,19 +429,19 @@ class ControlMechanism_Base(Mechanism_Base):
             # Iterate through projections sent for outputState
             for projection in DefaultController.outputStates[outputState].sendsToProjections:
 
-                # Move ControlSignal projection to self (by creating new outputState)
-                # IMPLEMENTATION NOTE: Method 1 -- Move old ControlSignal Projection to self
+                # Move ControlProjection to self (by creating new outputState)
+                # IMPLEMENTATION NOTE: Method 1 -- Move old ControlProjection to self
                 #    Easier to implement
-                #    - call _instantiate_control_signal_projection directly here (which takes projection as arg)
-                #        instead of instantiating a new ControlSignal Projection (more efficient, keeps any settings);
+                #    - call _instantiate_control_projection directly here (which takes projection as arg)
+                #        instead of instantiating a new ControlProjection (more efficient, keeps any settings);
                 #    - however, this bypasses call to Projection._instantiate_sender()
                 #        which calls Mechanism.sendsToProjections.append(),
-                #        so need to do that in _instantiate_control_signal_projection
+                #        so need to do that in _instantiate_control_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                self._instantiate_control_signal_projection(projection, context=context)
+                self._instantiate_control_projection(projection, context=context)
 
-                # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlSignal Projection
-                # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlSignal
+                # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
+                # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
                 # # TBI: Implement and then use Mechanism.add_project_from_mechanism()
                 # self._add_projection_from_mechanism(projection, new_output_state, context=context)
 
@@ -456,8 +458,8 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def _instantiate_control_signal_projection(self, projection, context=None):
-        """Add outputState and assign as sender to requesting controlSignal projection
+    def _instantiate_control_projection(self, projection, context=None):
+        """Add outputState and assign as sender to requesting ControlProjection
 
         Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
 
@@ -469,13 +471,13 @@ class ControlMechanism_Base(Mechanism_Base):
 
         """
 
-        from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
-        if not isinstance(projection, ControlSignal):
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        if not isinstance(projection, ControlProjection):
             raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {0}, "
-                                              "that is not a ControlSignal Projection, to outputState of {1}".
+                                              "that is not a ControlProjection, to outputState of {1}".
                                               format(projection, self.name))
 
-        output_name = projection.receiver.name + '_ControlSignal' + '_Output'
+        output_name = projection.receiver.name + '_ControlProjection' + '_Output'
 
         #  Update self.value by evaluating function
         self._update_value(context=context)
@@ -486,7 +488,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_item_index = len(self.value)-1
         output_value = self.value[output_item_index]
 
-        # Instantiate outputState for self as sender of ControlSignal
+        # Instantiate outputState for self as sender of ControlProjection
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.States.OutputState import OutputState
         state = _instantiate_state(owner=self,
@@ -517,11 +519,11 @@ class ControlMechanism_Base(Mechanism_Base):
         # Add projection to list of outgoing projections
         state.sendsToProjections.append(projection)
 
-        # Add projection to list of controlSignals
+        # Add projection to list of ControlProjections
         try:
-            self.controlSignals.append(projection)
+            self.controlProjections.append(projection)
         except AttributeError:
-            self.controlSignals = []
+            self.controlProjections = []
 
         # Update controlSignalCosts to accommodate instantiated projection
         try:
@@ -532,7 +534,7 @@ class ControlMechanism_Base(Mechanism_Base):
         return state
 
     def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
-        """Updates controlSignals based on inputs
+        """Updates ControlProjections based on inputs
 
         Must be overriden by subclass
         """

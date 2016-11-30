@@ -13,10 +13,10 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Functions.Function import *
@@ -26,15 +26,15 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPrefe
 
 __all__ = ['System',
            'process',
-           'Transfer',
+           'TransferMechanism',
            'IntegratorMechanism',
            'DDM',
            'EVCMechanism',
            'ComparatorMechanism',
            'WeightedErrorMechanism',
            'MappingProjection',
-           'ControlSignal',
-           'LearningSignal',
+           'ControlProjection',
+           'LearningProjection',
            'LinearCombination',
            'Linear',
            'Exponential',
