@@ -619,8 +619,8 @@ def _instantiate_parameter_states(owner, context=None):
     for param_name, param_value in owner.user_params.items():
 
         # Exclusions:
-        # Allow numbericals but omit booleans (which are treated by is_numerical as numerical)
-        if is_numerical(param_value) and not isinstance(param_value, bool):
+        # Allow numbericals but omit booleans (which are treated by is_numeric as numerical)
+        if is_numeric(param_value) and not isinstance(param_value, bool):
             pass
         # Only allow a FUNCTION_PARAMS dict
         elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:

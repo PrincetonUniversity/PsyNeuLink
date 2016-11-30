@@ -499,7 +499,7 @@ class ControlProjection(Projection_Base):
                 else:
                     test_value = 1
                 try:
-                    if not is_numerical(cost_function(test_value)):
+                    if not is_numeric(cost_function(test_value)):
                         raise ControlProjectionError("Function assigned to {} ({}) must return a scalar".
                                                  format(cost_function_name, cost_function))
                 except:
