@@ -2,8 +2,8 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
-#            each entry is the name of an inputState or outputState;  value is tuple with:
+# IMPLEMENT: For Mechanism, dictionaries for receivesFromProjections and sendsToProjections;
+#            each entry is the name of an inputState or outputState;  value is tuple with...??
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
 #
 #
@@ -35,9 +35,11 @@
 #            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
 #            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
 
-# DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
+# DOCUMENT:  runtime param assignment is one-time by default;
+#            but can use runtimeParamsStickyAssignmentPref for persistent assignment
+#            or use assign_param
 #
-# FIX: GET RID OF NotImplemented
+# FIX: GET RID OF NotImplemented, epecially in validate_params
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
 # FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
@@ -84,7 +86,7 @@
 #   LearningSignal -> LearningProjection
 
 # 11/12/16:
-# FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORKTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
+# FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
 #    inputValue is a list, variable is a 2d np.nparray
 
 # 11/19/16:
@@ -128,7 +130,7 @@
 # DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
 #                   (see :doc:`Mechanism` for specification of a parms dict)
-# FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_fucntion (like LearningProjection)
+# FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_function (like LearningProjection)
 #              since execute (called in _instantiate_function) uses self.receiver.
 #              COULD CATCH IT IN EXECUTE, AND CALL _instantiate_receiver.
 # FIX: make ControlProjection functions arguments in __init__, and get them out of a dictionary

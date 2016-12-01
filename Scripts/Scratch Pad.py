@@ -45,7 +45,7 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
 # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
 # TM1_parameter_state = ParameterState(value=22)
-transfer_mechanism_2 = TransferMechanism(function=Logistic())
+transfer_mechanism_2 = TransferMechanism(function=Logistic)
 # transfer_mechanism_3 = TransferMechanism()
 transfer_mechanism_3 = TransferMechanism(function=Linear(slope=2))
 
@@ -68,8 +68,7 @@ print(transfer_mechanism_3.execute(input=1.0,
                                                                             # SLOPE:(6.0,
                                                                             #        ModulationOperation.OVERRIDE
                                                                                       }}))
-transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic()})
-
+transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
 
 # transfer_process = process(pathway = [transfer_mechanism_1])
 # print(transfer_process.execute())

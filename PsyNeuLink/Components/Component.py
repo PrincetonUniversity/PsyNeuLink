@@ -961,15 +961,6 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        # if inspect.isclass(function):
-                        #     function_class = function
-                        # else:
-                        #     function_class = function.__class__
-                        # if inspect.isclass(request_set[FUNCTION]):
-                        #     request_set_function_class = request_set[FUNCTION]
-                        # else:
-                        #     request_set_function_class = request_set[FUNCTION].__class__
-                        # if function_class != default_set_function_class:
                         if function_class != default_function_class and COMMAND_LINE in context:
                             from PsyNeuLink.Components.Functions.Function import Function_Base
                             if isinstance(function, Function_Base):
@@ -979,23 +970,24 @@ class Component(object):
                     except UnboundLocalError:
                         pass
                 # FIX: MAY NEED TO ALSO ALLOW assign_default_kwFunctionParams FOR COMMAND_LINE IN CONTEXT
+                # MODIFIED 11/30/16 END
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
                     continue
 
-                # IF FUNCTION HAS CHANGED, AND PARAM IS FUNCTION PARAMS, REPLACE FUNCTION_PARAMS AND CONTINUE;
-                # OTHERWISE, CONTINUE TO UPDATE RECURSIVELY
-                # MODIFIED 11/30/16 END
-
-                # MODIFIED 11/29/16 NEW:  DON'T REPLACE REQUESTED ENTRY
+                # MODIFIED 11/29/16 NEW:
+                # Don't replace requested entry with default
                 if param_name in request_set:
                     continue
                 # MODIFIED 11/29/16 END
+
+                # Add to request_set any entries it is missing fron the default_set
                 request_set.setdefault(param_name, param_value)
-                # Recursively update any values in a dict
+                # Update any values in a dict
                 if isinstance(param_value, dict):
                     for dict_entry_name, dict_entry_value in param_value.items():
-                        # MODIFIED 11/29/16 NEW:  DON'T REPLACE REQUESTED ENTRY
+                        # MODIFIED 11/29/16 NEW:
+                        # Don't replace requested entries
                         if dict_entry_name in request_set[param_name]:
                             continue
                         # MODIFIED 11/29/16 END
@@ -1029,6 +1021,46 @@ class Component(object):
         import copy
         request_set_param_names = list(request_set.keys())
         validated_set = {}
+
+        # # MODIFIED 12/1/16 NEW:
+        # # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
+        # if FUNCTION in request_set:
+        #     requested_function = request_set[FUNCTION]
+        #     # Get function class:
+        #     if inspect.isclass(requested_function):
+        #         requested_function_class = requested_function
+        #     else:
+        #         requested_function_class = requested_function.__class__
+        #     # # Get default function (from ParamClassDefaults)
+        #     # try:
+        #     #     current_function = self.paramsCurrent[FUNCTION]
+        #     # except KeyError:
+        #     #     # This occurs if a function has been specified as an arg in the call to __init__()
+        #     #     #     but there is no function spec in paramClassDefaults;
+        #     #     # This will be caught, and an exception raised, in _validate_params()
+        #     #     pass
+        #     # else:
+        #     #     # Get default function class
+        #     #     if inspect.isclass(function):
+        #     #         default_function_class = default_function
+        #     #     else:
+        #     #         default_function_class = default_function.__class__
+        #     current_function = self.paramsCurrent[FUNCTION]
+        #     if inspect.isclass(current_function):
+        #         current_function_class = current_function
+        #     else:
+        #         current_function_class = current_function.__class__
+        #
+        #
+        #     if requested_function_class != current_function_class:
+        #         from PsyNeuLink.Components.Functions.Function import Function_Base
+        #         if isinstance(current_function, Function_Base):
+        #             request_set[FUNCTION] = current_function.__class__
+        #         request_set[FUNCTION_PARAMS] = requested_function.user_params
+        # # function not yet defined, so allow FUNCTION_PARAMS)
+        # # except UnboundLocalError:
+        # #     pass
+        # # MODIFIED 12/1/16 END
 
         self._assign_defaults(request_set=request_set,
                              target_set=validated_set,
