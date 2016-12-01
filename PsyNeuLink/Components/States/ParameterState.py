@@ -579,22 +579,12 @@ class ParameterState(State_Base):
         self._value = assignment
 
 def _instantiate_parameter_states(owner, context=None):
-    """Call _instantiate_state for all params in user_params to instantiate ParameterStates for them
+    """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
 
     If owner.params[PARAMETER_STATE] is None or False:
         - no parameterStates will be instantiated.
-    Otherwise, instantiate parameterState for each param in owner.user_params
-        - include ones in owner.user_params[FUNCTION_PARAMS] (nested call)
-        - exclude if it is a:
-            parameterState that already exists (e.g., in case of call from Component.assign_params)
-            non-numeric value (including None, NotImplemented, False or True)
-                unless it is:
-                    a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
-                    a dict with the name FUNCTION_PARAMS (otherwise exclude)
-            function
-                IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-                (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+    Otherwise, instantiate parameterState for each allowable param in owner.user_params
+
     """
 
     # TBI / IMPLEMENT: use specs to implement paramterStates below
@@ -619,54 +609,72 @@ def _instantiate_parameter_states(owner, context=None):
     # Instantiate parameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
     for param_name, param_value in owner.user_params.items():
+        _instantiate_parameter_state(owner, param_name, param_value, context=context)
 
 
-        # EXCLUSIONS:
+def _instantiate_parameter_state(owner, param_name, param_value, context):
+    """Call _instantiate_state for allowable params, to instantiate a ParameterState for it
 
-        # MODIFIED 11/30/16 NEW:
-        # Skip if parameterState already exists (e.g., in case of call from Component.assign_params)
-        if param_name in owner.parameterStates:
-            continue
-        # MODIFIED 11/30/16 END
+    Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
+    Exclude if it is a:
+        parameterState that already exists (e.g., in case of call from Component.assign_params)
+        non-numeric value (including None, NotImplemented, False or True)
+            unless it is:
+                a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+                a dict with the name FUNCTION_PARAMS (otherwise exclude)
+        function
+            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+    """
 
-        # Allow numbericals but omit booleans (which are treated by is_numeric as numerical)
-        if is_numeric(param_value) and not isinstance(param_value, bool):
-            pass
-        # Only allow a FUNCTION_PARAMS dict
-        elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:
-            pass
-        # Exclude function (see docstring above)
-        elif param_name in {FUNCTION, NotImplemented}:
-            continue
-        # Allow tuples (could be specification that includes a projection or ModulationOperation)
-        elif isinstance(param_value, tuple):
-            continue
-        # Exclude all others
-        else:
-            continue
 
-        if param_name is FUNCTION_PARAMS:
-            for function_param_name, function_param_value in param_value.items():
-                state = _instantiate_state(owner=owner,
-                                          state_type=ParameterState,
-                                          state_name=function_param_name,
-                                          state_spec=function_param_value,
-                                          state_params=None,
-                                          constraint_value=function_param_value,
-                                          constraint_value_name=function_param_name,
-                                          context=context)
-                if state:
-                    owner.parameterStates[function_param_name] = state
-                continue
+    # EXCLUSIONS:
 
-        else:
+    # # Skip if parameterState already exists (e.g., in case of call from Component.assign_params)
+    # if param_name in owner.parameterStates:
+    #     return
+
+    # Allow numberics but omit booleans (which are treated by is_numeric as numerical)
+    if is_numeric(param_value) and not isinstance(param_value, bool):
+        pass
+    # Only allow a FUNCTION_PARAMS dict
+    elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:
+        pass
+    # elif param_value is NotImplemented:
+    #     return
+    # Exclude function (see docstring above)
+    elif param_name is FUNCTION:
+        return
+    # Allow tuples (could be specification that includes a projection or ModulationOperation)
+    elif isinstance(param_value, tuple):
+        return
+    # Exclude all others
+    else:
+        return
+
+    if param_name is FUNCTION_PARAMS:
+        for function_param_name, function_param_value in param_value.items():
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
-                                      state_name=param_name,
-                                      state_spec=param_value,
+                                      state_name=function_param_name,
+                                      state_spec=function_param_value,
                                       state_params=None,
-                                      constraint_value=param_value,
-                                      constraint_value_name=param_name,
+                                      constraint_value=function_param_value,
+                                      constraint_value_name=function_param_name,
                                       context=context)
             if state:
-                owner.parameterStates[param_name] = state
+                owner.parameterStates[function_param_name] = state
+            continue
+
+    else:
+        state = _instantiate_state(owner=owner,
+                                  state_type=ParameterState,
+                                  state_name=param_name,
+                                  state_spec=param_value,
+                                  state_params=None,
+                                  constraint_value=param_value,
+                                  constraint_value_name=param_name,
+                                  context=context)
+        if state:
+            owner.parameterStates[param_name] = state
