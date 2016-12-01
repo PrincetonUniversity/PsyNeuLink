@@ -47,18 +47,18 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  time_step (“realtime”) = cascaded
         
              - Process 
-                 Function that takes an input, processes it through an ordered list of mechanisms (and projections)
+                 Component that takes an input, processes it through an ordered list of mechanisms (and projections)
                  and generates an output
         
                  - Mechanism 
-                     Function that converts an input state representation into an output state representation
+                     Component that converts an input state representation into an output state representation
                      Parameters that determine its operation, under the influence of projections
         
                  - Projection 
-                     Function that takes a source, possibly transforms it, and uses it to
+                     Component that takes a source, possibly transforms it, and uses it to
                      determine the operation of a mechanism;  three primary types:
         
-                     + Mapping
+                     + MappingProjection
                          Takes output state of sender, possibly transforms it,
                              and provides it as input state to receiver
         
@@ -71,7 +71,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          modulate the input and/or output state of a mechanism
         
                      + Learning
-                         Takes an input from objection function (Utility)
+                         Takes an input from objection function (Function)
                          and modulates params (e.g., weights) of projection execute method
                          + Vectorial: modifies mapping projections
                          + Evaluative: modifies control projections
@@ -92,12 +92,12 @@ Description: Princeton University licenses this file to You under the Apache Lic
              - Class(required_arg, [optional_args]) # comment
         
              Hierarchy:
-             - Function: abstract class - cannont be instantiated directly
+             - Component: abstract class - cannont be instantiated directly
                  - Category: abstract classes - cannont be instantiated directly
                      - Type: can be instantiated
                          <instances>
         
-             Function(variable, params, name, prefs, context)
+             Component(variable, params, name, prefs, context)
                  Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
                  Mechanism_Base([variable,                                   # default: DDM
                                  params,
@@ -111,7 +111,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                               prefs])
                          [TBI: PDP]
                      MonitoringMechanism
-                         Comparator
+                         ComparatorMechanism
                      ControlMechanism
                          DefaultControlMechanism
                          EVCMechanism
@@ -123,11 +123,11 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      OutputState(owner, [reference_value, params, name, prefs])
                                                                                     # output from mechanism execute method
                  Projection_Base(receiver, [sender, params, name, prefs, context])
-                     Mapping([sender, receiver, params, name, prefs])                    # outputState -> inputState
+                     MappingProjection([sender, receiver, params, name, prefs])                    # outputState -> inputState
                      ControlSignals([allocation_source, receiver, params, name, prefs])  # outputState -> parameterState
                      [TBI: - Gating()]                                                   # outputState -> inputState/outputState
                      [TBI: - Learning()]                                                 # outputState -> projection
-                 Utility_Base(variable_default, param_defaults, [name, prefs, context])
+                 Function_Base(variable_default, param_defaults, [name, prefs, context])
                      Contradiction([variable_default, param_defaults, prefs, context])    # example function
                      [TBI: Implement as abstract Type: Aggretate
                          LinearCombination([variable_default, param_defaults, prefs, context])   # combines values/vectors
@@ -145,46 +145,46 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
                          CLASS:                                               MODULE:
         
-             Function(Object)............................................[PsyNeuLink.Functions.Function]
+             Component(Object)............................................[PsyNeuLink.Components.Component]
         
-                 System(Function)........................................[PsyNeuLink.Functions.ShellClassses]
-                     System_Base(System).................................[PsyNeuLink.Functions.System]
+                 System(Component)........................................[PsyNeuLink.Components.ShellClassses]
+                     System_Base(System).................................[PsyNeuLink.Components.System]
         
-                 Process(Function).......................................[PsyNeuLink.Functions.ShellClassses]
-                     Process_Base(Process)...............................[PsyNeuLink.Functions.Process]
+                 Process(Component).......................................[PsyNeuLink.Components.ShellClassses]
+                     Process_Base(Process)...............................[PsyNeuLink.Components.Process]
         
-                 Mechanism(Function).....................................[PsyNeuLink.Functions.ShellClasses]
-                     Mechanism_Base(Mechanism)...........................[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                         DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Functions.Mechanisms.Mechanism]
-                         DDM(Mechanism_Base).............................[PsyNeuLink.Functions.Mechanisms.DDM]
-                         DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Functions.Mechanisms.Mechanism]
+                 Mechanism(Component).....................................[PsyNeuLink.Components.ShellClasses]
+                     Mechanism_Base(Mechanism)...........................[PsyNeuLink.Components.Mechanisms.Mechanism]
+                         DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Components.Mechanisms.Mechanism]
+                         DDM(Mechanism_Base).............................[PsyNeuLink.Components.Mechanisms.DDM]
+                         DefaultControlMechanism(Mechanism_Base)...[PsyNeuLink.Components.Mechanisms.Mechanism]
         
-                 State(Function)................................[PsyNeuLink.Functions.ShellClasses]
-                     State_Base(State).................[PsyNeuLink.Functions.States.State]
-                         InputState(State_Base)........[PsyNeuLink.Functions.States.InputState]
-                         OutputState(State_Base).......[PsyNeuLink.Functions.States.OutputState]
-                         ParameterState(State_Base)....[PsyNeuLink.Functions.States.ParameterState]
+                 State(Component)................................[PsyNeuLink.Components.ShellClasses]
+                     State_Base(State).................[PsyNeuLink.Components.States.State]
+                         InputState(State_Base)........[PsyNeuLink.Components.States.InputState]
+                         OutputState(State_Base).......[PsyNeuLink.Components.States.OutputState]
+                         ParameterState(State_Base)....[PsyNeuLink.Components.States.ParameterState]
         
-                 Projection(Function)....................................[PsyNeuLink.Functions.ShellClasses]
-                     Projection_Base(Projection).........................[PsyNeuLink.Functions.Projections.Projection]
-                         Mapping(Projection_Base)........................[PsyNeuLink.Functions.Projections.Mapping]
-                         ControlSignal(Projection_Base)..................[PsyNeuLink.Functions.Projections.ControlSignal]
+                 Projection(Component)....................................[PsyNeuLink.Components.ShellClasses]
+                     Projection_Base(Projection).........................[PsyNeuLink.Components.Projections.Projection]
+                         MappingProjection(Projection_Base)........................[PsyNeuLink.Components.Projections.MappingProjection]
+                         ControlSignal(Projection_Base)..................[PsyNeuLink.Components.Projections.ControlSignal]
         
-                 Utility(Function).......................................[PsyNeuLink.Functions.ShellClasses]
-                     Utility_Base(Utility)...............................[PsyNeuLink.Functions.Utilities.Utility]
-                         Contradiction(Utility_Base).....................[PsyNeuLink.Functions.Utilities.Utility]
-                         LinearCombination(Utility_Base)........................[PsyNeuLink.Functions.Utilities.Utility]
-                         Linear(Utility_Base)............................[PsyNeuLink.Functions.Utilities.Utility]
-                         Exponential(Utility_Base).......................[PsyNeuLink.Functions.Utilities.Utility]
-                         Integrator(Utility_Base)........................[PsyNeuLink.Functions.Utilities.Utility]
-                         LinearMatrix(Utility_Base)......................[PsyNeuLink.Functions.Utilities.Utility]
+                 Function(Component).......................................[PsyNeuLink.Components.ShellClasses]
+                     Function_Base(Function)...............................[PsyNeuLink.Components.Functions.Function]
+                         Contradiction(Function_Base).....................[PsyNeuLink.Components.Functions.Function]
+                         LinearCombination(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+                         Linear(Function_Base)............................[PsyNeuLink.Components.Functions.Function]
+                         Exponential(Function_Base).......................[PsyNeuLink.Components.Functions.Function]
+                         Integrator(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+                         LinearMatrix(Function_Base)......................[PsyNeuLink.Components.Functions.Function]
         
         
              Requirements:
         
              - Projection subclasses must see (particular) State subclasses in order to assign kwProjectionSender
              - State subclasses must see (particular) Projection subclasses in order to assign PROJECTION_TYPE
-             - Process must see Mechanism subclasses to assign PsyNeuLink.Functions.DefaultMechanism
+             - Process must see Mechanism subclasses to assign PsyNeuLink.Components.DefaultMechanism
              - Would like Mechanism, Projection (and possible State) classes to be extensible:
                  developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
         
@@ -236,7 +236,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
         ## DESIGN PATTERNS / PRINCIPLES
         
-        ### Functions:
+        ### Components:
              Everything is a function
              Every call (for both initialization and execution) has five standard arguments
              - variable (value):
@@ -295,13 +295,13 @@ Description: Princeton University licenses this file to You under the Apache Lic
              - Every mechanism has three types (subclasses) of State associated with it:
                  - a single InputState:
                       its value serves as the input to the mechanism
-                      it receives one or more Mapping Projections from other mechanisms
+                      it receives one or more MappingProjections from other mechanisms
                  - one or more ParameterStates:
                      their values serve as the parameters of the mechanism's FUNCTION (self.execute),
                      each of which receives typically one (but possibly more) ControlSignal projections
                  - a single OutputState:
                       its value serves as the output to the mechanism,
-                      and is typically assinged as the sender for other mechanisms' Mapping Projection(s)
+                      and is typically assinged as the sender for other mechanisms' MappingProjection(s)
              - State:
                  every instance of State has a single value attribute (that represents its "state"; = self.variable)
                  every instance of State must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
@@ -334,9 +334,9 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          instantiate_input_states; InputState._validate_variable]
                      c) self.paramsCurrent[param] <: ParameterState.value
                          [Mechanism._instantiate_attributes_before_function  /
-                          instantiate_parameter_states]
+                          _instantiate_parameter_states]
                      d) output of self.function <: self.outputState.value (OutputState value)
-                         [Mechanism._instantiate_attributes_after_function/instantiate_output_states;
+                         [Mechanism._instantiate_attributes_after_function/_instantiate_output_states;
                           OutputState._validate_variable]
         
              2) States value <: execute method
@@ -356,7 +356,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      projection's execute method)
                      a) State <: projections.receiver;
                          [Process._instantiate_pathway, State.instantiate_projection,
-                          Projection.validate_states, ControlSignal.assign_states, Mapping.assign_states]
+                          Projection.validate_states, ControlSignal.assign_states, MappingProjection.assign_states]
                     b) self.sender.value : self.variable (function variable)
                         [Projection._instantiate_attributes_before_function / _instantiate_sender]
                     c) self.receiver.value = self.value
@@ -378,7 +378,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
              paramClassDefaults:
         
-                 - Dictionary used to provide defaults for params of Function class and all of its subclasses
+                 - Dictionary used to provide defaults for params of Component class and all of its subclasses
                  - Subclasses should inherit super's paramClassDefaults, and their own
                  - Entries added by one subclass should subclass-specific (i.e., not represented in sibling classes)
                  - Subclasses should implement their copy of paramClassDefaults as follows:
@@ -404,7 +404,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      requiredParamClassDefaultTypes.update({<required entries>})
         
              Parameter specification:
-                 - All Function objects have three sets of parameter values that determine how their execute method operates:
+                 - All Component objects have three sets of parameter values that determine how their execute method operates:
                       + defaults defined for all parameters of the object's class, stored in paramClassDefaults (see above)
                       + instance-specific values, stored in paramInstanceDefaults (if specified override paramClassDefaults)
                       + current parameter values, stored in paramsCurrent, that are in effect for the current call to the object
@@ -440,7 +440,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  FUNCTION_PARAMS as an entry in one of the following dicts, that itself must be included in
                                  one of the kw<state_type>Params dicts listed above:
                                      kwProjectionParams: will apply for all projections to the specified state_type
-                                     kwMappingParams: will apply only to Mapping projections for the specified state_type
+                                     kwMappingParams: will apply only to MappingProjections for the specified state_type
                                      kwControlSignalParams: will apply only to ControlSignal projections for the specified state_type
                                      kwLearningSignalParams: will apply only to LearningSignal projections for the specified state_type
                                      <projection_name>: will apply only to projections with the specified name for the state_type
@@ -449,7 +449,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
         
              Note: methods not implemented by subclass are shown in brackets (to see place in sequence)
         
-             A) Function:
+             A) Component:
                  1) Assign name
                  2) Assign prefs
                  3) Assign log
@@ -517,7 +517,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                                  - if number of inputStates > 1, must equal length of mechanism's variable
                                      each state is assigned to an item of the mechanism's variable
                                      if there is only one state, it is assigned to the full variable
-                         ii) instantiate_parameter_states
+                         ii) _instantiate_parameter_states
                              - assigns parameter state for each param in FUNCTION_PARAMS
                      [super: _instantiate_function]
                      d) _instantiate_attributes_after_function
@@ -607,20 +607,20 @@ Description: Princeton University licenses this file to You under the Apache Lic
                          d) _instantiate_attributes_before_function:
                              - calls _instantiate_receiver and _instantiate_sender (which both must be done before _validate_function)
                                  * _instantiate_receiver must be called before _instantiate_sender since the latter requires access to
-                                     self.receiver to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+                                     self.receiver to determine whether to use a comparatorMechanism mechanism or <MappingProjection>.receiverError for error signals
                              i) _instantiate_receiver:
                                  * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls _add_projection_to_mechanism
         
                 """Instantiate and/or assign the parameterState of the projection to be modified by learning
         
-                If receiver is specified as a Mapping Projection, it is assigned to parameterStates[kwWeightMatrix]
+                If receiver is specified as a MappingProjection, it is assigned to parameterStates[kwWeightMatrix]
                     for the projection;  if that does not exist, it is instantiated and assigned as the receiver
                 If specified as a ParameterState, validate that it is parameterStates[kwWeightMatrix]
                 Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
                 
                 Note:
                 * This must be called before _instantiate_sender since that requires access to self.receiver
-                    to determine whether to use a comparator mechanism or <Mapping>.receiverError for error signals
+                    to determine whether to use a comparatorMechanism mechanism or <MappingProjection>.receiverError for error signals
                 * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                                       and calls _add_projection_to_mechanism
         
@@ -638,11 +638,11 @@ Description: Princeton University licenses this file to You under the Apache Lic
                     - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
                     - assign its outputState.value as self.variable
                 If sender was not specified (remains MonitoringMechanism_Base as specified in paramClassDefaults):
-                   if the owner of the Mapping projection projects to a MonitoringMechanism, then
+                   if the owner of the MappingProjection projects to a MonitoringMechanism, then
                        - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
                        - assign its outputState.value as self.variable
                    otherwise, if self.receiver.owner has an receiverError attribute, as that as self.variable
-                       (error signal for hidden units by BackPropagation Function)
+                       (error signal for hidden units by BackPropagation Component)
                    [TBI: otherwise, implement default MonitoringMechanism]
                    otherwise, raise exception
                                  
@@ -693,25 +693,25 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  - PreferenceSets:
                      Each object has a prefs attribute that is assigned a PreferenceSet object specifying its preferences
                      Preference objects have a set of preference attributes, one for each preference
-                     In addition to objects, every class in the Function hierarchy is assigned a:
+                     In addition to objects, every class in the Component hierarchy is assigned a:
                      + PreferenceLevel: used to specify preferences for objects at that class level and below
                      + PreferenceSet: preference settings for the corresponding level of specification (see PreferenceLevels below)
         
              - Standard preferences:
-                 Function objects and Mechanism subclass objects have the following preferences:
+                 Component objects and Mechanism subclass objects have the following preferences:
                  Format:  pref_name (type): [Class]
                  * note: "Class" refers to the class (and all subclasses) for which the preference is defined
         
-                 + verbose_pref (bool):  [Function]
+                 + verbose_pref (bool):  [Component]
                      determines whether non-execute-related actions (e.g., initialization) and non-fatal warnings are reported
         
-                 + paramValidation_pref (bool):  [Function]
+                 + paramValidation_pref (bool):  [Component]
                      determines whether the parameters of an object's execute method are validated prior to execution
         
-                 + reportOutput_pref (bool):  [Function]
+                 + reportOutput_pref (bool):  [Component]
                      determines whether output of execute-related actions is reported to the console (see Process and Mechanism)
         
-                 + log_pref (LogPreferences): [Function]
+                 + log_pref (LogPreferences): [Component]
                      determines whether activity of the object is recorded in its log (see Logging)
         
                  + functionRuntimeParams_pref (ModulationOperation): [Mechanism]
@@ -727,10 +727,10 @@ Description: Princeton University licenses this file to You under the Apache Lic
                      when a request is made for the value of the preference for that PreferenceSet
         
              - PreferenceLevels:
-                 There are four PreferenceLevels defined for the Function hierarchy:
-                 + System:  reserved for the Function class
-                 + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Utility)
-                 + Type: Category subclasses (e.g., Mapping and ControlSignal subclasses of Projection, Utility subclasses)
+                 There are four PreferenceLevels defined for the Component hierarchy:
+                 + System:  reserved for the Component class
+                 + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
+                 + Type: Category subclasses (e.g., MappingProjection and ControlSignal subclasses of Projection, Function subclasses)
                  + Instance: an instance of an object of any class
         
              - Setting preferences:
@@ -779,7 +779,7 @@ Description: Princeton University licenses this file to You under the Apache Lic
                  DDM:
                      InputState:
                          projections:
-                             Mapping
+                             MappingProjection
                                  sender: SystemDefaultSender
                      OutputState:
                          [TBI: sender for projection to SystemDefaultReceiver]

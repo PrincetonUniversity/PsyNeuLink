@@ -1,5 +1,4 @@
-Parameter State
-===============
+ParameterState
+==============
 
 .. automodule:: ParameterState
-	:members:

@@ -1,5 +1,11 @@
 Process
 =======
 
+.. toctree::
+   :maxdepth: 3
+
+   Process
+
 .. automodule:: Process
-	:members:
+   :members:
+   :exclude-members: ProcessTuple, ProcessList, ProcessInputState, random

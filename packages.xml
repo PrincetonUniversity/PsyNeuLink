@@ -1236,7 +1236,7 @@
         <entry key="Conntrack" value="0.5" />
         <entry key="Conpot" value="0.5.1" />
         <entry key="ConsistentHashing" value="0.2.2" />
-        <entry key="Console-Utility" value="0.5" />
+        <entry key="Console-Function" value="0.5" />
         <entry key="ConsoleBitly" value="0.1" />
         <entry key="ConsoleServer" value="1.0.2" />
         <entry key="ConsoleiTunesPlayer" value="0.1.3" />
@@ -4145,7 +4145,7 @@
         <entry key="Mambu" value="0.0.15" />
         <entry key="MambuPy" value="0.5" />
         <entry key="Manager" value="2.0.5" />
-        <entry key="Mandrill-Utilities" value="0.1" />
+        <entry key="Mandrill-Functions" value="0.1" />
         <entry key="MangaDL" value="0.2a1" />
         <entry key="MangoEngine" value="v1.0.0-rc.2" />
         <entry key="MangoTrac" value="0.6" />
@@ -35625,7 +35625,7 @@
         <entry key="glorpen-di" value="1.2" />
         <entry key="gloss.policy" value="0.5.1" />
         <entry key="gloss.theme" value="0.8.6" />
-        <entry key="glossia.comparator" value="0.1.2" />
+        <entry key="glossia.comparatorMechanism" value="0.1.2" />
         <entry key="glossolalia" value="1.0.1" />
         <entry key="glot" value="0.1.6" />
         <entry key="glove" value="1.0.0" />

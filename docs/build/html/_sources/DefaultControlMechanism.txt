@@ -1,5 +1,8 @@
-Default Control Mechanism
-=========================
+DefaultControlMechanism
+=======================
+
+[DOCUMENTATION COMING...]
 
 .. automodule:: DefaultControlMechanism
-	:members:
+   :members:
+   :exclude-members: random

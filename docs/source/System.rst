@@ -1,5 +1,11 @@
 System
 ======
 
+.. toctree::
+   :maxdepth: 3
+
+   System
+
 .. automodule:: System
-	:members:
+   :members:
+   :exclude-members: random

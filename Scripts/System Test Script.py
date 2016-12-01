@@ -1,10 +1,10 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Process import Process_Base
+from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 
-# DDM_prefs = FunctionPreferenceSet(
+# DDM_prefs = ComponentPreferenceSet(
 #                 prefs = {
 #                     kpVerbosePref: PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
@@ -16,8 +16,8 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 # my_DDM.prefs.show()
 #
 # #region MAIN SCRIPT
-# myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-#                                                  THRESHOLD:(10.0, CONTROL_SIGNAL)},
+# myMechanism = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+#                                                  THRESHOLD:(10.0, CONTROL_PROJECTION)},
 #                           kwDDM_AnalyticSolution:kwBogaczEtAl},
 #                   prefs = DDM_prefs,
 #                   name='My_DDM'
@@ -37,14 +37,14 @@ from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transf
 #                     name='My_DDM_3'
 #                     )
 #
-# process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
+# process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
 #                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #
 # process_prefs.show()
 
-Layer_1 = Transfer(default_input_value=[0,0], name='Layer 1')
-Layer_2 = Transfer(default_input_value=[0,0], name='Layer 2')
-Layer_3 = Transfer(default_input_value=[0,0], name='Layer 3')
+Layer_1 = TransferMechanism(default_input_value=[0,0], name='Layer 1')
+Layer_2 = TransferMechanism(default_input_value=[0,0], name='Layer 2')
+Layer_3 = TransferMechanism(default_input_value=[0,0], name='Layer 3')
 
 
 myProcess_1 = Process_Base(default_input_value=[0, 0],

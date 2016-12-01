@@ -4,9 +4,11 @@ Processing Mechanisms
 .. toctree:: 
 	:maxdepth:2
 
-	AdaptiveIntegrator
+	IntegratorMechanism
 	DDM
 	Transfer
 	
-.. automodule:: ProcessingMechanism
-	:members:
+..
+    .. automodule:: ProcessingMechanism
+        :members:
+        :exclude-members: MechanismTuple, MechanismList, random
