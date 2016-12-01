@@ -332,7 +332,7 @@ class Component(object):
         #         del self.init_args['self']
         #         # del self.init_args['__class__']
         #         return
-        context = context + INITIALIZING + ": " + kwFunctionInit
+        context = context + INITIALIZING + ": " + COMPONENT_INIT
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
         # # MODIFIED  OLD:
@@ -572,7 +572,7 @@ class Component(object):
                 # If arg is function and it's default is not a class, set it to one
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
                     # Note: this is for compatibility with current implementation of _instantiate_function()
-                    # FIX: REFACTOR Function._instantiate_function TO USE COPY OF INSTANTIATED function
+                    # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
                     self.paramClassDefaults[arg] = default(arg).__class__
 
                     # Get params from instantiated function
@@ -594,7 +594,7 @@ class Component(object):
         # ASSIGN ARG VALUES TO params dicts
         params = {}       # this is for final params that will be returned
         params_arg = {}   # this captures any values specified in a params arg, that are used to override arg values
-        ignore_kwFunctionParams = False
+        ignore_FUNCTION_PARAMS = False
 
         for arg in kwargs:
 
@@ -632,12 +632,12 @@ class Component(object):
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
                     params[FUNCTION_PARAMS] = function.user_params.copy()
-                    ignore_kwFunctionParams = True
+                    ignore_FUNCTION_PARAMS = True
 
             elif arg_name is FUNCTION_PARAMS:
 
-                # If function was instantiated object, functionParams came from it, so ignore additional specification
-                if ignore_kwFunctionParams:
+                # If function was instantiated object, FUNCTION_PARAMS came from it, so ignore additional specification
+                if ignore_FUNCTION_PARAMS:
                     TEST = True
                     if TEST:
                         pass
@@ -914,7 +914,7 @@ class Component(object):
             #     D) no default function, no default functionParams
             #         example: System, Process, MonitoringMechanism, WeightedErrorMechanism
 
-            self.assign_default_kwFunctionParams = True
+            self.assign_default_FUNCTION_PARAMS = True
 
             try:
                 # # MODIFIED 11/30/16 OLD:
@@ -927,7 +927,7 @@ class Component(object):
             except KeyError:
                 # If there is no function specified, then allow functionParams
                 # Note: this occurs for objects that have "hard-coded" functions
-                self.assign_default_kwFunctionParams = True
+                self.assign_default_FUNCTION_PARAMS = True
             else:
                 # Get function class:
                 if inspect.isclass(function):
@@ -951,7 +951,7 @@ class Component(object):
 
                     # If function's class != default function's class, suppress assignment of default functionParams
                     if function_class != default_function_class:
-                        self.assign_default_kwFunctionParams = False
+                        self.assign_default_FUNCTION_PARAMS = False
 
             # Sort to be sure FUNCTION is processed before FUNCTION_PARAMS,
             #    so that latter are evaluated in context of former
@@ -971,13 +971,16 @@ class Component(object):
                         #     request_set_function_class = request_set[FUNCTION].__class__
                         # if function_class != default_set_function_class:
                         if function_class != default_function_class and COMMAND_LINE in context:
+                            from PsyNeuLink.Components.Functions.Function import Function_Base
+                            if isinstance(function, Function_Base):
+                                request_set[FUNCTION] = function.__class__
                             default_set[FUNCTION_PARAMS] = function.user_params
                     # function not yet defined, so allow FUNCTION_PARAMS)
                     except UnboundLocalError:
                         pass
                 # FIX: MAY NEED TO ALSO ALLOW assign_default_kwFunctionParams FOR COMMAND_LINE IN CONTEXT
 
-                if param_name is FUNCTION_PARAMS and not self.assign_default_kwFunctionParams:
+                if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
                     continue
 
                 # IF FUNCTION HAS CHANGED, AND PARAM IS FUNCTION PARAMS, REPLACE FUNCTION_PARAMS AND CONTINUE;
@@ -1239,7 +1242,7 @@ class Component(object):
                     #     compatiable but different from the one in paramClassDefaults;
                     #     therefore, FUNCTION_PARAMS will not match paramClassDefaults;
                     #     instead, check that functionParams are compatible with the function's default params
-                    if param_name is FUNCTION_PARAMS and not self.assign_default_kwFunctionParams:
+                    if param_name is FUNCTION_PARAMS and not self.assign_default_FUNCTION_PARAMS:
                         # Get function:
                         try:
                             function = request_set[FUNCTION]
@@ -1338,13 +1341,13 @@ class Component(object):
         # Check if params[FUNCTION] is specified
         try:
             param_set = kwParamsCurrent
-            function = self._check_kwFunction(param_set)
+            function = self._check_FUNCTION(param_set)
             if not function:
                 param_set = kwParamInstanceDefaults
-                function, param_set = self._check_kwFunction(param_set)
+                function, param_set = self._check_FUNCTION(param_set)
                 if not function:
                     param_set = kwParamClassDefaults
-                    function, param_set = self._check_kwFunction(param_set)
+                    function, param_set = self._check_FUNCTION(param_set)
 
         except KeyError:
             # FUNCTION is not specified, so try to assign self.function to it
@@ -1418,7 +1421,7 @@ class Component(object):
                                             format(FUNCTION, self.paramsCurrent[FUNCTION],
                                                    self.__class__.__name__, self.name))
 
-    def _check_kwFunction(self, param_set):
+    def _check_FUNCTION(self, param_set):
         """Check FUNCTION param is a Function,
         """
 
@@ -1603,9 +1606,9 @@ class Component(object):
                                          self.name,
                                          self.function.__self__.name))
 
-        # # MODIFIED 11/27/16 NEW:
+        # MODIFIED 11/27/16 NEW:
         # self.paramInstanceDefaults[FUNCTION] = self.function
-        # # MODIFIED 11/27/16 END
+        # MODIFIED 11/27/16 END
 
         # Now that function has been instantiated, call self.function
         # to assign its output (and type of output) to self.value
@@ -1615,7 +1618,7 @@ class Component(object):
         # FIX: ?? SHOULD THIS CALL self.execute SO THAT function IS EVALUATED IN CONTEXT,
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
         # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
-        # self.value = self.function(context=context+kwSeparator+kwFunctionInit)
+        # self.value = self.function(context=context+kwSeparator+COMPONENT_INIT)
         self.value = self.execute(context=context)
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
@@ -1623,6 +1626,13 @@ class Component(object):
 
         self.function_object = self.function.__self__
         self.function_object.owner = self
+
+        # MODIFIED 11/30/16 NEW:
+        self.function_params = self.function_object.user_params
+        self.paramInstanceDefaults[FUNCTION] = self.function
+        self.paramInstanceDefaults[FUNCTION_PARAMS] = self.function_params
+        # MODIFIED 11/30/16 END
+
 
     def _instantiate_attributes_after_function(self, context=None):
         pass

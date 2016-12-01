@@ -2,36 +2,15 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# FIX: IN TransferMechanism, ASSIGNING __init__(function=Linear) VS function=Linear()
-# FIX          CRASHES runtime ASSIGNMENT IN ScratchPad (in check_args)
-# FIX: IN ScratchPad:
-# FIX:     transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic}) -> NO FUNCTION_PARAMS
-# FIX:     transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic()}) CRASHES
-
-
-# IMPLEMENT:  Command line call to _assign_defaults:
-#                     def assign_params
-#                     context = COMMAND_LINE or SCRIPT CALL
-#                     First validates request_set with "validated_set" as target_set for _validateE_params
-#                     Then instantiates validated_set
-#                     Then updates target_set (= paramInstanceDefaults) with validated_set
-# FIX: RE-ASSIGNMENT OF PARAMETER STATES GENERATES INDEXED NAME OF NEW PARAMETER_STATE THAT MESSES UP TEST
-# FIX:  (IS NOT RECOGNIZED) IN PrameterState._validate_params
-
-# FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
-
-
 # IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with:
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
 #
 #
-# IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
+# FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
-# FIX:                  that function_params are changed too
-# FIX / IMPLMENT:  change .function to a property, that refers to ivar ._function;
+# FIX / IMPLEMENT:  change .function to a property, that refers to ivar ._function;
 #                  make any internal direct assignments to ._function
 #                  make setter for .function that insures function_params have also been appropriately changed
 #                  by comparing them with new function's user_params,
@@ -40,8 +19,6 @@
 
 # CLEANUP:
 
-# FIX: Keywords: persistent use "Function" under COMPONENTS section
-#
 # DOCUMENT UNDER ParameterStates
 #     If parameter default value is set to None (or a non-numeric value),
 #           either in paramClassDefaults, as default in constructor argument, or specified as such,
@@ -2077,7 +2054,7 @@
 #    ?? SHOW OUTPUT BUT FLAG AS INITIALIZATION RUN
 #    ?? USE CONTEXT TO CONDUCT ABBREVIATED RUN??
 #
-# execute methods: test for kwSeparator+kwFunctionInit in context:
+# execute methods: test for kwSeparator+COMPONENT_INIT in context:
 #          limit what is implemented and/or reported on init (vs. actual run)
 #endregion
 
