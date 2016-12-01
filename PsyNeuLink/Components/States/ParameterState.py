@@ -27,6 +27,10 @@ Creating a ParameterState
 -------------------------
 
 COMMENT:
+
+ADD:
+
+--------------------------------------------------------------
     Instantiation:
         - ParameterStates can be instantiated in one of two ways:
             - directly: requires explicit specification of its value and owner;
@@ -42,18 +46,35 @@ COMMENT:
                   as they will be combined to produce a single value that must be compatible with self.variable
         - self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
 
-OLD VERSION:
-A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
-parameterStates are created automatically when the mechanism or projection to which they belong is created.  One
-parameterState is created for each parameter of the object's ``function``.  Each parameterState is
-created using the specification of the parameter for which it is responsible, as described below.
+#     If parameter default value is set to None (or a non-numeric value),
+#           either in paramClassDefaults, as default in constructor argument, or specified as such,
+#           then no parameter state is created and can't be used either for Control, Learning or runtime assignment
+#     Instantiate parameterState for each param in owner.user_params
+#     - including ones in owner.user_params[FUNCTION_PARAMS]
+#     - exclude if it is:
+#        assigned a non-numeric value (including None, NotImplemented, False or True)
+#           unless it is:
+#               a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+#               a dict with the name FUNCTION_PARAMS (otherwise exclude)
+#        a function
+#            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+#            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+#            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
 
+RUNTIME:  runtime param assignment is one-time by default;
+           but can use runtimeParamsStickyAssignmentPref for persistent assignment
+           or use assign_param
+
+
+--------------------------------------------------------------
 COMMENT
 
 A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
-parameterStates are created automatically when the mechanism or projection to which they belong is created.  One
-parameterState is created for each parameter of the object and its ``function``.  Each parameterState is
-created using the specification of the parameter for which it is responsible, as described below.
+parameterStates are created automatically when the mechanism or projection to which they belong is created.  The owner
+of a parameterState must be a mechanism or MappingProjection.  If it is not explicitly specified, it will be assigned
+to the :any:`DefaultProcessingMechanism` [LINK]. One parameterState is created for each parameter of its owner object
+and that object's ``function``.  Each parameterState is created using the specification of the parameter for which it
+is responsible, as described below.
 
 .. _ParameterState_Specifying_Parameters:
 
@@ -269,13 +290,6 @@ function:
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Components.Functions.Function import *
-
-# class ParameterStateLog(IntEnum):
-#     NONE            = 0
-#     TIME_STAMP      = 1 << 0
-#     ALL = TIME_STAMP
-#     DEFAULTS = NONE
-
 
 class ParameterStateError(Exception):
     def __init__(self, error_value):
