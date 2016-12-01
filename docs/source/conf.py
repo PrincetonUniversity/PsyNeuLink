@@ -21,14 +21,14 @@ import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/ControlMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/MonitoringMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Mechanisms/ProcessingMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Projections'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/States'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Functions/Utilities'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ControlMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/MonitoringMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/States'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Functions'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Globals/'))
 
 # -- General configuration ------------------------------------------------
@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PsyNeuLink'
-copyright = u'2016, Jon Cohen'
+copyright = u'2016, Jonathan D. Cohen'
 author = u'Jon Cohen'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -1,5 +1,4 @@
-Input State
-===========
+InputState
+==========
 
 .. automodule:: InputState
-	:members:

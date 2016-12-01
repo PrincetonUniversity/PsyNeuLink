@@ -1,28 +1,28 @@
 import random as rnd
 
-from PsyNeuLink.Functions.Mechanisms.ControlMechanisms.EVCMechanism import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
-from PsyNeuLink.Functions.Process import Process_Base
-from PsyNeuLink.Functions.System import System_Base
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Components.Process import Process_Base
+from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
 
 
 #region Preferences
-DDM_prefs = FunctionPreferenceSet(
+DDM_prefs = ComponentPreferenceSet(
                 prefs = {
                     kpVerbosePref: PreferenceEntry(False,PreferenceLevel.INSTANCE),
                     kpReportOutputPref: PreferenceEntry(True,PreferenceLevel.INSTANCE)})
 
-process_prefs = FunctionPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
+process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 #endregion
 
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-                                              #   THRESHOLD:(10.0, CONTROL_SIGNAL)
+Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+                                              #   THRESHOLD:(10.0, CONTROL_PROJECTION)
                                               },
                           kwDDM_AnalyticSolution:kwBogaczEtAl},
                   prefs = DDM_prefs,

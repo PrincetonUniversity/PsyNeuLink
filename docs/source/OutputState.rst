@@ -1,5 +1,4 @@
-Output State
-============
+OutputState
+===========
 
 .. automodule:: OutputState
-	:members:

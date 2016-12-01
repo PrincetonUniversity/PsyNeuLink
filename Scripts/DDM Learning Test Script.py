@@ -1,35 +1,35 @@
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Functions.Mechanisms.ProcessingMechanisms.Transfer import Transfer
-from PsyNeuLink.Functions.Process import process
-from PsyNeuLink.Functions.Projections.Mapping import Mapping
-from PsyNeuLink.Functions.Utilities.Utility import Logistic
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Functions.Function import Logistic
 
-Input_Layer = Transfer(name='Input Layer',
+Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
                        default_input_value = [0,0])
 
-Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
+Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
                           default_input_value = [0,0,0,0,0])
 
 Output_Layer = DDM(name='Output Layer DDM',
                    threshold=0.1,
-                   params = {MONITOR_FOR_LEARNING:ERROR_RATE},
+                   params = {MONITOR_FOR_LEARNING:PROBABILITY_LOWER_THRESHOLD},
                    default_input_value = [0])
 
-Input_Weights = Mapping(name='Input Weights',
+Input_Weights = MappingProjection(name='Input Weights',
                                   sender=Input_Layer,
                                   receiver=Hidden_Layer_1,
-                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
-                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
+                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
+                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
                                   )
 
-Output_Weights = Mapping(name='Output Weights',
+Output_Weights = MappingProjection(name='Output Weights',
                                   sender=Hidden_Layer_1,
                                   receiver=Output_Layer,
                                   # params={FUNCTION_PARAMS:{MATRIX:IDENTITY_MATRIX}}
-                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_SIGNAL)}}
-                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_SIGNAL)}}
+                                  params={FUNCTION_PARAMS: {MATRIX: (FULL_CONNECTIVITY_MATRIX,LEARNING_PROJECTION)}}
+                                  # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
                                   )
 
 z = process(default_input_value=[0, 0],
@@ -44,11 +44,11 @@ z = process(default_input_value=[0, 0],
 
 # Learned_Weights.monitoringMechanism.target = [1,1]
 # Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Functions.Mechanisms.MonitoringMechanisms.Comparator import COMPARATOR_TARGET
-# Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import TARGET
+# Learned_Weights.monitoringMechanism.paramsCurrent[TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],
-#           runtime_params={COMPARATOR_TARGET: [1, 1]})
+#           runtime_params={TARGET: [1, 1]})
 
 num_cycles = 10
 

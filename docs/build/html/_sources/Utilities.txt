@@ -1,10 +1,10 @@
-Utilities
+Functions
 =========
 
 .. toctree::
 	:maxdepth: 1
 
-	UtilityFunction
+	Functions
 	Run
 	Log
 	Preferences
