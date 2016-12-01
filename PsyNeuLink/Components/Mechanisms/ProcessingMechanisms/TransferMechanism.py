@@ -297,7 +297,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 function=Linear(),
+                 function=Linear,
                  initial_value=None,
                  noise=0.0,
                  rate=1.0,
