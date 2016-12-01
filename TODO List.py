@@ -2,11 +2,27 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: kwParamsCurrent -> PARAMS_CURRENT
+# IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
+#
+# FIX:  In LearingProjection init (line 300):  Only Logistic() works;  using Logistic crashes:
+#                    function=BackPropagation(learning_rate=1,
+#                                           activation_function=Logistic()),
+
+# FIX:  Finish issubclass search and replace:  Utilities 260
+# FIX: PARAMETER SPECIFICATION:
+#      Can't specify projection tuple to object parameter, at least not for TransferMechanism: get TransferError
+#      Can't specify projection class or keyword for function parameter:  get same TransferError
+#
+
 # IMPLEMENT: For Mechanism, dictionaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with...??
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
 #
 #
+# FIX: MAKE ALL OBJECT PARAMS @PRPOERTY SO THEY ARE READ-ONLY (I.E., ACCESSSIBLE ONLY VIA ASSIGN_PARAMS)
+#      AND USE SETTER TO ISSUE WARNING ON ATTEMPTS TO ASSIGN;  INTERNALLY USE _PARAM TO DO DIRECT ASSIGNMENTS
+
 # FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 

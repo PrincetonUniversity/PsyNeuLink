@@ -579,7 +579,11 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
+        # MODIFIED 12/1/16 OLD:
+        # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
+        # MODIFIED 12/1/16 NEW:
+        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # MODIFIED 12/1/16 END
 
         # Instantiate each projection specification in the projection_list, and
         # - insure it is in self.receivesFromProjections
@@ -784,7 +788,11 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
+        # # MODIFIED 12/1/16 OLD:
+        # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
+        # MODIFIED 12/1/16 NEW:
+        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # MODIFIED 12/1/16 END
 
         # Instantiate projection specification and
         # - insure it is in self.sendsToProjections
