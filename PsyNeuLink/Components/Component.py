@@ -961,20 +961,21 @@ class Component(object):
                 # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
                 if param_name is FUNCTION:
                     try:
-                        if inspect.isclass(function):
-                            function_class = function
-                        else:
-                            function_class = function.__class__
-                        if inspect.isclass(request_set[FUNCTION]):
-                            request_set_function_class = request_set[FUNCTION]
-                        else:
-                            request_set_function_class = request_set[FUNCTION].__class__
-                        if function_class != request_set_function_class:
+                        # if inspect.isclass(function):
+                        #     function_class = function
+                        # else:
+                        #     function_class = function.__class__
+                        # if inspect.isclass(request_set[FUNCTION]):
+                        #     request_set_function_class = request_set[FUNCTION]
+                        # else:
+                        #     request_set_function_class = request_set[FUNCTION].__class__
+                        # if function_class != default_set_function_class:
+                        if function_class != default_function_class and COMMAND_LINE in context:
                             default_set[FUNCTION_PARAMS] = function.user_params
                     # function not yet defined, so allow FUNCTION_PARAMS)
                     except UnboundLocalError:
                         pass
-                # MODIFIED 11/30/16 END
+                # FIX: MAY NEED TO ALSO ALLOW assign_default_kwFunctionParams FOR COMMAND_LINE IN CONTEXT
 
                 if param_name is FUNCTION_PARAMS and not self.assign_default_kwFunctionParams:
                     continue
@@ -1015,6 +1016,7 @@ class Component(object):
         Instantiate any items in request set that require it (i.e, function or states);
 
         """
+        context=COMMAND_LINE
 
         if not request_set:
             if self.verbosePref:
@@ -1028,9 +1030,10 @@ class Component(object):
         self._assign_defaults(request_set=request_set,
                              target_set=validated_set,
                              # assign_missing=False,
-                             context=COMMAND_LINE)
+                             context=context)
 
         self.paramInstanceDefaults.update(validated_set)
+        self.paramsCurrent = self.paramInstanceDefaults
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
@@ -1047,10 +1050,15 @@ class Component(object):
         #               but this may cause it to ignore FUNCTION_PARAMS when FUNCTION has changed
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
         # for param in request_set_param_names:
-        _instantiate_parameter_states(owner=self, context=COMMAND_LINE)
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_state
+        for param_name in request_set_param_names:
+            _instantiate_parameter_state(owner=self,
+                                         param_name=param_name,
+                                         param_value=validated_set[param_name],
+                                         context=context)
 
         if FUNCTION in validated_set:
-            self._instantiate_function()
+            self._instantiate_function(context=COMMAND_LINE)
 
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function()
@@ -1181,6 +1189,11 @@ class Component(object):
             try:
                 self.paramClassDefaults[param_name]
             except KeyError:
+                # MODIFIED 11/30/16 NEW:
+                # function is a class, so function_params has not yet been implemented
+                if param_name is FUNCTION_PARAMS and inspect.isclass(self.function):
+                    continue
+                # MODIFIED 11/30/16 END
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
             # The value of the param is None or NotImplemented in paramClassDefaults: suppress type checking
@@ -1504,7 +1517,7 @@ class Component(object):
                 #  Check if params[FUNCTION_PARAMS] is specified
                 try:
                     function_param_specs = self.paramsCurrent[FUNCTION_PARAMS].copy()
-                except KeyError:
+                except (KeyError, AttributeError):
                     # FUNCTION_PARAMS not specified, so nullify
                     function_param_specs = {}
                 else:

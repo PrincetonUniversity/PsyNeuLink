@@ -2,6 +2,13 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: IN TransferMechanism, ASSIGNING __init__(function=Linear) VS function=Linear()
+# FIX          CRASHES runtime ASSIGNMENT IN ScratchPad (in check_args)
+# FIX: IN ScratchPad:
+# FIX:     transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic}) -> NO FUNCTION_PARAMS
+# FIX:     transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic()}) CRASHES
+
+
 # IMPLEMENT:  Command line call to _assign_defaults:
 #                     def assign_params
 #                     context = COMMAND_LINE or SCRIPT CALL

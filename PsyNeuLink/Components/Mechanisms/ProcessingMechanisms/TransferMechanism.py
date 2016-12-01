@@ -90,7 +90,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -285,6 +285,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
+        # FUNCTION:TransferFunction,
         INPUT_STATES: None,
         OUTPUT_STATES:[TRANSFER_RESULT,
                        TRANSFER_MEAN,
@@ -296,7 +297,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 function=Linear(),
+                 function=Linear,
                  initial_value=None,
                  noise=0.0,
                  rate=1.0,
