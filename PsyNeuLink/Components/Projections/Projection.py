@@ -490,8 +490,7 @@ class Projection_Base(Projection):
 
         # PROJECTION_SENDER is either an instance or class of Mechanism or State:
         if (isinstance(sender_param, (Mechanism, State)) or
-                (inspect.isclass(sender_param) and
-                     (issubclass(sender_param, Mechanism) or issubclass(sender_param, State)))):
+                (inspect.isclass(sender_param) and issubclass(sender_param, (Mechanism, State)))):
             # it is NOT the same as the default, use it
             if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
                 self.sender = sender_param
@@ -506,8 +505,12 @@ class Projection_Base(Projection):
                                                                       sender_param.__class__.__name__))
             # it IS the same as the default, so check if sender arg (self.sender) is valid
             elif not (isinstance(self.sender, (Mechanism, State, Process)) or
-                          (inspect.isclass(self.sender) and
-                               (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
+                          # # MODIFIED 12/1/16 OLD:
+                          # (inspect.isclass(self.sender) and
+                          #      (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
+                          # MODIFIED 12/1/16 NEW:
+                          (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+                          # MODIFIED 12/1/16 END
                 # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
                 self.sender = sender_param
                 if self.prefs.verbosePref:

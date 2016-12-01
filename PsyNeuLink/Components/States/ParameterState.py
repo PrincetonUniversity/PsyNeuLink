@@ -26,74 +26,40 @@ to modify the value of the parameter for which it is responsible.
 Creating a ParameterState
 -------------------------
 
-COMMENT:
-
-ADD:
-
---------------------------------------------------------------
-    Instantiation:
-        - ParameterStates can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and owner;
-                - specification of value can be any of the forms allowed for specifying a State
-                    (default value will be inferred from anything other than a value or ParamValueProjection tuple)
-                - owner must be a reference to a Mechanism object, or DefaultProcessingMechanism_Base will be used
-            - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the owner
-                - the value of the owner's param for which the ParameterState is being instantiated
-                    will be used as its variable (that must also be compatible with its self.value)
-        - self.variable must be compatible with self.value (enforced in _validate_variable)
-            note: although it may receive multiple projections, the output of each must conform to self.variable,
-                  as they will be combined to produce a single value that must be compatible with self.variable
-        - self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
-
-#     If parameter default value is set to None (or a non-numeric value),
-#           either in paramClassDefaults, as default in constructor argument, or specified as such,
-#           then no parameter state is created and can't be used either for Control, Learning or runtime assignment
-#     Instantiate parameterState for each param in owner.user_params
-#     - including ones in owner.user_params[FUNCTION_PARAMS]
-#     - exclude if it is:
-#        assigned a non-numeric value (including None, NotImplemented, False or True)
-#           unless it is:
-#               a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
-#               a dict with the name FUNCTION_PARAMS (otherwise exclude)
-#        a function
-#            IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-#            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-#            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-
-RUNTIME:  runtime param assignment is one-time by default;
-           but can use runtimeParamsStickyAssignmentPref for persistent assignment
-           or use assign_param
-
-
---------------------------------------------------------------
-COMMENT
-
 A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
 parameterStates are created automatically when the mechanism or projection to which they belong is created.  The owner
-of a parameterState must be a mechanism or MappingProjection.  If it is not explicitly specified, it will be assigned
-to the :any:`DefaultProcessingMechanism` [LINK]. One parameterState is created for each parameter of its owner object
-and that object's ``function``.  Each parameterState is created using the specification of the parameter for which it
-is responsible, as described below.
+of a parameterState must be a mechanism or MappingProjection.  If the owner is not explicitly specified, and
+can't be determined by context, the parameterState will be assigned to the :any:`DefaultProcessingMechanism` [LINK].
+One parameterState is created for each configurable parameter of its owner object, as well as for each parameter of
+that object's  ``function``.  Each parameterState is created using the specification of the parameter for which it is
+responsible, as described below.
 
 .. _ParameterState_Specifying_Parameters:
 
-Specifying Function Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Specifying Parameters
+~~~~~~~~~~~~~~~~~~~~~
 
-The parameter of a ``function`` can be specified in one of three ways:
+Parameters can be specified in one of several ways:
 
-* in the constructor for its ``function``;
-* in the :keyword:`FUNCTION_PARAMS` entry of a parameter dictionary for the object to which the ``function`` belongs;
-* in some cases, as an argument in the constructor for the object to which the ``function`` belongs (see
-  :ref:`Component_Specifying_Functions_and_Parameters` for details).
+* in an **argument for the parameter** in the constructor for the object and/or its function
+  (see also :ref:`Component_Specifying_Functions_and_Parameters` for additional details);
+* in a **parameter dictionary** as the ``params`` argument in the constructor;  the entry for each parameter
+  must use the keyword for the parameter as its key, and the parameter's specification as its value
+  (see :ref:`ParameterState_Parameter_Specification_Examples` below);  parameters for an object's ``function`` must
+  be specified in an entry with the key :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary
+  containing an entry for each parameter of the function to be specified;
+* in the ``assign_params`` method for the object;
+* when the object is executed, in the ``runtime_params`` argument of a call to object's ``execute`` or ``run`` methods
+  (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the :any:`Pathway` for a
+  process to which it belongs (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters:>` below).
 
 The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
-or by default) is assigned to the parameterState's ``baseValue`` attribute, and any projection specified is assigned
-to its ``receiveFromProjections`` attribute.  The ``baseValue`` is assigned as the value of the parameter for
-``function`` when it executes, after it is modified by any ControlProjections or LearningProjections received by the
-ParameterState (see :ref:`Execution` for details).  The specification of a parameter can take any of the following
-forms:
+or by default) is assigned to the parameterState's ``baseValue``, and any projections assigned to it are added to its
+``receiveFromProjections`` attribute.   When the owner is executed,  the parameterState's ``baseValue`` is combined
+with the value of the projections it receives to determine the value of the parameter for which it is responsible
+(see :ref:`Execution` for details).
+
+The specification of a parameter can take any of the following forms:
 
     COMMENT:
        XXXX VERIFY THAT THIS IS TRUE:
@@ -117,13 +83,40 @@ forms:
       parameter state as the ``receiver`` for the projection.  The projection must be a ControlProjection or
       LearningProjection, and its value must be a valid one for the parameter.
     ..
-    * A :any:`ParamValueProjection` or 2-item (value, projection) tuple.  This creates a default parameterState using
-      the ``value`` (1st) item of the tuple as its ``baesValue``. If the ``projection`` (2nd) item of the tuple is an
-      existing projection or a constructor for one, it is assigned the parameter as its ``receiver``, and the
+    * A :any:`ParamValueProjection` or 2-item (value, projection) **tuple**.  This creates a default parameterState
+      using the ``value`` (1st) item of the tuple as its ``baesValue``. If the ``projection`` (2nd) item of the tuple
+      is an existing projection or a constructor for one, it is assigned the parameter as its ``receiver``, and the
       projection is assigned to the parameterState's ``receivesFromProjections`` attribute. If the projection item
       is the name of a Projection subclass, a default projection of the specified type is created, and assigned the
       parameterState as its ``receiver``.  In either case, the projection must be a ControlProjection or
       LearningProjection, and its value must be a valid one for the parameter.
+
+Additional considerations
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Default value:
+    - will be inferred for anything other than a value or ParamValueProjection tuple)
+    - be assigned the value of the owner's param for which the ParameterState is being instantiated
+        (that must also be compatible with its self.value)
+    - if parameter default value is set to None (or a non-numeric value),
+        either in paramClassDefaults, as default in constructor argument, or specified as such,
+        then no parameter state is created and can't be used either for Control, Learning or runtime assignment
+
+- No parameterState is created for parameters that are:
+   assigned a non-numeric value (including None, NotImplemented, False or True)
+      unless it is:
+          a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
+          a dict with the name FUNCTION_PARAMS (otherwise exclude)
+   a function
+       IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+       (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+       i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+
+- self.variable must be compatible with self.value (enforced in _validate_variable)
+    note: although it may receive multiple projections, the output of each must conform to self.variable,
+          as they will be combined to produce a single value that must be compatible with self.variable
+- self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
+
 
 Examples
 ~~~~~~~~
@@ -141,7 +134,7 @@ assigned a value and a ControlProjection; the third (``param_c``) is assigned a 
 with a specified function  <ControlProjection_Structure>`; and the fourth (``param_d``) is assigned just a
 ControlProjection (the default vaue for the parameter will be used).
 
-In this example, a MappingProjection is created in which its ``matrix`` parameter is assigned a
+In the following example, a MappingProjection is created, and its ``matrix`` parameter is assigned a
 a random weight matrix (using a :ref:`matrix keyword <Matrix_Keywords>`) and :doc:`LearningProjection`::
 
     my_mapping_projection = MappingProjection(sender=my_input_mechanism,
@@ -153,11 +146,18 @@ a random weight matrix (using a :ref:`matrix keyword <Matrix_Keywords>`) and :do
    standard function, its arguments are available in the constructor for the projection
    (see :ref:`Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
 
+COMMENT:
+    ADD EXAMPLE USING A PARAMS DICT, INCLUDING FUNCTION_PARAMS, AND assign_params
+COMMENT
 
 .. _ParameterState_Structure:
 
 Structure
 ---------
+
+The value of object params are accessible as attributes of the object, and the value of parameters for its ``function``
+are accessible either via object.function_object<param_name>, or object.function_params[<PARAM_KEYWORD>].
+These are read-only.  To re-assign the value of a parameter for an existing object, use its ``assign_params`` method
 
 function vs. parameter_modulation_operation
     Parameters:
@@ -228,7 +228,14 @@ values, and then assigns this to the parameter of its owner's ``function`` for w
 value  of the parameter is determined by the ``baseValue`` of its parameterState, modified by the value of any
 projections it receives.  The way in which it is modified is determined by
 
-.. ParameterState_Runtime_Parameters:
+.. _ParameterState_Runtime_Parameters:
+
+Runtime Specification of Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+RUNTIME:  runtime param assignment is one-time by default;
+           but can use runtimeParamsStickyAssignmentPref for persistent assignment
+           or use assign_param
 
 The value of function parameters can also be modified when the function's object is executed.  This can be done by
 specifying runtime parameters for a mechanism where it is specified in the ``pathway`` of a process or in mechanism's
