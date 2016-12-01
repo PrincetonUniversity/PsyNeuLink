@@ -68,7 +68,7 @@ print(transfer_mechanism_3.execute(input=1.0,
                                                                             # SLOPE:(6.0,
                                                                             #        ModulationOperation.OVERRIDE
                                                                                       }}))
-transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic})
+transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic()})
 
 
 # transfer_process = process(pathway = [transfer_mechanism_1])

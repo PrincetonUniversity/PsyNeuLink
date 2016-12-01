@@ -1610,7 +1610,7 @@ class Process_Base(Process):
         if input is NotImplemented:
             input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
-                    not (not context or kwFunctionInit in context)):
+                    not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
 
         else:

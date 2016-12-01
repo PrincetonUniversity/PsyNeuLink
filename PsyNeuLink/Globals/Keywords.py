@@ -118,7 +118,7 @@ TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
-kwFunctionInit = 'Function.__init__'
+COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
