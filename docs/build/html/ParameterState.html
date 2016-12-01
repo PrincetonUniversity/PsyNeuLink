@@ -176,15 +176,19 @@ parameterState is created for each parameter of the object and its <code class="
 created using the specification of the parameter for which it is responsible, as described below.</p>
 <div class="section" id="specifying-function-parameters">
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Function Parameters<a class="headerlink" href="#specifying-function-parameters" title="Permalink to this headline">¶</a></h3>
-<p>The parameter of a <code class="docutils literal"><span class="pre">function</span></code> can be specified in one of three ways:  in the constructor for its <code class="docutils literal"><span class="pre">function</span></code>;  in
-the <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code> entry of a parameter dictionary for the object to which the <code class="docutils literal"><span class="pre">function</span></code> belongs; or,
-in some cases, as an argument in the constructor for the object to which the <code class="docutils literal"><span class="pre">function</span></code> belongs (see
-<span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for details).  The items specified for the parameter are used
-to create its ParameterState.  The value specified (either explicitly, or by default) is assigned to the
-parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code> attribute, and any projection specified is assigned to its <code class="docutils literal"><span class="pre">receiveFromProjections</span></code>
-attribute.  The <code class="docutils literal"><span class="pre">baseValue</span></code> is assigned as the value of the parameter for <code class="docutils literal"><span class="pre">function</span></code> when it executes,
-after it is modified by any ControlProjections or LearningProjections received by the ParameterState (see
-<span class="xref std std-ref">Execution</span> for details).  The specification of a parameter can take any of the following forms:</p>
+<p>The parameter of a <code class="docutils literal"><span class="pre">function</span></code> can be specified in one of three ways:</p>
+<ul class="simple">
+<li>in the constructor for its <code class="docutils literal"><span class="pre">function</span></code>;</li>
+<li>in the <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code> entry of a parameter dictionary for the object to which the <code class="docutils literal"><span class="pre">function</span></code> belongs;</li>
+<li>in some cases, as an argument in the constructor for the object to which the <code class="docutils literal"><span class="pre">function</span></code> belongs (see
+<span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for details).</li>
+</ul>
+<p>The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
+or by default) is assigned to the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code> attribute, and any projection specified is assigned
+to its <code class="docutils literal"><span class="pre">receiveFromProjections</span></code> attribute.  The <code class="docutils literal"><span class="pre">baseValue</span></code> is assigned as the value of the parameter for
+<code class="docutils literal"><span class="pre">function</span></code> when it executes, after it is modified by any ControlProjections or LearningProjections received by the
+ParameterState (see <span class="xref std std-ref">Execution</span> for details).  The specification of a parameter can take any of the following
+forms:</p>
 <blockquote>
 <div><ul class="simple">
 <li>A <strong>value</strong>.  This must be a valid the value of the parameter.  The creates a default parameterState and
