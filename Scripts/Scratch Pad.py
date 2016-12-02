@@ -43,7 +43,7 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 
 transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
                                                            gain=ControlProjection()),
-                                         noise=(0.2, CONTROL_PROJECTION),
+                                         noise=CONTROL_PROJECTION,
                                          name='MY_TRANSFER_MECH'
                                          )
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
