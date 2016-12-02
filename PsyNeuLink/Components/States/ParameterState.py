@@ -75,12 +75,13 @@ The specification of a parameter can take any of the following forms:
       ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
     ..
     * A :any:`ParamValueProjection` or 2-item (value, projection) **tuple**.  This creates a default parameterState
-      using the ``value`` (1st) item of the tuple as its ``baesValue``. If the ``projection`` (2nd) item of the tuple
-      is an existing projection or a constructor for one, it is assigned the parameter as its ``receiver``, and the
-      projection is assigned to the parameterState's ``receivesFromProjections`` attribute. If the projection item
-      is the name of a Projection subclass, a default projection of the specified type is created, and assigned the
-      parameterState as its ``receiver``.  In either case, the projection must be a ControlProjection or
-      LearningProjection, and its value must be a valid one for the parameter.
+      using the ``value`` (1st) item of the tuple as its ``baesValue``, and assigns the parameter's name as the name
+      of the parameterState. If the ``projection`` (2nd) item of the tuple is an existing projection or a constructor
+      for one, it is assigned the parameter as its ``receiver``, and the projection is assigned to the
+      parameterState's ``receivesFromProjections`` attribute. If the projection item is the name of a Projection
+      subclass, a default projection of the specified type is created, and assigned the parameterState as its
+      ``receiver``.  In either case, the projection must be a ControlProjection or LearningProjection, and its value
+      must be a valid one for the parameter.
 
 Additional considerations
 ~~~~~~~~~~~~~~~~~~~~~~~~~
