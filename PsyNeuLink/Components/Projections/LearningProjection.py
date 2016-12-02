@@ -148,6 +148,8 @@ from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 # Params:
 
+parameter_keywords.update({LEARNING_PROJECTION})
+
 kwWeightChangeParams = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0

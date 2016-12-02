@@ -132,6 +132,8 @@ from PsyNeuLink.Components import DefaultController
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
 
+parameter_keywords.update({CONTROL_PROJECTION})
+
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
 #     GUMBY_MODE = 0.0
@@ -163,6 +165,7 @@ kpIntensityCost = "Control Signal Intensity Cost"
 kpAdjustmentCost = "Control Signal Adjustment Cost"
 kpDurationCost = "Control Signal DurationCost"
 kpCost = "Control Signal Cost"
+
 
 class ControlSignalCostOptions(IntEnum):
     NONE               = 0

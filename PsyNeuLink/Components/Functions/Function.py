@@ -137,7 +137,8 @@ def parameter_spec(param):
                            function_type,
                            ParamValueProjection,
                            Projection)) or
-        (inspect.isclass(param) and issubclass(param, Projection))):
+        (inspect.isclass(param) and issubclass(param, Projection)) or
+        param in parameter_keywords):
         return True
     return False
 
@@ -1058,6 +1059,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     """
 
     componentName = kwLogistic
+    parameter_keywords.update({GAIN,BIAS})
 
     variableClassDefault = 0
 
