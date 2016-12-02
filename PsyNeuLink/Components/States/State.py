@@ -327,7 +327,7 @@ class State_Base(State):
             - context (str)
             - **kargs (dict): dictionary of arguments using the following keywords for each of the above kargs:
                 + kwStateValue = value
-                + kwStateParams = params
+                + STATE_PARAMS = params
                 + kwStateName = name
                 + kwStatePrefs = prefs
                 + kwStateContext = context
@@ -348,7 +348,7 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                params = kargs[kwStateParams]
+                params = kargs[STATE_PARAMS]
             except (KeyError, NameError):
                 pass
             try:
@@ -1575,10 +1575,10 @@ def _instantiate_state(owner,                   # Object to which state will bel
         check compatibility of value with constraint_value
     + Projection object:
         assign constraint_value to value
-        assign projection to kwStateParams{STATE_PROJECTIONS:<projection>}
+        assign projection to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + Projection class (or keyword string constant for one):
         assign constraint_value to value
-        assign projection class spec to kwStateParams{STATE_PROJECTIONS:<projection>}
+        assign projection class spec to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
         check compatibility of kwStateValue with constraint_value
     + ParamValueProjection tuple: (only allowed for ParameterState spec)
@@ -1586,13 +1586,13 @@ def _instantiate_state(owner,                   # Object to which state will bel
             if it is a string:
                 test if it is a keyword and get its value by calling keyword method of owner's execute method
                 otherwise, return None (suppress assignment of parameterState)
-        assign ParamValueProjection.projection to kwStateParams{STATE_PROJECTIONS:<projection>}
+        assign ParamValueProjection.projection to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + 2-item tuple: (only allowed for ParameterState spec)
         assign first item to state_spec
             if it is a string:
                 test if it is a keyword and get its value by calling keyword method of owner's execute method
                 otherwise, return None (suppress assignment of parameterState)
-        assign second item to kwStateParams{STATE_PROJECTIONS:<projection>}
+        assign second item to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
     + value:
         if it is a string:
             test if it is a keyword and get its value by calling keyword method of owner's execute method
@@ -1630,34 +1630,53 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # Used locally to report type of specification for State
     #  if value is not compatible with constraint_value
     spec_type = None
+
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
-    # State subclass:
-    if inspect.isclass(constraint_value):
-        # If constraint_value is a State class, set to variableClassDefault:
-        if issubclass(constraint_value, State):
+
+    # Projection class or object: set to paramClassDefaults (of owner or owner's function)
+    if (isinstance(constraint_value, Projection) or
+            (inspect.isclass(constraint_value) and
+                 issubclass(constraint_value, (Projection)))):
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        # Disallow if it is not ControlProjection or a LearningProjection
+        if (inspect.isclass(constraint_value) and
+                not issubclass(constraint_value, (ControlProjection, LearningProjection))):
+            pass
+        try:
+            constraint_value = owner.paramClassDefaults[state_name]
+        # If parameter is not for owner itself, try owner's function
+        except KeyError:
+            constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+
+    # State class: set to variableClassDefault
+    elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
             constraint_value = state_spec.variableClassDefault
-        # If constraint_value is a Projection, set to output of function:
-        if issubclass(constraint_value, Projection):
-            constraint_value = constraint_value.value
-    # State object; set to value:
+
+    # State object: set to its value (i.e., output of its function)
     elif isinstance(constraint_value, state_type):
         constraint_value = constraint_value.value
-    # Specification dict; presumably it is for a State:
+
+    # Specification dict; presumably it is for a State
     elif isinstance(constraint_value, dict):
         constraint_value = constraint_value[kwStateValue]
+
     # ParamValueProjection tuple, set to ParamValueProjection.value:
     elif isinstance(constraint_value, ParamValueProjection):
         constraint_value = constraint_value.value
+
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
         if constraint_value is None:
             return None
+
     # function; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, function_type):
         constraint_value = get_param_value_for_function(owner, constraint_value)
         if constraint_value is None:
             return None
+
     # Otherwise, assumed to be a value
 
     # # MODIFIED 6/14/16: QQQ - WHY DOESN'T THIS WORK HERE?? (DONE BELOW, JUST BEFORE CALLING state = state_type(<>)
@@ -1727,10 +1746,10 @@ def _instantiate_state(owner,                   # Object to which state will bel
             state_value = constraint_value
             spec_type = kwStateValue
 
-        # Add state_spec[kwStateParams] to state_params
+        # Add state_spec[STATE_PARAMS] to state_params
         try:
-            state_params.update(state_spec[kwStateParams])
-        # state_spec[kwStateParams] was not specified
+            state_params.update(state_spec[STATE_PARAMS])
+        # state_spec[STATE_PARAMS] was not specified
         except KeyError:
                 pass
     #endregion
@@ -1739,7 +1758,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #region ParamValueProjection
     # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
     # - check that ParamValueProjection.value matches constraint_value and assign to state_value
-    # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
+    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State._instantiate_projections_to_state
     if isinstance(state_spec, ParamValueProjection):
@@ -1767,7 +1786,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #    projection specification (MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION or class ref to one of those), allow it
     #       (though should use ParamValueProjection)
     # - check that first item matches constraint_value and assign to state_value
-    # - assign second item as projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
+    # - assign second item as projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State._instantiate_projections_to_state
     # IMPLEMENTATION NOTE:
@@ -1821,18 +1840,19 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # Projection
     # If state_spec is a Projection object or Projection class
     # - assign constraint_value to state_value
-    # - assign ParamValueProjection.projection to kwStateParams:{STATE_PROJECTIONS:<projection>}
+    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State._instantiate_projections_to_state
     try:
+        # Projection class
         issubclass(state_spec, Projection)
+        state_value =  constraint_value
+        state_params.update({STATE_PROJECTIONS:state_spec})
     except TypeError:
+        # Projection object
         if isinstance(state_spec, (Projection, str)):
             state_value =  constraint_value
             state_params.update({STATE_PROJECTIONS:{PROJECTION_TYPE:state_spec}})
-    else:
-        state_value =  constraint_value
-        state_params.update({STATE_PROJECTIONS:state_spec})
 
     # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_value GROWS AND MISMATCHES state_value
     # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_value AND CHECK COMPATIBLITY AGAINST THAT

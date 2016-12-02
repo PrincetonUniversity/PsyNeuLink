@@ -1256,24 +1256,29 @@ class Component(object):
 
             # MODIFIED 12/1/16 NEW:
             # If the value is a projection, projection class, or a keyword for one, for anything other than
-            #    the FUNCTION param, then allow it (the value will be validated when the projection and corresponding
-            #    parameterState are created)
+            #    the FUNCTION param (which is not allowed to be specified as a projection)
+            #    then simply assign value to paramClassDefault (implicaton of not specifying it explicitly);
+            #    this also allows it to pass the test below and function execution to occur for initialization;
             from PsyNeuLink.Components.Projections.Projection import Projection
             # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
             # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION}) or
-                isinstance(param_value, Projection) or
+                isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
                 inspect.isclass(param_value) and issubclass(param_value,(Projection)))
                 and not param_name is FUNCTION):
-                continue
-
+                param_value = self.paramClassDefaults[param_name]
             # MODIFIED 12/1/16 END
 
-            # If the value is a function, check that it returns a value consistent with spec in paramClassDefault
+            # MODIFIED 12/2/16 OLD:
+            # If it is a Function, get the value from a tuple (since Functions can't take projection specifications)
             from PsyNeuLink.Components.Functions.Function import Function_Base
-            from PsyNeuLink.Components.States.ParameterState import get_function_param
             if isinstance(self, Function_Base):
-                param_value = get_function_param(self, param_name, param_value)
+                param_value = self._get_param_value_from_tuple(param_value)
+            # # MODIFIED 12/2/16 NEW:
+            # # If the param specification is a tuple get the value item from it (the projection will be parsed later)
+            # if isinstance(param_value, tuple):
+            #     param_value = self._get_param_value_from_tuple(param_value)
+            # MODIFIED 12/2/16 END
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
@@ -1355,6 +1360,27 @@ class Component(object):
                 raise ComponentError("Value of {0} ({1}) must be of type {2} ".
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
+
+    def _get_param_value_from_tuple(self, param_spec):
+        """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
+        """
+        from PsyNeuLink.Components.Mechanisms.Mechanism import ParamValueProjection
+        from PsyNeuLink.Components.Projections.Projection import Projection
+        # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+
+        if isinstance(param_spec, ParamValueProjection):
+            value =  param_spec.value
+        elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
+                (param_spec[1] in {CONTROL_PROJECTION, LEARNING_PROJECTION} or
+                     isinstance(param_spec[1], Projection) or
+                     (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
+              ):
+            value =  param_spec[0]
+        else:
+            value = param_spec
+
+        return value
 
     def _validate_function(self, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
@@ -1818,28 +1844,3 @@ class Component(object):
 
 
 COMPONENT_BASE_CLASS = Component
-
-def get_function_param(function, param_name, param_spec):
-    """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple
-    """
-    from PsyNeuLink.Components.Mechanisms.Mechanism import ParamValueProjection
-    from PsyNeuLink.Components.Projections.Projection import Projection
-    # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
-    # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-
-    if isinstance(param_spec, ParamValueProjection):
-        value =  param_spec.value
-    elif (isinstance(param_spec, tuple) and len(param_spec) is 2 and
-            (param_spec[1] in {MAPPING_PROJECTION, CONTROL_PROJECTION, LEARNING_PROJECTION} or
-                 isinstance(param_spec[1], Projection) or
-                 (inspect.isclass(param_spec[1]) and issubclass(param_spec[1], Projection)))
-          ):
-        value =  param_spec[0]
-    elif (isinstance(param_spec, Projection) or
-              (inspect.isclass(param_spec) and issubclass(param_spec, Projection) or
-              (isinstance(param_spec, str) and param_spec in {CONTROL_PROJECTION, LEARNING_PROJECTION}))):
-        value = function.paramClassDefaults[param_name]
-    else:
-        value = param_spec
-
-    return value

@@ -254,7 +254,7 @@ SINGLETON = 'ORIGIN AND TERMINAL'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
-kwStateParams = "State params" # Used in State specification dict
+STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
 kwMechanismTimeScale = "Mechanism Time Scale"

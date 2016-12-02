@@ -2,6 +2,13 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT: Consider implementing ParameterStates for Functions, and then assigning ControlProjections to them directly
+
+# IMPLEMENT: MOVE COMPUTATIONS FOR DIFFERENT OUTPUTVALUES (SUCH AS IN DDM)
+#            INTO THE FUNCTIONS OF THE OUTPUTSTATES THEMSELVES,
+#            AND DECLARE THOSE IN paramClassDefaults, ALONG WITH THEIR NAMES
+#            THEN CAN GET RID OF outputValueMapping BUSINESS
+
 # FIX: kwParamsCurrent -> PARAMS_CURRENT
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
@@ -2184,8 +2191,8 @@
 # - clean up documentation
 #
          # - %%% MOVE TO State
-         #  - MOVE STATE_PROJECTIONS out of kwStateParams:
-         #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
+         #  - MOVE STATE_PROJECTIONS out of STATE_PARAMS:
+         #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF STATE_PARAMS IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params
          # - if so, then correct in _instantiate_function_params under Mechanism
@@ -2201,7 +2208,7 @@
 #                                          format(param_value.projection))
 #
 # ADD HANDLING OF PROJECTION SPECIFICATIONS (IN kwStateProjection) IN State SUBCLASSES
-#                  MUST BE INCLUDED IN kwStateParams
+#                  MUST BE INCLUDED IN STATE_PARAMS
 #
 # GET CONSTRAINTS RIGHT:
 #    self.value === Mechanism.function.variable

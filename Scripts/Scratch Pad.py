@@ -51,10 +51,10 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 # MORE RECENT TESTING:
 
 
-transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection),
-                                                         gain=ControlProjection
+transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
+                                                         gain=ControlProjection()
                                                          ),
-                                         # noise=(3, ControlProjection)
+                                         # noise=(3, ControlProjection),
                                        name='MY_TRANSFER_MECH'
                                          )
 
@@ -1511,17 +1511,17 @@ import typecheck as tc
 #
 # try:
 #     state_params.update(state_spec[key])
-# # state_spec[kwStateParams] was not specified
+# # state_spec[STATE_PARAMS] was not specified
 # except KeyError:
 #         pass
 # # state_params was not specified
 # except (AttributeError):
 #     try:
 #         state_params = state_spec[key]
-#     # state_spec[kwStateParams] was not specified
+#     # state_spec[STATE_PARAMS] was not specified
 #     except KeyError:
 #         state_params = {}
-# # state_params was specified but state_spec[kwStateParams] was not specified
+# # state_params was specified but state_spec[STATE_PARAMS] was not specified
 # except TypeError:
 #     pass
 # #endregion

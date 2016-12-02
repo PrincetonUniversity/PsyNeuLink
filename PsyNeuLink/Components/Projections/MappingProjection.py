@@ -450,7 +450,7 @@ class MappingProjection(Projection_Base):
         Returns matrix param for MappingProjection, getting second item if it is
          a ParamValueprojection or unnamed (matrix, projection) tuple
         """
-        return get_function_param(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
+        return self._get_param_value_from_tuple(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
 
     @_matrix_spec.setter
     def _matrix_spec(self, value):
