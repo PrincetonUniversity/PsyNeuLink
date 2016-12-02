@@ -2,6 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: MOVE parameter_spec TO Component OR ParameterState??
 # IMPLEMENT: Consider implementing ParameterStates for Functions, and then assigning ControlProjections to them directly
 
 # IMPLEMENT: MOVE COMPUTATIONS FOR DIFFERENT OUTPUTVALUES (SUCH AS IN DDM)
