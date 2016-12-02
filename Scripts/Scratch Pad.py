@@ -41,16 +41,10 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
 #
 
-Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear)),
-                                   threshold=(1.0, ControlProjection(function=Linear)),
-                                   noise=(0.5),
-                                   starting_point=(0),
-                                   t0=0.45),
-               name='Decision')
-
-# MORE RECENT TESTING:
-
-
+transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99),
+                                         # noise=(3, ControlProjection),
+                                         name='MY_TRANSFER_MECH'
+                                         )
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
                                                          gain=ControlProjection
                                                          ),

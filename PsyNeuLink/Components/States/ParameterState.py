@@ -61,21 +61,18 @@ with the value of the projections it receives to determine the value of the para
 
 The specification of a parameter can take any of the following forms:
 
-    COMMENT:
-       XXXX VERIFY THAT THIS IS TRUE:
-    COMMENT
-    * A **value**.  This must be a valid the value of the parameter.  The creates a default parameterState and
-      assigns the value as its ``baseValue``. [LINK]
+    * A **value**.  This must be a valid the value of the parameter.  The creates a default parameterState, assigns
+      the parameter's name as the parameterState's name, and assigns the specified value as its ``baseValue``. [LINK]
     ..
     * An existing **parameterState** object or the name of one.  It's name must be the name of a parameter of the
       owner's ``function``, and its value must be a valid for that parameter.  This capability is provided
       for generality and potential future use, but its use is not advised.
     ..
     * A **Projection** subclass, object or specification dictionary for one [LINK].  This creates a default
-      parameterState, assigns the parameter's default value as the parameterState's ``baseValue``, and creates
-      and/or assigns the specified projection to it, and assigns the parameterState as the ``receiver`` for the
-      projection.  The projection must be a ControlProjection or LearningProjection, and its value must be a valid
-      one for the parameter.
+      parameterState, assigns the parameter's name as the parameterState's name, assigns the parameter's default
+      value as the parameterState's ``baseValue``, and creates and/or assigns the specified projection to it,
+      and assigns the parameterState as the ``receiver`` for the projection.  The projection must be a
+      ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
     ..
     * A :any:`ParamValueProjection` or 2-item (value, projection) **tuple**.  This creates a default parameterState
       using the ``value`` (1st) item of the tuple as its ``baesValue``. If the ``projection`` (2nd) item of the tuple
