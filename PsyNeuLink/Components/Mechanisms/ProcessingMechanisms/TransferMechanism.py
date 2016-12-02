@@ -335,17 +335,13 @@ class TransferMechanism(ProcessingMechanism_Base):
                                        context=self)
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
-        """Get (and validate) self.function from FUNCTION if specified
+        """Validate FUNCTION and mechanism params
 
-        Intercept definition of FUNCTION and assign to self.combinationFunction;
-            leave defintion of self.execute below intact;  it will call combinationFunction
-
-        Args:
-            request_set:
-            target_set:
-            context:
         """
-        transfer_function = request_set[FUNCTION]
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        transfer_function = target_set[FUNCTION]
         if isinstance(transfer_function, Component):
             transfer_function_class = transfer_function.__class__
             transfer_function_name = transfer_function.__class__.__name__
@@ -359,30 +355,30 @@ class TransferMechanism(ProcessingMechanism_Base):
                                 format(transfer_function_name, self.name, kwTransferFunction))
 
         # Validate INITIAL_VALUE
-        initial_value = request_set[INITIAL_VALUE]
+        initial_value = target_set[INITIAL_VALUE]
         if initial_value:
             if not iscompatible(initial_value, self.variable[0]):
                 raise TransferError("The format of the initial_value parameter for {} ({}) must match its input ({})".
                                     format(append_type_to_name(self), initial_value, self.variable[0]))
 
         # Validate NOISE:
-        noise = request_set[NOISE]
+        noise = target_set[NOISE]
         if isinstance(noise, float) and noise>=0 and noise<=1:
             self.noise_function = False
         elif isinstance(noise, function_type):
             self.noise_function = True
         else:
-            raise TransferError("noise parameter ({}) for {} must be a float between 0 and 1 or a function".
+            raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".
                                 format(noise, self.name))
 
         # Validate RATE:
-        rate = request_set[RATE]
+        rate = target_set[RATE]
         if not (isinstance(rate, float) and rate>=0 and rate<=1):
             raise TransferError("rate parameter ({}) for {} must be a float between 0 and 1".
                                 format(rate, self.name))
 
         # Validate RANGE:
-        range = request_set[RANGE]
+        range = target_set[RANGE]
         if range:
             if not (isinstance(range, tuple) and len(range)==2 and all(isinstance(i, numbers.Number) for i in range)):
                 raise TransferError("range parameter ({}) for {} must be a tuple with two numbers".
@@ -392,7 +388,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                     format(range, self.name))
 
 
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        # super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
 
     def _instantiate_attributes_before_function(self, context=None):
