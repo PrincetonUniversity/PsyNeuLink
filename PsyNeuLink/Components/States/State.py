@@ -1642,17 +1642,16 @@ def _instantiate_state(owner,                   # Object to which state will bel
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         # Disallow if it is not ControlProjection or a LearningProjection
-        if not (constraint_value in projection_keywords or
+        if (constraint_value in projection_keywords or
                     isinstance(constraint_value, (ControlProjection, LearningProjection)) or
                     (inspect.isclass(constraint_value) and
                 issubclass(constraint_value, (ControlProjection, LearningProjection)))
                 ):
-            pass
-        try:
-            constraint_value = owner.paramClassDefaults[state_name]
-        # If parameter is not for owner itself, try owner's function
-        except KeyError:
-            constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
+            try:
+                constraint_value = owner.paramClassDefaults[state_name]
+            # If parameter is not for owner itself, try owner's function
+            except KeyError:
+                constraint_value = owner.user_params[FUNCTION].paramClassDefaults[state_name]
 
     # State class: set to variableClassDefault
     elif inspect.isclass(constraint_value) and issubclass(constraint_value, State):
@@ -1670,6 +1669,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     elif isinstance(constraint_value, ParamValueProjection):
         constraint_value = constraint_value.value
 
+    # FIX: IS THIS OK?  OR DOES IT TRAP PROJECTOIN KEYWORD?  ZZZZZZZ
     # keyword; try to resolve to a value, otherwise return None to suppress instantiation of state
     if isinstance(constraint_value, str):
         constraint_value = get_param_value_for_keyword(owner, constraint_value)
@@ -1759,6 +1759,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
                 pass
     #endregion
 
+    # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:
+
     # IMPLEMENTATION NOTE:  CONSIDER DEPRECATING THIS
     #region ParamValueProjection
     # If state_type is ParameterState and state_spec is a ParamValueProjection tuple:
@@ -1830,9 +1832,13 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     #region Keyword String
     if isinstance(state_spec, str):
-        state_spec = get_param_value_for_keyword(owner, state_spec)
-        if state_spec is None:
-            return None
+        if state_spec in projection_keywords:
+            state_value = constraint_value
+            state_spec = 0
+        else:
+            state_spec = get_param_value_for_keyword(owner, state_spec)
+            if state_spec is None:
+                return None
     #endregion
 
     #region Function
