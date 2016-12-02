@@ -640,13 +640,26 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # if param_name in owner.parameterStates:
     #     return
 
+    from PsyNeuLink.Components.Projections.Projection import Projection
     # Allow numerics but omit booleans (which are treated by is_numeric as numerical)
     if is_numeric(param_value) and not isinstance(param_value, bool):
         pass
     # Only allow a FUNCTION_PARAMS dict
     elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:
         pass
-    # Allow tuples (could be specification that includes a projection or ModulationOperation)
+    # Allow ControlProjection, LearningProjection
+    elif isinstance(param_value, Projection):
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        if isinstance(param_value, (ControlProjection, LearningProjection)):
+            pass
+    # Allow Projection class
+    elif inspect.isclass(param_value) and issubclass(param_value, Projection):
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        if issubclass(param_value, (ControlProjection, LearningProjection)):
+            pass
+    # Allow tuples (could be spec that includes a projection or ModulationOperation)
     elif isinstance(param_value, tuple):
         pass
     # Allow if it is a keyword for a parameter

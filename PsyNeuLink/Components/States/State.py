@@ -1633,15 +1633,20 @@ def _instantiate_state(owner,                   # Object to which state will bel
 
     #region CHECK FORMAT OF constraint_value AND CONVERT TO SIMPLE VALUE
 
-    # Projection class or object: set to paramClassDefaults (of owner or owner's function)
-    if (isinstance(constraint_value, Projection) or
+    # Projection class, object, or keyword: set to paramClassDefaults (of owner or owner's function)
+    # FIX: ADD TEST FOR STR AND IN projection_keywords HERE
+    if (isinstance(constraint_value, (str, Projection)) or
             (inspect.isclass(constraint_value) and
                  issubclass(constraint_value, (Projection)))):
+        from PsyNeuLink.Components.Projections.Projection import projection_keywords
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         # Disallow if it is not ControlProjection or a LearningProjection
-        if (inspect.isclass(constraint_value) and
-                not issubclass(constraint_value, (ControlProjection, LearningProjection))):
+        if not (constraint_value in projection_keywords or
+                    isinstance(constraint_value, (ControlProjection, LearningProjection)) or
+                    (inspect.isclass(constraint_value) and
+                issubclass(constraint_value, (ControlProjection, LearningProjection)))
+                ):
             pass
         try:
             constraint_value = owner.paramClassDefaults[state_name]
