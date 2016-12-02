@@ -1022,46 +1022,6 @@ class Component(object):
         request_set_param_names = list(request_set.keys())
         validated_set = {}
 
-        # # MODIFIED 12/1/16 NEW:
-        # # FUNCTION class has changed, so replace rather than update FUNCTION_PARAMS
-        # if FUNCTION in request_set:
-        #     requested_function = request_set[FUNCTION]
-        #     # Get function class:
-        #     if inspect.isclass(requested_function):
-        #         requested_function_class = requested_function
-        #     else:
-        #         requested_function_class = requested_function.__class__
-        #     # # Get default function (from ParamClassDefaults)
-        #     # try:
-        #     #     current_function = self.paramsCurrent[FUNCTION]
-        #     # except KeyError:
-        #     #     # This occurs if a function has been specified as an arg in the call to __init__()
-        #     #     #     but there is no function spec in paramClassDefaults;
-        #     #     # This will be caught, and an exception raised, in _validate_params()
-        #     #     pass
-        #     # else:
-        #     #     # Get default function class
-        #     #     if inspect.isclass(function):
-        #     #         default_function_class = default_function
-        #     #     else:
-        #     #         default_function_class = default_function.__class__
-        #     current_function = self.paramsCurrent[FUNCTION]
-        #     if inspect.isclass(current_function):
-        #         current_function_class = current_function
-        #     else:
-        #         current_function_class = current_function.__class__
-        #
-        #
-        #     if requested_function_class != current_function_class:
-        #         from PsyNeuLink.Components.Functions.Function import Function_Base
-        #         if isinstance(current_function, Function_Base):
-        #             request_set[FUNCTION] = current_function.__class__
-        #         request_set[FUNCTION_PARAMS] = requested_function.user_params
-        # # function not yet defined, so allow FUNCTION_PARAMS)
-        # # except UnboundLocalError:
-        # #     pass
-        # # MODIFIED 12/1/16 END
-
         self._assign_defaults(request_set=request_set,
                              target_set=validated_set,
                              # assign_missing=False,
@@ -1286,11 +1246,9 @@ class Component(object):
                     target_set[param_name] = param_value()
                     continue
 
-            # MODIFIED 12/2/16 NEW:
             # Value is a ParamValueProjection or 2-item tuple, so extract its value for validation below
             if isinstance(param_value, (ParamValueProjection, tuple)):
                 param_value = self._get_param_value_from_tuple(param_value)
-            # MODIFIED 12/2/16 END
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length

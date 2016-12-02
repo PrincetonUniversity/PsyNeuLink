@@ -12,14 +12,11 @@
 # FIX: kwParamsCurrent -> PARAMS_CURRENT
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
-# FIX:  In LearingProjection init (line 300):  Only Logistic() works;  using Logistic crashes:
-#                    function=BackPropagation(learning_rate=1,
-#                                           activation_function=Logistic()),
-
+# TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
+#      Mechanism, MappingProjection and Function params
+#      ADD TO META TEST SCRIPT
+#
 # FIX:  Finish issubclass search and replace:  Utilities 260
-# FIX: PARAMETER SPECIFICATION:
-#      Can't specify projection tuple to object parameter, at least not for TransferMechanism: get TransferError
-#      Can't specify projection class or keyword for function parameter:  get same TransferError
 #
 
 # IMPLEMENT: For Mechanism, dictionaries for receivesFromProjections and sendsToProjections;
