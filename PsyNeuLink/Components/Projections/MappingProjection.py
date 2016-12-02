@@ -143,6 +143,7 @@ from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
 
 parameter_keywords.update({MAPPING_PROJECTION})
+projection_keywords.update({MAPPING_PROJECTION})
 
 class MappingError(Exception):
     def __init__(self, error_value):
