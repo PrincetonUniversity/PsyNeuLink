@@ -52,7 +52,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 
 
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
-                                                         gain=ControlProjection()
+                                                         gain=ControlProjection
                                                          ),
                                          # noise=(3, ControlProjection),
                                        name='MY_TRANSFER_MECH'

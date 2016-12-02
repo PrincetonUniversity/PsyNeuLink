@@ -1840,19 +1840,19 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # Projection
     # If state_spec is a Projection object or Projection class
     # - assign constraint_value to state_value
-    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:<projection>}
+    # - assign ParamValueProjection.projection to STATE_PARAMS:{STATE_PROJECTIONS:[<projection>]}
     # Note: validity of projection specification or compatibility of projection's variable or function output
     #       with state value is handled in State._instantiate_projections_to_state
     try:
         # Projection class
         issubclass(state_spec, Projection)
         state_value =  constraint_value
-        state_params.update({STATE_PROJECTIONS:state_spec})
+        state_params.update({STATE_PROJECTIONS:[state_spec]})
     except TypeError:
         # Projection object
         if isinstance(state_spec, (Projection, str)):
             state_value =  constraint_value
-            state_params.update({STATE_PROJECTIONS:{PROJECTION_TYPE:state_spec}})
+            state_params.update({STATE_PROJECTIONS:[state_spec]})
 
     # FIX:  WHEN THERE ARE MULTIPLE STATES, LENGTH OF constraint_value GROWS AND MISMATCHES state_value
     # IMPLEMENT:  NEED TO CHECK FOR ITEM OF constraint_value AND CHECK COMPATIBLITY AGAINST THAT
