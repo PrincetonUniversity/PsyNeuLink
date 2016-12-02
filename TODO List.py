@@ -6,6 +6,10 @@
 
 # STATE 1638
 # PARAMETER STATE 666
+# PROBLEM IN MULTILAYER LEARNING TEST; PROBABLY IN State._instantiate_state:
+#   owner:  WeightedErrorMechanism
+#   state_name: next_level_projection
+#   constraint_value:  its a list;  THAT IS THE PROBLEM
 
 # FIX: MOVE parameter_spec TO Component OR ParameterState??
 # IMPLEMENT: Consider implementing ParameterStates for Functions, and then assigning ControlProjections to them directly
