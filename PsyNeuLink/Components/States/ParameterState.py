@@ -71,17 +71,11 @@ The specification of a parameter can take any of the following forms:
       owner's ``function``, and its value must be a valid for that parameter.  This capability is provided
       for generality and potential future use, but its use is not advised.
     ..
-    COMMENT:
-       XXXX VERIFY THAT THIS IS TRUE:
-    COMMENT
-    * A **Projection subclass**.  This creates a default parameterState, assigns the parameter's default value as
-      the parameterState's ``baseValue``, and creates and assigns a projection to it of the specified type.
-      The projection must be a ControlProjection or LearningProjection.
-    ..
-    * A **Projection object** or **projection specification dictionary** [LINK].  This creates a default
-      parameterState, assigns the ``value`` of projection as the parameterState's ``baseValue``, and assigns the
-      parameter state as the ``receiver`` for the projection.  The projection must be a ControlProjection or
-      LearningProjection, and its value must be a valid one for the parameter.
+    * A **Projection** subclass, object or specification dictionary for one [LINK].  This creates a default
+      parameterState, assigns the parameter's default value as the parameterState's ``baseValue``, and creates
+      and/or assigns the specified projection to it, and assigns the parameterState as the ``receiver`` for the
+      projection.  The projection must be a ControlProjection or LearningProjection, and its value must be a valid
+      one for the parameter.
     ..
     * A :any:`ParamValueProjection` or 2-item (value, projection) **tuple**.  This creates a default parameterState
       using the ``value`` (1st) item of the tuple as its ``baesValue``. If the ``projection`` (2nd) item of the tuple
