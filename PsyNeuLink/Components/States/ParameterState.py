@@ -663,7 +663,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     elif isinstance(param_value, tuple):
         pass
     # Allow if it is a keyword for a parameter
-    elif param_value in parameter_keywords:
+    elif isinstance(param_value, str) and param_value in parameter_keywords:
         pass
     # elif param_value is NotImplemented:
     #     return
