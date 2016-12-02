@@ -2,6 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# KEYWORD FOR PROJECTION:  State 1835
+
+# STATE 1638
+# PARAMETER STATE 666
+
 # FIX: MOVE parameter_spec TO Component OR ParameterState??
 # IMPLEMENT: Consider implementing ParameterStates for Functions, and then assigning ControlProjections to them directly
 
