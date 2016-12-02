@@ -123,6 +123,8 @@ class ParamsDict(UserDict):
     #     self.data[key] = item
 # MODIFIED 8/31/16: ADD FOR PARAMSCURRENT->ATTRIBUTES  END
 
+parameter_keywords = set()
+
 # Used as templates for requiredParamClassDefaultTypes for COMPONENT:
 class Params(object):
     def __init__(self, **kwargs):

@@ -649,6 +649,9 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # Allow tuples (could be specification that includes a projection or ModulationOperation)
     elif isinstance(param_value, tuple):
         pass
+    # Allow if it is a keyword for a parameter
+    elif param_value in parameter_keywords:
+        pass
     # elif param_value is NotImplemented:
     #     return
     # Exclude function (see docstring above)

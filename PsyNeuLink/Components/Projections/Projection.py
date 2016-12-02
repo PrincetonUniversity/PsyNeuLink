@@ -201,6 +201,8 @@ ProjectionRegistry = {}
 
 kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
+projection_keywords = set()
+
 PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
                             IDENTITY_MATRIX,

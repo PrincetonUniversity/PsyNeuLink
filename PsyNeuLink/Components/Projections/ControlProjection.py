@@ -132,6 +132,7 @@ from PsyNeuLink.Components import DefaultController
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
 
+projection_keywords.update({CONTROL_PROJECTION})
 parameter_keywords.update({CONTROL_PROJECTION})
 
 # # Default control allocation mode values:
