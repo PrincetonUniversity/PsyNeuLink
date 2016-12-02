@@ -298,7 +298,7 @@ class LearningProjection(Projection_Base):
                  sender=None,
                  receiver=None,
                  function=BackPropagation(learning_rate=1,
-                                          activation_function=Logistic()),
+                                          activation_function=Logistic),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

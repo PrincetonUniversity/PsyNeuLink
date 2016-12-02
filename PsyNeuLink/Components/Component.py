@@ -1269,16 +1269,17 @@ class Component(object):
                 param_value = self.paramClassDefaults[param_name]
             # MODIFIED 12/1/16 END
 
-            # MODIFIED 12/2/16 OLD:
-            # If it is a Function, get the value from a tuple (since Functions can't take projection specifications)
+            # If self is a Function:
+            #    if param is a tuple, get its value (since Functions can't take projection specifications)
+            #    if param is a class ref for function, instantiate it as a function
             from PsyNeuLink.Components.Functions.Function import Function_Base
             if isinstance(self, Function_Base):
-                param_value = self._get_param_value_from_tuple(param_value)
-            # # MODIFIED 12/2/16 NEW:
-            # # If the param specification is a tuple get the value item from it (the projection will be parsed later)
-            # if isinstance(param_value, tuple):
-            #     param_value = self._get_param_value_from_tuple(param_value)
-            # MODIFIED 12/2/16 END
+                if isinstance(param_value, tuple):
+                    param_value = self._get_param_value_from_tuple(param_value)
+                elif (inspect.isclass(param_value) and
+                          issubclass(param_value, self.paramClassDefaults[param_name])):
+                    target_set[param_name] = param_value()
+                    continue
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
