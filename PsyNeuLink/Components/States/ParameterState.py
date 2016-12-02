@@ -643,19 +643,19 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     # if param_name in owner.parameterStates:
     #     return
 
-    # Allow numberics but omit booleans (which are treated by is_numeric as numerical)
+    # Allow numerics but omit booleans (which are treated by is_numeric as numerical)
     if is_numeric(param_value) and not isinstance(param_value, bool):
         pass
     # Only allow a FUNCTION_PARAMS dict
     elif isinstance(param_value, dict) and param_name is FUNCTION_PARAMS:
         pass
+    # Allow tuples (could be specification that includes a projection or ModulationOperation)
+    elif isinstance(param_value, tuple):
+        pass
     # elif param_value is NotImplemented:
     #     return
     # Exclude function (see docstring above)
     elif param_name is FUNCTION:
-        return
-    # Allow tuples (could be specification that includes a projection or ModulationOperation)
-    elif isinstance(param_value, tuple):
         return
     # Exclude all others
     else:
