@@ -41,17 +41,17 @@ Specifying Parameters
 
 Parameters can be specified in one of several ways:
 
-* in an **argument for the parameter** in the constructor for the object and/or its function
-  (see also :ref:`Component_Specifying_Functions_and_Parameters` for additional details);
-* in a **parameter dictionary** as the ``params`` argument in the constructor;  the entry for each parameter
-  must use the keyword for the parameter as its key, and the parameter's specification as its value
-  (see :ref:`ParameterState_Parameter_Specification_Examples` below);  parameters for an object's ``function`` must
-  be specified in an entry with the key :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary
-  containing an entry for each parameter of the function to be specified;
-* in the ``assign_params`` method for the object;
-* when the object is executed, in the ``runtime_params`` argument of a call to object's ``execute`` or ``run`` methods
-  (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the :any:`Pathway` for a
-  process to which it belongs (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters:>` below).
+    * in an **argument for the parameter** in the constructor for the object and/or its function
+      (see also :ref:`Component_Specifying_Functions_and_Parameters` for additional details);
+    * in a **parameter dictionary** as the ``params`` argument in the constructor;  the entry for each parameter
+      must use the keyword for the parameter as its key, and the parameter's specification as its value
+      (see :ref:`ParameterState_Parameter_Specification_Examples` below);  parameters for an object's ``function`` must
+      be specified in an entry with the key :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary
+      containing an entry for each parameter of the function to be specified;
+    * in the ``assign_params`` method for the object;
+    * when the object is executed, in the ``runtime_params`` argument of a call to object's ``execute`` or ``run`` methods
+      (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the :any:`Pathway` for a
+      process to which it belongs (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters:>` below).
 
 The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
 or by default) is assigned to the parameterState's ``baseValue``, and any projections assigned to it are added to its
@@ -83,11 +83,6 @@ The specification of a parameter can take any of the following forms:
 .. note::
    Currently, the ``function`` of an object, although it can be specified, cannot be assigned a ControlProjection,
    LearningProjection, or a runtime specification.  This may change in the future.
-
-A parameterState can receive more than one ControlProjection or LearningProjection.  However, they must all have
-values with the same format (number and type of elements) as the value of the parameter.  When the parameterState is
-updated (i.e., the owner is executed), these will be combined (using the parameterState's ``function``) and the
-result will be used to modify the parameter for which the parameterState is responsible.
 
 The **default value** assigned to a parameterState is the default value of the argument for the parameter in the
 constructor for the owner.  If the value of a parameter is specified as :keyword:`None`, :keyword:`NotImplemented`,
@@ -170,8 +165,12 @@ function vs. parameter_modulation_operation
 
 Every parameterState is owned by a :doc:`mechanism <Mechanism>` or :doc:`MappingProjection`. It can receive one or more
 :ref:`ControlProjections <ControlProjection>` or :ref:`LearningProjections <LearningProjection>` from other mechanisms.
-A list of projections received by a parameterState is maintained in its ``receivesFromProjections`` attribute.
-Like all PsyNeuLink components, it has the three following fundamental attributes:
+However, the format for the value of each (i.e., the number and type of its elements) must match the value of the
+parameter for which the parameterState is responsible.  When the parameterState is updated (i.e., the owner is executed)
+the values of its projections will be combined (using the  parameterState's ``function``) and the result will be used
+to modify the parameter for which the parameterState is responsible.  A list of projections received by a parameterState
+is maintained in its  ``receivesFromProjections`` attribute. Like all PsyNeuLink components, it has the three
+following core attributes:
 
 * ``variable``:  this serves as a template for the ``value`` of each projection that the parameterState receives;
   each must match both the number and type of elements of its ``variable``.
