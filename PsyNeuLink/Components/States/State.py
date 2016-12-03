@@ -1834,8 +1834,8 @@ def _instantiate_state(owner,                   # Object to which state will bel
     #region Keyword String
     if isinstance(state_spec, str):
         if state_spec in projection_keywords:
+            state_spec = state_value
             state_value = constraint_value
-            state_spec = 0
         else:
             state_spec = get_param_value_for_keyword(owner, state_spec)
             if state_spec is None:
