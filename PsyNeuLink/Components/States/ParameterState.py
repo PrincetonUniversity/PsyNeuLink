@@ -653,16 +653,16 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
         from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         if isinstance(param_value, (ControlProjection, LearningProjection)):
             pass
+        else:
+            return
     # Allow Projection class
     elif inspect.isclass(param_value) and issubclass(param_value, Projection):
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         if issubclass(param_value, (ControlProjection, LearningProjection)):
             pass
-        # ZZZZZZ
         else:
             return
-        # ZZZZZZ
     # Allow tuples (could be spec that includes a projection or ModulationOperation)
     elif isinstance(param_value, tuple):
         pass
