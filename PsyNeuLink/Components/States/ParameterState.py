@@ -217,10 +217,12 @@ calls its ``function`` to aggregate their values, combines this with its ``baseV
 Runtime Specification of Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In general, it should not be necessary to modify parameters programmatically execution-by-execution;  this should be
-done using control and/or learning mechanisms in a system.  Nevertheless, PsyNeuLink supports "on-the-fly" specification
-of parameters in two ways:  by specifying runtime parameters for a mechanism where it is specified in the ``pathway`` of
-a process, or in the mechanism's ``execute`` or ``run`` methods (see :ref:`Mechanism_Runtime_Parameters`).
+In general, it should not be necessary to modify parameters programmatically each time a process or system is
+executed or run; ordinarily, this should be done using :ref:`control projections <ControlProjection>` and/or
+:ref:`learning projections <LearningProjection>`.  However, it is possible to modify parameters "on-the-fly"
+in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is specified in the
+``pathway`` of a process, or in the ``execute`` method for a or ``run`` methods (see
+:ref:`Mechanism_Runtime_Parameters`).
 
 COMMENT:
     IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME?
