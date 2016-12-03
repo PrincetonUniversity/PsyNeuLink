@@ -83,7 +83,7 @@ transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
 # print(transfer_mechanism_3.execute(input=1.0))
-print(transfer_mechanism_3.run(input=1.0,
+print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
                                                                                    ModulationOperation.OVERRIDE),
                                                                             # SLOPE:(6.0,
@@ -96,8 +96,9 @@ my_process = process(pathway=[(transfer_mechanism_1,
                                {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
                               transfer_mechanism_3])
 
-print("My Process: \n", my_process.run(inputs=[[1.0]],
-                                       num_executions=3))
+# print("My Process: \n", my_process.run(inputs=[[1.0]],
+#                                        num_executions=3))
+print("My Process: \n", my_process.execute(input=[[1.0]]))
 # print("My Process: \n", my_process.execute(input=[1.0]))
 
 # transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
