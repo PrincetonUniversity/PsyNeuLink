@@ -261,10 +261,10 @@ with its corresponding item of the owner mechanism&#8217;s <code class="docutils
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, each inputState executes any projections it receives, calls its <code class="docutils literal"><span class="pre">function</span></code> to aggregate their values, and
-then assigns this to its <code class="docutils literal"><span class="pre">value</span></code> attribute.  This is also assigned as the value of the item for the inputState in
-the mechanism&#8217;s <code class="docutils literal"><span class="pre">inputValue</span></code> and <code class="docutils literal"><span class="pre">variable</span></code> attributes (see <span class="xref std std-ref">Mechanism InputStates</span>.</p>
+<p>An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the inputStat executes any projections it receives, calls its <code class="docutils literal"><span class="pre">function</span></code> to aggregate their
+values, and then assigns this to its <code class="docutils literal"><span class="pre">value</span></code> attribute.  This is also assigned as the value of the item for the
+inputState in the mechanism&#8217;s <code class="docutils literal"><span class="pre">inputValue</span></code> and <code class="docutils literal"><span class="pre">variable</span></code> attributes (see <span class="xref std std-ref">Mechanism InputStates</span>.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="inputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
