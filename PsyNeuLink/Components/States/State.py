@@ -46,7 +46,7 @@ Structure
 ---------
 
 Every state is owned by either a :doc:`mechanism <Mechanism>` or a :doc:`projection <Projection>`. Like all PsyNeuLink
-components, a state has the three following fundamental attributes:
+components, a state has the three following core attributes:
 
 * ``variable``:  for an inputState and parameterState, the value of this is determined by the value(s) of the
   projection(s) that it receives (and that are listed in its ``receivesFromProjections`` attribute);  for an

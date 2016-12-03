@@ -83,8 +83,8 @@ Structure
 Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
 mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
 :keyword:`TERMINAL` [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
-maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following
-fundamental attributes:
+maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following core
+attributes:
 
 * ``variable``:  this must match (both in number and types of elements) the value of the item it is assigned from its
   mechanism's ``outputValue`` attribute (see LINK]).
