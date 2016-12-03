@@ -48,11 +48,18 @@ Parameters can be specified in one of several places:
       (see :ref:`ParameterState_Parameter_Specification_Examples` below);  parameters for an object's ``function`` must
       be specified in an entry with the key :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary
       containing an entry for each parameter of the function to be specified;
-    * in the ``assign_params`` method for the object;
-    * when the object is executed, in the ``runtime_params`` argument of a call to object's ``execute`` or ``run`` methods
+    * in the ``assign_params`` method for the object
+    COMMENT:
+    ;
+    * when the object is executed, in the ``runtime_params`` argument of a call to object's ``execute``
+      COMMENT:
+          or ``run`` methods
+      COMMENT
+      method
       (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the :any:`Pathway` for a
       process to which it belongs (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters:>` below).
-
+    COMMENT
+    .
 The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
 or by default) is assigned to the parameterState's ``baseValue``, and any projections assigned to it are added to its
 ``receiveFromProjections`` attribute.   When the owner is executed,  the parameterState's ``baseValue`` is combined
@@ -81,15 +88,18 @@ The specification of a parameter can take any of the following forms:
       projection must be a ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
 
 .. note::
-   Currently, the ``function`` of an object, although it can be specified, cannot be assigned a ControlProjection,
-   LearningProjection, or a runtime specification.  This may change in the future.
+   Currently, the ``function`` of an object, although it can be specified, cannot be assigned
+   COMMENT:
+   a ControlProjection, LearningProjection, or a runtime specification.
+   COMMENT
+   a ControlProjection or a LearningProjection.
+   This may change in the future.
 
 The **default value** assigned to a parameterState is the default value of the argument for the parameter in the
 constructor for the owner.  If the value of a parameter is specified as :keyword:`None`, :keyword:`NotImplemented`,
 or any other non-numeric value that is not one of those listed above, then no parameter state is created and the
 parameter cannot be modified by a ControlProjection, LearningProjection, or :ref:`runtime specification
 <_ParameterState_Runtime_Parameters>`.
-
 
 COMMENT:
 - No parameterState is created for parameters that are:
@@ -201,80 +211,12 @@ function vs. parameter_modulation_operation
         FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
 COMMENT
 
-.. _ParameterState_Execution:
-
-Execution
----------
-
-A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the parameterState executes any ControlProjections and/or LearningProjections it receives,
-calls its ``function`` to aggregate their values, combines this with its ``baseValue`` using the
-``paramModulationOperation``, and then assigns this to the parameter for which it is responsible.
-
-
-.. _ParameterState_Runtime_Parameters:
-
-Runtime Specification of Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In general, it should not be necessary to modify parameters programmatically each time a process or system is
-executed or run; ordinarily, this should be done using :doc:`control projections <ControlProjection>` and/or
-:doc:`learning projections <LearningProjection>`.  However, it is possible to modify parameters "on-the-fly"
-in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is specified in the
-``pathway`` of a process, or in the ``execute``
-COMMENT:
-    or ``run`` methods
-COMMENT
-method
-for a mechanism, process or system (see :ref:`Mechanism_Runtime_Parameters`).
-
-COMMENT:
-    IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME?
-    IS THE RUN AND EXECUTE SPECIFICATION ONE TRIAL OR ALL TRIALS IN THAT RUN?
-COMMENT
-
-.. note::
-   At this time, runtime specification can be used only  for the parameters of a mechanism or of its ``function``.
-   Since the function itself is not currently assigned a parameterState, it cannot be modified at runtime;  nor is
-   there currently a method for runtime specification for the parameters of a MappingProjection.  These may be
-   supported in the future.
-
-COMMENT:
-
-    RUNTIME:  runtime param assignment is one-time by default;
-               but can use runtimeParamsStickyAssignmentPref for persistent assignment
-               or use assign_param
-
-   XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
-   XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
-COMMENT
-
-COMMENT:
-.. ParameterState_Parameter_Modulation_Operation:
-
-XXXX EXPLAIN:
-parameter_modulation_operation:  ModulationOperation - list values and their meaning
-see ref:`Mapping_Parameter_Modulation_Operation`
-
-        - get ParameterStateParams
-        - pass params to super, which aggregates inputs from projections
-        - combine input from projections (processed in super) with baseValue using paramModulationOperation
-        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
-        - assign result to self.value
-
-COMMENT
-
-
-COMMENT:
- XXXXX NEED TO MODIFY DESCRIPTION AND/OR FIGURE TO DEAL WITH LEARNING SIGNALS
-COMMENT
-
 .. _ParameterState_Figure:
 
 The figure below shows how these factors are combined by the parameterState to determine the parameter value for a
 function:
 
-    **How a ParameterState Determines the Value of a Parameter of its Owner's Function**
+    **How a ParameterState Determines the Value of a Parameter**
 
     .. figure:: _static/ParameterState_fig.*
        :alt: ParameterState
@@ -296,6 +238,123 @@ function:
        | E (blue)     | parameterState's ``function`` combines ``value`` of  projections   |
        +--------------+--------------------------------------------------------------------+
 
+
+.. _ParameterState_Execution:
+
+Execution
+---------
+
+A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the parameterState executes any ControlProjections and/or LearningProjections it receives,
+calls its ``function`` to aggregate their values, combines this with its ``baseValue`` using the
+``paramModulationOperation``, and then assigns this to the parameter for which it is responsible.
+
+COMMENT:
+    .. _ParameterState_Runtime_Parameters:
+
+    Runtime Specification of Parameters
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    In general, it should not be necessary to modify parameters programmatically each time a process or system is
+    executed or run; ordinarily, this should be done using :doc:`control projections <ControlProjection>` and/or
+    :doc:`learning projections <LearningProjection>`.  However, it is possible to modify parameters "on-the-fly"
+    in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is specified in the
+    ``pathway`` of a process, or in the ``execute``
+    COMMENT:
+        or ``run`` methods
+    COMMENT
+    method
+    for a mechanism, process or system (see :ref:`Mechanism_Runtime_Parameters`).
+
+    COMMENT:
+        IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME? <- BUG IN merge_dictionary()
+        IS THE RUN AND EXECUTE SPECIFICATION ONE TRIAL OR ALL TRIALS IN THAT RUN?
+    COMMENT
+
+    .. note::
+       At this time, runtime specification can be used only  for the parameters of a mechanism or of its ``function``.
+       Since the function itself is not currently assigned a parameterState, it cannot be modified at runtime;  nor is
+       there currently a method for runtime specification for the parameters of a MappingProjection.  These may be
+       supported in the future.
+
+    COMMENT:
+
+        RUNTIME:  runtime param assignment is one-time by default;
+                   but can use runtimeParamsStickyAssignmentPref for persistent assignment
+                   or use assign_param
+
+       XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
+       XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
+    COMMENT
+COMMENT
+
+COMMENT:
+.. ParameterState_Parameter_Modulation_Operation:
+
+XXXX EXPLAIN:
+parameter_modulation_operation:  ModulationOperation - list values and their meaning
+see ref:`Mapping_Parameter_Modulation_Operation`
+
+        - get ParameterStateParams
+        - pass params to super, which aggregates inputs from projections
+        - combine input from projections (processed in super) with baseValue using paramModulationOperation
+        - combine result with value specified at runtime in PARAMETER_STATE_PARAMS
+        - assign result to self.value
+
+COMMENT
+
+
+.. _ParameterState_Figure:
+
+The figure below shows how these factors are combined by the parameterState to determine a parameter value:
+
+    **How a ParameterState Determines the Value of a Parameter**
+
+    .. figure:: _static/ParameterState_fig.*
+       :alt: ParameterState
+       :scale: 75 %
+
+       ..
+
+       +--------------+--------------------------------------------------------------------+
+       | Component    | Impact of ParameterState on Parameter Value                        |
+       +==============+====================================================================+
+       | A (brown)    | ``baseValue`` (default value of parameter``)                       |
+       +--------------+--------------------------------------------------------------------+
+       | B (violet)   | runtime specification of parameter value                           |
+       +--------------+--------------------------------------------------------------------+
+       | C (red)      | runtime parameter influences projection-modulated ``baseValue``    |
+       +--------------+--------------------------------------------------------------------+
+       | D (green)    | combined projection values modulate ``baseValue``                  |
+       +--------------+--------------------------------------------------------------------+
+       | E (blue)     | parameterState's ``function`` combines ``value`` of  projections   |
+       +--------------+--------------------------------------------------------------------+
+
+       In the first line, the values for ``param_x`` and ``param_z`` labeled "A" (and shown in brown)
+       specify the ``baseValue`` of the paramterStates for each parameter;  these are the values
+       that will be used for those parameters absent any other influences.  The values labeld
+       COMMENT:
+         Constructor parameter specification:
+             1st example: the values for ``param_x`` and ``param_z`` labeled "A" (and shown in brown)
+                          specify the ``baseValue`` of the paramterStates for each parameter;  these are the values
+                          that will be used for those parameters absent any other influences.
+                          param_x is given a controlSignal;  any values specified by the control siginal are combined
+                          using the parameterState's ``function`` (E) and then combined with its baseValue (A) using the
+                          parameterState's ``parameterModulationOpeartion`` (D);  finally, those will be combined
+                          with any runtime specification (see 2nd and 3rd examples)
+                          using the runtime modulationOperation (C)
+         Runtime parameter specification:
+             2nd example:  param_x is given a runtime value (violet) but no runtime ModulationOperation;
+                           param_y is given a runtime value (violet) and also a runtime ModulationOperation (red);
+                           the parameterState's parameterModulationOperation is set to MULTIPLY (green).
+             3rd example:  param_x is given a runtime value (violet) and also a runtime ModulationOperation (red);
+                           param_y is given a runtime value (violet) but no runtime ModulationOperation;
+                           the parameterState's parameterModulationOperation is set to SUM (green)
+         NOTE: CAPS FOR PARAM SPECIFICATION IN DICTS -> KEYWORDS
+
+
+          AUGMENT FIGURE TO SHOW PARAM SPECIFICATIONS FOR BOTH THE OBJECT AND ITS FUNCTION
+       COMMENT
 
 """
 
