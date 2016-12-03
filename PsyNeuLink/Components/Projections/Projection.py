@@ -34,7 +34,7 @@ to another mechanism (its ``receiver``).  There are three types of projections t
     MappingProjections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
 * :doc:`ControlProjection`
-    Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
+    These take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
     <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
     modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
     typically used in the context of a :doc:`System`.
@@ -65,7 +65,7 @@ or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specificati
 
   *Constructor*.  Used the same way in context as it is ordinarily.
 
-  *Projection instance*.  This must be an instance of an existing projection.
+  *Projection object*.  This must be a reference to an existing instance of a projection.
 
   *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
@@ -200,6 +200,8 @@ from PsyNeuLink.Globals.Registry import register_category
 ProjectionRegistry = {}
 
 kpProjectionTimeScaleLogEntry = "Projection TimeScale"
+
+projection_keywords = set()
 
 PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
@@ -490,8 +492,7 @@ class Projection_Base(Projection):
 
         # PROJECTION_SENDER is either an instance or class of Mechanism or State:
         if (isinstance(sender_param, (Mechanism, State)) or
-                (inspect.isclass(sender_param) and
-                     (issubclass(sender_param, Mechanism) or issubclass(sender_param, State)))):
+                (inspect.isclass(sender_param) and issubclass(sender_param, (Mechanism, State)))):
             # it is NOT the same as the default, use it
             if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
                 self.sender = sender_param
@@ -506,8 +507,12 @@ class Projection_Base(Projection):
                                                                       sender_param.__class__.__name__))
             # it IS the same as the default, so check if sender arg (self.sender) is valid
             elif not (isinstance(self.sender, (Mechanism, State, Process)) or
-                          (inspect.isclass(self.sender) and
-                               (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
+                          # # MODIFIED 12/1/16 OLD:
+                          # (inspect.isclass(self.sender) and
+                          #      (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
+                          # MODIFIED 12/1/16 NEW:
+                          (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+                          # MODIFIED 12/1/16 END
                 # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
                 self.sender = sender_param
                 if self.prefs.verbosePref:
@@ -637,7 +642,7 @@ class Projection_Base(Projection):
                              self.sender.function.__class__.__name__,
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
-            self.assign_defaults(variable=self.sender.value, context=context)
+            self._assign_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)

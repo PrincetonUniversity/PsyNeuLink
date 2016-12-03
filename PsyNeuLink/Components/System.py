@@ -812,7 +812,7 @@ class System_Base(System):
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
                 if not input is None:
-                    process.assign_defaults(input)
+                    process._assign_defaults(variable=input, context=context)
 
             # Otherwise, instantiate Process
             if not isinstance(process, Process):

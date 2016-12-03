@@ -22,8 +22,8 @@
 CONTENTS:
 
     TYPE CHECKING and VALUE COMPARISON:
-        is_numerical_or_none
-        is_numerical
+        is_numeric_or_none
+        is_numeric
         iscompatible
 
     ENUM:
@@ -124,12 +124,12 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
-def is_numerical_or_none(x):
+def is_numeric_or_none(x):
     if not x:
         return True
-    return is_numerical(x)
+    return is_numeric(x)
 
-def is_numerical(x):
+def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 kwCompatibilityType = "type"

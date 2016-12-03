@@ -132,6 +132,9 @@ from PsyNeuLink.Components import DefaultController
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
 
+projection_keywords.update({CONTROL_PROJECTION})
+parameter_keywords.update({CONTROL_PROJECTION})
+
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
 #     GUMBY_MODE = 0.0
@@ -163,6 +166,7 @@ kpIntensityCost = "Control Signal Intensity Cost"
 kpAdjustmentCost = "Control Signal Adjustment Cost"
 kpDurationCost = "Control Signal DurationCost"
 kpCost = "Control Signal Cost"
+
 
 class ControlSignalCostOptions(IntEnum):
     NONE               = 0
@@ -499,7 +503,7 @@ class ControlProjection(Projection_Base):
                 else:
                     test_value = 1
                 try:
-                    if not is_numerical(cost_function(test_value)):
+                    if not is_numeric(cost_function(test_value)):
                         raise ControlProjectionError("Function assigned to {} ({}) must return a scalar".
                                                  format(cost_function_name, cost_function))
                 except:

@@ -353,7 +353,7 @@ def process(process_spec=None,
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(_is_projection_spec)=None,
-            target:tc.optional(is_numerical)=None,
+            target:tc.optional(is_numeric)=None,
             params=None,
             name=None,
             prefs:is_pref_set=None,
@@ -762,7 +762,7 @@ class Process_Base(Process):
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  # learning:tc.optional(_is_projection_spec)=None,
                  learning=None,
-                 target:tc.optional(is_numerical)=None,
+                 target:tc.optional(is_numeric)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -1610,7 +1610,7 @@ class Process_Base(Process):
         if input is NotImplemented:
             input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
-                    not (not context or kwFunctionInit in context)):
+                    not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
 
         else:

@@ -148,6 +148,9 @@ from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 # Params:
 
+parameter_keywords.update({LEARNING_PROJECTION})
+projection_keywords.update({LEARNING_PROJECTION})
+
 kwWeightChangeParams = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
@@ -298,7 +301,7 @@ class LearningProjection(Projection_Base):
                  sender=None,
                  receiver=None,
                  function=BackPropagation(learning_rate=1,
-                                          activation_function=Logistic()),
+                                          activation_function=Logistic),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -547,7 +550,7 @@ class LearningProjection(Projection_Base):
             # receiver has parameterState for MATRIX, so update its params with ones specified by LearningProjection
             else:
                 # MODIFIED 8/13/16:
-                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # FIX: ?? SHOULD THIS USE _assign_defaults:
                 self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
             # Assign self.receiver to parameterState used for weight matrix param
