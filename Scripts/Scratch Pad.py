@@ -83,7 +83,7 @@ transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
 # print(transfer_mechanism_3.execute(input=1.0))
-print(transfer_mechanism_3.execute(input=1.0,
+print(transfer_mechanism_3.run(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
                                                                                    ModulationOperation.OVERRIDE),
                                                                             # SLOPE:(6.0,
