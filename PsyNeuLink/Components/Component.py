@@ -1221,7 +1221,7 @@ class Component(object):
             #    the FUNCTION param (which is not allowed to be specified as a projection)
             #    then simply assign value to paramClassDefault (implicaton of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
-            from PsyNeuLink.Components.Projections.Projection import Projection
+            from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
             # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
             # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
             if (((isinstance(param_value, str) and param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION}) or
