@@ -59,7 +59,7 @@ transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProject
                                        )
 
 
-transfer_mechanism_1 = TransferMechanism(function=Linear(slope=(3, ControlProjection)))
+transfer_mechanism_1 = TransferMechanism(function=Linear(slope=(1, ControlProjection)))
 # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
 # TM1_parameter_state = ParameterState(value=22)
 transfer_mechanism_2 = TransferMechanism(function=Logistic(bias=(3, ControlProjection),
@@ -68,7 +68,7 @@ transfer_mechanism_2 = TransferMechanism(function=Logistic(bias=(3, ControlProje
                                          # noise=(3, ControlProjection)
                                          )
 # transfer_mechanism_3 = TransferMechanism()
-transfer_mechanism_3 = TransferMechanism(function=Linear(slope=2))
+transfer_mechanism_3 = TransferMechanism(function=Linear(slope=1))
 
 transfer_mechanism_1.execute()
 # my_process = process(pathway=[transfer_mechanism_1,
@@ -79,7 +79,7 @@ transfer_mechanism_1.execute()
 
 # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
-transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = True
+transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
 # print(transfer_mechanism_3.execute(input=1.0))
@@ -89,18 +89,26 @@ print(transfer_mechanism_3.execute(input=1.0,
                                                                             # SLOPE:(6.0,
                                                                             #        ModulationOperation.OVERRIDE
                                                                                       }}))
-print(transfer_mechanism_3.run(inputs=1.0,
-                               num_executions=3))
+# print(transfer_mechanism_3.run(inputs=[1.0],
+#                                num_executions=3))
+
+my_process = process(pathway=[(transfer_mechanism_1,
+                               {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
+                              transfer_mechanism_3])
+
+print("My Process: \n", my_process.run(inputs=[[1.0]],
+                                       num_executions=3))
+# print("My Process: \n", my_process.execute(input=[1.0]))
+
+# transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
 
 
 
-transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
+
 
 # transfer_process = process(pathway = [transfer_mechanism_1])
 # print(transfer_process.execute())
 print ('Done')
-
-print ("True is numerical: {}".format(is_numeric(True)))
 
 # my_mech1 = TransferMechanism(function=Logistic)
 # my_mech2 = TransferMechanism(function=Logistic)
