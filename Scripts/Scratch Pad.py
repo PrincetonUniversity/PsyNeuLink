@@ -52,9 +52,9 @@ transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
                                                          gain=CONTROL_PROJECTION
                                                          ),
-                                         noise=(0.3, ControlProjection),
+                                       noise=(0.3, ControlProjection),
                                        name='MY_TRANSFER_MECH'
-                                         )
+                                       )
 
 
 transfer_mechanism_1 = TransferMechanism(function=Linear(slope=(3, ControlProjection)))
