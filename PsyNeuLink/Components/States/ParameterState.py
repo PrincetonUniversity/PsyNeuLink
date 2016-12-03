@@ -218,11 +218,15 @@ Runtime Specification of Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In general, it should not be necessary to modify parameters programmatically each time a process or system is
-executed or run; ordinarily, this should be done using :ref:`control projections <ControlProjection>` and/or
-:ref:`learning projections <LearningProjection>`.  However, it is possible to modify parameters "on-the-fly"
+executed or run; ordinarily, this should be done using :doc:`control projections <ControlProjection>` and/or
+:doc:`learning projections <LearningProjection>`.  However, it is possible to modify parameters "on-the-fly"
 in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is specified in the
-``pathway`` of a process, or in the ``execute`` method for a or ``run`` methods (see
-:ref:`Mechanism_Runtime_Parameters`).
+``pathway`` of a process, or in the ``execute``
+COMMENT:
+    or ``run`` methods
+COMMENT
+method
+for a mechanism, process or system (see :ref:`Mechanism_Runtime_Parameters`).
 
 COMMENT:
     IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME?
