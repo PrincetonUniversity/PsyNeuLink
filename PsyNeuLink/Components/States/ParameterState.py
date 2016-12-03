@@ -68,34 +68,40 @@ The specification of a parameter can take any of the following forms:
       owner's ``function``, and its value must be a valid for that parameter.  This capability is provided
       for generality and potential future use, but its use is not advised.
     ..
-    * A **Projection** specification [LINK].  This creates a default parameterState, assigns the parameter's default
-      value as the parameterState's ``baseValue``, and assigns the parameter's name as the name of the parameterState;
-      it also creates and/or assigns the specified projection, and assigns the parameterState as the projection's
-      ``receiver``.  The projection must be a ControlProjection or LearningProjection, and its value must be a valid
-      one for the parameter.
+    * A ref:`projection specification <Projection_In_Context_Specification>`.  This creates a default parameterState,
+      assigns the parameter's default value as the parameterState's ``baseValue``, and assigns the parameter's name as
+      the name of the parameterState;  it also creates and/or assigns the specified projection, and assigns the
+      parameterState as the projection's ``receiver``.  The projection must be a ControlProjection or
+      LearningProjection, and its value must be a valid one for the parameter.
     ..
-    * A :any:`ParamValueProjection` or 2-item (value, projection) **tuple**.  This creates a default parameterState,
-      uses the ``value`` (1st) item of the tuple as parameterState's ``baseValue``, and assigns the parameter's name
-      as the name of the parameterState.  The ``projection`` (2nd) item of the tuple is used to creates and/or assign
-      the specified projection, that is assigned the parameterState as its ``receiver``.  The projection
-      must be a ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
+    * A :any:`ParamValueProjection` or 2-item (value, projection specification) **tuple**.  This creates a default
+      parameterState, uses the ``value`` (1st) item of the tuple as parameterState's ``baseValue``, and assigns the
+      parameter's name as the name of the parameterState.  The ``projection`` (2nd) item of the tuple is used to
+      creates and/or assign the specified projection, that is assigned the parameterState as its ``receiver``.  The
+      projection must be a ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
 
-Additional considerations
-~~~~~~~~~~~~~~~~~~~~~~~~~
+.. note::
+   Currently, the ``function`` of an object, although it can be specified, cannot be assigned a ControlProjection,
+   LearningProjection, or a runtime specification.  This may change in the future.
 
-Default value:
-    - will be inferred for anything other than a value or ParamValueProjection tuple)
-    - be assigned the value of the owner's param for which the ParameterState is being instantiated
-        (that must also be compatible with its self.value)
-    - if parameter default value is set to None (or a non-numeric value),
-        either in paramClassDefaults, as default in constructor argument, or specified as such,
-        then no parameter state is created and can't be used either for Control, Learning or runtime assignment
+A parameterState can receive more than one ControlProjection or LearningProjection.  However, they must all have
+values with the same format (number and type of elements) as the value of the parameter.  When the parameterState is
+updated (i.e., the owner is executed), these will be combined (using the parameterState's ``function``) and the
+result will be used to modify the parameter for which the parameterState is responsible.
 
+The **default value** assigned to a parameterState is the default value of the argument for the parameter in the
+constructor for the owner.  If the value of a parameter is specified as :keyword:`None`, :keyword:`NotImplemented`,
+or any other non-numeric value that is not one of those listed above, then no parameter state is created and the
+parameter cannot be modified by a ControlProjection, LearningProjection, or :ref:`runtime specification
+<_ParameterState_Runtime_Parameters>`.
+
+
+COMMENT:
 - No parameterState is created for parameters that are:
    assigned a non-numeric value (including None, NotImplemented, False or True)
       unless it is:
           a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
-          a dict with the name FUNCTION_PARAMS (otherwise exclude)
+          a dict with an entry with the key FUNCTION_PARAMS and a value that is a dict (otherwise exclude)
    a function
        IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
@@ -104,8 +110,7 @@ Default value:
 - self.variable must be compatible with self.value (enforced in _validate_variable)
     note: although it may receive multiple projections, the output of each must conform to self.variable,
           as they will be combined to produce a single value that must be compatible with self.variable
-- self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
-
+COMMENT
 
 Examples
 ~~~~~~~~
@@ -159,6 +164,8 @@ function vs. parameter_modulation_operation
             - by including them at initialization (param[FUNCTION] = <function>(sender, params)
             - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
+
+- self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
 
 
 Every parameterState is owned by a :doc:`mechanism <Mechanism>` or :doc:`MappingProjection`. It can receive one or more

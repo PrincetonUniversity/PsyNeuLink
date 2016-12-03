@@ -41,11 +41,13 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
 #
 
+my_control = ControlProjection(name='MY CONTROL')
+
 transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
                                                            gain=ControlProjection()),
                                          # noise=(0.3, CONTROL_PROJECTION),
-                                         # noise=ControlProjection,
-                                         noise=CONTROL_PROJECTION,
+                                         noise=ControlProjection,
+                                         # noise='MY CONTROL',
                                          rate=(0.1, ControlProjection),
                                          name='MY_TRANSFER_MECH'
                                          )

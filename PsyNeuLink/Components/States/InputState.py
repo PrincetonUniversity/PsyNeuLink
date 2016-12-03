@@ -60,7 +60,7 @@ specifying the name for the inputState to be created, and its value is one of th
       dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
       Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.
     ..
-    * A :any:`ParamValueProjection`.  This creates a default inputState using the ``value`` item as its ``value``,
+    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its ``value``,
       and assigns the state as the ``receiver`` of the ``projection`` item.
 
     .. note::

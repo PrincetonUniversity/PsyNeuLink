@@ -34,7 +34,7 @@ to another mechanism (its ``receiver``).  There are three types of projections t
     MappingProjections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
 * :doc:`ControlProjection`
-    Thess take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
+    These take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
     <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
     modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
     typically used in the context of a :doc:`System`.
@@ -65,7 +65,7 @@ or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specificati
 
   *Constructor*.  Used the same way in context as it is ordinarily.
 
-  *Projection instance*.  This must be an instance of an existing projection.
+  *Projection object*.  This must be a reference to an existing instance of a projection.
 
   *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
