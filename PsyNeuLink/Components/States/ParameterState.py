@@ -144,10 +144,52 @@ COMMENT
 Structure
 ---------
 
-The value of object params are accessible as attributes of the object, and the value of parameters for its ``function``
-are accessible either via object.function_object<param_name>, or object.function_params[<PARAM_KEYWORD>].
-These are read-only.  To re-assign the value of a parameter for an existing object, use its ``assign_params`` method
+Every parameterState is owned by a :doc:`mechanism <Mechanism>` or :doc:`MappingProjection`. It can receive one or more
+:ref:`ControlProjections <ControlProjection>` or :ref:`LearningProjections <LearningProjection>` from other mechanisms.
+However, the format for the value of each (i.e., the number and type of its elements) must match the value of the
+parameter for which the parameterState is responsible.  When the parameterState is updated (i.e., the owner is executed)
+the values of its projections will be combined (using the  parameterState's ``function``) and the result will be used
+to modify the parameter for which the parameterState is responsible (see :ref:`Execution <_ParameterState_Execution>`
+below).  A list of projections received by a parameterState is maintained in its  ``receivesFromProjections``
+attribute. Like all PsyNeuLink components, it has the three following core attributes:
 
+* ``variable``:  this serves as a template for the ``value`` of each projection that the parameterState receives; it
+  must match the format (the number and type of elements) of the parameter for which the parameterState is responsible.
+  Any projections the parameterState receives must, it turn, match the format of its ``variable``.
+
+* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
+   received by the parameterState.  The default function is :any:`LinearCombination` that multiplies the values.
+   A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
+   some way), so long as it generates a result that is compatible with the ``value`` of the parameterState.
+
+* ``value``:  this is the value assigned to the parameter for which the parameterState is responsible.  It is the
+  ``baseValue`` of the parameterState, modified by aggregated value of the projections received by the parameterState.
+
+In addition, a parameterState has two other attributes that are used to determine the value it assigns to the
+parameter for which it is responsible (as shown in the :ref:`figure <ParameterState_Figure>` below):
+
+.. ParameterState_BaseValue:
+
+* ``baseValue``:  this is the default value of the parameter for which the parameterState is responsible.
+  It is combined with the result of the parameterState's ``function``, which aggregates the values received from its
+  projections, to determine the value of the parameter for which the parameterState is responsible.
+
+.. ParameterState_Parameter_Modulation_Operation:
+
+* ``parameterModulationOperation``: this determines how the result of the parameterState's ``function`` (the
+  aggregrated values of the projections it receives) is combined with its ``baseValue`` to generate the value assigned
+  to the parameter for which it is responsible.  This must be a value of :any:`ModulationOperation`;  the default is
+  :keyword:`PRODUCT`.
+  COMMENT:
+      WHERE CAN THIS BE SPECIFIED OTHER THAN AT RUNTIME?
+  COMMENT
+
+The value an object's parameter is accessible as an attribute with the corresponding name, and the value of
+the parameters for its  ``function`` are accessible either as object.function_object<param_name>,
+or object.function_params[<PARAM_KEYWORD>].  Parameter attribute values are read-only.  To re-assign the value of a
+parameter for an object or its ``function``, use its ``assign_params`` method
+
+COMMENT:
 function vs. parameter_modulation_operation
     Parameters:
         The default for FUNCTION is LinearCombination using kwAritmentic.Operation.PRODUCT:
@@ -159,58 +201,7 @@ function vs. parameter_modulation_operation
             - by including them at initialization (param[FUNCTION] = <function>(sender, params)
             - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
             - at run time, which changes their values for just for that call (self.execute(sender, params)
-
-- self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)
-
-
-Every parameterState is owned by a :doc:`mechanism <Mechanism>` or :doc:`MappingProjection`. It can receive one or more
-:ref:`ControlProjections <ControlProjection>` or :ref:`LearningProjections <LearningProjection>` from other mechanisms.
-However, the format for the value of each (i.e., the number and type of its elements) must match the value of the
-parameter for which the parameterState is responsible.  When the parameterState is updated (i.e., the owner is executed)
-the values of its projections will be combined (using the  parameterState's ``function``) and the result will be used
-to modify the parameter for which the parameterState is responsible.  A list of projections received by a parameterState
-is maintained in its  ``receivesFromProjections`` attribute. Like all PsyNeuLink components, it has the three
-following core attributes:
-
-* ``variable``:  this serves as a template for the ``value`` of each projection that the parameterState receives;
-  each must match both the number and type of elements of its ``variable``.
-
-* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
-   received by the parameterState.  The default function is :any:`LinearCombination` that multiplies the values.
-   A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
-   some way), so long as it generates a result that is compatible with the ``value`` expected for the parameterState
-XXX IS THIS TRUE:
-   It assigns the result to the parameterState's ``value`` attribute.
-XXX DOES THIS COMBINE WITH BASEVALUE, OR IS THAT DONE AFTETWARDS?
-
-* ``value``:  this is the aggregated value of the projections received by the parameterState, assigned to it by the
-  parameterState's ``function``.  It must be compatible
-  COMMENT:
-  both with the inputState's ``variable`` (since the ``function``
-  of an inputState only combines the values of its projections, but does not otherwise transform its input),
-  COMMENT
-  with its corresponding item of the owner mechanism's ``variable``.
-
-In addition, a parameterState has two other attributes that are used to determine the value of the ``function``
-parameter for which it is responsible:
-
-.. ParameterState_BaseValue:
-
-* ``baseValue``:  this is the default value of the ``function`` parameter for which the parameterState is responsible.
-  It is combined with the parameterState's value (i.e., the aggregated values received from its projections) to
-  determine the value of the ``function`` parameter for which the parameterState is responsible
-  (see :ref:`figure <ParameterState_Figure>` below).
-
-.. ParameterState_Parameter_Modulation_Operation:
-
-* ``parameterModulationOperation``: determines how the parameterState's ``value`` (i.e., the aggregrated values
-  received from its projections) is combined with its ``baseValue`` to generate the value assigned to the ``function``
-  parameter for which it is responsible (see :ref:`figure <ParameterState_Figure>` below).  This must be a value of
-  :any:`ModulationOperation`;  the default is :keyword:`PRODUCT`.
-
-COMMENT:
-   XXXX DOCUMENT THAT THIS CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
-COMMMENT
+COMMENT
 
 .. _ParameterState_Execution:
 
@@ -237,6 +228,7 @@ specifying runtime parameters for a mechanism where it is specified in the ``pat
 ``execute`` or ``run`` methods (see :ref:`Mechanism_Runtime_Parameters`).
 COMMENT:
    XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
+   XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
 COMMENT
 
 COMMENT:
