@@ -176,7 +176,7 @@ MappingProjections are used to connect the mechanisms in the <code class="docuti
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">Thess take a &#8220;control allocation&#8221; specification — usually the ouptput of a  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
+<dd><p class="first last">These take a &#8220;control allocation&#8221; specification — usually the ouptput of a  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
 modulate the value of the corresponding parameter of the mechanism&#8217;s function.  ControlProjections are
 typically used in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
 </dd>
@@ -204,7 +204,7 @@ or a <a class="reference internal" href="MappingProjection.html#mapping-tuple-sp
 <p id="projection-in-context-specification"><em>In context specification</em>.  Any of the following can be used:</p>
 <blockquote>
 <div><p><em>Constructor</em>.  Used the same way in context as it is ordinarily.</p>
-<p><em>Projection instance</em>.  This must be an instance of an existing projection.</p>
+<p><em>Projection object</em>.  This must be a reference to an existing instance of a projection.</p>
 <p><em>Projection keyword</em>.  This will create a default instance of the specified type, and can be any of the following:</p>
 <ul class="simple">
 <li><code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PROJECTION</span></code> - a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with the <span class="xref doc">DefaultMechanism</span> as its <code class="docutils literal"><span class="pre">sender</span></code>.</li>
