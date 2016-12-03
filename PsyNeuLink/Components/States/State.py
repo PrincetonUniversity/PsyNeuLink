@@ -1644,6 +1644,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
         # Disallow if it is not ControlProjection or a LearningProjection
         if (constraint_value in projection_keywords or
                     isinstance(constraint_value, (ControlProjection, LearningProjection)) or
+                    # isinstance(constraint_value, Projection) or
                     (inspect.isclass(constraint_value) and
                 issubclass(constraint_value, (ControlProjection, LearningProjection)))
                 ):
