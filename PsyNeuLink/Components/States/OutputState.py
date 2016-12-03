@@ -98,9 +98,9 @@ attributes:
 Execution
 ---------
 
-States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, the values of each ouputState of a mechanism are updated with the results of a call to the mechanism's
-``function``: their values assigned the value of the corresponding item in the mechanism's ``outputValue`` attribute.
+An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the value of the ouputState is updated with the result of the call to the mechanism's ``function``,
+and the value is assigned to the value of the corresponding item in the mechanism's ``outputValue`` attribute.
 
 
 .. _OutputState_Class_Reference:

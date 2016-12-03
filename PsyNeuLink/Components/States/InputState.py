@@ -121,10 +121,11 @@ attribute.  Like all PsyNeuLink components, it has the three following core attr
 Execution
 ---------
 
-States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, each inputState executes any projections it receives, calls its ``function`` to aggregate their values, and
-then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the inputState in
-the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates <_Mechanism_Variable>`.
+An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the inputStat executes any projections it receives, calls its ``function`` to aggregate their
+values, and then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the
+inputState in the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates
+<_Mechanism_Variable>`.
 
 .. _InputState_Class_Reference:
 

@@ -183,7 +183,7 @@ that object&#8217;s  <code class="docutils literal"><span class="pre">function</
 responsible, as described below.</p>
 <div class="section" id="specifying-parameters">
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
-<p>Parameters can be specified in one of several ways:</p>
+<p>Parameters can be specified in one of several places:</p>
 <blockquote>
 <div><ul class="simple">
 <li>in an <strong>argument for the parameter</strong> in the constructor for the object and/or its function
@@ -314,21 +314,26 @@ parameter for an object or its <code class="docutils literal"><span class="pre">
 </div>
 <div class="section" id="execution">
 <span id="parameterstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, each parameterState executes any projections it receives, calls its own <code class="docutils literal"><span class="pre">function</span></code> to aggregate their
-values, and then assigns this to the parameter of its owner&#8217;s <code class="docutils literal"><span class="pre">function</span></code> for which it is responsible.  The
-value  of the parameter is determined by the <code class="docutils literal"><span class="pre">baseValue</span></code> of its parameterState, modified by the value of any
-projections it receives.  The way in which it is modified is determined by</p>
+<p>A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the parameterState executes any ControlProjections and/or LearningProjections it receives,
+calls its <code class="docutils literal"><span class="pre">function</span></code> to aggregate their values, combines this with its <code class="docutils literal"><span class="pre">baseValue</span></code> using the
+<code class="docutils literal"><span class="pre">paramModulationOperation</span></code>, and then assigns this to the parameter for which it is responsible.</p>
 <div class="section" id="runtime-specification-of-parameters">
 <span id="parameterstate-runtime-parameters"></span><h3>Runtime Specification of Parameters<a class="headerlink" href="#runtime-specification-of-parameters" title="Permalink to this headline">¶</a></h3>
-<dl class="docutils">
-<dt>RUNTIME:  runtime param assignment is one-time by default;</dt>
-<dd>but can use runtimeParamsStickyAssignmentPref for persistent assignment
-or use assign_param</dd>
-</dl>
-<p>The value of function parameters can also be modified when the function&#8217;s object is executed.  This can be done by
-specifying runtime parameters for a mechanism where it is specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process or in mechanism&#8217;s
-<code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods (see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).</p>
+<p>The value of a parameter for a mechanism or its <code class="docutils literal"><span class="pre">function</span></code> can be modified when the mechanism is executed.
+This can be done by specifying runtime parameters for the mechanism in
+where it is specified in
+the <code class="docutils literal"><span class="pre">pathway</span></code> of a process, or in the mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods
+(see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).</p>
+<p>IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME?
+IS THE RUN AND EXECUTE SPECIFICATION ONE TRIAL OR ALL TRIALS IN THAT RUN?</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">At this time, runtime specification can be used only  for the parameters of a mechanism or of its <code class="docutils literal"><span class="pre">function</span></code>.
+Since the function itself is not currently assigned a parameterState, it cannot be modified at runtime;  nor is
+there currently a method for runtime specification for the parameters of a MappingProjection.  These may be
+supported in the future.</p>
+</div>
 <p id="parameterstate-figure">The figure below shows how these factors are combined by the parameterState to determine the parameter value for a
 function:</p>
 <blockquote>

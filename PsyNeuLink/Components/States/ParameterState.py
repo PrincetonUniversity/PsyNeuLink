@@ -39,7 +39,7 @@ responsible, as described below.
 Specifying Parameters
 ~~~~~~~~~~~~~~~~~~~~~
 
-Parameters can be specified in one of several ways:
+Parameters can be specified in one of several places:
 
     * in an **argument for the parameter** in the constructor for the object and/or its function
       (see also :ref:`Component_Specifying_Functions_and_Parameters` for additional details);
@@ -181,7 +181,9 @@ parameter for which it is responsible (as shown in the :ref:`figure <ParameterSt
   to the parameter for which it is responsible.  This must be a value of :any:`ModulationOperation`;  the default is
   :keyword:`PRODUCT`.
   COMMENT:
-      WHERE CAN THIS BE SPECIFIED OTHER THAN AT RUNTIME?
+      EXPLAIN THAT THIS CAN BE SPECIFIED IN THE :keyword:`PARAMETER_MODULATION_OPERATION` entry of a
+      :keyword:`PARAMETER_STATE_PARAMS` dictionary AT RUNTIME (SEE RUNTIME SPCIFICATION  AND SEE FIGURE
+      BUT WHAT ABOUT ITS DEFAULT VALUE??  WHERE IS THAT SPECIFIED?  IN PARAM SPECIFICATION DICTIONARY?
   COMMENT
 
 The value an object's parameter is accessible as an attribute with the corresponding name, and the value of
@@ -197,10 +199,6 @@ function vs. parameter_modulation_operation
                (generally ControlProjections)
 # IMPLEMENTATION NOTE:  *** CONFIRM THAT THIS IS TRUE:
         FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
 COMMENT
 
 .. _ParameterState_Execution:
@@ -208,25 +206,38 @@ COMMENT
 Execution
 ---------
 
-States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, each parameterState executes any projections it receives, calls its own ``function`` to aggregate their
-values, and then assigns this to the parameter of its owner's ``function`` for which it is responsible.  The
-value  of the parameter is determined by the ``baseValue`` of its parameterState, modified by the value of any
-projections it receives.  The way in which it is modified is determined by
+A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the parameterState executes any ControlProjections and/or LearningProjections it receives,
+calls its ``function`` to aggregate their values, combines this with its ``baseValue`` using the
+``paramModulationOperation``, and then assigns this to the parameter for which it is responsible.
+
 
 .. _ParameterState_Runtime_Parameters:
 
 Runtime Specification of Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-RUNTIME:  runtime param assignment is one-time by default;
-           but can use runtimeParamsStickyAssignmentPref for persistent assignment
-           or use assign_param
+The value of a parameter for a mechanism or its ``function`` can be modified when the mechanism is executed.
+This can be done by specifying runtime parameters for the mechanism in
+where it is specified in
+the ``pathway`` of a process, or in the mechanism's ``execute`` or ``run`` methods
+(see :ref:`Mechanism_Runtime_Parameters`).
 
-The value of function parameters can also be modified when the function's object is executed.  This can be done by
-specifying runtime parameters for a mechanism where it is specified in the ``pathway`` of a process or in mechanism's
-``execute`` or ``run`` methods (see :ref:`Mechanism_Runtime_Parameters`).
+IS THE MECHANISM TUPLE SPECIFICATION ONE TIME OR EACH TIME?
+IS THE RUN AND EXECUTE SPECIFICATION ONE TRIAL OR ALL TRIALS IN THAT RUN?
+
+.. note::
+   At this time, runtime specification can be used only  for the parameters of a mechanism or of its ``function``.
+   Since the function itself is not currently assigned a parameterState, it cannot be modified at runtime;  nor is
+   there currently a method for runtime specification for the parameters of a MappingProjection.  These may be
+   supported in the future.
+
 COMMENT:
+
+    RUNTIME:  runtime param assignment is one-time by default;
+               but can use runtimeParamsStickyAssignmentPref for persistent assignment
+               or use assign_param
+
    XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)
    XXXX DOCUMENT THAT MOD OP CAN BE SPECIFIED IN A TUPLE WITH PARAM VALUE (INSTEAD OF PROJECTION) AS PER FIGURE?
 COMMENT
