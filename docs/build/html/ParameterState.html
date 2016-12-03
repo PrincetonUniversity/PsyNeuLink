@@ -98,6 +98,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#runtime-specification-of-parameters">Runtime Specification of Parameters</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
@@ -180,7 +184,8 @@ responsible, as described below.</p>
 <div class="section" id="specifying-parameters">
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several ways:</p>
-<ul class="simple">
+<blockquote>
+<div><ul class="simple">
 <li>in an <strong>argument for the parameter</strong> in the constructor for the object and/or its function
 (see also <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details);</li>
 <li>in a <strong>parameter dictionary</strong> as the <code class="docutils literal"><span class="pre">params</span></code> argument in the constructor;  the entry for each parameter
@@ -193,6 +198,7 @@ containing an entry for each parameter of the function to be specified;</li>
 (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the <code class="xref any docutils literal"><span class="pre">Pathway</span></code> for a
 process to which it belongs (see <span class="xref std std-ref">Runtime Specification</span> below).</li>
 </ul>
+</div></blockquote>
 <p>The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
 or by default) is assigned to the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and any projections assigned to it are added to its
 <code class="docutils literal"><span class="pre">receiveFromProjections</span></code> attribute.   When the owner is executed,  the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code> is combined
@@ -229,10 +235,6 @@ projection must be a ControlProjection or LearningProjection, and its value must
 <p class="last">Currently, the <code class="docutils literal"><span class="pre">function</span></code> of an object, although it can be specified, cannot be assigned a ControlProjection,
 LearningProjection, or a runtime specification.  This may change in the future.</p>
 </div>
-<p>A parameterState can receive more than one ControlProjection or LearningProjection.  However, they must all have
-values with the same format (number and type of elements) as the value of the parameter.  When the parameterState is
-updated (i.e., the owner is executed), these will be combined (using the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>) and the
-result will be used to modify the parameter for which the parameterState is responsible.</p>
 <p>The <strong>default value</strong> assigned to a parameterState is the default value of the argument for the parameter in the
 constructor for the owner.  If the value of a parameter is specified as <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, <code class="xref std std-keyword docutils literal"><span class="pre">NotImplemented</span></code>,
 or any other non-numeric value that is not one of those listed above, then no parameter state is created and the
@@ -267,99 +269,105 @@ standard function, its arguments are available in the constructor for the projec
 </div>
 <div class="section" id="structure">
 <span id="parameterstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>The value of object params are accessible as attributes of the object, and the value of parameters for its <code class="docutils literal"><span class="pre">function</span></code>
-are accessible either via object.function_object&lt;param_name&gt;, or object.function_params[&lt;PARAM_KEYWORD&gt;].
-These are read-only.  To re-assign the value of a parameter for an existing object, use its <code class="docutils literal"><span class="pre">assign_params</span></code> method</p>
-<dl class="docutils">
-<dt>function vs. parameter_modulation_operation</dt>
-<dd><dl class="first last docutils">
-<dt>Parameters:</dt>
-<dd><dl class="first last docutils">
-<dt>The default for FUNCTION is LinearCombination using kwAritmentic.Operation.PRODUCT:</dt>
-<dd><dl class="first last docutils">
-<dt>self.value is multiplied by  the output of each of the  projections it receives</dt>
-<dd>(generally ControlProjections)</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-<dt># IMPLEMENTATION NOTE:  <a href="#id1"><span class="problematic" id="id2">**</span></a>* CONFIRM THAT THIS IS TRUE:</dt>
-<dd><p class="first">FUNCTION can be set to another function, so long as it has type kwLinearCombinationFunction
-The parameters of FUNCTION can be set:</p>
-<blockquote class="last">
-<div><ul class="simple">
-<li>by including them at initialization (param[FUNCTION] = &lt;function&gt;(sender, params)</li>
-<li>calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)</li>
-<li>at run time, which changes their values for just for that call (self.execute(sender, params)</li>
-</ul>
-</div></blockquote>
-</dd>
-</dl>
-<ul class="simple">
-<li>self.function (= params[FUNCTION]) must be Function.LinearCombination (enforced in _validate_params)</li>
-</ul>
 <p>Every parameterState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. It can receive one or more
 <span class="xref std std-ref">ControlProjections</span> or <span class="xref std std-ref">LearningProjections</span> from other mechanisms.
-A list of projections received by a parameterState is maintained in its <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.
-Like all PsyNeuLink components, it has the three following fundamental attributes:</p>
+However, the format for the value of each (i.e., the number and type of its elements) must match the value of the
+parameter for which the parameterState is responsible.  When the parameterState is updated (i.e., the owner is executed)
+the values of its projections will be combined (using the  parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>) and the result will be used
+to modify the parameter for which the parameterState is responsible (see <span class="xref std std-ref">Execution</span>
+below).  A list of projections received by a parameterState is maintained in its  <code class="docutils literal"><span class="pre">receivesFromProjections</span></code>
+attribute. Like all PsyNeuLink components, it has the three following core attributes:</p>
 <ul>
-<li><p class="first"><code class="docutils literal"><span class="pre">variable</span></code>:  this serves as a template for the <code class="docutils literal"><span class="pre">value</span></code> of each projection that the parameterState receives;
-each must match both the number and type of elements of its <code class="docutils literal"><span class="pre">variable</span></code>.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">variable</span></code>:  this serves as a template for the <code class="docutils literal"><span class="pre">value</span></code> of each projection that the parameterState receives; it
+must match the format (the number and type of elements) of the parameter for which the parameterState is responsible.
+Any projections the parameterState receives must, it turn, match the format of its <code class="docutils literal"><span class="pre">variable</span></code>.</p>
 </li>
 <li><dl class="first docutils">
 <dt><code class="docutils literal"><span class="pre">function</span></code>:  this performs an elementwise (Hadamard) aggregation  of the <code class="docutils literal"><span class="pre">values</span></code> of the projections</dt>
 <dd><p class="first last">received by the parameterState.  The default function is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that multiplies the values.
 A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
-some way), so long as it generates a result that is compatible with the <code class="docutils literal"><span class="pre">value</span></code> expected for the parameterState</p>
+some way), so long as it generates a result that is compatible with the <code class="docutils literal"><span class="pre">value</span></code> of the parameterState.</p>
 </dd>
 </dl>
 </li>
-</ul>
-<dl class="docutils">
-<dt>XXX IS THIS TRUE:</dt>
-<dd>It assigns the result to the parameterState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.</dd>
-</dl>
-<p>XXX DOES THIS COMBINE WITH BASEVALUE, OR IS THAT DONE AFTETWARDS?</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">value</span></code>:  this is the aggregated value of the projections received by the parameterState, assigned to it by the
-parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.  It must be compatible
-with its corresponding item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.</li>
-</ul>
-<p>In addition, a parameterState has two other attributes that are used to determine the value of the <code class="docutils literal"><span class="pre">function</span></code>
-parameter for which it is responsible:</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">baseValue</span></code>:  this is the default value of the <code class="docutils literal"><span class="pre">function</span></code> parameter for which the parameterState is responsible.
-It is combined with the parameterState&#8217;s value (i.e., the aggregated values received from its projections) to
-determine the value of the <code class="docutils literal"><span class="pre">function</span></code> parameter for which the parameterState is responsible
-(see <span class="xref std std-ref">figure</span> below).</li>
-</ul>
-<ul>
-<li><p class="first"><code class="docutils literal"><span class="pre">parameterModulationOperation</span></code>: determines how the parameterState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> (i.e., the aggregrated values
-received from its projections) is combined with its <code class="docutils literal"><span class="pre">baseValue</span></code> to generate the value assigned to the <code class="docutils literal"><span class="pre">function</span></code>
-parameter for which it is responsible (see <span class="xref std std-ref">figure</span> below).  This must be a value of
-<code class="xref any docutils literal"><span class="pre">ModulationOperation</span></code>;  the default is <code class="xref std std-keyword docutils literal"><span class="pre">PRODUCT</span></code>.</p>
-<blockquote>
-<div><p>XXXXX MAKE SURE ROLE OF ParamModulationOperation FOR runtime params IS EXPLAINED THERE (OR EXPLAIN HERE)</p>
-</div></blockquote>
+<li><p class="first"><code class="docutils literal"><span class="pre">value</span></code>:  this is the value assigned to the parameter for which the parameterState is responsible.  It is the
+<code class="docutils literal"><span class="pre">baseValue</span></code> of the parameterState, modified by aggregated value of the projections received by the parameterState.</p>
 </li>
 </ul>
-<p>XXXX EXPLAIN:
-parameter_modulation_operation:  ModulationOperation - list values and their meaning
-see ref:<cite>Mapping_Parameter_Modulation_Operation</cite></p>
-<blockquote>
-<div><blockquote>
-<div><ul class="simple">
-<li>get ParameterStateParams</li>
-<li>pass params to super, which aggregates inputs from projections</li>
-<li>combine input from projections (processed in super) with baseValue using paramModulationOperation</li>
-<li>combine result with value specified at runtime in PARAMETER_STATE_PARAMS</li>
-<li>assign result to self.value</li>
+<p>In addition, a parameterState has two other attributes that are used to determine the value it assigns to the
+parameter for which it is responsible (as shown in the <a class="reference internal" href="#parameterstate-figure"><span class="std std-ref">figure</span></a> below):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">baseValue</span></code>:  this is the default value of the parameter for which the parameterState is responsible.
+It is combined with the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, which aggregates the values received from its
+projections, to determine the value of the parameter for which the parameterState is responsible.</li>
 </ul>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">parameterModulationOperation</span></code>: this determines how the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (the
+aggregrated values of the projections it receives) is combined with its <code class="docutils literal"><span class="pre">baseValue</span></code> to generate the value assigned
+to the parameter for which it is responsible.  This must be a value of <code class="xref any docutils literal"><span class="pre">ModulationOperation</span></code>;  the default is
+<code class="xref std std-keyword docutils literal"><span class="pre">PRODUCT</span></code>.</li>
+</ul>
+<p>The value an object&#8217;s parameter is accessible as an attribute with the corresponding name, and the value of
+the parameters for its  <code class="docutils literal"><span class="pre">function</span></code> are accessible either as object.function_object&lt;param_name&gt;,
+or object.function_params[&lt;PARAM_KEYWORD&gt;].  Parameter attribute values are read-only.  To re-assign the value of a
+parameter for an object or its <code class="docutils literal"><span class="pre">function</span></code>, use its <code class="docutils literal"><span class="pre">assign_params</span></code> method</p>
+</div>
+<div class="section" id="execution">
+<span id="parameterstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
+occurs, each parameterState executes any projections it receives, calls its own <code class="docutils literal"><span class="pre">function</span></code> to aggregate their
+values, and then assigns this to the parameter of its owner&#8217;s <code class="docutils literal"><span class="pre">function</span></code> for which it is responsible.  The
+value  of the parameter is determined by the <code class="docutils literal"><span class="pre">baseValue</span></code> of its parameterState, modified by the value of any
+projections it receives.  The way in which it is modified is determined by</p>
+<div class="section" id="runtime-specification-of-parameters">
+<span id="parameterstate-runtime-parameters"></span><h3>Runtime Specification of Parameters<a class="headerlink" href="#runtime-specification-of-parameters" title="Permalink to this headline">¶</a></h3>
+<dl class="docutils">
+<dt>RUNTIME:  runtime param assignment is one-time by default;</dt>
+<dd>but can use runtimeParamsStickyAssignmentPref for persistent assignment
+or use assign_param</dd>
+</dl>
+<p>The value of function parameters can also be modified when the function&#8217;s object is executed.  This can be done by
+specifying runtime parameters for a mechanism where it is specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process or in mechanism&#8217;s
+<code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods (see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).</p>
+<p id="parameterstate-figure">The figure below shows how these factors are combined by the parameterState to determine the parameter value for a
+function:</p>
+<blockquote>
+<div><p><strong>How a ParameterState Determines the Value of a Parameter of its Owner&#8217;s Function</strong></p>
+<div class="figure">
+<a class="reference internal image-reference" href="_images/ParameterState_fig.png"><img alt="ParameterState" src="_images/ParameterState_fig.png" style="width: 4387.5px; height: 3244.5px;" /></a>
+<div class="legend">
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="83%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Component</th>
+<th class="head">Impact of ParameterState on Parameter Value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>A (brown)</td>
+<td><code class="docutils literal"><span class="pre">baseValue</span></code> (default value of parameter of owner&#8217;s <code class="docutils literal"><span class="pre">function</span></code>)</td>
+</tr>
+<tr class="row-odd"><td>B (purple)</td>
+<td>runtime specification of parameter value</td>
+</tr>
+<tr class="row-even"><td>C (red)</td>
+<td>runtime parameter influences projection-modulated <code class="docutils literal"><span class="pre">baseValue</span></code></td>
+</tr>
+<tr class="row-odd"><td>D (green)</td>
+<td>combined projection values modulate <code class="docutils literal"><span class="pre">baseValue</span></code></td>
+</tr>
+<tr class="row-even"><td>E (blue)</td>
+<td>parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines <code class="docutils literal"><span class="pre">value</span></code> of  projections</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div></blockquote>
-<p>XXXXX NEED TO MODIFY DESCRIPTION AND/OR FIGURE TO DEAL WITH LEARNING SIGNALS</p>
-</div></blockquote>
+</div>
 </div>
 </div>
 
