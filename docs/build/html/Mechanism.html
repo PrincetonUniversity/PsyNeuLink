@@ -414,7 +414,7 @@ and then that process must be included in the <code class="docutils literal"><sp
 when it executed.  This can be done by using the <code class="docutils literal"><span class="pre">runtime_param</span></code> argument of its <code class="docutils literal"><span class="pre">execute</span></code> method, or by specifying
 the runtime parameters in a tuple with the mechanism in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process
 (see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>). In either case, runtime parameters  are specified using a dictionary that
-contains one or more entries, each of which contains a sub-dictionary corresponding to the mechanism&#8217;s states
+contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism&#8217;s states
 (inputStates, parameterStates and/or outputStates) or its function; those dictionaries, in turn, contain
 entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
 <code class="docutils literal"><span class="pre">runtime_params</span></code> argument of the <code class="docutils literal"><span class="pre">execute</span></code> method below for more details).</p>

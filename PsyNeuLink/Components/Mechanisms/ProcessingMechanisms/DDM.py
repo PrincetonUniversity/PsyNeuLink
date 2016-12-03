@@ -514,7 +514,7 @@ class DDM(ProcessingMechanism_Base):
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
-        # User accessible params are assigned in assign_defaults_to_paramClassDefaults (in __init__)
+        # User accessible params are assigned in _assign_defaults_to_paramClassDefaults (in __init__)
         OUTPUT_STATES:[DDM_DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
                        DDM_RESPONSE_TIME,
                        DDM_PROBABILITY_UPPER_THRESHOLD, # Probability of hitting upper bound

@@ -266,11 +266,12 @@ mechanism subclass, as well as those specific to a particular subclass (document
       The value of each entry can be one of the following (see :ref:`ParameterState_Specifying_Parameters` for details):
 
       * the value of the parameter itself;
-      * a parameter state, the value of which specifies the parameter's value
-        (see :ref:`ParameterState_Creation`).
+      * a parameter state, the value of which specifies the parameter's value (see :ref:`ParameterState_Creation`);
+      * a :ref:`ControlProjection or LearningProjection specification <Projection_In_Context_Specification>`,
+        that assigns the parameter its default value, and a projection to it's parameterState of the specified type;
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
         :doc:`ControlProjection` or a :doc:`LearningProjection`
-        (a :class:`ParamValueProjection` namedtuple can be used for clarity).
+        (a :any:`ParamValueProjection` namedtuple can be used for clarity).
       ..
       .. note::
          Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
@@ -542,7 +543,7 @@ class Mechanism_Base(Mechanism):
                 updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
             - adjust(params, context)
-                modifies specified mechanism params (by calling Function.assign_defaults)
+                modifies specified mechanism params (by calling Function._assign_defaults)
                 returns output
 
         MechanismRegistry
@@ -1644,7 +1645,7 @@ class Mechanism_Base(Mechanism):
 #         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
 #         """
 #
-#         self.assign_defaults(self.inputState, params)
+#         self._assign_defaults(self.inputState, params)
 # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
 #         return self.outputState.value
 

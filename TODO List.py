@@ -2,20 +2,45 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# EXECUTING -> EXECUTING
+# KEYWORD FOR PROJECTION:  State 1835
+# STATE 1638
+# PARAMETER STATE 666
 
-# IMPLEMENT: For Mechanism, dictiontaries for receivesFromProjections and sendsToProjections;
-#            each entry is the name of an inputState or outputState;  value is tuple with:
+# FIX: MOVE parameter_spec TO Component OR ParameterState??
+# IMPLEMENT: Consider implementing ParameterStates for Functions, and then assigning ControlProjections to them directly
+
+# IMPLEMENT: MOVE COMPUTATIONS FOR DIFFERENT OUTPUTVALUES (SUCH AS IN DDM)
+#            INTO THE FUNCTIONS OF THE OUTPUTSTATES THEMSELVES,
+#            AND DECLARE THOSE IN paramClassDefaults, ALONG WITH THEIR NAMES
+#            THEN CAN GET RID OF outputValueMapping BUSINESS
+
+# FIX: kwParamsCurrent -> PARAMS_CURRENT
+# IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
+#
+# TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
+#      Mechanism, MappingProjection and Function params
+#      ADD TO META TEST SCRIPT
+#
+# FIX:  Finish issubclass search and replace:  Utilities 260
+#
+
+# IMPLEMENT: For Mechanism, dictionaries for receivesFromProjections and sendsToProjections;
+#            each entry is the name of an inputState or outputState;  value is tuple with...??
 # IMPLEMENT: add built-in names for mechanism's InputStates and OutputStates (like ParameterStates)
 #
 #
-# IMPLEMENT / FIX: ??DO ParameterStates GET SET FOR NON_FUNCTION PARAMS?  IF NOT, HOW CAN THEY BE CONTROLLED?
+# FIX: MAKE ALL OBJECT PARAMS @PRPOERTY SO THEY ARE READ-ONLY (I.E., ACCESSSIBLE ONLY VIA ASSIGN_PARAMS)
+#      AND USE SETTER TO ISSUE WARNING ON ATTEMPTS TO ASSIGN;  INTERNALLY USE _PARAM TO DO DIRECT ASSIGNMENTS
+
+# FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
 
-# FIX: is_numerical -> is_numeric
-
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
-# FIX:                  that function_params are changed too
+# FIX / IMPLEMENT:  change .function to a property, that refers to ivar ._function;
+#                  make any internal direct assignments to ._function
+#                  make setter for .function that insures function_params have also been appropriately changed
+#                  by comparing them with new function's user_params,
+#                  deleting any that don't match (presumably from old function that are still there)
+#                  and assigning defaults for new function's params that are not missing / not yet there
 
 # CLEANUP:
 
@@ -35,16 +60,13 @@
 #            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
 #            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
 
-# DOCUMENT:  runtime param assignment is one-time;  use assign_default for "sticky" reassigment
+# DOCUMENT:  runtime param assignment is one-time by default;
+#            but can use runtimeParamsStickyAssignmentPref for persistent assignment
+#            or use assign_param
 #
-# FIX: GET RID OF NotImplemented
-#
+# FIX: GET RID OF NotImplemented, epecially in validate_params
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
-# FIX: Mechanism._update_parameter_state:  ASSIGNMENT OF parameterState.value TO paramsCurrent NEEDS TO MATCH FORMAT
-#                                          (SINCE PARAM IS GOING TO GET VALIDATED)
-#                                          TEST IN ScratchPad:
-#                                                  transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
 # FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
 # END CLEANUP
 
@@ -89,7 +111,7 @@
 #   LearningSignal -> LearningProjection
 
 # 11/12/16:
-# FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORKTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
+# FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
 #    inputValue is a list, variable is a 2d np.nparray
 
 # 11/19/16:
@@ -133,7 +155,7 @@
 # DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
 #                   (see :doc:`Mechanism` for specification of a parms dict)
-# FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_fucntion (like LearningProjection)
+# FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_function (like LearningProjection)
 #              since execute (called in _instantiate_function) uses self.receiver.
 #              COULD CATCH IT IN EXECUTE, AND CALL _instantiate_receiver.
 # FIX: make ControlProjection functions arguments in __init__, and get them out of a dictionary
@@ -407,9 +429,9 @@
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 # IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
-# FIX: get rid of is_numerical_or_none; replace throughout with tc.optional(is_numerical)
+# FIX: get rid of is_numeric_or_none; replace throughout with tc.optional(is_numeric)
 
-# FIX: implement assign_defaults where flagged
+# FIX: implement _assign_defaults where flagged
 
 # 9/18/16:
 
@@ -431,7 +453,7 @@
 
 # IMPLEMENT: consolidate parameter validation into a single method
 #            test DDM with drift_rate specified as lambda function
-#            is_numerical_or_none -> optional_numerical
+#            is_numeric_or_none -> optional_numerical
 #            typecheck function for matrix
 # FIX: Get rid of NotImplemented in:
 #      prefs must be a specification dict or NotImplemented or None
@@ -442,7 +464,7 @@
 
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
-                # FIX: ?? SHOULD THIS USE assign_defaults:
+                # FIX: ?? SHOULD THIS USE _assign_defaults:
                 # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 
 # IMPLEMENT: Change "Function" to Component, and Function to Function
@@ -630,7 +652,7 @@
 # FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
 # FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
 # FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
-# FIX: ?? SHOULD THIS USE assign_defaults:
+# FIX: ?? SHOULD THIS USE _assign_defaults:
 # FIX: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
 # FIX: IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
 # FIX: Assignment of processInputStates when mechanism belongs to more than one process
@@ -909,7 +931,7 @@
 #      - need to make sure all parses of function can now handle this
 #      - instantiation of parameterStates needs to extract any params specified as args and/or in a params dict
 # - add @property for all params, so they can be addressed directly as attributes
-#      setter method should call assign_defaults
+#      setter method should call _assign_defaults
 #
 
 #endregion
@@ -1209,7 +1231,7 @@
     # *  params can be set in the standard way for any Function subclass:
     #     - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
     #          and used for paramsCurrent unless and until the latter are changed in a function call
-    #     - paramInstanceDefaults can be later modified using assign_defaults
+    #     - paramInstanceDefaults can be later modified using _assign_defaults
     #     - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
 # FIX: Figures: need higher rez
@@ -1955,7 +1977,7 @@
 #                 + projection object or class: a default state will be implemented and assigned the projection
 #                 + value: a default state will be implemented using the value
 
-# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using assign_defaults),
+# FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
 # FIX:                  that function_params are changed too
 #
 # FIX / IMPLEMENT: "MODIFIED RUNTIME_PARAMS":
@@ -2059,7 +2081,7 @@
 #    ?? SHOW OUTPUT BUT FLAG AS INITIALIZATION RUN
 #    ?? USE CONTEXT TO CONDUCT ABBREVIATED RUN??
 #
-# execute methods: test for kwSeparator+kwFunctionInit in context:
+# execute methods: test for kwSeparator+COMPONENT_INIT in context:
 #          limit what is implemented and/or reported on init (vs. actual run)
 #endregion
 
@@ -2171,8 +2193,8 @@
 # - clean up documentation
 #
          # - %%% MOVE TO State
-         #  - MOVE STATE_PROJECTIONS out of kwStateParams:
-         #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF kwStateParams IF CHANGE IS MADE IN State
+         #  - MOVE STATE_PROJECTIONS out of STATE_PARAMS:
+         #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF STATE_PARAMS IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params
          # - if so, then correct in _instantiate_function_params under Mechanism
@@ -2188,7 +2210,7 @@
 #                                          format(param_value.projection))
 #
 # ADD HANDLING OF PROJECTION SPECIFICATIONS (IN kwStateProjection) IN State SUBCLASSES
-#                  MUST BE INCLUDED IN kwStateParams
+#                  MUST BE INCLUDED IN STATE_PARAMS
 #
 # GET CONSTRAINTS RIGHT:
 #    self.value === Mechanism.function.variable

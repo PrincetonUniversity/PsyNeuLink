@@ -1,0 +1,5 @@
+ComparatorMechanism
+===================
+
+.. automodule:: ComparatorMechanism
+   :members:
