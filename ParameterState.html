@@ -320,10 +320,12 @@ calls its <code class="docutils literal"><span class="pre">function</span></code
 <code class="docutils literal"><span class="pre">paramModulationOperation</span></code>, and then assigns this to the parameter for which it is responsible.</p>
 <div class="section" id="runtime-specification-of-parameters">
 <span id="parameterstate-runtime-parameters"></span><h3>Runtime Specification of Parameters<a class="headerlink" href="#runtime-specification-of-parameters" title="Permalink to this headline">¶</a></h3>
-<p>In general, it should not be necessary to modify parameters programmatically execution-by-execution;  this should be
-done using control and/or learning mechanisms in a system.  Nevertheless, PsyNeuLink supports &#8220;on-the-fly&#8221; specification
-of parameters in two ways:  by specifying runtime parameters for a mechanism where it is specified in the <code class="docutils literal"><span class="pre">pathway</span></code> of
-a process, or in the mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods (see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).</p>
+<p>In general, it should not be necessary to modify parameters programmatically each time a process or system is
+executed or run; ordinarily, this should be done using <span class="xref std std-ref">control projections</span> and/or
+<span class="xref std std-ref">learning projections</span>.  However, it is possible to modify parameters &#8220;on-the-fly&#8221;
+in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is specified in the
+<code class="docutils literal"><span class="pre">pathway</span></code> of a process, or in the <code class="docutils literal"><span class="pre">execute</span></code> method for a or <code class="docutils literal"><span class="pre">run</span></code> methods (see
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">At this time, runtime specification can be used only  for the parameters of a mechanism or of its <code class="docutils literal"><span class="pre">function</span></code>.
