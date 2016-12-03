@@ -321,13 +321,13 @@ The figure below shows how these factors are combined by the parameterState to d
        +==============+====================================================================+
        | A (brown)    | ``baseValue`` (default value of parameter``)                       |
        +--------------+--------------------------------------------------------------------+
-       | B (violet)   | runtime specification of parameter value                           |
+       | B (blue)     | parameterState's ``function`` combines ``value`` of  projections   |
        +--------------+--------------------------------------------------------------------+
-       | C (red)      | runtime parameter influences projection-modulated ``baseValue``    |
+       | C (green)    | runtime parameter influences projection-modulated ``baseValue``    |
        +--------------+--------------------------------------------------------------------+
-       | D (green)    | combined projection values modulate ``baseValue``                  |
+       | D (violet)   | runtime specification of parameter value                           |
        +--------------+--------------------------------------------------------------------+
-       | E (blue)     | parameterState's ``function`` combines ``value`` of  projections   |
+       | E (red)      | combined projection values modulate ``baseValue``                  |
        +--------------+--------------------------------------------------------------------+
 
        In the first line, the values for ``param_x`` and ``param_z`` labeled "A" (and shown in brown)
