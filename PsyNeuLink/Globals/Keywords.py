@@ -133,7 +133,7 @@ PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect f
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
+FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion

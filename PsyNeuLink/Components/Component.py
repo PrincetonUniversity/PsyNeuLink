@@ -707,9 +707,9 @@ class Component(object):
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
             if context:
-                context = context + SEPARATOR_BAR + kwFunctionCheckArgs
+                context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
-                context = kwFunctionCheckArgs
+                context = FUNCTION_CHECK_ARGS
             self._validate_variable(variable, context=context)
         else:
             self.variable = variable
@@ -722,7 +722,7 @@ class Component(object):
         # # If parameter_validation is set, the function was called with params,
         # #   and they have changed, then validate requested values and assign to target_set
         # if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
-        #     # self._validate_params(params, target_set, context=kwFunctionCheckArgs)
+        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
         # If params have been passed, treat as runtime params and assign to paramsCurrent
