@@ -104,9 +104,9 @@ stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 p.show()
 s.show()
 
-# p.execute()
+p.execute()
 
-s.execute()
+# s.execute()
 
 # s.run(num_executions=10,
 #       # inputs=stim_list,
