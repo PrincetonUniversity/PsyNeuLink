@@ -910,7 +910,7 @@ class Process_Base(Process):
                 - otherwise, instantiate a default MappingProjection from previous mechanism to next:
                     use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if the lengths are not equal
-                    use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if kwLearning has been set
+                    use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if LEARNING has been set
 
         :param context:
         :return:
@@ -1676,7 +1676,12 @@ class Process_Base(Process):
 
         # Add _monitoring__mech_tuples to _mech_tuples for execution
         if self._monitoring__mech_tuples:
+            # MODIFIED 12/4/16 OLD:
             self._mech_tuples.extend(self._monitoring__mech_tuples)
+            # # MODIFIED 12/4/16 NEW:
+            # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
+            # MODIFIED 12/4/16 END
+
             # MODIFIED 10/2/16 OLD:
             # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
             # self._phaseSpecMax = self._phaseSpecMax + 1
@@ -1901,6 +1906,10 @@ class Process_Base(Process):
             mech = item.mechanism
             params = item.params
 
+            # IMPLEMENTATION NOTE:
+            #    This implementation restricts learning to parameterStates of projections to inputStates
+            #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
+
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
                 # For each projection in the list
@@ -1908,10 +1917,10 @@ class Process_Base(Process):
                     # For each parameter_state of the projection
                     try:
                         for parameter_state in projection.parameterStates.values():
-                            # Call parameter_state.update with kwLearning in context to update LearningSignals
+                            # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context + kwSeparatorBar + kwLearning
+                            context = context + kwSeparatorBar + LEARNING
                             parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
 
                     # Not all Projection subclasses instantiate parameterStates

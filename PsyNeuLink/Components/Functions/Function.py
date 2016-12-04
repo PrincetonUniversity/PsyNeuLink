@@ -2060,7 +2060,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 class LearningFunction(Function_Base):
-    componentType = kwLearningFunction
+    componentType = LEARNING_FUNCTION
 
 
 LEARNING_RATE = "learning_rate"

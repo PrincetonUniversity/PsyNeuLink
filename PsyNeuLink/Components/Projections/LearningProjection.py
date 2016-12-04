@@ -914,7 +914,7 @@ FROM TODO:
                          else default ComparatorMechanism
             - receiver: MappingProjection parameterState (or some equivalent thereof)
 
-        MappingProjection should have kwLearningParam which:
+        MappingProjection should have LEARNING_PARAM which:
            - specifies LearningProjection
            - defaults to BP
         ?? - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
