@@ -2,7 +2,13 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# FIX: WHICH IS CORRECT:
+# DOCUMENTATION: add show to Systsem and Process
+#
+# IMPLEMENT:  Demos of Functions that plots each Function
+#                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
+#
+#
+# FIX: WHICH IS CORRECT (SEBASTIAN):
 #             # MODIFIED 12/4/16 OLD:
 #             self._mech_tuples.extend(self._monitoring__mech_tuples)
 #             # # MODIFIED 12/4/16 NEW:
@@ -1725,6 +1731,13 @@
 
 #region EVC ----------------------------------------------------------------------------------------------------------
 #
+# FIX: WHICH IS CORRECT (SEBASTIAN):
+#             # MODIFIED 12/4/16 OLD:
+#             self._mech_tuples.extend(self._monitoring__mech_tuples)
+#             # # MODIFIED 12/4/16 NEW:
+#             # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
+#             # MODIFIED 12/4/16 END
+
 # NOTE:  Can implement reward rate valuation by:
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:

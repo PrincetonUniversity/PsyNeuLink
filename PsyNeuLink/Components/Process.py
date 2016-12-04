@@ -2033,6 +2033,45 @@ class Process_Base(Process):
         elif separator:
             print("\n\n****************************************\n")
 
+    def show(self, options=None):
+        """Print ``executionList``, :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms,
+        ``outputs`` and their labels for the system.
+
+        Arguments
+        ---------
+
+        options : InspectionOptions
+            [TBI]
+        """
+
+        # # IMPLEMENTATION NOTE:  Stub for implementing options:
+        # if options and self.InspectOptions.ALL_OUTPUT_LABELS in options:
+        #     pass
+
+        print ("\n---------------------------------------------------------")
+        print ("\n{0}\n".format(self.name))
+
+        print ("\tLearning enabled: {}".format(self._learning_enabled))
+
+        print ("\n\tMechanisms:")
+
+        for mech_name in self.mechanismNames:
+            print ("\t\t{}".format(mech_name))
+
+        print ("\n\tOrigin mechanism: ".format(self.name))
+        for mech_tuple in self.originMechanisms.mech_tuples_sorted:
+            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+
+        print ("\n\tTerminal mechanism: ".format(self.name))
+        for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
+            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+            for output_state_name in mech_tuple.mechanism.outputStates:
+                print("\t\t\t{0}".format(output_state_name))
+
+        print ("\n---------------------------------------------------------")
+
+
+
     @property
     def mechanisms(self):
         return self._allMechanisms.mechanisms

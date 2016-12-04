@@ -78,7 +78,7 @@ p = process(default_input_value=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
 
-z = system(processes=[p],
+s = system(processes=[p],
            # controller=EVCMechanism,
            # enable_controller=True,
            # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
@@ -101,11 +101,14 @@ def show_target():
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 
-p.execute()
+p.show()
+s.show()
 
-# z.execute()
+# p.execute()
 
-# z.run(num_executions=10,
+s.execute()
+
+# s.run(num_executions=10,
 #       # inputs=stim_list,
 #       inputs=[[-1, 30],[2, 10]],
 #       targets=[[0, 0, 1],[0, 0, 2]],
