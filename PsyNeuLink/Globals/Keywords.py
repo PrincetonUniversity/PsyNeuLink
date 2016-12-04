@@ -47,7 +47,7 @@ INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 # General
 
 kwSeparator = ': '
-kwSeparatorBar = ' | '
+SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 NO_CONTEXT = "NO_CONTEXT"

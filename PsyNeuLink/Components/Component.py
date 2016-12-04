@@ -707,7 +707,7 @@ class Component(object):
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is NotImplemented:
             if context:
-                context = context + kwSeparatorBar + kwFunctionCheckArgs
+                context = context + SEPARATOR_BAR + kwFunctionCheckArgs
             else:
                 context = kwFunctionCheckArgs
             self._validate_variable(variable, context=context)

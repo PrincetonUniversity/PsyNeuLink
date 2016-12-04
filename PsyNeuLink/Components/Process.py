@@ -1920,7 +1920,7 @@ class Process_Base(Process):
                             # Call parameter_state.update with LEARNING in context to update LearningSignals
                             # Note: do this rather just calling LearningSignals directly
                             #       since parameter_state.update() handles parsing of LearningProjection-specific params
-                            context = context + kwSeparatorBar + LEARNING
+                            context = context + SEPARATOR_BAR + LEARNING
                             parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
 
                     # Not all Projection subclasses instantiate parameterStates
