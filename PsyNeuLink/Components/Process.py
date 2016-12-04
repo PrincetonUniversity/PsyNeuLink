@@ -2049,22 +2049,26 @@ class Process_Base(Process):
         #     pass
 
         print ("\n---------------------------------------------------------")
-        print ("\n{0}\n".format(self.name))
+        print ("\n{}\n".format(self.name))
 
         print ("\tLearning enabled: {}".format(self._learning_enabled))
 
-        print ("\n\tMechanisms:")
+        # print ("\n\tMechanisms:")
+        # for mech_name in self.mechanismNames:
+        #     print ("\t\t{}".format(mech_name))
 
-        for mech_name in self.mechanismNames:
-            print ("\t\t{}".format(mech_name))
+        print ("\n\tMechanisms:")
+        for mech_tuple in self._mech_tuples:
+            print ("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+
 
         print ("\n\tOrigin mechanism: ".format(self.name))
         for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+            print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanism: ".format(self.name))
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-            print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+            print("\t\t{} (phase: {})".format(mech_tuple.mechanism.name, mech_tuple.phase))
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
 

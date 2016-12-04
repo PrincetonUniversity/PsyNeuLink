@@ -1051,11 +1051,7 @@ class System_Base(System):
         # Sort for consistency of output
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
-        # # MODIFIED 11/1/16 OLD:
-        # for process in self.processes:
-        # MODIFIED 11/1/16 NEW:
         for process in sorted_processes:
-        # MODIFIED 11/1/16 END
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState
@@ -1069,11 +1065,7 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            # # MODIFIED 11/1/16 OLD:
-                            # projection.sender.owner in self.processes or
-                            # MODIFIED 11/1/16 NEW:
                             projection.sender.owner in sorted_processes or
-                            # MODIFIED 11/1/16 END
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
                             # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
