@@ -262,11 +262,14 @@ COMMENT:
     Runtime Specification of Parameters
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    .. note::
+       This is an advanced feature, that is generally not required for most applications.
+
     In general, it should not be necessary to modify parameters programmatically each time a process or system is
     executed or run; ordinarily, this should be done using :doc:`control projections <ControlProjection>` and/or
-    :doc:`learning projections <LearningProjection>`.  However, it is possible to modify parameters "on-the-fly"
-    in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is specified in the
-    ``pathway`` of a process, or in the ``execute``
+    :doc:`learning projections <LearningProjection>`.  However, if necessary, it is possible to modify parameters
+    "on-the-fly" in two ways:  by specifying runtime parameters for a mechanism as part of a tuple where it is
+    specified in the ``pathway`` of a process, or in the ``execute``
     IGNORE_START
         or ``run`` methods
     IGNORE_END

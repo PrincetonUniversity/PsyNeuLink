@@ -39,13 +39,6 @@ Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 # This projection will be used by the process below by referencing it in the process' pathway;
 #    note: sender and receiver args don't need to be specified
 Input_Weights = MappingProjection(name='Input Weights',
-                        # sender=Input_Layer,
-                        # receiver=Hidden_Layer_1,
-                        # matrix=(random_weight_matrix, LearningProjection()),
-                        # matrix=random_weight_matrix,
-                        # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection()),
-                        # matrix=RANDOM_CONNECTIVITY_MATRIX
-                        # matrix=FULL_CONNECTIVITY_MATRIX,
                         matrix=Input_Weights_matrix
                         )
 
@@ -54,8 +47,6 @@ Input_Weights = MappingProjection(name='Input Weights',
 Middle_Weights = MappingProjection(name='Middle Weights',
                          sender=Hidden_Layer_1,
                          receiver=Hidden_Layer_2,
-                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection())
-                         # matrix=FULL_CONNECTIVITY_MATRIX
                          matrix=Middle_Weights_matrix
                          )
 
@@ -63,14 +54,6 @@ Middle_Weights = MappingProjection(name='Middle Weights',
 Output_Weights = MappingProjection(name='Output Weights',
                          sender=Hidden_Layer_2,
                          receiver=Output_Layer,
-                         # matrix=random_weight_matrix,
-                         # matrix=(random_weight_matrix, LEARNING_PROJECTION),
-                         # matrix=(random_weight_matrix, LearningProjection),
-                         # matrix=(random_weight_matrix, LearningProjection()),
-                         # matrix=(RANDOM_CONNECTIVITY_MATRIX),
-                         # matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection),
-                         # matrix=(FULL_CONNECTIVITY_MATRIX, LearningProjection)
-                         # matrix=FULL_CONNECTIVITY_MATRIX
                          matrix=Output_Weights_matrix
                          )
 
@@ -95,16 +78,14 @@ p = process(default_input_value=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
 
-# Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
-# Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
-# Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
-
 z = system(processes=[p],
            # controller=EVCMechanism,
            # enable_controller=True,
            # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
            # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
            # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
+           prefs={VERBOSE_PREF: False,
+                  REPORT_OPUTPUT_PREF: True},
            name='Learning Test System')
 
 def print_header():
@@ -120,11 +101,11 @@ def show_target():
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 
-# p.execute()
+z.execute()
 
-z.run(num_executions=10,
-      # inputs=stim_list,
-      inputs=[[-1, 30],[2, 10]],
-      targets=[[0, 0, 1],[0, 0, 2]],
-      call_before_trial=print_header,
-      call_after_trial=show_target)
+# z.run(num_executions=10,
+#       # inputs=stim_list,
+#       inputs=[[-1, 30],[2, 10]],
+#       targets=[[0, 0, 1],[0, 0, 2]],
+#       call_before_trial=print_header,
+#       call_after_trial=show_target)

@@ -1607,7 +1607,7 @@ class Process_Base(Process):
 
         """
         # Validate input
-        if input is NotImplemented:
+        if input is None or input is NotImplemented:
             input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
@@ -1788,7 +1788,7 @@ class Process_Base(Process):
             mech.initialize(value)
 
     def execute(self,
-                input=NotImplemented,
+                input=None,
                 # params=None,
                 target=None,
                 time_scale=None,
