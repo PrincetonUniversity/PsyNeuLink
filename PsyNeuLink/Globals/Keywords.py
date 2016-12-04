@@ -171,7 +171,7 @@ kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
 kwTransferFunction = "TRANSFER FUNCTION"
 kwDistributionFunction = "DISTRIBUTION FUNCTION"
-kwLearningFunction = 'LEARNING FUNCTION'
+LEARNING_FUNCTION = 'LEARNING FUNCTION'
 
 
 # Function SUBTYPES -----------------
@@ -227,7 +227,7 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-kwLearning = 'learning'
+LEARNING = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"

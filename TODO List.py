@@ -2,6 +2,19 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: WHICH IS CORRECT:
+#             # MODIFIED 12/4/16 OLD:
+#             self._mech_tuples.extend(self._monitoring__mech_tuples)
+#             # # MODIFIED 12/4/16 NEW:
+#             # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
+#             # MODIFIED 12/4/16 END
+
+# IMPLEMENT / DOCUMENTATION:
+#             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
+#                This implementation restricts learning to parameterStates of projections to inputStates
+#                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
+#             ADD LEARNING TO OF OTHER PARAMETER STATES (E.G., OBJECT ITSELF AND/OR ITS FUNCTION)
+
 
 # FIX: ADD SUPPORT FOR RUNTIME PARAMS TO RUN
 # FIX: MOVE parameter_spec TO Component OR ParameterState??
@@ -2385,7 +2398,7 @@
 #    - extract core functionality from ParameterState:
 #        make it an object of its own
 #        ParameterState and Training Projection both call that object
-# MappingProjection should have kwLearningParam which:
+# MappingProjection should have LEARNING_PARAM which:
 #    - specifies LearningProjection
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
 #    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningProjection with BP
