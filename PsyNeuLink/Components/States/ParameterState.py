@@ -495,7 +495,7 @@ class ParameterState(State_Base):
             Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
             the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
             mechanism: states within a mechanism with the same base name are appended an index in the order of their
-            creation).
+            creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the PreferenceSet for the inputState.
