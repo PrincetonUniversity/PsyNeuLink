@@ -128,7 +128,7 @@ FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
-kwParamsCurrent = "paramsCurrent"                  # Params currently in effect for an instance of a Function
+PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)

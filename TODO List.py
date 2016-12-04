@@ -11,7 +11,7 @@
 #            AND DECLARE THOSE IN paramClassDefaults, ALONG WITH THEIR NAMES
 #            THEN CAN GET RID OF outputValueMapping BUSINESS
 
-# FIX: kwParamsCurrent -> PARAMS_CURRENT
+# FIX: PARAMS_CURRENT -> PARAMS_CURRENT
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
 # TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
@@ -1153,7 +1153,7 @@
 #  ! Mechanism
 #  √ MonitoringMechanism
 #  ~ OutputState
-#    ParameterState
+#  ~ ParameterState - NEED TO ADD RUNTIME SPECIFICATION
 #    Preferences
 #  √ Process
 #    ProcessingMechanism

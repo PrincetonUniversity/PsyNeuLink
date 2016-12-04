@@ -1385,7 +1385,7 @@ class Component(object):
 
         # Check if params[FUNCTION] is specified
         try:
-            param_set = kwParamsCurrent
+            param_set = PARAMS_CURRENT
             function = self._check_FUNCTION(param_set)
             if not function:
                 param_set = kwParamInstanceDefaults
@@ -1426,7 +1426,7 @@ class Component(object):
             # FUNCTION is valid:
             if function:
                 # - if other than paramsCurrent, report (if in VERBOSE mode) and assign to paramsCurrent
-                if param_set is not kwParamsCurrent:
+                if param_set is not PARAMS_CURRENT:
                     if self.prefs.verbosePref:
                         warnings.warn("{0} ({1}) is not a Function object or a valid method; {2} ({3}) will be used".
                                       format(FUNCTION,
