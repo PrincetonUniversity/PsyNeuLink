@@ -1255,11 +1255,21 @@ class System_Base(System):
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
         #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
+        num_origin_mechs = len(list(self.originMechanisms))
         if inputs is None:
-            pass
+            # # MODIFIED 12/4/16 OLD:
+            # pass
+            # MODIFIED 12/4/16 NEW:
+            if (self.prefs.verbosePref and
+                    not (not context or COMPONENT_INIT in context)):
+                print("- No input provided;  default will be used: {0}")
+            inputs = np.zeros_like(self.variable)
+            for i in range(num_origin_mechs):
+                inputs[i] = self.originMechanisms[i].variableInstanceDefault
+            # MODIFIED 12/4/16 END
+
         else:
             num_inputs = np.size(inputs,0)
-            num_origin_mechs = len(list(self.originMechanisms))
             if num_inputs != num_origin_mechs:
                 # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
                 num_inputs = np.size(inputs)
