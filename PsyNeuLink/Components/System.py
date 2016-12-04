@@ -1568,6 +1568,14 @@ class System_Base(System):
         print ("\n---------------------------------------------------------")
         print ("\n{0}".format(self.name))
 
+
+        print ("\n\tControl enabled: {0}".format(self.enable_controller))
+        print ("\n\tProcesses:")
+
+        for process in self.processes:
+            print ("\t\t{} [learning enabled: {}]".format(process.name, process._learning_enabled))
+
+
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
         # Sort for consistency of output
@@ -1576,16 +1584,10 @@ class System_Base(System):
         # for i in range(len(self.execution_sets)):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
-            # for mech_tuple in self.execution_sets[i]:
-            # # MODIFIED 11/1/16 OLD:
-            # for mech_tuple in execution_sets_sorted[i]:
-            #     print("{0} ".format(mech_tuple.mechanism.name), end='')
-            # MODIFIED 11/1/16 NEW:
             sorted_mechs_names_in_set = sorted(list(mech_tuple.mechanism.name
                                                     for mech_tuple in self.execution_sets[i]))
             for name in sorted_mechs_names_in_set:
                 print("{0} ".format(name), end='')
-            # MODIFIED 11/1/16 END
             print("}")
 
         # Print executionList sorted by phase and including EVC mechanism
@@ -1616,19 +1618,11 @@ class System_Base(System):
             print ("\t\t\t{}".format(mech_tuple.mechanism.name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
-        # # MODIFIED 11/1/16 OLD:
-        # for mech_tuple in self.originMechanisms.mech_tuples:
-        # MODIFIED 11/1/16 NEW:
         for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanisms: ".format(self.name))
-        # # MODIFIED 11/1/16 OLD:
-        # for mech_tuple in self.terminalMechanisms.mech_tuples:
-        # MODIFIED 11/1/16 NEW:
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
