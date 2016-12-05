@@ -785,7 +785,7 @@ class ControlProjection(Projection_Base):
         if not context:
             context = receiver_mech.name + " " + self.name + kwAssign
         else:
-            context = context + kwSeparatorBar + self.name + kwAssign
+            context = context + SEPARATOR_BAR + self.name + kwAssign
 
         # If context is consistent with log_pref:
         if (log_pref is LogLevel.ALL_ASSIGNMENTS or

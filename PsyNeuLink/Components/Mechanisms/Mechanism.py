@@ -763,9 +763,9 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         if not context or isinstance(context, object) or inspect.isclass(context):
-            context = INITIALIZING + self.name + kwSeparatorBar + self.__class__.__name__
+            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
         else:
-            context = context + kwSeparatorBar + INITIALIZING + self.name
+            context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,

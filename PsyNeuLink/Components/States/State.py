@@ -46,7 +46,7 @@ Structure
 ---------
 
 Every state is owned by either a :doc:`mechanism <Mechanism>` or a :doc:`projection <Projection>`. Like all PsyNeuLink
-components, a state has the three following fundamental attributes:
+components, a state has the three following core attributes:
 
 * ``variable``:  for an inputState and parameterState, the value of this is determined by the value(s) of the
   projection(s) that it receives (and that are listed in its ``receivesFromProjections`` attribute);  for an
@@ -1132,7 +1132,7 @@ class State_Base(State):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
-        Note: only update LearningSignals if context == kwLearning; otherwise, just get their value
+        Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Assign result to self.value
 
@@ -1207,13 +1207,13 @@ class State_Base(State):
                 projection_params = None
                 # MODIFIED 9/4/16 END
 
-            # Update LearningSignals only if context == kwLearning;  otherwise, just get current value
+            # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection):
                 # # MODIFIED 9/4/16 OLD:
-                # if context is kwLearning:
+                # if context is LEARNING:
                 # MODIFIED 9/4/16 NEW:
-                if kwLearning in context:
+                if LEARNING in context:
                 # MODIFIED 9/4/16 END
                     projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
                     return

@@ -3,8 +3,8 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
-      <env name="DYLD_LIBRARY_PATH" value="/Users/jdc/anaconda/envs/python34/lib" />
       <env name="PYTHONUNBUFFERED" value="1" />
+      <env name="DYLD_LIBRARY_PATH" value="/Users/jdc/anaconda/envs/python34/lib" />
     </envs>
     <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />

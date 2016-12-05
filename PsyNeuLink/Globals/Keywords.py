@@ -47,7 +47,7 @@ INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 # General
 
 kwSeparator = ': '
-kwSeparatorBar = ' | '
+SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 NO_CONTEXT = "NO_CONTEXT"
@@ -128,12 +128,12 @@ FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
-kwParamsCurrent = "paramsCurrent"                  # Params currently in effect for an instance of a Function
+PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
+FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
@@ -171,7 +171,7 @@ kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
 kwTransferFunction = "TRANSFER FUNCTION"
 kwDistributionFunction = "DISTRIBUTION FUNCTION"
-kwLearningFunction = 'LEARNING FUNCTION'
+LEARNING_FUNCTION = 'LEARNING FUNCTION'
 
 
 # Function SUBTYPES -----------------
@@ -227,7 +227,7 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-kwLearning = 'learning'
+LEARNING = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
