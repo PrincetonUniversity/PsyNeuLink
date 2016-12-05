@@ -286,7 +286,7 @@ class ControlMechanism_Base(Mechanism_Base):
                                                     prefs=prefs,
                                                     context=self)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and FUNCTION_PARAMS
 
         If SYSTEM is not specified:
@@ -533,7 +533,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
         """Updates ControlProjections based on inputs
 
         Must be overriden by subclass

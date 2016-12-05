@@ -98,7 +98,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=NotImplemented, context=None):
+    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
 
         for channel_name, channel in self.controlSignalChannels.items():
 
