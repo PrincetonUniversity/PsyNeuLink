@@ -15,7 +15,7 @@ Example function:
 Combination Components:
   * :class:`LinearCombination`
 
-Transfer Components:
+TransferMechanism Components:
   * :class:`Linear`
   * :class:`Exponential`
   * :class:`Logistic`
@@ -129,10 +129,16 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 def parameter_spec(param):
-    # if is_numerical(param):
-    if isinstance(param, numbers.Number):
-        return True
-    if isinstance(param, (tuple, function_type, ParamValueProjection)):
+    # if is_numeric(param):
+    if (isinstance(param, (numbers.Number,
+                           np.ndarray,
+                           list,
+                           tuple,
+                           function_type,
+                           ParamValueProjection,
+                           Projection)) or
+        (inspect.isclass(param) and issubclass(param, Projection)) or
+        param in parameter_keywords):
         return True
     return False
 
@@ -162,7 +168,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION
 IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
         - Parameters can be assigned and/or changed individually or in sets, by:
           - including them in the initialization call
-          - calling the assign_defaults method (which changes their default values)
+          - calling the _assign_defaults method (which changes their default values)
           - including them in a call the function method (which changes their values for just for that call)
         - Parameters must be specified in a params dictionary:
           - the key for each entry should be the name of the parameter (used also to name associated projections)
@@ -193,7 +199,7 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
         + registry (dict): FunctionRegistry
         + classPreference (PreferenceSet): ComponentPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: False}
+        + paramClassDefaults (dict): {kwFunctionOutputTypeConversion: :keyword:`False`}
 
     Class methods:
         none
@@ -313,7 +319,7 @@ class Contradiction(Function_Base): # Example
          + propensity (kwPropensity: a mode specifying the manner of responses (tendency to agree or disagree)
          + pertinacity (kwPertinacity: the consistency with which the manner complies with the propensity
 
-    Contradiction.function returns True or False
+    Contradiction.function returns :keyword:`True` or :keyword:`False`
     """
 
     # Function componentName and type (defined at top of module)
@@ -332,7 +338,7 @@ class Contradiction(Function_Base): # Example
 
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
-    #  in the initialization call or later (using either assign_defaults or during a function call)
+    #  in the initialization call or later (using either _assign_defaults or during a function call)
     kwPropensity = "PROPENSITY"
     kwPertinacity = "PERTINACITY"
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -363,7 +369,8 @@ class Contradiction(Function_Base): # Example
                 context=None):
         """Returns a boolean that is (or tends to be) the same as or opposite the one passed in
 
-        Returns True or False, that is either the same or opposite the statement passed in as the variable
+        Returns :keyword:`True` or :keyword:`False`, that is either the same or opposite the statement passed in as the
+        variable
         The propensity parameter must be set to be Manner.OBSEQUIOUS or Manner.CONTRARIAN, which
             determines whether the response is (or tends to be) the same as or opposite to the statement
         The pertinacity parameter determines the consistency with which the response conforms to the manner
@@ -398,7 +405,7 @@ class Contradiction(Function_Base): # Example
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
-        Note:  this method (or the class version) is called only if the parameter_validation attribute is True
+        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
 
         :param variable: (anything but a dict) - variable to be validated:
         :param context: (str)
@@ -416,7 +423,7 @@ class Contradiction(Function_Base): # Example
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
-        Note:  this method (or the class version) is called only if the parameter_validation attribute is True
+        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
 
         :param request_set: (dict) - params to be validated
         :param target_set: (dict) - destination of validated params
@@ -524,7 +531,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
             context:
         """
         super()._validate_variable(variable=variable, context=context)
-        if not is_numerical(variable):
+        if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
 
@@ -603,6 +610,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     componentName = kwLinearCombination
 
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
+
     # # Operation indicators
     # class Operation(Enum):
     #     SUM = 0
@@ -623,8 +638,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
-                 exponents:is_numerical_or_none=None,
-                 weights:is_numerical_or_none=None,
+                 exponents:is_numeric_or_none=None,
+                 weights:is_numeric_or_none=None,
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,
@@ -679,7 +694,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                        format(variable, self.__class__.__name__))
 
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
@@ -821,7 +836,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-#region ***********************************  TRANSFER FUNCTIONS  *******************************************************
+#region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
 #endregion
 
 class TransferFunction(Function_Base):
@@ -842,17 +857,28 @@ class Linear(TransferFunction): # ----------------------------------------------
 
     componentName = kwLinear
 
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'LinearClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
+
+
     variableClassDefault = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: True})
+                               kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+    })
 
     @tc.typecheck
     def __init__(self,
                  variable_default=variableClassDefault,
-                 slope:parameter_spec=1,
-                 intercept:parameter_spec=0,
+                 slope:parameter_spec=1.0,
+                 intercept:parameter_spec=0.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
@@ -1033,6 +1059,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     """
 
     componentName = kwLogistic
+    parameter_keywords.update({GAIN,BIAS})
 
     variableClassDefault = 0
 
@@ -1098,7 +1125,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
              MAX_VAL: array with a scalar for the element with the maximum softmax value, and zeros elsewhere
              MAX_INDICATOR: array with a one for the element with the maximum softmax value, and zeros elsewhere
              PROB: probabilistially picks an element based on their softmax values to pass through; all others are zero
-         # + max (kwMax): only reports max value, all others set to 0 (default: False)
+         # + max (kwMax): only reports max value, all others set to 0 (default: :keyword:`False`)
 
     SoftMax.function returns scalar result
     """
@@ -1205,6 +1232,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     - each row of the mapping corresponds to an element of the sender vector (outer index)
     - each column of the mapping corresponds to an element of the receiver vector (inner index):
 
+    COMMENT:
+    XXXX CONVERT TO FIGURE:
     ----------------------------------------------------------------------------------------------------------
     MATRIX FORMAT
                                      INDICES:
@@ -1226,12 +1255,13 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                            [ [[0,0], [0,1], [0,2], [0,3] ], [[1,0], [1,1], [1,2], [1,3] ]... ]
 
     ----------------------------------------------------------------------------------------------------------
+    COMMENT
 
     Initialization arguments:
     - variable (2D np.ndarray containing exactly two sub-arrays:  sender and receiver vectors
     - params (dict) specifying:
          + filler (kwFillerValue: number) value used to initialize all entries in matrix (default: 0)
-         + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: False)
+         + identity (kwkwIdentityMapping: boolean): constructs identity matrix (default: :keyword:`False`)
 
     Create a matrix in self.matrix that is used in calls to LinearMatrix.function.
 
@@ -1306,7 +1336,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
-        Note:  this method (or the class version) is called only if the parameter_validation attribute is True
+        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
 
         :param request_set: (dict) - params to be validated
         :param target_set: (dict) - destination of validated params
@@ -1360,7 +1390,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 if isinstance(param_value, numbers.Number):
                     continue
 
-# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING._instantiate_receiver)
+# FIX: IMPLEMENT AUTO_ASSIGN_MATRIX HERE: PASS, AS SHOULD HAVE BEEN HANDLED BY CALLER (E.G., MAPPING_PROJECTION._instantiate_receiver)
 # FIX: IMPLEMENT RANDOM_CONNECTIVITY_MATRIX?
                 #np.matrix or np.ndarray provided, so validate that it is numeric and check dimensions
                 elif isinstance(param_value, (np.ndarray, np.matrix)):
@@ -1390,7 +1420,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     #                         format(matrix_cols, self.name, receiver_len))
 
                 # Auto, full or random connectivity matrix requested (using keyword):
-                # Note:  assume that these will be properly processed by caller (e.g., Mapping._instantiate_receiver)
+                # Note:  assume that these will be properly processed by caller
+                #        (e.g., MappingProjection._instantiate_receiver)
                 elif param_value in {AUTO_ASSIGN_MATRIX, FULL_CONNECTIVITY_MATRIX, RANDOM_CONNECTIVITY_MATRIX}:
                     continue
 
@@ -1517,10 +1548,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # # MODIFIED 10/29/16 OLD:
         # matrix = get_matrix(keyword)
         # MODIFIED 10/29/16 NEW:
-        from PsyNeuLink.Components.Projections.Mapping import Mapping
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         rows = None
         cols = None
-        if isinstance(self, Mapping):
+        if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
             cols = len(self.receiver.variable)
         matrix = get_matrix(keyword, rows, cols)
@@ -1613,11 +1644,11 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              - must be same type and format as variable
              - can be specified as a runtime parameter, which resets oldValue to one specified
              Note: self.oldValue stores previous value with which new value is integrated
-         + SCALE (value): rate of accumuluation based on weighting of new vs. old value (default: 1)
-         + WEIGHTING (Weightings Enum): method of accumulation (default: LINEAR):
-                LINEAR -- returns old_value incremented by rate parameter (simple accumulator)
-                SCALED -- returns old_value incremented by rate * new_value
-                TIME_AVERAGED -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+         + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
+         + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
+                CONSTANT -- returns old_value incremented by rate parameter (ignores input)
+                SIMPLE -- returns old_value incremented by rate * new_value
+                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
 
@@ -1637,9 +1668,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 variable_default=None,
                  rate:parameter_spec=1.0,
-                 weighting:tc.enum(LINEAR, SCALED, TIME_AVERAGED)=LINEAR,
+                 weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE)=CONSTANT,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  context='Integrator Init'):
@@ -1661,9 +1692,40 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         self.oldValue = self.paramsCurrent[kwInitializer]
 
     def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+
+        # MODIFIED 11/22/16 NEW:
+        # Handle list or array for rate specification
+        rate = request_set[RATE]
+        if isinstance(rate, (list, np.ndarray)):
+            if len(rate) != np.array(self.variable).size:
+                # If the variable was not specified, then reformat it to match rate specification
+                #    and assign variableClassDefault accordingly
+                # Note: this situation can arise when the rate is parameterized (e.g., as an array)
+                #       in the Integrator's constructor, where that is used as a specification for a function parameter
+                #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
+                #       the object itself, thus does not see the array specification for the input.
+                if self._variable_not_specified:
+                    self._assign_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                    if self.verbosePref:
+                        warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
+                                      "matach the length ({}) of the default input ({});  the default input has been "
+                                      "updated to match".
+                                      format(len(rate), rate, self.name, np.array(self.variable).size), self.variable)
+                else:
+                    raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                        "must match the length ({}) of the default input ({})".
+                                        format(len(rate), rate, self.name,np.array(self.variable).size, self.variable))
+
+            self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+        # MODIFIED 11/22/16 END
+
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+        # Make sure initializer is compatible with variable
         try:
             if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
                 raise FunctionError("kwInitializer param {0} for {1} must be same type as variable {2}".
@@ -1672,6 +1734,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                           self.variable))
         except KeyError:
             pass
+
 
     # def function(self, old_value, new_value, param_list=NotImplemented):
 
@@ -1685,17 +1748,16 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         :var variable: (list) - old_value and new_value (default: [0, 0]:
         :parameter params: (dict) with entries specifying:
                         RATE: number - rate of accumulation as relative weighting of new vs. old value  (default = 1)
-                        WEIGHTING: Integrator.Weightings - type of weighting (default = Weightings.LINEAR)
+                        WEIGHTING: Integrator.Weightings - type of weighting (default = CONSTANT)
         :return number:
         """
 
 # FIX:  CONVERT TO NP?
-
 # FIX:  NEED TO CONVERT OLD_VALUE TO NP ARRAY
 
-        self._check_args(variable, params, context)
+        self._check_args(variable=variable, params=params, context=context)
 
-        rate = float(self.paramsCurrent[RATE])
+        rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
 
         try:
@@ -1704,26 +1766,32 @@ class Integrator(IntegratorFunction): # ----------------------------------------
             old_value = self.oldValue
 
         old_value = np.atleast_2d(old_value)
-
         new_value = self.variable
 
         # Compute function based on weighting param
-        if weighting is LINEAR:
+        if weighting is CONSTANT:
             value = old_value + rate
             # return value
-        elif weighting is SCALED:
+        elif weighting is SIMPLE:
             value = old_value + (new_value * rate)
             # return value
-        elif weighting is TIME_AVERAGED:
+        elif weighting is ADAPTIVE:
             # return (1-rate)*old_value + rate*new_value
             value = (1-rate)*old_value + rate*new_value
         else:
             # return new_value
             value = new_value
 
-        self.oldValue = value
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if not INITIALIZING in context:
+            self.oldValue = value
+
         return value
 
+    # def keyword(self, keyword):
+    #     return keyword
 
 # region DDM
 #
@@ -1759,7 +1827,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             + bias (kwDDM_Bias: float)
             + noise (NOISE: float)
             + t0 (NON_DECISION_TIME: float)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -1854,7 +1922,8 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
             try:
                 rt = ztilde * tanh(ztilde * atilde) + \
                      ((2*ztilde*(1-exp(-2*x0tilde*atilde)))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde))-x0tilde) + t0
-                er = 1/(1+exp(2*ztilde*atilde)) - ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
+                er = 1/(1+exp(2*ztilde*atilde)) - \
+                                             ((1-exp(-2*x0tilde*atilde))/(exp(2*ztilde*atilde)-exp(-2*ztilde*atilde)))
 
             except (Warning):
                 # Per Mike Shvartsman:
@@ -1899,7 +1968,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
             + bias (kwDDM_Bias: float)
             + noise (NOISE: float)
             + t0 (NON_DECISION_TIME: float)
-        - time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -1991,7 +2060,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 class LearningFunction(Function_Base):
-    componentType = kwLearningFunction
+    componentType = LEARNING_FUNCTION
 
 
 LEARNING_RATE = "learning_rate"
@@ -2065,7 +2134,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                     format(self.variable[ACTIVATION_OUTPUT], self.componentName))
             if len(self.variable[ACTIVATION_ERROR]) != 1:
                 raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
-                                    "(variable of Comparator mechanism may need to be specified as an array of length 1)".
+                                    "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
                                     format(self.name, self.variable[ACTIVATION_ERROR]))
 
 
@@ -2078,12 +2147,12 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         Assume output array has a single non-zero value chosen by the softmax function of the error_source
         Assume error is a single scalar value
-        Assume weight matrix (for Mapping projection to error_source) is a diagonal matrix
+        Assume weight matrix (for MappingProjection to error_source) is a diagonal matrix
             (one weight for corresponding pairs of elements in the input and output arrays)
         Adjust the weight corresponding to the chosen element of the output array, using error value and learning rate
 
         Note: assume variable is a 2D np.array with three items (input, output, error)
-              for compatibility with other learning functions (and calls from LearningSignal)
+              for compatibility with other learning functions (and calls from LearningProjection)
 
         :var variable: 2D np.array with three items (input array, output array, error array)
         :parameter params: (dict) with entry specifying:
@@ -2127,7 +2196,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
      - variable (list or np.array): must have three 1D elements
      - params (dict): specifies
          + LEARNING_RATE: (float) - learning rate (default: 1.0)
-         + kwTransferFunctionDerivative - (function) derivative of transfer function (default: derivative of logistic)
+         + kwTransferFunctionDerivative - (function) derivative of TransferMechanism function (default: derivative of logistic)
     """
 
     componentName = kwBackProp

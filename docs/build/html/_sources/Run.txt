@@ -1,5 +1,11 @@
 Run
 ===
 
+.. toctree::
+   :maxdepth: 3
+
+   Run
+
 .. automodule:: Run
-	:members:
+   :members:
+   :exclude-members: random

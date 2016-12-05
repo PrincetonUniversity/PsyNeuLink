@@ -1,10 +1,10 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 
-my_Transfer = Transfer(name='my_Transfer',
+my_Transfer = TransferMechanism(name='my_Transfer',
                        default_input_value = [0,0],
                        function=Logistic(gain=1.0, bias=0),
                        noise=0.0,

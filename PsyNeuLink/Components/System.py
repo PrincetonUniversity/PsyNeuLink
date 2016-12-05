@@ -13,7 +13,7 @@
 ..
     Sections:
       * :ref:`System_Overview`
-      * :ref:`System_Creating_A_System`
+      * :ref:`System_Creation`
       * :ref:`System_Structure`
          * :ref:`System_Graph`
          * :ref:`System_Mechanisms`
@@ -46,7 +46,7 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 * :doc:`ControlMechanism`
     These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms
 
-.. _System_Creating_A_System:
+.. _System_Creation:
 
 Creating a System
 -----------------
@@ -144,14 +144,14 @@ Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The input to a system is specified in the ``inputs`` argument of either its ``execute`` or ``run`` method.  In both
 cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate input for the
-corresponding :keyword:`ORIGIN` mechanism (listed in system.originMechanisms.mechanisms). If the ``execute` method
-is used, input for only a single trial is provided, and only a single trial is executed.  The run method can be used
+corresponding :keyword:`ORIGIN` mechanism (listed in ``originMechanisms``). If the ``execute`` method
+is used, input for only a single trial is provided, and only a single trial is executed.  The ``run`` method can be used
 for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs, one for each
 round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
 execution, as input to mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`),
-and target values are assigned to the target attribute of monitoring mechanisms (see learning below;  also, see
-Run [LINK] for additional details of formatting input specifications).
+and target values are assigned to the target attribute of :doc:`Monitoringmechanisms` (see learning below;  also, see
+:doc:`Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
 
@@ -204,7 +204,7 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.Comparator import Comparator
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -226,7 +226,7 @@ NUM_PHASES_PER_TRIAL = 'num_phases'
 MONITORING_MECHANISMS = 'monitoring_mechanisms'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 CONTROL_MECHANISMS = 'control_mechanisms'
-CONTROL_PROJECTION_RECEIVERS = 'control_projections_receivers'
+CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
 
 SystemRegistry = {}
 
@@ -260,7 +260,7 @@ def system(default_input_value=None,
            initial_values:dict={},
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
-           monitored_output_states:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -271,8 +271,8 @@ def system(default_input_value=None,
     processes=None,                           \
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
-    enable_controller=False,                  \
-    monitored_output_states=None,             \
+    enable_controller=:keyword:`False`,       \
+    monitor_for_control=:keyword:`None`,  \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -289,7 +289,7 @@ def system(default_input_value=None,
     ---------
 
     default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
-        used as the input to the system if none is provided in a call to the execute() method or run() function.
+        the input to the system if none is provided in a call to the execute() method or run() function.
         Should contain one item corresponding to the input of each ORIGIN mechanism in the system.
 
         COMMENT:
@@ -297,35 +297,37 @@ def system(default_input_value=None,
         COMMENT
 
     processes : list of process specifications : default list(''DefaultProcess'')
-        process specifications can be an instance, the class name (creates a default Process, or a specification
+        a list of the processes to include in the system.
+        Process specifications can be an instance, the class name (creates a default Process, or a specification
         dictionary (see Processes for details).
 
     initial_values : dict of mechanism:value entries
-        dictionary of values used to initialize mechanisms that close recurrent loops (designated as INITIALIZE_CYCLE).
+        a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
+        INITIALIZE_CYCLE).
         The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
         compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
-        monitors the value of the outputState(s) for mechanisms specified in monitored_output_states, and uses those
-        to specify the value of the ControlSignal projections for the :doc:`ControlMechanism`.
+        the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
+        monitor_for_control, and specify the value of ControlProjections in the system.
 
-    enable_controller :  bool : default False
-        determines whether the controller is called during system execution.
+    enable_controller :  bool : default :keyword:`False`
+        specifies whether the ``controller`` is executed during system execution.
 
-    monitored_output_states : list of OutputState objects or specifications : default None
-        specifies the outputStates of the terminal mechanisms in the System to be monitored by its controller (see
-        :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitored_output_states`` parameter.
+    monitor_for_control : list of OutputState objects or specifications : default None
+        specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
+        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` parameter).
 
     params : dict : default None
-        dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
+        a dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
         values in the dictionary will override argument values
 
     name : str : default System-<index>
-        string used for the name of the system
+        a string used for the name of the system
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        preference set for system (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the PreferenceSet for system (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -348,7 +350,7 @@ def system(default_input_value=None,
                        controller=controller,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
-                       monitored_output_states=monitored_output_states,
+                       monitor_for_control=monitor_for_control,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -362,8 +364,8 @@ class System_Base(System):
     processes=None,                           \
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
-    enable_controller=False,                  \
-    monitored_output_states=None,             \
+    enable_controller=:keyword:`False`,       \
+    monitor_for_control=:keyword:`None`   \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -391,7 +393,7 @@ class System_Base(System):
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
                                 kwController: DefaultController,
-                                kwTimeScale: TimeScale.TRIAL}
+                                TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -523,21 +525,21 @@ class System_Base(System):
         must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system
         (self.recurrentInitMechanisms).
 
-        .. timeScale : TimeScale  : default TimeScale.TRIAL
-           set in params[TIME_SCALE], defines the temporal "granularity" of the process; must be of type TimeScale
+    timeScale : TimeScale  : default TimeScale.TRIAL
+       determines the default TimeScale value used by mechanisms in the system.
 
     results : List[outputState.value]
         List of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-<index>
-        Name of the system;
+        the name of the system;
         Specified in the name argument of the call to create the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        Preference set for system.
+        the PreferenceSet for system.
         Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details).[LINK]
@@ -562,7 +564,7 @@ class System_Base(System):
     variableClassDefault = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({kwTimeScale: TimeScale.TRIAL})
+    paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL})
 
     @tc.typecheck
     def __init__(self,
@@ -571,24 +573,24 @@ class System_Base(System):
                  initial_values=None,
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
-                 monitored_output_states=None,
+                 monitor_for_control=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         processes = processes or []
-        monitored_output_states = monitored_output_states or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                  initial_values=initial_values,
                                                  controller=controller,
                                                  enable_controller=enable_controller,
-                                                 monitored_output_states=monitored_output_states,
+                                                 monitor_for_control=monitor_for_control,
                                                  params=params)
 
-        self.pathway = NotImplemented
+        self.pathway = None
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.function = self.execute
@@ -680,7 +682,7 @@ class System_Base(System):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -810,7 +812,7 @@ class System_Base(System):
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
                 if not input is None:
-                    process.assign_defaults(input)
+                    process._assign_defaults(variable=input, context=context)
 
             # Otherwise, instantiate Process
             if not isinstance(process, Process):
@@ -963,8 +965,8 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a Comparator or
-            #     it projects only to Comparator(s)
+            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a ComparatorMechanism or
+            #     it projects only to ComparatorMechanism(s)
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
@@ -1049,11 +1051,7 @@ class System_Base(System):
         # Sort for consistency of output
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
-        # # MODIFIED 11/1/16 OLD:
-        # for process in self.processes:
-        # MODIFIED 11/1/16 NEW:
         for process in sorted_processes:
-        # MODIFIED 11/1/16 END
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState
@@ -1067,11 +1065,7 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            # # MODIFIED 11/1/16 OLD:
-                            # projection.sender.owner in self.processes or
-                            # MODIFIED 11/1/16 NEW:
                             projection.sender.owner in sorted_processes or
-                            # MODIFIED 11/1/16 END
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
                             # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
@@ -1228,7 +1222,7 @@ class System_Base(System):
         Arguments
         ---------
         inputs : list or ndarray
-            list or array of input value arrays, one for each ORIGIN mechanism of the system
+            a list or array of input value arrays, one for each :keyword:`ORIGIN` mechanism in the system.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
                specifies a default TimeScale for the system]
@@ -1243,8 +1237,8 @@ class System_Base(System):
         """
 
         if not context:
-            context = kwExecuting + self.name
-        report_system_output = self.prefs.reportOutputPref and context and kwExecuting in context
+            context = EXECUTING + self.name
+        report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if report_system_output:
             report_process_output = any(process.reportOutputPref for process in self.processes)
 
@@ -1252,12 +1246,22 @@ class System_Base(System):
 
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
-        #    the input to the mapping projection to the first (origin) Mechanism in that Process' pathway
+        #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
+        num_origin_mechs = len(list(self.originMechanisms))
         if inputs is None:
-            pass
+            # # MODIFIED 12/4/16 OLD:
+            # pass
+            # MODIFIED 12/4/16 NEW:
+            if (self.prefs.verbosePref and
+                    not (not context or COMPONENT_INIT in context)):
+                print("- No input provided;  default will be used: {0}")
+            inputs = np.zeros_like(self.variable)
+            for i in range(num_origin_mechs):
+                inputs[i] = self.originMechanisms[i].variableInstanceDefault
+            # MODIFIED 12/4/16 END
+
         else:
             num_inputs = np.size(inputs,0)
-            num_origin_mechs = len(list(self.originMechanisms))
             if num_inputs != num_origin_mechs:
                 # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
                 num_inputs = np.size(inputs)
@@ -1325,6 +1329,10 @@ class System_Base(System):
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
+                            # MODIFIED 12/4/16 NEW:
+                            if process.learning and process._learning_enabled:
+                                continue
+                            # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
@@ -1347,10 +1355,25 @@ class System_Base(System):
 
         # FIX: NEED TO CHECK PHASE HERE
         # Don't execute learning for simulation runs
-        if not kwEVCSimulation in context:
+        if not EVC_SIMULATION in context:
             for process in self.processes:
                 if process.learning and process._learning_enabled:
+                    # MODIFIED 12/4/16 NEW:
+                    # for mech in process.monitoring_mechanisms:
+                    for mech_tuple in process.monitoringMechanisms.mech_tuples:
+                        mech_tuple.mechanism.execute(time_scale=self.timeScale,
+                                                     runtime_params=mech_tuple.params,
+                                                     context=context)
+                    # MODIFIED 12/4/16 END
+
                     process._execute_learning(context=context)
+
+                    # MODIFIED 12/4/16 NEW:
+                    if report_system_output:
+                        if report_process_output:
+                            process._report_process_completion()
+                    # MODIFIED 12/4/16 END
+
         # endregion
 
 
@@ -1360,7 +1383,7 @@ class System_Base(System):
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not kwEVCSimulation in context and self.enable_controller:
+        if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
                     self.controller.execute(time_scale=TimeScale.TRIAL,
@@ -1401,38 +1424,39 @@ class System_Base(System):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-            input for each in a sequence of executions (see ``run`` function [LINK] for detailed
-            description of formatting requirements and options).
+            the input for each in a sequence of executions (see :doc:`Run` for detailed description of formatting
+            requirements and options).
 
-        reset_clock : bool : default True
-            reset ``CentralClock`` to 0 before a sequence of executions.
+        reset_clock : bool : default :keyword:`True`
+            if True, resets the ``CentralClock`` to 0 before a sequence of executions.
 
-        initialize : bool default False
-            calls the ``initialize`` method of the system before a sequence of executions.
+        initialize : bool default :keyword:`False`
+            if :keyword:`True`, calls the ``initialize`` method of the system before a sequence of executions.
 
-        targets : List[input] or np.ndarray(input) : default ``None``
-            target values for monitoring mechanisms for each execution (used for learning).  The length (of the
-            outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+        targets : List[input] or np.ndarray(input) : default :keyword:`None`
+            the target values for the MonitoringMechanisms of the system for each execution (used for learning).
+            The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
+            of ``inputs``.
 
-        learning : bool :  default ``None``
+        learning : bool :  default :keyword:`None`
             enables or disables learning during execution.
-            If it is not specified, current state is left intact.
-            If True, learning is forced on; if False, learning is forced off.
+            If it is not specified, the current state is left intact.
+            If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= ``None``
+        call_before_trial : Function : default= :keyword:`None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= ``None``
+        call_after_trial : Function : default= :keyword:`None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= ``None``
+        call_before_time_step : Function : default= :keyword:`None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= ``None``
+        call_after_time_step : Function : default= :keyword:`None`
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            determines whether mechanisms are executed for a single time step or a trial.
+            specifies whether mechanisms are executed for a single time step or a trial.
 
         Returns
         -------
@@ -1538,7 +1562,8 @@ class System_Base(System):
         DICT_OUTPUT = ()
 
     def show(self, options=None):
-        """Print execution_sets, executionList, origin and terminal mechanisms, outputs, and output labels
+        """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms,
+        ``outputs`` and their labels for the system.
 
         Arguments
         ---------
@@ -1554,6 +1579,14 @@ class System_Base(System):
         print ("\n---------------------------------------------------------")
         print ("\n{0}".format(self.name))
 
+
+        print ("\n\tControl enabled: {0}".format(self.enable_controller))
+        print ("\n\tProcesses:")
+
+        for process in self.processes:
+            print ("\t\t{} [learning enabled: {}]".format(process.name, process._learning_enabled))
+
+
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
         # Sort for consistency of output
@@ -1562,16 +1595,10 @@ class System_Base(System):
         # for i in range(len(self.execution_sets)):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
-            # for mech_tuple in self.execution_sets[i]:
-            # # MODIFIED 11/1/16 OLD:
-            # for mech_tuple in execution_sets_sorted[i]:
-            #     print("{0} ".format(mech_tuple.mechanism.name), end='')
-            # MODIFIED 11/1/16 NEW:
             sorted_mechs_names_in_set = sorted(list(mech_tuple.mechanism.name
                                                     for mech_tuple in self.execution_sets[i]))
             for name in sorted_mechs_names_in_set:
                 print("{0} ".format(name), end='')
-            # MODIFIED 11/1/16 END
             print("}")
 
         # Print executionList sorted by phase and including EVC mechanism
@@ -1602,19 +1629,11 @@ class System_Base(System):
             print ("\t\t\t{}".format(mech_tuple.mechanism.name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
-        # # MODIFIED 11/1/16 OLD:
-        # for mech_tuple in self.originMechanisms.mech_tuples:
-        # MODIFIED 11/1/16 NEW:
         for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanisms: ".format(self.name))
-        # # MODIFIED 11/1/16 OLD:
-        # for mech_tuple in self.terminalMechanisms.mech_tuples:
-        # MODIFIED 11/1/16 NEW:
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
@@ -1650,7 +1669,7 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of Mapping projections that receive learning projections
+            :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 
             :keyword:`CONTROL_MECHANISMS`:list of CONTROL mechanisms
 
@@ -1680,15 +1699,15 @@ class System_Base(System):
                 output_state_names.append(name)
         output_value_array = np.array(output_value_array)
 
-        from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
-        from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
+        from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
             for parameter_state in mech.parameterStates:
                 try:
                     for projection in parameter_state.receivesFromProjections:
-                        if isinstance(projection, ControlSignal):
+                        if isinstance(projection, ControlProjection):
                             controlled_parameters.append(parameter_state)
                 except AttributeError:
                     pass
@@ -1697,7 +1716,7 @@ class System_Base(System):
                     for projection in output_state.sendsToProjections:
                         for parameter_state in projection.paramaterStates:
                             for sender in parameter_state.receivesFromProjections:
-                                if isinstance(sender, LearningSignal):
+                                if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
                     pass

@@ -4,7 +4,7 @@ Processing Mechanisms
 .. toctree:: 
 	:maxdepth:2
 
-	AdaptiveIntegrator
+	IntegratorMechanism
 	DDM
 	Transfer
 	

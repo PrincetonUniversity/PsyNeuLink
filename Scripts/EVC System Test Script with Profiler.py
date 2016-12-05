@@ -1,6 +1,6 @@
 import profile
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveIntegrator import *
+from PsyNeuLink.Components.Mechanisms.IntegratorMechanism import *
 from PsyNeuLink.Components.Mechanisms.LinearMechanism import *
 
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
@@ -25,8 +25,8 @@ def run():
     #region Mechanisms
     Input = LinearMechanism(name='Input')
     Reward = LinearMechanism(name='Reward')
-    Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-                                                     # THRESHOLD:(10.0, CONTROL_SIGNAL)
+    Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+                                                     # THRESHOLD:(10.0, CONTROL_PROJECTION)
                                                   },
                            kwDDM_AnalyticSolution:kwBogaczEtAl},
                       prefs = DDM_prefs,
@@ -50,7 +50,7 @@ def run():
 
     #region System
     mySystem = System_Base(params={kwProcesses:[TaskExecutionProcess, RewardProcess],
-                                   MONITORED_OUTPUT_STATES:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
+                                   MONITOR_FOR_CONTROL:[Reward, ERROR_RATE,(RESPONSE_TIME, -1, 1)]},
                            name='EVC Test System')
     #endregion
 

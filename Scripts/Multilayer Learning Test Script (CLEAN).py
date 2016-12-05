@@ -1,26 +1,26 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import Transfer
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.Mapping import Mapping
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic
 
 
 
-Input_Layer = Transfer(name='Input Layer',
+Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
                        default_input_value = np.zeros((2,)))
 
-Hidden_Layer_1 = Transfer(name='Hidden Layer_1',
+Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
                           default_input_value = np.zeros((5,)))
 
-Hidden_Layer_2 = Transfer(name='Hidden Layer_2',
+Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
                           default_input_value = [0,0,0,0])
 
-Output_Layer = Transfer(name='Output Layer',
+Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
                         default_input_value = [0,0,0])
 
@@ -32,16 +32,16 @@ Middle_Weights_matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 Output_Weights_matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 
-Input_Weights = Mapping(name='Input Weights',
+Input_Weights = MappingProjection(name='Input Weights',
                         matrix=Input_Weights_matrix)
 
-# Middle_Weights = Mapping(name='Middle Weights',
+# Middle_Weights = MappingProjection(name='Middle Weights',
 #                          sender=Hidden_Layer_1,
 #                          receiver=Hidden_Layer_2,
 #                          matrix=Middle_Weights_matrix)
 #
 # # Commented lines in this projection illustrate variety of ways in which matrix and learning signals can be specified
-# Output_Weights = Mapping(name='Output Weights',
+# Output_Weights = MappingProjection(name='Output Weights',
 #                          sender=Hidden_Layer_2,
 #                          receiver=Output_Layer,
 #                          matrix=Output_Weights_matrix)
@@ -53,7 +53,7 @@ z = process(default_input_value=[0, 0],
                            Hidden_Layer_1,
                            Hidden_Layer_2,
                            Output_Layer],
-            learning=LearningSignal,
+            learning=LearningProjection,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})

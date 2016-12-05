@@ -30,6 +30,8 @@
 # ******************************************    CONSTANTS    ***********************************************************
 # **********************************************************************************************************************
 
+# parameter_keywords = set()
+
 ON = True
 OFF = False
 DEFAULT = False
@@ -40,53 +42,25 @@ INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
-# DISABLED = 'disabled'
-# OVERRIDE = lambda a, b : a
-# ADD = lambda a, b : a + b
-# MULTIPLY = lambda a, b : a * b
-SUM = 'sum'
-DIFFERENCE = 'difference'
-PRODUCT = 'product'
-QUOTIENT = 'quotient'
-SUBTRACTION = 'subtraction'
-DIVISION = 'division'
-SCALAR = 'scalar'
-VECTOR = 'vector'
-
-GAIN = 'gain'
-BIAS = 'bias'
-SLOPE = 'slope'
-INTERCEPT = 'intercept'
-RATE = 'rate'
-SCALE = 'scale'
-NOISE = 'noise'
-
-WEIGHTING = "weighting"
-
-OUTPUT_TYPE = 'output'
-ALL = 'all'
-MAX_VAL = 'max_val'
-MAX_INDICATOR = 'max_indicator'
-PROB = 'prob'
-MUTUAL_ENTROPY = 'mutual entropy'
 
 #region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
 
 kwSeparator = ': '
-kwSeparatorBar = ' | '
+SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
+NO_CONTEXT = "NO_CONTEXT"
 INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
-kwExecuting = " EXECUTING " # Used in context for Log and ReportOutput pref
+EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
 VALIDATE = kwValidate
+COMMAND_LINE = "COMMAND_LINE"
 kwParams = 'params'
-ALLOCATION_SAMPLES = "allocation_samples"
 
 #endregion
 
@@ -107,7 +81,7 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 #region --------------------------------------------    TIME SCALE    --------------------------------------------------
 
 kwCentralClock = "CentralClock"
-kwTimeScale = "Time Scale"
+TIME_SCALE = "time_scale"
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
@@ -131,7 +105,7 @@ kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
-#region ----------------------------------------------   FUNCTION   ----------------------------------------------------
+#region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
 kwParamsArg = "params"
@@ -146,7 +120,7 @@ TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
-kwFunctionInit = 'Function.__init__'
+COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
@@ -154,17 +128,17 @@ FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
-kwParamsCurrent = "paramsCurrent"                  # Params currently in effect for an instance of a Function
+PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
+FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
-#region ----------------------------------------    FUNCTION SUBCLASSES  -----------------------------------------------
+#region ----------------------------------------    COMPONENT SUBCLASSES  ----------------------------------------------
 
 # Function Categories   -----------------
 
@@ -187,9 +161,9 @@ OUTPUT_STATE = "OutputState"
 kwParameterState = "ParameterState"
 
 # Projections:
-MAPPING = "Mapping"
-CONTROL_SIGNAL = "ControlSignal"
-LEARNING_SIGNAL = "LearningSignal"
+MAPPING_PROJECTION = "MappingProjection"
+CONTROL_PROJECTION = "ControlProjection"
+LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
@@ -197,7 +171,7 @@ kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
 kwTransferFunction = "TRANSFER FUNCTION"
 kwDistributionFunction = "DISTRIBUTION FUNCTION"
-kwLearningFunction = 'LEARNING FUNCTION'
+LEARNING_FUNCTION = 'LEARNING FUNCTION'
 
 
 # Function SUBTYPES -----------------
@@ -213,7 +187,7 @@ kwComparatorMechanism = "ComparatorMechanism"
 kwDDM = "DDM"
 kwLinearMechanism = "LinearMechanism"
 kwSigmoidLayer = "SigmoidLayer"
-kwAdaptiveIntegrator = "AdaptiveIntegrator"
+kwIntegratorMechanism = "IntegratorMechanism"
 
 # Function:
 kwContradiction = "Contradiction"
@@ -253,7 +227,7 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-kwLearning = 'learning'
+LEARNING = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
@@ -282,7 +256,7 @@ SINGLETON = 'ORIGIN AND TERMINAL'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
-kwStateParams = "State params" # Used in State specification dict
+STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
 kwMechanismTimeScale = "Mechanism Time Scale"
@@ -305,19 +279,20 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
-MONITORED_OUTPUT_STATES = "monitored_output_states"
+MONITOR_FOR_CONTROL = "monitor_for_control"
 kwPredictionMechanism = "PredictionMechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 kwPredictionMechanismOutput = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
-CONTROL_SIGNAL_PROJECTIONS = 'ControlSignalProjections'
+CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
 COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
-kwEVCSimulation = 'SIMULATING'
+EVC_SIMULATION = 'SIMULATING'
+ALLOCATION_SAMPLES = "allocation_samples"
 
 #endregion
 
@@ -347,21 +322,52 @@ OUTPUT_STATE_PARAMS = 'output_states_params'
 PROJECTION = "Projection"
 PROJECTION_TYPE = "ProjectionType"
 PROJECTION_PARAMS = "ProjectionParams"
-MAPPING_PARAMS = "MappingParams"
-CONTROL_SIGNAL_PARAMS = "ControlSignalParams"
-kwLearningSignalParams = 'LearningSignalParams'
+MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
+CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
+LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
 PROJECTION_SENDER = 'projectionSender'
 kwSenderArg = 'sender'
 PROJECTION_SENDER_VALUE =  "projectionSenderValue"
 kwProjectionReceiver = 'ProjectionReceiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
-MONITOR_FOR_LEARNING = 'MonitorForLearning'
+MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 
 #endregion
 
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
+
+
+# DISABLED = 'disabled'
+# OVERRIDE = lambda a, b : a
+# ADD = lambda a, b : a + b
+# MULTIPLY = lambda a, b : a * b
+SUM = 'sum'
+DIFFERENCE = 'difference'
+PRODUCT = 'product'
+QUOTIENT = 'quotient'
+SUBTRACTION = 'subtraction'
+DIVISION = 'division'
+SCALAR = 'scalar'
+VECTOR = 'vector'
+
+GAIN = 'gain'
+BIAS = 'bias'
+SLOPE = 'slope'
+INTERCEPT = 'intercept'
+RATE = 'rate'
+SCALE = 'scale'
+NOISE = 'noise'
+
+WEIGHTING = "weighting"
+
+OUTPUT_TYPE = 'output'
+ALL = 'all'
+MAX_VAL = 'max_val'
+MAX_INDICATOR = 'max_indicator'
+PROB = 'prob'
+MUTUAL_ENTROPY = 'mutual entropy'
 
 kwInitializer = 'initializer'
 WEIGHTS = "weights"
@@ -369,9 +375,9 @@ EXPONENTS = "exponents"
 OPERATION = "operation"
 OFFSET = "offset"
 LINEAR = 'linear'
-SCALED = 'scaled'
-TIME_AVERAGED = 'time_averaged'
-
+CONSTANT = 'constant'
+SIMPLE = 'scaled'
+ADAPTIVE = 'apaptive'
 
 
 MATRIX = "matrix"

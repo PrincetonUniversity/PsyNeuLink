@@ -2,7 +2,6 @@ import random as rnd
 
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from PsyNeuLink.Components.Process import Process_Base
 from PsyNeuLink.Components.System import System_Base
 from PsyNeuLink.Globals.Keywords import *
@@ -21,8 +20,8 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 #region Mechanisms
 Input = LinearMechanism(name='Input')
 Reward = LinearMechanism(name='Reward')
-Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_SIGNAL),
-                                              #   THRESHOLD:(10.0, CONTROL_SIGNAL)
+Decision = DDM(params={FUNCTION_PARAMS:{DRIFT_RATE:(1.0, CONTROL_PROJECTION),
+                                              #   THRESHOLD:(10.0, CONTROL_PROJECTION)
                                               },
                           kwDDM_AnalyticSolution:kwBogaczEtAl},
                   prefs = DDM_prefs,

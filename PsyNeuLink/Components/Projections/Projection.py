@@ -12,7 +12,7 @@
 ..
     Sections of this document:
       * :ref:`Projection_Overview`
-      * :ref:`Projection_Creating_A_Projection`
+      * :ref:`Projection_Creation`
       * :ref:`Projection_Structure`
          * :ref:`Projection_Sender`
          * :ref:`Projection_Receiver`
@@ -28,65 +28,87 @@ Projections allow information to be passed between mechanisms.  A projection tak
 one mechanism (its ``sender``), and does whatever conversion is needed to transmit that information as the input
 to another mechanism (its ``receiver``).  There are three types of projections that serve difference purposes:
 
-* :doc:`Mapping`
-    These take the ouptut of one :doc:`ProcessingMechanism`, convert this by convolving it with the projection's
-    ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically, Mapping projections
-    are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
+* :doc:`MappingProjection`
+    These take the ouptut of one :doc:`ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
+    the projection's ``matrix`` parameter, and transmit this as input to another ProcessingMechanism.  Typically,
+    MappingProjections are used to connect the mechanisms in the ``pathway`` of a :doc:`process`.
 ..
-* :doc:`ControlSignal`
-    Thess take a "control allocation" specification — usually the ouptput of a :doc:`ControlMechanism` — and transmit
-    this to the parameterState of ProcessingMechanism, which uses this to modulate the value of the corresponding
-    parameter of the mechanism's function.  ControlSignals projections are typically used in the context of a
-    :doc:`System`.
+* :doc:`ControlProjection`
+    These take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
+    <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
+    modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
+    typically used in the context of a :doc:`System`.
 ..
-* :doc:`Learning`
-    These take an "error signal" — usually the output of a :doc:`MonitoringMechanism` — and transmit this to the
-    parameterState of a :doc:`Mapping` projection, which uses this to modify its ``matrix`` parameter.
-    ControlSignal projections are typically used in the context of a :doc:`Process` or :doc:`System` that uses learning.
+* :doc:`LearningProjection`
+    These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
+    transmit this to the parameterState of a :doc:`MappingProjection`, which uses this to modify its ``matrix``
+    parameter. LearningProjections are used in the context of a :doc:`System` or :doc:`Process` that uses learning.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
 COMMENT
 
-.. _Projection_Creating_A_Projection:
+.. _Projection_Creation:
 
 Creating a Projection
 ---------------------
 
 Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
-in the ``pathway`` attribute of a process, or in a tuple with the specification of a function parameter.[LINK]
-This can be done using a call to the projection subclass, or one of the following ways:
+in the ``pathway`` attribute of a process, or when a tuple is used to specify the parameter of a function
+(such as a :ref:`ControlProjection for a mechanism <Mechanism_Assigning_A_ControlProjection>`,
+or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specification>`).
 
-  * name of an **existing projection**:
-  ..
-  * name of a **projection type** (subclass);
-  ..
-  * **specification dictionary** -- this can contain an entry specifying the type of projection,
-    and/or entries specifying the value of parameters used to instantiate it.
-    These should take the following form:
+.. _Projection_In_Context_Specification:
 
-      * :keyword:`PROJECTION_TYPE`: <name of a projection type>
+*In context specification*.  Any of the following can be used:
 
-          if this entry is absent, a default projection will be created that is appropriate for the context
-          (for example, a Mapping projection for an inputState, and a ControlSignal projection for a parameterState).
+  *Constructor*.  Used the same way in context as it is ordinarily.
 
-      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
+  *Projection object*.  This must be a reference to an existing instance of a projection.
 
-          the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
-          below), and the value should be the value of the parameter.  It can contain any of the standard parameters
-          for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
-          projection (see documentation for subclass).  Note that parameter values in the specification dict will be
-          used to instantiate the projection.  These can be overridden during execution by specifying
-          :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the * ``execute`` method for a
-          :class:`mechanism` directly, or where it is specified in the ``pathway`` of a :class:`process`.
+  *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  * **automatically** -- PsyNeuLink will automatically create projections under some circumstances.  For example,
-    a process automatically generates a  :class:`Mapping` projection between adjacent mechanisms in its pathway if
-    none is specified; and :class:`LearningSignal`  projections are automatically generated when :ref:`Process_Learning`
-    is specified for a process.  Creating a :class:`state` will also automatically generate a projection and a sender
-    mechanism, if none is specified (the type of projection and its sender mechanism depend on the type of state --
-    see state subclasses for details).
+  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` with the :doc:`DefaultMechanism` as its ``sender``.
+  * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` with the :doc:`DefaultControlMechanism`
+    as its ``sender``.
+  * :keyword:`LEARNING_PROJECTION` - a :doc:`LearningProjection`.  This can only be used for a projection to the
+    ``matrix`` parameterState of a :doc:`MappingProjection`.  If the ``receiver`` for the MappingProjection
+    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the
+    LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
+    as will a MappingProjection from the error source to the MonitoringMechanism
+    (see :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
+
+  *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
+  specified type.
+
+  *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
+  specifying the value of parameters used to instantiate it. These should take the following form:
+
+  * :keyword:`PROJECTION_TYPE`: <name of a projection type>
+
+      if this entry is absent, a default projection will be created that is appropriate for the context
+      (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
+
+  * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
+
+      the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
+      below), and the value should be the value of the parameter.  It can contain any of the standard parameters
+      for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
+      projection (see documentation for subclass).  Note that parameter values in the specification dict will be
+      used to instantiate the projection.  These can be overridden during execution by specifying
+      :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the * ``execute`` method for a
+      :class:`mechanism` directly, or where it is specified in the ``pathway`` of a :class:`process`.
+
+.. _Projection_Automatic_Creation:
+
+*Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
+a process automatically generates a :doc:`MappingProjection` between adjacent mechanisms in its ``pathway`` if
+none is specified; and :doc:`LearningProjection`  projections are automatically generated when
+:ref:`learning <Process_Learning>` is specified for a process.  Creating a :doc:`state <State>` will also
+automatically generate a projection and a sender mechanism, if none is specified in its constructor (the type of
+projection and its sender mechanism depend on the type of state -- see :doc:`state subclasses <States>` for details).
+
 
 .. _Projection_Structure:
 
@@ -111,7 +133,7 @@ sender's ``value`` is used as the ``variable`` (input) for projection's ``functi
   ..
   * the name of an existing mechanism (to which a default outputState will be added);
   ..
-  * a specification dictionary (see :ref:`State_Creating_A_State`[LINK]).
+  * a specification dictionary (see :ref:`State_Creation`[LINK]).
 
 If a sender is not specified, or its specification creates a default, paramClassDefaults[PROJECTION_SENDER] is
 used to assign a default appropriate to the type of projection (see [LINK]).
@@ -133,7 +155,7 @@ specified as:
     (whether the object can be a mechanism or projection, and the type of state that will be created for it
     is determined by the type of projection — see subclass for details).
   ..
-  * a specification dictionary (see _State_Creating_A_State).
+  * a specification dictionary (see _State_Creation).
   ..
   .. note::
      a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
@@ -143,14 +165,14 @@ specified as:
 COMMENT:
     If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added
     to the mechanism depends on the type of projection:
-        Mapping projection:
+        MappingProjection:
             receiver = <Mechanism>.inputState
-        ControlSignal projection:
+        ControlProjection:
             sender = <Mechanism>.outputState
             receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
-        LearningSignal projection:
+        LearningProjection:
             sender = <Mechanism>.outputState
-            receiver = <Mapping projection>.parameterState IF AND ONLY IF there is a single one
+            receiver = <MappingProjection>.parameterState IF AND ONLY IF there is a single one
                         that is a ParameterState;  otherwise, an exception is raised
 COMMENT
 
@@ -179,13 +201,15 @@ ProjectionRegistry = {}
 
 kpProjectionTimeScaleLogEntry = "Projection TimeScale"
 
+projection_keywords = set()
+
 PROJECTION_SPEC_KEYWORDS = {AUTO_ASSIGN_MATRIX,
                             DEFAULT_MATRIX,
                             IDENTITY_MATRIX,
                             FULL_CONNECTIVITY_MATRIX,
                             RANDOM_CONNECTIVITY_MATRIX,
-                            LEARNING_SIGNAL,
-                            CONTROL_SIGNAL}
+                            LEARNING_PROJECTION,
+                            CONTROL_PROJECTION}
 
 class ProjectionError(Exception):
     def __init__(self, error_value):
@@ -219,7 +243,6 @@ class ProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-# DOCUMENT: (lazy updating of projections re: parameter updating (e.g., matrix param of Mapping with learning).
     """
     Projection_Base(  \
     receiver,         \
@@ -237,8 +260,9 @@ class Projection_Base(Projection):
 
 
     COMMENT:
-        Description:
-            Projection category of Component class (default type:  Mapping)
+        Description
+        -----------
+            Projection category of Component class (default type:  MappingProjection)
 
         Class attributes
         ----------------
@@ -292,13 +316,13 @@ class Projection_Base(Projection):
     COMMENT
 
     name : str : default <Projection subclass>-<index>
-        Name of the projection.
+        the name of the projection.
         Specified in the name argument of the call to create the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        Preference set for the projection.
+        the PreferenceSet for the projection.
         Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
         (see Description under PreferenceSet for details) [LINK].
@@ -351,10 +375,10 @@ class Projection_Base(Projection):
         NOTES:
         * Receiver is required, since can't instantiate a Projection without a receiving State
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
-            Mapping projection:
+            MappingProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.inputState
-            ControlSignal projection:
+            ControlProjection:
                 sender = <Mechanism>.outputState
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
@@ -424,10 +448,10 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR Mapping?, WHAT ABOUT ControlSignal??
+# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlSignal SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
+#                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(variable_default=variable,
@@ -438,7 +462,7 @@ class Projection_Base(Projection):
 
         # self.paramNames = self.paramInstanceDefaults.keys()
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
@@ -468,8 +492,7 @@ class Projection_Base(Projection):
 
         # PROJECTION_SENDER is either an instance or class of Mechanism or State:
         if (isinstance(sender_param, (Mechanism, State)) or
-                (inspect.isclass(sender_param) and
-                     (issubclass(sender_param, Mechanism) or issubclass(sender_param, State)))):
+                (inspect.isclass(sender_param) and issubclass(sender_param, (Mechanism, State)))):
             # it is NOT the same as the default, use it
             if sender_param is not self.paramClassDefaults[PROJECTION_SENDER]:
                 self.sender = sender_param
@@ -484,8 +507,12 @@ class Projection_Base(Projection):
                                                                       sender_param.__class__.__name__))
             # it IS the same as the default, so check if sender arg (self.sender) is valid
             elif not (isinstance(self.sender, (Mechanism, State, Process)) or
-                          (inspect.isclass(self.sender) and
-                               (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
+                          # # MODIFIED 12/1/16 OLD:
+                          # (inspect.isclass(self.sender) and
+                          #      (issubclass(self.sender, Mechanism) or issubclass(self.sender, State)))):
+                          # MODIFIED 12/1/16 NEW:
+                          (inspect.isclass(self.sender) and issubclass(self.sender, (Mechanism, State)))):
+                          # MODIFIED 12/1/16 END
                 # sender arg (self.sender) is not valid, so use PROJECTION_SENDER (= default)
                 self.sender = sender_param
                 if self.prefs.verbosePref:
@@ -538,8 +565,8 @@ class Projection_Base(Projection):
 
         self._instantiate_sender(context=context)
 
-        from PsyNeuLink.Components.States.ParameterState import instantiate_parameter_states
-        instantiate_parameter_states(owner=self, context=context)
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        _instantiate_parameter_states(owner=self, context=context)
 
     def _instantiate_sender(self, context=None):
         """Assign self.sender to outputState of sender and insure compatibility with self.variable
@@ -553,9 +580,9 @@ class Projection_Base(Projection):
         If self.value / self.variable is None, set to sender.value
 
         Notes:
-        * ControlSignal initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlSignal-specific inputState, outputState and ControlSignalChannel to it
-        [TBI: * LearningSignal overrides this method to check if sender is kwDefaultSender;
+        * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
+            if so, it assigns a ControlProjection-specific inputState, outputState and ControlSignalChannel to it
+        [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
             if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 
         :param context: (str)
@@ -571,7 +598,7 @@ class Projection_Base(Projection):
             if issubclass(self.sender, OutputState):
                 # MODIFIED 9/12/16 NEW:
                 # self.paramsCurrent['function_params']['matrix']
-                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING PROJECTION??
+                # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
                 # MODIFIED 9/12/16 END
                 self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
@@ -591,7 +618,7 @@ class Projection_Base(Projection):
 
         # At this point, self.sender should be a OutputState
         if not isinstance(self.sender, OutputState):
-            raise ProjectionError("Sender for Mapping projection must be a Mechanism or State")
+            raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
         # MODIFIED 8/4/16 OLD:  SHOULD CALL _add_projection_from
@@ -615,7 +642,7 @@ class Projection_Base(Projection):
                              self.sender.function.__class__.__name__,
                              self.sender.owner.name))
             # - reassign self.variable to sender.value
-            self.assign_defaults(variable=self.sender.value, context=context)
+            self._assign_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         self._instantiate_receiver(context=context)
@@ -657,8 +684,8 @@ class Projection_Base(Projection):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
 
-# from PsyNeuLink.Components.Projections.ControlSignal import is_control_signal
-# from PsyNeuLink.Components.Projections.LearningSignal import is_learning_signal
+# from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
+# from PsyNeuLink.Components.Projections.LearningProjection import is_learning_signal
 
 def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification
@@ -669,7 +696,7 @@ def _is_projection_spec(spec):
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
 
-    Otherwise, return False
+    Otherwise, return :keyword:`False`
 
     Returns: (bool)
     """
@@ -686,9 +713,9 @@ def _is_projection_spec(spec):
         # Call recursively on first item, which should be a standard projection spec
         if _is_projection_spec(spec[0]):
             # IMPLEMENTATION NOTE: keywords must be used to refer to subclass, to avoid import loop
-            if _is_projection_subclass(spec[1], CONTROL_SIGNAL):
+            if _is_projection_subclass(spec[1], CONTROL_PROJECTION):
                 return True
-            if _is_projection_subclass(spec[1], LEARNING_SIGNAL):
+            if _is_projection_subclass(spec[1], LEARNING_PROJECTION):
                 return True
     return False
 
@@ -705,7 +732,7 @@ def _is_projection_subclass(spec, keyword):
         keyword is a keyword for an entry in the spec dict
         keyword[spec] is a legal specification for the subclass
 
-    Otherwise, return False
+    Otherwise, return :keyword:`False`
     """
     if spec is keyword:
         return True
@@ -740,7 +767,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
             - the keyword kwAddInputState or the name for an inputState to be added
     Specification of ParameterState must be a ParameterState object
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
+    projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
     IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
                           CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
 
@@ -751,7 +778,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         context:
 
     """
-    from PsyNeuLink.Components.States.State import instantiate_state
+    from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.InputState import InputState
     from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -764,12 +791,12 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
 
     # state is State object, so use that
     if isinstance(state, State_Base):
-        state.instantiate_projections_to_state(projections=projection_spec, context=context)
+        state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # Generic kwInputState is specified, so use (primary) inputState
     elif state is kwInputState:
-        receiver.inputState.instantiate_projections_to_state(projections=projection_spec, context=context)
+        receiver.inputState._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into inputStates OrderedDict, so get corresponding key and assign to input_state
@@ -787,7 +814,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     #    so try as key in inputStates OrderedDict (i.e., as name of an inputState)
     if isinstance(state, str):
         try:
-            receiver.inputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
+            receiver.inputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -807,7 +834,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
 
-    input_state = instantiate_state(owner=receiver,
+    input_state = _instantiate_state(owner=receiver,
                                     state_type=InputState,
                                     state_name=input_state,
                                     state_spec=projection_spec.value,
@@ -821,12 +848,12 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     except AttributeError:
         receiver.inputStates = OrderedDict({input_state.name:input_state})
         receiver.inputState = list(receiver.inputStates)[0]
-    input_state.instantiate_projections_to_state(projections=projection_spec, context=context)
+    input_state._instantiate_projections_to_state(projections=projection_spec, context=context)
 
 def _add_projection_from(sender, state, projection_spec, receiver, context=None):
     """Assign an "outgoing" Projection from an OutputState of a sender Mechanism
 
-    projection_spec can be any valid specification of a projection_spec (see State.instantiate_projections_to_state)
+    projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
     state must be a specification of an outputState
     Specification of OutputState can be any of the following:
             - OUTPUT_STATE - assigns projection_spec to (primary) outputState
@@ -842,7 +869,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
         context:
     """
 
-    from PsyNeuLink.Components.States.State import instantiate_state
+    from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.OutputState import OutputState
 
@@ -852,12 +879,12 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
 
     # state is State object, so use that
     if isinstance(state, State_Base):
-        state.instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
+        state._instantiate_projection_from_state(projection_spec=projection_spec, receiver=receiver, context=context)
         return
 
     # Generic OUTPUT_STATE is specified, so use (primary) outputState
     elif state is OUTPUT_STATE:
-        sender.outputState.instantiate_projections_to_state(projections=projection_spec, context=context)
+        sender.outputState._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
     # input_state is index into outputStates OrderedDict, so get corresponding key and assign to output_state
@@ -875,7 +902,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     #    so try as key in outputStates OrderedDict (i.e., as name of an outputState)
     if isinstance(state, str):
         try:
-            sender.outputState[state].instantiate_projections_to_state(projections=projection_spec, context=context)
+            sender.outputState[state]._instantiate_projections_to_state(projections=projection_spec, context=context)
         except KeyError:
             pass
         else:
@@ -895,7 +922,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                 raise ProjectionError("Unable to assign projection {0} to sender {1}".
                                       format(projection_spec.name, sender.name))
 
-    output_state = instantiate_state(owner=sender,
+    output_state = _instantiate_state(owner=sender,
                                      state_type=OutputState,
                                      state_name=output_state,
                                      state_spec=projection_spec.value,
@@ -909,4 +936,4 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     except AttributeError:
         sender.outputStates = OrderedDict({output_state.name:output_state})
         sender.outputState = list(sender.outputStates)[0]
-    output_state.instantiate_projections_to_state(projections=projection_spec, context=context)
+    output_state._instantiate_projections_to_state(projections=projection_spec, context=context)
