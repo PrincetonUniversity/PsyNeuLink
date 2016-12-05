@@ -310,7 +310,7 @@ PsyNeuLink assigns one parameterState for each parameter of the mechanism&#8217;
 arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
 from the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, that is used to
 modify the function&#8217;s parameter value in response to the outcome(s) of processing.  See
-<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Function Parameters</span></a> for details of specifying the parameter values of a mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Parameters</span></a> for details of specifying the parameter values of a mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
 </div>
 <div class="section" id="outputstates">
 <span id="mechanism-outputstates"></span><h4>OutputStates<a class="headerlink" href="#outputstates" title="Permalink to this headline">¶</a></h4>
@@ -347,14 +347,15 @@ specifies the function for the mechanism;  can be one implemented by the subclas
 <li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code> : Dict[str, value] -
 dictionary of parameters for the mechanism&#8217;s function.
 The key of each entry must be the name of the  parameter.
-The value of each entry can be one of the following (see <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Function Parameters</span></a> for details):</p>
+The value of each entry can be one of the following (see <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Parameters</span></a> for details):</p>
 <ul class="simple">
 <li>the value of the parameter itself;</li>
-<li>a parameter state, the value of which specifies the parameter&#8217;s value
-(see <a class="reference internal" href="ParameterState.html#parameterstate-creation"><span class="std std-ref">Creating a ParameterState</span></a>).</li>
+<li>a parameter state, the value of which specifies the parameter&#8217;s value (see <a class="reference internal" href="ParameterState.html#parameterstate-creation"><span class="std std-ref">Creating a ParameterState</span></a>);</li>
+<li>a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">ControlProjection or LearningProjection specification</span></a>,
+that assigns the parameter its default value, and a projection to it&#8217;s parameterState of the specified type;</li>
 <li>a tuple with exactly two items: the parameter value and a projection type specifying either a
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>
-(a <code class="xref py py-class docutils literal"><span class="pre">ParamValueProjection</span></code> namedtuple can be used for clarity).</li>
+(a <code class="xref any docutils literal"><span class="pre">ParamValueProjection</span></code> namedtuple can be used for clarity).</li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>

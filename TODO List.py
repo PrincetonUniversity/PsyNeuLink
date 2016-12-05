@@ -2,10 +2,21 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# KEYWORD FOR PROJECTION:  State 1835
-# STATE 1638
-# PARAMETER STATE 666
+# DOCUMENTATION: add show to Systsem and Process
+#
+# IMPLEMENT:  Demos of Functions that plots each Function
+#                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
+#
+#
 
+# IMPLEMENT / DOCUMENTATION:
+#             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
+#                This implementation restricts learning to parameterStates of projections to inputStates
+#                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
+#             ADD LEARNING TO OF OTHER PARAMETER STATES (E.G., OBJECT ITSELF AND/OR ITS FUNCTION)
+
+
+# FIX: ADD SUPPORT FOR RUNTIME PARAMS TO RUN
 # FIX: MOVE parameter_spec TO Component OR ParameterState??
 # IMPLEMENT: Consider implementing ParameterStates for Functions, and then assigning ControlProjections to them directly
 
@@ -14,7 +25,7 @@
 #            AND DECLARE THOSE IN paramClassDefaults, ALONG WITH THEIR NAMES
 #            THEN CAN GET RID OF outputValueMapping BUSINESS
 
-# FIX: kwParamsCurrent -> PARAMS_CURRENT
+# FIX: PARAMS_CURRENT -> PARAMS_CURRENT
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
 # TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
@@ -1156,7 +1167,7 @@
 #  ! Mechanism
 #  √ MonitoringMechanism
 #  ~ OutputState
-#    ParameterState
+#  ~ ParameterState - NEED TO ADD RUNTIME SPECIFICATION
 #    Preferences
 #  √ Process
 #    ProcessingMechanism
@@ -1714,6 +1725,13 @@
 
 #region EVC ----------------------------------------------------------------------------------------------------------
 #
+# FIX: WHICH IS CORRECT (SEBASTIAN):
+#             # MODIFIED 12/4/16 OLD:
+#             self._mech_tuples.extend(self._monitoring__mech_tuples)
+#             # # MODIFIED 12/4/16 NEW:
+#             # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
+#             # MODIFIED 12/4/16 END
+
 # NOTE:  Can implement reward rate valuation by:
 # - implementing reward mechanism (gets input from environment)
 # - instantiating EVC with:
@@ -2387,7 +2405,7 @@
 #    - extract core functionality from ParameterState:
 #        make it an object of its own
 #        ParameterState and Training Projection both call that object
-# MappingProjection should have kwLearningParam which:
+# MappingProjection should have LEARNING_PARAM which:
 #    - specifies LearningProjection
 #    - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
 #    - otherwise defaults to LinearCompartor (which it instantiates for itself) and LearningProjection with BP
