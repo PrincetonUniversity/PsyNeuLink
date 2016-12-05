@@ -462,7 +462,7 @@ class Projection_Base(Projection):
 
         # self.paramNames = self.paramInstanceDefaults.keys()
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
 
         Check:
