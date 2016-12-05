@@ -46,7 +46,7 @@ def observe_value_at_keypath(keypath, old_value, new_value):
     print("KVO keypath: {0};  old value: {1};  new value: {2}".format(keypath, old_value, new_value))
 
 
-# def is_numerical_or_none(x):
+# def is_numeric_or_none(x):
 #     if not x:
 #         return True
 #     if isinstance(x, numbers.Number):

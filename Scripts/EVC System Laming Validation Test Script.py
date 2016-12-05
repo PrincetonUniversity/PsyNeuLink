@@ -1,8 +1,8 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Transfer import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ControlSignal import ControlSignal
+from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
@@ -19,14 +19,14 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Mechanisms:
-Input = Transfer(name='Input',
-                 # params={MONITORED_OUTPUT_STATES:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
+Input = TransferMechanism(name='Input',
+                 # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
-Reward = Transfer(name='Reward',
-                 # params={MONITORED_OUTPUT_STATES:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
+Reward = TransferMechanism(name='Reward',
+                 # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
-Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlSignal(function=Linear)),
-                                   threshold=(1.0, ControlSignal(function=Linear)),
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear)),
+                                   threshold=(1.0, ControlProjection(function=Linear)),
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
@@ -50,9 +50,9 @@ RewardProcess = process(
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
-                  monitored_output_states=[Reward, PROBABILITY_UPPER_THRESHOLD, (RESPONSE_TIME, -1, 1)],
-                  # monitored_output_states=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
-                  # monitored_output_states=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
+                  monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
+                  # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
+                  # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
 
 # Show characteristics of system:

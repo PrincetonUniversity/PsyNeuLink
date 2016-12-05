@@ -1,5 +1,5 @@
-EVC Mechanism
-=============
+EVCMechanism
+============
 
 .. automodule:: EVCMechanism
    :members:

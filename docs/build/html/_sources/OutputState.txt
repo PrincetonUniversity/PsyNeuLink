@@ -1,4 +1,4 @@
-Output State
-============
+OutputState
+===========
 
 .. automodule:: OutputState

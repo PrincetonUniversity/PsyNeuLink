@@ -10,62 +10,110 @@
 
 """
 
-.. _OutputStates_Creating_An_OutputState:
+Overview
+--------
+
+The outputState(s) of a mechanism represent the output of the mechanism's ``function``, that can serve as the input to
+other mechanisms, and/or as the output of a process and/or system (if the mechanism to which the outputState belongs
+is the :keyword:`TERMINAL` mechanism [LINK] of that process or system).  A list of the outgoing projections from an
+outputState is kept in its ``sendsToProjections`` attribute.
+
+.. _OutputStates_Creation:
 
 Creating an OutputState
 -----------------------
 
-An outputState can be created by calling its constructor, but more commonly it is done by specifying one (or more)
-outputStates in the :keyword:`OUTPUT_STATES` entry of a params dictionary when creating a mechanism. An
-outputState must be owned by a mechanism.  If the outputState is created directly, the mechanism to which it belongs
-must be specified in the ``owner`` argument when calling the constructor;  if the outputState is specified in the
-:keyword:`OUTPUT_STATES` entry of a parameter dictionary for a mechanism, then the owner is inferred from the context.
+An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
+usually automatically create the outputState(s) it needs when it is created.  For example, if the mechanism is
+being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will be created and assigned
+as the ``sender`` of a MappingProjection to the next mechanism in the pathway, or to the process's ``output`` if it is
+the :keyword:`TERMINAL` mechanism of the process. If one or more custom outputStates need to be specified when a
+mechanism is created, or added to an existing mechanism, this can be in an entry of the mechanism's parameter
+dictionary, using the key :keyword:`OUTPUT_STATES` [LINK] and a value that specifies one or more outputStates.
+For a single outputState, the value can be any of the specifications in the the list below.  To create multiple
+outputStates, the value of the :keyword:`OUTPUT_STATES` entry can be either a list, each item of which can be any of
+the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string  specifying the
+name for the outputState to be created, and its value is one of the specifications below:
 
-+ OUTPUT_STATES (value, list, dict):
-    supports the ability of a subclass to define specialized outputStates;
-    only used if OUTPUT_STATES is an argument in the subclass' __init__ or
-    is specified as a parameter in the subclass' paramClassDefaults.
-    In those cases:
-        if param is absent or is a str:
-            a default OutputState will be instantiated using output of mechanism's execute method (EMO)
-            (and the str, if provided used as its name);
-            it will be placed as the single entry in an OrderedDict
-        if param is a single value:
-            it will (if necessary) be instantiated and placed as the single entry in an OrderedDict
-        if param is a list:
-            each item will (if necessary) be instantiated and placed in an OrderedDict
-        if param is an OrderedDict:
-            each entry will (if necessary) be instantiated as a OutputState
-        in each case, the result will be an OrderedDict of one or more entries:
-            the key for the entry will be the name of the outputState if provided, otherwise
-                OUTPUT_STATES-n will used (with n incremented for each entry)
-            the value of the outputState in each entry will be assigned to the corresponding item of the EMO
-            the dict will be assigned to both self.outputStates and paramsCurrent[OUTPUT_STATES]
-            self.outputState will be pointed to self.outputStates[0] (the first entry of the dict)
-        notes:
-            * if there is only one outputState, but the EMV has more than one item, it is assigned to the
-                the sole outputState, which is assumed to have a multi-item value
-            * if there is more than one outputState, the number must match length of EMO,
-              or an exception is raised
-        specification of the param value, list item, or dict entry value can be any of the following, a
-        long as it is compatible with the relevant item of the output of the mechanism's function (EMO):
-            + OutputState class: default outputState will be instantiated using EMO as its value
-            + OutputState object: its value must be compatible with EMO
-            + specification dict:  OutputState will be instantiated using EMO as its value;
-                must contain the following entries: (see Initialization arguments for State):
-                    + FUNCTION (method)
-                    + FUNCTION_PARAMS (dict)
-            + str:
-                will be used as name of a default outputState (and key for its entry in self.outputStates)
-                value must match value of the corresponding item of the mechanism's EMO
-            + value:
-                will be used a variable to instantiate a OutputState; value must be compatible with EMO
-        * note: inputStates can also be added using State.instantiate_state()
+    * An existing **outputState** object or the name of one.  Its ``value`` must be compatible with the item of the
+      owner mechanism's ``outputValue`` that will be assigned to it (see [LINK]).
+    ..
+    * The :class:`OutputState` **class** or a string.  This creates a default outputState using the owner
+      mechanism's ``value`` as the template for the outputState's ``variable``. [LINK]  If :keyword:`OutputState`
+      is used, a default name is assigned to the state;  if a string is, it is assigned as the name
+      of the outputState (see [LINK] for naming conventions).
+    ..
+    * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
+      This must be compatible with the items of the owner mechanism's ``outputValue`` that will be assigned to the
+      outputState (see [LINK]).
+    ..
+    * A **specification dictionary**.  This creates the specified outputState using the items of the owner mechanism's
+    ``outputValue`` that will be assigned to it as the template for the outputState's ``variable`` [LINK].
+
+COMMENT:
+   XXXXXXX CHECK ALL THIS:
+             LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
+             DICTIONARY KEY IS USED AS NAME
+             NUMBER OF STATES MUST EQUAL LENGTH OF MECHANISM'S ATTRIBUTE (VARIABLE OR OUTPUTVALUE)
+             SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
+                MULTI-ITEM ATTRIBUTE OF STATE
+             MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
+             ERROR IS GENERATED FOR NUMBER MISMATCH
+             reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
+COMMENT
+Assigning outputStates using the :keyword:`OUTPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
+automatic generation of outputStates for that mechanism.  If the mechanism requires multiple outputStates (i.e.,
+it's ``outputValue`` attribute has more than on item), it assigns each item to its own outputState (see [LINK]).
+Therefore, the number of outputStates specified must equal the number of items in the mechanisms's ``outputValue``.
+An exception is if ``outputValue`` has more than one item, the mechanism may still be assigned a single
+outputState;  in that case, the ``variable`` of that outputState must have the same number of items as
+the  mechanisms's ``outputValue``.  For cases in which there are multiple outputStates, the order in which they are
+specified in the list or OrderedDict must parallel the order in which the corresponding items appear in the
+``outputValue`` attribute; furthemore, as noted above, the ``variable`` for each outputState must match
+(in number and types of elements) the item  from the mechanism's ``outputValue`` that it will be assigned.
+
+Finally, an outputState must be owned by a mechanism. Therefore, if the inputState is created directly,
+the mechanism to which it belongs must be specified in the ``owner`` argument of its constructor; if the inputState
+is specified in the :keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is
+inferred from the context.
+
+Structure
+---------
+
+Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
+mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
+:keyword:`TERMINAL` [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
+maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following core
+attributes:
+
+* ``variable``:  this must match (both in number and types of elements) the value of the item it is assigned from its
+  mechanism's ``outputValue`` attribute (see LINK]).
+
+* ``function``:  this is implemented for structural consistency, but is not currently used by PsyNeuLink.
+
+* ``value``:  this is assigned the value of the outputState`s ``variable``, and used as the input for any projections
+  that it sends.
+
+
+Execution
+---------
+
+An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the value of the ouputState is updated with the result of the call to the mechanism's ``function``,
+and the value is assigned to the value of the corresponding item in the mechanism's ``outputValue`` attribute.
+
+
+.. _OutputState_Class_Reference:
+
+Class Reference
+---------------
+
 
 """
 
 # import Components
 from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Components.States.State import _instantiate_state_list
 from PsyNeuLink.Components.Functions.Function import *
 
 # class OutputStateLog(IntEnum):
@@ -84,65 +132,112 @@ class OutputStateError(Exception):
 
 
 class OutputState(State_Base):
-    """Implement subclass type of State, that represents output of its owner
+    """
+    OutputState(                               \
+    owner,                                     \
+    reference_value,                           \
+    value=None,                                \
+    function=LinearCombination(operation=SUM), \
+    params=None,                               \
+    name=None,                                 \
+    prefs=None)
 
-    Description:
-        The OutputState class is a type in the State category of Component,
-        It is used primarily as the sender for Mapping projections
-        Its FUNCTION updates its value:
-            note:  currently, this is the identity function, that simply maps variable to self.value
+    Implements subclass of State that represents the output of a mechanism
 
-    Instantiation:
-        - OutputStates can be instantiated in one of two ways:
-            - directly: requires explicit specification of its value and owner
-            - as part of the instantiation of a mechanism:
-                - the mechanism for which it is being instantiated will automatically be used as the owner
-                - the owner's self.value will be used as its value
-        - self.value is set to self.variable (enforced in State_Base._validate_variable)
-        - self.function (= params[FUNCTION]) should be an identity function (enforced in _validate_params)
+    COMMENT:
 
-        - if owner is being instantiated within a pathway:
-            - OutputState will be assigned as the sender of a projection to the subsequent mechanism
-            - if it is the last mechanism in the list, it will send a projection to process.output
+        Description
+        -----------
+            The OutputState class is a type in the State category of Component,
+            It is used primarily as the sender for MappingProjections
+            Its FUNCTION updates its value:
+                note:  currently, this is the identity function, that simply maps variable to self.value
 
-    StateRegistry:
-        All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
-          a count for all instances of it, and a dictionary of those instances
+        Class attributes:
+            + componentType (str) = OUTPUT_STATES
+            + paramClassDefaults (dict)
+                + FUNCTION (LinearCombination)
+                + FUNCTION_PARAMS   (Operation.PRODUCT)
+            + paramNames (dict)
 
-    Naming:
-        kwInputState can be named explicitly (using the name='<name>' argument). If this argument is omitted,
-         it will be assigned "OutputState" with a hyphenated, indexed suffix ('OutputState-n')
+        Class methods:
+            function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
 
-    Parameters:
-        The default for FUNCTION is LinearMatrix using MATRIX: IDENTITY_MATRIX:
-        The parameters of FUNCTION can be set:
-            - by including them at initialization (param[FUNCTION] = <function>(sender, params)
-            - calling the adjust method, which changes their default values (param[FUNCTION].adjust(params)
-            - at run time, which changes their values for just for that call (self.execute(sender, params)
+        StateRegistry
+        -------------
+            All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
+              a count for all instances of it, and a dictionary of those instances
 
-    Class attributes:
-        + componentType (str) = OUTPUT_STATES
-        + paramClassDefaults (dict)
-            + FUNCTION (LinearCombination)
-            + FUNCTION_PARAMS   (Operation.PRODUCT)
-        + paramNames (dict)
+    COMMENT
 
-    Class methods:
-        function (executes function specified in params[FUNCTION];  default: LinearCombination with Operation.SUM)
 
-    Instance attributes:
-        + paramInstanceDefaults (dict) - defaults for instance (created and validated in Components init)
-        + params (dict) - set currently in effect
-        + paramNames (list) - list of keys for the params dictionary
-        + owner (Mechanism)
-        + value (value)
-        + projections (list)
-        + params (dict)
-        + name (str)
-        + prefs (dict)
+    Arguments
+    ---------
 
-    Instance methods:
-        none
+    owner : Mechanism
+        the mechanism to which the outputState belongs; it must be specified or determinable from the context in which
+        the outputState is created.
+
+    reference_value : number, list or np.ndarray
+        the component of the owner mechanism's ``outputValue`` attribute to which the outputState corresponds.
+
+    value : number, list or np.ndarray
+        used as the template for ``variable``.
+
+    function : Function or method : default LinearCombination(operation=SUM)
+        implemented for structural consistency;  not currently used by PsyNeuLink.
+
+    params : Optional[Dict[param keyword, param value]]
+        a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
+
+    name : str : default OutputState-<index>
+        a string used for the name of the outputState.
+        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        belongs (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+    prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
+        the PreferenceSet for the outputState.
+        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
+
+    Attributes
+    ----------
+
+    owner : Mechanism
+        the mechanism to which the outputState belongs.
+
+    sendsToProjections : Optional[List[Projection]]
+        a list of the projections sent by the outputState (i.e., for which the outputState is a ``sender``).
+
+    variable : number, list or np.ndarray
+        assigned an item of the ``outputValue`` of its owner mechanism.
+
+    function : CombinationFunction : default LinearCombination(operation=SUM))
+        implemented for structural consistency;  not currently used by PsyNeuLink.
+
+    value : number, list or np.ndarray
+        assigned the value of the outputState`s ``variable``, and used as the input for any projections that it sends.
+
+    name : str : default <State subclass>-<index>
+        name of the outputState.
+        Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+
+        .. note::
+            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
+            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            creation.
+
+    prefs : PreferenceSet or specification dict : State.classPreferences
+        the PreferenceSet for the outputState.
+        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+        assigned using ``classPreferences`` defined in __init__.py
+        (see Description under PreferenceSet for details) [LINK].
+
     """
 
     #region CLASS ATTRIBUTES
@@ -158,41 +253,28 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING})
+    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
     #endregion
 
     tc.typecheck
     def __init__(self,
                  owner,
                  reference_value,
-                 value=NotImplemented,
+                 value=None,
                  function=LinearCombination(operation=SUM),
-                 params=NotImplemented,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-IMPLEMENTATION NOTE:  *** DOCUMENTATION NEEDED (SEE CONTROL SIGNAL??)
-                      *** EXPLAIN owner_output_value:
-reference_value is component of owner.variable that corresponds to the current State
 
+        # IMPLEMENTATION NOTE:
         # Potential problem:
         #    - a OutputState may correspond to a particular item of owner.value
         #        in which case there will be a mismatch here
-        #    - if OutputState is being instantiated from Mechanism (in instantiate_output_states)
+        #    - if OutputState is being instantiated from Mechanism (in _instantiate_output_states)
         #        then the item of owner.value is known and has already been checked
-        #        (in the call to instantiate_state)
+        #        (in the call to _instantiate_state)
         #    - otherwise, should ignore
-
-        :param owner: (Mechanism object)
-        :param reference_value: (value)
-        :param value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (PreferenceSet)
-        :param context: (str)
-        :return:
-        """
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function, params=params)
@@ -201,8 +283,8 @@ reference_value is component of owner.variable that corresponds to the current S
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlSignal._instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlSignal._instantiate_sender),
+        # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,
@@ -240,8 +322,8 @@ reference_value is component of owner.variable that corresponds to the current S
                                                   self.owner.name,
                                                   self.reference_value))
 
-def instantiate_output_states(owner, context=None):
-    """Call State.instantiate_state_list() to instantiate orderedDict of outputState(s)
+def _instantiate_output_states(owner, context=None):
+    """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
     If INPUT_STATES is not specified, use self.variable to create a default output state
@@ -252,7 +334,7 @@ def instantiate_output_states(owner, context=None):
         - each outputState corresponds to an item in the output of the owner's function
         - if there is only one outputState, it is assigned the full value
 
-    (See State.instantiate_state_list() for additional details)
+    (See State._instantiate_state_list() for additional details)
 
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) is assigned here
@@ -261,7 +343,7 @@ def instantiate_output_states(owner, context=None):
     :param context:
     :return:
     """
-    owner.outputStates = instantiate_state_list(owner=owner,
+    owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
                                                 state_param_identifier=OUTPUT_STATES,

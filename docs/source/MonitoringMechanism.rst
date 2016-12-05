@@ -1,11 +1,12 @@
-Monitoring Mechanisms
-=====================
+MonitoringMechanisms
+====================
 
 .. toctree::
-	:maxdepth:
+	:maxdepth: 2
 
-	Comparator
-	WeightedError
+	ComparatorMechanism
+	WeightedErrorMechanism
 
 .. automodule:: MonitoringMechanism
-	:members:
+   :members:
+   :exclude-members: Linear, random
