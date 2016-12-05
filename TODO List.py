@@ -9,6 +9,9 @@
 #
 #
 
+# IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
+#            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
+
 # IMPLEMENT / DOCUMENTATION:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
 #                This implementation restricts learning to parameterStates of projections to inputStates
@@ -25,15 +28,11 @@
 #            AND DECLARE THOSE IN paramClassDefaults, ALONG WITH THEIR NAMES
 #            THEN CAN GET RID OF outputValueMapping BUSINESS
 
-# FIX: PARAMS_CURRENT -> PARAMS_CURRENT
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
 # TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
 #      Mechanism, MappingProjection and Function params
 #      ADD TO META TEST SCRIPT
-#
-# FIX:  Finish issubclass search and replace:  Utilities 260
-#
 
 # IMPLEMENT: For Mechanism, dictionaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with...??

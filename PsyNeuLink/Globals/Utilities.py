@@ -256,8 +256,7 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     # if isinstance(candidate, match_type):
     if (isinstance(candidate, match_type) or
-            (isinstance(candidate, (list, np.ndarray)) and
-                 (issubclass(match_type, list) or issubclass(match_type, np.ndarray))) or
+            (isinstance(candidate, (list, np.ndarray)) and (issubclass(match_type, (list, np.ndarray)))) or
             (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
             # MODIFIED 9/20/16 NEW:
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified

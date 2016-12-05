@@ -265,7 +265,7 @@ for projection_type in ProjectionRegistry:
 
     # If it is a subclass of Mechanism or State, leave it alone
     if (inspect.isclass(projection_sender) and
-            (issubclass(projection_sender, Mechanism_Base) or issubclass(projection_sender, State_Base))):
+            (issubclass(projection_sender, (Mechanism_Base, State_Base)))):
         continue
     # If it is an instance of Mechanism or State, leave it alone
     if isinstance(projection_sender, (Mechanism_Base, State_Base)):
