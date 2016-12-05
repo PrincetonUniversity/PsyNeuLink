@@ -334,7 +334,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                        # context=context,
                                        context=self)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and mechanism params
 
         """

@@ -571,7 +571,7 @@ class DDM(ProcessingMechanism_Base):
     # MODIFIED 11/21/16 END
 
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -620,8 +620,8 @@ class DDM(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute DDM function (currently only trial-level, analytic solution)

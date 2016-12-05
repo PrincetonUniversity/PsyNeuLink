@@ -440,7 +440,7 @@ class State_Base(State):
 
         self.baseValue = self.variable
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """validate projection specification(s)
 
         Call super (Component._validate_params()
