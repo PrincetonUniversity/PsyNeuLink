@@ -459,7 +459,7 @@ def mechanism(mech_spec=None, params=None, context=None):
             return mech_spec(context=context, **mech_spec)
 
     # Called without a specification, so return default type
-    elif mech_spec is NotImplemented:
+    elif mech_spec is None:
         return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
 
     # Can't be anything else, so return empty
@@ -694,7 +694,7 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
         MONITOR_FOR_CONTROL: NotImplemented,
-        MONITOR_FOR_LEARNING: NotImplemented
+        MONITOR_FOR_LEARNING: None
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,
         #     Components.States.ParameterState.ParameterState,
@@ -819,7 +819,7 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
         Go through target_set params (populated by Function._validate_params) and validate values for:
@@ -1492,7 +1492,7 @@ class Mechanism_Base(Mechanism):
                                             input_state.name,
                                             append_type_to_name(self)))
 
-    def _update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
+    def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
 
         Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
@@ -1583,8 +1583,8 @@ class Mechanism_Base(Mechanism):
         self._update_output_states()
 
     def __execute__(self,
-                    variable=NotImplemented,
-                    params=NotImplemented,
+                    variable=None,
+                    params=None,
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
