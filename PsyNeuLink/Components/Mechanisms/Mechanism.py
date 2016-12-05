@@ -266,11 +266,12 @@ mechanism subclass, as well as those specific to a particular subclass (document
       The value of each entry can be one of the following (see :ref:`ParameterState_Specifying_Parameters` for details):
 
       * the value of the parameter itself;
-      * a parameter state, the value of which specifies the parameter's value
-        (see :ref:`ParameterState_Creation`).
+      * a parameter state, the value of which specifies the parameter's value (see :ref:`ParameterState_Creation`);
+      * a :ref:`ControlProjection or LearningProjection specification <Projection_In_Context_Specification>`,
+        that assigns the parameter its default value, and a projection to it's parameterState of the specified type;
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
         :doc:`ControlProjection` or a :doc:`LearningProjection`
-        (a :class:`ParamValueProjection` namedtuple can be used for clarity).
+        (a :any:`ParamValueProjection` namedtuple can be used for clarity).
       ..
       .. note::
          Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
@@ -458,7 +459,7 @@ def mechanism(mech_spec=None, params=None, context=None):
             return mech_spec(context=context, **mech_spec)
 
     # Called without a specification, so return default type
-    elif mech_spec is NotImplemented:
+    elif mech_spec is None:
         return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
 
     # Can't be anything else, so return empty
@@ -542,7 +543,7 @@ class Mechanism_Base(Mechanism):
                 updates input, param values, executes <subclass>.function, returns outputState.value
             - terminate_execute(self, context=None): terminates execution of mechanism (for TimeScale = time_step)
             - adjust(params, context)
-                modifies specified mechanism params (by calling Function.assign_defaults)
+                modifies specified mechanism params (by calling Function._assign_defaults)
                 returns output
 
         MechanismRegistry
@@ -693,7 +694,7 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
         MONITOR_FOR_CONTROL: NotImplemented,
-        MONITOR_FOR_LEARNING: NotImplemented
+        MONITOR_FOR_LEARNING: None
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,
         #     Components.States.ParameterState.ParameterState,
@@ -762,9 +763,9 @@ class Mechanism_Base(Mechanism):
                           context=context)
 
         if not context or isinstance(context, object) or inspect.isclass(context):
-            context = INITIALIZING + self.name + kwSeparatorBar + self.__class__.__name__
+            context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
         else:
-            context = context + kwSeparatorBar + INITIALIZING + self.name
+            context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
         super(Mechanism_Base, self).__init__(variable_default=variable,
                                              param_defaults=params,
@@ -818,7 +819,7 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
         Go through target_set params (populated by Function._validate_params) and validate values for:
@@ -1491,7 +1492,7 @@ class Mechanism_Base(Mechanism):
                                             input_state.name,
                                             append_type_to_name(self)))
 
-    def _update_input_states(self, runtime_params=NotImplemented, time_scale=None, context=None):
+    def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each inputState in self.inputStates:
 
         Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
@@ -1582,8 +1583,8 @@ class Mechanism_Base(Mechanism):
         self._update_output_states()
 
     def __execute__(self,
-                    variable=NotImplemented,
-                    params=NotImplemented,
+                    variable=None,
+                    params=None,
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
@@ -1644,7 +1645,7 @@ class Mechanism_Base(Mechanism):
 #         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
 #         """
 #
-#         self.assign_defaults(self.inputState, params)
+#         self._assign_defaults(self.inputState, params)
 # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
 #         return self.outputState.value
 

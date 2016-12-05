@@ -382,7 +382,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
         """
 
-        # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
+        # FIX: USE _ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
 
         comparison_function_params = {}
         comparison_operation = self.paramsCurrent[COMPARISON_OPERATION]

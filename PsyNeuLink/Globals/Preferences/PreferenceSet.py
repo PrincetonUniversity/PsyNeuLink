@@ -147,7 +147,7 @@ class PreferenceSet(object):
     def __init__(self,
                  owner,
                  level=PreferenceLevel.SYSTEM,
-                 prefs=NotImplemented,
+                 prefs=None,
                  name=None,
                  context=None
                  ):

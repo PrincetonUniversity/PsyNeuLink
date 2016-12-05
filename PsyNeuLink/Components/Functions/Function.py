@@ -129,8 +129,16 @@ def optional_parameter_spec(param):
     return parameter_spec(param)
 
 def parameter_spec(param):
-    # if is_numerical(param):
-    if isinstance(param, (numbers.Number, np.ndarray, list, tuple, function_type, ParamValueProjection)):
+    # if is_numeric(param):
+    if (isinstance(param, (numbers.Number,
+                           np.ndarray,
+                           list,
+                           tuple,
+                           function_type,
+                           ParamValueProjection,
+                           Projection)) or
+        (inspect.isclass(param) and issubclass(param, Projection)) or
+        param in parameter_keywords):
         return True
     return False
 
@@ -160,7 +168,7 @@ IMPLEMENTATION NOTE:  *** DOCUMENTATION
 IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARAMETER
         - Parameters can be assigned and/or changed individually or in sets, by:
           - including them in the initialization call
-          - calling the assign_defaults method (which changes their default values)
+          - calling the _assign_defaults method (which changes their default values)
           - including them in a call the function method (which changes their values for just for that call)
         - Parameters must be specified in a params dictionary:
           - the key for each entry should be the name of the parameter (used also to name associated projections)
@@ -330,7 +338,7 @@ class Contradiction(Function_Base): # Example
 
     # Param class defaults
     # These are used both to type-cast the params, and as defaults if none are assigned
-    #  in the initialization call or later (using either assign_defaults or during a function call)
+    #  in the initialization call or later (using either _assign_defaults or during a function call)
     kwPropensity = "PROPENSITY"
     kwPertinacity = "PERTINACITY"
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
@@ -523,7 +531,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
             context:
         """
         super()._validate_variable(variable=variable, context=context)
-        if not is_numerical(variable):
+        if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
 
@@ -630,8 +638,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
-                 exponents:is_numerical_or_none=None,
-                 weights:is_numerical_or_none=None,
+                 exponents:is_numeric_or_none=None,
+                 weights:is_numeric_or_none=None,
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,
@@ -1051,6 +1059,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     """
 
     componentName = kwLogistic
+    parameter_keywords.update({GAIN,BIAS})
 
     variableClassDefault = 0
 
@@ -1698,7 +1707,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                 #       in that case, the Integrator gets instantiated using its variableClassDefault ([[0]]) before
                 #       the object itself, thus does not see the array specification for the input.
                 if self._variable_not_specified:
-                    self.assign_defaults(variable=np.zeros_like(np.array(rate)))
+                    self._assign_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                     if self.verbosePref:
                         warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} must "
                                       "matach the length ({}) of the default input ({});  the default input has been "
@@ -2051,7 +2060,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 class LearningFunction(Function_Base):
-    componentType = kwLearningFunction
+    componentType = LEARNING_FUNCTION
 
 
 LEARNING_RATE = "learning_rate"

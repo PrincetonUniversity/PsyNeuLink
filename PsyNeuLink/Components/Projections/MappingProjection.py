@@ -142,6 +142,9 @@ Class Reference
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
 
+parameter_keywords.update({MAPPING_PROJECTION})
+projection_keywords.update({MAPPING_PROJECTION})
+
 class MappingError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -450,7 +453,7 @@ class MappingProjection(Projection_Base):
         Returns matrix param for MappingProjection, getting second item if it is
          a ParamValueprojection or unnamed (matrix, projection) tuple
         """
-        return get_function_param(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
+        return self._get_param_value_from_tuple(self.paramsCurrent[FUNCTION_PARAMS][MATRIX])
 
     @_matrix_spec.setter
     def _matrix_spec(self, value):
