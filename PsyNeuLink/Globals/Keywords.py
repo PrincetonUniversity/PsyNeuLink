@@ -30,6 +30,8 @@
 # ******************************************    CONSTANTS    ***********************************************************
 # **********************************************************************************************************************
 
+# parameter_keywords = set()
+
 ON = True
 OFF = False
 DEFAULT = False
@@ -40,41 +42,12 @@ INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
 INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
-# DISABLED = 'disabled'
-# OVERRIDE = lambda a, b : a
-# ADD = lambda a, b : a + b
-# MULTIPLY = lambda a, b : a * b
-SUM = 'sum'
-DIFFERENCE = 'difference'
-PRODUCT = 'product'
-QUOTIENT = 'quotient'
-SUBTRACTION = 'subtraction'
-DIVISION = 'division'
-SCALAR = 'scalar'
-VECTOR = 'vector'
-
-GAIN = 'gain'
-BIAS = 'bias'
-SLOPE = 'slope'
-INTERCEPT = 'intercept'
-RATE = 'rate'
-SCALE = 'scale'
-NOISE = 'noise'
-
-WEIGHTING = "weighting"
-
-OUTPUT_TYPE = 'output'
-ALL = 'all'
-MAX_VAL = 'max_val'
-MAX_INDICATOR = 'max_indicator'
-PROB = 'prob'
-MUTUAL_ENTROPY = 'mutual entropy'
 
 #region ---------------------------------------------    GENERAL    ----------------------------------------------------
 # General
 
 kwSeparator = ': '
-kwSeparatorBar = ' | '
+SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 NO_CONTEXT = "NO_CONTEXT"
@@ -86,8 +59,8 @@ kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
 VALIDATE = kwValidate
+COMMAND_LINE = "COMMAND_LINE"
 kwParams = 'params'
-ALLOCATION_SAMPLES = "allocation_samples"
 
 #endregion
 
@@ -132,7 +105,7 @@ kpMechanismOutputLogEntry = "Mechanism Output"
 kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
-#region ----------------------------------------------   FUNCTION   ----------------------------------------------------
+#region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
 kwParamsArg = "params"
@@ -147,7 +120,7 @@ TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
-kwFunctionInit = 'Function.__init__'
+COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
@@ -155,17 +128,17 @@ FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a
 
 kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
 kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
-kwParamsCurrent = "paramsCurrent"                  # Params currently in effect for an instance of a Function
+PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
                                                    #    in which those are kept separate from paramsCurrent (see DDM)
 
-kwFunctionCheckArgs = 'super._check_args' # Use for "context" arg
+FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Function Components to set output type
 
 #endregion
 
-#region ----------------------------------------    FUNCTION SUBCLASSES  -----------------------------------------------
+#region ----------------------------------------    COMPONENT SUBCLASSES  ----------------------------------------------
 
 # Function Categories   -----------------
 
@@ -198,7 +171,7 @@ kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
 kwTransferFunction = "TRANSFER FUNCTION"
 kwDistributionFunction = "DISTRIBUTION FUNCTION"
-kwLearningFunction = 'LEARNING FUNCTION'
+LEARNING_FUNCTION = 'LEARNING FUNCTION'
 
 
 # Function SUBTYPES -----------------
@@ -254,7 +227,7 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-kwLearning = 'learning'
+LEARNING = 'learning'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
@@ -283,7 +256,7 @@ SINGLETON = 'ORIGIN AND TERMINAL'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
-kwStateParams = "State params" # Used in State specification dict
+STATE_PARAMS = "State params" # Used in State specification dict
 
 # ParamClassDefaults:
 kwMechanismTimeScale = "Mechanism Time Scale"
@@ -319,6 +292,7 @@ COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
+ALLOCATION_SAMPLES = "allocation_samples"
 
 #endregion
 
@@ -364,6 +338,37 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
+
+# DISABLED = 'disabled'
+# OVERRIDE = lambda a, b : a
+# ADD = lambda a, b : a + b
+# MULTIPLY = lambda a, b : a * b
+SUM = 'sum'
+DIFFERENCE = 'difference'
+PRODUCT = 'product'
+QUOTIENT = 'quotient'
+SUBTRACTION = 'subtraction'
+DIVISION = 'division'
+SCALAR = 'scalar'
+VECTOR = 'vector'
+
+GAIN = 'gain'
+BIAS = 'bias'
+SLOPE = 'slope'
+INTERCEPT = 'intercept'
+RATE = 'rate'
+SCALE = 'scale'
+NOISE = 'noise'
+
+WEIGHTING = "weighting"
+
+OUTPUT_TYPE = 'output'
+ALL = 'all'
+MAX_VAL = 'max_val'
+MAX_INDICATOR = 'max_indicator'
+PROB = 'prob'
+MUTUAL_ENTROPY = 'mutual entropy'
+
 kwInitializer = 'initializer'
 WEIGHTS = "weights"
 EXPONENTS = "exponents"
@@ -373,7 +378,6 @@ LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'apaptive'
-
 
 
 MATRIX = "matrix"

@@ -83,8 +83,8 @@ Structure
 Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
 mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
 :keyword:`TERMINAL` [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
-maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following
-fundamental attributes:
+maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following core
+attributes:
 
 * ``variable``:  this must match (both in number and types of elements) the value of the item it is assigned from its
   mechanism's ``outputValue`` attribute (see LINK]).
@@ -98,9 +98,9 @@ fundamental attributes:
 Execution
 ---------
 
-States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, the values of each ouputState of a mechanism are updated with the results of a call to the mechanism's
-``function``: their values assigned the value of the corresponding item in the mechanism's ``outputValue`` attribute.
+An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the value of the ouputState is updated with the result of the call to the mechanism's ``function``,
+and the value is assigned to the value of the corresponding item in the mechanism's ``outputValue`` attribute.
 
 
 .. _OutputState_Class_Reference:
@@ -230,7 +230,7 @@ class OutputState(State_Base):
             Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
             the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
             mechanism: states within a mechanism with the same base name are appended an index in the order of their
-            creation).
+            creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the PreferenceSet for the outputState.

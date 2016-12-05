@@ -22,8 +22,8 @@
 CONTENTS:
 
     TYPE CHECKING and VALUE COMPARISON:
-        is_numerical_or_none
-        is_numerical
+        is_numeric_or_none
+        is_numeric
         iscompatible
 
     ENUM:
@@ -124,12 +124,12 @@ class AutoNumber(IntEnum):
 
 TEST_CONDTION = False
 
-def is_numerical_or_none(x):
+def is_numeric_or_none(x):
     if not x:
         return True
-    return is_numerical(x)
+    return is_numeric(x)
 
-def is_numerical(x):
+def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 kwCompatibilityType = "type"
@@ -256,8 +256,7 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     # if isinstance(candidate, match_type):
     if (isinstance(candidate, match_type) or
-            (isinstance(candidate, (list, np.ndarray)) and
-                 (issubclass(match_type, list) or issubclass(match_type, np.ndarray))) or
+            (isinstance(candidate, (list, np.ndarray)) and (issubclass(match_type, (list, np.ndarray)))) or
             (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
             # MODIFIED 9/20/16 NEW:
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified

@@ -60,7 +60,7 @@ specifying the name for the inputState to be created, and its value is one of th
       dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
       Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.
     ..
-    * A :any:`ParamValueProjection`.  This creates a default inputState using the ``value`` item as its ``value``,
+    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its ``value``,
       and assigns the state as the ``receiver`` of the ``projection`` item.
 
     .. note::
@@ -99,7 +99,7 @@ Structure
 Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
 mechanisms, as well as from the process to which its owner belongs (if it is the :keyword:`ORIGIN` [LINK] mechanism
 for that process.  A list of projections received by an inputState is maintained in its ``receivesFromProjections``
-attribute.  Like all PsyNeuLink components, it has the three following fundamental attributes:
+attribute.  Like all PsyNeuLink components, it has the three following core attributes:
 
 * ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
   each must match both the number and type of elements of its ``variable``.
@@ -121,10 +121,11 @@ attribute.  Like all PsyNeuLink components, it has the three following fundament
 Execution
 ---------
 
-States cannot be executed directly.  They are executed when the mechanism to which they belong is executed. When this
-occurs, each inputState executes any projections it receives, calls its ``function`` to aggregate their values, and
-then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the inputState in
-the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates <_Mechanism_Variable>`.
+An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
+When this occurs, the inputStat executes any projections it receives, calls its ``function`` to aggregate their
+values, and then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the
+inputState in the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates
+<_Mechanism_Variable>`.
 
 .. _InputState_Class_Reference:
 
@@ -264,7 +265,7 @@ class InputState(State_Base):
             Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
             the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
             mechanism: states within a mechanism with the same base name are appended an index in the order of their
-            creation).
+            creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
         the PreferenceSet for the inputState.

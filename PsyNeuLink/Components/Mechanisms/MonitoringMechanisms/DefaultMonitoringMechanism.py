@@ -60,7 +60,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         *  params can be set in the standard way for any Function subclass:
             - params provided in param_defaults at initialization will be assigned as paramInstanceDefaults
                  and used for paramsCurrent unless and until the latter are changed in a function call
-            - paramInstanceDefaults can be later modified using assign_defaults
+            - paramInstanceDefaults can be later modified using _assign_defaults
             - params provided in a function call (to execute or adjust) will be assigned to paramsCurrent
 
     MechanismRegistry:
@@ -271,7 +271,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             instantiate self.combinationFunction
         """
 
-        # FIX: USE ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
+        # FIX: USE _ASSIGN_DEFAULTS HERE (TO BE SURE INSTANCE DEFAULTS ARE UPDATED AS WELL AS PARAMS_CURRENT
 
         comparison_function_params = {}
 

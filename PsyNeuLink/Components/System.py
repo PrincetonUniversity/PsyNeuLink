@@ -590,7 +590,7 @@ class System_Base(System):
                                                  monitor_for_control=monitor_for_control,
                                                  params=params)
 
-        self.pathway = NotImplemented
+        self.pathway = None
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.function = self.execute
@@ -682,7 +682,7 @@ class System_Base(System):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -812,7 +812,7 @@ class System_Base(System):
             # If process item is a Process object, assign input as default
             if isinstance(process, Process):
                 if not input is None:
-                    process.assign_defaults(input)
+                    process._assign_defaults(variable=input, context=context)
 
             # Otherwise, instantiate Process
             if not isinstance(process, Process):
@@ -1051,11 +1051,7 @@ class System_Base(System):
         # Sort for consistency of output
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
-        # # MODIFIED 11/1/16 OLD:
-        # for process in self.processes:
-        # MODIFIED 11/1/16 NEW:
         for process in sorted_processes:
-        # MODIFIED 11/1/16 END
             first_mech = process.firstMechanism
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState
@@ -1069,11 +1065,7 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            # # MODIFIED 11/1/16 OLD:
-                            # projection.sender.owner in self.processes or
-                            # MODIFIED 11/1/16 NEW:
                             projection.sender.owner in sorted_processes or
-                            # MODIFIED 11/1/16 END
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
                             # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
@@ -1255,11 +1247,21 @@ class System_Base(System):
         #region ASSIGN INPUTS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
         #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
+        num_origin_mechs = len(list(self.originMechanisms))
         if inputs is None:
-            pass
+            # # MODIFIED 12/4/16 OLD:
+            # pass
+            # MODIFIED 12/4/16 NEW:
+            if (self.prefs.verbosePref and
+                    not (not context or COMPONENT_INIT in context)):
+                print("- No input provided;  default will be used: {0}")
+            inputs = np.zeros_like(self.variable)
+            for i in range(num_origin_mechs):
+                inputs[i] = self.originMechanisms[i].variableInstanceDefault
+            # MODIFIED 12/4/16 END
+
         else:
             num_inputs = np.size(inputs,0)
-            num_origin_mechs = len(list(self.originMechanisms))
             if num_inputs != num_origin_mechs:
                 # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
                 num_inputs = np.size(inputs)
@@ -1327,6 +1329,10 @@ class System_Base(System):
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
+                            # MODIFIED 12/4/16 NEW:
+                            if process.learning and process._learning_enabled:
+                                continue
+                            # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
@@ -1352,7 +1358,22 @@ class System_Base(System):
         if not EVC_SIMULATION in context:
             for process in self.processes:
                 if process.learning and process._learning_enabled:
+                    # MODIFIED 12/4/16 NEW:
+                    # for mech in process.monitoring_mechanisms:
+                    for mech_tuple in process.monitoringMechanisms.mech_tuples:
+                        mech_tuple.mechanism.execute(time_scale=self.timeScale,
+                                                     runtime_params=mech_tuple.params,
+                                                     context=context)
+                    # MODIFIED 12/4/16 END
+
                     process._execute_learning(context=context)
+
+                    # MODIFIED 12/4/16 NEW:
+                    if report_system_output:
+                        if report_process_output:
+                            process._report_process_completion()
+                    # MODIFIED 12/4/16 END
+
         # endregion
 
 
@@ -1558,6 +1579,14 @@ class System_Base(System):
         print ("\n---------------------------------------------------------")
         print ("\n{0}".format(self.name))
 
+
+        print ("\n\tControl enabled: {0}".format(self.enable_controller))
+        print ("\n\tProcesses:")
+
+        for process in self.processes:
+            print ("\t\t{} [learning enabled: {}]".format(process.name, process._learning_enabled))
+
+
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
         # Sort for consistency of output
@@ -1566,16 +1595,10 @@ class System_Base(System):
         # for i in range(len(self.execution_sets)):
             print ("\t\tSet {0}:\n\t\t\t".format(i),end='')
             print("{ ",end='')
-            # for mech_tuple in self.execution_sets[i]:
-            # # MODIFIED 11/1/16 OLD:
-            # for mech_tuple in execution_sets_sorted[i]:
-            #     print("{0} ".format(mech_tuple.mechanism.name), end='')
-            # MODIFIED 11/1/16 NEW:
             sorted_mechs_names_in_set = sorted(list(mech_tuple.mechanism.name
                                                     for mech_tuple in self.execution_sets[i]))
             for name in sorted_mechs_names_in_set:
                 print("{0} ".format(name), end='')
-            # MODIFIED 11/1/16 END
             print("}")
 
         # Print executionList sorted by phase and including EVC mechanism
@@ -1606,19 +1629,11 @@ class System_Base(System):
             print ("\t\t\t{}".format(mech_tuple.mechanism.name))
 
         print ("\n\tOrigin mechanisms: ".format(self.name))
-        # # MODIFIED 11/1/16 OLD:
-        # for mech_tuple in self.originMechanisms.mech_tuples:
-        # MODIFIED 11/1/16 NEW:
         for mech_tuple in self.originMechanisms.mech_tuples_sorted:
-        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
 
         print ("\n\tTerminal mechanisms: ".format(self.name))
-        # # MODIFIED 11/1/16 OLD:
-        # for mech_tuple in self.terminalMechanisms.mech_tuples:
-        # MODIFIED 11/1/16 NEW:
         for mech_tuple in self.terminalMechanisms.mech_tuples_sorted:
-        # MODIFIED 11/1/16 END
             print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))

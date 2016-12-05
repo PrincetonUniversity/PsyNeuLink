@@ -41,13 +41,34 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
 #
 
-# MORE RECENT TESTING:
-transfer_mechanism_1 = TransferMechanism(function=Linear(slope=3))
+my_control = ControlProjection(name='MY CONTROL')
+
+transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
+                                                           gain=ControlProjection()),
+                                         # noise=(0.3, CONTROL_PROJECTION),
+                                         noise=ControlProjection,
+                                         # noise='MY CONTROL',
+                                         rate=(0.1, ControlProjection),
+                                         name='MY_TRANSFER_MECH'
+                                         )
+transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
+                                                         gain=CONTROL_PROJECTION
+                                                         ),
+                                       noise=(0.3, ControlProjection),
+                                       name='MY_TRANSFER_MECH'
+                                       )
+
+
+transfer_mechanism_1 = TransferMechanism(function=Linear(slope=(1, ControlProjection)))
 # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
 # TM1_parameter_state = ParameterState(value=22)
-transfer_mechanism_2 = TransferMechanism(function=Logistic)
+transfer_mechanism_2 = TransferMechanism(function=Logistic(bias=(3, ControlProjection),
+                                                           gain=ControlProjection
+                                                           )
+                                         # noise=(3, ControlProjection)
+                                         )
 # transfer_mechanism_3 = TransferMechanism()
-transfer_mechanism_3 = TransferMechanism(function=Linear(slope=2))
+transfer_mechanism_3 = TransferMechanism(function=Linear(slope=1))
 
 transfer_mechanism_1.execute()
 # my_process = process(pathway=[transfer_mechanism_1,
@@ -58,7 +79,7 @@ transfer_mechanism_1.execute()
 
 # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
-transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = True
+transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 print(transfer_mechanism_3.execute(input=1.0,
                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
 # print(transfer_mechanism_3.execute(input=1.0))
@@ -68,13 +89,27 @@ print(transfer_mechanism_3.execute(input=1.0,
                                                                             # SLOPE:(6.0,
                                                                             #        ModulationOperation.OVERRIDE
                                                                                       }}))
+# print(transfer_mechanism_3.run(inputs=[1.0],
+#                                num_executions=3))
+
+my_process = process(pathway=[transfer_mechanism_1,
+                               # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
+                              transfer_mechanism_3])
+
+print("My Process: \n", my_process.run(inputs=[[1.0]],
+                                       num_executions=3))
+# print("My Process: \n", my_process.execute(input=[[1.0]]))
+# print("My Process: \n", my_process.execute(input=[1.0]))
+
+# transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
+
+
+
 
 
 # transfer_process = process(pathway = [transfer_mechanism_1])
 # print(transfer_process.execute())
 print ('Done')
-
-print ("True is numerical: {}".format(is_numerical(True)))
 
 # my_mech1 = TransferMechanism(function=Logistic)
 # my_mech2 = TransferMechanism(function=Logistic)
@@ -1490,17 +1525,17 @@ import typecheck as tc
 #
 # try:
 #     state_params.update(state_spec[key])
-# # state_spec[kwStateParams] was not specified
+# # state_spec[STATE_PARAMS] was not specified
 # except KeyError:
 #         pass
 # # state_params was not specified
 # except (AttributeError):
 #     try:
 #         state_params = state_spec[key]
-#     # state_spec[kwStateParams] was not specified
+#     # state_spec[STATE_PARAMS] was not specified
 #     except KeyError:
 #         state_params = {}
-# # state_params was specified but state_spec[kwStateParams] was not specified
+# # state_params was specified but state_spec[STATE_PARAMS] was not specified
 # except TypeError:
 #     pass
 # #endregion
