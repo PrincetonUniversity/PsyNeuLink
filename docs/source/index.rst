@@ -95,15 +95,14 @@ PsyNeuLink uses the following primary constructs:
             [+ GatingSignal — Not yet implemented
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
 
-COMMENT:
-Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
-    * ``variable``
-        the input to its function, used both as a template for the format of the input, as its default value
-    * ``function``
-        performs the core computation of a component.
-    * ``params``
-        dictionary of parameters for the function
-COMMENT
+..
+    Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
+        * ``variable``
+            the input to its function, used both as a template for the format of the input, as its default value
+        * ``function``
+            performs the core computation of a component.
+        * ``params``
+            dictionary of parameters for the function
 
 
 Contributors

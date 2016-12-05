@@ -212,7 +212,7 @@ class PreferenceSet(object):
 
         # prefs must be a specification dict or NotImplemented or None
         # FIX: replace with typecheck
-        if not (isinstance(prefs, dict) or prefs is NotImplemented or prefs is None):
+        if not (isinstance(prefs, dict) or prefs is None):
             raise PreferenceSetError("Preferences ({0}) specified for {1} must a PreferenceSet or"
                                      " specification dict of preferences".format(prefs, owner.name))
         #endregion
