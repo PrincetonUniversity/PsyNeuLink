@@ -48,62 +48,61 @@ constraints as possible on what it is possible to implement or ask a model to do
 Functional Architecture
 -----------------------
 
+PsyNeuLink uses the following primary constructs:
+
+- :doc:`System`
+    Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.
+
+    - :doc:`Process`
+        Takes an input, processes it through an ordered list of mechanisms and projections, and generates an output.
+
+        - :doc:`Mechanism`
+            Transforms an input representation into an output representation.
+            Parameters determine its operation, under the influence of projections.
+            There are three primary types:
+            ..
+
+            + :doc:`ProcessingMechanism`
+                  Aggregates the inputs it receives from other mechanisms or the input to a process or system,
+                  transforms them in some way, and provides the result either as input to other mechanisms and/or
+                  to the output of a process or system.
+            ..
+            + :doc:`ControlMechanism`
+                  Evaluates the output of one or more other mechanisms, and uses this to modify the parameters of those
+                  or other mechanisms.
+            ..
+            + :doc:`MonitoringMechanism`
+                   Monitors the output of one or more other mechanisms, compares these to a target value,
+                   and generates an error signal used for learning.
+
+        - :doc:`Projection`
+             Takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of
+             another mechanism. There are three primary types:
+
+
+            + :doc:`MappingProjection`
+                Takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+                and provides it as input to that receiver mechanism.
+
+            + :doc:`ControlProjection`
+                 Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
+                 the parameter(s) of a mechanism.
+
+            + :doc:`LearningProjection`
+                 Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
+                 and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).
+
+            [+ GatingSignal — Not yet implemented
+                 Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
+
 Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
     * ``variable``
         the input to its function, used both as a template for the format of the input, as its default value
     * ``function``
-        performs the core comoputation of a component.
+        performs the core computation of a component.
     * ``params``
         dictionary of parameters for the function
 
-
-PsyNeuLink uses the following primary constructs:
-
-- :doc:`System`
-    Set of (potentially interacting) processes, possibly managed by a ControlMechanism.
-
-    - :doc:`Process`
-        Component that takes an input, processes it through an ordered list of mechanisms (and projections)
-        and generates an output.
-
-        - :doc:`Mechanism`
-            Component that takes an input, transforms it in some way, and provides
-            it as an output that can be used for some purpose.
-            ..
-
-            + :doc:`ProcessingMechanism`
-                  Component aggregrate the input they receive from other mechanisms in a process or system,
-                  and/or the input to a process or system, transform it in some way, and provide the result either as
-                  input for other mechanisms and/or the output of a process or system.
-            ..
-            + :doc:`ControlMechanism`
-                  Component that evaluates the output of one or more other mechanisms, and uses this to modify the
-                  function parameters of those or other mechanisms.
-            ..
-            + :doc:`MonitoringMechanism`
-                  Component that monitors the output of one or more other mechanisms, receive training (target) values,
-                  and compare these to generate error signals used for learning
-
-        - :doc:`Projection`
-            Component that takes a source of input from one mechanism (its sender) and conveys it to another (its
-            receiver), transforming it if necessary so that it is usable by its receiver.
-
-
-            + :doc:`MappingProjection`
-                Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
-                and then provide that as input to the receiver mechanism.
-
-            + :doc:`ControlProjection`
-                Takes an allocation (scalar), possibly transforms it,
-                and uses it to modulate the parameter(s) of another mechanism's function.
-
-            + :doc:`LearningProjection`
-                Takes an error signal (scalar or vector), possibly transforms it,
-                and uses it to modulate the parameter(s) of a projection function (e.g., the weights of a matrix).
-
-            [+ GatingSignal — Not yet implemented
-                Takes a source, possibly transforms it, and uses it to
-                modulate the input or output state of a mechanism.
 
 
 Contributors

@@ -65,35 +65,38 @@ It does this in a manner that:
          takes an input, processes it through an ordered list of mechanisms and projections, and generates an output.
     
          + Mechanism: 
-             converts an input state representation into an output state representation.
+             transforms an input representation into an output representation.
              Parameters determine its operation, under the influence of projections.
+             There are three primary types:
              
              + ProcessingMechanism:
-                  used to transform representations.              
+                  aggregates the inputs it receives from other mechanisms or the input to a process or system, 
+                  transforms them in some way, and provides the result either as input to other mechanisms and/or 
+                  to the output of a process or system.
              
              + ControlMechanism
-                  used to evaluate the consequences of transformations carried out by ProcessingMechanisms
-                  and modulate the parameters of those mechanisms to maximize or minimize some objective function.
-             
+                  evaluates the output of one or more other mechanisms, and uses this to modify the parameters of those
+                  or other mechanisms.
+
              + MonitoringMechanism
-                  used to evaluate the consequences of transformations carried out by a set of ProcessingMechanisms
-                  and modulate the parameters of MappingProjections between the mechanisms to maximize or minimize 
-                  some objective function.
+                   monitors the output of one or more other mechanisms, compares these to a target value,
+                   and generates an error signal used for learning.
     
          + Projection: 
-             takes the output of a mechanism, possibly transforms it, and uses it to
-             determine the operation of another mechanism;  three primary types:
+             takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of 
+             another mechanism. There are three primary types:
     
              + MappingProjection:
-                 takes the output of a mechanism and provides it as the input to another mechanism.
+                takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+                and provides it as input to that receiver mechanism.
     
              + ControlProjection:
                  takes an allocation (scalar) (usually the output of a ControlMechanism) 
                  and uses it to modulate the parameter(s) of a mechanism.
     
              + LearningProjection:
-                 takes an error signal (scalar or vector) (usually the output of a Monitoring Mechanism) 
-                 and uses it to modulate the matrix parameter of a MappingProjection.
+                 takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism) 
+                 and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).
                  
              [+ GatingProjection — Not yet implemented
                  takes a gating signal source and uses it to modulate the input or output state of a mechanism.
