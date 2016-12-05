@@ -9,6 +9,9 @@
 #
 #
 
+# IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
+#            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
+
 # IMPLEMENT / DOCUMENTATION:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
 #                This implementation restricts learning to parameterStates of projections to inputStates
