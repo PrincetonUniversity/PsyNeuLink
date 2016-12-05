@@ -2,19 +2,32 @@
 
 PsyNeuLink is a block modeling system for cognitive neuroscience.
 It is open source, and meant to be extended
-Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
-The tutorial is available by [???] 
 
 ### Contributors
+    - **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
+    - **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
+    - **Bryn Keller**, Intel Labs, Intel Corporation
+    - **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
+    - **Aida Piccato**, Princeton University
+    - **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
+    - **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
+    - **Ted Willke**, Intel Labs, Intel Corporation
+    - **Nate Wilson**, Princeton Neuroscience Institute, Princeton University 
 
-    Jonathan D. Cohen, Princeton Neuroscience Institute, Princeton University
-    Peter Johnson, Princeton Neuroscience Institute, Princeton University
-    Bryn Keller, Intel Labs, Intel Corporation
-    Sebastian Musslick, Princeton Neuroscience Institute, Princeton University
-    Amitai Shenhav, Cognitive, Linguistic, & Psychological Sciences, Brown University
-    Michael Shvartsman, Princeton Neuroscience Institute, Princeton University
-    Ted Willke, Intel Labs, Intel Corporation
-    Nate Wilson, Princeton Neuroscience Institute, Princeton University 
+## Installation
+
+    Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
+
+    The tutorial is available at/y [???] 
+
+    Right now, PsyNeuLink is in an alpha state and is not available through pypi/pip. Instead, you can clone the github repo [here](https://github.com/PrincetonUniversity/PsyNeuLink). For now, clone the devel branch rather than the master branch. You can switch branches by pressing the "branch: master" dropdown menu on the left side of the page. Then download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
+
+    Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
+    Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
+
+    PsyNeuLink is compatible with any version of python 3, but this tutorial requires a 3.5 installation with the latest versions of IPython, jupyter, and matplotlib installed.
+
+    To install the package, navigate to the cloned directory in a terminal, switch to your preferred python3 environment, then run the command __"pip install ."__ (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5). All prerequisite packages will be automatically added to your enviroment.
 
 ### License
 
