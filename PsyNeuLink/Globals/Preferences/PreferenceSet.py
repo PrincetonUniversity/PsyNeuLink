@@ -197,7 +197,7 @@ class PreferenceSet(object):
                                          format(self.__class__.__name__, self.baseClass))
             else:
                 # owner of PreferenceSet must be a subclass or instance of a subclass in baseClass
-                if not (inspect.isclass(owner) or isinstance(owner, self.baseClass)) or owner is NotImplemented:
+                if not (inspect.isclass(owner) or isinstance(owner, self.baseClass)) or owner is None:
                     raise PreferenceSetError("owner argument must be included in call to {1}() "
                                              "and must be an object in the {2} class hierarchy".
                                          format(owner, self.__class__.__name__, self.baseClass.__name__))

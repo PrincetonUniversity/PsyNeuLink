@@ -137,8 +137,8 @@
             
   <div class="section" id="psyneulink-documentation">
 <h1>PsyNeuLink Documentation<a class="headerlink" href="#psyneulink-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is a &#8220;block modeling system&#8221; for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
@@ -258,7 +258,7 @@ the parameter(s) of a mechanism.</p>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
 <dd><p class="first last">Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
-and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).</p>
+and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).</p>
 </dd>
 </dl>
 </li>
@@ -280,9 +280,10 @@ and uses it to modulate the parameter of a projection (using the matrix of a Map
 </dl>
 </li>
 </ul>
-<dl class="docutils">
-<dt>Every PsyNeuLink object is a subclass of the <span class="xref doc">Component</span> subclass.  Every component has a:</dt>
-<dd><ul class="first last">
+<p>COMMENT:
+Every PsyNeuLink object is a subclass of the <span class="xref doc">Component</span> subclass.  Every component has a:</p>
+<blockquote>
+<div><ul>
 <li><dl class="first docutils">
 <dt><code class="docutils literal"><span class="pre">variable</span></code></dt>
 <dd><p class="first last">the input to its function, used both as a template for the format of the input, as its default value</p>
@@ -302,8 +303,8 @@ and uses it to modulate the parameter of a projection (using the matrix of a Map
 </dl>
 </li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
+<p>COMMENT</p>
 </div>
 <div class="section" id="contributors">
 <h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>

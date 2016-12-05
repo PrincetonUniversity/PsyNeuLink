@@ -7,8 +7,8 @@ PsyNeuLink Documentation
 ========================
 
 
-Overview
---------
+Purpose
+-------
 
 PsyNeuLink is a "block modeling system" for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
@@ -90,11 +90,12 @@ PsyNeuLink uses the following primary constructs:
 
             + :doc:`LearningProjection`
                  Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
-                 and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).
+                 and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).
 
             [+ GatingSignal — Not yet implemented
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
 
+COMMENT:
 Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
     * ``variable``
         the input to its function, used both as a template for the format of the input, as its default value
@@ -102,7 +103,7 @@ Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every c
         performs the core computation of a component.
     * ``params``
         dictionary of parameters for the function
-
+COMMENT
 
 
 Contributors
