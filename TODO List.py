@@ -9,6 +9,9 @@
 #
 #
 
+# IMPLEMENT:  Figure in README.md;
+#             Reconcile README.md and AND html docs first page.
+
 # IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
 
