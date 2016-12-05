@@ -1330,7 +1330,7 @@ class System_Base(System):
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
                             # MODIFIED 12/4/16 NEW:
-                            if process._learning_enabled:
+                            if process.learning and process._learning_enabled:
                                 continue
                             # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:

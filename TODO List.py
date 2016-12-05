@@ -25,15 +25,11 @@
 #            AND DECLARE THOSE IN paramClassDefaults, ALONG WITH THEIR NAMES
 #            THEN CAN GET RID OF outputValueMapping BUSINESS
 
-# FIX: PARAMS_CURRENT -> PARAMS_CURRENT
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
 # TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
 #      Mechanism, MappingProjection and Function params
 #      ADD TO META TEST SCRIPT
-#
-# FIX:  Finish issubclass search and replace:  Utilities 260
-#
 
 # IMPLEMENT: For Mechanism, dictionaries for receivesFromProjections and sendsToProjections;
 #            each entry is the name of an inputState or outputState;  value is tuple with...??
