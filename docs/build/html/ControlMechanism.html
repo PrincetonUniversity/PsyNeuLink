@@ -184,7 +184,7 @@ ControlMechanism is a <code class="docutils literal"><span class="pre">controlle
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
 <p>ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">Creating a System</span></a>),
+A ControlMechanism is also created automatically whenever a system is created (see <span class="xref std std-ref">System_Creation</span>),
 and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>). The outputStates to be monitored
 by a ControlMechanism are specified in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> argument, which can be specified in a number of
 ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
@@ -224,7 +224,7 @@ monitored even if the mechanism is not a <code class="xref std std-keyword docut
 </ul>
 <ul>
 <li><p class="first">OutputStates to be monitored can be specified in the <strong>ControlMechanism</strong> responsible for the monitoring, or in the
-<strong>system</strong> for which that ControlMechanism is the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>).  Specification
+<strong>system</strong> for which that ControlMechanism is the <span class="xref std std-ref">controller</span>).  Specification
 can be in the controlMechanism or system&#8217;s <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument, or in the
 <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="docutils literal"><span class="pre">params</span></code> argument.  In
 either case, the value must be a list, each item of which must be one of the following:</p>
@@ -276,7 +276,7 @@ must have the three following items in the order listed:</p>
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>The ControlMechanism of a system is always the last to be executed (see System <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">Control</span></a>).  A
+<p>The ControlMechanism of a system is always the last to be executed (see System <span class="xref std std-ref">System_Execution_Control</span>).  A
 ControlMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> takes as its input the values of the outputStates specified in its
 <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> parameter, and uses those to determine the value of its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
 projections. In the next round of execution, each ControlProjection&#8217;s value is used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it

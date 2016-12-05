@@ -85,11 +85,31 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ParameterState</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-parameters">Specifying Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -248,8 +268,8 @@ each of which is specified using a different format:</p>
 </pre></div>
 </div>
 <p>The first parameter of the mechanism&#8217;s function (<code class="docutils literal"><span class="pre">param_a</span></code>) is assigned a value directly; the second (<code class="docutils literal"><span class="pre">param_b</span></code>) is
-assigned a value and a ControlProjection; the third (<code class="docutils literal"><span class="pre">param_c</span></code>) is assigned a value and a <a class="reference internal" href="ControlProjection.html#controlprojection-structure"><span class="std std-ref">ControlProjection
-with a specified function</span></a>; and the fourth (<code class="docutils literal"><span class="pre">param_d</span></code>) is assigned just a
+assigned a value and a ControlProjection; the third (<code class="docutils literal"><span class="pre">param_c</span></code>) is assigned a value and a <span class="xref std std-ref">ControlProjection
+with a specified function</span>; and the fourth (<code class="docutils literal"><span class="pre">param_d</span></code>) is assigned just a
 ControlProjection (the default vaue for the parameter will be used).</p>
 <p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is assigned a
 a random weight matrix (using a <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">matrix keyword</span></a>) and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>:</p>
