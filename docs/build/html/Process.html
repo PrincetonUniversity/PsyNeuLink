@@ -637,7 +637,7 @@ assigned using <code class="docutils literal"><span class="pre">classPreferences
 
 <dl class="method">
 <dt id="Process.Process_Base.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=NotImplemented</em>, <em>target=None</em>, <em>time_scale=None</em>, <em>runtime_params=NotImplemented</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>target=None</em>, <em>time_scale=None</em>, <em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Coordinate execution of mechanisms in project list (self.pathway)</p>
 <p>First check that input is provided (required).
 Then go through mechanisms in pathway list, and execute each one in the order they appear in the list.</p>
@@ -702,6 +702,21 @@ each execution.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Process.Process_Base.show">
+<code class="descname">show</code><span class="sig-paren">(</span><em>options=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print <code class="docutils literal"><span class="pre">executionList</span></code>, <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms,
+<code class="docutils literal"><span class="pre">outputs</span></code> and their labels for the system.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>options</strong> (<em>InspectionOptions</em>) &#8211; [TBI]</td>
 </tr>
 </tbody>
 </table>

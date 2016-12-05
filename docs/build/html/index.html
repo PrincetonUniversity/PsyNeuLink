@@ -187,6 +187,99 @@ constraints as possible on what it is possible to implement or ask a model to do
 </div>
 <div class="section" id="functional-architecture">
 <h2>Functional Architecture<a class="headerlink" href="#functional-architecture" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink uses the following primary constructs:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="System.html"><span class="doc">System</span></a></dt>
+<dd><p class="first">Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Process.html"><span class="doc">Process</span></a></dt>
+<dd><p class="first">Takes an input, processes it through an ordered list of mechanisms and projections, and generates an output.</p>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a></dt>
+<dd><p class="first">Transforms an input representation into an output representation.
+Parameters determine its operation, under the influence of projections.
+There are three primary types:
+..</p>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
+<dd><p class="first last">Aggregates the inputs it receives from other mechanisms or the input to a process or system,
+transforms them in some way, and provides the result either as input to other mechanisms and/or
+to the output of a process or system.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
+<dd><p class="first last">Evaluates the output of one or more other mechanisms, and uses this to modify the parameters of those
+or other mechanisms.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul class="last">
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a></dt>
+<dd><p class="first last">Monitors the output of one or more other mechanisms, compares these to a target value,
+and generates an error signal used for learning.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a></dt>
+<dd><blockquote class="first">
+<div><p>Takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of
+another mechanism. There are three primary types:</p>
+</div></blockquote>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
+<dd><p class="first last">Takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+and provides it as input to that receiver mechanism.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
+<dd><p class="first last">Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
+the parameter(s) of a mechanism.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
+<dd><p class="first last">Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
+and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="last docutils">
+<dt>[+ GatingSignal —&nbsp;Not yet implemented</dt>
+<dd><p class="first last">Takes a gating signal source and uses it to modulate the input or output state of a mechanism.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
 <dl class="docutils">
 <dt>Every PsyNeuLink object is a subclass of the <span class="xref doc">Component</span> subclass.  Every component has a:</dt>
 <dd><ul class="first last">
@@ -198,7 +291,7 @@ constraints as possible on what it is possible to implement or ask a model to do
 </li>
 <li><dl class="first docutils">
 <dt><code class="docutils literal"><span class="pre">function</span></code></dt>
-<dd><p class="first last">performs the core comoputation of a component.</p>
+<dd><p class="first last">performs the core computation of a component.</p>
 </dd>
 </dl>
 </li>
@@ -211,98 +304,6 @@ constraints as possible on what it is possible to implement or ask a model to do
 </ul>
 </dd>
 </dl>
-<p>PsyNeuLink uses the following primary constructs:</p>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="System.html"><span class="doc">System</span></a></dt>
-<dd><p class="first">Set of (potentially interacting) processes, possibly managed by a ControlMechanism.</p>
-<ul class="last">
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="Process.html"><span class="doc">Process</span></a></dt>
-<dd><p class="first">Component that takes an input, processes it through an ordered list of mechanisms (and projections)
-and generates an output.</p>
-<ul class="last">
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a></dt>
-<dd><p class="first">Component that takes an input, transforms it in some way, and provides
-it as an output that can be used for some purpose.
-..</p>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
-<dd><p class="first last">Component aggregrate the input they receive from other mechanisms in a process or system,
-and/or the input to a process or system, transform it in some way, and provide the result either as
-input for other mechanisms and/or the output of a process or system.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
-<dd><p class="first last">Component that evaluates the output of one or more other mechanisms, and uses this to modify the
-function parameters of those or other mechanisms.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<ul class="last">
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a></dt>
-<dd><p class="first last">Component that monitors the output of one or more other mechanisms, receive training (target) values,
-and compare these to generate error signals used for learning</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a></dt>
-<dd><p class="first">Component that takes a source of input from one mechanism (its sender) and conveys it to another (its
-receiver), transforming it if necessary so that it is usable by its receiver.</p>
-<ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
-<dd><p class="first last">Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
-and then provide that as input to the receiver mechanism.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">Takes an allocation (scalar), possibly transforms it,
-and uses it to modulate the parameter(s) of another mechanism&#8217;s function.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd><p class="first last">Takes an error signal (scalar or vector), possibly transforms it,
-and uses it to modulate the parameter(s) of a projection function (e.g., the weights of a matrix).</p>
-</dd>
-</dl>
-</li>
-</ul>
-<dl class="last docutils">
-<dt>[+ GatingSignal —&nbsp;Not yet implemented</dt>
-<dd><p class="first last">Takes a source, possibly transforms it, and uses it to
-modulate the input or output state of a mechanism.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
 </div>
 <div class="section" id="contributors">
 <h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
