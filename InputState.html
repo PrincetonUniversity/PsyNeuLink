@@ -170,7 +170,7 @@ and the result is assigned to a corresponding item in the owner mechanism&#8217;
 <span id="inputstate-creation"></span><h2>Creating an InputState<a class="headerlink" href="#creating-an-inputstate" title="Permalink to this headline">¶</a></h2>
 <p>An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically create the inputState(s) it needs when it is created.  For example, if the mechanism is
-being created within the <a class="reference internal" href="Process.html#process-pathway"><span class="std std-ref">pathway of a process</span></a>, its inputState will be created and assigned as
+being created within the <span class="xref std std-ref">pathway of a process</span>, its inputState will be created and assigned as
 the <code class="docutils literal"><span class="pre">receiver</span></code> of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
 need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
 the mechanism&#8217;s parameter dictionary, using the key <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> [LINK] and a value that specifies one or
