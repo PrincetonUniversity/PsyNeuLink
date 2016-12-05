@@ -777,7 +777,7 @@ class Process_Base(Process):
                                                  target=target,
                                                  params=params)
 
-        self.pathway = NotImplemented
+        self.pathway = None
         self.input = None
         self.processInputStates = []
         self.function = self.execute
@@ -818,7 +818,7 @@ class Process_Base(Process):
         if variable:
             self.variable = convert_to_np_array(self.variable, 2)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate learning and initial_values args
         """
 
@@ -1797,7 +1797,7 @@ class Process_Base(Process):
                 # params=None,
                 target=None,
                 time_scale=None,
-                runtime_params=NotImplemented,
+                runtime_params=None,
                 context=None
                 ):
         """Coordinate execution of mechanisms in project list (self.pathway)

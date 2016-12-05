@@ -590,7 +590,7 @@ class System_Base(System):
                                                  monitor_for_control=monitor_for_control,
                                                  params=params)
 
-        self.pathway = NotImplemented
+        self.pathway = None
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.function = self.execute
@@ -682,7 +682,7 @@ class System_Base(System):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1330,7 +1330,7 @@ class System_Base(System):
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
                             # MODIFIED 12/4/16 NEW:
-                            if process._learning_enabled:
+                            if process.learning and process._learning_enabled:
                                 continue
                             # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
