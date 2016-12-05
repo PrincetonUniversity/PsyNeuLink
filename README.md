@@ -96,7 +96,7 @@ It does this in a manner that:
     
              + LearningProjection:
                  takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism) 
-                 and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).
+                 and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).
                  
              [+ GatingProjection — Not yet implemented
                  takes a gating signal source and uses it to modulate the input or output state of a mechanism.
