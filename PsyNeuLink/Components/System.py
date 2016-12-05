@@ -1329,6 +1329,10 @@ class System_Base(System):
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
+                            # MODIFIED 12/4/16 NEW:
+                            if process._learning_enabled:
+                                continue
+                            # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
@@ -1354,7 +1358,22 @@ class System_Base(System):
         if not EVC_SIMULATION in context:
             for process in self.processes:
                 if process.learning and process._learning_enabled:
+                    # MODIFIED 12/4/16 NEW:
+                    # for mech in process.monitoring_mechanisms:
+                    for mech_tuple in process.monitoringMechanisms.mech_tuples:
+                        mech_tuple.mechanism.execute(time_scale=self.timeScale,
+                                                     runtime_params=mech_tuple.params,
+                                                     context=context)
+                    # MODIFIED 12/4/16 END
+
                     process._execute_learning(context=context)
+
+                    # MODIFIED 12/4/16 NEW:
+                    if report_system_output:
+                        if report_process_output:
+                            process._report_process_completion()
+                    # MODIFIED 12/4/16 END
+
         # endregion
 
 

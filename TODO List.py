@@ -8,12 +8,6 @@
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 #
 #
-# FIX: WHICH IS CORRECT (SEBASTIAN):
-#             # MODIFIED 12/4/16 OLD:
-#             self._mech_tuples.extend(self._monitoring__mech_tuples)
-#             # # MODIFIED 12/4/16 NEW:
-#             # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
-#             # MODIFIED 12/4/16 END
 
 # IMPLEMENT / DOCUMENTATION:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909

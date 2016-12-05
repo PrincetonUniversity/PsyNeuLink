@@ -1899,10 +1899,14 @@ class Process_Base(Process):
     def _execute_learning(self, context=None):
         """ Update each LearningProjection for mechanisms in _mech_tuples of process
 
-        Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
+        # Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
 
         """
-        for item in reversed(self._mech_tuples):
+        # MODIFIED 12/4/16 OLD:
+        # for item in reversed(self._mech_tuples):
+        # MODIFIED 12/4/16 NEW:  NO NEED TO REVERSE, AS THIS IS JUST UPDATING PARMAETER STATES, NOT ACTIVITIES
+        for item in self._mech_tuples:
+        # MODIFIED 12/4/16 END
             mech = item.mechanism
             params = item.params
 
