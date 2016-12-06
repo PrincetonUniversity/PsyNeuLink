@@ -162,15 +162,17 @@ Learning
 ~~~~~~~~
 
 Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for a :ref:`projection <LearningProjection_Creation>` to a
-particular mechanism, or for the entire process (using its ''learning'' attribute).  Specifying learning for a
-process will implement it for all eligible projections the process (i.e., all MappingProjections, excluding
-projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the
-:keyword:`TERIMINAL` mechanism to the process' outputState). When learning is specified for the process, all
-projections in the process will be trained so that input to the process (i.e., its :keyword:`ORIGIN` mechanism)
-will generate the specified target value as its output (i.e., the output of the :keyword:`TERMINAL` mechanism).
-In either case, all mechanisms that receive projections for which learning has been specified must be compatiable
-with learning (see :doc:`LearningProjection`).
+Learning can be configured for the projection to a particular mechanism in a process, or for the entire process.
+It is specified for a particular mechanism by including a
+:ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
+to that mechanism [LINK].  It is specified for the entire process by assigning to its ``learning`` argument either a
+LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
+implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
+the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the :keyword:`TERMINAL` mechanism to
+the process' outputState). When learning is specified for the process, all projections in the process will be trained
+so that input to the process (i.e., its :keyword:`ORIGIN` mechanism) will generate the specified target value as its
+output (i.e., the output of the :keyword:`TERMINAL` mechanism). In either case, all mechanisms that receive
+projections for which learning has been specified must be compatible with learning (see :doc:`LearningProjection`).
 
 When learning is specified, the following objects are automatically created (see figure below):
 * :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value;
@@ -272,9 +274,9 @@ with backpropagation::
 
 .. XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=LEARNING_PROJECTION)
+    #                      learning=LEARNING)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-                         learning=LEARNING_PROJECTION,
+                         learning=LEARNING,
                          target=[0])
 
 .. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
@@ -284,7 +286,7 @@ with backpropagation::
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=LEARNING_PROJECTION)
+    #                      learning=LEARNING)
 
 
 
@@ -312,7 +314,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, kwWeightChangeParams
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
@@ -352,7 +354,7 @@ def process(process_spec=None,
             initial_values:dict={},
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-            learning:tc.optional(_is_projection_spec)=None,
+            learning:tc.optional(_is_learning_spec)=None,
             target:tc.optional(is_numeric)=None,
             params=None,
             name=None,
@@ -1136,6 +1138,11 @@ class Process_Base(Process):
 
         # If learning is specified for the Process, add to default projection params
         if self.learning:
+
+            # if spec is LEARNING (convenience spec), change to projection version of keyword for consistency below
+            if self.learning is LEARNING:
+                self.learning = LEARNING_PROJECTION
+
             # FIX: IF self.learning IS AN ACTUAL LearningProjection OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
             # FIX:     OR CAN THE SAME LearningProjection OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
             # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?
@@ -1342,7 +1349,7 @@ class Process_Base(Process):
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
-                                if sender_arg in {None, NotImplemented}:
+                                if sender_arg is None:
                                     item.init_args[kwSenderArg] = sender_mech
                                 elif sender_arg is not sender_mech:
                                     raise ProcessError("Sender of projection ({}) specified in item {} of"
@@ -1363,7 +1370,7 @@ class Process_Base(Process):
                             else:
                                 # If receiver is not specified for the projection,
                                 #    assign mechanism that follows it in the pathway
-                                if receiver_arg in {None, NotImplemented}:
+                                if receiver_arg is None:
                                     item.init_args[kwReceiverArg] = receiver_mech
                                 elif receiver_arg is not receiver_mech:
                                     raise ProcessError("Receiver of projection ({}) specified in item {} of"
@@ -1607,7 +1614,7 @@ class Process_Base(Process):
 
         """
         # Validate input
-        if input is None or input is NotImplemented:
+        if input is None:
             input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
@@ -1643,20 +1650,20 @@ class Process_Base(Process):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
-            go through _mech_tuples in reverse order of pathway since
-                learning signals are processed from the output (where the training signal is provided) backwards
-            exhaustively check all of components of each mechanism,
-                including all projections to its inputStates and parameterStates
-            initialize all items that specified deferred initialization
-            construct a _monitoring__mech_tuples of mechanism tuples (mech, params, phase_spec):
-                assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-            add _monitoring__mech_tuples to the Process' _mech_tuples
-            assign input projection from Process to first mechanism in _monitoring__mech_tuples
+            For learning:
+                go through _mech_tuples in reverse order of pathway since
+                    LearningProjections are processed from the output (where the training signal is provided) backwards
+                exhaustively check all of components of each mechanism,
+                    including all projections to its inputStates and parameterStates
+                initialize all items that specified deferred initialization
+                construct a _monitoring__mech_tuples of mechanism tuples (mech, params, phase_spec):
+                    assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
+                add _monitoring__mech_tuples to the Process' _mech_tuples
+                assign input projection from Process to first mechanism in _monitoring__mech_tuples
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningProjection
-
-        IMPLEMENTATION NOTE: this is implemented to be fully general, but at present may be overkill
-                             since the only objects that currently use deferred initialization are LearningSignals
+                             this is implemented to be fully general, but at present may be overkill
+                             since the only objects that currently use deferred initialization are LearningProjections
         """
 
         # For each mechanism in the Process, in backwards order through its _mech_tuples
@@ -1676,19 +1683,11 @@ class Process_Base(Process):
 
         # Add _monitoring__mech_tuples to _mech_tuples for execution
         if self._monitoring__mech_tuples:
-            # MODIFIED 12/4/16 OLD:
             self._mech_tuples.extend(self._monitoring__mech_tuples)
-            # # MODIFIED 12/4/16 NEW:
-            # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
-            # MODIFIED 12/4/16 END
 
-            # MODIFIED 10/2/16 OLD:
-            # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
-            # self._phaseSpecMax = self._phaseSpecMax + 1
-            # MODIFIED 10/2/16 NEW:
-            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED _phaseSpecMax, SO LEAVE IT ALONE
-            # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
-            # MODIFIED 10/2/16 END
+            # IMPLEMENTATION NOTE:
+            #   MonitoringMechanisms for learning are assigned _phaseSpecMax;
+            #   this is so that they will run after the last ProcessingMechansisms have run
 
     def _instantiate__deferred_init_projections(self, projection_list, context=None):
 
@@ -1734,7 +1733,9 @@ class Process_Base(Process):
 
          This should only be called if self.learning is specified
          Check that there is one and only one ComparatorMechanism for the process
-         Assign comparatorMechanism to self.comparatorMechanism, assign self to comparatorMechanism.processes, and report assignment if verbose
+         Assign comparatorMechanism to self.comparatorMechanism,
+             assign self to comparatorMechanism.processes,
+             and report assignment if verbose
         """
 
         if not self.learning:
@@ -2146,7 +2147,7 @@ class ProcessInputState(OutputState):
        self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
 
     """
-    def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
+    def __init__(self, owner=None, variable=None, name=None, prefs=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:

@@ -311,7 +311,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
         super()._validate_variable(variable=variable, context=context)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Get (and validate) [TBI: SAMPLE, TARGET and/or] FUNCTION if specified
 
         # TBI:
@@ -416,8 +416,8 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         super()._instantiate_function(context=context)
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 

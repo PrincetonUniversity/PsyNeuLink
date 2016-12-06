@@ -236,7 +236,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that width of NEXT_LEVEL_PROJECTION matrix equals length of error_signal
 
         Validate that width of matrix for projection in NEXT_LEVEL_PROJECTION param equals length of error_signal
@@ -260,8 +260,8 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 

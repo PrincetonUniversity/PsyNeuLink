@@ -693,7 +693,10 @@ class Mechanism_Base(Mechanism):
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({
         kwMechanismTimeScale: TimeScale.TRIAL,
-        MONITOR_FOR_CONTROL: NotImplemented,
+        MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
+                                              # but is set to NotImplemented so that it is ignored if it is not
+                                              # assigned;  setting it to None actively disallows assignment
+                                              # (see EVCMechanism_instantiate_input_states for more details)
         MONITOR_FOR_LEARNING: None
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,

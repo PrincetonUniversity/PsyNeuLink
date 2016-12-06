@@ -690,15 +690,13 @@ class Projection_Base(Projection):
 def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification
 
-    Return true if spec is any of the following:
+    Return :keyword:`true` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
     + specification dict containing:
         + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
 
     Otherwise, return :keyword:`False`
-
-    Returns: (bool)
     """
     if inspect.isclass(spec) and issubclass(spec, Projection):
         return True

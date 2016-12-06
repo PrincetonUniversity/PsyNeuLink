@@ -51,7 +51,7 @@ class RegistryError(Exception):
 def register_category(entry,
                       base_class,
                       name=None,
-                      registry=NotImplemented,
+                      registry=None,
                       context='Registry'):
 # MODIFIED 9/10/16 END
 # DOCUMENT:

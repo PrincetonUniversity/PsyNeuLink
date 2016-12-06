@@ -857,7 +857,7 @@ class EVCMechanism(ControlMechanism_Base):
             self.predictionMechanisms.append(prediction_mechanism)
 
             # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
-            prediction_process = Process_Base(default_input_value=NotImplemented,
+            prediction_process = Process_Base(default_input_value=None,
                                               params={
                                                   PATHWAY:[(mech, mech.phaseSpec),
                                                                    IDENTITY_MATRIX,
@@ -991,10 +991,10 @@ class EVCMechanism(ControlMechanism_Base):
         return simulation_inputs
 
     def __execute__(self,
-                    variable=NotImplemented,
+                    variable=None,
                     params=None,
                     time_scale=TimeScale.TRIAL,
-                    runtime_params=NotImplemented,
+                    runtime_params=None,
                     context=None):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
