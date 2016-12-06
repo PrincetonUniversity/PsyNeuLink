@@ -105,11 +105,11 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
    Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
    series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
    that converge on a common final ProcessingMechanism.  The latter projects to a
-   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive learning in Process B.  It also projects to
-   a :doc:`ControlMechanism <ControlMechanism>` that regulates ProcessingMechanisms in both Processes A and B.  Note
-   that while the mechanisms and projections responsible for learning belong to, and are restricted to a single
-   process, those responsible for control belong to the system and can monitor and/or control mechanisms belonging to
-   more than one process.
+   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in
+   Process B. It also projects to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>`
+   ProcessingMechanisms in both Processes A and B.  Note that while the mechanisms and projections responsible for
+   learning belong to, and are restricted to a single process, those responsible for control belong to the system and
+    can monitor and/or control mechanisms belonging to more than one process.
 
 ..
     Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:

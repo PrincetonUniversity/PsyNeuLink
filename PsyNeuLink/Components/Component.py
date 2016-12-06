@@ -1208,7 +1208,6 @@ class Component(object):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
 
-            # MODIFIED 12/1/16 NEW:
             # If the value is a projection, projection class, or a keyword for one, for anything other than
             #    the FUNCTION param (which is not allowed to be specified as a projection)
             #    then simply assign value to paramClassDefault (implicaton of not specifying it explicitly);
@@ -1216,12 +1215,12 @@ class Component(object):
             from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
             # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
             # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-            if (((isinstance(param_value, str) and param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION}) or
+            if (((isinstance(param_value, str) and
+                          param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
                 inspect.isclass(param_value) and issubclass(param_value,(Projection)))
                 and not param_name is FUNCTION):
                 param_value = self.paramClassDefaults[param_name]
-            # MODIFIED 12/1/16 END
 
             # If self is a Function:
             #    if param is a tuple, get its value (since Functions can't take projection specifications)
