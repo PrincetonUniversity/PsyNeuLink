@@ -2146,7 +2146,7 @@ class ProcessInputState(OutputState):
        self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
 
     """
-    def __init__(self, owner=None, variable=NotImplemented, name=None, prefs=None):
+    def __init__(self, owner=None, variable=None, name=None, prefs=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
         :param variable:

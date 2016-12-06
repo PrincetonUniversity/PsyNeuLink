@@ -98,7 +98,7 @@ def is_pref(pref):
 def is_pref_set(pref):
     if pref is None:
         return True
-    if isinstance(pref, (ComponentPreferenceSet, type(NotImplemented))):
+    if isinstance(pref, (ComponentPreferenceSet, type(None))):
         return True
     if isinstance(pref, dict):
         if all(key in ComponentPreferenceSetPrefs for key in pref):
@@ -222,11 +222,11 @@ class ComponentPreferenceSet(PreferenceSet):
 
     }
 
-    baseClass = NotImplemented
+    baseClass = None
 
     def __init__(self,
-                 owner=NotImplemented,
-                 prefs=NotImplemented,
+                 owner=None,
+                 prefs=None,
                  level=PreferenceLevel.SYSTEM,
                  name=None,
                  context=None,
@@ -268,12 +268,12 @@ class ComponentPreferenceSet(PreferenceSet):
                 pass
 
         # If baseClass has not been assigned, do so here:
-        if self.baseClass is NotImplemented:
+        if self.baseClass is None:
             from PsyNeuLink.Components.Component import Component
             self.baseClass = Component
 
         # If owner is not specified, assign DefaultProcessingMechanism_Base as default owner
-        if owner is NotImplemented:
+        if owner is None:
             from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
             DefaultPreferenceSetOwner = DefaultProcessingMechanism_Base(name=kwDefaultPreferenceSetOwner)
             owner = DefaultPreferenceSetOwner

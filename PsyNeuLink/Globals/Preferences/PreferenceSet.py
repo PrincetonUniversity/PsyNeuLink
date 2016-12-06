@@ -197,7 +197,7 @@ class PreferenceSet(object):
                                          format(self.__class__.__name__, self.baseClass))
             else:
                 # owner of PreferenceSet must be a subclass or instance of a subclass in baseClass
-                if not (inspect.isclass(owner) or isinstance(owner, self.baseClass)) or owner is NotImplemented:
+                if not (inspect.isclass(owner) or isinstance(owner, self.baseClass)) or owner is None:
                     raise PreferenceSetError("owner argument must be included in call to {1}() "
                                              "and must be an object in the {2} class hierarchy".
                                          format(owner, self.__class__.__name__, self.baseClass.__name__))
@@ -210,9 +210,9 @@ class PreferenceSet(object):
             raise PreferenceSetError("{0} must implement defaultPreferencesDict dict as a class attribute".
                                      format(self.__class__.__name__))
 
-        # prefs must be a specification dict or NotImplemented or None
+        # prefs must be a specification dict or None
         # FIX: replace with typecheck
-        if not (isinstance(prefs, dict) or prefs is NotImplemented or prefs is None):
+        if not (isinstance(prefs, dict) or prefs is None):
             raise PreferenceSetError("Preferences ({0}) specified for {1} must a PreferenceSet or"
                                      " specification dict of preferences".format(prefs, owner.name))
         #endregion
@@ -279,7 +279,7 @@ class PreferenceSet(object):
             if isinstance(class_prefs, PreferenceSet):
                 self = class_prefs
 
-                if prefs is NotImplemented:                                                    # Condition 1
+                if prefs is None:                                                    # Condition 1
                     # No prefs arg, so just assign self to class_prefs
                     condition = 1
 
