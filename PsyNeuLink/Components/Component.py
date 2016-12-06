@@ -337,12 +337,7 @@ class Component(object):
         context = context + INITIALIZING + ": " + COMPONENT_INIT
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
-        # # MODIFIED  OLD:
-        # self.variableInstanceDefault = NotImplemented
-        # # MODIFIED  NEW:
         self.variableInstanceDefault = None
-        # MODIFIED  END
-        # self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
         self.componentName = self.componentType
@@ -364,7 +359,7 @@ class Component(object):
         if isinstance(prefs, PreferenceSet):
             self.prefs = prefs
             # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # Otherwise, if prefs is a specification dict instantiate it, or if it is NotImplemented assign defaults
+        # Otherwise, if prefs is a specification dict instantiate it, or if it is None, assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
         #endregion
@@ -761,7 +756,7 @@ class Component(object):
             self.runtime_params_in_use = False
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        if self.prefs.paramValidationPref and params and not params is target_set:
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
 
@@ -809,11 +804,7 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        # MODIFIED 11/22/16 OLD:
-        # if not variable is NotImplemented:
-        # MODIFIED 11/22/16 NEW:
-        if not variable is None:
-        # MODIFIED 11/22/16 END
+        if not variable is None and not variable is NotImplemented:
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
         if request_set and not request_set is None:
@@ -1400,9 +1391,9 @@ class Component(object):
                                     " paramClassDefaults, or as the default for the function argument in its init".
                                     format(self.__class__.__name__, FUNCTION))
             else:
-                # self.function is NotImplemented
-                # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
-                if (function is None):
+                # self.function is None
+                # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned None
+                if function is None:
                     raise("PROGRAM ERROR: either {0} must be specified or {1}.function must be implemented for {2}".
                           format(FUNCTION,self.__class__.__name__, self.name))
                 # self.function is OK, so return
