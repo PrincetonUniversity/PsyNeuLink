@@ -73,10 +73,6 @@
 #            (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
 #            i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
 
-# DOCUMENT:  runtime param assignment is one-time by default;
-#            but can use runtimeParamsStickyAssignmentPref for persistent assignment
-#            or use assign_param
-#
 # FIX: GET RID OF NotImplemented:  STILL LINGERING FOR:
 #                MONITOR_FOR_CONTROL (see Mechanism line 696)
 #                     needed to distinguish between suppress and ignore MONITOR_FOR_CONTROL
@@ -119,18 +115,11 @@
 
 
 # 11/22/16:
-# √ AdaptiveIntegrator -> IntegratorMechanism
-# √ TransferMechanism -> TransferMechanism
-# √ WeightedErrorMechanism -> WeightedErrorMechanism
-# √ ComparatorMechanism -> ComparatorMechanism
-#   DDM -> DDMMechanism
-# √ Mapping -> MappingProjection
-# √ ControlSignal -> ControlProjection
-#   LearningSignal -> LearningProjection
+# FIX: DDM -> DDMMechanism
 
 # 11/12/16:
 # FIX: WHY BOTHER WITH inputValue ATTRIBUTE?  IF IT IS WORTH KEEPING, ADD TO DOCUMENTATION OF MECHANISM AND INPUTSTATE
-#    inputValue is a list, variable is a 2d np.nparray
+# DOCUMENTATION:  inputValue is a list, variable is a 2d np.nparray
 
 # 11/19/16:
 # FIX: WHY IS THE FIRST ARGUMENT FOR A State (AND ITS SUBCLASSES) "value" RATHER THAN "variable"??

@@ -161,7 +161,14 @@
 <h1>MonitoringMechanisms<a class="headerlink" href="#monitoringmechanisms" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#creating-a-comparatormechanism">Creating a ComparatorMechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ComparatorMechanism.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="WeightedErrorMechanism.html">WeightedErrorMechanism</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="WeightedErrorMechanism.html#creating-a-weightederrormechanism">Creating A WeightedErrorMechanism</a></li>
@@ -182,7 +189,7 @@ for learning[LINK]) or some other value (e.g., conflict).</p>
 <span id="monitoringmechanism-creation"></span><h2>Creating A MonitoringMechanism<a class="headerlink" href="#creating-a-monitoringmechanism" title="Permalink to this headline">¶</a></h2>
 <p>a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
 type. One or more MonitoringMechanisms are also created automatically when a process or system is created for
-which learning is specified (see <span class="xref std std-ref">learning in a process</span>,
+which learning is specified (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>,
 and <span class="xref std std-ref">automatic creation of LearningSignals</span> for the specific requirements of each type.</p>
 </div>
 <div class="section" id="execution">
@@ -202,7 +209,7 @@ compares the monitored value).</p>
 
 <dl class="class">
 <dt id="MonitoringMechanism.MonitoringMechanism_Base">
-<em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=NotImplemented</em>, <em>params=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>MonitoringMechanism(     variable=None,           params=None,             name=None,               prefs=None,              context=None):
 Abstract class for MonitoringMechanism</p>
 <div class="admonition note">
