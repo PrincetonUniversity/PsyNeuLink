@@ -242,7 +242,7 @@ class Component(object):
     Class methods:
         - _validate_variable(variable)
         - _validate_params(request_set, target_set, context)
-        - _assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
+        - _assign_defaults(variable, request_set, assign_missing, target_set, default_set=None
         - reset_params()
         - _check_args(variable, params)
         - _assign_args_to_param_dicts(params, param_names, function_param_names)
@@ -359,7 +359,7 @@ class Component(object):
         if isinstance(prefs, PreferenceSet):
             self.prefs = prefs
             # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # Otherwise, if prefs is a specification dict instantiate it, or if it is None, assign defaults
+        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
         #endregion
@@ -692,7 +692,7 @@ class Component(object):
         """
 
         # If function is called without any arguments, get default for variable
-        if variable is NotImplemented:
+        if variable is None:
             variable = self.variableInstanceDefault # assigned by the Function class init when initializing
 
         # If the variable is a function, call it
@@ -700,7 +700,7 @@ class Component(object):
             variable = variable()
 
         # Validate variable if parameter_validation is set and the function was called with a variable
-        if self.prefs.paramValidationPref and not variable is NotImplemented:
+        if self.prefs.paramValidationPref and not variable is None:
             if context:
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
@@ -716,7 +716,7 @@ class Component(object):
         # # MODIFIED 11/27/16 OLD:
         # # If parameter_validation is set, the function was called with params,
         # #   and they have changed, then validate requested values and assign to target_set
-        # if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
@@ -774,7 +774,7 @@ class Component(object):
           request_set must contain a dict of params to be assigned to target_set (??and paramInstanceDefaults??)
           If assign_missing option is set, then any params defined for the class
               but not included in the requested set are assigned values from the default_set;
-              if request_set is NotImplemented, then all values in the target_set are assigned from the default_set
+              if request_set is None, then all values in the target_set are assigned from the default_set
               if the default set is not specified, then paramInstanceDefaults is used (see below)
           If target_set and/or default_set is not specified, paramInstanceDefaults is used for whichever is missing
               NOTES:
@@ -786,7 +786,7 @@ class Component(object):
                   calling with a request_set that has the values from paramInstanceDefaults to be preserved,
                   paramInstanceDefaults as target_set, and paramClassDefaults as default_set
               * all paramInstanceDefaults can be set to class ("factory") defaults by
-                  calling with an empty request_set (or is NotImplemented), paramInstanceDefaults for target_set,
+                  calling with an empty request_set (or =None), paramInstanceDefaults for target_set,
                   and paramClassDefaults as default_set (although reset_params does the same thing)
           Class defaults can not be passed as target_set
               IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;
@@ -804,16 +804,16 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        if not variable is None and not variable is NotImplemented:
+        if not variable is None:
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
-        if request_set and not request_set is None:
+        if request_set:
             if not isinstance(request_set, dict):
                 raise ComponentError("requested parameter set must be a dictionary")
-        if not target_set is None:
+        if target_set:
             if not isinstance(target_set, dict):
                 raise ComponentError("target parameter set must be a dictionary")
-        if not default_set is None:
+        if default_set:
             if not isinstance(default_set, dict):
                 raise ComponentError("default parameter set must be a dictionary")
 
