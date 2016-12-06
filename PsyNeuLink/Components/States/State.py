@@ -1263,7 +1263,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=NotImplemented, time_scale=None, params=None, context=None):
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
