@@ -187,7 +187,7 @@ constraints as possible on what it is possible to implement or ask a model to do
 </div>
 <div class="section" id="functional-architecture">
 <h2>Functional Architecture<a class="headerlink" href="#functional-architecture" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink uses the following primary constructs:</p>
+<p>PsyNeuLink uses the following primary constructs (illustrated in the <a class="reference internal" href="#system-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="System.html"><span class="doc">System</span></a></dt>
@@ -280,6 +280,18 @@ and uses it to modulate the parameter of a projection (usually the matrix of a M
 </dl>
 </li>
 </ul>
+<p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
+<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
+series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
+that converge on a common final ProcessingMechanism.  The latter projects to a
+<a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> that is used to drive learning in Process B.  It also projects to
+a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that regulates ProcessingMechanisms in both Processes A and B.  Note
+that while the mechanisms and projections responsible for learning belong to, and are restricted to a single
+process, those responsible for control belong to the system and can monitor and/or control mechanisms belonging to
+more than one process.</span></p>
+</div>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>

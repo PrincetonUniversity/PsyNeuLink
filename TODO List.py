@@ -9,6 +9,10 @@
 #
 #
 
+# DOCUMENT: Component:  :keyword:`NotImplemented` can be assigned to a parameter in the definition of paramClassDefaults
+#                          to allow it to pass _validate_params without having to make an assignment (i.e., to
+#                          suppress type checking.
+#                       :keyword:`None` is used to suppress its use by higher level assignments
 # IMPLEMENT:  Figure in README.md;
 #             Reconcile README.md and AND html docs first page.
 
