@@ -9,6 +9,12 @@
 #
 #
 
+# FIX: SYSTEM LEARNING:
+#      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
+#                     on the hidden layer of another process)
+#      2) System:  parse learning mechanism assignments to be sure that comparators are replaced with weighterorrs
+#                     where pathways converge.
+
 # DOCUMENT: Component:  :keyword:`NotImplemented` can be assigned to a parameter in the definition of paramClassDefaults
 #                          to allow it to pass _validate_params without having to make an assignment (i.e., to
 #                          suppress type checking.
