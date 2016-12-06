@@ -1342,7 +1342,7 @@ class Process_Base(Process):
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
-                                if sender_arg in {None, NotImplemented}:
+                                if sender_arg is None:
                                     item.init_args[kwSenderArg] = sender_mech
                                 elif sender_arg is not sender_mech:
                                     raise ProcessError("Sender of projection ({}) specified in item {} of"
@@ -1363,7 +1363,7 @@ class Process_Base(Process):
                             else:
                                 # If receiver is not specified for the projection,
                                 #    assign mechanism that follows it in the pathway
-                                if receiver_arg in {None, NotImplemented}:
+                                if receiver_arg is None:
                                     item.init_args[kwReceiverArg] = receiver_mech
                                 elif receiver_arg is not receiver_mech:
                                     raise ProcessError("Receiver of projection ({}) specified in item {} of"
@@ -1607,7 +1607,7 @@ class Process_Base(Process):
 
         """
         # Validate input
-        if input is None or input is NotImplemented:
+        if input is None:
             input = self.firstMechanism.variableInstanceDefault
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
