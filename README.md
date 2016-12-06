@@ -28,14 +28,14 @@ Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
 
 The tutorial is available at/by [???] 
 
-Right now, PsyNeuLink is in an alpha state and is not available through pypi/pip. Instead, you can clone the github repo [here](https://github.com/PrincetonUniversity/PsyNeuLink). For now, clone the devel branch rather than the master branch. You can switch branches by pressing the "branch: master" dropdown menu on the left side of the page. Then download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
+Right now, PsyNeuLink is in an alpha state and is not available through pypi/pip. Instead, you can clone the github repo [here](https://github.com/PrincetonUniversity/PsyNeuLink). Clone the master branch. Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
 Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
 Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
 
 PsyNeuLink is compatible with any version of python 3, but this tutorial requires a 3.5 installation with the latest versions of IPython, jupyter, and matplotlib installed.
 
-To install the package, navigate to the cloned directory in a terminal, switch to your preferred python3 environment, then run the command __"pip install ."__ (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5). All prerequisite packages will be automatically added to your enviroment.
+To install the package, navigate to the cloned directory in a terminal, switch to your preferred python3 environment, then run the command __"pip install ."__ (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5). All prerequisite packages will be automatically added to your environment.
 
 ## Purpose
 
