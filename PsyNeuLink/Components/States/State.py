@@ -1148,7 +1148,7 @@ class State_Base(State):
             # Get State params
             self.stateParams = params[self.paramsType]
         except (KeyError, TypeError):
-            self.stateParams = NotImplemented
+            self.stateParams = None
         except (AttributeError):
             raise StateError("PROGRAM ERROR: paramsType not specified for {}".format(self.name))
         #endregion

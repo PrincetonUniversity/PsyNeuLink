@@ -77,7 +77,12 @@
 #            but can use runtimeParamsStickyAssignmentPref for persistent assignment
 #            or use assign_param
 #
-# FIX: GET RID OF NotImplemented, epecially in validate_params
+# FIX: GET RID OF NotImplemented:  STILL LINGERING FOR:
+#                MONITOR_FOR_CONTROL (see Mechanism line 696)
+#                     needed to distinguish between suppress and ignore MONITOR_FOR_CONTROL
+#                variableClassDefault (see Component line 408)
+#                    needed to allow Process and System to set their variableClassDefault values to None
+
 # FIX: name of Functions is being assigned to Type rather than subtype
 # FIX: _validate_params ALWAYS ALLOW PARAMETER_STATE_PARAMS TO PASS
 # FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
