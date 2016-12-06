@@ -1276,7 +1276,7 @@ class System_Base(System):
                 process = self.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
-                if input is None or input is NotImplemented:
+                if input is None:
                     continue
                 else:
                     # Assign input as value of corresponding Process inputState

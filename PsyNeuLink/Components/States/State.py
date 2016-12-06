@@ -941,7 +941,7 @@ class State_Base(State):
             if not projection_spec in self.sendsToProjections:
                 self.sendsToProjections.append(projection_spec)
 
-    def _check_projection_receiver(self, projection_spec, messages=NotImplemented, context=None):
+    def _check_projection_receiver(self, projection_spec, messages=None, context=None):
         """Check whether Projection object references State as receiver and, if not, return default Projection object
 
         Arguments:
@@ -961,7 +961,7 @@ class State_Base(State):
         prefix = 0
         suffix = 1
         name = 2
-        if messages is NotImplemented:
+        if messages is None:
             messages = ["","","",context.__class__.__name__]
         message = "{}{} is a projection of the correct type for {}, but its receiver is not assigned to {}." \
                   " \nReassign (r) or use default projection (d)?:".format(messages[prefix],
@@ -994,7 +994,7 @@ class State_Base(State):
 
         return (projection_spec, None)
 
-    def _check_projection_sender(self, projection_spec, receiver, messages=NotImplemented, context=None):
+    def _check_projection_sender(self, projection_spec, receiver, messages=None, context=None):
         """Check whether Projection object references State as sender and, if not, return default Projection object
 
         Arguments:
@@ -1014,7 +1014,7 @@ class State_Base(State):
         prefix = 0
         suffix = 1
         name = 2
-        if messages is NotImplemented:
+        if messages is None:
             messages = ["","","",context.__class__.__name__]
         #FIX: NEED TO GET projection_spec.name VS .__name__ STRAIGHT BELOW
         message = "{}{} is a projection of the correct type for {}, but its sender is not assigned to {}." \
@@ -1128,7 +1128,7 @@ class State_Base(State):
 #
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
+    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Update each projection, combine them, and assign result to value
 
         Call update for each projection in self.receivesFromProjections (passing specified params)
@@ -1240,7 +1240,7 @@ class State_Base(State):
                 # pass only function params
                 function_params = self.stateParams[FUNCTION_PARAMS]
             except (KeyError, TypeError):
-                function_params = NotImplemented
+                function_params = None
 
             # Combine projection values
             combined_values = self.function(variable=projection_value_list,
@@ -1263,7 +1263,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=NotImplemented, time_scale=None, params=NotImplemented, context=None):
+    def execute(self, input=NotImplemented, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property

@@ -472,7 +472,7 @@ class PreferenceSet(object):
 #                                          " must be a {2} or PreferenceLevel".
 #                                          format(pref_spec, pref_attrib_name, type(pref_spec).__name__))
 
-    def set_preference(self, candidate_info, pref_ivar_name, default_entry=NotImplemented):
+    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None):
         """Validate and assign PreferenceSet, setting, or level to a PreferenceSet preference attribute
 
         Validate candidate candidate_info and, if OK, assign to pref_ivar_name attribute; candidate_info can be a:
@@ -519,7 +519,7 @@ class PreferenceSet(object):
 
         #region Get/validate defaults
         # No default specified
-        if default_entry is NotImplemented:
+        if default_entry is None:
             try:
                 # Get current info to use as reference and filler in new PreferenceEntry
                 #    in case candidate_info is just a level or setting
@@ -672,7 +672,7 @@ class PreferenceSet(object):
                                                     LogEntry.__module__+"."+LogEntry.__name__,
                                                     global_log_entry_value))
 
-    def get_pref_setting_for_level(self, pref_ivar_name, requested_level=NotImplemented):
+    def get_pref_setting_for_level(self, pref_ivar_name, requested_level=None):
         """Return the setting of a preference for a specified preference level, and any error messages generated
 
         Arguments:
@@ -684,7 +684,7 @@ class PreferenceSet(object):
         """
         pref_entry = getattr(self, pref_ivar_name)
 
-        if requested_level is NotImplemented:
+        if requested_level is None:
             requested_level = pref_entry.level
 
         # Preference is owned by an object
@@ -773,13 +773,13 @@ class PreferenceSet(object):
                                "is not a Function object or subclass".
                                format(self.owner.__class__.__name__, self.__class__.__name__, pref_ivar_name))
 
-    def show(self, type=NotImplemented):
+    def show(self, type=None):
         """Print preferences for PreferenceSet
 
         :return:
         """
 
-        if self.owner is NotImplemented:
+        if self.owner is None:
             raise PreferenceSetError("{0} does not have an owner assigned.  If this PreferenceSet belongs to a class,"
                                      "the class should be given as the owner arg "
                                      "in the call to instantiate the PreferenceSet".format(self.name))

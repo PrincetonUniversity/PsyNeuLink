@@ -139,7 +139,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
+                 default_input_value=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -152,7 +152,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         :param prefs: (PreferenceSet)
         """
 
-        if default_input_value is NotImplemented:
+        if default_input_value is None:
             # default_input_value = Comparator_DEFAULT_INPUT
             # FIX: ??CORRECT:
             default_input_value = self.variableClassDefault
@@ -185,7 +185,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
         super()._validate_variable(variable=variable, context=context)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Get (and validate) [TBI: SAMPLE, TARGET and/or] FUNCTION if specified
 
         # TBI:
@@ -312,8 +312,8 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
