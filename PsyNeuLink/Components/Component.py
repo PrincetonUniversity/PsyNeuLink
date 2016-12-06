@@ -675,7 +675,7 @@ class Component(object):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def _check_args(self, variable, params=NotImplemented, target_set=None, context=None):
+    def _check_args(self, variable, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params
 
         Called by functions to validate variable and params
@@ -766,11 +766,11 @@ class Component(object):
 
 
     def _assign_defaults(self,
-                        variable=NotImplemented,
-                        request_set=NotImplemented,
+                        variable=None,
+                        request_set=None,
                         assign_missing=True,
-                        target_set=NotImplemented,
-                        default_set=NotImplemented,
+                        target_set=None,
+                        default_set=None,
                         context=None
                         ):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
@@ -812,17 +812,17 @@ class Component(object):
         # MODIFIED 11/22/16 OLD:
         # if not variable is NotImplemented:
         # MODIFIED 11/22/16 NEW:
-        if not variable is None and not variable is NotImplemented:
+        if not variable is None:
         # MODIFIED 11/22/16 END
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
-        if request_set and not request_set is NotImplemented:
+        if request_set and not request_set is None:
             if not isinstance(request_set, dict):
                 raise ComponentError("requested parameter set must be a dictionary")
-        if not target_set is NotImplemented:
+        if not target_set is None:
             if not isinstance(target_set, dict):
                 raise ComponentError("target parameter set must be a dictionary")
-        if not default_set is NotImplemented:
+        if not default_set is None:
             if not isinstance(default_set, dict):
                 raise ComponentError("default parameter set must be a dictionary")
 
@@ -844,7 +844,7 @@ class Component(object):
 
         # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
         self._validate_variable(variable, context=context)
-        if variable is None or variable is NotImplemented:
+        if variable is None:
             self.variableInstanceDefault = self.variableClassDefault
         else:
             # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
@@ -853,17 +853,17 @@ class Component(object):
 
 
         # If no params were passed, then done
-        if request_set is NotImplemented and  target_set is NotImplemented and default_set is NotImplemented:
+        if request_set is None and  target_set is None and default_set is None:
             return
 
         # GET AND VALIDATE PARAMS
 
         # Assign param defaults for target_set and default_set
-        if target_set is NotImplemented:
+        if target_set is None:
             target_set = self.paramInstanceDefaults
         if target_set is self.paramClassDefaults:
             raise ComponentError("Altering paramClassDefaults not permitted")
-        if default_set is NotImplemented:
+        if default_set is None:
             default_set = self.paramInstanceDefaults
 
         # MODIFIED 11/28/16 OLD:
@@ -893,7 +893,7 @@ class Component(object):
         #  assign value from specified default set to any params missing from request set
         # Note:  do this before validating execute method and params, as some params may depend on others being present
         if assign_missing:
-            if not request_set or request_set is NotImplemented:
+            if not request_set:
                 request_set = {}
 
             # FIX: DO ALL OF THIS IN VALIDATE PARAMS?
@@ -1000,7 +1000,7 @@ class Component(object):
         # VALIDATE PARAMS
 
         # if request_set has been passed or created then validate and, if OK, assign to targets
-        if request_set and request_set != NotImplemented:
+        if request_set:
             self._validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
 
@@ -1122,7 +1122,7 @@ class Component(object):
         #    - mark as not having been specified
         #    - return
         self._variable_not_specified = False
-        if variable is None or variable is NotImplemented:
+        if variable is None:
             self.variable = self.variableClassDefault
             self._variable_not_specified = True
             return
@@ -1193,15 +1193,15 @@ class Component(object):
                 # MODIFIED 11/30/16 END
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
-            # The value of the param is None or NotImplemented in paramClassDefaults: suppress type checking
+            # The value of the param is None in paramClassDefaults: suppress type checking
             # DOCUMENT:
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
                 if self.prefs.verbosePref:
-                    warnings.warn("{0} is specified as NotImplemented for {1} which suppresses type checking".
+                    warnings.warn("{0} is specified as None for {1} which suppresses type checking".
                                   format(param_name, self.name))
-                if not target_set is NotImplemented:
+                if not target_set is None:
                     target_set[param_name] = param_value
                 continue
 
@@ -1290,7 +1290,7 @@ class Component(object):
                                     except KeyError:
                                         target_set[param_name] = {}
                                         target_set[param_name][entry_name] = entry_value
-                                    # target_set NotImplemented
+                                    # target_set None
                                     except TypeError:
                                         pass
                     else:
@@ -1316,15 +1316,11 @@ class Component(object):
                                 except KeyError:
                                     target_set[param_name] = {}
                                     target_set[param_name][entry_name] = entry_value
-                                # target_set NotImplemented
+                                # target_set None
                                 except TypeError:
                                     pass
 
-                                # if not target_set is NotImplemented:
-                                #     target_set[param_name][entry_name] = entry_value
-
-
-                elif not target_set is None and not target_set is NotImplemented:
+                elif not target_set is None:
                     target_set[param_name] = param_value
 
             # Parameter is not a valid type
@@ -1406,7 +1402,7 @@ class Component(object):
             else:
                 # self.function is NotImplemented
                 # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
-                if (function is NotImplemented):
+                if (function is None):
                     raise("PROGRAM ERROR: either {0} must be specified or {1}.function must be implemented for {2}".
                           format(FUNCTION,self.__class__.__name__, self.name))
                 # self.function is OK, so return

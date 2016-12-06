@@ -318,7 +318,7 @@ class LearningProjection(Projection_Base):
         # Flag for deferred initialization
         self.value = DEFERRED_INITIALIZATION
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or
         MappingProjection
 
@@ -903,7 +903,7 @@ FROM TODO:
     # # MODIFIED 9/4/16 OLD:
     # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
     # MODIFIED 9/4/16 NEW:
-    def execute(self, input=NotImplemented, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, time_scale=None, context=None):
     # MODIFIED 9/4/16 END
         """
 

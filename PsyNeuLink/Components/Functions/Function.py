@@ -418,7 +418,7 @@ class Contradiction(Function_Base): # Example
         else:
             raise FunctionError("Variable must be {0}".format(type(self.variableClassDefault)))
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validates variable and /or params and assigns to targets
 
         This overrides the class method, to perform more detailed type checking
@@ -805,7 +805,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
-        if not exponents is None and not exponents is NotImplemented:
+        if not exponents is None:
             if len(exponents) != len(self.variable):
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
@@ -817,7 +817,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 self.variable = self.variable ** exponents
 
         # Apply weights if they were specified
-        if not weights is None and not weights is NotImplemented:
+        if not weights is None:
             if len(weights) != len(self.variable):
                 raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))
@@ -1332,7 +1332,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 raise FunctionError("variable ({0}) for {1} must be a 1D np.ndarray".
                                    format(self.variable, self.__class__.__name__))
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -1691,7 +1691,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Reassign to kWInitializer in case default value was overridden
         self.oldValue = self.paramsCurrent[kwInitializer]
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
 
         # MODIFIED 11/22/16 NEW:
         # Handle list or array for rate specification
