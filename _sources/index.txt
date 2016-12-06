@@ -47,7 +47,7 @@ constraints as possible on what it is possible to implement or ask a model to do
 Functional Architecture
 -----------------------
 
-PsyNeuLink uses the following primary constructs:
+PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figure <System__Figure>` below):
 
 - :doc:`System`
     Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.
@@ -93,6 +93,23 @@ PsyNeuLink uses the following primary constructs:
 
             [+ GatingSignal — Not yet implemented
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
+
+.. _System__Figure:
+
+**Major Components in PsyNeuLink**
+
+.. figure:: _static/System_full_fig.png
+   :alt: Overview of major PsyNeuLink components
+   :scale: 75 %
+
+   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
+   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
+   that converge on a common final ProcessingMechanism.  The latter projects to a
+   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive learning in Process B.  It also projects to
+   a :doc:`ControlMechanism <ControlMechanism>` that regulates ProcessingMechanisms in both Processes A and B.  Note
+   that while the mechanisms and projections responsible for learning belong to, and are restricted to a single
+   process, those responsible for control belong to the system and can monitor and/or control mechanisms belonging to
+   more than one process.
 
 ..
     Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
