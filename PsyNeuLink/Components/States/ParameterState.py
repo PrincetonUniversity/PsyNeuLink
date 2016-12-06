@@ -664,8 +664,7 @@ class ParameterState(State_Base):
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
-        if (self.stateParams is NotImplemented or
-                    self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
+        if (not self.stateParams or self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
             return
 
         # Assign class-level pref as default operation
