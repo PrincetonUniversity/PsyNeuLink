@@ -6,9 +6,8 @@
 PsyNeuLink Documentation
 ========================
 
-
-Overview
---------
+Purpose
+-------
 
 PsyNeuLink is a "block modeling system" for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
@@ -48,7 +47,7 @@ constraints as possible on what it is possible to implement or ask a model to do
 Functional Architecture
 -----------------------
 
-PsyNeuLink uses the following primary constructs:
+PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figure <System__Figure>` below):
 
 - :doc:`System`
     Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.
@@ -90,19 +89,58 @@ PsyNeuLink uses the following primary constructs:
 
             + :doc:`LearningProjection`
                  Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
-                 and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).
+                 and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).
 
             [+ GatingSignal — Not yet implemented
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
 
-Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
-    * ``variable``
-        the input to its function, used both as a template for the format of the input, as its default value
-    * ``function``
-        performs the core computation of a component.
-    * ``params``
-        dictionary of parameters for the function
+.. _System__Figure:
 
+**Major Components in PsyNeuLink**
+
+.. figure:: _static/System_full_fig.png
+   :alt: Overview of major PsyNeuLink components
+   :scale: 75 %
+
+   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
+   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
+   that converge on a common final ProcessingMechanism.  The latter projects to a
+   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in
+   Process B. It also projects to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>`
+   ProcessingMechanisms in both Processes A and B.  Note that while the mechanisms and projections responsible for
+   learning belong to, and are restricted to a single process, those responsible for control belong to the system and
+    can monitor and/or control mechanisms belonging to more than one process.
+
+..
+    Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
+        * ``variable``
+            the input to its function, used both as a template for the format of the input, as its default value
+        * ``function``
+            performs the core computation of a component.
+        * ``params``
+            dictionary of parameters for the function
+
+
+Installation
+------------
+
+The tutorial is available at/by [???]
+
+Currently, PsyNeuLink is in an alpha state and is not available through pypi/pip.
+Instead, you can clone the github repo (https://github.com/PrincetonUniversity/PsyNeuLink).
+Clone the master branch.
+Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
+
+Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
+Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
+
+PsyNeuLink is compatible with any version of python 3,
+but this tutorial requires a 3.5 installation with the latest versions of IPython, jupyter, and matplotlib installed.
+
+To install the package, navigate to the cloned directory in a terminal,
+switch to your preferred python3 environment, then run the command __"pip install ."__
+(make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
+All prerequisite packages will be automatically added to your environment.
 
 
 Contributors

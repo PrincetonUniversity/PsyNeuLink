@@ -555,7 +555,7 @@ class ParameterState(State_Base):
 
         self.parameterModulationOperation = self.paramsCurrent[PARAMETER_MODULATION_OPERATION]
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure that parameterState (as identified by its name) is for a valid parameter for owner
 
         Parameter can be either owner's, or owner's function_object
@@ -611,7 +611,7 @@ class ParameterState(State_Base):
                                                   self.owner.variable))
 
 
-    def update(self, params=NotImplemented, time_scale=TimeScale.TRIAL, context=None):
+    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
         """Parse params for parameterState params and XXX ***
 
 # DOCUMENTATION:  MORE HERE:
@@ -664,8 +664,7 @@ class ParameterState(State_Base):
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
-        if (self.stateParams is NotImplemented or
-                    self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
+        if (not self.stateParams or self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
             return
 
         # Assign class-level pref as default operation

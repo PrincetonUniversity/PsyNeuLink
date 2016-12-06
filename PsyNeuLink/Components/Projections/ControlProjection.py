@@ -448,7 +448,7 @@ class ControlProjection(Projection_Base):
                                             prefs=prefs,
                                             context=self)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """validate allocation_samples and controlSignal cost functions
 
         Checks if:
@@ -686,7 +686,7 @@ class ControlProjection(Projection_Base):
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
 
-    def execute(self, variable=NotImplemented, params=NotImplemented, time_scale=None, context=None):
+    def execute(self, variable=None, params=None, time_scale=None, context=None):
         """Adjust the control signal, based on the allocation value passed to it
 
         Computes new intensity and cost attributes from allocation
