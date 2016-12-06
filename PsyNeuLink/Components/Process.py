@@ -1650,20 +1650,20 @@ class Process_Base(Process):
         """Instantiate any objects in the Process that have deferred their initialization
 
         Description:
-            go through _mech_tuples in reverse order of pathway since
-                learning signals are processed from the output (where the training signal is provided) backwards
-            exhaustively check all of components of each mechanism,
-                including all projections to its inputStates and parameterStates
-            initialize all items that specified deferred initialization
-            construct a _monitoring__mech_tuples of mechanism tuples (mech, params, phase_spec):
-                assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-            add _monitoring__mech_tuples to the Process' _mech_tuples
-            assign input projection from Process to first mechanism in _monitoring__mech_tuples
+            For learning:
+                go through _mech_tuples in reverse order of pathway since
+                    LearningProjections are processed from the output (where the training signal is provided) backwards
+                exhaustively check all of components of each mechanism,
+                    including all projections to its inputStates and parameterStates
+                initialize all items that specified deferred initialization
+                construct a _monitoring__mech_tuples of mechanism tuples (mech, params, phase_spec):
+                    assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
+                add _monitoring__mech_tuples to the Process' _mech_tuples
+                assign input projection from Process to first mechanism in _monitoring__mech_tuples
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningProjection
-
-        IMPLEMENTATION NOTE: this is implemented to be fully general, but at present may be overkill
-                             since the only objects that currently use deferred initialization are LearningSignals
+                             this is implemented to be fully general, but at present may be overkill
+                             since the only objects that currently use deferred initialization are LearningProjections
         """
 
         # For each mechanism in the Process, in backwards order through its _mech_tuples
@@ -1683,19 +1683,11 @@ class Process_Base(Process):
 
         # Add _monitoring__mech_tuples to _mech_tuples for execution
         if self._monitoring__mech_tuples:
-            # MODIFIED 12/4/16 OLD:
             self._mech_tuples.extend(self._monitoring__mech_tuples)
-            # # MODIFIED 12/4/16 NEW:
-            # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
-            # MODIFIED 12/4/16 END
 
-            # MODIFIED 10/2/16 OLD:
-            # # They have been assigned self._phaseSpecMax+1, so increment self.phaseSpeMax
-            # self._phaseSpecMax = self._phaseSpecMax + 1
-            # MODIFIED 10/2/16 NEW:
-            # # FIX: MONITORING MECHANISMS FOR LEARNING NOW ASSIGNED _phaseSpecMax, SO LEAVE IT ALONE
-            # # FIX: THIS IS SO THAT THEY WILL RUN AFTER THE LAST ProcessingMechanisms HAVE RUN
-            # MODIFIED 10/2/16 END
+            # IMPLEMENTATION NOTE:
+            #   MonitoringMechanisms for learning are assigned _phaseSpecMax;
+            #   this is so that they will run after the last ProcessingMechansisms have run
 
     def _instantiate__deferred_init_projections(self, projection_list, context=None):
 
@@ -1741,7 +1733,9 @@ class Process_Base(Process):
 
          This should only be called if self.learning is specified
          Check that there is one and only one ComparatorMechanism for the process
-         Assign comparatorMechanism to self.comparatorMechanism, assign self to comparatorMechanism.processes, and report assignment if verbose
+         Assign comparatorMechanism to self.comparatorMechanism,
+             assign self to comparatorMechanism.processes,
+             and report assignment if verbose
         """
 
         if not self.learning:
