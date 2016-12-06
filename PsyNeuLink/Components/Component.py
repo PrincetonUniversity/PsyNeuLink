@@ -406,9 +406,10 @@ class Component(object):
         # Do this here, as _validate_variable might be overridden by subclass
         try:
             if self.variableClassDefault is NotImplemented:
-                raise ComponentError("variableClassDefault must be given a value for {0}".format(self.componentName))
+                raise ComponentError("variableClassDefault for {} must be assigned a value or \'None\'".
+                                     format(self.componentName))
         except AttributeError:
-            raise ComponentError("variableClassDefault must be defined for {0} or its base class".
+            raise ComponentError("variableClassDefault must be defined for {} or its base class".
                                 format(self.componentName))
         #endregion
 
@@ -428,7 +429,7 @@ class Component(object):
                    type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
-                raise ComponentError("Param {0} must be in paramClassDefaults for {1}".
+                raise ComponentError("Param {} must be in paramClassDefaults for {}".
                                     format(required_param, self.name))
 
             # If the param does not match any of the types specified for it in type_requirements
@@ -441,8 +442,8 @@ class Component(object):
                     OK = (any(isinstance(required_param_value, type_spec) for type_spec in type_requirements))
                 if not OK:
                     type_names = format(" or ".join("{!s}".format(type.__name__) for (type) in type_requirements))
-                    raise ComponentError("Value ({0}) of param {1} is not appropriate for {2};"
-                                        "  requires one of the following types: {3}".
+                    raise ComponentError("Value ({}) of param {} is not appropriate for {};"
+                                        "  requires one of the following types: {}".
                                         format(required_param_value.__name__, required_param, self.name, type_names))
             except TypeError:
                 pass
