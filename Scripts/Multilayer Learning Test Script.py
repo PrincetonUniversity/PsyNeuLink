@@ -89,7 +89,7 @@ z = process(default_input_value=[0, 0],
                            # Output_Weights,
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
-            learning=LearningProjection,
+            learning=LEARNING,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})

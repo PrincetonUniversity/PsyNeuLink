@@ -162,15 +162,17 @@ Learning
 ~~~~~~~~
 
 Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for a :ref:`projection <LearningProjection_Creation>` to a
-particular mechanism, or for the entire process (using its ''learning'' attribute).  Specifying learning for a
-process will implement it for all eligible projections the process (i.e., all MappingProjections, excluding
-projections from the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the
-:keyword:`TERIMINAL` mechanism to the process' outputState). When learning is specified for the process, all
-projections in the process will be trained so that input to the process (i.e., its :keyword:`ORIGIN` mechanism)
-will generate the specified target value as its output (i.e., the output of the :keyword:`TERMINAL` mechanism).
-In either case, all mechanisms that receive projections for which learning has been specified must be compatiable
-with learning (see :doc:`LearningProjection`).
+Learning can be configured for the projection to a particular mechanism in a process, or for the entire process.
+It is specified for a particular mechanism by including a
+:ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
+to that mechanism [LINK].  It is specified for the entire process by assigning to its ``learning`` argument either a
+LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
+implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
+the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the :keyword:`TERMINAL` mechanism to
+the process' outputState). When learning is specified for the process, all projections in the process will be trained
+so that input to the process (i.e., its :keyword:`ORIGIN` mechanism) will generate the specified target value as its
+output (i.e., the output of the :keyword:`TERMINAL` mechanism). In either case, all mechanisms that receive
+projections for which learning has been specified must be compatible with learning (see :doc:`LearningProjection`).
 
 When learning is specified, the following objects are automatically created (see figure below):
 * :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value;
@@ -272,9 +274,9 @@ with backpropagation::
 
 .. XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=LEARNING_PROJECTION)
+    #                      learning=LEARNING)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-                         learning=LEARNING_PROJECTION,
+                         learning=LEARNING,
                          target=[0])
 
 .. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
@@ -284,7 +286,7 @@ with backpropagation::
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
     # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=LEARNING_PROJECTION)
+    #                      learning=LEARNING)
 
 
 
@@ -312,7 +314,7 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, kwWeightChangeParams
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
@@ -352,7 +354,7 @@ def process(process_spec=None,
             initial_values:dict={},
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-            learning:tc.optional(_is_projection_spec)=None,
+            learning:tc.optional(_is_learning_spec)=None,
             target:tc.optional(is_numeric)=None,
             params=None,
             name=None,
@@ -1136,6 +1138,11 @@ class Process_Base(Process):
 
         # If learning is specified for the Process, add to default projection params
         if self.learning:
+
+            # if spec is LEARNING (convenience spec), change to projection version of keyword for consistency below
+            if self.learning is LEARNING:
+                self.learning = LEARNING_PROJECTION
+
             # FIX: IF self.learning IS AN ACTUAL LearningProjection OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
             # FIX:     OR CAN THE SAME LearningProjection OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
             # FIX:     DOES IT HAVE ANY INTERNAL STATE VARIABLES OR PARAMS THAT NEED TO BE PROJECTIONS-SPECIFIC?

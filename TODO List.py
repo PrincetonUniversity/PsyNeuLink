@@ -13,8 +13,6 @@
 #                          to allow it to pass _validate_params without having to make an assignment (i.e., to
 #                          suppress type checking.
 #                       :keyword:`None` is used to suppress its use by higher level assignments
-# IMPLEMENT:  Figure in README.md;
-#             Reconcile README.md and AND html docs first page.
 
 # IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
@@ -25,6 +23,7 @@
 #                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
 #             ADD LEARNING TO OF OTHER PARAMETER STATES (E.G., OBJECT ITSELF AND/OR ITS FUNCTION)
 
+# IMPLEMENT: learning argument and property for system, that enforces learning on all processes
 
 # FIX: ADD SUPPORT FOR RUNTIME PARAMS TO RUN
 # FIX: MOVE parameter_spec TO Component OR ParameterState??
