@@ -1443,11 +1443,9 @@ def _instantiate_state_list(owner,
                                  " must be an indexable object (e.g., list or np.ndarray)".
                                  format(constraint_value, constraint_value_name, state_type.__name__))
 
-        # # If there is only one state, assign full constraint_value to sole state
-        # #    but only do this if number of constraints is > 1, as need to leave solo exposed value intact
-        # if num_states == 1 and num_constraint_items > 1:
-        #     state_constraint_value = [constraint_value]
-
+        # MODIFIED 12/7/16 OLD:
+        # IMPLEMENTATION NOTE: NO LONGER VALID SINCE outputStates CAN NOW BE ONE TO MANY OR MANY TO ONE
+        #                      WITH RESPECT TO ITEMS OF constraint_value (I.E., owner.value)
         # If number of states exceeds number of items in constraint_value, raise exception
         if num_states > num_constraint_items:
             raise StateError("There are too many {0} specified ({1}) in {2} "
@@ -1467,6 +1465,8 @@ def _instantiate_state_list(owner,
                                         num_constraint_items,
                                         constraint_value_name,
                                         owner.name))
+        # MODIFIED 12/7/16 NEW:
+        # MODIFIED 12/7/16 END
 
         # INSTANTIATE EACH STATE
 
