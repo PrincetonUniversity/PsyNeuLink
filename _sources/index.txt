@@ -6,6 +6,16 @@
 PsyNeuLink Documentation
 ========================
 
+* :ref:`Purpose`
+* :ref:`Overview`
+* :ref:`Component Hierarchy <Component_Hierarchy>`
+* :ref:`Installation`
+* :ref:`Contributors`
+* :ref:`Indices_and_Tables`
+
+
+.. _Purpose:
+
 Purpose
 -------
 
@@ -35,15 +45,18 @@ in a manner that:
  ..
  - provides a standard and accessible environment for model comparison, sharing, and documentation;
  ..
- - provides an interface (API) to other powerful tools for implementing individual components, such as:
-   - MatLab (general purpose math tools0;
-   - TensorFlow, Teano (deep learning; ODEs);
-   - Emergent (broad class of neurally-plausible connectionist models);
-   - ACT-R (sybmolic, production system models).
+ - interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:
+
+   * MatLab (general purpose math tools);
+   * TensorFlow, Teano (deep learning; ODEs);
+   * Emergent (broad class of neurally-plausible connectionist models);
+   * ACT-R (sybmolic, production system models).
 
 The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.
 
+
+.. _Overview:
 
 Overview
 --------
@@ -116,6 +129,8 @@ the opportunity to test and explore how they interact with one another in a sing
             dictionary of parameters for the function
 
 
+.. _Component_Hierarchy:
+
 Component Hierarchy
 -------------------
 
@@ -167,6 +182,8 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
 
 
+.. _Installation:
+
 Installation
 ------------
 
@@ -188,6 +205,8 @@ switch to your preferred python3 environment, then run the command __"pip instal
 (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
 All prerequisite packages will be automatically added to your environment.
 
+
+.. _Contributors:
 
 Contributors
 ------------
@@ -233,6 +252,8 @@ Contributors
    Function
    Run
 
+
+.. _Indices_and_Tables:
 
 Indices and tables
 ==================

@@ -137,8 +137,16 @@
             
   <div class="section" id="psyneulink-documentation">
 <h1>PsyNeuLink Documentation<a class="headerlink" href="#psyneulink-documentation" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="#purpose"><span class="std std-ref">Purpose</span></a></li>
+<li><a class="reference internal" href="#overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#component-hierarchy"><span class="std std-ref">Component Hierarchy</span></a></li>
+<li><a class="reference internal" href="#installation"><span class="std std-ref">Installation</span></a></li>
+<li><a class="reference internal" href="#contributors"><span class="std std-ref">Contributors</span></a></li>
+<li><a class="reference internal" href="#indices-and-tables"><span class="std std-ref">Indices and tables</span></a></li>
+</ul>
 <div class="section" id="purpose">
-<h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is a &#8220;block modeling system&#8221; for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
@@ -176,18 +184,20 @@ integration of, and interaction among disparate components that can vary in thei
 <li>provides a standard and accessible environment for model comparison, sharing, and documentation;</li>
 </ul>
 <ul class="simple">
-<li>provides an interface (API) to other powerful tools for implementing individual components, such as:
-- MatLab (general purpose math tools0;
-- TensorFlow, Teano (deep learning; ODEs);
-- Emergent (broad class of neurally-plausible connectionist models);
-- ACT-R (sybmolic, production system models).</li>
+<li>interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:<ul>
+<li>MatLab (general purpose math tools);</li>
+<li>TensorFlow, Teano (deep learning; ODEs);</li>
+<li>Emergent (broad class of neurally-plausible connectionist models);</li>
+<li>ACT-R (sybmolic, production system models).</li>
+</ul>
+</li>
 </ul>
 </div></blockquote>
 <p>The goal is to encourage users to think about information processing in a &#8220;mind/brain-like&#8221; way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.</p>
 </div>
 <div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.</p>
 <p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
 output
@@ -228,7 +238,7 @@ elements into a single integrated system.  This affords modelers the flexibility
 model to a form of processing and/or level of analysis that is appropriate for that component, while providing
 the opportunity to test and explore how they interact with one another in a single system.</p>
 <p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
-<div class="figure" id="id1">
+<div class="figure" id="id7">
 <a class="reference internal image-reference" href="_images/System_simple_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_simple_fig.png" style="width: 4000.0px; height: 4583.5px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
@@ -237,7 +247,7 @@ complete example, that includes components responsible for control and learning)
 </div>
 </div>
 <div class="section" id="component-hierarchy">
-<h2>Component Hierarchy<a class="headerlink" href="#component-hierarchy" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>Component Hierarchy<a class="headerlink" href="#component-hierarchy" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink uses the following primary constructs (illustrated in the <a class="reference internal" href="#system-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul>
 <li><dl class="first docutils">
@@ -333,7 +343,7 @@ and uses it to modulate the parameter of a projection (usually the matrix of a M
 </ul>
 </div>
 <div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>The tutorial is available at/by [???]</p>
 <p>Currently, PsyNeuLink is in an alpha state and is not available through pypi/pip.
 Instead, you can clone the github repo (<a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">https://github.com/PrincetonUniversity/PsyNeuLink</a>).
@@ -349,7 +359,7 @@ switch to your preferred python3 environment, then run the command __&#8221;pip 
 All prerequisite packages will be automatically added to your environment.</p>
 </div>
 <div class="section" id="contributors">
-<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
 <li><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</li>
@@ -365,7 +375,7 @@ All prerequisite packages will be automatically added to your environment.</p>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<span id="id6"></span><h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
