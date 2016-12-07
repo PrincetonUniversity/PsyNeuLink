@@ -355,7 +355,7 @@ def process(process_spec=None,
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(_is_learning_spec)=None,
-            target:tc.optional(is_numeric)=None,
+            target=None,
             params=None,
             name=None,
             prefs:is_pref_set=None,
@@ -762,9 +762,8 @@ class Process_Base(Process):
                  initial_values=None,
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
-                 # learning:tc.optional(_is_projection_spec)=None,
                  learning=None,
-                 target:tc.optional(is_numeric)=None,
+                 target=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -821,16 +820,12 @@ class Process_Base(Process):
             self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate learning and initial_values args
+        """Validate initial_values args
+           Note: validation of target (for learning) is deferred until _instantiate_target since,
+                 if it doesn't have a comparator (see _check_for_comparator), it will not need a target.
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # FIX:  WARN BUT SET TARGET TO self.terminal.outputState
-        if self.learning:
-            if self.target is None:
-                raise ProcessError("Learning has been specified ({}) for {} so target must be as well".
-                                   format(self.learning, self.name))
 
         # Note: don't confuse target_set (argument of validate_params) with self.target (process attribute for learning)
         if target_set[kwInitialValues]:
@@ -919,7 +914,7 @@ class Process_Base(Process):
         """
         pathway = self.paramsCurrent[PATHWAY]
         self._mech_tuples = []
-        self._monitoring__mech_tuples = []
+        self._monitoring_mech_tuples = []
 
         self._standardize_config_entries(pathway=pathway, context=context)
 
@@ -954,13 +949,14 @@ class Process_Base(Process):
 
         if self.learning:
             self._check_for_comparator()
-            self._instantiate_target_input()
+            if self.comparatorMechanism:
+                self._instantiate_target_input()
             self._learning_enabled = True
         else:
             self._learning_enabled = False
 
         self._allMechanisms = MechanismList(self, self._mech_tuples)
-        self.monitoringMechanisms = MechanismList(self, self._monitoring__mech_tuples)
+        self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
 
 
     def _standardize_config_entries(self, pathway, context=None):
@@ -1656,10 +1652,10 @@ class Process_Base(Process):
                 exhaustively check all of components of each mechanism,
                     including all projections to its inputStates and parameterStates
                 initialize all items that specified deferred initialization
-                construct a _monitoring__mech_tuples of mechanism tuples (mech, params, phase_spec):
+                construct a _monitoring_mech_tuples of mechanism tuples (mech, params, phase_spec):
                     assign phase_spec for each MonitoringMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
-                add _monitoring__mech_tuples to the Process' _mech_tuples
-                assign input projection from Process to first mechanism in _monitoring__mech_tuples
+                add _monitoring_mech_tuples to the Process' _mech_tuples
+                assign input projection from Process to first mechanism in _monitoring_mech_tuples
 
         IMPLEMENTATION NOTE: assume that the only projection to a projection is a LearningProjection
                              this is implemented to be fully general, but at present may be overkill
@@ -1681,9 +1677,9 @@ class Process_Base(Process):
                 parameter_state._deferred_init()
                 self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # Add _monitoring__mech_tuples to _mech_tuples for execution
-        if self._monitoring__mech_tuples:
-            self._mech_tuples.extend(self._monitoring__mech_tuples)
+        # Add _monitoring_mech_tuples to _mech_tuples for execution
+        if self._monitoring_mech_tuples:
+            self._mech_tuples.extend(self._monitoring_mech_tuples)
 
             # IMPLEMENTATION NOTE:
             #   MonitoringMechanisms for learning are assigned _phaseSpecMax;
@@ -1716,9 +1712,9 @@ class Process_Base(Process):
             except AttributeError:
                 pass
             else:
-                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring__mech_tuples
+                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
                 if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
-                                                    mech_tuple in self._monitoring__mech_tuples):
+                                                    mech_tuple in self._monitoring_mech_tuples):
                     # # MODIFIED 10/2/16 OLD:
                     # monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
                     # # MODIFIED 10/2/16 NEW:
@@ -1726,7 +1722,7 @@ class Process_Base(Process):
                     # MODIFIED 10/16/16 NEWER:
                     monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
                     # MODIFIED 10/2/16 END
-                    self._monitoring__mech_tuples.append(monitoring_mech_tuple)
+                    self._monitoring_mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
         """Check for and assign ComparatorMechanism to use for reporting error during learning.
@@ -1738,6 +1734,27 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
+        # MODIFIED 12/6/16 NEW:
+        def trace_monitoring_mechanism_projections(mech):
+            """Recursively trace projections to monitoring mechanisms;
+                   return ComparatorMechanism if one is found upstream;
+                   return None if no ComparatorMechanism is found.
+            """
+            for input_state in mech.inputStates.values():
+                for projection in input_state.receivesFromProjections:
+                    sender = projection.sender.owner
+                    if isinstance(sender, ComparatorMechanism):
+                        return sender
+                    if sender.inputStates:
+                        comparator = trace_monitoring_mechanism_projections(sender)
+                        if comparator:
+                            return comparator
+                        else:
+                            continue
+                    else:
+                        continue
+        # MODIFIED 12/6/16 END
+
         if not self.learning:
             raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
                                " for a process if it has a learning specification")
@@ -1746,8 +1763,29 @@ class Process_Base(Process):
                            for mech_tuple in self._mech_tuples if isinstance(mech_tuple.mechanism, ComparatorMechanism))
 
         if not comparators:
-            raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
-                               "but no ComparatorMechanism mechanism".format(self.name, self.learning))
+
+            # # MODIFIED 12/6/16 OLD:
+            # raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
+            #                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
+
+            # MODIFIED 12/6/16 NEW:
+            # Trace projections to first monitoring_mechanism (which is for the last mechanism in the process)
+            #   (in case terminal mechanism of process is part of another process that has learning implemented)
+            comparator = trace_monitoring_mechanism_projections(self._monitoring_mech_tuples[0][0])
+            if comparator:
+                if self.prefs.verbosePref:
+                    warnings.warn("{} itself has no ComparatorMechanism, but its TERMINAL_MECHANISM ({}) "
+                                  "appears to be in one or more pathways ({}) that has one".
+                                                      format(self.name,
+                                                             # list(self.terminalMechanisms)[0].name,
+                                                             self.lastMechanism.name,
+                                                             list(process.name for process in comparator.processes)))
+                self.comparatorMechanism = None
+            else:
+
+                raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
+                                   "but no ComparatorMechanism mechanism".format(self.name, self.learning))
+            # MODIFIED 12/6/16 END
 
         elif len(comparators) > 1:
             comparator_names = list(comparatorMechanism.name for comparatorMechanism in comparators)
@@ -1758,15 +1796,17 @@ class Process_Base(Process):
             self.comparatorMechanism = comparators[0]
             self.comparatorMechanism.processes[self] = ComparatorMechanism
             if self.prefs.verbosePref:
-                print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".format(self.comparatorMechanism.name, self.name))
+                print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".
+                      format(self.comparatorMechanism.name, self.name))
+
 
     def _instantiate_target_input(self):
 
-        # # MODIFIED 9/20/16 OLD:
-        # target = self.target
-        # MODIFIED 9/20/16 NEW:
+        if self.target is None:
+            raise ProcessError("Learning has been specified for {} and it has a ComparatorMechanism, "
+                               "so it must also have a target.".format(self.name))
+
         target = np.atleast_1d(self.target)
-        # MODIFIED 9/20/16 END
 
         # Create ProcessInputState for target and assign to comparatorMechanism's target inputState
         comparator_target = self.comparatorMechanism.inputStates[TARGET]
