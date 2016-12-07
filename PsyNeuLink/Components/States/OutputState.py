@@ -386,6 +386,7 @@ def _instantiate_output_states(owner, context=None):
     # MODIFIED 12/7/16 END
 
     constraint_value = []
+    owner_value = np.atleast_2d(owner.value)
 
     if owner.paramsCurrent[OUTPUT_STATES]:
         for output_state in owner.paramsCurrent[OUTPUT_STATES]:
@@ -400,9 +401,9 @@ def _instantiate_output_states(owner, context=None):
                     index = output_state[INDEX]
                 except KeyError:
                     pass
-            constraint_value.extend(owner.value[index])
+            constraint_value.extend(owner_value[index])
     else:
-        constraint_value = owner.value
+        constraint_value = owner_value
 
     owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
