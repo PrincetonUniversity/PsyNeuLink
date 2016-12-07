@@ -16,7 +16,11 @@
 #    System:  Control and Learning under Structure
 #    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
 #                       that has a ComparatorMechanism (and for which a target is specified)
-#    OutputStates: SELECT argument, customizability, balance between customized outputStates and dedicated mechanisms
+#    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
+
+# FIX *************
+# FIX / IMPLEMENT: MAKE SURE THAT outputValue IS GETTING SET (IN Mechanism.execute OR Mecchanism._update_output_states
+# FIX *************
 
 # FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
 #                    rename reference_value??
