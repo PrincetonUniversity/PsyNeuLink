@@ -142,9 +142,10 @@
 <p>PsyNeuLink is a &#8220;block modeling system&#8221; for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
-psychological processes, the interaction of which can then be simulated.</p>
+psychological processes, the interaction of which can then be simulated at the system level.</p>
 <p>PsyNeuLink is open source, and meant to be extended. Its goal is to provide an environment for implementing models
-of mind/brain function that are modular, customizable, extensible and disseminable.  It does this in a manner that:</p>
+of mind/brain function that are modular, customizable, extensible, disseminable, and clearly documented.  It does this
+in a manner that:</p>
 <blockquote>
 <div><ul class="simple">
 <li>is <em>computationally general</em> —&nbsp;that is, that can implement any desired mechanism or process;</li>
@@ -155,7 +156,7 @@ of mind/brain function that are modular, customizable, extensible and disseminab
 </ul>
 <ul class="simple">
 <li>expresses (as few as possible) <em>commitments</em> that reflect general principles of how the brain/mind is organized
-and functions, without committing to any particular model or theory;</li>
+and operates, without committing to any particular model or theory;</li>
 </ul>
 <ul class="simple">
 <li>expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientists;</li>
@@ -165,14 +166,14 @@ and functions, without committing to any particular model or theory;</li>
 integration of, and interaction among disparate components that can vary in their:</p>
 <blockquote>
 <div><ul class="simple">
-<li>time-scale of operation</li>
 <li>granularity of representation and function</li>
+<li>time-scale of operation</li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
 <ul class="simple">
-<li>provides a standard environment for model comparison, sharing, and documentation;</li>
+<li>provides a standard and accessible environment for model comparison, sharing, and documentation;</li>
 </ul>
 <ul class="simple">
 <li>provides an interface (API) to other powerful tools for implementing individual components, such as:
@@ -183,10 +184,60 @@ integration of, and interaction among disparate components that can vary in thei
 </ul>
 </div></blockquote>
 <p>The goal is to encourage users to think about information processing in a &#8220;mind/brain-like&#8221; way, while imposing as few
-constraints as possible on what it is possible to implement or ask a model to do.</p>
+constraints as possible on what it is possible to implement or ask the model to do.</p>
 </div>
-<div class="section" id="functional-architecture">
-<h2>Functional Architecture<a class="headerlink" href="#functional-architecture" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.</p>
+<p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
+output
+available to other mechanisms.  Mechanisms can take any form of input, use any funciton, and generate any form of
+output.  PsyNeuLink provides mechanisms with standard functions (e.g., linear and logistic transforms for scalars and
+arrays;  integrator functions, including various forms of drift diffusion processes; and matrix algebraic functions).
+However a mechanism can easily be customized with any function that can be written in or called from Python.</p>
+<p><a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> and <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>.  Mechanisms are composed into processes, by linking them into
+pathways with projections.  A projection takes the output of its sender mechanism, and transforms it as necessary to
+provide it as input to its receiver mechanism.  A process is a linear chain of mechanisms connected by projections.
+Projections within a pathway can be recurrent, but they cannot branch (that is done with systems, as described below)
+. Processes can also be configured for learning, in which the projections are trained to produce a specified output
+for each of a given set of inputs.</p>
+<p><a class="reference internal" href="System.html"><span class="doc">System</span></a>.  A system is composed of a set of processes.  Typically, the processes of a system overlap &#8211; that is,
+they share one or more mechanisms.  The network of processes in a system is explicitly represented as a graph, in which
+each node is a mechanism, and each edge is a projection.  The system&#8217;s graph is used to execute it, and can be
+exported to display and/or analyze it.  Each system can also have a controller, that can be configured to monitor
+the output of any of its mechanisms, evaluate this according to any objective function, and used to control any of the
+parameters of the mechanisms&#8217; function so as to optimize the objective function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The functionality described under <strong>Execution</strong> below is still being implemented.  At present, all mechanisms
+operate in <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, and some operate in <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code> mode;  however, mixed
+execution and coordination has not yet been fully implemented and debugged.</p>
+</div>
+<p><strong>Execution</strong>.  Mechanisms in PsyNeuLink can be run at one of two time scales.  In <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, the
+transformation computed by a mechanism is &#8220;complete&#8221; (i.e., the result is stationary.  For example, for an
+integrator, the full integral is computed in a single step (analytically where possible).  In <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code>
+mode, PsyNeuLink approximates &#8220;continuous time&#8221; by breaking computations into sequential time steps at a specified
+level of precision. For example, for an intergrator, it numerically integrates the path at a specified rate. A system
+automatically coordinates the execution of its mechanisms, synchronizing those that are operating on different time
+scales (e.g., suspending ones using <code class="xref std std-keyword docutils literal"><span class="pre">trial</span> <span class="pre">mode</span></code> until those using  <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code> mode have met
+specified criteria.]</p>
+<p>Since mechanisms can implement any function, projections insure that they can &#8220;communicate&#8221; with
+each other seamlessly, and systems coordinate execution over different time scales, PsyNeuLink can be used to
+integrate mechanisms of different types, levels of analysis, and/or time scales of operation, composing heterogeneous
+elements into a single integrated system.  This affords modelers the flexibility to commit each component of their
+model to a form of processing and/or level of analysis that is appropriate for that component, while providing
+the opportunity to test and explore how they interact with one another in a single system.</p>
+<p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/System_simple_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_simple_fig.png" style="width: 4000.0px; height: 4583.5px;" /></a>
+<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
+series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
+that converge on a common final ProcessingMechanism (see <a class="reference internal" href="System.html#system-full-fig"><span class="std std-ref">figure in System</span></a> for a more
+complete example, that includes components responsible for control and learning).</span></p>
+</div>
+</div>
+<div class="section" id="component-hierarchy">
+<h2>Component Hierarchy<a class="headerlink" href="#component-hierarchy" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink uses the following primary constructs (illustrated in the <a class="reference internal" href="#system-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul>
 <li><dl class="first docutils">
@@ -280,18 +331,6 @@ and uses it to modulate the parameter of a projection (usually the matrix of a M
 </dl>
 </li>
 </ul>
-<p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
-<div class="figure" id="id1">
-<a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
-<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
-series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
-that converge on a common final ProcessingMechanism.  The latter projects to a
-<a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> that is used to drive learning in Process B.  It also projects to
-a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that regulates ProcessingMechanisms in both Processes A and B.  Note
-that while the mechanisms and projections responsible for learning belong to, and are restricted to a single
-process, those responsible for control belong to the system and can monitor and/or control mechanisms belonging to
-more than one process.</span></p>
-</div>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>

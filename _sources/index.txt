@@ -12,10 +12,11 @@ Purpose
 PsyNeuLink is a "block modeling system" for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
-psychological processes, the interaction of which can then be simulated.
+psychological processes, the interaction of which can then be simulated at the system level.
 
 PsyNeuLink is open source, and meant to be extended. Its goal is to provide an environment for implementing models
-of mind/brain function that are modular, customizable, extensible and disseminable.  It does this in a manner that:
+of mind/brain function that are modular, customizable, extensible, disseminable, and clearly documented.  It does this
+in a manner that:
 
  - is *computationally general* — that is, that can implement any desired mechanism or process;
  ..
@@ -23,16 +24,16 @@ of mind/brain function that are modular, customizable, extensible and disseminab
    (e.g., function-based, object-oriented programming);
  ..
  - expresses (as few as possible) *commitments* that reflect general principles of how the brain/mind is organized
-   and functions, without committing to any particular model or theory;
+   and operates, without committing to any particular model or theory;
  ..
  - expresses these commitments in a form that is powerful, easy to use, and familiar to cognitive neuroscientists;
  ..
  - allows models to be simply and flexibly implemented, using a minimum of coding, and that provides seamless
    integration of, and interaction among disparate components that can vary in their:
-     - time-scale of operation
      - granularity of representation and function
+     - time-scale of operation
  ..
- - provides a standard environment for model comparison, sharing, and documentation;
+ - provides a standard and accessible environment for model comparison, sharing, and documentation;
  ..
  - provides an interface (API) to other powerful tools for implementing individual components, such as:
    - MatLab (general purpose math tools0;
@@ -41,11 +42,82 @@ of mind/brain function that are modular, customizable, extensible and disseminab
    - ACT-R (sybmolic, production system models).
 
 The goal is to encourage users to think about information processing in a "mind/brain-like" way, while imposing as few
-constraints as possible on what it is possible to implement or ask a model to do.
+constraints as possible on what it is possible to implement or ask the model to do.
 
 
-Functional Architecture
------------------------
+Overview
+--------
+
+The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.
+
+:doc:`Mechanism`.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
+output
+available to other mechanisms.  Mechanisms can take any form of input, use any funciton, and generate any form of
+output.  PsyNeuLink provides mechanisms with standard functions (e.g., linear and logistic transforms for scalars and
+arrays;  integrator functions, including various forms of drift diffusion processes; and matrix algebraic functions).
+However a mechanism can easily be customized with any function that can be written in or called from Python.
+
+:doc:`Projection` and :doc:`Processes <Process>`.  Mechanisms are composed into processes, by linking them into
+pathways with projections.  A projection takes the output of its sender mechanism, and transforms it as necessary to
+provide it as input to its receiver mechanism.  A process is a linear chain of mechanisms connected by projections.
+Projections within a pathway can be recurrent, but they cannot branch (that is done with systems, as described below)
+. Processes can also be configured for learning, in which the projections are trained to produce a specified output
+for each of a given set of inputs.
+
+:doc:`System`.  A system is composed of a set of processes.  Typically, the processes of a system overlap -- that is,
+they share one or more mechanisms.  The network of processes in a system is explicitly represented as a graph, in which
+each node is a mechanism, and each edge is a projection.  The system's graph is used to execute it, and can be
+exported to display and/or analyze it.  Each system can also have a controller, that can be configured to monitor
+the output of any of its mechanisms, evaluate this according to any objective function, and used to control any of the
+parameters of the mechanisms' function so as to optimize the objective function.
+
+.. note::
+   The functionality described under **Execution** below is still being implemented.  At present, all mechanisms
+   operate in :keyword:`trial` mode, and some operate in :keyword:`time_step` mode;  however, mixed
+   execution and coordination has not yet been fully implemented and debugged.
+
+**Execution**.  Mechanisms in PsyNeuLink can be run at one of two time scales.  In :keyword:`trial` mode, the
+transformation computed by a mechanism is "complete" (i.e., the result is stationary.  For example, for an
+integrator, the full integral is computed in a single step (analytically where possible).  In :keyword:`time_step`
+mode, PsyNeuLink approximates "continuous time" by breaking computations into sequential time steps at a specified
+level of precision. For example, for an intergrator, it numerically integrates the path at a specified rate. A system
+automatically coordinates the execution of its mechanisms, synchronizing those that are operating on different time
+scales (e.g., suspending ones using :keyword:`trial mode` until those using  :keyword:`time_step` mode have met
+specified criteria.]
+
+Since mechanisms can implement any function, projections insure that they can "communicate" with
+each other seamlessly, and systems coordinate execution over different time scales, PsyNeuLink can be used to
+integrate mechanisms of different types, levels of analysis, and/or time scales of operation, composing heterogeneous
+elements into a single integrated system.  This affords modelers the flexibility to commit each component of their
+model to a form of processing and/or level of analysis that is appropriate for that component, while providing
+the opportunity to test and explore how they interact with one another in a single system.
+
+
+.. _System__Figure:
+
+**Major Components in PsyNeuLink**
+
+.. figure:: _static/System_simple_fig.png
+   :alt: Overview of major PsyNeuLink components
+   :scale: 50 %
+
+   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
+   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
+   that converge on a common final ProcessingMechanism (see :ref:`figure in System <System_Full_Fig>` for a more
+   complete example, that includes components responsible for control and learning).
+
+..
+    Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
+        * ``variable``
+            the input to its function, used both as a template for the format of the input, as its default value
+        * ``function``
+            performs the core computation of a component.
+        * ``params``
+            dictionary of parameters for the function
+
+
+Component Hierarchy
+-------------------
 
 PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figure <System__Figure>` below):
 
@@ -93,32 +165,6 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
 
             [+ GatingSignal — Not yet implemented
                  Takes a gating signal source and uses it to modulate the input or output state of a mechanism.
-
-.. _System__Figure:
-
-**Major Components in PsyNeuLink**
-
-.. figure:: _static/System_full_fig.png
-   :alt: Overview of major PsyNeuLink components
-   :scale: 75 %
-
-   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
-   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism.  The latter projects to a
-   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive learning in Process B.  It also projects to
-   a :doc:`ControlMechanism <ControlMechanism>` that regulates ProcessingMechanisms in both Processes A and B.  Note
-   that while the mechanisms and projections responsible for learning belong to, and are restricted to a single
-   process, those responsible for control belong to the system and can monitor and/or control mechanisms belonging to
-   more than one process.
-
-..
-    Every PsyNeuLink object is a subclass of the :doc:`Component` subclass.  Every component has a:
-        * ``variable``
-            the input to its function, used both as a template for the format of the input, as its default value
-        * ``function``
-            performs the core computation of a component.
-        * ``params``
-            dictionary of parameters for the function
 
 
 Installation
