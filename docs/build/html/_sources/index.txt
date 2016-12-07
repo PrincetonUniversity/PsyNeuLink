@@ -45,7 +45,7 @@ in a manner that:
  ..
  - provides a standard and accessible environment for model comparison, sharing, and documentation;
  ..
- - interfaces (API) can easily be constructed to other powerful tools for implementing individual components, such as:
+ - interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:
 
    * MatLab (general purpose math tools);
    * TensorFlow, Teano (deep learning; ODEs);
