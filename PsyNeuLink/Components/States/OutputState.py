@@ -369,6 +369,11 @@ def _instantiate_output_states(owner, context=None):
     :param context:
     :return:
     """
+
+    # MODIFIED 12/7/16 NEW:
+    # EXPAND constraint_value to match specification of outputStates (by # and function return values)
+    # MODIFIED 12/7/16 END
+
     owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
