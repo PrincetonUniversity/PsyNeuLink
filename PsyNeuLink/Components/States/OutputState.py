@@ -123,6 +123,8 @@ from PsyNeuLink.Components.Functions.Function import *
 #     DEFAULTS = NONE
 
 
+PRIMARY_OUTPUT_STATE = 0
+
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -137,7 +139,7 @@ class OutputState(State_Base):
     owner,                                     \
     reference_value,                           \
     value=None,                                \
-    index=0,                                   \
+    index=PRIMARY_OUTPUT_STATE,                \
     function=LinearCombination(operation=SUM), \
     params=None,                               \
     name=None,                                 \
@@ -185,7 +187,7 @@ class OutputState(State_Base):
     value : number, list or np.ndarray
         used as the template for ``variable``.
 
-    index : int : default 0
+    index : int : default PRIMARY_OUTPUT_STATE
         the item in the owner mechanism's ``value`` attribute to use for the outputState
         (that is, as the input to the outputState's ``function``).
 
@@ -270,7 +272,7 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  value=None,
-                 index=0,
+                 index=PRIMARY_OUTPUT_STATE,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
@@ -371,14 +373,42 @@ def _instantiate_output_states(owner, context=None):
     """
 
     # MODIFIED 12/7/16 NEW:
-    # EXPAND constraint_value to match specification of outputStates (by # and function return values)
+    # EXPAND constraint_value to match specification of outputStates (by # and function return values):
+    #            in order to both constrain spec and also match # states to # items in constraint
+    #            (checked in _instantiate_state_list)
+    # For each outputState:
+    #      check for index param:
+    #          if it is a state, get from attribute
+    #          if it is dict, look for param
+    #          if it is anything else, assume index is PRIMARY_OUTPUT_STATE
+    #      get indexed value from output.value
+    #      append the indexed value to constraint_value
     # MODIFIED 12/7/16 END
+
+    constraint_value = []
+
+    if owner.paramsCurrent[OUTPUT_STATES]:
+        for output_state in owner.paramsCurrent[OUTPUT_STATES]:
+            # Default is PRIMARY_OUTPUT_STATE
+            index = PRIMARY_OUTPUT_STATE
+            # If output_state is already an OutputState object, get its index attribute
+            if isinstance(output_state, OutputState):
+                index = output_state.index
+            # If output_state is a specification dict, get its INDEX attribute if specified
+            elif isinstance(output_state, dict):
+                try:
+                    index = output_state[INDEX]
+                except KeyError:
+                    pass
+            constraint_value.extend(owner.value[index])
+    else:
+        constraint_value = owner.value
 
     owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
                                                 state_param_identifier=OUTPUT_STATES,
-                                                constraint_value=owner.value,
+                                                constraint_value=constraint_value,
                                                 constraint_value_name="output",
                                                 context=context)
     # Assign self.outputState to first outputState in dict
