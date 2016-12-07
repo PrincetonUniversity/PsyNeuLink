@@ -125,7 +125,7 @@ class AutoNumber(IntEnum):
 TEST_CONDTION = False
 
 def is_numeric_or_none(x):
-    if not x:
+    if x is None:
         return True
     return is_numeric(x)
 
