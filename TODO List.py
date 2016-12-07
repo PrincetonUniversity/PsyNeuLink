@@ -1732,9 +1732,9 @@
 #
 # FIX: WHICH IS CORRECT (SEBASTIAN):
 #             # MODIFIED 12/4/16 OLD:
-#             self._mech_tuples.extend(self._monitoring__mech_tuples)
+#             self._mech_tuples.extend(self._monitoring_mech_tuples)
 #             # # MODIFIED 12/4/16 NEW:
-#             # self._mech_tuples.extend(reversed(self._monitoring__mech_tuples))
+#             # self._mech_tuples.extend(reversed(self._monitoring_mech_tuples))
 #             # MODIFIED 12/4/16 END
 
 # NOTE:  Can implement reward rate valuation by:
