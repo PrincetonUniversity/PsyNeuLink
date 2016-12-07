@@ -137,6 +137,7 @@ class OutputState(State_Base):
     owner,                                     \
     reference_value,                           \
     value=None,                                \
+    index=0,                                   \
     function=LinearCombination(operation=SUM), \
     params=None,                               \
     name=None,                                 \
@@ -184,6 +185,10 @@ class OutputState(State_Base):
     value : number, list or np.ndarray
         used as the template for ``variable``.
 
+    index : int : default 0
+        the item in the owner mechanism's ``value`` attribute to use for the outputState
+        (that is, as the input to the outputState's ``function``).
+
     function : Function or method : default LinearCombination(operation=SUM)
         implemented for structural consistency;  not currently used by PsyNeuLink.
 
@@ -213,6 +218,10 @@ class OutputState(State_Base):
 
     variable : number, list or np.ndarray
         assigned an item of the ``outputValue`` of its owner mechanism.
+
+    index : int
+        the item in the owner mechanism's ``value`` attribute used for the outputState
+        (that is, as the input to its ``function``).
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         implemented for structural consistency;  not currently used by PsyNeuLink.
@@ -261,6 +270,7 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  value=None,
+                 index=0,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
@@ -277,7 +287,9 @@ class OutputState(State_Base):
         #    - otherwise, should ignore
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(index=index,
+                                                  function=function,
+                                                  params=params)
 
         self.reference_value = reference_value
 
@@ -321,6 +333,20 @@ class OutputState(State_Base):
                                            format(self.value,
                                                   self.owner.name,
                                                   self.reference_value))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate that index is within the range of the number of items in the owner mechanism's ``value``.
+
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        try:
+            self.owner.value[request_set[INDEX]]
+        except IndexError:
+            raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
+                                   "the outputValue ({}) for its owner mechanism ({})".
+                                   format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+
 
 def _instantiate_output_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)

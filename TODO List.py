@@ -10,13 +10,16 @@
 #
 
 # DOCUMENT:
-#    Index.rst:
-#    Overview:  narrative description of what can be done, scope of mechanisms and facilities
+#    README.md -> README.rst AND/OR Index.rst:
 #    Features:  graph support, logging, hierarchical preferences
 #
 #    System:  Control and Learning under Structure
 #    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
 #                       that has a ComparatorMechanism (and for which a target is specified)
+#    OutputStates: SELECT argument, customizability, balance between customized outputStates and dedicated mechanisms
+
+# FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
+#                    rename reference_value??
 
 # FIX: SYSTEM LEARNING:
 #      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
