@@ -287,7 +287,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # TIME_SCALE: TimeScale.TRIAL,
         # FUNCTION:TransferFunction,
         INPUT_STATES: None,
-        OUTPUT_STATES:[TRANSFER_RESULT,
+        # OUTPUT_STATES:[TRANSFER_RESULT,
+        #                TRANSFER_MEAN,
+        #                TRANSFER_VARIANCE]
+        OUTPUT_STATES:[{FUNCTION:
+                            NAME:TRANSFER_RESULT},
                        TRANSFER_MEAN,
                        TRANSFER_VARIANCE]
     })
