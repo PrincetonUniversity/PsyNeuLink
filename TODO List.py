@@ -9,6 +9,15 @@
 #
 #
 
+# DOCUMENT:
+#    Index.rst:
+#    Overview:  narrative description of what can be done, scope of mechanisms and facilities
+#    Features:  graph support, logging, hierarchical preferences
+#
+#    System:  Control and Learning under Structure
+#    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
+#                       that has a ComparatorMechanism (and for which a target is specified)
+
 # FIX: SYSTEM LEARNING:
 #      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
 #                     on the hidden layer of another process)
@@ -23,7 +32,7 @@
 # IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
 
-# IMPLEMENT / DOCUMENTATION:
+# IMPLEMENT / DOCUMENT:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
 #                This implementation restricts learning to parameterStates of projections to inputStates
 #                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
