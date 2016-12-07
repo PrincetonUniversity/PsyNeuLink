@@ -234,7 +234,7 @@ for the <a class="reference internal" href="#Mechanism.mechanism" title="Mechani
 </li>
 <li><p class="first"><strong>automatically</strong> &#8211; PsyNeuLink automatically creates one or more mechanisms under some circumstances.
 For example, <code class="xref py py-class docutils literal"><span class="pre">MonitoringMechanisms</span></code> (and associated <a class="reference internal" href="LearningProjection.html#module-LearningProjection" title="LearningProjection"><code class="xref py py-class docutils literal"><span class="pre">LearningProjection</span></code></a>) will be created
-automtically when <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Learning</span></a> is specified for a process.</p>
+automtically when <span class="xref std std-ref">Process_Learning</span> is specified for a process.</p>
 </li>
 </ul>
 </div></blockquote>
@@ -386,7 +386,7 @@ used to specify outputStates to be used by a MonitoringMechanism for learning
 <span id="mechanism-role-in-processes-and-systems"></span><h3>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
 are stored in the mechanism&#8217;s <code class="docutils literal"><span class="pre">processes</span></code> and <code class="docutils literal"><span class="pre">systems</span></code> attributes, respectively (see Process
-<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and System <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> for designation labels and their meanings).
+<span class="xref std std-ref">Process_Mechanisms</span> and System <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> for designation labels and their meanings).
 Any mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> receives a projection to its primary inputState from the process(es)
 to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
 mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
@@ -399,10 +399,10 @@ of any process or system to which it belongs.</p>
 <span id="mechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A mechanism can be executed using its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods.  This can be useful in testing a mechanism
 and/or debugging.  However, more typically, mechanisms are executed as part of a process or system (see Process
-<a class="reference internal" href="Process.html#process-execution"><span class="std std-ref">Execution</span></a> and System <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a> for more details).  For either of these, the mechanism must
+<span class="xref std std-ref">Process_Execution</span> and System <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">Execution</span></a> for more details).  For either of these, the mechanism must
 be included in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process.  There, it can be specified on its own, or as the first item of a tuple
 that also has an optional set of runtime parameters (see below), and/or a phase specification for use when executed
-in a system (see System <span class="xref std std-ref">System_Phase</span> for an explanation of phases; and see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>
+in a system (see System <span class="xref std std-ref">System_Phase</span> for an explanation of phases; and see Process <span class="xref std std-ref">Process_Mechanisms</span>
 for additional details about specifying a mechanism in a process <code class="docutils literal"><span class="pre">pathway</span></code>).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -414,7 +414,7 @@ and then that process must be included in the <code class="docutils literal"><sp
 <p>The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
 when it executed.  This can be done by using the <code class="docutils literal"><span class="pre">runtime_param</span></code> argument of its <code class="docutils literal"><span class="pre">execute</span></code> method, or by specifying
 the runtime parameters in a tuple with the mechanism in the <code class="docutils literal"><span class="pre">pathway</span></code> of a process
-(see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>). In either case, runtime parameters  are specified using a dictionary that
+(see Process <span class="xref std std-ref">Process_Mechanisms</span>). In either case, runtime parameters  are specified using a dictionary that
 contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism&#8217;s states
 (inputStates, parameterStates and/or outputStates) or its function; those dictionaries, in turn, contain
 entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
@@ -558,7 +558,7 @@ Note: this is not necessarily equal to the <code class="docutils literal"><span 
 <code class="descname">processes</code><a class="headerlink" href="#Mechanism.Mechanism_Base.processes" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[Process, str]:</em> &#8211; Contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
 The key of each entry is a process to which the mechanism belongs, and its value the mechanism&#8217;s designation
-in that process (see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> for designations and their meanings).</p>
+in that process (see Process <span class="xref std std-ref">Process_Mechanisms</span> for designations and their meanings).</p>
 </dd></dl>
 
 <dl class="attribute">

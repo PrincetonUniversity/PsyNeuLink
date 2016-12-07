@@ -1341,7 +1341,7 @@ class Process_Base(Process):
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[kwNameArg], DEFERRED_INITIALIZATION, kwSenderArg))
+                                                   format(item.init_args[NAME_ARG], DEFERRED_INITIALIZATION, kwSenderArg))
                             else:
                                 # If sender is not specified for the projection,
                                 #    assign mechanism that precedes in pathway
@@ -1351,7 +1351,7 @@ class Process_Base(Process):
                                     raise ProcessError("Sender of projection ({}) specified in item {} of"
                                                        " pathway for {} is not the mechanism ({}) "
                                                        "that precedes it in the pathway".
-                                                       format(item.init_args[kwNameArg],
+                                                       format(item.init_args[NAME_ARG],
                                                               i, self.name, sender_mech.name))
                             # Check receiver arg
                             try:
@@ -1362,7 +1362,7 @@ class Process_Base(Process):
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
                                                    "but init_args does not have entry for {}".
-                                                   format(item.init_args[kwNameArg], DEFERRED_INITIALIZATION, kwReceiverArg))
+                                                   format(item.init_args[NAME_ARG], DEFERRED_INITIALIZATION, kwReceiverArg))
                             else:
                                 # If receiver is not specified for the projection,
                                 #    assign mechanism that follows it in the pathway
@@ -1372,7 +1372,7 @@ class Process_Base(Process):
                                     raise ProcessError("Receiver of projection ({}) specified in item {} of"
                                                        " pathway for {} is not the mechanism ({}) "
                                                        "that follows it in the pathway".
-                                                       format(item.init_args[kwNameArg],
+                                                       format(item.init_args[NAME_ARG],
                                                               i, self.name, receiver_mech.name))
 
                             # Complete initialization of projection

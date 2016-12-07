@@ -108,8 +108,8 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
-kwParamsArg = "params"
-kwNameArg = "name"
+PARAMS_ARG = "params"
+NAME_ARG = "name"
 kwPrefsArg = "prefs"
 kwContextArg = "context"
 kwInitialValues = 'initial_values'
