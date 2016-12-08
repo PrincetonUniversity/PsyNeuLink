@@ -604,7 +604,14 @@ class Mechanism_Base(Mechanism):
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
         List of values of the mechanism's outputStates.
-        Note: this is not necessarily equal to the ``value`` attribute.
+        Note: this is not necessarily equal to the ``value`` attribute of the mechanism, since the outputState's
+        ``function`` and/or its ``analyze`` attributes may calculate a new quantity derived from an item of the
+        mechanism's ``value``, and assign that to the outputState's ``value`` and the corresponding item of the
+        mechanism's ``outputValue``.
+
+        COMMENT:
+            EXAMPLE HERE
+        COMMENT
 
         .. _outputStateValueMapping : Dict[str, int]:
                contains the mappings of outputStates to their indices in the outputValue list
@@ -1261,17 +1268,34 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call mechanism's __execute__ method for init
+            # # MODIFIED 12/8/16 OLD:
+            # elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
+            #     return self.__execute__(variable=self.variable,
+            #                          params=runtime_params,
+            #                          time_scale=time_scale,
+            #                          context=context)
+            # # Only call mechanism's function method for init
+            # elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+            #     return self.function(variable=self.variable,
+            #                          params=runtime_params,
+            #                          time_scale=time_scale,
+            #                          context=context)
+            # MODIFIED 12/8/16 NEW:
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return self.__execute__(variable=self.variable,
-                                     params=runtime_params,
-                                     time_scale=time_scale,
-                                     context=context)
+                return_value =  self.__execute__(variable=self.variable,
+                                                 params=runtime_params,
+                                                 time_scale=time_scale,
+                                                 context=context)
+                return np.atleast_2d(return_value)
+
             # Only call mechanism's function method for init
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return self.function(variable=self.variable,
-                                     params=runtime_params,
-                                     time_scale=time_scale,
-                                     context=context)
+                return_value = self.function(variable=self.variable,
+                                             params=runtime_params,
+                                             time_scale=time_scale,
+                                             context=context)
+                return np.atleast_2d(return_value)
+            # MODIFIED 12/8/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
