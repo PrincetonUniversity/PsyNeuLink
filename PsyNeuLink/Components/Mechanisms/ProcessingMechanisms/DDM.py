@@ -526,22 +526,22 @@ class DDM(ProcessingMechanism_Base):
         # MODIFIED 12/7/16 NEW:
         OUTPUT_STATES:[                                        # Full set specified to include Navarro and Fuss outputs
             {NAME_ARG:DDM_DECISION_VARIABLE,
-             INDEX:DDM_Output.DECISION_VARIABLE},
+             INDEX:DDM_Output.DECISION_VARIABLE.value},
 
             {NAME_ARG:DDM_RESPONSE_TIME,
-             INDEX:DDM_Output.RESPONSE_TIME},
+             INDEX:DDM_Output.RESPONSE_TIME.value},
 
             {NAME_ARG:DDM_PROBABILITY_UPPER_THRESHOLD,          # Probability of hitting upper bound
-             INDEX:DDM_Output.DDM_PROBABILITY_UPPER_THRESHOLD},
+             INDEX:DDM_Output.P_UPPER_MEAN.value},
 
             {NAME_ARG:DDM_PROBABILITY_LOWER_THRESHOLD,          # Probability of hitting lower bound
-             INDEX:DDM_Output.DDM_PROBABILITY_LOWER_THRESHOLD},
+             INDEX:DDM_Output.P_LOWER_MEAN.value},
 
             {NAME_ARG:DDM_RT_CORRECT_MEAN,                      # NavarroAnd Fuss only
-             INDEX:DDM_Output.DDM_RT_CORRECT_MEAN},
+             INDEX:DDM_Output.RT_CORRECT_MEAN.value},
 
             {NAME_ARG:DDM_RT_CORRECT_VARIANCE,                  # NavarroAnd Fuss only
-             INDEX:DDM_Output.DDM_RT_CORRECT_VARIANCE}
+             INDEX:DDM_Output.RT_CORRECT_VARIANCE.value}
         ]
         # MODIFIED 12/7/16 END
     })
@@ -603,6 +603,11 @@ class DDM(ProcessingMechanism_Base):
             raise DDMError("{} param of {} must be one of the following functions: {}".
                            format(FUNCTION, self.name, function_names))
 
+        if not isinstance(target_set[FUNCTION], NavarroAndFuss):
+            # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
+            del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
+            del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
+
         try:
             threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
         except KeyError:
@@ -614,8 +619,6 @@ class DDM(ProcessingMechanism_Base):
                 raise DDMError("{} param of {} ({}) must be >= zero".
                                format(THRESHOLD, self.name, threshold))
 
-
-    # def _instantiate_function(self, context=NotImplemented):
     def _instantiate_attributes_before_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_method
         """
@@ -629,17 +632,27 @@ class DDM(ProcessingMechanism_Base):
         # self._outputStateValueMapping[DDM_PROBABILITY_LOWER_THRESHOLD] = DDM_Output.P_LOWER_MEAN.value
         # MODIFIED 12/7/16 END
 
-        # If not using Navarro and Fuss, get rid of extra params:
-        if self.function is BogaczEtAl:
-            outputStates = self.params[OUTPUT_STATES]
-            try:
-                del outputStates[outputStates.index(DDM_RT_CORRECT_MEAN)]
-                del outputStates[outputStates.index(DDM_RT_CORRECT_VARIANCE)]
-            except ValueError:
-                pass
-        else:
-            self._outputStateValueMapping[DDM_RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-            self._outputStateValueMapping[DDM_RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
+        # MODIFIED 12/7/16 OLD:  QQQQQQQQ
+        # MOVE THIS TO _instantiate_ouput_states??
+        # DEFER ALL THIS TO AFTER FUNCTION (SINCE OUTPUTSTATES NOT YET INSTANTIATED)
+        # # If not using Navarro and Fuss, get rid of extra params:
+        # if self.function is BogaczEtAl:
+        #     outputStates = self.params[OUTPUT_STATES]
+        #     try:
+        #         # MODIFIED 12/7/16 OLD:
+        #         # del outputStates[outputStates.index(DDM_RT_CORRECT_MEAN)]
+        #         # del outputStates[outputStates.index(DDM_RT_CORRECT_VARIANCE)]
+        #         # MODIFIED 12/7/16 NEW:
+        #         NEED TO LOOK INSIDE DICT AT STATE SPEC (OBJECT or SPEC DICT) FOR STATE NAME
+        #         del self.paramsCurrent[DDM_RT_CORRECT_MEAN]
+        #         del self.paramsCurrent[DDM_RT_CORRECT_VARIANCE]
+        #         # MODIFIED 12/7/16 END
+        #     except ValueError:
+        #         pass
+        # else:
+        #     self._outputStateValueMapping[DDM_RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
+        #     self._outputStateValueMapping[DDM_RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
+        # MODIFIED 12/7/16 END
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -734,7 +747,6 @@ class DDM(ProcessingMechanism_Base):
 
             # # MODIFIED 12/7/16 OLD:
             # # Assign outputValue
-            #
             # if isinstance(self.function.__self__, BogaczEtAl):
             #     self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result
             #     self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.P_LOWER_MEAN.value]
@@ -755,7 +767,27 @@ class DDM(ProcessingMechanism_Base):
             #
             # return self.outputValue
             # MODIFIED 12/7/16 NEW:
-            return result
+            if isinstance(self.function.__self__, BogaczEtAl):
+                return_value = np.array([[0],[0],[0],[0]])
+                return_value[DDM_Output.RESPONSE_TIME.value], return_value[DDM_Output.P_LOWER_MEAN.value] = result
+                return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - return_value[DDM_Output.P_LOWER_MEAN.value]
+
+            elif isinstance(self.function.__self__, NavarroAndFuss):
+                return_value = np.array([[0],[0],[0],[0],[0],[0]])
+                return_value[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
+                return_value[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
+                return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
+                return_value[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
+                return_value[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
+
+            # Convert ER to decision variable:
+            if random() < return_value[DDM_Output.P_LOWER_MEAN.value]:
+                return_value[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
+            else:
+                return_value[DDM_Output.DECISION_VARIABLE.value] = threshold
+
+            return return_value
             # MODIFIED 12/7/16 END
 
         else:
