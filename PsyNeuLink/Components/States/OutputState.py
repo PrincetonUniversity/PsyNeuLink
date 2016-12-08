@@ -402,6 +402,7 @@ class OutputState(State_Base):
             # self.value = self.analyze(self.owner.value[self.index])
             # MODIFIED 12/8/16 NEW:
             self.value = type_match(self.analyze(self.owner.value[self.index]), type(self.owner.value[self.index]))
+            TEST = True
             # MODIFIED 12/8/16 END
 
 
