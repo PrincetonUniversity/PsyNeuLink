@@ -9,6 +9,8 @@
 #
 #
 
+# IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+
 # DOCUMENT:
 #    README.md -> README.rst AND/OR Index.rst:
 #    Features:  graph support, logging, hierarchical preferences

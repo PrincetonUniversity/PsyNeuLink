@@ -1263,7 +1263,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=None, time_scale=None, params=None, context=None):
+    def execute(self, input=None, params=None, time_scale=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
@@ -1752,12 +1752,27 @@ def _instantiate_state(owner,                   # Object to which state will bel
             state_value = constraint_value
             spec_type = kwStateValue
 
+        # # MODIFIED 12/7/16 OLD:
+        # # # Add state_spec[STATE_PARAMS] to state_params
+        # try:
+        #     state_params.update(state_spec[STATE_PARAMS])
+        # # state_spec[STATE_PARAMS] was not specified
+        # except KeyError:
+        #     pass
+        # MODIFIED 12/7/16 NEW:
+        # Get name if it is specified in dict
+        try:
+            state_name = state_spec[NAME_ARG]
+            del state_spec[NAME_ARG]
+        except KeyError:
+            pass
         # Add state_spec[STATE_PARAMS] to state_params
         try:
-            state_params.update(state_spec[STATE_PARAMS])
-        # state_spec[STATE_PARAMS] was not specified
+            state_params.update(state_spec)
         except KeyError:
-                pass
+            pass
+        # MODIFIED 12/7/16 END
+
     #endregion
 
     # IMPLEMENTATION NOTE:  CONSOLIDATE ALL THE PROJECTION-RELATED STUFF BELOW:

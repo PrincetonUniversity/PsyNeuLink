@@ -1273,27 +1273,6 @@ class Mechanism_Base(Mechanism):
                                      time_scale=time_scale,
                                      context=context)
 
-        # # Direct call to execute mechanism with specified input,
-        # #    so call subclass __execute__ method with input and runtime_params (if specified), and return
-        # elif not input is None:
-        #     self._assign_input(input)
-        #     if runtime_params:
-        #         for param_set in runtime_params:
-        #             if not param_set in {INPUT_STATE_PARAMS,
-        #                                  PARAMETER_STATE_PARAMS,
-        #                                  OUTPUT_STATE_PARAMS}:
-        #                 raise MechanismError("{0} is not a valid parameter set for runtime specification".
-        #                                      format(param_set))
-        #         # FIX: NEED TO UPATE PARAMETER_STATE HERE TO ACTIVATE RUNTIME PARAMS
-        #     return self.__execute__(variable=input,
-        #                          params=runtime_params,
-        #                          time_scale=time_scale,
-        #                          context=context)
-        # else:
-        #     pass
-        # # Execute
-
-
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
         if self.prefs.paramValidationPref:
@@ -1313,29 +1292,11 @@ class Mechanism_Base(Mechanism):
                         target_set=runtime_params)
         #endregion
 
-
-
-
-        # #region UPDATE INPUT STATE(S)
-        # # Executing process or system, update inputStates
-        # if input is None:
-        #     self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
-        # else:
-        # # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
-        #     self._assign_input(input)
-        #
-        # #endregion
-
         #region UPDATE INPUT STATE(S)
         # Executing or simulating process or system, get input by updating inputStates
         if input is None and (EXECUTING in context or EVC_SIMULATION in context):
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
 
-        # MODIFIED 11/27/16 OLD:
-        # else:
-        # # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
-        #     self._assign_input(input)
-        # MODIFIED 11/27/16 NEW:
         # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
         else:
             if context is NO_CONTEXT:
@@ -1346,11 +1307,6 @@ class Mechanism_Base(Mechanism):
         # MODIFIED 11/27/16 END
 
         #endregion
-
-
-
-
-
 
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
@@ -1390,13 +1346,11 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
-        self._update_output_states(time_scale=time_scale, context=context)
-        #endregion
-
-        #region TBI
-        # # Call outputState.execute
-        # #    updates outState.value, based on any projections (e.g., gating) it may get
-        # self.inputState.execute()
+        # # MODIFIED 12/7/16 OLD:
+        # self._update_output_states(time_scale=time_scale, context=context)
+        # MODIFIED 12/7/16 NEW:
+        self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+        # MODIFIED 12/7/16 END
         #endregion
 
         #region REPORT EXECUTION
@@ -1501,13 +1455,6 @@ class Mechanism_Base(Mechanism):
         Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
         Aggregate results (using inputState execute method)
         Update inputState.value
-
-        Args:
-            params:
-            time_scale:
-            context:
-
-        Returns:
         """
         for i in range(len(self.inputStates)):
             state_name, state = list(self.inputStates.items())[i]
@@ -1543,7 +1490,8 @@ class Mechanism_Base(Mechanism):
             #    to runtime param or paramsCurrent (per above)
             param[state_name] = type_match(state.value, param_type)
 
-    def _update_output_states(self, time_scale=None, context=None):
+    def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
+    # MODIFIED 12/7/16 END
         # """Assign items in self.value to each outputState in outputSates
         #
         # Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
@@ -1567,8 +1515,15 @@ class Mechanism_Base(Mechanism):
         #             raise MechanismError("{} must implement _outputStateValueMapping attribute in function".
         #                                  format(self.__class__.__name__))
 
-        """Assign each item of outputValue to the value of a corresponding outputState
+        """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
+
         """
+        for i in range(len(self.outputStates)):
+            state = list(self.outputStates.values())[i]
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            # self.outputValue[i] = state.value
+
+        # Assign value of each outputState to corresponding item in self.ouputValue
         self.outputValue = list(state.value for state in list(self.outputStates.values()))
 
 

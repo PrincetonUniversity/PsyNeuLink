@@ -261,16 +261,16 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             {NAME_ARG:COMPARISON_RESULT},
 
             {NAME_ARG:COMPARISON_MEAN,
-             FUNCTION:lambda x: np.mean(x)},
+             ANALYZE:lambda x: np.mean(x)},
 
             {NAME_ARG:COMPARISON_SUM,
-             FUNCTION:lambda x: np.sum(x)},
+             ANALYZE:lambda x: np.sum(x)},
 
             {NAME_ARG:COMPARISON_SSE,
-             FUNCTION:lambda x: np.sum(x*x)},
+             ANALYZE:lambda x: np.sum(x*x)},
 
             {NAME_ARG:COMPARISON_MSE,
-             FUNCTION:lambda x: np.sum(x*x)/len(x)}
+             ANALYZE:lambda x: np.sum(x*x)/len(x)}
         ]})
         # MODIFIED 12/7/16 NEW:
 

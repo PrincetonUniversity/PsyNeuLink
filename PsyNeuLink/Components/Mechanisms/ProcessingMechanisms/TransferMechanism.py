@@ -285,25 +285,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
-        # FUNCTION:TransferFunction,
         INPUT_STATES: None,
-
-        # MODIFIED 12/7/16 OLD:
-        # OUTPUT_STATES:[TRANSFER_RESULT,
-        #                TRANSFER_MEAN,
-        #                TRANSFER_VARIANCE]
-        # })
-        # MODIFIED 12/7/16 NEW:
         OUTPUT_STATES:[
             {NAME_ARG:TRANSFER_RESULT},
-
             {NAME_ARG:TRANSFER_MEAN,
-             FUNCTION:lambda x: np.mean(x)},
-
+             ANALYZE:lambda x: np.mean(x)},
             {NAME_ARG:TRANSFER_VARIANCE,
-             FUNCTION:lambda x: np.var(x)}
+             ANALYZE:lambda x: np.var(x)}
         ]})
-        # MODIFIED 12/7/16 END
 
     paramNames = paramClassDefaults.keys()
 
