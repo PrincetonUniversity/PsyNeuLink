@@ -1201,6 +1201,13 @@ class Component(object):
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
                     continue
+                # MODIFIED 12/8/16 NEW:
+                # If the value is a Function class, allow any function
+                from PsyNeuLink.Components.Functions.Function import Function_Base
+                if issubclass(self.paramClassDefaults[param_name], Function_Base):
+                    if isinstance(param_value, function_type):
+                        continue
+                # MODIFIED 12/8/16 END
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
@@ -1313,6 +1320,8 @@ class Component(object):
 
                 elif not target_set is None:
                     target_set[param_name] = param_value
+
+            # If param is a function_type, allow any other function_type
 
             # Parameter is not a valid type
             else:
