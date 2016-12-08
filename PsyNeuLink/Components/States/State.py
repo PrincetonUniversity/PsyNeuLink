@@ -1752,25 +1752,22 @@ def _instantiate_state(owner,                   # Object to which state will bel
             state_value = constraint_value
             spec_type = kwStateValue
 
-        # # MODIFIED 12/7/16 OLD:
-        # # # Add state_spec[STATE_PARAMS] to state_params
-        # try:
-        #     state_params.update(state_spec[STATE_PARAMS])
-        # # state_spec[STATE_PARAMS] was not specified
-        # except KeyError:
-        #     pass
-        # MODIFIED 12/7/16 NEW:
-        # Get name if it is specified in dict
-        try:
-            state_name = state_spec[NAME_ARG]
-            del state_spec[NAME_ARG]
-        except KeyError:
-            pass
         # Add state_spec[STATE_PARAMS] to state_params
         try:
-            state_params.update(state_spec)
+            state_params.update(state_spec[STATE_PARAMS])
+        # state_spec[STATE_PARAMS] was not specified
         except KeyError:
             pass
+        # MODIFIED 12/7/16 NEW:
+        # Add state_spec[STATE_PARAMS] to state_params
+        for spec in state_spec:
+            if spec is NAME_ARG:
+                # Assign state name
+                state_name = state_spec[spec]
+                # Do not include in params dict for state
+                #  (IMPLEMENTATION NOTE: but don't delete, as apparaently still yoked to paramClassDefaults)
+                continue
+            state_params[spec] = state_spec[spec]
         # MODIFIED 12/7/16 END
 
     #endregion
