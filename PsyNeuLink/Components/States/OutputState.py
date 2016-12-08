@@ -398,7 +398,11 @@ class OutputState(State_Base):
         # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 
         if not self.value:
-            self.value = self.analyze(self.owner.value[self.index])
+            # # MODIFIED 12/8/16 OLD:
+            # self.value = self.analyze(self.owner.value[self.index])
+            # MODIFIED 12/8/16 NEW:
+            self.value = type_match(self.analyze(self.owner.value[self.index]), type(self.owner.value[self.index]))
+            # MODIFIED 12/8/16 END
 
 
 def _instantiate_output_states(owner, context=None):

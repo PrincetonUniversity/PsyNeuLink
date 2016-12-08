@@ -9,6 +9,9 @@
 #
 #
 
+# FIX: ANALYZE -> CALCULATE [Preserve Case]
+# FIX:  ALLOW NAME_ARG TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
+
 # IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 
 # DOCUMENT:
@@ -21,7 +24,8 @@
 #    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
 
 # FIX *************
-# FIX / IMPLEMENT: MAKE SURE THAT outputValue IS GETTING SET (IN Mechanism.execute OR Mecchanism._update_output_states
+# FIX / IMPLEMENT: MAKE SURE THAT outputValue IS GETTING SET PROPERLY
+#                  (IN Mechanism.execute OR Mecchanism._update_output_states)
 # FIX *************
 
 # FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
