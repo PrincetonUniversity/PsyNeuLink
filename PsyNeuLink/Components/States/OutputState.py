@@ -443,7 +443,11 @@ def _instantiate_output_states(owner, context=None):
     :return:
     """
 
+    # # MODIFIED 12/8/16 OLD:
     constraint_value = []
+    # # MODIFIED 12/8/16 NEW:
+    # constraint_value = np.array(2,)
+    # MODIFIED 12/8/16 END
     owner_value = np.atleast_2d(owner.value)
 
     if owner.paramsCurrent[OUTPUT_STATES]:
@@ -459,7 +463,12 @@ def _instantiate_output_states(owner, context=None):
                     index = output_state[INDEX]
                 except KeyError:
                     pass
-            constraint_value.extend(owner_value[index])
+            # # MODIFIED 12/8/16 OLD:
+            # constraint_value.extend(owner_value[index])
+            # MODIFIED 12/8/16 NEW:
+            constraint_value.append(owner_value[index])
+            TEST = True
+            # MODIFIED 12/8/16 END
     else:
         constraint_value = owner_value
 

@@ -1358,22 +1358,17 @@ class Mechanism_Base(Mechanism):
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
-        # # MODIFIED 11/27/16 OLD:
-        # self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
-        # MODIFIED 11/27/16 NEW:
         self.value = self.__execute__(variable=self.inputValue,
                                       params=runtime_params,
                                       time_scale=time_scale,
                                       context=context)
-        # MODIFIED 11/27/16 END
+        # MODIFIED 12/8/16 NEW:
+        self.value = np.atleast_2d(self.value)
+        # MODIFIED 12/8/16 END
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
-        # # MODIFIED 12/7/16 OLD:
-        # self._update_output_states(time_scale=time_scale, context=context)
-        # MODIFIED 12/7/16 NEW:
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
-        # MODIFIED 12/7/16 END
         #endregion
 
         #region REPORT EXECUTION
@@ -1546,7 +1541,7 @@ class Mechanism_Base(Mechanism):
             state.update(params=runtime_params, time_scale=time_scale, context=context)
             # self.outputValue[i] = state.value
 
-        # Assign value of each outputState to corresponding item in self.ouputValue
+        # Assign value of each outputState to corresponding item in self.outputValue
         self.outputValue = list(state.value for state in list(self.outputStates.values()))
 
 
