@@ -411,14 +411,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
                                         "not recognized; should have been detected in Function._validate_params".
                                         format(comparison_operation, self.name))
 
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[COMPARISON_RESULT] = ComparatorOutput.COMPARISON_RESULT.value
-        self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
-        self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-        self._outputStateValueMapping[COMPARISON_SSE] = ComparatorOutput.COMPARISON_SSE.value
-        self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
-
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_function(self, context=None):

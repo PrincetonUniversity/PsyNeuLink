@@ -1500,14 +1500,7 @@ class Component(object):
                     return None
 
     def _instantiate_attributes_before_function(self, context=None):
-
-        # Get length of and instantiate self.outputValue
-        try:
-            # Note: use _outputStateValueMapping here (instead of outputStates), since
-            #   during initialization function is run (to evaluate output) before outputStates have been instantiated
-            self.outputValue = [None] * len(self._outputStateValueMapping)
-        except AttributeError:
-            self.outputValue = None
+        pass
 
     def _instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]
