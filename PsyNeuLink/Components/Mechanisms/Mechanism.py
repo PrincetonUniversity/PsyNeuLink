@@ -1509,30 +1509,6 @@ class Mechanism_Base(Mechanism):
             param[state_name] = type_match(state.value, param_type)
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
-    # MODIFIED 12/7/16 END
-        # """Assign items in self.value to each outputState in outputSates
-        #
-        # Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
-        # Use mapping of items to outputStates in self._outputStateValueMapping
-        # Notes:
-        # * self._outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
-        # * if len(self.value) == 1, (i.e., there is only one value), absence of self._outputStateValueMapping is forgiven
-        # * if the function of a Function is specified only by FUNCTION and returns a value with len > 1
-        #     it MUST also specify kwFunctionOutputStateValueMapping
-        #
-        # """
-        # if len(self.value) == 1:
-        #     self.outputStates[list(self.outputStates.keys())[0]].value = self.value[0]
-        # #
-        # # Assign items in self.value to outputStates using mapping of states to values in self._outputStateValueMapping
-        # else:
-        #     for state in self.outputStates:
-        #         try:
-        #             self.outputStates[state].value = self.value[self._outputStateValueMapping[state]]
-        #         except AttributeError:
-        #             raise MechanismError("{} must implement _outputStateValueMapping attribute in function".
-        #                                  format(self.__class__.__name__))
-
         """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
 
         """
