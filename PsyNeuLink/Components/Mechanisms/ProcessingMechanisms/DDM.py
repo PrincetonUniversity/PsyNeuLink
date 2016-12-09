@@ -515,15 +515,7 @@ class DDM(ProcessingMechanism_Base):
         TIME_SCALE: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in _assign_defaults_to_paramClassDefaults (in __init__)
-        # MODIFIED 12/7/16 OLD:
-        # OUTPUT_STATES:[DDM_DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
-        #                DDM_RESPONSE_TIME,
-        #                DDM_PROBABILITY_UPPER_THRESHOLD, # Probability of hitting upper bound
-        #                DDM_PROBABILITY_LOWER_THRESHOLD, # Probability of hitting lower bound
-        #                DDM_RT_CORRECT_MEAN,         # NavarroAnd Fuss only
-        #                DDM_RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
         # # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
-        # MODIFIED 12/7/16 NEW:
         OUTPUT_STATES:[                                        # Full set specified to include Navarro and Fuss outputs
             {NAME_ARG:DDM_DECISION_VARIABLE,
              INDEX:DDM_Output.DECISION_VARIABLE.value},
@@ -543,7 +535,6 @@ class DDM(ProcessingMechanism_Base):
             {NAME_ARG:DDM_RT_CORRECT_VARIANCE,                  # NavarroAnd Fuss only
              INDEX:DDM_Output.RT_CORRECT_VARIANCE.value}
         ]
-        # MODIFIED 12/7/16 END
     })
 
     # Set default input_value to default bias for DDM

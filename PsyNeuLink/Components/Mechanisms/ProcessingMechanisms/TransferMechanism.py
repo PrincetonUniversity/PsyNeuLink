@@ -288,10 +288,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         INPUT_STATES: None,
         OUTPUT_STATES:[
             {NAME_ARG:TRANSFER_RESULT},
+
             {NAME_ARG:TRANSFER_MEAN,
-             ANALYZE:lambda x: np.mean(x)},
+             CALCULATE:lambda x: np.mean(x)},
+
             {NAME_ARG:TRANSFER_VARIANCE,
-             ANALYZE:lambda x: np.var(x)}
+             CALCULATE:lambda x: np.var(x)}
         ]})
 
     paramNames = paramClassDefaults.keys()

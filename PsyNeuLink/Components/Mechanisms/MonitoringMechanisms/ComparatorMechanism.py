@@ -249,30 +249,21 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         INPUT_STATES:[SAMPLE,   # Instantiate two inputStates, one for sample and target each
                        TARGET],  #    and name them using keyword names
         PARAMETER_STATES: None,             # This suppresses parameterStates
-        # MODIFIED 12/7/16 OLD:
-        # OUTPUT_STATES:[COMPARISON_RESULT,
-        #                          COMPARISON_MEAN,
-        #                          COMPARISON_SUM,
-        #                          COMPARISON_SSE,
-        #                          COMPARISON_MSE]
-        # })
-        # MODIFIED 12/7/16 NEW:
         OUTPUT_STATES:[
             {NAME_ARG:COMPARISON_RESULT},
 
             {NAME_ARG:COMPARISON_MEAN,
-             ANALYZE:lambda x: np.mean(x)},
+             CALCULATE:lambda x: np.mean(x)},
 
             {NAME_ARG:COMPARISON_SUM,
-             ANALYZE:lambda x: np.sum(x)},
+             CALCULATE:lambda x: np.sum(x)},
 
             {NAME_ARG:COMPARISON_SSE,
-             ANALYZE:lambda x: np.sum(x*x)},
+             CALCULATE:lambda x: np.sum(x*x)},
 
             {NAME_ARG:COMPARISON_MSE,
-             ANALYZE:lambda x: np.sum(x*x)/len(x)}
+             CALCULATE:lambda x: np.sum(x*x)/len(x)}
         ]})
-        # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()
 
