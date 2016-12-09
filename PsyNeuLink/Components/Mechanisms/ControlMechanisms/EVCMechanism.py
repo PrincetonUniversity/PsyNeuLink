@@ -434,7 +434,7 @@ class EVCMechanism(ControlMechanism_Base):
     #     kp<pref>: <setting>...}
 
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
-    variableClassDefault = [defaultControlAllocation]
+    variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem

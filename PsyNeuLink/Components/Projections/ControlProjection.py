@@ -395,7 +395,7 @@ class ControlProjection(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: DefaultController,
-        PROJECTION_SENDER_VALUE: [defaultControlAllocation],
+        PROJECTION_SENDER_VALUE: defaultControlAllocation,
         CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS})
 
     @tc.typecheck
