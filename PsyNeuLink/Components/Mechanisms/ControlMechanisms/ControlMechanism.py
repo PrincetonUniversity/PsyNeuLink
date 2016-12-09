@@ -540,6 +540,10 @@ class ControlMechanism_Base(Mechanism_Base):
         """
         raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
+    def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
+        TEST = True
+        pass
+
     def show(self):
 
         print ("\n---------------------------------------------------------")
