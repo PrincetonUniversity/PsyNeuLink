@@ -500,6 +500,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             #
             # return self.outputValue
             # MODIFIED 12/7/16 NEW:
+            self.summedErrorSignal = sum
             return comparison_array
             # MODIFIED 12/7/16 END
 
