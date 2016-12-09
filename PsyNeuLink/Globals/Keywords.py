@@ -110,7 +110,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 # General:
 PARAMS_ARG = "params"
 NAME_ARG = "name"
-kwPrefsArg = "prefs"
+PREFS_ARG = "prefs"
 kwContextArg = "context"
 kwInitialValues = 'initial_values'
 
@@ -314,6 +314,8 @@ PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
+INDEX = 'index'
+ANALYZE = 'analyze'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------

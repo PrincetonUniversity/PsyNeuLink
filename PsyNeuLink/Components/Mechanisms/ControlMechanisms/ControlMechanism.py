@@ -255,7 +255,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
-    variableClassDefault = [defaultControlAllocation]
+    variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -461,14 +461,9 @@ class ControlMechanism_Base(Mechanism_Base):
     def _instantiate_control_projection(self, projection, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
-        Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
-
-        Args:
-            projection:
-            context:
+        Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
 
         Returns state: (OutputState)
-
         """
 
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
@@ -539,6 +534,13 @@ class ControlMechanism_Base(Mechanism_Base):
         Must be overriden by subclass
         """
         raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+
+    def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
+        """Overrides super
+        This is to prevent standard assignment of outputStates from self.value (output of function);
+        This is currently handled by controlMechanisms in a customized manner.
+        """
+        pass
 
     def show(self):
 

@@ -31,4 +31,4 @@ class DefaultControlAllocationMode(Enum):
     GUMBY_MODE = 0.0
     BADGER_MODE = 1.0
     TEST_MODE = 240
-defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
+defaultControlAllocation = [DefaultControlAllocationMode.BADGER_MODE.value]
