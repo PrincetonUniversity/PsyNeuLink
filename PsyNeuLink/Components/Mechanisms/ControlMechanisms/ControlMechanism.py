@@ -384,7 +384,7 @@ class ControlMechanism_Base(Mechanism_Base):
         input_state = _instantiate_state(owner=self,
                                                   state_type=InputState,
                                                   state_name=input_state_name,
-                                                  state_spec=defaultControlAllocation,
+                                                  state_spec=[defaultControlAllocation],
                                                   state_params=None,
                                                   constraint_value=np.array(self.variable[variable_item_index]),
                                                   constraint_value_name='Default control allocation',
