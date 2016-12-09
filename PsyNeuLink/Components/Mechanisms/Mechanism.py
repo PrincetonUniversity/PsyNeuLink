@@ -1558,7 +1558,13 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
         print ("\n\'{}\'{} executed:\n- input:  {}".
-               format(self.name, mechanism_string, input.__str__().strip("[]")))
+        # MODIFIED 12/9/16 OLD:
+        #        format(self.name, mechanism_string, input.__str__().strip("[]")))
+        # MODIFIED 12/9/16 NEW:
+               format(self.name, mechanism_string, [float(i) for i in input].__str__().strip("[]")))
+        # MODIFIED 12/9/16 END
+
+
         if params:
             print("- params:")
             # Sort for consistency of output
@@ -1585,8 +1591,13 @@ class Mechanism_Base(Mechanism):
                         print ("\t\t{}: {}".
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
+        # # MODIFIED 12/9/16 OLD:
+        # print("- output: {}".
+        #       format(re.sub('[\[,\],\n]','',str(output))))
+        # MODIFIED 12/9/16 NEW:
         print("- output: {}".
-              format(re.sub('[\[,\],\n]','',str(float(output)))))
+              format(re.sub('[\[,\],\n]','',str([float(i) for i in output]))))
+        # MODIFIED 12/9/16 END
 
 #     def adjust_function(self, params, context=None):
 #         """Modify control_signal_allocations while process is executing

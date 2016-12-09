@@ -2054,7 +2054,8 @@ class Process_Base(Process):
         print("\n\'{}' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
-        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str(self.variable))))
+        variable = [list(i) for i in self.variable]
+        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str(variable))))
 
     def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
@@ -2069,7 +2070,11 @@ class Process_Base(Process):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     re.sub('[\[,\],\n]','',str(self.outputState.value))))
+                     # # MODIFIED 12/9/16 OLD:
+                     # re.sub('[\[,\],\n]','',str(self.outputState.value))))
+                     # MODIFIED 12/9/16 NEW:
+                     re.sub('[\[,\],\n]','',str([float(i) for i in self.outputState.value]))))
+                     # MODIFIED 12/9/16 END
 
         if self.learning:
             print("\n- MSE: {}".
