@@ -315,7 +315,7 @@ PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
 INDEX = 'index'
-ANALYZE = 'analyze'
+CALCULATE = 'calculate'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------

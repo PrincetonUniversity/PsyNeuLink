@@ -288,7 +288,7 @@ class OutputState(State_Base):
                  reference_value,
                  value=None,
                  index=PRIMARY_OUTPUT_STATE,
-                 analyze:function_type=Linear,
+                 calculate:function_type=Linear,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
@@ -297,7 +297,7 @@ class OutputState(State_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(index=index,
-                                                  analyze=analyze,
+                                                  calculate=calculate,
                                                   function=function,
                                                   params=params)
 
@@ -364,10 +364,10 @@ class OutputState(State_Base):
         # IMPLEMENT: VALIDATE THAT ANALYZE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
         try:
-            if isinstance(target_set[ANALYZE], type):
-                function = target_set[ANALYZE]().function
+            if isinstance(target_set[CALCULATE], type):
+                function = target_set[CALCULATE]().function
             else:
-                function = target_set[ANALYZE]
+                function = target_set[CALCULATE]
             try:
                 function(self.owner.value[target_set[INDEX]])
             except:
@@ -376,9 +376,9 @@ class OutputState(State_Base):
                                        "".format(target_set[INDEX],
                                                  self.owner.name,
                                                  self.owner.value[target_set[INDEX]],
-                                                 ANALYZE,
+                                                 CALCULATE,
                                                  self.name,
-                                                 target_set[ANALYZE]))
+                                                 target_set[CALCULATE]))
         except KeyError:
             pass
 
@@ -387,8 +387,8 @@ class OutputState(State_Base):
         """
         super()._instantiate_attributes_after_function(context=context)
 
-        if isinstance(self.analyze, type):
-            self.analyze = self.analyze().function
+        if isinstance(self.calculate, type):
+            self.calculate = self.calculate().function
 
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -401,7 +401,7 @@ class OutputState(State_Base):
             # # MODIFIED 12/8/16 OLD:
             # self.value = self.analyze(self.owner.value[self.index])
             # MODIFIED 12/8/16 NEW:
-            self.value = type_match(self.analyze(self.owner.value[self.index]), type(self.owner.value[self.index]))
+            self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
             # MODIFIED 12/8/16 END
 
 
