@@ -461,14 +461,9 @@ class ControlMechanism_Base(Mechanism_Base):
     def _instantiate_control_projection(self, projection, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
-        Updates allocationPolicy and controlSignalCosts attributes to accomodate instantiated projection
-
-        Args:
-            projection:
-            context:
+        Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
 
         Returns state: (OutputState)
-
         """
 
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
