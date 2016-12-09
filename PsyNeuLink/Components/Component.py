@@ -1320,7 +1320,17 @@ class Component(object):
                                     pass
 
                 elif not target_set is None:
-                    target_set[param_name] = param_value
+                    # # MODIFIED 12/8/17 OLD:
+                    # target_set[param_name] = param_value
+                    # MODIFIED 12/8/17 NEW:
+                    # Copy any iterables so that deletionsn can be made to local assignments
+                    from collections import Iterable
+                    if not isinstance(param_value, Iterable) or isinstance(param_value, str):
+                        target_set[param_name] = param_value
+                    else:
+                        target_set[param_name] = param_value.copy()
+                    # MODIFIED 12/8/17 END
+                    TEST = True
 
             # If param is a function_type, allow any other function_type
 

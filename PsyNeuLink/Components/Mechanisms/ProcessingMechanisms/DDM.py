@@ -623,38 +623,17 @@ class DDM(ProcessingMechanism_Base):
         """Delete params not in use, call super.instantiate_execute_method
         """
 
-        # # MODIFIED 12/7/16 OLD:
-        # # Assign output mappings:
-        # self._outputStateValueMapping = {}
-        # self._outputStateValueMapping[DDM_DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-        # self._outputStateValueMapping[DDM_RESPONSE_TIME] = DDM_Output.RESPONSE_TIME.value
-        # self._outputStateValueMapping[DDM_PROBABILITY_UPPER_THRESHOLD] = DDM_Output.P_UPPER_MEAN.value
-        # self._outputStateValueMapping[DDM_PROBABILITY_LOWER_THRESHOLD] = DDM_Output.P_LOWER_MEAN.value
-        # MODIFIED 12/7/16 END
-
-        # MODIFIED 12/7/16 OLD:  QQQQQQQQ
-        # MOVE THIS TO _instantiate_ouput_states??
-        # DEFER ALL THIS TO AFTER FUNCTION (SINCE OUTPUTSTATES NOT YET INSTANTIATED)
-        # # If not using Navarro and Fuss, get rid of extra params:
-        # if self.function is BogaczEtAl:
-        #     outputStates = self.params[OUTPUT_STATES]
-        #     try:
-        #         # MODIFIED 12/7/16 OLD:
-        #         # del outputStates[outputStates.index(DDM_RT_CORRECT_MEAN)]
-        #         # del outputStates[outputStates.index(DDM_RT_CORRECT_VARIANCE)]
-        #         # MODIFIED 12/7/16 NEW:
-        #         NEED TO LOOK INSIDE DICT AT STATE SPEC (OBJECT or SPEC DICT) FOR STATE NAME
-        #         del self.paramsCurrent[DDM_RT_CORRECT_MEAN]
-        #         del self.paramsCurrent[DDM_RT_CORRECT_VARIANCE]
-        #         # MODIFIED 12/7/16 END
-        #     except ValueError:
-        #         pass
-        # else:
-        #     self._outputStateValueMapping[DDM_RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-        #     self._outputStateValueMapping[DDM_RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
-        # MODIFIED 12/7/16 END
-
         super()._instantiate_attributes_before_function(context=context)
+
+    # def _instantiate_attributes_after_function(self, context=None):
+    #
+    #     super()._instantiate_attributes_after_function(context=context)
+    #
+    #     if not isinstance(self.paramsCurrent[FUNCTION], NavarroAndFuss):
+    #         # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
+    #         del self.outputStates[DDM_RT_CORRECT_MEAN]
+    #         del self.outputStates[DDM_RT_CORRECT_VARIANCE]
+
 
     def __execute__(self,
                 variable=None,

@@ -1127,7 +1127,6 @@ class Mechanism_Base(Mechanism):
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        # self._instantiate_output_states(context=context)
         from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
         _instantiate_output_states(owner=self, context=context)
 
