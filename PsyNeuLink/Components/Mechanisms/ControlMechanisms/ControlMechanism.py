@@ -536,7 +536,10 @@ class ControlMechanism_Base(Mechanism_Base):
         raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
-        TEST = True
+        """Overrides super
+        This is to prevent standard assignment of outputStates from self.value (output of function);
+        This is currently handled by controlMechanisms in a customized manner.
+        """
         pass
 
     def show(self):
