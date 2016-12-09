@@ -142,6 +142,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanis
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Functions.Function import BackPropagation
@@ -150,6 +151,19 @@ from PsyNeuLink.Components.Functions.Function import BackPropagation
 
 parameter_keywords.update({LEARNING_PROJECTION})
 projection_keywords.update({LEARNING_PROJECTION})
+
+def _is_learning_spec(spec):
+    """Evaluate whether spec is a valid learning specification
+
+    Return :keyword:`true` if spec is LEARNING or a valid projection_spec (see Projection._is_projection_spec
+    Otherwise, return :keyword:`False`
+
+    """
+    if spec is LEARNING:
+        return True
+    else:
+        return _is_projection_spec(spec)
+
 
 kwWeightChangeParams = "weight_change_params"
 
@@ -318,7 +332,7 @@ class LearningProjection(Projection_Base):
         # Flag for deferred initialization
         self.value = DEFERRED_INITIALIZATION
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or
         MappingProjection
 
@@ -903,7 +917,7 @@ FROM TODO:
     # # MODIFIED 9/4/16 OLD:
     # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
     # MODIFIED 9/4/16 NEW:
-    def execute(self, input=NotImplemented, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, time_scale=None, context=None):
     # MODIFIED 9/4/16 END
         """
 

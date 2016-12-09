@@ -167,7 +167,7 @@ class Log:
 
     """
 
-    def __init__(self, owner, entries=NotImplemented):
+    def __init__(self, owner, entries=None):
         """Initialize log with list of entries
 
         Each item of the entries list should be a keypath (kp<attribute name>) designating an attribute
@@ -184,7 +184,7 @@ class Log:
         # self.entries = EntriesDict({})
         self.entries = EntriesDict(self)
 
-        if entries is NotImplemented:
+        if entries is None:
             return
 
         # self.add_entries(entries)
@@ -410,7 +410,7 @@ class Log:
                 if self.owner.prefs.verbosePref:
                     warnings.warn("Started logging of {0}".format(entry))
 
-    def print_entries(self, entries=NotImplemented, *args):
+    def print_entries(self, entries=None, *args):
         """Print values of entries
 
         If entries is the keyword ALL_ENTRIES, print all entries in the self.owner.prefs.logPref list
@@ -421,7 +421,7 @@ class Log:
         """
 
         # If ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is ALL_ENTRIES or entries is NotImplemented:
+        if entries is ALL_ENTRIES or entries is None:
             entries = self.entries.keys()
 
         # If entries is a single entry, put in list for processing below

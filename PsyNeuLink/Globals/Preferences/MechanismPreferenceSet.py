@@ -70,7 +70,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             returns PreferenceEntry for the RuntimeParamStickyAssignmentPref attribute of the owner's Preference object
     """
     def __init__(self,
-                 owner=NotImplemented,
+                 owner=None,
                  reportOutput_pref=reportOutputPrefInstanceDefault,
                  runtimeParamModulation_pref=runtimeParamModulationPrefInstanceDefault,
                  log_pref=logPrefInstanceDefault,

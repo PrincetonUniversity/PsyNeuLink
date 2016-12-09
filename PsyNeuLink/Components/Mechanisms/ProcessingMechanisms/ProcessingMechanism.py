@@ -46,8 +46,8 @@ class ProcessingMechanism_Base(Mechanism_Base):
     variableClassDefault = [defaultControlAllocation]
 
     def __init__(self,
-                 variable=NotImplemented,
-                 params=NotImplemented,
+                 variable=None,
+                 params=None,
                  name=None,
                  prefs=None,
                  context=None):
