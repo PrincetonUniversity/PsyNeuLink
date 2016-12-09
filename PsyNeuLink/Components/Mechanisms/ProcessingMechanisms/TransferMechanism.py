@@ -285,12 +285,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
-        # FUNCTION:TransferFunction,
         INPUT_STATES: None,
-        OUTPUT_STATES:[TRANSFER_RESULT,
-                       TRANSFER_MEAN,
-                       TRANSFER_VARIANCE]
-    })
+        OUTPUT_STATES:[
+            {NAME_ARG:TRANSFER_RESULT},
+            {NAME_ARG:TRANSFER_MEAN,
+             ANALYZE:lambda x: np.mean(x)},
+            {NAME_ARG:TRANSFER_VARIANCE,
+             ANALYZE:lambda x: np.var(x)}
+        ]})
 
     paramNames = paramClassDefaults.keys()
 
@@ -395,11 +397,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
 
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
-        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
-        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
+        # MODIFIED 12/7/16 OLD:
+        # # Map indices of output to outputState(s)
+        # self._outputStateValueMapping = {}
+        # self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
+        # self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
+        # self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
+        # MODIFIED 12/7/16 END
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -488,14 +492,20 @@ class TransferMechanism(ProcessingMechanism_Base):
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
             output_vector[maxCapIndices] = np.max(range)
-        mean = np.mean(output_vector)
-        variance = np.var(output_vector)
 
-        self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        self.outputValue[Transfer_Output.MEAN.value] = mean
-        self.outputValue[Transfer_Output.VARIANCE.value] = variance
+        # # MODIFIED 12/7/16 OLD:
+        # mean = np.mean(output_vector)
+        # variance = np.var(output_vector)
+        #
+        # self.outputValue[Transfer_Output.RESULT.value] = output_vector
+        # self.outputValue[Transfer_Output.MEAN.value] = mean
+        # self.outputValue[Transfer_Output.VARIANCE.value] = variance
+        #
+        # return self.outputValue
+        # MODIFIED 12/7/16 NEW:
+        return output_vector
+        # MODIFIED 12/7/16 END
 
-        return self.outputValue
         #endregion
 
 

@@ -69,7 +69,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
-    variableClassDefault = [defaultControlAllocation]
+    variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()

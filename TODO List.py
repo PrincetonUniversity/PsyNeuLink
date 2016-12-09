@@ -9,14 +9,31 @@
 #
 #
 
+# FIX:  del NAME_ARG
+# FIX: EVC TEST SCRIPT:  - output:  4.95
+# FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
+# FIX: IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+# FIX: ANALYZE -> CALCULATE [Preserve Case]
+# FIX:  ALLOW NAME_ARG TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
+
+# IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+
 # DOCUMENT:
-#    Index.rst:
-#    Overview:  narrative description of what can be done, scope of mechanisms and facilities
+#    README.md -> README.rst AND/OR Index.rst:
 #    Features:  graph support, logging, hierarchical preferences
 #
 #    System:  Control and Learning under Structure
 #    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
 #                       that has a ComparatorMechanism (and for which a target is specified)
+#    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
+
+# FIX *************
+# FIX / IMPLEMENT: MAKE SURE THAT outputValue IS GETTING SET PROPERLY
+#                  (IN Mechanism.execute OR Mecchanism._update_output_states)
+# FIX *************
+
+# FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
+#                    rename reference_value??
 
 # FIX: SYSTEM LEARNING:
 #      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate

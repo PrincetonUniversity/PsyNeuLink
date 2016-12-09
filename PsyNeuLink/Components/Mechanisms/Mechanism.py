@@ -604,7 +604,14 @@ class Mechanism_Base(Mechanism):
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
         List of values of the mechanism's outputStates.
-        Note: this is not necessarily equal to the ``value`` attribute.
+        Note: this is not necessarily equal to the ``value`` attribute of the mechanism, since the outputState's
+        ``function`` and/or its ``analyze`` attributes may calculate a new quantity derived from an item of the
+        mechanism's ``value``, and assign that to the outputState's ``value`` and the corresponding item of the
+        mechanism's ``outputValue``.
+
+        COMMENT:
+            EXAMPLE HERE
+        COMMENT
 
         .. _outputStateValueMapping : Dict[str, int]:
                contains the mappings of outputStates to their indices in the outputValue list
@@ -1120,7 +1127,6 @@ class Mechanism_Base(Mechanism):
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        # self._instantiate_output_states(context=context)
         from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
         _instantiate_output_states(owner=self, context=context)
 
@@ -1261,38 +1267,34 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call mechanism's __execute__ method for init
+            # # MODIFIED 12/8/16 OLD:
+            # elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
+            #     return self.__execute__(variable=self.variable,
+            #                          params=runtime_params,
+            #                          time_scale=time_scale,
+            #                          context=context)
+            # # Only call mechanism's function method for init
+            # elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+            #     return self.function(variable=self.variable,
+            #                          params=runtime_params,
+            #                          time_scale=time_scale,
+            #                          context=context)
+            # MODIFIED 12/8/16 NEW:
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return self.__execute__(variable=self.variable,
-                                     params=runtime_params,
-                                     time_scale=time_scale,
-                                     context=context)
+                return_value =  self.__execute__(variable=self.variable,
+                                                 params=runtime_params,
+                                                 time_scale=time_scale,
+                                                 context=context)
+                return np.atleast_2d(return_value)
+
             # Only call mechanism's function method for init
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return self.function(variable=self.variable,
-                                     params=runtime_params,
-                                     time_scale=time_scale,
-                                     context=context)
-
-        # # Direct call to execute mechanism with specified input,
-        # #    so call subclass __execute__ method with input and runtime_params (if specified), and return
-        # elif not input is None:
-        #     self._assign_input(input)
-        #     if runtime_params:
-        #         for param_set in runtime_params:
-        #             if not param_set in {INPUT_STATE_PARAMS,
-        #                                  PARAMETER_STATE_PARAMS,
-        #                                  OUTPUT_STATE_PARAMS}:
-        #                 raise MechanismError("{0} is not a valid parameter set for runtime specification".
-        #                                      format(param_set))
-        #         # FIX: NEED TO UPATE PARAMETER_STATE HERE TO ACTIVATE RUNTIME PARAMS
-        #     return self.__execute__(variable=input,
-        #                          params=runtime_params,
-        #                          time_scale=time_scale,
-        #                          context=context)
-        # else:
-        #     pass
-        # # Execute
-
+                return_value = self.function(variable=self.variable,
+                                             params=runtime_params,
+                                             time_scale=time_scale,
+                                             context=context)
+                return np.atleast_2d(return_value)
+            # MODIFIED 12/8/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -1313,29 +1315,11 @@ class Mechanism_Base(Mechanism):
                         target_set=runtime_params)
         #endregion
 
-
-
-
-        # #region UPDATE INPUT STATE(S)
-        # # Executing process or system, update inputStates
-        # if input is None:
-        #     self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
-        # else:
-        # # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
-        #     self._assign_input(input)
-        #
-        # #endregion
-
         #region UPDATE INPUT STATE(S)
         # Executing or simulating process or system, get input by updating inputStates
         if input is None and (EXECUTING in context or EVC_SIMULATION in context):
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
 
-        # MODIFIED 11/27/16 OLD:
-        # else:
-        # # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
-        #     self._assign_input(input)
-        # MODIFIED 11/27/16 NEW:
         # Direct call to execute mechanism with specified input, so assign input to mechanism's inputStates
         else:
             if context is NO_CONTEXT:
@@ -1346,11 +1330,6 @@ class Mechanism_Base(Mechanism):
         # MODIFIED 11/27/16 END
 
         #endregion
-
-
-
-
-
 
         #region UPDATE PARAMETER STATE(S)
         # #TEST:
@@ -1379,30 +1358,22 @@ class Mechanism_Base(Mechanism):
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
-        # # MODIFIED 11/27/16 OLD:
-        # self.value = self.__execute__(variable=self.inputValue, time_scale=time_scale, context=context)
-        # MODIFIED 11/27/16 NEW:
         self.value = self.__execute__(variable=self.inputValue,
                                       params=runtime_params,
                                       time_scale=time_scale,
                                       context=context)
-        # MODIFIED 11/27/16 END
+        # MODIFIED 12/8/16 NEW:
+        self.value = np.atleast_2d(self.value)
+        # MODIFIED 12/8/16 END
         #endregion
 
         #region UPDATE OUTPUT STATE(S)
-        self._update_output_states(time_scale=time_scale, context=context)
-        #endregion
-
-        #region TBI
-        # # Call outputState.execute
-        # #    updates outState.value, based on any projections (e.g., gating) it may get
-        # self.inputState.execute()
+        self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
         #region REPORT EXECUTION
         if self.prefs.reportOutputPref and context and EXECUTING in context:
             self._report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
-
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
@@ -1501,13 +1472,6 @@ class Mechanism_Base(Mechanism):
         Call execute method for all (MappingProjection) projections in inputState.receivesFromProjections
         Aggregate results (using inputState execute method)
         Update inputState.value
-
-        Args:
-            params:
-            time_scale:
-            context:
-
-        Returns:
         """
         for i in range(len(self.inputStates)):
             state_name, state = list(self.inputStates.items())[i]
@@ -1543,30 +1507,18 @@ class Mechanism_Base(Mechanism):
             #    to runtime param or paramsCurrent (per above)
             param[state_name] = type_match(state.value, param_type)
 
-
-    def _update_output_states(self, time_scale=None, context=None):
-        """Assign items in self.value to each outputState in outputSates
-
-        Assign each item of self.execute's return value to the value of the corresponding outputState in outputSates
-        Use mapping of items to outputStates in self._outputStateValueMapping
-        Notes:
-        * self._outputStateValueMapping must be implemented by Mechanism subclass (typically in its function)
-        * if len(self.value) == 1, (i.e., there is only one value), absence of self._outputStateValueMapping is forgiven
-        * if the function of a Function is specified only by FUNCTION and returns a value with len > 1
-            it MUST also specify kwFunctionOutputStateValueMapping
+    def _update_output_states(self, runtime_params=None, time_scale=None, context=None):
+        """Execute function for each outputState and assign result of each to corresponding item of self.outputValue
 
         """
-        if len(self.value) == 1:
-            self.outputStates[list(self.outputStates.keys())[0]].value = self.value[0]
-        #
-        # Assign items in self.value to outputStates using mapping of states to values in self._outputStateValueMapping
-        else:
-            for state in self.outputStates:
-                try:
-                    self.outputStates[state].value = self.value[self._outputStateValueMapping[state]]
-                except AttributeError:
-                    raise MechanismError("{} must implement _outputStateValueMapping attribute in function".
-                                         format(self.__class__.__name__))
+        for i in range(len(self.outputStates)):
+            state = list(self.outputStates.values())[i]
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+            # self.outputValue[i] = state.value
+
+        # Assign value of each outputState to corresponding item in self.outputValue
+        self.outputValue = list(state.value for state in list(self.outputStates.values()))
+
 
     def initialize(self, value):
         """Assign initial value to mechanism.value and update outputStates
@@ -1634,7 +1586,7 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
         print("- output: {}".
-              format(re.sub('[\[,\],\n]','',str(output))))
+              format(re.sub('[\[,\],\n]','',str(float(output)))))
 
 #     def adjust_function(self, params, context=None):
 #         """Modify control_signal_allocations while process is executing

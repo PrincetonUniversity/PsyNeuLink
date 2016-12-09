@@ -128,12 +128,30 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         FUNCTION_PARAMS:{COMPARISON_OPERATION: DIFFERENCE},
         INPUT_STATES:[SAMPLE,   # Automatically instantiate local InputStates
                                 TARGET],  # for sample and target, and name them using kw constants
-        OUTPUT_STATES:[COMPARISON_RESULT,
-                                 COMPARISON_MEAN,
-                                 COMPARISON_SUM,
-                                 COMPARISON_SSE,
-                                 COMPARISON_MSE]
-    })
+        # MODIFIED 12/7/16 OLD:
+        # OUTPUT_STATES:[COMPARISON_RESULT,
+        #                          COMPARISON_MEAN,
+        #                          COMPARISON_SUM,
+        #                          COMPARISON_SSE,
+        #                          COMPARISON_MSE]
+        # })
+        # MODIFIED 12/7/16 NEW:
+        OUTPUT_STATES:[
+            {NAME_ARG:COMPARISON_RESULT},
+
+            {NAME_ARG:COMPARISON_MEAN,
+             ANALYZE:lambda x: np.mean(x)},
+
+            {NAME_ARG:COMPARISON_SUM,
+             ANALYZE:lambda x: np.sum(x)},
+
+            {NAME_ARG:COMPARISON_SSE,
+             ANALYZE:lambda x: np.sum(x*x)},
+
+            {NAME_ARG:COMPARISON_MSE,
+             ANALYZE:lambda x: np.sum(x*x)/len(x)}
+        ]})
+        # MODIFIED 12/7/16 NEW:
 
     paramNames = paramClassDefaults.keys()
 
@@ -299,17 +317,19 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
-    def _instantiate_attributes_before_function(self, context=None):
-
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[COMPARISON_RESULT] = ComparatorOutput.COMPARISON_RESULT.value
-        self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
-        self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-        self._outputStateValueMapping[COMPARISON_SSE] = ComparatorOutput.COMPARISON_SSE.value
-        self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
-
-        super()._instantiate_attributes_before_function(context=context)
+    # MODIFIED 12/7/16 OLD:
+    # def _instantiate_attributes_before_function(self, context=None):
+    #
+    #     # Map indices of output to outputState(s)
+    #     self._outputStateValueMapping = {}
+    #     self._outputStateValueMapping[COMPARISON_RESULT] = ComparatorOutput.COMPARISON_RESULT.value
+    #     self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
+    #     self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
+    #     self._outputStateValueMapping[COMPARISON_SSE] = ComparatorOutput.COMPARISON_SSE.value
+    #     self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
+    #
+    #     super()._instantiate_attributes_before_function(context=context)
+    # MODIFIED 12/7/16 END
 
     def __execute__(self,
                 variable=None,
@@ -366,18 +386,23 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             # Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.comparisonFunction.function(variable=self.variable, params=params)
-            mean = np.mean(comparison_array)
-            sum = np.sum(comparison_array)
-            SSE = np.sum(comparison_array * comparison_array)
-            MSE = SSE/len(comparison_array)
 
-            self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
-            self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
-            self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
-            self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
-            self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
-
-            return self.outputValue
+            # # MODIFIED 12/7/16 OLD:
+            # mean = np.mean(comparison_array)
+            # sum = np.sum(comparison_array)
+            # SSE = np.sum(comparison_array * comparison_array)
+            # MSE = SSE/len(comparison_array)
+            #
+            # self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
+            # self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
+            # self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
+            # self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
+            # self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
+            #
+            # return self.outputValue
+            # MODIFIED 12/7/16 NEW:
+            return comparison_array
+            # MODIFIED 12/7/16 END
 
         else:
             raise MechanismError("time_scale not specified for ComparatorMechanism")

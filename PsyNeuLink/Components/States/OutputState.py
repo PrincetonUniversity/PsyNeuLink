@@ -123,6 +123,8 @@ from PsyNeuLink.Components.Functions.Function import *
 #     DEFAULTS = NONE
 
 
+PRIMARY_OUTPUT_STATE = 0
+
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -137,6 +139,8 @@ class OutputState(State_Base):
     owner,                                     \
     reference_value,                           \
     value=None,                                \
+    index=PRIMARY_OUTPUT_STATE,                \
+    analyze=Linear,                            \
     function=LinearCombination(operation=SUM), \
     params=None,                               \
     name=None,                                 \
@@ -184,8 +188,17 @@ class OutputState(State_Base):
     value : number, list or np.ndarray
         used as the template for ``variable``.
 
+    index : int : default PRIMARY_OUTPUT_STATE
+        the item in the owner mechanism's ``value`` attribute used as input of the ``analyze`` function, to determine
+        the ``value`` of the outputState.
+
+    analyze : function or method : default Linear
+        used to convert item of owner mechanism's ``value`` to outputState's ``value`` (and corresponding
+        item of owner's ``outputValue``.  It must accept a value that has the same format as the mechanism's ``value``.
+
     function : Function or method : default LinearCombination(operation=SUM)
-        implemented for structural consistency;  not currently used by PsyNeuLink.
+        function used to aggregate the values of the projections received by the outputState.
+        It must produce a result that has the same format (number and type of elements) as its ``value``.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
@@ -214,11 +227,24 @@ class OutputState(State_Base):
     variable : number, list or np.ndarray
         assigned an item of the ``outputValue`` of its owner mechanism.
 
+    index : int
+        the item in the owner mechanism's ``value`` attribute used as input of the ``analyze`` function, to determine
+        the ``value`` of the outputState.
+
+    analyze : function or method : default Linear
+        function used to convert the item of owner mechanism's ``value`` specified by the ``index`` attribute;  it is
+        combined with the result of the outputState's ``function`` to determine it's ``value``, and the corresponding
+        item of the owner mechanism's ``outputValue``. Default is Linear (identity function) which simply transfers the
+        value as is.
+
     function : CombinationFunction : default LinearCombination(operation=SUM))
-        implemented for structural consistency;  not currently used by PsyNeuLink.
+        performs an element-wise (Hadamard) aggregation  of the ``values`` of the projections received by the
+        outputState.  The result is combined with the result of the analyze function and assigned as the ``value``
+        of the outputState, and the corresponding item of the owner's ``outputValue``.
 
     value : number, list or np.ndarray
-        assigned the value of the outputState`s ``variable``, and used as the input for any projections that it sends.
+        assigned the result of the ``analyze`` function, combined with any result of the outputState's ``function``,
+        which is also assigned to the corresopnding item of the owner mechanism's ``outputValue``.
 
     name : str : default <State subclass>-<index>
         name of the outputState.
@@ -261,23 +287,19 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  value=None,
+                 index=PRIMARY_OUTPUT_STATE,
+                 analyze:function_type=Linear,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
-        # IMPLEMENTATION NOTE:
-        # Potential problem:
-        #    - a OutputState may correspond to a particular item of owner.value
-        #        in which case there will be a mismatch here
-        #    - if OutputState is being instantiated from Mechanism (in _instantiate_output_states)
-        #        then the item of owner.value is known and has already been checked
-        #        (in the call to _instantiate_state)
-        #    - otherwise, should ignore
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(index=index,
+                                                  analyze=analyze,
+                                                  function=function,
+                                                  params=params)
 
         self.reference_value = reference_value
 
@@ -322,7 +344,83 @@ class OutputState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate index and anaylze parameters
+
+        Validate that index is within the range of the number of items in the owner mechanism's ``value``,
+        and that the corresponding item is a valid input to the analyze function
+
+
+        """
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        try:
+            self.owner.value[target_set[INDEX]]
+        except IndexError:
+            raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
+                                   "the outputValue ({}) for its owner mechanism ({})".
+                                   format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+
+        # IMPLEMENT: VALIDATE THAT ANALYZE FUNCTION ACCEPTS VALUE CONSISTENT WITH
+        #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
+        try:
+            if isinstance(target_set[ANALYZE], type):
+                function = target_set[ANALYZE]().function
+            else:
+                function = target_set[ANALYZE]
+            try:
+                function(self.owner.value[target_set[INDEX]])
+            except:
+                raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function specified for "
+                                       "the {} parameter of {} ({})"
+                                       "".format(target_set[INDEX],
+                                                 self.owner.name,
+                                                 self.owner.value[target_set[INDEX]],
+                                                 ANALYZE,
+                                                 self.name,
+                                                 target_set[ANALYZE]))
+        except KeyError:
+            pass
+
+    def _instantiate_attributes_after_function(self, context=None):
+        """Instantiate analyze function
+        """
+        super()._instantiate_attributes_after_function(context=context)
+
+        if isinstance(self.analyze, type):
+            self.analyze = self.analyze().function
+
+
+    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+
+        super().update(params=params, time_scale=time_scale, context=context)
+
+        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+
+        if not self.value:
+            # # MODIFIED 12/8/16 OLD:
+            # self.value = self.analyze(self.owner.value[self.index])
+            # MODIFIED 12/8/16 NEW:
+            self.value = type_match(self.analyze(self.owner.value[self.index]), type(self.owner.value[self.index]))
+            # MODIFIED 12/8/16 END
+
+
 def _instantiate_output_states(owner, context=None):
+    # MODIFIED 12/7/16 NEW:
+    # ADD TO DOCUMENTATION BELOW:
+    # EXPAND constraint_value to match specification of outputStates (by # and function return values):
+    #            in order to both constrain spec and also match # states to # items in constraint
+    #            (checked in _instantiate_state_list)
+    # For each outputState:
+    #      check for index param:
+    #          if it is a state, get from attribute
+    #          if it is dict, look for param
+    #          if it is anything else, assume index is PRIMARY_OUTPUT_STATE
+    #      get indexed value from output.value
+    #      append the indexed value to constraint_value
+
+    # ALSO: INSTANTIATE ANALYZE FUNCTION
+    # MODIFIED 12/7/16 END
     """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
@@ -343,12 +441,43 @@ def _instantiate_output_states(owner, context=None):
     :param context:
     :return:
     """
+
+    # # MODIFIED 12/8/16 OLD:
+    constraint_value = []
+    # # MODIFIED 12/8/16 NEW:
+    # constraint_value = np.array(2,)
+    # MODIFIED 12/8/16 END
+    owner_value = np.atleast_2d(owner.value)
+
+    if owner.paramsCurrent[OUTPUT_STATES]:
+        for output_state in owner.paramsCurrent[OUTPUT_STATES]:
+            # Default is PRIMARY_OUTPUT_STATE
+            index = PRIMARY_OUTPUT_STATE
+            # If output_state is already an OutputState object, get its index attribute
+            if isinstance(output_state, OutputState):
+                index = output_state.index
+            # If output_state is a specification dict, get its INDEX attribute if specified
+            elif isinstance(output_state, dict):
+                try:
+                    index = output_state[INDEX]
+                except KeyError:
+                    pass
+            # # MODIFIED 12/8/16 OLD:
+            # constraint_value.extend(owner_value[index])
+            # MODIFIED 12/8/16 NEW:
+            constraint_value.append(owner_value[index])
+            TEST = True
+            # MODIFIED 12/8/16 END
+    else:
+        constraint_value = owner_value
+
     owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
                                                 state_param_identifier=OUTPUT_STATES,
-                                                constraint_value=owner.value,
+                                                constraint_value=constraint_value,
                                                 constraint_value_name="output",
                                                 context=context)
     # Assign self.outputState to first outputState in dict
     owner.outputState = list(owner.outputStates.values())[0]
+
