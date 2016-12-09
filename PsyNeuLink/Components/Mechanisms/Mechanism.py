@@ -1374,7 +1374,6 @@ class Mechanism_Base(Mechanism):
         #region REPORT EXECUTION
         if self.prefs.reportOutputPref and context and EXECUTING in context:
             self._report_mechanism_execution(self.inputValue, self.user_params, self.outputState.value)
-
         #endregion
 
         #region RE-SET STATE_VALUES AFTER INITIALIZATION
