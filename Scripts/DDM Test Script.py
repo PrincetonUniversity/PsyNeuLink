@@ -19,7 +19,7 @@ my_DDM = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_PROJECTION),
 my_DDM.prefs = DDM_prefs
 my_DDM.prefs.level = PreferenceLevel.SYSTEM
 
-my_DDM.prefs.show()
+# my_DDM.prefs.show()
 
 myMechanism = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL_PROJECTION),
                                       threshold=(10.0, CONTROL_PROJECTION),

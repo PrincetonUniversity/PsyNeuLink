@@ -1758,6 +1758,12 @@ def _instantiate_state(owner,                   # Object to which state will bel
         # state_spec[STATE_PARAMS] was not specified
         except KeyError:
             pass
+        # MODIFIED 12/7/16 OLD:
+        # try:
+        #     state_name = state_spec[NAME_ARG]
+        #     del state_spec[NAME_ARG]
+        # except KeyError:
+        #     pass
         # MODIFIED 12/7/16 NEW:
         # Add state_spec[STATE_PARAMS] to state_params
         for spec in state_spec:
@@ -1765,7 +1771,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
                 # Assign state name
                 state_name = state_spec[spec]
                 # Do not include in params dict for state
-                #  (IMPLEMENTATION NOTE: but don't delete, as apparaently still yoked to paramClassDefaults)
+                #  (IMPLEMENTATION NOTE: but don't delete, as apparently still yoked to paramClassDefaults)
                 continue
             state_params[spec] = state_spec[spec]
         # MODIFIED 12/7/16 END
