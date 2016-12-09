@@ -747,7 +747,7 @@ class DDM(ProcessingMechanism_Base):
             # return self.outputValue
             # MODIFIED 12/7/16 NEW:
             if isinstance(self.function.__self__, BogaczEtAl):
-                return_value = np.array([[0],[0],[0],[0]])
+                return_value = np.array([[0.0],[0.0],[0.0],[0.0]])
                 return_value[DDM_Output.RESPONSE_TIME.value], return_value[DDM_Output.P_LOWER_MEAN.value] = result
                 return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - return_value[DDM_Output.P_LOWER_MEAN.value]
 
