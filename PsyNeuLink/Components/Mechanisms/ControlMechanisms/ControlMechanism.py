@@ -463,6 +463,13 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
 
+        Assume that:
+            - self.value is populated (in _update_value) with an array of allocations from self.allocationPolicy;
+            - self.allocationPolicy has already been extended to include the particular (indexed) allocation
+                to be used for the outputState being created here.
+
+        INCREMENT BASED ON TOTAL NUMBER OF OUTPUTSTATES SO FAR
+
         Returns state: (OutputState)
         """
 
@@ -472,44 +479,50 @@ class ControlMechanism_Base(Mechanism_Base):
                                               "that is not a ControlProjection, to outputState of {1}".
                                               format(projection, self.name))
 
-        output_name = projection.receiver.name + '_ControlProjection' + '_Output'
 
         #  Update self.value by evaluating function
         self._update_value(context=context)
-        # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
-        #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
-        #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
-        #                      self.allocationPolicy STORES THE outputState.value(s)
-        output_item_index = len(self.value)-1
-        output_value = self.value[output_item_index]
+
+        # # MODIFIED 12/9/16 OLD:
+        # output_item_output_state_index = len(self.value)-1
+        # output_value = self.value[output_item_output_state_index]
+        # MODIFIED 12/9/16 NEW:
+        try:
+            output_state_index = len(self.outputStates)
+        except AttributeError:
+            output_state_index = 0
+        output_state_name = projection.receiver.name + '_ControlProjection' + '_Output'
+        output_state_value = self.value[output_state_index]
+        # MODIFIED 12/9/16 END
 
         # Instantiate outputState for self as sender of ControlProjection
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.States.OutputState import OutputState
         state = _instantiate_state(owner=self,
                                             state_type=OutputState,
-                                            state_name=output_name,
+                                            state_name=output_state_name,
                                             state_spec=defaultControlAllocation,
                                             state_params=None,
-                                            constraint_value=output_value,
+                                            constraint_value=output_state_value,
                                             constraint_value_name='Default control allocation',
-                                            # constraint_index=output_item_index,
+                                            # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
 
+        state.output_state_index = output_state_index
         projection.sender = state
 
-        # Update allocationPolicy to accommodate instantiated projection and add output_value
+        # Update allocationPolicy to accommodate instantiated projection and add output_state_value
         try:
-            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_value, 0))
+            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_state_value, 0))
         except AttributeError:
-            self.allocationPolicy = np.atleast_2d(output_value)
+            self.allocationPolicy = np.atleast_2d(output_state_value)
 
         # Update self.outputState and self.outputStates
         try:
-            self.outputStates[output_name] = state
+            self.outputStates[output_state_name] = state
         except AttributeError:
-            self.outputStates = OrderedDict({output_name:state})
-            self.outputState = self.outputStates[output_name]
+            self.outputStates = OrderedDict({output_state_name:state})
+            self.outputState = self.outputStates[output_state_name]
 
         # Add projection to list of outgoing projections
         state.sendsToProjections.append(projection)

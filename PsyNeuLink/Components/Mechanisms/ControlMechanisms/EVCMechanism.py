@@ -1249,10 +1249,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
-
         # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
-
 
         # # MODIFIED 10/5/16 OLD:
         # return self.EVCmax
@@ -1267,7 +1265,6 @@ class EVCMechanism(ControlMechanism_Base):
         for i in range(len(self.outputStates)):
             self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
         return
-
 
         # for i in range(len(self.EVCmaxPolicy)):
         #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
