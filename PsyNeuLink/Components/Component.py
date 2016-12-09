@@ -242,7 +242,7 @@ class Component(object):
     Class methods:
         - _validate_variable(variable)
         - _validate_params(request_set, target_set, context)
-        - _assign_defaults(variable, request_set, assign_missing, target_set, default_set=NotImplemented
+        - _assign_defaults(variable, request_set, assign_missing, target_set, default_set=None
         - reset_params()
         - _check_args(variable, params)
         - _assign_args_to_param_dicts(params, param_names, function_param_names)
@@ -337,12 +337,7 @@ class Component(object):
         context = context + INITIALIZING + ": " + COMPONENT_INIT
 
         # These insure that subclass values are preserved, while allowing them to be referred to below
-        # # MODIFIED  OLD:
-        # self.variableInstanceDefault = NotImplemented
-        # # MODIFIED  NEW:
         self.variableInstanceDefault = None
-        # MODIFIED  END
-        # self.paramClassDefaults = self.paramClassDefaults
         self.paramInstanceDefaults = {}
 
         self.componentName = self.componentType
@@ -364,7 +359,7 @@ class Component(object):
         if isinstance(prefs, PreferenceSet):
             self.prefs = prefs
             # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # Otherwise, if prefs is a specification dict instantiate it, or if it is NotImplemented assign defaults
+        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
         #endregion
@@ -411,9 +406,10 @@ class Component(object):
         # Do this here, as _validate_variable might be overridden by subclass
         try:
             if self.variableClassDefault is NotImplemented:
-                raise ComponentError("variableClassDefault must be given a value for {0}".format(self.componentName))
+                raise ComponentError("variableClassDefault for {} must be assigned a value or \'None\'".
+                                     format(self.componentName))
         except AttributeError:
-            raise ComponentError("variableClassDefault must be defined for {0} or its base class".
+            raise ComponentError("variableClassDefault must be defined for {} or its base class".
                                 format(self.componentName))
         #endregion
 
@@ -433,7 +429,7 @@ class Component(object):
                    type(PsyNeuLink.Components.Functions.Function.Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
-                raise ComponentError("Param {0} must be in paramClassDefaults for {1}".
+                raise ComponentError("Param {} must be in paramClassDefaults for {}".
                                     format(required_param, self.name))
 
             # If the param does not match any of the types specified for it in type_requirements
@@ -446,8 +442,8 @@ class Component(object):
                     OK = (any(isinstance(required_param_value, type_spec) for type_spec in type_requirements))
                 if not OK:
                     type_names = format(" or ".join("{!s}".format(type.__name__) for (type) in type_requirements))
-                    raise ComponentError("Value ({0}) of param {1} is not appropriate for {2};"
-                                        "  requires one of the following types: {3}".
+                    raise ComponentError("Value ({}) of param {} is not appropriate for {};"
+                                        "  requires one of the following types: {}".
                                         format(required_param_value.__name__, required_param, self.name, type_names))
             except TypeError:
                 pass
@@ -675,7 +671,7 @@ class Component(object):
         for arg in kwargs:
             self.__setattr__(arg, kwargs[arg])
 
-    def _check_args(self, variable, params=NotImplemented, target_set=None, context=None):
+    def _check_args(self, variable, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params
 
         Called by functions to validate variable and params
@@ -697,7 +693,7 @@ class Component(object):
         """
 
         # If function is called without any arguments, get default for variable
-        if variable is NotImplemented:
+        if variable is None:
             variable = self.variableInstanceDefault # assigned by the Function class init when initializing
 
         # If the variable is a function, call it
@@ -705,7 +701,7 @@ class Component(object):
             variable = variable()
 
         # Validate variable if parameter_validation is set and the function was called with a variable
-        if self.prefs.paramValidationPref and not variable is NotImplemented:
+        if self.prefs.paramValidationPref and not variable is None:
             if context:
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
@@ -721,7 +717,7 @@ class Component(object):
         # # MODIFIED 11/27/16 OLD:
         # # If parameter_validation is set, the function was called with params,
         # #   and they have changed, then validate requested values and assign to target_set
-        # if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
@@ -729,7 +725,7 @@ class Component(object):
         #   (relabel params as runtime_params for clarity)
         runtime_params = params
 
-        if runtime_params and not runtime_params is NotImplemented:
+        if runtime_params and not runtime_params is None:
             for param_name in self.user_params:
                 # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
                 #    At present, assignment of ``function`` as runtime param is not supported
@@ -761,16 +757,16 @@ class Component(object):
             self.runtime_params_in_use = False
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-        if self.prefs.paramValidationPref and params and not params is NotImplemented and not params is target_set:
+        if self.prefs.paramValidationPref and params and not params is target_set:
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
 
     def _assign_defaults(self,
-                        variable=NotImplemented,
-                        request_set=NotImplemented,
+                        variable=None,
+                        request_set=None,
                         assign_missing=True,
-                        target_set=NotImplemented,
-                        default_set=NotImplemented,
+                        target_set=None,
+                        default_set=None,
                         context=None
                         ):
         """Validate variable and/or param defaults in requested set and assign values to params in target set
@@ -779,7 +775,7 @@ class Component(object):
           request_set must contain a dict of params to be assigned to target_set (??and paramInstanceDefaults??)
           If assign_missing option is set, then any params defined for the class
               but not included in the requested set are assigned values from the default_set;
-              if request_set is NotImplemented, then all values in the target_set are assigned from the default_set
+              if request_set is None, then all values in the target_set are assigned from the default_set
               if the default set is not specified, then paramInstanceDefaults is used (see below)
           If target_set and/or default_set is not specified, paramInstanceDefaults is used for whichever is missing
               NOTES:
@@ -791,7 +787,7 @@ class Component(object):
                   calling with a request_set that has the values from paramInstanceDefaults to be preserved,
                   paramInstanceDefaults as target_set, and paramClassDefaults as default_set
               * all paramInstanceDefaults can be set to class ("factory") defaults by
-                  calling with an empty request_set (or is NotImplemented), paramInstanceDefaults for target_set,
+                  calling with an empty request_set (or =None), paramInstanceDefaults for target_set,
                   and paramClassDefaults as default_set (although reset_params does the same thing)
           Class defaults can not be passed as target_set
               IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;
@@ -809,20 +805,16 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        # MODIFIED 11/22/16 OLD:
-        # if not variable is NotImplemented:
-        # MODIFIED 11/22/16 NEW:
-        if not variable is None and not variable is NotImplemented:
-        # MODIFIED 11/22/16 END
+        if not variable is None:
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
-        if request_set and not request_set is NotImplemented:
+        if request_set:
             if not isinstance(request_set, dict):
                 raise ComponentError("requested parameter set must be a dictionary")
-        if not target_set is NotImplemented:
+        if target_set:
             if not isinstance(target_set, dict):
                 raise ComponentError("target parameter set must be a dictionary")
-        if not default_set is NotImplemented:
+        if default_set:
             if not isinstance(default_set, dict):
                 raise ComponentError("default parameter set must be a dictionary")
 
@@ -844,7 +836,7 @@ class Component(object):
 
         # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
         self._validate_variable(variable, context=context)
-        if variable is None or variable is NotImplemented:
+        if variable is None:
             self.variableInstanceDefault = self.variableClassDefault
         else:
             # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
@@ -853,17 +845,17 @@ class Component(object):
 
 
         # If no params were passed, then done
-        if request_set is NotImplemented and  target_set is NotImplemented and default_set is NotImplemented:
+        if request_set is None and  target_set is None and default_set is None:
             return
 
         # GET AND VALIDATE PARAMS
 
         # Assign param defaults for target_set and default_set
-        if target_set is NotImplemented:
+        if target_set is None:
             target_set = self.paramInstanceDefaults
         if target_set is self.paramClassDefaults:
             raise ComponentError("Altering paramClassDefaults not permitted")
-        if default_set is NotImplemented:
+        if default_set is None:
             default_set = self.paramInstanceDefaults
 
         # MODIFIED 11/28/16 OLD:
@@ -893,7 +885,7 @@ class Component(object):
         #  assign value from specified default set to any params missing from request set
         # Note:  do this before validating execute method and params, as some params may depend on others being present
         if assign_missing:
-            if not request_set or request_set is NotImplemented:
+            if not request_set:
                 request_set = {}
 
             # FIX: DO ALL OF THIS IN VALIDATE PARAMS?
@@ -1000,7 +992,7 @@ class Component(object):
         # VALIDATE PARAMS
 
         # if request_set has been passed or created then validate and, if OK, assign to targets
-        if request_set and request_set != NotImplemented:
+        if request_set:
             self._validate_params(request_set, target_set, context=context)
             # Variable passed validation, so assign as instance_default
 
@@ -1122,7 +1114,7 @@ class Component(object):
         #    - mark as not having been specified
         #    - return
         self._variable_not_specified = False
-        if variable is None or variable is NotImplemented:
+        if variable is None:
             self.variable = self.variableClassDefault
             self._variable_not_specified = True
             return
@@ -1193,15 +1185,15 @@ class Component(object):
                 # MODIFIED 11/30/16 END
                 raise ComponentError("{0} is not a valid parameter for {1}".format(param_name, self.__class__.__name__))
 
-            # The value of the param is None or NotImplemented in paramClassDefaults: suppress type checking
+            # The value of the param is None in paramClassDefaults: suppress type checking
             # DOCUMENT:
             # IMPLEMENTATION NOTE: this can be used for params with multiple possible types,
             #                      until type lists are implemented (see below)
             if self.paramClassDefaults[param_name] is None or self.paramClassDefaults[param_name] is NotImplemented:
                 if self.prefs.verbosePref:
-                    warnings.warn("{0} is specified as NotImplemented for {1} which suppresses type checking".
+                    warnings.warn("{0} is specified as None for {1} which suppresses type checking".
                                   format(param_name, self.name))
-                if not target_set is NotImplemented:
+                if not target_set is None:
                     target_set[param_name] = param_value
                 continue
 
@@ -1216,7 +1208,6 @@ class Component(object):
                 if isinstance(self.paramClassDefaults[param_name], param_value):
                     continue
 
-            # MODIFIED 12/1/16 NEW:
             # If the value is a projection, projection class, or a keyword for one, for anything other than
             #    the FUNCTION param (which is not allowed to be specified as a projection)
             #    then simply assign value to paramClassDefault (implicaton of not specifying it explicitly);
@@ -1224,12 +1215,12 @@ class Component(object):
             from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
             # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
             # from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-            if (((isinstance(param_value, str) and param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION}) or
+            if (((isinstance(param_value, str) and
+                          param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
                 inspect.isclass(param_value) and issubclass(param_value,(Projection)))
                 and not param_name is FUNCTION):
                 param_value = self.paramClassDefaults[param_name]
-            # MODIFIED 12/1/16 END
 
             # If self is a Function:
             #    if param is a tuple, get its value (since Functions can't take projection specifications)
@@ -1290,7 +1281,7 @@ class Component(object):
                                     except KeyError:
                                         target_set[param_name] = {}
                                         target_set[param_name][entry_name] = entry_value
-                                    # target_set NotImplemented
+                                    # target_set None
                                     except TypeError:
                                         pass
                     else:
@@ -1316,15 +1307,11 @@ class Component(object):
                                 except KeyError:
                                     target_set[param_name] = {}
                                     target_set[param_name][entry_name] = entry_value
-                                # target_set NotImplemented
+                                # target_set None
                                 except TypeError:
                                     pass
 
-                                # if not target_set is NotImplemented:
-                                #     target_set[param_name][entry_name] = entry_value
-
-
-                elif not target_set is None and not target_set is NotImplemented:
+                elif not target_set is None:
                     target_set[param_name] = param_value
 
             # Parameter is not a valid type
@@ -1404,9 +1391,9 @@ class Component(object):
                                     " paramClassDefaults, or as the default for the function argument in its init".
                                     format(self.__class__.__name__, FUNCTION))
             else:
-                # self.function is NotImplemented
-                # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned NotImplemented
-                if (function is NotImplemented):
+                # self.function is None
+                # IMPLEMENTATION NOTE:  This is a coding error;  self.function should NEVER be assigned None
+                if function is None:
                     raise("PROGRAM ERROR: either {0} must be specified or {1}.function must be implemented for {2}".
                           format(FUNCTION,self.__class__.__name__, self.name))
                 # self.function is OK, so return

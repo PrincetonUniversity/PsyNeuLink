@@ -26,16 +26,16 @@ It is open source, and meant to be extended
 
 Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
 
-The tutorial is available at/by [???] 
-
-Right now, PsyNeuLink is in an alpha state and is not available through pypi/pip. Instead, you can clone the github repo [here](https://github.com/PrincetonUniversity/PsyNeuLink). For now, clone the devel branch rather than the master branch. You can switch branches by pressing the "branch: master" dropdown menu on the left side of the page. Then download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
+Right now, PsyNeuLink is in an alpha state and is not available through pypi/pip. Instead, you can clone the github repo [here](https://github.com/PrincetonUniversity/PsyNeuLink). Clone the master branch. Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
 Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
 Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
 
-PsyNeuLink is compatible with any version of python 3, but this tutorial requires a 3.5 installation with the latest versions of IPython, jupyter, and matplotlib installed.
+PsyNeuLink is compatible with any version of python 3, but the tutorial requires a 3.5 installation with the latest versions of IPython, jupyter, and matplotlib installed.
 
-To install the package, navigate to the cloned directory in a terminal, switch to your preferred python3 environment, then run the command __"pip install ."__ (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5). All prerequisite packages will be automatically added to your enviroment.
+To install the package, navigate to the cloned directory in a terminal, switch to your preferred python3 environment, then run the command __"pip install ."__ (make sure to include the period and to use the appropriate pip/pip3 command for python 3). All prerequisite packages will be automatically added to your environment.
+
+There is a tutorial available to introduce the basic syntax and usage of PsyNeuLink. To access it, make sure you fulfill the requirements mentioned above, then run the terminal command "jupyter notebook" from the root PsyNeuLink directory. Once the directory opens in your browser, click on "PsyNeuLink Tutorial.ipynb"
 
 ## Purpose
 
@@ -96,7 +96,7 @@ It does this in a manner that:
     
              + LearningProjection:
                  takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism) 
-                 and uses it to modulate the parameter of a projection (using the matrix of a MappingProjection).
+                 and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).
                  
              [+ GatingProjection — Not yet implemented
                  takes a gating signal source and uses it to modulate the input or output state of a mechanism.

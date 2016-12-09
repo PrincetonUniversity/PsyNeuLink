@@ -137,8 +137,8 @@
             
   <div class="section" id="psyneulink-documentation">
 <h1>PsyNeuLink Documentation<a class="headerlink" href="#psyneulink-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="purpose">
+<h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is a &#8220;block modeling system&#8221; for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
@@ -187,52 +187,28 @@ constraints as possible on what it is possible to implement or ask a model to do
 </div>
 <div class="section" id="functional-architecture">
 <h2>Functional Architecture<a class="headerlink" href="#functional-architecture" title="Permalink to this headline">¶</a></h2>
-<dl class="docutils">
-<dt>Every PsyNeuLink object is a subclass of the <span class="xref doc">Component</span> subclass.  Every component has a:</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt><code class="docutils literal"><span class="pre">variable</span></code></dt>
-<dd><p class="first last">the input to its function, used both as a template for the format of the input, as its default value</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><code class="docutils literal"><span class="pre">function</span></code></dt>
-<dd><p class="first last">performs the core comoputation of a component.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><code class="docutils literal"><span class="pre">params</span></code></dt>
-<dd><p class="first last">dictionary of parameters for the function</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p>PsyNeuLink uses the following primary constructs:</p>
+<p>PsyNeuLink uses the following primary constructs (illustrated in the <a class="reference internal" href="#system-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="System.html"><span class="doc">System</span></a></dt>
-<dd><p class="first">Set of (potentially interacting) processes, possibly managed by a ControlMechanism.</p>
+<dd><p class="first">Set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="Process.html"><span class="doc">Process</span></a></dt>
-<dd><p class="first">Component that takes an input, processes it through an ordered list of mechanisms (and projections)
-and generates an output.</p>
+<dd><p class="first">Takes an input, processes it through an ordered list of mechanisms and projections, and generates an output.</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a></dt>
-<dd><p class="first">Component that takes an input, transforms it in some way, and provides
-it as an output that can be used for some purpose.
+<dd><p class="first">Transforms an input representation into an output representation.
+Parameters determine its operation, under the influence of projections.
+There are three primary types:
 ..</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
-<dd><p class="first last">Component aggregrate the input they receive from other mechanisms in a process or system,
-and/or the input to a process or system, transform it in some way, and provide the result either as
-input for other mechanisms and/or the output of a process or system.</p>
+<dd><p class="first last">Aggregates the inputs it receives from other mechanisms or the input to a process or system,
+transforms them in some way, and provides the result either as input to other mechanisms and/or
+to the output of a process or system.</p>
 </dd>
 </dl>
 </li>
@@ -240,8 +216,8 @@ input for other mechanisms and/or the output of a process or system.</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
-<dd><p class="first last">Component that evaluates the output of one or more other mechanisms, and uses this to modify the
-function parameters of those or other mechanisms.</p>
+<dd><p class="first last">Evaluates the output of one or more other mechanisms, and uses this to modify the parameters of those
+or other mechanisms.</p>
 </dd>
 </dl>
 </li>
@@ -249,8 +225,8 @@ function parameters of those or other mechanisms.</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a></dt>
-<dd><p class="first last">Component that monitors the output of one or more other mechanisms, receive training (target) values,
-and compare these to generate error signals used for learning</p>
+<dd><p class="first last">Monitors the output of one or more other mechanisms, compares these to a target value,
+and generates an error signal used for learning.</p>
 </dd>
 </dl>
 </li>
@@ -260,35 +236,36 @@ and compare these to generate error signals used for learning</p>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a></dt>
-<dd><p class="first">Component that takes a source of input from one mechanism (its sender) and conveys it to another (its
-receiver), transforming it if necessary so that it is usable by its receiver.</p>
+<dd><blockquote class="first">
+<div><p>Takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of
+another mechanism. There are three primary types:</p>
+</div></blockquote>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
-<dd><p class="first last">Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
-and then provide that as input to the receiver mechanism.</p>
+<dd><p class="first last">Takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+and provides it as input to that receiver mechanism.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">Takes an allocation (scalar), possibly transforms it,
-and uses it to modulate the parameter(s) of another mechanism&#8217;s function.</p>
+<dd><p class="first last">Takes an allocation (scalar) (usually the output of a ControlMechanism) and uses it to modulate
+the parameter(s) of a mechanism.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd><p class="first last">Takes an error signal (scalar or vector), possibly transforms it,
-and uses it to modulate the parameter(s) of a projection function (e.g., the weights of a matrix).</p>
+<dd><p class="first last">Takes an error signal (scalar or vector, usually the output of a Monitoring Mechanism)
+and uses it to modulate the parameter of a projection (usually the matrix of a MappingProjection).</p>
 </dd>
 </dl>
 </li>
 </ul>
 <dl class="last docutils">
 <dt>[+ GatingSignal —&nbsp;Not yet implemented</dt>
-<dd><p class="first last">Takes a source, possibly transforms it, and uses it to
-modulate the input or output state of a mechanism.</p>
+<dd><p class="first last">Takes a gating signal source and uses it to modulate the input or output state of a mechanism.</p>
 </dd>
 </dl>
 </dd>
@@ -303,6 +280,37 @@ modulate the input or output state of a mechanism.</p>
 </dl>
 </li>
 </ul>
+<p id="system-figure"><strong>Major Components in PsyNeuLink</strong></p>
+<div class="figure" id="id1">
+<a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
+<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  Each process has a
+series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
+that converge on a common final ProcessingMechanism.  The latter projects to a
+<a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> that is used to drive <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in
+Process B. It also projects to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that <a class="reference internal" href="ControlProjection.html"><span class="doc">controls</span></a>
+ProcessingMechanisms in both Processes A and B.  Note that while the mechanisms and projections responsible for
+learning belong to, and are restricted to a single process, those responsible for control belong to the system and</span></p>
+<div class="legend">
+<blockquote>
+<div>can monitor and/or control mechanisms belonging to more than one process.</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>The tutorial is available at/by [???]</p>
+<p>Currently, PsyNeuLink is in an alpha state and is not available through pypi/pip.
+Instead, you can clone the github repo (<a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">https://github.com/PrincetonUniversity/PsyNeuLink</a>).
+Clone the master branch.
+Download the package with the green &#8220;Clone or download&#8221; button on the right side of the page and &#8220;Download ZIP.&#8221;</p>
+<p>Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
+Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.</p>
+<p>PsyNeuLink is compatible with any version of python 3,
+but this tutorial requires a 3.5 installation with the latest versions of IPython, jupyter, and matplotlib installed.</p>
+<p>To install the package, navigate to the cloned directory in a terminal,
+switch to your preferred python3 environment, then run the command __&#8221;pip install .&#8221;__
+(make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
+All prerequisite packages will be automatically added to your environment.</p>
 </div>
 <div class="section" id="contributors">
 <h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>

@@ -125,7 +125,7 @@ class AutoNumber(IntEnum):
 TEST_CONDTION = False
 
 def is_numeric_or_none(x):
-    if not x:
+    if x is None:
         return True
     return is_numeric(x)
 
@@ -138,7 +138,7 @@ kwCompatibilityNumeric = "numeric"
 
 # IMPLEMENT SUPPORT OF *LIST* OF TYPES IN kwCompatibilityType (see Function.__init__ FOR EXAMPLE)
 # IMPLEMENT: IF REFERENCE IS np.ndarray, try converting candidate to array and comparing
-def iscompatible(candidate, reference=NotImplemented, **kargs):
+def iscompatible(candidate, reference=None, **kargs):
     """Check if candidate matches reference or, if that is omitted, it matches type, length and/or numeric specification
 
     If kargs is omitted, candidate and reference must match in type and length
@@ -188,7 +188,7 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
     with warnings.catch_warnings():
         warnings.filterwarnings("error")
         try:
-            if candidate == reference:
+            if reference and (candidate == reference):
                 return True
         except Warning:
             # IMPLEMENTATION NOTE: np.array generates the following warning:
@@ -223,7 +223,7 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
 
 
     # If reference is not provided, assign local_variables to arg values (provided or default)
-    if reference is NotImplemented:
+    if reference is None:
         match_type = kargs[kwCompatibilityType]
         match_length = kargs[kwCompatibilityLength]
         number_only = kargs[kwCompatibilityNumeric]
@@ -304,7 +304,7 @@ def iscompatible(candidate, reference=NotImplemented, **kargs):
             else:
                 if len(candidate) == match_length:
                     # No reference,so item by item comparison is not relevant
-                    if reference is NotImplemented:
+                    if reference is None:
                         return True
                     # If reference was provided, compare element by element
                     elif all(isinstance(c, type(r)) for c, r in zip(candidate,reference)):
@@ -348,7 +348,7 @@ def merge_param_dicts(source, specific, general):
     """
 
     # Validate source as dict
-    if source is None or source is NotImplemented:
+    if not source:
         return
     if not isinstance(source, dict):
         raise UtilitiesError("merge_param_dicts: source {0} must be a dict".format(source))

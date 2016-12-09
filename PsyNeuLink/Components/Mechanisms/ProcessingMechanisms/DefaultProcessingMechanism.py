@@ -55,8 +55,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=NotImplemented,
-                 params=NotImplemented,
+                 default_input_value=None,
+                 params=None,
                  name=None,
                  prefs:is_pref_set=None):
         """Add Linear as default function, assign default name, and call super.__init__
