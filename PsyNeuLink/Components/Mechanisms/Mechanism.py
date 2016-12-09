@@ -1586,7 +1586,7 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
         print("- output: {}".
-              format(re.sub('[\[,\],\n]','',str(output))))
+              format(re.sub('[\[,\],\n]','',str(float(output)))))
 
 #     def adjust_function(self, params, context=None):
 #         """Modify control_signal_allocations while process is executing

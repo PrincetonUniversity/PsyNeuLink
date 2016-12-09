@@ -1193,13 +1193,13 @@ class EVCMechanism(ControlMechanism_Base):
                 if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     self.EVCvalues = EVC_values
                     self.EVCpolicies = EVC_policies
-            # TEST PRINT:
-            print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-                  format(max_value_state_policy_tuple[0],
-                         max_value_state_policy_tuple[1],
-                         max_value_state_policy_tuple[2]),
-                  flush=True)
-
+            # # TEST PRINT:
+            # import re
+            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
+            #       format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
+            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
+            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
+            #       flush=True)
 
             # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
             # a = np.random.random()
