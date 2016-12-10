@@ -411,7 +411,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute TransferMechanism function and return transform of input
@@ -487,7 +487,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.previous_input = current_input
 
         # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=params)
+        output_vector = self.function(variable=current_input, params=runtime_params)
 
         if range:
             minCapIndices = np.where(output_vector < range[0])

@@ -628,7 +628,7 @@ class DDM(ProcessingMechanism_Base):
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute DDM function (currently only trial-level, analytic solution)

@@ -252,7 +252,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -264,7 +264,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         if not context:
             context = EXECUTING + self.name
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=runtime_params, context=context)
 
         # Get error signal from monitoring mechanism for next mechanism in the process
         error = self.variable[0]
