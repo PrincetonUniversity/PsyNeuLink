@@ -709,11 +709,11 @@ class DDM(ProcessingMechanism_Base):
             noise = float(self.parameterStates[NOISE].value)
             t0 = float(self.parameterStates[NON_DECISION_TIME].value)
 
-            result = self.function(runtime_params={DRIFT_RATE:drift_rate,
-                                                   STARTING_POINT:starting_point,
-                                                   THRESHOLD:threshold,
-                                                   NOISE:noise,
-                                                   NON_DECISION_TIME:t0})
+            result = self.function(params={DRIFT_RATE:drift_rate,
+                                           STARTING_POINT:starting_point,
+                                           THRESHOLD:threshold,
+                                           NOISE:noise,
+                                           NON_DECISION_TIME:t0})
 
             # # MODIFIED 12/7/16 OLD:
             # # Assign outputValue

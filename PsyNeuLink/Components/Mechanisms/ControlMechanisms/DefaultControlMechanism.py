@@ -19,8 +19,8 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 from PsyNeuLink.Components.ShellClasses import *
 
 
-ControlSignalChannel = namedtuple('ControlSignalChannel',
-                                  'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
+# ControlSignalChannel = namedtuple('ControlSignalChannel',
+#                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
 class DefaultControlMechanism(ControlMechanism_Base):
@@ -88,7 +88,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        self.controlSignalChannels = OrderedDict()
 
         super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
                                                          params=params,
@@ -100,64 +99,52 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
 
-        for channel_name, channel in self.controlSignalChannels.items():
-
-            channel.inputState.value = defaultControlAllocation
-
-            # Note: self.execute is not implemented as a method;  it defaults to Linear
-            #       from paramClassDefaults[FUNCTION] (see above)
-            channel.outputState.value = self.function(channel.inputState.value, context=context)
-
-        # # FIX: CONSTRUCT np.array OF outputState.values
-        # return output
+        # FIX: REVISE TO NOT USE CHANNELS;  JUST RETURN INPUTSTATE VALUES, AS PASS-THROUGH THAT WILL BE ASSIGNED TO
+        # MODIFIED 12/9/16 OLD:
+        # # OUTPUT STATES
+        # for channel_name, channel in self.controlSignalChannels.items():
+        #
+        #     channel.inputState.value = defaultControlAllocation
+        #
+        #     # Note: self.execute is not implemented as a method;  it defaults to Linear
+        #     #       from paramClassDefaults[FUNCTION] (see above)
+        #     channel.outputState.value = self.function(channel.inputState.value, context=context)
+        #
+        # # # FIX: CONSTRUCT np.array OF outputState.values
+        # # return output
+        # MODIFIED 12/9/16 NEW:
+        return self.inputValue or [defaultControlAllocation]
+        # MODIFIED 12/9/16 END
 
     def _instantiate_input_states(self, context=None):
-        """Suppress assignment of inputState(s) - this is done by instantiate_control_signal_channel
+        """Suppress assignment of inputState(s) - this is handled by instantiate_control_projection
         """
-        # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
-        # self.inputState = None
-        # self.inputStates = None
-        # # MODIFIED 9/15/16 OLD:
-        # pass
-        # MODIFIED 9/15/16 NEW:
-        self.inputValue = None
-        # # MODIFIED 9/15/16 END
+
+        # This is here to handle initialization
+        # (i.e., expectation that self.inputValue attribute has been instantiated)
+        try:
+            self.inputStates
+        except AttributeError:
+            self.inputValue = None
+        else:
+            pass
 
 
     def _instantiate_control_projection(self, projection, context=None):
-        # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
-        """
-
-        Args:
-            projection:
-            context:
-
-        Returns:
-
+        """Instantiate requested controlProjection and associated inputState
         """
 
         # Instantiate inputStates and "channels" for controlSignal allocations
-        self.instantiate_control_signal_channel(projection=projection, context=context)
+        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
+        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
+
+        # try:
+        #     self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
+        # except AttributeError:
+        #     self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
+        self.allocationPolicy = self.inputValue
+
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
                                                       context=context)
-
-    def instantiate_control_signal_channel(self, projection, context=None):
-        """Instantiate inputState that passes defaultControlAllocation to ControlProjection
-
-        Instantiate an inputState with defaultControlAllocation as its value
-
-        Args:
-            projection:
-            context:
-
-        Returns:
-
-        """
-        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
-
-        # MODIFIED 12/10/16
-        # FIX: INSTANTIATE A CONTROL SIGNAL CHANNEL HERE OR GET RID IF THE WHOLE CONSTRUCT
-
-        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)

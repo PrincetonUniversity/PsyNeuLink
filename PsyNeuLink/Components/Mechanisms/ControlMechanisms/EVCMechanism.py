@@ -424,6 +424,8 @@ class EVCMechanism(ControlMechanism_Base):
     """
 
     componentType = "EVCMechanism"
+    initMethod = INIT_FUNCTION_METHOD_ONLY
+
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
@@ -813,6 +815,18 @@ class EVCMechanism(ControlMechanism_Base):
         self.inputValue = self.variable.copy() * 0.0
 
         return self.inputStates
+
+    def _instantiate_control_projection(self, projection, context=None):
+        """
+        """
+        try:
+            self.allocationPolicy = np.append(self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
+        except AttributeError:
+            self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
+
+        # Call super to instantiate outputStates
+        super()._instantiate_control_projection(projection=projection,
+                                                      context=context)
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System
