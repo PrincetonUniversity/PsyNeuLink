@@ -530,7 +530,8 @@ class ControlProjection(Projection_Base):
         elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
             pass
         else:
-            raise ControlProjectionError("allocation_samples argument ({}) in {} must be a list or 1D np.array of number".
+            raise ControlProjectionError("allocation_samples argument ({}) in {} must be "
+                                         "a list or 1D np.array of numbers".
                                      format(allocation_samples, self.name))
 
 

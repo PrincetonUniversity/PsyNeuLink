@@ -820,9 +820,10 @@ class EVCMechanism(ControlMechanism_Base):
         """
         """
         try:
-            self.allocationPolicy = np.append(self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
+            self.allocationPolicy = np.append(self.allocationPolicy, defaultControlAllocation)
         except AttributeError:
-            self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
+            # self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
+            self.allocationPolicy = np.array(defaultControlAllocation)
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
@@ -970,14 +971,16 @@ class EVCMechanism(ControlMechanism_Base):
                                       num_control_projections))
 
 
-        # Map indices of outputValue to outputState(s)
-        self._outputStateValueMapping = OrderedDict()
-        for i in range(len(self.outputStates)):
-            self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
-        # for output_state in self.outputStates:
+        # MODIFIED 12/10/16 OLD:
+        # # Map indices of outputValue to outputState(s)
+        # self._outputStateValueMapping = OrderedDict()
+        # for i in range(len(self.outputStates)):
         #     self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
-
-        self.outputValue = [None] * len(self._outputStateValueMapping)
+        # # for output_state in self.outputStates:
+        # #     self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
+        #
+        # self.outputValue = [None] * len(self._outputStateValueMapping)
+        # MODIFIED 12/10/16 END
 
     def _get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
@@ -1226,32 +1229,14 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN CONTROL SIGNAL VALUES
 
         # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
-        # MODIFIED 10/25/16 OLD:
-        # for output_state in self.outputStates.values():
-            # output_state.value = np.atleast_1d(next(iter(self.EVCmaxPolicy)))
-        # MODIFIED 10/25/16 NEW:
-        for output_state_name, output_state in self.outputStates.items():
-            output_state.value = np.atleast_1d(self.EVCmaxPolicy[self._outputStateValueMapping[output_state_name]])
-        # MODIFIED 10/25/16 END
-
-        # MODIFIED 11/4/16 NEWER:
         EVCmaxStateValue = iter(self.EVCmaxStateValues)
-        # MODIFIED 11/4/16 END
+
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
         for i in range(len(self.inputStates)):
-            # list(self.inputStates.values())[i].value = np.atleast_1d(self.EVCmaxStateValues[i])
-            # # MODIFIED 10/25/16 OLD:
-            # next(iter(self.inputStates.values())).value = np.atleast_1d(next(iter(self.EVCmaxStateValues)))
-            # # MODIFIED 10/25/16 NEW:
-            # self.inputStates[list(self.inputStates.keys())[i]].value =
-            #  np.atleast_1d(next(iter(self.EVCmaxStateValues)))
-            # MODIFIED 11/4/16 NEWER:
             self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(EVCmaxStateValue))
-            # MODIFIED 10/25/16 END
 
 
         # Report EVC max info
-
         if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlProjection allocation(s) for maximum EVC:")
@@ -1265,56 +1250,14 @@ class EVCMechanism(ControlMechanism_Base):
         # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
 
-        # # MODIFIED 10/5/16 OLD:
-        # return self.EVCmax
-        # # MODIFIED 10/5/16 NEW:
-        # return self.EVCmaxPolicy
-        # MODIFIED 10/25/15 NEWER:
+        #region ASSIGN AND RETURN allocationPolicy
+        # Convert EVCmaxPolicy into 2d array with one controlSignal allocation per item,
+        #     assign to self.allocationPolicy, and return (where it will be assigned to self.value).
+        #     (note:  the conversion is to be consistent with use of self.value for assignments to outputStates.value)
+        self.allocationPolicy = np.array(self.EVCmaxPolicy).reshape(len(self.EVCmaxPolicy), -1)
+        return self.allocationPolicy
+        #endregion
 
-        # # MODIFIED 12/9/16 OLD:
-        # # for name in self._outputStateValueMapping:
-        # #     self.outputValue[self._outputStateValueMapping[name]] =
-        # #                    self.EVCmaxPolicy[self._outputStateValueMapping[name]]
-        # # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
-        # for i in range(len(self.outputStates)):
-        #     self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
-        # return
-        #
-        # # for i in range(len(self.EVCmaxPolicy)):
-        # #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
-        # MODIFIED 12/9/16 NEW:
-        return self.EVCmaxPolicy
-        # MODIFIED 12/9/16 END
-
-        # MODIFIED 10/5-25/16 END
-
-    # IMPLEMENTATION NOTE: NOT IMPLEMENTED, AS PROVIDED BY params[FUNCTION]
-    # IMPLEMENTATION NOTE: RETURNS EVC FOR CURRENT STATE OF monitoredOutputStates
-    #                      self.value IS SET TO THIS, WHICH IS NOT THE SAME AS outputState(s).value
-    #                      THE LATTER IS STORED IN self.allocationPolicy
-    # def execute(self, params, time_scale, context):
-    #     """Calculate EVC for values of monitored states (in self.inputStates)
-    #     """
-
-    # def _update_output_states(self, time_scale=None, context=None):
-    #     """Assign outputStateValues to allocationPolicy
-    #
-    #     This method overrides super._update_output_states, instantiate allocationPolicy attribute
-    #         and assign it outputStateValues
-    #     Notes:
-    #     * this is necessary, since self.execute returns (and thus self.value equals) the EVC for monitoredOutputStates
-    #         and a given allocation policy (i.e., set of outputState values / ControlProjection specifications);
-    #         this devaites from the usual case in which self.value = self.execute = self.outputState.value(s)
-    #         therefore, self.allocationPolicy is used to represent to current set of self.outputState.value(s)
-    #
-    #     Args:
-    #         time_scale:
-    #         context:
-    #     """
-    #     for i in range(len(self.allocationPolicy)):
-    #         self.allocationPolicy[i] = next(iter(self.outputStates.values())).value
-    #
-    #     super()._update_output_states(time_scale= time_scale, context=context)
 
     def _add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC

@@ -134,14 +134,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
         """Instantiate requested controlProjection and associated inputState
         """
 
-        # Instantiate inputStates and "channels" for controlSignal allocations
+        # Instantiate inputStates and allocationPolicy attribute for controlSignal allocations
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
-
-        # try:
-        #     self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
-        # except AttributeError:
-        #     self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
         self.allocationPolicy = self.inputValue
 
 
