@@ -992,9 +992,8 @@ class EVCMechanism(ControlMechanism_Base):
 
     def __execute__(self,
                     variable=None,
-                    params=None,
-                    time_scale=TimeScale.TRIAL,
                     runtime_params=None,
+                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 

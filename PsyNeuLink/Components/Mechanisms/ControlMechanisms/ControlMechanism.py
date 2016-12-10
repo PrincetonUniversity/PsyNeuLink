@@ -554,7 +554,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self, variable=None, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
         """Updates ControlProjections based on inputs
 
         Must be overriden by subclass

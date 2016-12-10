@@ -98,7 +98,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
 
-    def __execute__(self, variable=None, params=None, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
 
         for channel_name, channel in self.controlSignalChannels.items():
 
@@ -112,7 +112,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # return output
 
     def _instantiate_input_states(self, context=None):
-        """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
+        """Suppress assignment of inputState(s) - this is done by instantiate_control_signal_channel
         """
         # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
         # self.inputState = None
@@ -156,5 +156,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         """
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
+
+        # MODIFIED 12/10/16
+        # FIX: INSTANTIATE A CONTROL SIGNAL CHANNEL HERE OR GET RID IF THE WHOLE CONSTRUCT
 
         self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
