@@ -99,22 +99,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
 
-        # FIX: REVISE TO NOT USE CHANNELS;  JUST RETURN INPUTSTATE VALUES, AS PASS-THROUGH THAT WILL BE ASSIGNED TO
-        # MODIFIED 12/9/16 OLD:
-        # # OUTPUT STATES
-        # for channel_name, channel in self.controlSignalChannels.items():
-        #
-        #     channel.inputState.value = defaultControlAllocation
-        #
-        #     # Note: self.execute is not implemented as a method;  it defaults to Linear
-        #     #       from paramClassDefaults[FUNCTION] (see above)
-        #     channel.outputState.value = self.function(channel.inputState.value, context=context)
-        #
-        # # # FIX: CONSTRUCT np.array OF outputState.values
-        # # return output
-        # MODIFIED 12/9/16 NEW:
         return self.inputValue or [defaultControlAllocation]
-        # MODIFIED 12/9/16 END
 
     def _instantiate_input_states(self, context=None):
         """Instantiate inputValue attribute
