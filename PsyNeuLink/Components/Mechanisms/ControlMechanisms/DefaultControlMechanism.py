@@ -117,11 +117,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # MODIFIED 12/9/16 END
 
     def _instantiate_input_states(self, context=None):
-        """Suppress assignment of inputState(s) - this is handled by instantiate_control_projection
+        """Instantiate inputValue attribute
+
+        Otherwise, no need to do anything, as DefaultControllerMechanism only adds inputStates
+        when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state
         """
 
-        # This is here to handle initialization
-        # (i.e., expectation that self.inputValue attribute has been instantiated)
         try:
             self.inputStates
         except AttributeError:

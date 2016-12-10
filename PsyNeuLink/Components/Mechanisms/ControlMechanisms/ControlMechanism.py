@@ -346,7 +346,7 @@ class ControlMechanism_Base(Mechanism_Base):
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
     def _instantiate_attributes_before_function(self, context=None):
-        """Instantiate self.system
+        """Instantiate self.system attribute
 
         Assign self.system
         """
