@@ -415,6 +415,7 @@ def _instantiate_input_states(owner, context=None):
 
     # Initialize self.inputValue to correspond to format of owner's variable, and zero it
 # FIX: INSURE THAT ELEMENTS CAN BE FLOATS HERE:  GET AND ASSIGN SHAPE RATHER THAN COPY? XXX
+# FIX:  IS THIS A LIST OR np.array (SHOULD BE A LIST)
     owner.inputValue = owner.variable.copy() * 0.0
 
     # Assign self.inputState to first inputState in dict

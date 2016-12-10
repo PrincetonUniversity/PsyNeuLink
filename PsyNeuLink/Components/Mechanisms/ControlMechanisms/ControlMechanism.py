@@ -374,11 +374,40 @@ class ControlMechanism_Base(Mechanism_Base):
             input_state (InputState):
 
         """
-        # Extend self.variable to accommodate new inputState
+
+        # First, test for initialization conditions:
+
+        # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
         if self.variable is None:
             self.variable = np.atleast_2d(input_state_value)
+
+        # If there is a single item in self.variable, it could be the one assigned on initialization
+        #     (in order to validate ``function`` and get its return value as a template for self.value);
+        #     in that case, there should be no inputStates yet, so pass
+        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
+        elif len(self.variable) == 1:
+            try:
+                self.inputStates
+            except AttributeError:
+                # If there are no inputStates, this is the usual initialization condition;
+                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
+                pass
+            else:
+                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+        # Other than on initialization (handled above), it is a PROGRAM ERROR if
+        #    the number of inputStates is not equal to the number of items in self.variable
+        elif len(self.variable) != len(self.inputStates):
+            raise ControlMechanismError("PROGRAM ERROR:  The number of inputStates ({}) does not match "
+                                        "the number of items found for the variable attribute ({}) of {}"
+                                        "when creating {}".
+                                        format(len(self.inputStates),
+                                               len(self.variable),
+                                               self.name,input_state_name))
+
+        # Extend self.variable to accommodate new inputState
         else:
             self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
@@ -395,10 +424,13 @@ class ControlMechanism_Base(Mechanism_Base):
 
         #  Update inputState and inputStates
         try:
-            self.inputStates[input_state_name] = input_state
+            self.inputStates[input_state.name] = input_state
         except AttributeError:
             self.inputStates = OrderedDict({input_state_name:input_state})
             self.inputState = list(self.inputStates.values())[0]
+
+        self.inputValue = list(state.value for state in self.inputStates.values())
+
         return input_state
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -483,30 +515,16 @@ class ControlMechanism_Base(Mechanism_Base):
                                               format(projection, self.name))
 
 
-        # MODIFIED 12/9/16 NEW:
-        # Update allocationPolicy to accommodate instantiated projection and add output_state_value
-        try:
-            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
-        except AttributeError:
-            self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
-
         #  Update self.value by evaluating function
         self._update_value(context=context)
-        # MODIFIED 12/9/16 END
 
-        # # MODIFIED 12/9/16 OLD:
-        # output_item_output_state_index = len(self.value)-1
-        # output_value = self.value[output_item_output_state_index]
-        # MODIFIED 12/9/16 NEW:
+        # Instantiate new outputState and assign as sender of ControlProjection
         try:
             output_state_index = len(self.outputStates)
         except AttributeError:
             output_state_index = 0
         output_state_name = projection.receiver.name + '_ControlProjection' + '_Output'
-        output_state_value = self.value[output_state_index]
-        # MODIFIED 12/9/16 END
-
-        # Instantiate outputState for self as sender of ControlProjection
+        output_state_value = self.allocationPolicy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.States.OutputState import OutputState
         state = _instantiate_state(owner=self,
@@ -519,16 +537,11 @@ class ControlMechanism_Base(Mechanism_Base):
                                             # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
 
-        state.output_state_index = output_state_index
-        projection.sender = state
+        # Add index assignment to outputState
+        state.index = output_state_index
 
-        # # MODIFIED 12/9/16 OLD:
-        # # Update allocationPolicy to accommodate instantiated projection and add output_state_value
-        # try:
-        #     self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_state_value, 0))
-        # except AttributeError:
-        #     self.allocationPolicy = np.atleast_2d(output_state_value)
-        # MODIFIED 12/9/16 END
+        # Assign outputState as ControlProjection's sender
+        projection.sender = state
 
         # Update self.outputState and self.outputStates
         try:
@@ -537,10 +550,10 @@ class ControlMechanism_Base(Mechanism_Base):
             self.outputStates = OrderedDict({output_state_name:state})
             self.outputState = self.outputStates[output_state_name]
 
-        # Add projection to list of outgoing projections
+        # Add ControlProjection to list of outputState's outgoing projections
         state.sendsToProjections.append(projection)
 
-        # Add projection to list of ControlProjections
+        # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
             self.controlProjections.append(projection)
         except AttributeError:
