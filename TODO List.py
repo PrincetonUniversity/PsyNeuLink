@@ -2,6 +2,9 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENT:  "item" used to refer to element in any array at any level higher than the highest dimension (axis)
+#             which is referred to as an element (i.e, an entry at the highest dimension / axis)
+
 # DOCUMENTATION: add show to Systsem and Process
 #
 # IMPLEMENT:  Demos of Functions that plots each Function
