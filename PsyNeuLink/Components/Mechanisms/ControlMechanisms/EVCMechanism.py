@@ -424,6 +424,8 @@ class EVCMechanism(ControlMechanism_Base):
     """
 
     componentType = "EVCMechanism"
+    initMethod = INIT_FUNCTION_METHOD_ONLY
+
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # classPreferenceLevel = PreferenceLevel.TYPE
@@ -814,6 +816,18 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.inputStates
 
+    def _instantiate_control_projection(self, projection, context=None):
+        """
+        """
+        try:
+            self.allocationPolicy = np.append(self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
+        except AttributeError:
+            self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
+
+        # Call super to instantiate outputStates
+        super()._instantiate_control_projection(projection=projection,
+                                                      context=context)
+
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System
 
@@ -992,9 +1006,8 @@ class EVCMechanism(ControlMechanism_Base):
 
     def __execute__(self,
                     variable=None,
-                    params=None,
-                    time_scale=TimeScale.TRIAL,
                     runtime_params=None,
+                    time_scale=TimeScale.TRIAL,
                     context=None):
         """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
 
@@ -1249,10 +1262,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         #endregion
 
-
         # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
-
 
         # # MODIFIED 10/5/16 OLD:
         # return self.EVCmax
@@ -1260,17 +1271,20 @@ class EVCMechanism(ControlMechanism_Base):
         # return self.EVCmaxPolicy
         # MODIFIED 10/25/15 NEWER:
 
-        # for name in self._outputStateValueMapping:
-        #     self.outputValue[self._outputStateValueMapping[name]] =
-        #                    self.EVCmaxPolicy[self._outputStateValueMapping[name]]
-        # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
-        for i in range(len(self.outputStates)):
-            self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
-        return
-
-
-        # for i in range(len(self.EVCmaxPolicy)):
-        #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+        # # MODIFIED 12/9/16 OLD:
+        # # for name in self._outputStateValueMapping:
+        # #     self.outputValue[self._outputStateValueMapping[name]] =
+        # #                    self.EVCmaxPolicy[self._outputStateValueMapping[name]]
+        # # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
+        # for i in range(len(self.outputStates)):
+        #     self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
+        # return
+        #
+        # # for i in range(len(self.EVCmaxPolicy)):
+        # #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+        # MODIFIED 12/9/16 NEW:
+        return self.EVCmaxPolicy
+        # MODIFIED 12/9/16 END
 
         # MODIFIED 10/5-25/16 END
 

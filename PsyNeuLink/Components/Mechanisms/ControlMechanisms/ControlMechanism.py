@@ -243,8 +243,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
     componentType = "ControlMechanism"
 
-    initMethod = INIT_FUNCTION_METHOD_ONLY
-
+    # # MODIFIED 12/9/16 OLD:
+    # initMethod = INIT_FUNCTION_METHOD_ONLY
+    # # MODIFIED 12/9/16 NEW:
+    initMethod = INIT__EXECUTE__METHOD_ONLY
+    # MODIFIED 12/9/16 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -371,11 +374,40 @@ class ControlMechanism_Base(Mechanism_Base):
             input_state (InputState):
 
         """
-        # Extend self.variable to accommodate new inputState
+
+        # First, test for initialization conditions:
+
+        # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
         if self.variable is None:
             self.variable = np.atleast_2d(input_state_value)
+
+        # If there is a single item in self.variable, it could be the one assigned on initialization
+        #     (in order to validate ``function`` and get its return value as a template for self.value);
+        #     in that case, there should be no inputStates yet, so pass
+        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
+        elif len(self.variable) == 1:
+            try:
+                self.inputStates
+            except AttributeError:
+                # If there are no inputStates, this is the usual initialization condition;
+                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
+                pass
+            else:
+                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+        # Other than on initialization (handled above), it is a PROGRAM ERROR if
+        #    the number of inputStates is not equal to the number of items in self.variable
+        elif len(self.variable) != len(self.inputStates):
+            raise ControlMechanismError("PROGRAM ERROR:  The number of inputStates ({}) does not match "
+                                        "the number of items found for the variable attribute ({}) of {}"
+                                        "when creating {}".
+                                        format(len(self.inputStates),
+                                               len(self.variable),
+                                               self.name,input_state_name))
+
+        # Extend self.variable to accommodate new inputState
         else:
             self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+
         variable_item_index = self.variable.size-1
 
         # Instantiate inputState
@@ -392,10 +424,13 @@ class ControlMechanism_Base(Mechanism_Base):
 
         #  Update inputState and inputStates
         try:
-            self.inputStates[input_state_name] = input_state
+            self.inputStates[input_state.name] = input_state
         except AttributeError:
             self.inputStates = OrderedDict({input_state_name:input_state})
             self.inputState = list(self.inputStates.values())[0]
+
+        self.inputValue = list(state.value for state in self.inputStates.values())
+
         return input_state
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -463,6 +498,13 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
 
+        Assume that:
+            - self.value is populated (in _update_value) with an array of allocations from self.allocationPolicy;
+            - self.allocationPolicy has already been extended to include the particular (indexed) allocation
+                to be used for the outputState being created here.
+
+        INCREMENT BASED ON TOTAL NUMBER OF OUTPUTSTATES SO FAR
+
         Returns state: (OutputState)
         """
 
@@ -472,49 +514,46 @@ class ControlMechanism_Base(Mechanism_Base):
                                               "that is not a ControlProjection, to outputState of {1}".
                                               format(projection, self.name))
 
-        output_name = projection.receiver.name + '_ControlProjection' + '_Output'
 
         #  Update self.value by evaluating function
         self._update_value(context=context)
-        # IMPLEMENTATION NOTE: THIS ASSUMED THAT self.value IS AN ARRAY OF OUTPUT STATE VALUES, BUT IT IS NOT
-        #                      RATHER, IT IS THE OUTPUT OF THE EXECUTE METHOD (= EVC OF monitoredOutputStates)
-        #                      SO SHOULD ALWAYS HAVE LEN = 1 (INDEX = 0)
-        #                      self.allocationPolicy STORES THE outputState.value(s)
-        output_item_index = len(self.value)-1
-        output_value = self.value[output_item_index]
 
-        # Instantiate outputState for self as sender of ControlProjection
+        # Instantiate new outputState and assign as sender of ControlProjection
+        try:
+            output_state_index = len(self.outputStates)
+        except AttributeError:
+            output_state_index = 0
+        output_state_name = projection.receiver.name + '_ControlProjection' + '_Output'
+        output_state_value = self.allocationPolicy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.States.OutputState import OutputState
         state = _instantiate_state(owner=self,
                                             state_type=OutputState,
-                                            state_name=output_name,
+                                            state_name=output_state_name,
                                             state_spec=defaultControlAllocation,
                                             state_params=None,
-                                            constraint_value=output_value,
+                                            constraint_value=output_state_value,
                                             constraint_value_name='Default control allocation',
-                                            # constraint_index=output_item_index,
+                                            # constraint_output_state_index=output_item_output_state_index,
                                             context=context)
 
-        projection.sender = state
+        # Add index assignment to outputState
+        state.index = output_state_index
 
-        # Update allocationPolicy to accommodate instantiated projection and add output_value
-        try:
-            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_value, 0))
-        except AttributeError:
-            self.allocationPolicy = np.atleast_2d(output_value)
+        # Assign outputState as ControlProjection's sender
+        projection.sender = state
 
         # Update self.outputState and self.outputStates
         try:
-            self.outputStates[output_name] = state
+            self.outputStates[output_state_name] = state
         except AttributeError:
-            self.outputStates = OrderedDict({output_name:state})
-            self.outputState = self.outputStates[output_name]
+            self.outputStates = OrderedDict({output_state_name:state})
+            self.outputState = self.outputStates[output_state_name]
 
-        # Add projection to list of outgoing projections
+        # Add ControlProjection to list of outputState's outgoing projections
         state.sendsToProjections.append(projection)
 
-        # Add projection to list of ControlProjections
+        # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
             self.controlProjections.append(projection)
         except AttributeError:
@@ -528,7 +567,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
         """Updates ControlProjections based on inputs
 
         Must be overriden by subclass

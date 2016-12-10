@@ -333,13 +333,13 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
         # DOCUMENTATION:
         # variable (float): set to self.value (= self.inputValue)
-        # params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+        # runtime_params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
         # time_scale (TimeScale): determines "temporal granularity" with which mechanism is executed
         # context (str)
         #
@@ -369,7 +369,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         if not context:
             context = EXECUTING + self.name
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=runtime_params, context=context)
 
 
         # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
@@ -385,7 +385,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
             # Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.comparisonFunction.function(variable=self.variable, params=params)
+            comparison_array = self.comparisonFunction.function(variable=self.variable, params=runtime_params)
 
             # # MODIFIED 12/7/16 OLD:
             # mean = np.mean(comparison_array)

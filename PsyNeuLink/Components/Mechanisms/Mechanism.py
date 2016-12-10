@@ -1282,7 +1282,7 @@ class Mechanism_Base(Mechanism):
             # MODIFIED 12/8/16 NEW:
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self.__execute__(variable=self.variable,
-                                                 params=runtime_params,
+                                                 runtime_params=runtime_params,
                                                  time_scale=time_scale,
                                                  context=context)
                 return np.atleast_2d(return_value)
@@ -1359,7 +1359,7 @@ class Mechanism_Base(Mechanism):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
         self.value = self.__execute__(variable=self.inputValue,
-                                      params=runtime_params,
+                                      runtime_params=runtime_params,
                                       time_scale=time_scale,
                                       context=context)
         # MODIFIED 12/8/16 NEW:
@@ -1539,10 +1539,10 @@ class Mechanism_Base(Mechanism):
 
     def __execute__(self,
                     variable=None,
-                    params=None,
+                    runtime_params=None,
                     time_scale=None,
                     context=None):
-        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+        return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
 
     def _report_mechanism_execution(self, input=None, params=None, output=None):
 
