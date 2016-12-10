@@ -495,25 +495,27 @@ class EVCMechanism(ControlMechanism_Base):
         """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
 
         Instantiate PredictionMechanisms for origin mechanisms in System
-        - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
-        - if an associated input mechanism needs to be monitored by the EVCMechanism, it must be specified explicilty
-            in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
+            - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
+            - if an associated input mechanism must be monitored by the EVCMechanism, it must be specified explicitly
+                in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
 
         Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
-        - if specification in outputState is None:
-             do NOT monitor this state (this overrides any other specifications)
-        - if an outputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
-        - if a mechanism is terminal and/or specified in the system or controller:
-            if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
-            if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
-        Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
+            - if specification in outputState is None:
+                 do NOT monitor this state (this overrides any other specifications)
+            - if an outputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
+            - if a mechanism is terminal and/or specified in the system or controller:
+                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
+                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
+            Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
 
-        Assign inputState to controller for each state to be monitored;  for each item in self.monitoredOutputStates:
-        - if it is a OutputState, call _instantiate_monitoring_input_state()
-        - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
-            (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
-        - each inputState is assigned a name with the following format:
-            '<name of mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
+        Assign inputState to controller for each state to be monitored;
+            uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
+            For each item in self.monitoredOutputStates:
+            - if it is a OutputState, call _instantiate_monitoring_input_state()
+            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
+                (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
+            - each inputState is assigned a name with the following format:
+                '<name of mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
@@ -1273,8 +1275,6 @@ class EVCMechanism(ControlMechanism_Base):
         """
         states_spec = list(states_spec)
         self._validate_monitored_state_spec(states_spec, context=context)
-        # FIX: MODIFIED 7/18/16:  NEED TO IMPLEMENT  _instantiate_monitored_output_states
-        #                         SO AS TO CALL _instantiate_input_states()
         self._instantiate_monitored_output_states(states_spec, context=context)
 
 def _compute_EVC(args):
