@@ -9,8 +9,8 @@
 #
 #
 
-# FIX:  del NAME_ARG
-# FIX: EVC TEST SCRIPT:  - output:  4.95
+# IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
+# FIX:  del NAME_ARG, AND CHANGE NAME_ARG -> NAME
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
 # FIX: IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 # FIX: ANALYZE -> CALCULATE [Preserve Case]

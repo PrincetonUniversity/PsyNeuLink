@@ -243,8 +243,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
     componentType = "ControlMechanism"
 
-    initMethod = INIT_FUNCTION_METHOD_ONLY
-
+    # # MODIFIED 12/9/16 OLD:
+    # initMethod = INIT_FUNCTION_METHOD_ONLY
+    # # MODIFIED 12/9/16 NEW:
+    initMethod = INIT__EXECUTE__METHOD_ONLY
+    # MODIFIED 12/9/16 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -480,8 +483,16 @@ class ControlMechanism_Base(Mechanism_Base):
                                               format(projection, self.name))
 
 
+        # MODIFIED 12/9/16 NEW:
+        # Update allocationPolicy to accommodate instantiated projection and add output_state_value
+        try:
+            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(defaultControlAllocation, 0))
+        except AttributeError:
+            self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
+
         #  Update self.value by evaluating function
         self._update_value(context=context)
+        # MODIFIED 12/9/16 END
 
         # # MODIFIED 12/9/16 OLD:
         # output_item_output_state_index = len(self.value)-1
@@ -511,11 +522,13 @@ class ControlMechanism_Base(Mechanism_Base):
         state.output_state_index = output_state_index
         projection.sender = state
 
-        # Update allocationPolicy to accommodate instantiated projection and add output_state_value
-        try:
-            self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_state_value, 0))
-        except AttributeError:
-            self.allocationPolicy = np.atleast_2d(output_state_value)
+        # # MODIFIED 12/9/16 OLD:
+        # # Update allocationPolicy to accommodate instantiated projection and add output_state_value
+        # try:
+        #     self.allocationPolicy = np.append(self.self.allocationPolicy, np.atleast_2d(output_state_value, 0))
+        # except AttributeError:
+        #     self.allocationPolicy = np.atleast_2d(output_state_value)
+        # MODIFIED 12/9/16 END
 
         # Update self.outputState and self.outputStates
         try:
@@ -541,7 +554,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def __execute__(self, variable=None, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
         """Updates ControlProjections based on inputs
 
         Must be overriden by subclass
