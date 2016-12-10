@@ -628,7 +628,7 @@ class DDM(ProcessingMechanism_Base):
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute DDM function (currently only trial-level, analytic solution)
@@ -709,11 +709,11 @@ class DDM(ProcessingMechanism_Base):
             noise = float(self.parameterStates[NOISE].value)
             t0 = float(self.parameterStates[NON_DECISION_TIME].value)
 
-            result = self.function(params={DRIFT_RATE:drift_rate,
-                                           STARTING_POINT:starting_point,
-                                           THRESHOLD:threshold,
-                                           NOISE:noise,
-                                           NON_DECISION_TIME:t0})
+            result = self.function(runtime_params={DRIFT_RATE:drift_rate,
+                                                   STARTING_POINT:starting_point,
+                                                   THRESHOLD:threshold,
+                                                   NOISE:noise,
+                                                   NON_DECISION_TIME:t0})
 
             # # MODIFIED 12/7/16 OLD:
             # # Assign outputValue
