@@ -717,14 +717,6 @@ class EVCMechanism(ControlMechanism_Base):
                     self.monitoredOutputStates.append(output_state)
                     continue
 
-                # # MODIFIED 11/13/16 OLD: PREVENTS MECH OR MECH NAME SPEC FROM BEING RECOGNIZED
-                # if option_spec is None:
-                #     continue
-                # MODIFIED 11/13/16 NEW:
-                # MODIFIED 11/13/16 END
-                # if option_spec is MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES:
-                #     continue
-
 # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
 # THE LIST NOR IS IT A TERMINAL MECHANISM
 
@@ -733,9 +725,7 @@ class EVCMechanism(ControlMechanism_Base):
                 #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a mechanism)
                 #   or it is a terminal mechanism
                 elif (mech.name in local_specs or mech in local_specs or
-                              # MODIFIED 11/13/16 NEW
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              # MODIFIED 11/13/16 END
                               mech in self.system.terminalMechanisms.mechanisms):
                     #
                     if (not (mech.name in local_specs or mech in local_specs) and
@@ -754,10 +744,8 @@ class EVCMechanism(ControlMechanism_Base):
                         if output_state is mech.outputState:
                             self.monitoredOutputStates.append(output_state)
                             continue
-                    # # MODIFIED 11/13/16 NEW:
                     elif option_spec is None:
                         continue
-                    # # MODIFIED 11/13/16 END
                     else:
                         raise EVCError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
@@ -889,11 +877,7 @@ class EVCMechanism(ControlMechanism_Base):
             self.predictionProcesses.append(prediction_process)
 
         # Re-instantiate system with predictionMechanism Process(es) added
-        # MODIFIED 10/2/16 OLD:
         self.system._instantiate_processes(inputs=self.system.variable, context=context)
-        # # MODIFIED 10/2/16 NEW:
-        # self.system._instantiate_processes(inputs=inputs, context=context)
-        # MODIFIED 10/2/16 END
         self.system._instantiate_graph(context=context)
 
     def _instantiate_monitoring_input_state(self, monitored_state, context=None):
@@ -971,18 +955,6 @@ class EVCMechanism(ControlMechanism_Base):
                                       COST_AGGREGATION_FUNCTION,
                                       self.name,
                                       num_control_projections))
-
-
-        # MODIFIED 12/10/16 OLD:
-        # # Map indices of outputValue to outputState(s)
-        # self._outputStateValueMapping = OrderedDict()
-        # for i in range(len(self.outputStates)):
-        #     self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
-        # # for output_state in self.outputStates:
-        # #     self._outputStateValueMapping[list(self.outputStates.keys())[i]] = i
-        #
-        # self.outputValue = [None] * len(self._outputStateValueMapping)
-        # MODIFIED 12/10/16 END
 
     def _get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
@@ -1300,11 +1272,7 @@ def _compute_EVC(args):
 
     # Implement the current policy over ControlProjections
     for i in range(len(ctlr.outputStates)):
-        # # MODIFIED 10/25/16 OLD:
-        # next(iter(ctlr.outputStates.values())).value = np.atleast_1d(allocation_vector[i])
-        # MODIFIED 10/25/16 NEW:
         ctlr.outputStates[list(ctlr.outputStates.keys())[i]].value = np.atleast_1d(allocation_vector[i])
-        # MODIFIED 10/25/16 END
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step

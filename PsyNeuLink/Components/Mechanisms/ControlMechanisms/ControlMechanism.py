@@ -243,11 +243,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
     componentType = "ControlMechanism"
 
-    # # MODIFIED 12/9/16 OLD:
-    # initMethod = INIT_FUNCTION_METHOD_ONLY
-    # # MODIFIED 12/9/16 NEW:
     initMethod = INIT__EXECUTE__METHOD_ONLY
-    # MODIFIED 12/9/16 END
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
@@ -276,12 +272,10 @@ class ControlMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        # MODIFIED 11/5/16 NEW:
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   function=function,
                                                   params=params)
-         # MODIFIED 11/5/16 END
 
         super(ControlMechanism_Base, self).__init__(variable=default_input_value,
                                                     params=params,
@@ -315,7 +309,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                   format(self.name))
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
-        # MODIFIED 11/10/16 END
 
         super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
                                                                  target_set=target_set,
