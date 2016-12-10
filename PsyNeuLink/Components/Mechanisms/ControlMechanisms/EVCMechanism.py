@@ -1258,16 +1258,20 @@ class EVCMechanism(ControlMechanism_Base):
         # return self.EVCmaxPolicy
         # MODIFIED 10/25/15 NEWER:
 
-        # for name in self._outputStateValueMapping:
-        #     self.outputValue[self._outputStateValueMapping[name]] =
-        #                    self.EVCmaxPolicy[self._outputStateValueMapping[name]]
-        # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
-        for i in range(len(self.outputStates)):
-            self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
-        return
-
-        # for i in range(len(self.EVCmaxPolicy)):
-        #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+        # # MODIFIED 12/9/16 OLD:
+        # # for name in self._outputStateValueMapping:
+        # #     self.outputValue[self._outputStateValueMapping[name]] =
+        # #                    self.EVCmaxPolicy[self._outputStateValueMapping[name]]
+        # # Get EVCmaxPolicy for each outputState (which are in an OrderedDict) and assign to corresponding outputValue
+        # for i in range(len(self.outputStates)):
+        #     self.outputValue[self._outputStateValueMapping[list(self.outputStates.keys())[i]]] = self.EVCmaxPolicy[i]
+        # return
+        #
+        # # for i in range(len(self.EVCmaxPolicy)):
+        # #     self.outputValue[self.outputState[self._outputStateValueMapping[i]]] = self.EVCmaxPolicy[i]
+        # MODIFIED 12/9/16 NEW:
+        return self.EVCmaxPolicy
+        # MODIFIED 12/9/16 END
 
         # MODIFIED 10/5-25/16 END
 
