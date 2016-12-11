@@ -109,7 +109,7 @@ Every mechanism has one or more :doc:`inputStates <InputState>`, :doc:`parameter
 :doc:`outputStates <OutputStates>`, that allow it to receive and send projections, and to execute its ``function``
 (see :ref:`Mechanism_Function`) --  these are summarized below under :ref:`States`.  When a mechanism is created,
 it automatically creates the parameterStates it needs to represent the parameters of its ``function``.  It also
-creates any inputStates an outputStates required for the projections it has been assigned.  However, inputStates and
+creates any inputStates and outputStates required for the projections it has been assigned.  However, inputStates and
 outputStates, and corresponding projections, can also be specified in the mechanism's parameter dictionary, using
 entries with the keys ``INPUT_STATES`` and ``OUTPUT_STATES``, respectively. The value of each entry can be the name
 of the state's class (to create a default), an existing state, the name of one,  a specification dictionary for one,
@@ -214,35 +214,22 @@ modify the function's parameter value in response to the outcome(s) of processin
 
 OutputStates
 ^^^^^^^^^^^^
-
-COMMENT:
-   XXXXX UPDATE THIS BASED ON OUTPUTSTATE DOCSTRING
-COMMENT
-
-These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates,
-the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState`` attribute, while all of
-its outputStates (including the primary one) are stored in an OrderedDict in its ``outputStates`` attribute;  the
-key for each entry is the name of an outputState, and the value is the outputState itself.  By convention,
-a mechanism's ``execute`` method assigns the output of its ``function`` to the value of the primary outputState.
-Other outputStates are assigned other values associated with the output of the ``function`` (e.g., its mean,
-variance, etc.).  OutputStates may also be used for other purposes.  For example, :doc:`ControlMechanisms` can have
-multiple outputStates, one for each of their :doc:`ControlProjections <ControlProjection>`.  Each outputState can serve
-as a sender for projections, to transmit its value to other mechanisms and/or the output of a process or system.
-The ``value`` attributes of all of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the
- mechanism's ``outputValue`` attribute.
-
-COMMENT:
-[TBI:]
-Usually the ``function`` of the primary outputState transfers the result of the mechanism's function to the primary
-outputState's ``value`` attribute (i.e., its function is the Linear function with slope=1 and intercept=0).  Other
-outputStates may use other functions to transform the result of the mechanism's function in various ways (e.g.,
-generate its mean, variance, etc.), the results of which are stored in each outputState's ``value`` attribute.
-OutputStates may also be used for other purposes.  For example, ControlMechanisms can have multiple outputStates,
-one for each parameter controlled.  The ``value`` of each outputState can serve as a sender for projections,
-to transmit its value to other mechahnisms and/or the ouput of a process or system.  The ``value`` attributes of all
-of a mechanism's outputStates are concatenated into a 2d np.array and assigned to the mechanism's ``outputValue``
-attribute.
-COMMENT
+These represent the output(s) of a mechanism. A mechanism can have several outputStates, and each can serve as a
+sender for projections, to transmit  its value to other  mechanisms and/or the output of a process or system.
+Similar to inputStates, the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState``
+attribute, while all of its outputStates (including the primary one) are stored in an OrderedDict in its
+``outputStates`` attribute;  the key for each entry is the name of an outputState, and the value is the outputState
+itself.  Every mechanism has at  least one ("primary") outputState, that is kept in its ``outputState`` attribute.
+This is assigned an unmodified  copy of the first item of the owner mechanism's ``value`` (often the direct output
+of the mechanism's ``function``).  OutputStates may also be used for other purposes.  For example, some Processing
+mechanisms (such as the :doc:`TransferMechanism`) use outputStates to represent values derived from its primary out
+(e.g., its mean and variance).   :doc:`ControlMechanisms` can have multiple outputStates, one for each of their
+:doc:`ControlProjections  <ControlProjection>`.  The item of the mechanism's ``value`` to which an outputState is
+assigned can be specified using its ``INDEX`` parameter, and the function used to convert that item into the
+outputState's ``value`` can be customized using its ``CALCULATE`` parameter (see :ref:`OutputStates_Creation`).
+The ``value`` attributes of all of a mechanism's outputStates  are concatenated into a 2d np.array and assigned to
+the  mechanism's ``outputValue`` attribute.  Note that this is distinct from the mechanism's ``value`` attribute,
+which contains the full and unmodified results of its execution.
 
 .. _Mechanism_Specifying_Parameters:
 
@@ -605,7 +592,7 @@ class Mechanism_Base(Mechanism):
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
         List of values of the mechanism's outputStates.
         Note: this is not necessarily equal to the ``value`` attribute of the mechanism, since the outputState's
-        ``function`` and/or its ``analyze`` attributes may calculate a new quantity derived from an item of the
+        ``function`` and/or its ``calculate`` attributes may calculate a new quantity derived from an item of the
         mechanism's ``value``, and assign that to the outputState's ``value`` and the corresponding item of the
         mechanism's ``outputValue``.
 

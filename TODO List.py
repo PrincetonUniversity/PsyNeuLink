@@ -2,16 +2,33 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
+# DOCUMENT:  "params dictionary" vs. "parameter dictionary"
+
+# DOCUMENT:  FIGURES FOR:
+#                   inputState: inputValue vs. variable
+#                   OutputState: function vs. calculate, value vs. outputState.value vs. outputValue
+
+# DOCUMENT:  IN MECHANISM, CLARIFY:
+#                DISTINCTION BETWEEN THE RESULT OF ITS FUNCTION,
+#                                     AND ITS ``value`` ATTRIBUTE, WHICH IS WHAT IS RETURNED BY ITS EXECUTE METHOD
+#                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
+#                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
+#
+
 # DOCUMENT:  "item" used to refer to element in any array at any level higher than the highest dimension (axis)
 #             which is referred to as an element (i.e, an entry at the highest dimension / axis)
 
 # DOCUMENTATION: add show to Systsem and Process
 #
+
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 #
 #
 
+# FIX: ``value`` should not be used as the name of the variable arg for states
+# FIX:       too easily confused with their ``value`` attributes;  should be switched back to ``variable``
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
 # FIX:  del NAME_ARG, AND CHANGE NAME_ARG -> NAME
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
@@ -994,7 +1011,7 @@
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # -------------------
-# TERMINOLOGY:  ControlSignal -> ControlProjection (or should it be ControlSignalProjection
+#
 # QUESTION:     Should ControlSignal "intelligence" (e.g., intensity, costs, etc.)
 #                   be in EVC mechanism rather than ControlProjection?
 #                   EVCMechanism makes more sense theoretically
