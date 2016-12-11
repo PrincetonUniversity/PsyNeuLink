@@ -203,8 +203,8 @@ switch to your preferred python3 environment, then run the command __"pip instal
 (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
 All prerequisite packages will be automatically added to your environment.
 
-Once downloaded, a tutorial can be by running the terminal command ``jupyter notebook`` within the root directory of
-the PsyNeuLink package.  Once the jupyther notebook opens, within the list of files click on
+Once downloaded, a tutorial can be run by running the terminal command ``jupyter notebook`` within the root directory
+of the PsyNeuLink package.  Once the jupyter notebook opens, within the list of files click on
 "PsyNeuLink Tutorial.ipynb".  This will open the tutorial, that will provide any additional information needed to get
 started.
 
