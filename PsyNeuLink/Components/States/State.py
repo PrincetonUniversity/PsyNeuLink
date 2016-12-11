@@ -334,13 +334,6 @@ class State_Base(State):
                 NOTES:
                     * these are used for dictionary specification of a State in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
-
-        :param owner: (Mechanism)
-        :param value: (value)
-        :param params: (dict)
-        :param name: (str)
-        :param prefs: (dict)
-        :return:
         """
         if kargs:
             try:
