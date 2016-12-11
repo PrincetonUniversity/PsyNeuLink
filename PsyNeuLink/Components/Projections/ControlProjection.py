@@ -395,7 +395,7 @@ class ControlProjection(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: DefaultController,
-        PROJECTION_SENDER_VALUE: [defaultControlAllocation],
+        PROJECTION_SENDER_VALUE: defaultControlAllocation,
         CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS})
 
     @tc.typecheck
@@ -530,7 +530,8 @@ class ControlProjection(Projection_Base):
         elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
             pass
         else:
-            raise ControlProjectionError("allocation_samples argument ({}) in {} must be a list or 1D np.array of number".
+            raise ControlProjectionError("allocation_samples argument ({}) in {} must be "
+                                         "a list or 1D np.array of numbers".
                                      format(allocation_samples, self.name))
 
 

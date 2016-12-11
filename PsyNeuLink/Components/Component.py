@@ -556,8 +556,8 @@ class Component(object):
 
             arg_name = parse_arg(arg)
 
+
             # The params arg (nor anything in it) is never a default
-            # if arg is kwParams:
             if arg_name is kwParams:
                 continue
 
@@ -646,8 +646,9 @@ class Component(object):
             else:
                 params[arg] = kwargs[arg]
 
-        # Override arg values with any specified in params dict (including FUNCTION_PARAMS)
+        # Add or override arg values with any specified in params dict (including FUNCTION_PARAMS)
         if params_arg:
+
             try:
                 params[FUNCTION_PARAMS].update(params_arg[FUNCTION_PARAMS])
                 # This is needed so that when params is updated below,
@@ -657,15 +658,28 @@ class Component(object):
                 params_arg[FUNCTION_PARAMS].update(params[FUNCTION_PARAMS])
             except KeyError:
                 pass
+
             params.update(params_arg)
 
         # Save user-accessible params
         self.user_params = params.copy()
 
+        # Provide opportunity for subclasses to filter final set of params in class-specific way
+        # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
+        self._filter_params(params)
+
         self._create_attributes_for_user_params(**self.user_params)
 
         # Return params only for args:
         return params
+
+    def _filter_params(self, params):
+        """This provides an opportunity for subclasses to modify the final set of params in a class-specific way;
+
+        Note:
+        The default (here) allows user-specified params to override entries in paramClassDefaults with the same name
+        """
+        pass
 
     def _create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:
@@ -1174,6 +1188,7 @@ class Component(object):
         """
 
         for param_name, param_value in request_set.items():
+
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
             try:
                 self.paramClassDefaults[param_name]
@@ -1201,6 +1216,11 @@ class Component(object):
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
                     continue
+                # If the value is a Function class, allow any function
+                from PsyNeuLink.Components.Functions.Function import Function_Base
+                if issubclass(self.paramClassDefaults[param_name], Function_Base):
+                    if isinstance(param_value, function_type):
+                        continue
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
@@ -1242,6 +1262,16 @@ class Component(object):
             # Value is a ParamValueProjection or 2-item tuple, so extract its value for validation below
             if isinstance(param_value, (ParamValueProjection, tuple)):
                 param_value = self._get_param_value_from_tuple(param_value)
+
+            # MODIFIED 12/11/16 OLD:  NO LONGER NEED AS "LISTIFICATION" NOW OCCURS IN assign_args_to_param_dicts
+            # # If it is a state specification for a mechanism with a single item, convert to list format
+            # if param_name in {INPUT_STATES, OUTPUT_STATES}:
+            #     from PsyNeuLink.Components.States.State import State_Base
+            #     if (isinstance(param_value, (str, State_Base, dict)) or
+            #             is_numeric(param_value) or
+            #             (inspect.isclass(param_value) and issubclass(param_value, State_Base))):
+            #         param_value = [param_value]
+            #         # request_set[param_name] = [param_value]
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
@@ -1312,7 +1342,14 @@ class Component(object):
                                     pass
 
                 elif not target_set is None:
-                    target_set[param_name] = param_value
+                    # Copy any iterables so that deletions can be made to assignments belonging to the instance
+                    from collections import Iterable
+                    if not isinstance(param_value, Iterable) or isinstance(param_value, str):
+                        target_set[param_name] = param_value
+                    else:
+                        target_set[param_name] = param_value.copy()
+
+            # If param is a function_type, allow any other function_type
 
             # Parameter is not a valid type
             else:
@@ -1480,14 +1517,7 @@ class Component(object):
                     return None
 
     def _instantiate_attributes_before_function(self, context=None):
-
-        # Get length of and instantiate self.outputValue
-        try:
-            # Note: use _outputStateValueMapping here (instead of outputStates), since
-            #   during initialization function is run (to evaluate output) before outputStates have been instantiated
-            self.outputValue = [None] * len(self._outputStateValueMapping)
-        except AttributeError:
-            self.outputValue = None
+        pass
 
     def _instantiate_function(self, context=None):
         """Instantiate function defined in <subclass>.function or <subclass>.paramsCurrent[FUNCTION]

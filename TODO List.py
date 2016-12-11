@@ -2,12 +2,60 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
+# DOCUMENT:  "params dictionary" vs. "parameter dictionary"
+
+# DOCUMENT:  FIGURES FOR:
+#                   inputState: inputValue vs. variable
+#                   OutputState: function vs. calculate, value vs. outputState.value vs. outputValue
+
+# DOCUMENT:  IN MECHANISM, CLARIFY:
+#                DISTINCTION BETWEEN THE RESULT OF ITS FUNCTION,
+#                                     AND ITS ``value`` ATTRIBUTE, WHICH IS WHAT IS RETURNED BY ITS EXECUTE METHOD
+#                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
+#                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
+#
+
+# DOCUMENT:  "item" used to refer to element in any array at any level higher than the highest dimension (axis)
+#             which is referred to as an element (i.e, an entry at the highest dimension / axis)
+
 # DOCUMENTATION: add show to Systsem and Process
 #
+
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 #
+
+# FIX: IN COMPONENT.assign_args_to_param_dicts():
+#       SEQUESTER INPUT_STATE AND OUTPUT_STATE USER SPECIFIATIONS FOR user_params
+# FIX: ``value`` should not be used as the name of the variable arg for states
+#              too easily confused with their ``value`` attributes;  should be switched back to ``variable``
+# IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
+# FIX:  del NAME_ARG, AND CHANGE NAME_ARG -> NAME
+# FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
+# FIX: IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+# FIX:  ALLOW NAME_ARG TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
+# FIX: MAKE SURE THAT ANY ControlProjections ASSIGNED TO A CONTROLLER ARE FOR A MECHANISM IN THE SAME SYSTEM
+#           AS ANY PRE-EXISTING ONES;  SAME FOR INPUTSTATE CREATION
+
+# IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+
+# DOCUMENT:
+#    README.md -> README.rst AND/OR Index.rst:
+#    Features:  graph support, logging, hierarchical preferences
 #
+#    System:  Control and Learning under Structure
+#    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
+#                       that has a ComparatorMechanism (and for which a target is specified)
+#    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
+
+# FIX *************
+# FIX / IMPLEMENT: MAKE SURE THAT outputValue IS GETTING SET PROPERLY
+#                  (IN Mechanism.execute OR Mecchanism._update_output_states)
+# FIX *************
+
+# FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
+#                    rename reference_value??
 
 # FIX: SYSTEM LEARNING:
 #      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
@@ -23,7 +71,7 @@
 # IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
 
-# IMPLEMENT / DOCUMENTATION:
+# IMPLEMENT / DOCUMENT:
 #             IMPLEMENTATION NOTE:  Process._execute_learning - ~line 1909
 #                This implementation restricts learning to parameterStates of projections to inputStates
 #                That means that other parameters (e.g. object or function parameters) are not currenlty learnable
@@ -963,7 +1011,7 @@
 #region EVC MEETING: ---------------------------------------------------------------------------------------------------
 
 # -------------------
-# TERMINOLOGY:  ControlSignal -> ControlProjection (or should it be ControlSignalProjection
+#
 # QUESTION:     Should ControlSignal "intelligence" (e.g., intensity, costs, etc.)
 #                   be in EVC mechanism rather than ControlProjection?
 #                   EVCMechanism makes more sense theoretically
