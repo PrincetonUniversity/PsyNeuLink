@@ -242,7 +242,7 @@ automtically when <a class="reference internal" href="Process.html#process-learn
 <span class="xref doc">outputStates</span>, that allow it to receive and send projections, and to execute its <code class="docutils literal"><span class="pre">function</span></code>
 (see <a class="reference internal" href="#mechanism-function"><span class="std std-ref">Function</span></a>) &#8211;  these are summarized below under <span class="xref std std-ref">States</span>.  When a mechanism is created,
 it automatically creates the parameterStates it needs to represent the parameters of its <code class="docutils literal"><span class="pre">function</span></code>.  It also
-creates any inputStates an outputStates required for the projections it has been assigned.  However, inputStates and
+creates any inputStates and outputStates required for the projections it has been assigned.  However, inputStates and
 outputStates, and corresponding projections, can also be specified in the mechanism&#8217;s parameter dictionary, using
 entries with the keys <code class="docutils literal"><span class="pre">INPUT_STATES</span></code> and <code class="docutils literal"><span class="pre">OUTPUT_STATES</span></code>, respectively. The value of each entry can be the name
 of the state&#8217;s class (to create a default), an existing state, the name of one,  a specification dictionary for one,
@@ -314,18 +314,22 @@ modify the function&#8217;s parameter value in response to the outcome(s) of pro
 </div>
 <div class="section" id="outputstates">
 <span id="mechanism-outputstates"></span><h4>OutputStates<a class="headerlink" href="#outputstates" title="Permalink to this headline">¶</a></h4>
-<p>These represent the output(s) of a mechanism. A mechanism can have several outputStates.  Similar to inputStates,
-the ** <em>primary</em> (first or only) outputState** is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputState</span></code> attribute, while all of
-its outputStates (including the primary one) are stored in an OrderedDict in its <code class="docutils literal"><span class="pre">outputStates</span></code> attribute;  the
-key for each entry is the name of an outputState, and the value is the outputState itself.  By convention,
-a mechanism&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method assigns the output of its <code class="docutils literal"><span class="pre">function</span></code> to the value of the primary outputState.
-Other outputStates are assigned other values associated with the output of the <code class="docutils literal"><span class="pre">function</span></code> (e.g., its mean,
-variance, etc.).  OutputStates may also be used for other purposes.  For example, <span class="xref doc">ControlMechanisms</span> can have
-multiple outputStates, one for each of their <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.  Each outputState can serve
-as a sender for projections, to transmit its value to other mechanisms and/or the output of a process or system.
-The <code class="docutils literal"><span class="pre">value</span></code> attributes of all of a mechanism&#8217;s outputStates are concatenated into a 2d np.array and assigned to the</p>
-<blockquote>
-<div>mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</div></blockquote>
+<p>These represent the output(s) of a mechanism. A mechanism can have several outputStates, and each can serve as a
+sender for projections, to transmit  its value to other  mechanisms and/or the output of a process or system.
+Similar to inputStates, the ** <em>primary</em> (first or only) outputState** is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputState</span></code>
+attribute, while all of its outputStates (including the primary one) are stored in an OrderedDict in its
+<code class="docutils literal"><span class="pre">outputStates</span></code> attribute;  the key for each entry is the name of an outputState, and the value is the outputState
+itself.  Every mechanism has at  least one (&#8220;primary&#8221;) outputState, that is kept in its <code class="docutils literal"><span class="pre">outputState</span></code> attribute.
+This is assigned an unmodified  copy of the first item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> (often the direct output
+of the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>).  OutputStates may also be used for other purposes.  For example, some Processing
+mechanisms (such as the <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>) use outputStates to represent values derived from its primary out
+(e.g., its mean and variance).   <span class="xref doc">ControlMechanisms</span> can have multiple outputStates, one for each of their
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.  The item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which an outputState is
+assigned can be specified using its <code class="docutils literal"><span class="pre">INDEX</span></code> parameter, and the function used to convert that item into the
+outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> can be customized using its <code class="docutils literal"><span class="pre">CALCULATE</span></code> parameter (see <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">Creating an OutputState</span></a>).
+The <code class="docutils literal"><span class="pre">value</span></code> attributes of all of a mechanism&#8217;s outputStates  are concatenated into a 2d np.array and assigned to
+the  mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.  Note that this is distinct from the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute,
+which contains the full and unmodified results of its execution.</p>
 </div>
 </div>
 <div class="section" id="specifying-mechanism-parameters">
@@ -543,7 +547,10 @@ the mechanism has been executed at least once.</p>
 <dt id="Mechanism.Mechanism_Base.outputValue">
 <code class="descname">outputValue</code><a class="headerlink" href="#Mechanism.Mechanism_Base.outputValue" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[value] : default mechanism.function(variableInstanceDefault)</em> &#8211; List of values of the mechanism&#8217;s outputStates.
-Note: this is not necessarily equal to the <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
+Note: this is not necessarily equal to the <code class="docutils literal"><span class="pre">value</span></code> attribute of the mechanism, since the outputState&#8217;s
+<code class="docutils literal"><span class="pre">function</span></code> and/or its <code class="docutils literal"><span class="pre">calculate</span></code> attributes may calculate a new quantity derived from an item of the
+mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and assign that to the outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> and the corresponding item of the
+mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
