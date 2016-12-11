@@ -20,6 +20,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.States.OutputState import OutputState
 
 # ORIGINAL:
 # transfer_mechanism_1 = TransferMechanism()
@@ -49,7 +50,7 @@ transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
                                          noise=ControlProjection,
                                          # noise='MY CONTROL',
                                          rate=(0.1, ControlProjection),
-                                         params={OUTPUT_STATES:[10, 20]},
+                                         params={OUTPUT_STATES:OutputState},
                                          name='MY_TRANSFER_MECH'
                                          )
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),

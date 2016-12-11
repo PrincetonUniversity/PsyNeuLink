@@ -49,32 +49,32 @@ the value of the  :keyword:`OUTPUT_STATES` entry can be either a list, each item
 specifications below;  or,  it can be an OrderedDict, in which the key for each entry is a string  specifying the
 name for the outputState to be  created, and its value is one of the specifications below:
 
-    * An existing **outputState** object or the name of one.  Its ``value`` must be compatible with the item of the
-      owner mechanism's ``value`` to which it is assigned (designated by its ``index`` attribute) (see [LINK]).
+    * An existing **outputState** object.  Its ``value`` must match (in the number and type of its elements)
+      the item of the owner mechanism's ``value`` to which the outputState is assigned
+      (designated by its :ref:`index attribute <OutputState_Index>`).
     ..
     * The :class:`OutputState` **class** or a string.  This creates a default outputState that is assigned the first
       item of the owner mechanism's ``value`` as its value.  If :keyword:`OutputState` is used, a default name is
       assigned to the state;  if a string is, it is assigned as the name of the outputState (see [LINK] for naming
       conventions).
     ..
+    * A **specification dictionary**.  This can include entries with keys using any of the arguments in an
+      outputState's constructor, and a value for that argument.  By default, the outputState is assigned to the
+      first item of the owner mechanism's ``value``.  However, the :ref:`index argument <OutputState_Index>`
+      can be used to assign the outputState to different item.
+    ..
     * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
       This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
-      outputState (see [LINK]).
-    ..
-    * A **specification dictionary**.  This can include entries with keywords using any of the arguments in an
-      outputState's constructor and a value for that argument.  By default, the outputState is assigned to the
-      first item of the owner mechanism's ``value``.  However, the ``index`` argument can be used to assign it
-      to different one.
+      outputState (designated by its :ref:`index attribute <OutputState_Index>`).
 
 COMMENT:
    CHECK ALL OF THIS:
              WHAT IS THE POINT OF THE VALUE SPECIFICATION??
-             SINGLE SPEC DOESN'T WORK;  RIGHT NOW MUST BE A LIST:  FIX THAT
              DEFAULT NAME IS MESSED UP:  Defaultoutput_state
              ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT (OR IS IT ADDED?): TRUE, BUT IT SHOULD BE CHANGED
              reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
 COMMENT
-.. _OutputState_Index_and_Caclulate:
+.. _OutputState_Index_and_Calculate:
 
 Most mechanisms assign an outputState for each item of their owner mechanism's ``value``, and some assign additional
 outputStates that calculate values derived from one more more of those items.  Assigning outputStates
@@ -110,8 +110,12 @@ Like all PsyNeuLink components, it has the three following core attributes:
 
 In addition, an outputState has two attribute that determine its operation:
 
+.. _OutputState_Index:
+
 * ``index``: this determines the item of its owner mechanism's ``value`` to which it is assigned.  By default, this is
   set to 0, which assigns it to the first item.
+
+.. _OutputState_Calculate:
 
 * ``calculate``:  this specifies the function used to convert the item to which the outputState is assigned to
   the outputState's value.  The result is assigned to the outputState's ``value`` attribute. The default for
@@ -359,7 +363,6 @@ class OutputState(State_Base):
         :param context: (str)
         :return none:
         """
-
         super(OutputState,self)._validate_variable(variable, context)
 
         self.variableClassDefault = self.reference_value
@@ -380,6 +383,7 @@ class OutputState(State_Base):
 
 
         """
+
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         try:

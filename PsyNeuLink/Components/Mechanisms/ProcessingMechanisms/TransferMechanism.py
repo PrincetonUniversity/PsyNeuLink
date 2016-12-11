@@ -391,10 +391,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
 
-
-        # super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-
     def _instantiate_attributes_before_function(self, context=None):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
