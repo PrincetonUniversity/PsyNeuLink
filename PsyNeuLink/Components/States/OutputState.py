@@ -13,7 +13,6 @@
 Overview
 --------
 
-
 OutputState(s) represent the result(s) of executing a mechanism.  This may be the result(s) of its ``function`` and/or
 other derived values.  The full results are stored in the mechanism's ``value`` attribute;  outputStates
 are used to represent individual items of the ``value``, and/or useful quantities derived from them.  For example, the
