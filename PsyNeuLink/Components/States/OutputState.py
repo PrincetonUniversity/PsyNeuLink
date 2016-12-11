@@ -300,7 +300,7 @@ class OutputState(State_Base):
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
         .. note::
-            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
             the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
             mechanism: states within a mechanism with the same base name are appended an index in the order of their
             creation.
