@@ -1456,6 +1456,11 @@ def _instantiate_state_list(owner,
                 state_name = key
                 state_constraint_value = constraint_value
                 # Note: state_spec has already been assigned to entry value by enumeration above
+                # MODIFIED 12/11/16 NEW:
+                # If it is an "exposed" number, make it a 1d np.array
+                if isinstance(state_spec, numbers.Number):
+                    state_spec = np.atleast_1d(state_spec)
+                # MODIFIED 12/11/16 END
                 state_params = None
 
             # State_entries is a list
@@ -1500,7 +1505,12 @@ def _instantiate_state_list(owner,
                     # Add incremented index suffix for each state name
                     else:
                         state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(key+1)
-                    # Note: state_spec has already been assigned to item in state_entries list by enumeration above
+                    # MODIFIED 12/11/16 NEW:
+                    # If it is an "exposed" number, make it a 1d np.array
+                    if isinstance(state_spec, numbers.Number):
+                        state_spec = np.atleast_1d(state_spec)
+                    # MODIFIED 12/11/16 END
+
                     state_constraint_value = constraint_value[key]
 
             state = _instantiate_state(owner=owner,
