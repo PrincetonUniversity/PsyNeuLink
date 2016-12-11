@@ -65,15 +65,14 @@ name for the outputState to be  created, and its value is one of the specificati
     * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
       This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
       outputState (designated by its :ref:`index attribute <OutputState_Index>`).
+      COMMENT:
+         AT PRESENT THIS IS NOT USEFUL;  HOWEVER, IN THE FUTURE (E.G., WHEN GATING PROJECTIONS TO OUTPUT STATES
+         IS ADDED) IT MAY BE USEFUL FOR SPECIFYING A BASEVALUE (E.G., DEFAULT) FOR THE OUTPUTSTATE.
+      COMMENT
 
     .. note::
        In all cases, the ``variable`` of the outputState must be match (that is, have the same number and type
        of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
-
-COMMENT:
-             WHAT IS THE POINT OF THE VALUE SPECIFICATION??
-             reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
-COMMENT
 
 .. _OutputState_Index_and_Calculate:
 
@@ -105,8 +104,11 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
   ``value`` attribute to which it is assigned (in its ``index`` attribute).
 
-* ``function``: this is implemented for potential future use (if/when outputStates are allowed to receive projections),
-  but is not currently used by PsyNeuLink.
+* ``function``: this is implemented for potential future use, but is not currently used by PsyNeuLink.
+  COMMENT:
+     AT PRESENT THIS IS NOT USEFUL;  HOWEVER, IT MAY BE IN THE FUTURE WHEN PROJECTIONS TO OUTPUTSTATES (E.G,. GATING)
+     ARE IMPLEMENTED.
+  COMMENT
 
 * ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its ``calculate``
   parameter, and used as the input to any projections that it sends.
@@ -236,6 +238,14 @@ class OutputState(State_Base):
     function : Function or method : default LinearCombination(operation=SUM)
         function used to aggregate the values of the projections received by the outputState.
         It must produce a result that has the same format (number and type of elements) as its ``value``.
+
+        .. note::
+           Currently PsyNeuLink does not support projections to outputStates.  The ``function`` attribute is
+           implemented for consistency with other states classes, and for potential future use.  The default simply
+           passes its input to its output. The ``function`` attribute can be modified to change this behavior.
+           However, for compatibility with future versions, it is *strongly* recommended that such functionality
+           be implemented by assigning the desired function to the ``calculate`` attribute; this will insure
+           compatibility with future versions.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
