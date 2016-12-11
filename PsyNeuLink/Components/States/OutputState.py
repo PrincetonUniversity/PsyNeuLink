@@ -104,7 +104,7 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
   ``value`` attribute to which it is assigned (in its ``index`` attribute).
 
-* ``function``: this is implemented for potential future use, but is not currently used by PsyNeuLink.
+* ``function``: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.
   COMMENT:
      AT PRESENT THIS IS NOT USEFUL;  HOWEVER, IT MAY BE IN THE FUTURE WHEN PROJECTIONS TO OUTPUTSTATES (E.G,. GATING)
      ARE IMPLEMENTED.
@@ -113,7 +113,7 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its ``calculate``
   parameter, and used as the input to any projections that it sends.
 
-In addition, an outputState has two attribute that determine its operation:
+An outputState also has two additional attributes that determine its operation:
 
 .. _OutputState_Index:
 
@@ -129,6 +129,7 @@ In addition, an outputState has two attribute that determine its operation:
   the item to which the outputState is assigned.  Note that the ``calculate`` function is distinct from the
   outputState's ``function`` parameter (which is reserved for future use).
 
+.. _OutputState_Execution:
 
 Execution
 ---------
