@@ -67,7 +67,7 @@ name for the outputState to be  created, and its value is one of the specificati
       outputState (designated by its :ref:`index attribute <OutputState_Index>`).
 
     .. note::
-       In all cases, the ``variable`` of the inputState must be compatible (that is, have the same number and
+       In all cases, the ``variable`` of the outputState must be compatible (that is, have the same number and
        type of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
 
 COMMENT:
