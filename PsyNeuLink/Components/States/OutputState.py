@@ -31,7 +31,7 @@ Creating an OutputState
 -----------------------
 
 An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism
-usually create the outputState(s) it needs automatically when it is created.  For example, if the mechanism is
+usually creates the outputState(s) it needs automatically when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, an outputState will be created and assigned
 as the ``sender`` of a MappingProjection to the next mechanism in the pathway, or to the process's ``output`` if it is
 the :keyword:`TERMINAL` mechanism of that process.
@@ -75,10 +75,8 @@ COMMENT:
     ADD MENTION OF CALCULATE
 
    CHECK ALL THIS:
-             THE ONLY OUTPUT STATE CREATED AUTOMATCIALLY IS THE PRIMARY ONE;  ALL OTHERS MUST BE CODED OR SPECIFIED
-             LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
+             ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
              DICTIONARY KEY IS USED AS NAME
-             NUMBER OF STATES MUST EQUAL LENGTH OF MECHANISM'S ATTRIBUTE (VARIABLE OR OUTPUTVALUE)
              SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
                 MULTI-ITEM ATTRIBUTE OF STATE
              MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
