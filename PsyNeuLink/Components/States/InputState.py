@@ -27,13 +27,19 @@ Creating an InputState
 An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically create the inputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as
-the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
-need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
-the mechanism's parameter dictionary, using the key :keyword:`INPUT_STATES` [LINK] and a value that specifies one or
-more inputStates. For a single inputState, the value can be any of the specifications in the the list below.  To
-create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry can be either a list, each item of
-which is any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string
-specifying the name for the inputState to be created, and its value is one of the specifications below:
+the ``receiver`` of a MappingProjection from the  preceding mechanism in the pathway.
+
+An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
+must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
+:keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
+
+If one or more custom inputStates need to be specified when a mechanism is created, or added to an existing mechanism,
+they can be specified in an entry of the mechanism's parameter dictionary, using the key :keyword:`INPUT_STATES`
+[LINK] and a value that specifies one or more inputStates. For a single inputState, the value can be any of the
+specifications in the the list below.  To create multiple inputStates, the value of the :keyword:`INPUT_STATES` entry
+can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
+in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
+one of the specifications below:
 
     * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with item of the owner
       mechanism's ``variable`` to which it will be assigned (see [LINK]).
@@ -58,19 +64,17 @@ specifying the name for the inputState to be created, and its value is one of th
     * A **specification dictionary**.  This creates the specified inputState using the owner mechanism's ``variable``
       as the template for the inputState's ``value`` [LINK].  In addition to the standard entries of a parameter
       dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
-      Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.
+      Projection, projection specification dictionary [LINK], or a list containing items that are either of those.
     ..
     * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its ``value``,
       and assigns the state as the ``receiver`` of the ``projection`` item.
 
     .. note::
-       In all cases, the resulting value of the inputState must be compatible (that is, have the same number and type
-       of elements) as the item of its owner mechanism's ``variable`` to which it is assigned (see [LINK]).
+       In all cases, the resulting ``value`` of the inputState must be compatible (that is, have the same number and
+       type of elements) as the item of its owner mechanism's ``variable`` to which it is assigned (see [LINK]).
 
 COMMENT:
-   XXXXXXX CHECK ALL THIS:
-             LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
-             DICTIONARY KEY IS USED AS NAME
+   CHECK THIS:
              NUMBER OF STATES MUST EQUAL LENGTH OF MECHANISM'S ATTRIBUTE (VARIABLE OR OUTPUTVALUE)
              SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
                 MULTI-ITEM ATTRIBUTE OF STATE
@@ -78,20 +82,19 @@ COMMENT:
              ERROR IS GENERATED FOR NUMBER MISMATCH
              reference_value IS THE ITEM OF variable CORRESPONDING TO THE inputState
 COMMENT
-Assigning inputStates using the :keyword:`INPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
-automatic generation of inputStates for that mechanism.  If the mechanism requires multiple inputStates (i.e.,
-it's ``variable`` attribute has more than on item), it assigns the ``value`` of each inputState to an item of its
-``variable`` (see [LINK]). Therefore, the number of inputStates specified must equal the number of items in the
-mechanisms's ``variable``.  An exception is if the mechanism's ``variable`` has more than one item, it may still be
-assigned a single inputState;  in that case, the ``value`` of that inputState must have the same number of items as
-the  mechanisms's ``variable``.  For cases in which there are multiple inputStates, the order in which they are
-specified in the list or OrderedDict must parallel the order of the items to which they will be assined in the
-mechanism's ``variable``; furthemore, as noted above, the ``value`` for each inputState must match (in number and
-types of elements) the item of ``variable`` to which it will be assigned.
 
-Finally, an inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
-must be specified in the ``owner`` argument of its constructor; if the inputState is specified in the
-:keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.
+Assigning inputStates using the :keyword:`INPUT_STATES` entry of a mechanism's parameter dictionary adds them to any
+that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
+automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
+the one automatically generated). InputStates can also be added by using the assign_output_state method [LINK].
+If the mechanism requires multiple inputStates (i.e., it's ``variable`` attribute has more than on item), it assigns
+the ``value`` of each inputState to an item of its ``variable`` (see [LINK]). Therefore, the number of inputStates
+specified must equal the number of items in the mechanisms's ``variable``.  An exception is if the mechanism's
+``variable`` has more than one item, it may still be assigned a single inputState;  in that case, the ``value`` of
+that inputState must have the same number of items as the  mechanisms's ``variable``.  For cases in which there are
+multiple inputStates, the order in which they are specified in the list or OrderedDict must parallel the order of
+the items to which they will be assined in the mechanism's ``variable``; furthemore, as noted above, the ``value`` for
+each inputState must match (in number and types of elements) the item of ``variable`` to which it will be assigned.
 
 Structure
 ---------

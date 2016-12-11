@@ -379,7 +379,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
         the processingMechanism class used for prediction mechanism(s).
-        Note: each instance will be named based on origin mechanism + kwPredictionMechanism,
+        Note: each instance will be named based on origin mechanism + PREDICTION_MECHANISM,
               and assigned an outputState named based on the same
 
     prediction_mechanism_params : Dict[param key, param value] : default :keyword:`None`
@@ -860,12 +860,12 @@ class EVCMechanism(ControlMechanism_Base):
 
 
             # Add outputState with name based on originMechanism
-            output_state_name = mech.name + '_' + kwPredictionMechanismOutput
+            output_state_name = mech.name + '_' + PREDICTION_MECHANISM_OUTPUT
             prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                                                            name=mech.name + "_" + kwPredictionMechanism,
+                                                            name=mech.name + "_" + PREDICTION_MECHANISM,
                                                             params = prediction_mechanism_params,
                                                             context=context)
 

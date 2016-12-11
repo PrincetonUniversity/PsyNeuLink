@@ -49,7 +49,7 @@ the value of the  :keyword:`OUTPUT_STATES` entry can be either a list, each item
 specifications below;  or,  it can be an OrderedDict, in which the key for each entry is a string  specifying the
 name for the outputState to be  created, and its value is one of the specifications below:
 
-    * An existing **outputState** object.  Its ``value`` must match (in the number and type of its elements)
+    * An existing **outputState** object.  Its ``variable`` must match (in the number and type of its elements)
       the item of the owner mechanism's ``value`` to which the outputState is assigned
       (designated by its :ref:`index attribute <OutputState_Index>`).
     ..
@@ -67,24 +67,29 @@ name for the outputState to be  created, and its value is one of the specificati
       This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
       outputState (designated by its :ref:`index attribute <OutputState_Index>`).
 
+    .. note::
+       In all cases, the ``variable`` of the inputState must be compatible (that is, have the same number and
+       type of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
+
 COMMENT:
-   CHECK ALL OF THIS:
              WHAT IS THE POINT OF THE VALUE SPECIFICATION??
-             ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT (OR IS IT ADDED?): TRUE, BUT IT SHOULD BE CHANGED
              reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
 COMMENT
+
 .. _OutputState_Index_and_Calculate:
 
 Most mechanisms assign an outputState for each item of their owner mechanism's ``value``, and some assign additional
 outputStates that calculate values derived from one more more of those items.  Assigning outputStates
-explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the mechanism's params dictionary) supercedes the
-automatic generation of outputStates for that mechanism, however outputStates can be added by using the
-assign_output_state method [LINK]. By default, a specified outputState will use the first item of the owner
-mechanism's ``value``.  However, it can be assigned a different item by specifying its ``index`` parameter [LINK].
-The ``variable`` of an outputState must match (in the number and type of its elements) the item of the mechanism's
-``value`` to which it is assigned. An outputState can also be configured to transform the value of the
-item, by specifying a function for its ``calculate`` parameter [LINK];  the function must be able to take as
-input a value that is compatible with the item to which the outputState is assigned.
+explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the mechanism's params dictionary) adds them to any
+that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
+automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
+the one automatically generated). OutputStates can also be added by using the assign_output_state method [LINK]. By
+default, a specified outputState  will use the first item of the owner mechanism's ``value``.  However, it can be
+assigned a different item by  specifying its ``index`` parameter [LINK]. The ``variable`` of an outputState must match
+(in the number and type of  its elements) the item of the mechanism's ``value`` to which it is assigned. An outputState
+can also be configured to transform the value of the item, by specifying a function for its ``calculate`` parameter
+[LINK];  the function must be able to take as input a value that is compatible with the item to which the
+outputState is assigned.
 
 .. _OutputState_Structure:
 
