@@ -9,7 +9,30 @@
 # **************************************  DefaultControlMechanism ************************************************
 
 """
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
+The DefaultControlMechanism is created whenever PsyNeuLink is run.  It is assigned as the ControlMechanism for any
+:doc:`System` that is created for which no ControlMechanism is specified.  The DefaultControlMechanism creates
+an inputState for each ControlProjection it is assigned, and uses :any:`defaultControlAllocation` as the value for
+the control signal.  By default,  :any:`defaultControlAllocation` = 1, so that ControlProjections from the
+DefaultControlMechanism have no effect on their parameters.  Thus, for the most part, the DefaultControlMechanism
+serves as a place marker for ControlProjections (having on effect on the parameters it "controls"), until the system
+is assigned a more useful ControlMechanism (such as the :doc:`EVCMechanism`).  However, it can be used to uniformly
+control the parameters that receive ControlProjections from it, by manually changing the value of
+:any:`defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
+created, executed and their attributes.
+
+COMMENT:
+   ADD LINK FOR defaultControlAllocation
+
+    TEST FOR defaultControlAllocation:  |defaultControlAllocation|
+
+    ANOTHER TEST FOR defaultControlAllocation:  :py:print:`defaultControlAllocation`
+
+    AND YET ANOTHER TEST FOR defaultControlAllocation:  :py:print:|defaultControlAllocation|
+
+    LINK TO DEFAULTS: :doc:`Defaults`
+COMMENT
+
 
 """
 
@@ -24,35 +47,25 @@ from PsyNeuLink.Components.ShellClasses import *
 
 
 class DefaultControlMechanism(ControlMechanism_Base):
-    """Implement default control mechanism
+    """Implements the DefaultControlMechanism
 
-    Description:
-        Implement default source of control signals, with one inputState and outputState for each
-        Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and ControlProjection(s)
+    COMMENT:
+        Description:
+            Implements default source of control signals, with one inputState and outputState for each.
+            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and ControlProjection(s)
 
+            Every ControlProjection is assigned this mechanism as its sender by default (i.e., unless a sender is
+                explicitly specified in its constructor).
 
-# DOCUMENTATION NEEDED
-    - EXPLAIN WHAT ControlSignalChannel IS:
-            A ControlSignalChannel is instantiated for each ControlProjection assigned to DefaultController
-        It simply passes the defaultControlAllocation value to the ControlProjection
+            An inputState and outputState is created for each ControlProjection assigned:
+                the inputState is assigned the ``defaultControlAllocation`` value;
+                when the DefaultControlMechanism executes, it simply assigns the same value to the ControlProjection.
 
-
-    - EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER
-    - AN OUTPUT STATE SHOULD BE CREATED FOR EACH OF THOSE SENDERS
-    - AN INPUT STATE SHOULD BE CREATED FOR EACH OUTPUTSTATE
-    - THE EXECUTE METHOD SHOULD SIMPLY MAP THE INPUT STATE TO THE OUTPUT STATE
-    - EVC CAN THEN BE A SUBCLASS THAT OVERRIDES EXECUTE METHOD AND DOES SOMETHING MORE SOPHISTICATED
-        (E.G,. KEEPS TRACK OF IT'S SENDER PROJECTIONS AND THEIR COSTS, ETC.)
-    * MAY NEED TO AUGMENT OUTPUT STATES TO KNOW ABOUT THEIR SENDERS
-    * MAY NEED TO ADD NEW CONSTRAINT ON ASSIGNING A STATE AS A SENDER:  IT HAS TO BE AN OUTPUTSTATE
-
-
-    Class attributes:
-        + componentType (str): System Default Mechanism
-        + paramClassDefaults (dict):
-            # + kwInputStateValue: [0]
-            # + kwOutputStateValue: [1]
-            + FUNCTION: Linear
+            Class attributes:
+                + componentType (str): System Default Mechanism
+                + paramClassDefaults (dict):
+                    + FUNCTION: Linear
+    COMMENT
     """
 
     componentType = "DefaultControlMechanism"

@@ -391,10 +391,10 @@ class State_Base(State):
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=value,
-                                                  param_defaults=params,
-                                                  name=name,
-                                                  prefs=prefs,
-                                                  context=context.__class__.__name__)
+                                         param_defaults=params,
+                                         name=name,
+                                         prefs=prefs,
+                                         context=context.__class__.__name__)
 
         # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
         try:

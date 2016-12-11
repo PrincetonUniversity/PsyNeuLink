@@ -128,14 +128,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         FUNCTION_PARAMS:{COMPARISON_OPERATION: DIFFERENCE},
         INPUT_STATES:[SAMPLE,   # Automatically instantiate local InputStates
                                 TARGET],  # for sample and target, and name them using kw constants
-        # MODIFIED 12/7/16 OLD:
-        # OUTPUT_STATES:[COMPARISON_RESULT,
-        #                          COMPARISON_MEAN,
-        #                          COMPARISON_SUM,
-        #                          COMPARISON_SSE,
-        #                          COMPARISON_MSE]
-        # })
-        # MODIFIED 12/7/16 NEW:
         OUTPUT_STATES:[
             {NAME_ARG:COMPARISON_RESULT},
 

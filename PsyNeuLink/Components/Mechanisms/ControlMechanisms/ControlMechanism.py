@@ -25,10 +25,10 @@ Creating A ControlMechanism
 ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creation`),
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates to be monitored
-by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can be specified in a number of
-ways (see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a :doc:`MappingProjection` from that outputState to the newly created inputState.
-How a ControlMechanism creates its ControlProjections depends on the subclass.
+by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can take a number of forms
+(see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
+outputStates it monitors, and assigns a :doc:`MappingProjection` from that outputState to the inputState of the
+ControlMechanism. How a ControlMechanism creates its ControlProjections depends on the subclass.
 
 .. _ControlMechanism_Monitored_OutputStates:
 
@@ -111,8 +111,8 @@ Execution
 The ControlMechanism of a system is always the last to be executed (see System :ref:`System_Execution_Control`).  A
 ControlMechanism's ``function`` takes as its input the values of the outputStates specified in its
 :keyword:`MONITOR_FOR_CONTROL` parameter, and uses those to determine the value of its :doc:`ControlProjection`
-projections. In the next round of execution, each ControlProjection's value is used by the :doc:`ParameterState` to which it
-projects, to update the corresponding parameter of the recieving mechanism's function.
+projections. In the next round of execution, each ControlProjection's value is used by the :doc:`ParameterState`
+to which it projects, to update the parameter of the receiving mechanism.
 
 .. note::
    A :doc:`ParameterState` that receives a :doc:`ControlProjection` does not update its value until its owner
@@ -236,7 +236,8 @@ class ControlMechanism_Base(Mechanism_Base):
         array of costs associated with each of the control signals in the ``controlProjections`` attribute.
 
     allocationPolicy : 2d np.array
-        array of values currently assigned to each control signal in the ``controlProjections`` attribute.
+        array of values assigned to each control signal in the ``controlProjections`` attribute.
+        This is the same as the ControlMechanism's ``value`` attribute.
 
 
     """
