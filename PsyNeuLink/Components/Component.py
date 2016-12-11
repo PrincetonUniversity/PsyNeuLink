@@ -1202,13 +1202,11 @@ class Component(object):
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
                     continue
-                # MODIFIED 12/8/16 NEW:
                 # If the value is a Function class, allow any function
                 from PsyNeuLink.Components.Functions.Function import Function_Base
                 if issubclass(self.paramClassDefaults[param_name], Function_Base):
                     if isinstance(param_value, function_type):
                         continue
-                # MODIFIED 12/8/16 END
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
             # This occurs if the item specified by the param has not yet been implemented (e.g., a function)
@@ -1250,6 +1248,15 @@ class Component(object):
             # Value is a ParamValueProjection or 2-item tuple, so extract its value for validation below
             if isinstance(param_value, (ParamValueProjection, tuple)):
                 param_value = self._get_param_value_from_tuple(param_value)
+
+            # If it is a state specification for a mechanism with a single item, convert to list format
+            if param_name in {INPUT_STATES, OUTPUT_STATES}:
+                from PsyNeuLink.Components.States.State import State_Base
+                if (isinstance(param_value, (str, State_Base, dict)) or
+                        is_numeric(param_value) or
+                        (inspect.isclass(param_value) and issubclass(param_value, State_Base))):
+                    param_value = [param_value]
+                    # request_set[param_name] = [param_value]
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length

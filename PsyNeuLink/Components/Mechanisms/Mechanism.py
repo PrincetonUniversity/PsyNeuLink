@@ -721,7 +721,7 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        # if not isinstance(context, self):
+        # Forbid direct call to base class constructor
         if not isinstance(context, type(self)) and not kwValidate in context:
             raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  "use mechanism() or one of the following subclasses: {0}".
@@ -759,6 +759,7 @@ class Mechanism_Base(Mechanism):
                           registry=self._stateRegistry,
                           context=context)
 
+        # Mark initialization in context
         if not context or isinstance(context, object) or inspect.isclass(context):
             context = INITIALIZING + self.name + SEPARATOR_BAR + self.__class__.__name__
         else:
