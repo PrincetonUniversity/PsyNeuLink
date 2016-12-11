@@ -171,13 +171,17 @@ and the result is assigned to a corresponding item in the owner mechanism&#8217;
 <p>An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically create the inputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the <a class="reference internal" href="Process.html#process-pathway"><span class="std std-ref">pathway of a process</span></a>, its inputState will be created and assigned as
-the <code class="docutils literal"><span class="pre">receiver</span></code> of a MappingProjection from the  preceding mechanism in the pathway. If one or more custom inputStates
-need to be specified when a mechanism is created, or added to an existing mechanism, this can be done in an entry of
-the mechanism&#8217;s parameter dictionary, using the key <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> [LINK] and a value that specifies one or
-more inputStates. For a single inputState, the value can be any of the specifications in the the list below.  To
-create multiple inputStates, the value of the <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry can be either a list, each item of
-which is any of the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string
-specifying the name for the inputState to be created, and its value is one of the specifications below:</p>
+the <code class="docutils literal"><span class="pre">receiver</span></code> of a MappingProjection from the  preceding mechanism in the pathway.</p>
+<p>An inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
+must be specified in the <code class="docutils literal"><span class="pre">owner</span></code> argument of its constructor; if the inputState is specified in the
+<code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.</p>
+<p>If one or more custom inputStates need to be specified when a mechanism is created, or added to an existing mechanism,
+they can be specified in an entry of the mechanism&#8217;s parameter dictionary, using the key <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code>
+[LINK] and a value that specifies one or more inputStates. For a single inputState, the value can be any of the
+specifications in the the list below.  To create multiple inputStates, the value of the <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry
+can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
+in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
+one of the specifications below:</p>
 <blockquote>
 <div><ul class="simple">
 <li>An existing <strong>inputState</strong> object or the name of one.  Its <code class="docutils literal"><span class="pre">value</span></code> must be compatible with item of the owner
@@ -208,7 +212,7 @@ belongs.</li>
 <li>A <strong>specification dictionary</strong>.  This creates the specified inputState using the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>
 as the template for the inputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> [LINK].  In addition to the standard entries of a parameter
 dictionary [LINK], the dictionary can have a <code class="xref std std-keyword docutils literal"><span class="pre">STATE_PROJECTIONS</span></code> entry, the value of which can be a
-Projection, projection specificadtion dictionary [LINK], or a list containing items thate are either of those.</li>
+Projection, projection specification dictionary [LINK], or a list containing items that are either of those.</li>
 </ul>
 <ul class="simple">
 <li>A <code class="xref any docutils literal"><span class="pre">ParamValueProjection</span></code> tuple.  This creates a default inputState using the <code class="docutils literal"><span class="pre">value</span></code> item as its <code class="docutils literal"><span class="pre">value</span></code>,
@@ -216,23 +220,22 @@ and assigns the state as the <code class="docutils literal"><span class="pre">re
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In all cases, the resulting value of the inputState must be compatible (that is, have the same number and type
-of elements) as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> to which it is assigned (see [LINK]).</p>
+<p class="last">In all cases, the resulting <code class="docutils literal"><span class="pre">value</span></code> of the inputState must be compatible (that is, have the same number and
+type of elements) as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> to which it is assigned (see [LINK]).</p>
 </div>
 </div></blockquote>
-<p>Assigning inputStates using the <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry of a mechanism&#8217;s parameter dictionary supercedes the
-automatic generation of inputStates for that mechanism.  If the mechanism requires multiple inputStates (i.e.,
-it&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> attribute has more than on item), it assigns the <code class="docutils literal"><span class="pre">value</span></code> of each inputState to an item of its
-<code class="docutils literal"><span class="pre">variable</span></code> (see [LINK]). Therefore, the number of inputStates specified must equal the number of items in the
-mechanisms&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.  An exception is if the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> has more than one item, it may still be
-assigned a single inputState;  in that case, the <code class="docutils literal"><span class="pre">value</span></code> of that inputState must have the same number of items as
-the  mechanisms&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.  For cases in which there are multiple inputStates, the order in which they are
-specified in the list or OrderedDict must parallel the order of the items to which they will be assined in the
-mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>; furthemore, as noted above, the <code class="docutils literal"><span class="pre">value</span></code> for each inputState must match (in number and
-types of elements) the item of <code class="docutils literal"><span class="pre">variable</span></code> to which it will be assigned.</p>
-<p>Finally, an inputState must be owned by a mechanism. Therefore, if the inputState is created directly, its mechanism
-must be specified in the <code class="docutils literal"><span class="pre">owner</span></code> argument of its constructor; if the inputState is specified in the
-<code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry of the parameter dictionary for a mechanism, then the owner is inferred from the context.</p>
+<p>Assigning inputStates using the <code class="xref std std-keyword docutils literal"><span class="pre">INPUT_STATES</span></code> entry of a mechanism&#8217;s parameter dictionary adds them to any
+that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
+automatically generated, the name will be suffixed with a numerical index and added (that is, it will <em>not</em> replace
+the one automatically generated). InputStates can also be added by using the assign_output_state method [LINK].
+If the mechanism requires multiple inputStates (i.e., it&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> attribute has more than on item), it assigns
+the <code class="docutils literal"><span class="pre">value</span></code> of each inputState to an item of its <code class="docutils literal"><span class="pre">variable</span></code> (see [LINK]). Therefore, the number of inputStates
+specified must equal the number of items in the mechanisms&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.  An exception is if the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">variable</span></code> has more than one item, it may still be assigned a single inputState;  in that case, the <code class="docutils literal"><span class="pre">value</span></code> of
+that inputState must have the same number of items as the  mechanisms&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.  For cases in which there are
+multiple inputStates, the order in which they are specified in the list or OrderedDict must parallel the order of
+the items to which they will be assined in the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>; furthemore, as noted above, the <code class="docutils literal"><span class="pre">value</span></code> for
+each inputState must match (in number and types of elements) the item of <code class="docutils literal"><span class="pre">variable</span></code> to which it will be assigned.</p>
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
