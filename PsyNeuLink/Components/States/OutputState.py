@@ -70,7 +70,6 @@ name for the outputState to be  created, and its value is one of the specificati
 COMMENT:
    CHECK ALL OF THIS:
              WHAT IS THE POINT OF THE VALUE SPECIFICATION??
-             DEFAULT NAME IS MESSED UP:  Defaultoutput_state
              ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT (OR IS IT ADDED?): TRUE, BUT IT SHOULD BE CHANGED
              reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
 COMMENT

@@ -1326,27 +1326,6 @@ class State_Base(State):
 
 # **************************************************************************************
 
-# Module functions:
-#
-# - _instantiate_state_list(state_type,
-#                                    state_param_identifier,
-#                                    constraint_value,
-#                                    constraint_value_name,
-#                                    context)
-#     instantiates states of type specified from list in paramsCurrent specified by state_param_identifier;
-#     passes state_type and constraints to State._instantiate_state
-#         for instantiating each individual state
-#
-# - _instantiate_state(owner,
-#                               state_type
-#                               state_name,
-#                               state_spec,
-#                               constraint_value,
-#                               constraint_value_name,
-#                               constraint_index,
-#                               context):
-#     instantiates state of type specified by state_type and state_spec, using constraints
-
 def _instantiate_state_list(owner,
                            state_list,              # list of State specs, (state_spec, params) tuples, or None
                            state_type,              # StateType subclass
@@ -1436,7 +1415,6 @@ def _instantiate_state_list(owner,
                                  " must be an indexable object (e.g., list or np.ndarray)".
                                  format(constraint_value, constraint_value_name, state_type.__name__))
 
-        # MODIFIED 12/7/16 OLD:
         # IMPLEMENTATION NOTE: NO LONGER VALID SINCE outputStates CAN NOW BE ONE TO MANY OR MANY TO ONE
         #                      WITH RESPECT TO ITEMS OF constraint_value (I.E., owner.value)
         # If number of states exceeds number of items in constraint_value, raise exception
@@ -1458,8 +1436,6 @@ def _instantiate_state_list(owner,
                                         num_constraint_items,
                                         constraint_value_name,
                                         owner.name))
-        # MODIFIED 12/7/16 NEW:
-        # MODIFIED 12/7/16 END
 
         # INSTANTIATE EACH STATE
 
@@ -1520,10 +1496,10 @@ def _instantiate_state_list(owner,
                 else:
                     # If only one state, don't add index suffix
                     if num_states == 1:
-                        state_name = 'Default' + state_param_identifier[:-1]
+                        state_name = 'Default_' + state_param_identifier[:-1]
                     # Add incremented index suffix for each state name
                     else:
-                        state_name = 'Default' + state_param_identifier[:-1] + "-" + str(key+1)
+                        state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(key+1)
                     # Note: state_spec has already been assigned to item in state_entries list by enumeration above
                     state_constraint_value = constraint_value[key]
 
