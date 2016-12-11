@@ -249,12 +249,21 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         INPUT_STATES:[SAMPLE,   # Instantiate two inputStates, one for sample and target each
                        TARGET],  #    and name them using keyword names
         PARAMETER_STATES: None,             # This suppresses parameterStates
-        OUTPUT_STATES:[COMPARISON_RESULT,
-                       COMPARISON_MEAN,
-                       COMPARISON_SUM,
-                       COMPARISON_SSE,
-                       COMPARISON_MSE]
-    })
+        OUTPUT_STATES:[
+            {NAME_ARG:COMPARISON_RESULT},
+
+            {NAME_ARG:COMPARISON_MEAN,
+             CALCULATE:lambda x: np.mean(x)},
+
+            {NAME_ARG:COMPARISON_SUM,
+             CALCULATE:lambda x: np.sum(x)},
+
+            {NAME_ARG:COMPARISON_SSE,
+             CALCULATE:lambda x: np.sum(x*x)},
+
+            {NAME_ARG:COMPARISON_MSE,
+             CALCULATE:lambda x: np.sum(x*x)/len(x)}
+        ]})
 
     paramNames = paramClassDefaults.keys()
 
@@ -402,14 +411,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
                                         "not recognized; should have been detected in Function._validate_params".
                                         format(comparison_operation, self.name))
 
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[COMPARISON_RESULT] = ComparatorOutput.COMPARISON_RESULT.value
-        self._outputStateValueMapping[COMPARISON_MEAN] = ComparatorOutput.COMPARISON_MEAN.value
-        self._outputStateValueMapping[COMPARISON_SUM] = ComparatorOutput.COMPARISON_SUM.value
-        self._outputStateValueMapping[COMPARISON_SSE] = ComparatorOutput.COMPARISON_SSE.value
-        self._outputStateValueMapping[COMPARISON_MSE] = ComparatorOutput.COMPARISON_MSE.value
-
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_function(self, context=None):
@@ -417,7 +418,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -440,7 +441,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         if not context:
             context = EXECUTING + self.name
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=runtime_params, context=context)
 
 
         # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
@@ -456,30 +457,35 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
             # Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.function(variable=self.variable, params=params)
+            comparison_array = self.function(variable=self.variable, params=runtime_params)
 
-            mean = np.mean(comparison_array)
-            sum = np.sum(comparison_array)
-            SSE = np.sum(comparison_array * comparison_array)
-            MSE = SSE/len(comparison_array)
-
+            # # MODIFIED 12/7/16 OLD:
+            # mean = np.mean(comparison_array)
+            # sum = np.sum(comparison_array)
+            # SSE = np.sum(comparison_array * comparison_array)
+            # MSE = SSE/len(comparison_array)
+            #
+            # self.summedErrorSignal = sum
+            #
+            # # Assign output values
+            # self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
+            # self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
+            # self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
+            # self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
+            # self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
+            #
+            # # if (self.prefs.reportOutputPref and EXECUTING in context):
+            # #     print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
+            # #                                                                  self.variable[0],
+            # #                                                                  self.variable[1]))
+            # #     print ("\nOutput:\n- Error: {}\n- MSE: {}".
+            # #            format(comparison_array, MSE))
+            #
+            # return self.outputValue
+            # MODIFIED 12/7/16 NEW:
             self.summedErrorSignal = sum
-
-            # Assign output values
-            self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
-            self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
-            self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
-            self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
-            self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
-
-            # if (self.prefs.reportOutputPref and EXECUTING in context):
-            #     print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
-            #                                                                  self.variable[0],
-            #                                                                  self.variable[1]))
-            #     print ("\nOutput:\n- Error: {}\n- MSE: {}".
-            #            format(comparison_array, MSE))
-
-            return self.outputValue
+            return comparison_array
+            # MODIFIED 12/7/16 END
 
         else:
             raise MechanismError("time_scale not specified for ComparatorMechanism")

@@ -259,7 +259,7 @@ class ComponentPreferenceSet(PreferenceSet):
             except (KeyError, NameError):
                 pass
             try:
-                name = kargs[kwNameArg]
+                name = kargs[NAME_ARG]
             except (KeyError, NameError):
                 pass
             try:

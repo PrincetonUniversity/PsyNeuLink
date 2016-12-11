@@ -83,12 +83,17 @@ def show_trial_header():
     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
 def show_results():
+    import re
     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    print ('\tDrift rate control signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
-    print ('\tThreshold control signal (from EVC): {}'.format(Decision.parameterStates[THRESHOLD].value))
+    print ('\tDrift rate control signal (from EVC): {}'.
+           # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
+           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
+    print ('\tThreshold control signal (from EVC): {}'.
+           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value)))))
     for result in results:
-        print("\t{}: {}".format(result[0], result[1]))
+        print("\t{}: {}".format(re.sub('[\[,\],\n]','',str(result[0])),
+                                re.sub('[\[,\],\n]','',str(float(result[1])))))
 
 # Run system:
 

@@ -13,69 +13,84 @@
 Overview
 --------
 
-The outputState(s) of a mechanism represent the output of the mechanism's ``function``, that can serve as the input to
-other mechanisms, and/or as the output of a process and/or system (if the mechanism to which the outputState belongs
-is the :keyword:`TERMINAL` mechanism [LINK] of that process or system).  A list of the outgoing projections from an
-outputState is kept in its ``sendsToProjections`` attribute.
+OutputState(s) represent the result(s) of executing a mechanism.  This may be the result(s) of its ``function`` and/or
+other derived values.  The full results are stored in the mechanism's ``value`` attribute;  outputStates
+are used to represent individual items of the ``value``, and/or useful quantities derived from them.  For example, the
+``function`` of a :doc:`TransferMechanism` generates a result (the transformed value of its input);  however, the
+mechanism has outputStates that represent not only that result, but also its mean and
+variance (if it is an array).  As a different example, the ``function`` of a :doc:`DDM` mechanism generates several
+results (such as decision accuracy and response time), each of which is assigned as the value of a different
+outputState.  The outputState(s) of a mechanism can serve as the input to other  mechanisms (by way of
+:doc:`projections <Projections>`), or as the output of a process and/or system.  A list of  the  outgoing
+projections from an outputState is kept in its ``sendsToProjections`` attribute.
 
 .. _OutputStates_Creation:
 
 Creating an OutputState
 -----------------------
 
-An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
-usually automatically create the outputState(s) it needs when it is created.  For example, if the mechanism is
-being created within the :ref:`pathway of a process <Process_Pathway>`, its outputState will be created and assigned
+An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism
+usually creates the outputState(s) it needs automatically when it is created.  For example, if the mechanism is
+being created within the :ref:`pathway of a process <Process_Pathway>`, an outputState will be created and assigned
 as the ``sender`` of a MappingProjection to the next mechanism in the pathway, or to the process's ``output`` if it is
-the :keyword:`TERMINAL` mechanism of the process. If one or more custom outputStates need to be specified when a
-mechanism is created, or added to an existing mechanism, this can be in an entry of the mechanism's parameter
-dictionary, using the key :keyword:`OUTPUT_STATES` [LINK] and a value that specifies one or more outputStates.
-For a single outputState, the value can be any of the specifications in the the list below.  To create multiple
-outputStates, the value of the :keyword:`OUTPUT_STATES` entry can be either a list, each item of which can be any of
-the specifications below;  or, it can be an OrderedDict, in which the key for each entry is a string  specifying the
-name for the outputState to be created, and its value is one of the specifications below:
+the :keyword:`TERMINAL` mechanism of that process.
 
-    * An existing **outputState** object or the name of one.  Its ``value`` must be compatible with the item of the
-      owner mechanism's ``outputValue`` that will be assigned to it (see [LINK]).
+An outputState must be owned by a mechanism. Therefore, if the outputState is created directly,
+the mechanism to which it belongs must be specified in the ``owner`` argument of its constructor; if the outputState
+is specified in the :keyword:`OUTPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is
+inferred from the context.
+
+If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
+mechanism, they can be specified in an entry of the mechanism's parameter dictionary, using the key
+:keyword:`OUTPUT_STATES` and a value that specifies the outputState for each one to be added. For a single
+outputState, the value can be any of the specifications in the the list below.  To create multiple outputStates,
+the value of the  :keyword:`OUTPUT_STATES` entry can be either a list, each item of which can be any of the
+specifications below;  or,  it can be an OrderedDict, in which the key for each entry is a string  specifying the
+name for the outputState to be  created, and its value is one of the specifications below:
+
+    * An existing **outputState** object.  Its ``variable`` must match (in the number and type of its elements)
+      the item of the owner mechanism's ``value`` to which the outputState is assigned
+      (designated by its :ref:`index attribute <OutputState_Index>`).
     ..
-    * The :class:`OutputState` **class** or a string.  This creates a default outputState using the owner
-      mechanism's ``value`` as the template for the outputState's ``variable``. [LINK]  If :keyword:`OutputState`
-      is used, a default name is assigned to the state;  if a string is, it is assigned as the name
-      of the outputState (see [LINK] for naming conventions).
+    * The :class:`OutputState` **class** or a string.  This creates a default outputState that is assigned the first
+      item of the owner mechanism's ``value`` as its value.  If :keyword:`OutputState` is used, a default name is
+      assigned to the state;  if a string is, it is assigned as the name of the outputState (see [LINK] for naming
+      conventions).
+    ..
+    * A **specification dictionary**.  This can include entries with keys using any of the arguments in an
+      outputState's constructor, and a value for that argument.  By default, the outputState is assigned to the
+      first item of the owner mechanism's ``value``.  However, the :ref:`index argument <OutputState_Index>`
+      can be used to assign the outputState to different item.
     ..
     * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
-      This must be compatible with the items of the owner mechanism's ``outputValue`` that will be assigned to the
-      outputState (see [LINK]).
-    ..
-    * A **specification dictionary**.  This creates the specified outputState using the items of the owner mechanism's
-    ``outputValue`` that will be assigned to it as the template for the outputState's ``variable`` [LINK].
+      This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
+      outputState (designated by its :ref:`index attribute <OutputState_Index>`).
+
+    .. note::
+       In all cases, the ``variable`` of the inputState must be compatible (that is, have the same number and
+       type of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
 
 COMMENT:
-   XXXXXXX CHECK ALL THIS:
-             LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
-             DICTIONARY KEY IS USED AS NAME
-             NUMBER OF STATES MUST EQUAL LENGTH OF MECHANISM'S ATTRIBUTE (VARIABLE OR OUTPUTVALUE)
-             SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
-                MULTI-ITEM ATTRIBUTE OF STATE
-             MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
-             ERROR IS GENERATED FOR NUMBER MISMATCH
+             WHAT IS THE POINT OF THE VALUE SPECIFICATION??
              reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
 COMMENT
-Assigning outputStates using the :keyword:`OUTPUT_STATES` entry of a mechanism's parameter dictionary supercedes the
-automatic generation of outputStates for that mechanism.  If the mechanism requires multiple outputStates (i.e.,
-it's ``outputValue`` attribute has more than on item), it assigns each item to its own outputState (see [LINK]).
-Therefore, the number of outputStates specified must equal the number of items in the mechanisms's ``outputValue``.
-An exception is if ``outputValue`` has more than one item, the mechanism may still be assigned a single
-outputState;  in that case, the ``variable`` of that outputState must have the same number of items as
-the  mechanisms's ``outputValue``.  For cases in which there are multiple outputStates, the order in which they are
-specified in the list or OrderedDict must parallel the order in which the corresponding items appear in the
-``outputValue`` attribute; furthemore, as noted above, the ``variable`` for each outputState must match
-(in number and types of elements) the item  from the mechanism's ``outputValue`` that it will be assigned.
 
-Finally, an outputState must be owned by a mechanism. Therefore, if the inputState is created directly,
-the mechanism to which it belongs must be specified in the ``owner`` argument of its constructor; if the inputState
-is specified in the :keyword:`INPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is
-inferred from the context.
+.. _OutputState_Index_and_Calculate:
+
+Most mechanisms assign an outputState for each item of their owner mechanism's ``value``, and some assign additional
+outputStates that calculate values derived from one more more of those items.  Assigning outputStates
+explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the mechanism's params dictionary) adds them to any
+that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
+automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
+the one automatically generated). OutputStates can also be added by using the assign_output_state method [LINK]. By
+default, a specified outputState  will use the first item of the owner mechanism's ``value``.  However, it can be
+assigned a different item by  specifying its ``index`` parameter [LINK]. The ``variable`` of an outputState must match
+(in the number and type of  its elements) the item of the mechanism's ``value`` to which it is assigned. An outputState
+can also be configured to transform the value of the item, by specifying a function for its ``calculate`` parameter
+[LINK];  the function must be able to take as input a value that is compatible with the item to which the
+outputState is assigned.
+
+.. _OutputState_Structure:
 
 Structure
 ---------
@@ -83,25 +98,45 @@ Structure
 Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
 mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
 :keyword:`TERMINAL` [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
-maintained in its ``sendsToProjections`` attribute.  Like all PsyNeuLink components, it has the three following core
-attributes:
+maintained in its ``sendsToProjections`` attribute.
 
-* ``variable``:  this must match (both in number and types of elements) the value of the item it is assigned from its
-  mechanism's ``outputValue`` attribute (see LINK]).
+Like all PsyNeuLink components, it has the three following core attributes:
 
-* ``function``:  this is implemented for structural consistency, but is not currently used by PsyNeuLink.
+* ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
+  ``value`` attribute to which it is assigned (in its ``index`` attribute).
 
-* ``value``:  this is assigned the value of the outputState`s ``variable``, and used as the input for any projections
-  that it sends.
+* ``function``: this is implemented for potential future use (if/when outputStates are allowed to receive projections),
+  but is not currently used by PsyNeuLink.
+
+* ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its ``calculate``
+  parameter, and used as the input to any projections that it sends.
+
+In addition, an outputState has two attribute that determine its operation:
+
+.. _OutputState_Index:
+
+* ``index``: this determines the item of its owner mechanism's ``value`` to which it is assigned.  By default, this is
+  set to 0, which assigns it to the first item.
+
+.. _OutputState_Calculate:
+
+* ``calculate``:  this specifies the function used to convert the item to which the outputState is assigned to
+  the outputState's value.  The result is assigned to the outputState's ``value`` attribute. The default for
+  ``calculate`` is the identity function, which simply assigns the item of the mechanism'sm ``value`` unmodified as
+  the ``value`` of the outputState.  However, it can be assigned any function that can take as input the  value of
+  the item to which the outputState is assigned.  Note that the ``calculate`` function is distinct from the
+  outputState's ``function`` parameter (which is reserved for future use).
 
 
 Execution
 ---------
 
 An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the value of the ouputState is updated with the result of the call to the mechanism's ``function``,
-and the value is assigned to the value of the corresponding item in the mechanism's ``outputValue`` attribute.
-
+When this occurs, the mechanism places the results of its execution in its ``value`` attribute, and the value of the
+outputState is then updated by calling its ``calculate`` function using as its input the item of the onwer mechanism's
+``value`` to which the outputState is assigned.  The result is assigned to the outputState's ``value``, as well as
+to a corresponding item of the mechanism's ``outputValue`` attribute.  It is also used as the input to any projections
+for which the outputState is the sender.
 
 .. _OutputState_Class_Reference:
 
@@ -123,6 +158,8 @@ from PsyNeuLink.Components.Functions.Function import *
 #     DEFAULTS = NONE
 
 
+PRIMARY_OUTPUT_STATE = 0
+
 class OutputStateError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -137,6 +174,8 @@ class OutputState(State_Base):
     owner,                                     \
     reference_value,                           \
     value=None,                                \
+    index=PRIMARY_OUTPUT_STATE,                \
+    calculate=Linear,                          \
     function=LinearCombination(operation=SUM), \
     params=None,                               \
     name=None,                                 \
@@ -184,8 +223,17 @@ class OutputState(State_Base):
     value : number, list or np.ndarray
         used as the template for ``variable``.
 
+    index : int : default PRIMARY_OUTPUT_STATE
+        the item in the owner mechanism's ``value`` attribute used as input of the ``calculate`` function, to determine
+        the ``value`` of the outputState.
+
+    calculate : function or method : default Linear
+        used to convert item of owner mechanism's ``value`` to outputState's ``value`` (and corresponding
+        item of owner's ``outputValue``.  It must accept a value that has the same format as the mechanism's ``value``.
+
     function : Function or method : default LinearCombination(operation=SUM)
-        implemented for structural consistency;  not currently used by PsyNeuLink.
+        function used to aggregate the values of the projections received by the outputState.
+        It must produce a result that has the same format (number and type of elements) as its ``value``.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
@@ -214,11 +262,24 @@ class OutputState(State_Base):
     variable : number, list or np.ndarray
         assigned an item of the ``outputValue`` of its owner mechanism.
 
+    index : int
+        the item in the owner mechanism's ``value`` attribute used as input of the ``calculate`` function, to determine
+        the ``value`` of the outputState.
+
+    calculate : function or method : default Linear
+        function used to convert the item of owner mechanism's ``value`` specified by the ``index`` attribute;  it is
+        combined with the result of the outputState's ``function`` to determine it's ``value``, and the corresponding
+        item of the owner mechanism's ``outputValue``. Default is Linear (identity function) which simply transfers the
+        value as is.
+
     function : CombinationFunction : default LinearCombination(operation=SUM))
-        implemented for structural consistency;  not currently used by PsyNeuLink.
+        performs an element-wise (Hadamard) aggregation  of the ``values`` of the projections received by the
+        outputState.  The result is combined with the result of the calculate function and assigned as the ``value``
+        of the outputState, and the corresponding item of the owner's ``outputValue``.
 
     value : number, list or np.ndarray
-        assigned the value of the outputState`s ``variable``, and used as the input for any projections that it sends.
+        assigned the result of the ``calculate`` function, combined with any result of the outputState's ``function``,
+        which is also assigned to the corresopnding item of the owner mechanism's ``outputValue``.
 
     name : str : default <State subclass>-<index>
         name of the outputState.
@@ -261,23 +322,19 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  value=None,
+                 index=PRIMARY_OUTPUT_STATE,
+                 calculate:function_type=Linear,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
-        # IMPLEMENTATION NOTE:
-        # Potential problem:
-        #    - a OutputState may correspond to a particular item of owner.value
-        #        in which case there will be a mismatch here
-        #    - if OutputState is being instantiated from Mechanism (in _instantiate_output_states)
-        #        then the item of owner.value is known and has already been checked
-        #        (in the call to _instantiate_state)
-        #    - otherwise, should ignore
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function, params=params)
+        params = self._assign_args_to_param_dicts(index=index,
+                                                  calculate=calculate,
+                                                  function=function,
+                                                  params=params)
 
         self.reference_value = reference_value
 
@@ -309,7 +366,6 @@ class OutputState(State_Base):
         :param context: (str)
         :return none:
         """
-
         super(OutputState,self)._validate_variable(variable, context)
 
         self.variableClassDefault = self.reference_value
@@ -322,7 +378,84 @@ class OutputState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate index and anaylze parameters
+
+        Validate that index is within the range of the number of items in the owner mechanism's ``value``,
+        and that the corresponding item is a valid input to the calculate function
+
+
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        try:
+            self.owner.value[target_set[INDEX]]
+        except IndexError:
+            raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
+                                   "the outputValue ({}) for its owner mechanism ({})".
+                                   format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+
+        # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
+        #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
+        try:
+            if isinstance(target_set[CALCULATE], type):
+                function = target_set[CALCULATE]().function
+            else:
+                function = target_set[CALCULATE]
+            try:
+                function(self.owner.value[target_set[INDEX]])
+            except:
+                raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function specified for "
+                                       "the {} parameter of {} ({})"
+                                       "".format(target_set[INDEX],
+                                                 self.owner.name,
+                                                 self.owner.value[target_set[INDEX]],
+                                                 CALCULATE,
+                                                 self.name,
+                                                 target_set[CALCULATE]))
+        except KeyError:
+            pass
+
+    def _instantiate_attributes_after_function(self, context=None):
+        """Instantiate calculate function
+        """
+        super()._instantiate_attributes_after_function(context=context)
+
+        if isinstance(self.calculate, type):
+            self.calculate = self.calculate().function
+
+
+    def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+
+        super().update(params=params, time_scale=time_scale, context=context)
+
+        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+
+        if not self.value:
+            # # MODIFIED 12/8/16 OLD:
+            # self.value = self.calculate(self.owner.value[self.index])
+            # MODIFIED 12/8/16 NEW:
+            self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+            # MODIFIED 12/8/16 END
+
+
 def _instantiate_output_states(owner, context=None):
+    # MODIFIED 12/7/16 NEW:
+    # ADD TO DOCUMENTATION BELOW:
+    # EXPAND constraint_value to match specification of outputStates (by # and function return values):
+    #            in order to both constrain spec and also match # states to # items in constraint
+    #            (checked in _instantiate_state_list)
+    # For each outputState:
+    #      check for index param:
+    #          if it is a state, get from attribute
+    #          if it is dict, look for param
+    #          if it is anything else, assume index is PRIMARY_OUTPUT_STATE
+    #      get indexed value from output.value
+    #      append the indexed value to constraint_value
+
+    # ALSO: INSTANTIATE CALCULATE FUNCTION
+    # MODIFIED 12/7/16 END
     """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
 
     Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
@@ -343,12 +476,34 @@ def _instantiate_output_states(owner, context=None):
     :param context:
     :return:
     """
+
+    constraint_value = []
+    owner_value = np.atleast_2d(owner.value)
+
+    if owner.paramsCurrent[OUTPUT_STATES]:
+        for output_state in owner.paramsCurrent[OUTPUT_STATES]:
+            # Default is PRIMARY_OUTPUT_STATE
+            index = PRIMARY_OUTPUT_STATE
+            # If output_state is already an OutputState object, get its index attribute
+            if isinstance(output_state, OutputState):
+                index = output_state.index
+            # If output_state is a specification dict, get its INDEX attribute if specified
+            elif isinstance(output_state, dict):
+                try:
+                    index = output_state[INDEX]
+                except KeyError:
+                    pass
+            constraint_value.append(owner_value[index])
+    else:
+        constraint_value = owner_value
+
     owner.outputStates = _instantiate_state_list(owner=owner,
                                                 state_list=owner.paramsCurrent[OUTPUT_STATES],
                                                 state_type=OutputState,
                                                 state_param_identifier=OUTPUT_STATES,
-                                                constraint_value=owner.value,
+                                                constraint_value=constraint_value,
                                                 constraint_value_name="output",
                                                 context=context)
     # Assign self.outputState to first outputState in dict
     owner.outputState = list(owner.outputStates.values())[0]
+

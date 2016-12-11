@@ -108,9 +108,9 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
-kwParamsArg = "params"
-kwNameArg = "name"
-kwPrefsArg = "prefs"
+PARAMS_ARG = "params"
+NAME_ARG = "name"
+PREFS_ARG = "prefs"
 kwContextArg = "context"
 kwInitialValues = 'initial_values'
 
@@ -280,10 +280,10 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
-kwPredictionMechanism = "PredictionMechanism"
+PREDICTION_MECHANISM = "PredictionMechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
-kwPredictionMechanismOutput = "PredictionMechanismOutput"
+PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
@@ -314,6 +314,8 @@ PARAMETER_STATE_PARAMS = 'parameter_state_params'
 PARAMETER_MODULATION_OPERATION = 'parameter_modulation_operation'
 OUTPUT_STATES = 'output_states'
 OUTPUT_STATE_PARAMS = 'output_states_params'
+INDEX = 'index'
+CALCULATE = 'calculate'
 #endregion
 
 #region ---------------------------------------------    PROJECTION  ---------------------------------------------------

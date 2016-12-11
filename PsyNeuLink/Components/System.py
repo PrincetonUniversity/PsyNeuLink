@@ -110,6 +110,36 @@ the role they play in a system:
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
+
+COMMENT:
+    Control
+    ~~~~~~~
+
+    Learning
+    ~~~~~~~~
+
+    Based on process
+
+COMMENT
+
+.. _System_Full_Fig:
+
+**Components of a System**
+
+.. figure:: _static/System_full_fig.png
+   :alt: Overview of major PsyNeuLink components
+   :scale: 75 %
+
+   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
+   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
+   that converge on a common final ProcessingMechanism.  The latter projects to a
+   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in
+   Process B. It also projects to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>`
+   ProcessingMechanisms in both Processes A and B.  Note that while the mechanisms and projections responsible for
+   learning belong to, and are restricted to a single process, those responsible for control belong to the system and
+   can monitor and/or control mechanisms belonging to more than one process.
+
+
 .. _System_Execution:
 
 Execution
