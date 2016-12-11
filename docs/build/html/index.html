@@ -185,8 +185,8 @@ integration of, and interaction among disparate components that can vary in thei
 </ul>
 <ul class="simple">
 <li>interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:<ul>
-<li>MatLab (general purpose math tools);</li>
-<li>TensorFlow, Teano (deep learning; ODEs);</li>
+<li>MatLab (general purpose mathematical tools);</li>
+<li>TensorFlow, Teano (ODE&#8217;s, deep learning);</li>
 <li>Emergent (broad class of neurally-plausible connectionist models);</li>
 <li>ACT-R (sybmolic, production system models).</li>
 </ul>
@@ -198,7 +198,8 @@ constraints as possible on what it is possible to implement or ask the model to 
 </div>
 <div class="section" id="overview">
 <span id="id2"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.</p>
+<p>PsyNeuLink is written in Python, and conforms to the syntax and (most of the) coding standards for the language.
+The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.</p>
 <p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
 output
 available to other mechanisms.  Mechanisms can take any form of input, use any funciton, and generate any form of
@@ -220,8 +221,8 @@ parameters of the mechanisms&#8217; function so as to optimize the objective fun
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The functionality described under <strong>Execution</strong> below is still being implemented.  At present, all mechanisms
-operate in <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, and some operate in <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code> mode;  however, mixed
-execution and coordination has not yet been fully implemented and debugged.</p>
+operate in <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, and some operate in <code class="xref std std-keyword docutils literal"><span class="pre">time_step</span></code> mode;  however, the coordination and
+has execution of components with mixed time scales has not yet been fully implemented and debugged.</p>
 </div>
 <p><strong>Execution</strong>.  Mechanisms in PsyNeuLink can be run at one of two time scales.  In <code class="xref std std-keyword docutils literal"><span class="pre">trial</span></code> mode, the
 transformation computed by a mechanism is &#8220;complete&#8221; (i.e., the result is stationary.  For example, for an
