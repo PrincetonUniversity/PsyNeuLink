@@ -47,8 +47,8 @@ in a manner that:
  ..
  - interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:
 
-   * MatLab (general purpose math tools);
-   * TensorFlow, Teano (deep learning; ODEs);
+   * MatLab (general purpose mathematical tools);
+   * TensorFlow, Teano (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (sybmolic, production system models).
 
