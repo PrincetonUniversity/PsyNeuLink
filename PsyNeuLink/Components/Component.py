@@ -556,8 +556,8 @@ class Component(object):
 
             arg_name = parse_arg(arg)
 
+
             # The params arg (nor anything in it) is never a default
-            # if arg is kwParams:
             if arg_name is kwParams:
                 continue
 
@@ -646,8 +646,9 @@ class Component(object):
             else:
                 params[arg] = kwargs[arg]
 
-        # Override arg values with any specified in params dict (including FUNCTION_PARAMS)
+        # Add or override arg values with any specified in params dict (including FUNCTION_PARAMS)
         if params_arg:
+
             try:
                 params[FUNCTION_PARAMS].update(params_arg[FUNCTION_PARAMS])
                 # This is needed so that when params is updated below,
@@ -657,6 +658,10 @@ class Component(object):
                 params_arg[FUNCTION_PARAMS].update(params[FUNCTION_PARAMS])
             except KeyError:
                 pass
+
+            # Handle how params are treated with respect to those in paramClassDefaults (default is to override)
+            self._add_params_or_use_to_override_defaults(params_arg)
+
             params.update(params_arg)
 
         # Save user-accessible params
@@ -666,6 +671,12 @@ class Component(object):
 
         # Return params only for args:
         return params
+
+    def _add_params_or_use_to_override_defaults(self, params_arg):
+        """This provides an opportunity for classes to specify how to combine params with default
+        Doing nothing (as below) causes specifications in a params dict to override those in paramClassDefaults
+        """
+        return params_arg
 
     def _create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:
@@ -1249,14 +1260,15 @@ class Component(object):
             if isinstance(param_value, (ParamValueProjection, tuple)):
                 param_value = self._get_param_value_from_tuple(param_value)
 
-            # If it is a state specification for a mechanism with a single item, convert to list format
-            if param_name in {INPUT_STATES, OUTPUT_STATES}:
-                from PsyNeuLink.Components.States.State import State_Base
-                if (isinstance(param_value, (str, State_Base, dict)) or
-                        is_numeric(param_value) or
-                        (inspect.isclass(param_value) and issubclass(param_value, State_Base))):
-                    param_value = [param_value]
-                    # request_set[param_name] = [param_value]
+            # MODIFIED 12/11/16 OLD:  NO LONGER NEED AS "LISTIFICATION" NOW OCCURS IN assign_args_to_param_dicts
+            # # If it is a state specification for a mechanism with a single item, convert to list format
+            # if param_name in {INPUT_STATES, OUTPUT_STATES}:
+            #     from PsyNeuLink.Components.States.State import State_Base
+            #     if (isinstance(param_value, (str, State_Base, dict)) or
+            #             is_numeric(param_value) or
+            #             (inspect.isclass(param_value) and issubclass(param_value, State_Base))):
+            #         param_value = [param_value]
+            #         # request_set[param_name] = [param_value]
 
             # Check if param value is of same type as one with the same name in paramClassDefaults;
             #    don't worry about length
@@ -1327,17 +1339,12 @@ class Component(object):
                                     pass
 
                 elif not target_set is None:
-                    # # MODIFIED 12/8/17 OLD:
-                    # target_set[param_name] = param_value
-                    # MODIFIED 12/8/17 NEW:
-                    # Copy any iterables so that deletionsn can be made to local assignments
+                    # Copy any iterables so that deletions can be made to assignments belonging to the instance
                     from collections import Iterable
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
                         target_set[param_name] = param_value
                     else:
                         target_set[param_name] = param_value.copy()
-                    # MODIFIED 12/8/17 END
-                    TEST = True
 
             # If param is a function_type, allow any other function_type
 
