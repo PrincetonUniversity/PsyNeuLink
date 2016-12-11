@@ -818,11 +818,10 @@ class Mechanism_Base(Mechanism):
         self.variable = convert_to_np_array(self.variable, 2)
 
     def _filter_params(self, params):
-        """
+        """Add rather than override INPUT_STATES and/or OUTPUT_STATES
 
         Allows specification of INPUT_STATES or OUTPUT_STATES in params dictionary to be added to,
         rather than override those in paramClassDefaults (the default behavior)
-
         """
 
         # INPUT_STATES:
