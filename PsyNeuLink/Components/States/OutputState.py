@@ -172,7 +172,6 @@ class OutputState(State_Base):
     """
     OutputState(                               \
     owner,                                     \
-    reference_value,                           \
     value=None,                                \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
@@ -218,7 +217,10 @@ class OutputState(State_Base):
         the outputState is created.
 
     reference_value : number, list or np.ndarray
-        the component of the owner mechanism's ``outputValue`` attribute to which the outputState corresponds.
+        a template for the item of the owner mechanism's ``value`` attribute to which the outputState will be assigned
+        (specified by the ``index`` argument).  This must match (in number and type of elements) the ``variable``
+        argument; it is used to insure the compatibility of the source of the input to the outputState and its
+        ``variable`` (used for its ``function`` and ``calculate`` routines).
 
     value : number, list or np.ndarray
         used as the template for ``variable``.

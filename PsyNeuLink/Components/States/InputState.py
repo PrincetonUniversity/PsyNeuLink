@@ -214,7 +214,7 @@ class InputState(State_Base):
         the inputState is created.
 
     reference_value : number, list or np.ndarray
-        the component of the owner mechanism's ``variable`` attribute that corresponds to the inputState.
+        the item of the owner mechanism's ``variable`` attribute that corresponds to the inputState.
 
     value : number, list or np.ndarray
         used as the template for ``variable``.
