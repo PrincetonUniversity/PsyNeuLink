@@ -212,10 +212,10 @@ outputStates that calculate values derived from one more more of those items.  A
 explicitly (i.e., including an <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry in the mechanism&#8217;s params dictionary) supercedes the
 automatic generation of outputStates for that mechanism, however outputStates can be added by using the
 assign_output_state method [LINK]. By default, a specified outputState will use the first item of the owner
-mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However, it can be assigned a different item by specifying its <code class="docutils literal"><span class="pre">INDEX</span></code> parameter [LINK].
-The <code class="docutils literal"><span class="pre">variable</span></code> of an outputState must be compatible (in the number and type of its elements) with the item of the
-mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned. An outputState can also be configured to transform the value of the
-item, by specifying a function for its <code class="docutils literal"><span class="pre">CALCULATE</span></code> parameter [LINK];  the function must be able to take as
+mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However, it can be assigned a different item by specifying its <code class="docutils literal"><span class="pre">index</span></code> parameter [LINK].
+The <code class="docutils literal"><span class="pre">variable</span></code> of an outputState must match (in the number and type of its elements) the item of the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">value</span></code> to which it is assigned. An outputState can also be configured to transform the value of the
+item, by specifying a function for its <code class="docutils literal"><span class="pre">calculate</span></code> parameter [LINK];  the function must be able to take as
 input a value that is compatible with the item to which the outputState is assigned.</p>
 </div>
 <div class="section" id="structure">
