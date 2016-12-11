@@ -70,21 +70,12 @@ name for the outputState to be  created, and its value is one of the specificati
       to different one.
 
 COMMENT:
-   XXXXXXX
-
-    ADD MENTION OF CALCULATE
-
-   CHECK ALL THIS:
-             ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT
+   CHECK ALL OF THIS:
+             ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT (OR IS IT ADDED?)
              DICTIONARY KEY IS USED AS NAME
              SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
                 MULTI-ITEM ATTRIBUTE OF STATE
-             MATCH OF FORMATS OF CORRESPONDING ITEMS ARE VALIDATED
-             ERROR IS GENERATED FOR NUMBER MISMATCH
              reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
-
-             the ``variable`` for each outputState must match
-            (in number and types of elements) the item  from the mechanism's ``value`` that it will be assigned.
 COMMENT
 .. _OutputState_Index_and_Caclulate:
 
@@ -93,10 +84,10 @@ outputStates that calculate values derived from one more more of those items.  A
 explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the mechanism's params dictionary) supercedes the
 automatic generation of outputStates for that mechanism, however outputStates can be added by using the
 assign_output_state method [LINK]. By default, a specified outputState will use the first item of the owner
-mechanism's ``value``.  However, it can be assigned a different item by specifying its ``INDEX`` parameter [LINK].
-The ``variable`` of an outputState must be compatible (in the number and type of its elements) with the item of the
-mechanism's ``value`` to which it is assigned. An outputState can also be configured to transform the value of the
-item, by specifying a function for its ``CALCULATE`` parameter [LINK];  the function must be able to take as
+mechanism's ``value``.  However, it can be assigned a different item by specifying its ``index`` parameter [LINK].
+The ``variable`` of an outputState must match (in the number and type of its elements) the item of the mechanism's
+``value`` to which it is assigned. An outputState can also be configured to transform the value of the
+item, by specifying a function for its ``calculate`` parameter [LINK];  the function must be able to take as
 input a value that is compatible with the item to which the outputState is assigned.
 
 .. _OutputState_Structure:
