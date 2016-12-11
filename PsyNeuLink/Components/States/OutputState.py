@@ -43,7 +43,7 @@ inferred from the context.
 
 If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
 mechanism, they can be specified in an entry of the mechanism's parameter dictionary, using the key
-:keyword:`OUTPUT_STATES` [LINK] and a value that specifies the outputState for each one to be added. For a single
+:keyword:`OUTPUT_STATES` and a value that specifies the outputState for each one to be added. For a single
 outputState, the value can be any of the specifications in the the list below.  To create multiple outputStates,
 the value of the  :keyword:`OUTPUT_STATES` entry can be either a list, each item of which can be any of the
 specifications below;  or,  it can be an OrderedDict, in which the key for each entry is a string  specifying the
@@ -57,12 +57,9 @@ name for the outputState to be  created, and its value is one of the specificati
       assigned to the state;  if a string is, it is assigned as the name of the outputState (see [LINK] for naming
       conventions).
     ..
-    COMMENT:
-        IS THIS STILL SUPPORTED?  IS IT EVEN USEFUL?
-        * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
-          This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
-          outputState (see [LINK]).
-    COMMENT
+    * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
+      This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
+      outputState (see [LINK]).
     ..
     * A **specification dictionary**.  This can include entries with keywords using any of the arguments in an
       outputState's constructor and a value for that argument.  By default, the outputState is assigned to the
@@ -71,10 +68,10 @@ name for the outputState to be  created, and its value is one of the specificati
 
 COMMENT:
    CHECK ALL OF THIS:
-             ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT (OR IS IT ADDED?)
-             DICTIONARY KEY IS USED AS NAME
-             SINGLE STATE FOR MULTI-ITEM MECHANISM ATTRIBUTE ASSIGNS (OR AT LEASET CHECKS FOR)
-                MULTI-ITEM ATTRIBUTE OF STATE
+             WHAT IS THE POINT OF THE VALUE SPECIFICATION??
+             SINGLE SPEC DOESN'T WORK;  RIGHT NOW MUST BE A LIST:  FIX THAT
+             DEFAULT NAME IS MESSED UP:  Defaultoutput_state
+             ** LIST OR ORDERED DICT SUPERCEDES AUTOMATIC ASSIGNMENT (OR IS IT ADDED?): TRUE, BUT IT SHOULD BE CHANGED
              reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
 COMMENT
 .. _OutputState_Index_and_Caclulate:

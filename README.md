@@ -58,6 +58,10 @@ It does this in a manner that:
 
 ## Functional Architecture
 
+PsyNeuLink is written in Python, and conforms to the syntax and (most of the) coding standards for the language.
+It provides a framework with the following structural components, as well as a set of methods for creating,
+customizing and executing them:
+
 - System:
      set of (potentially interacting) processes, that can be managed by a “budget” of control and trained.
 

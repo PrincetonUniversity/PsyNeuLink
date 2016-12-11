@@ -49,7 +49,7 @@ transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
                                          noise=ControlProjection,
                                          # noise='MY CONTROL',
                                          rate=(0.1, ControlProjection),
-                                         params={OUTPUT_STATES:{NAME_ARG: 'JDC STATE'}},
+                                         params={OUTPUT_STATES:[10, 20]},
                                          name='MY_TRANSFER_MECH'
                                          )
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
