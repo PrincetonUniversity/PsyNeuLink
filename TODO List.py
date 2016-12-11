@@ -25,19 +25,18 @@
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 #
-#
 
+# FIX: IN COMPONENT.assign_args_to_param_dicts():
+#       SEQUESTER INPUT_STATE AND OUTPUT_STATE USER SPECIFIATIONS FOR user_params
 # FIX: ``value`` should not be used as the name of the variable arg for states
-# FIX:       too easily confused with their ``value`` attributes;  should be switched back to ``variable``
+#              too easily confused with their ``value`` attributes;  should be switched back to ``variable``
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
 # FIX:  del NAME_ARG, AND CHANGE NAME_ARG -> NAME
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
 # FIX: IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
-# FIX: ANALYZE -> CALCULATE [Preserve Case]
 # FIX:  ALLOW NAME_ARG TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
 # FIX: MAKE SURE THAT ANY ControlProjections ASSIGNED TO A CONTROLLER ARE FOR A MECHANISM IN THE SAME SYSTEM
 #           AS ANY PRE-EXISTING ONES;  SAME FOR INPUTSTATE CREATION
-# FIX: CLEANSE Components._validate_params OF ANY CLASS-SPECIFIC FILITERS (MOVE TO BASE_CLASSES, MAYBE WITH ABC)?
 
 # IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 

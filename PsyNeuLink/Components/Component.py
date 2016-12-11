@@ -659,24 +659,27 @@ class Component(object):
             except KeyError:
                 pass
 
-            # Handle how params are treated with respect to those in paramClassDefaults (default is to override)
-            self._add_params_or_use_to_override_defaults(params_arg)
-
             params.update(params_arg)
 
         # Save user-accessible params
         self.user_params = params.copy()
+
+        # Provide opportunity for subclasses to filter final set of params in class-specific way
+        # Note:  this is done here to preserve identity of user-specified params assigned to user_params above
+        self._filter_params(params)
 
         self._create_attributes_for_user_params(**self.user_params)
 
         # Return params only for args:
         return params
 
-    def _add_params_or_use_to_override_defaults(self, params_arg):
-        """This provides an opportunity for classes to specify how to combine params with default
-        Doing nothing (as below) causes specifications in a params dict to override those in paramClassDefaults
+    def _filter_params(self, params):
+        """This provides an opportunity for subclasses to modify the final set of params in a class-specific way;
+
+        Note:
+        The default (here) allows user-specified params to override entries in paramClassDefaults with the same name
         """
-        return params_arg
+        pass
 
     def _create_attributes_for_user_params(self, **kwargs):
         for arg in kwargs:

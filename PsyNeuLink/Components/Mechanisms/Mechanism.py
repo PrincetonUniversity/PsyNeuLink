@@ -817,17 +817,17 @@ class Mechanism_Base(Mechanism):
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
-    def _add_params_or_use_to_override_defaults(self, params_arg):
-        """Override of super (Component) method
+    def _filter_params(self, params):
+        """
 
         Allows specification of INPUT_STATES or OUTPUT_STATES in params dictionary to be added to,
-        rather than override those in paramClassDefaults for the class or subclass (the default behavior)
+        rather than override those in paramClassDefaults (the default behavior)
 
         """
 
         # INPUT_STATES:
         try:
-            input_states_spec = params_arg[INPUT_STATES]
+            input_states_spec = params[INPUT_STATES]
         except KeyError:
             pass
         else:
@@ -844,11 +844,11 @@ class Mechanism_Base(Mechanism):
             #          the primary inputState which must remain first for the inputStates OrderedDictionary
             default_input_states.extend(input_states_spec)
             # Assign full set back to params_arg
-            params_arg[INPUT_STATES] = default_input_states
+            params[INPUT_STATES] = default_input_states
 
         # OUTPUT_STATES:
         try:
-            output_states_spec = params_arg[OUTPUT_STATES]
+            output_states_spec = params[OUTPUT_STATES]
         except KeyError:
             pass
         else:
@@ -865,7 +865,7 @@ class Mechanism_Base(Mechanism):
             #          the primary outputState which must remain first for the outputStates OrderedDictionary
             default_output_states.extend(output_states_spec)
             # Assign full set back to params_arg
-            params_arg[OUTPUT_STATES] = default_output_states
+            params[OUTPUT_STATES] = default_output_states
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL

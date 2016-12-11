@@ -280,10 +280,10 @@ kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 MONITOR_FOR_CONTROL = "monitor_for_control"
-kwPredictionMechanism = "PredictionMechanism"
+PREDICTION_MECHANISM = "PredictionMechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
-kwPredictionMechanismOutput = "PredictionMechanismOutput"
+PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
