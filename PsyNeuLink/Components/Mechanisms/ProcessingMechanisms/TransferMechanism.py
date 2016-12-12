@@ -287,12 +287,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         # TIME_SCALE: TimeScale.TRIAL,
         INPUT_STATES: None,
         OUTPUT_STATES:[
-            {NAME_ARG:TRANSFER_RESULT},
+            {NAME:TRANSFER_RESULT},
 
-            {NAME_ARG:TRANSFER_MEAN,
+            {NAME:TRANSFER_MEAN,
              CALCULATE:lambda x: np.mean(x)},
 
-            {NAME_ARG:TRANSFER_VARIANCE,
+            {NAME:TRANSFER_VARIANCE,
              CALCULATE:lambda x: np.var(x)}
         ]})
 

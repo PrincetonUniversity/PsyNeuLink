@@ -129,18 +129,18 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         INPUT_STATES:[SAMPLE,   # Automatically instantiate local InputStates
                                 TARGET],  # for sample and target, and name them using kw constants
         OUTPUT_STATES:[
-            {NAME_ARG:COMPARISON_RESULT},
+            {NAME:COMPARISON_RESULT},
 
-            {NAME_ARG:COMPARISON_MEAN,
+            {NAME:COMPARISON_MEAN,
              CALCULATE:lambda x: np.mean(x)},
 
-            {NAME_ARG:COMPARISON_SUM,
+            {NAME:COMPARISON_SUM,
              CALCULATE:lambda x: np.sum(x)},
 
-            {NAME_ARG:COMPARISON_SSE,
+            {NAME:COMPARISON_SSE,
              CALCULATE:lambda x: np.sum(x*x)},
 
-            {NAME_ARG:COMPARISON_MSE,
+            {NAME:COMPARISON_MSE,
              CALCULATE:lambda x: np.sum(x*x)/len(x)}
         ]})
         # MODIFIED 12/7/16 NEW:

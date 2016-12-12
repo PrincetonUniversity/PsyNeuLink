@@ -356,7 +356,7 @@ class ControlMechanism_Base(Mechanism_Base):
         """Instantiate inputState for ControlMechanism
 
         Extend self.variable by one item to accommodate new inputState
-        Instantiate an inputState using input_state_name and input_state_value
+        Instantiate the inputState using input_state_name and input_state_value
         Update self.inputState and self.inputStates
 
         Args:
@@ -408,13 +408,13 @@ class ControlMechanism_Base(Mechanism_Base):
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.States.InputState import InputState
         input_state = _instantiate_state(owner=self,
-                                                  state_type=InputState,
-                                                  state_name=input_state_name,
-                                                  state_spec=defaultControlAllocation,
-                                                  state_params=None,
-                                                  constraint_value=np.array(self.variable[variable_item_index]),
-                                                  constraint_value_name='Default control allocation',
-                                                  context=context)
+                                         state_type=InputState,
+                                         state_name=input_state_name,
+                                         state_spec=defaultControlAllocation,
+                                         state_params=None,
+                                         constraint_value=np.array(self.variable[variable_item_index]),
+                                         constraint_value_name='Default control allocation',
+                                         context=context)
 
         #  Update inputState and inputStates
         try:
