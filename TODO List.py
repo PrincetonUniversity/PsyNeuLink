@@ -2,6 +2,16 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT / DOCUMENT:  MODIFY ``function`` ATTRIBUTE SO THAT, IF IT IS NOT A SUBCLASS OF Function
+#                        (E.G., IT IS A LAMBDA FUNCTION), THEN FUNCTION_PARAMS IS DISABLED.
+#                        -- SEE EXAMPLE OF transfer_mechanism_Y in Scratch Pad
+#                        THEN, INTEGRATE WITH SPECIFICATION OF INPUT_STATES,
+#                        BY ADDING ``index`` ATTRIBUTE TO INPUT_STATES, AND ASSIGNING EACH ONE TO RELEVANT
+#                        ITEM IN ``variable`` OF CUSTOM FUNCTION.
+
+# DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
+#            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
+
 # DOCUMENT:  "params dictionary" vs. "parameter dictionary"
 
 # DOCUMENT:  FIGURES FOR:
@@ -21,6 +31,7 @@
 # DOCUMENTATION: add show to Systsem and Process
 #
 
+# IMPLEMENT: ``index`` attribute for InputState, paralleling outputState (and document accordingly)
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 #
