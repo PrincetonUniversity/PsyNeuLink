@@ -529,7 +529,7 @@ class ParameterState(State_Base):
     def __init__(self,
                  owner,
                  reference_value=None,
-                 value=None,
+                 variable=None,
                  function=LinearCombination(operation=PRODUCT),
                  parameter_modulation_operation=ModulationOperation.MULTIPLY,
                  params=None,
@@ -547,7 +547,7 @@ class ParameterState(State_Base):
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
-                                             value=value,
+                                             variable=variable,
                                              params=params,
                                              name=name,
                                              prefs=prefs,

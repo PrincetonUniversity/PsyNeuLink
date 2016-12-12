@@ -88,12 +88,12 @@ def show_results():
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
     print ('\tDrift rate control signal (from EVC): {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
     print ('\tThreshold control signal (from EVC): {}'.
            format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value)))))
     for result in results:
-        print("\t{}: {}".format(re.sub('[\[,\],\n]','',str(result[0])),
-                                re.sub('[\[,\],\n]','',str(float(result[1])))))
+        print("\t{}: {}".format(result[0],
+                                re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
 
 # Run system:
 

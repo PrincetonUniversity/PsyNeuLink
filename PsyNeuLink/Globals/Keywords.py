@@ -6,25 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# # *******************************   get_param_value_for_keyword ******************************************************
-# #
-# def get_param_value_for_keyword(owner, keyword):
-#     from PsyNeuLink.Components.Functions.Function import FunctionError
-#     try:
-#         return owner.paramsCurrent[FUNCTION].keyword(keyword)
-#     except FunctionError as e:
-#         if owner.prefs.verbosePref:
-#             print ("{} of {}".format(e, owner.name))
-#         return None
-#     except AttributeError:
-#         if owner.prefs.verbosePref:
-#             print ("Keyword ({}) not recognized for {}".format(keyword, owner.name))
-#         return None
-#
-
-
 # ********************************************  Keywords ***************************************************************
-#
 
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS    ***********************************************************
@@ -109,7 +91,7 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 
 # General:
 PARAMS_ARG = "params"
-NAME_ARG = "name"
+NAME = "name"
 PREFS_ARG = "prefs"
 kwContextArg = "context"
 kwInitialValues = 'initial_values'
@@ -341,10 +323,6 @@ MONITOR_FOR_LEARNING = 'monitor_for_learning'
 #region ----------------------------------------------    FUNCTION   ---------------------------------------------------
 
 
-# DISABLED = 'disabled'
-# OVERRIDE = lambda a, b : a
-# ADD = lambda a, b : a + b
-# MULTIPLY = lambda a, b : a * b
 SUM = 'sum'
 DIFFERENCE = 'difference'
 PRODUCT = 'product'

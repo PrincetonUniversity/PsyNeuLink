@@ -2,6 +2,15 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT / DOCUMENT:  MODIFY ``function`` ATTRIBUTE SO THAT, IF IT IS NOT A SUBCLASS OF Function
+#                        (E.G., IT IS A LAMBDA FUNCTION), THEN FUNCTION_PARAMS IS DISABLED.
+#                        -- SEE EXAMPLE OF transfer_mechanism_Y in Scratch Pad
+#                        THEN, INTEGRATE WITH SPECIFICATION OF INPUT_STATES,
+#                        BY ADDING ``index`` ATTRIBUTE TO INPUT_STATES, AND ASSIGNING EACH ONE TO RELEVANT
+#                        ITEM IN ``variable`` OF CUSTOM FUNCTION.
+
+# DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
+#            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
 
 # DOCUMENT:  "params dictionary" vs. "parameter dictionary"
 
@@ -22,19 +31,17 @@
 # DOCUMENTATION: add show to Systsem and Process
 #
 
+# IMPLEMENT: ``index`` attribute for InputState, paralleling outputState (and document accordingly)
 # IMPLEMENT:  Demos of Functions that plots each Function
 #                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
 #
 
-# FIX: IN COMPONENT.assign_args_to_param_dicts():
-#       SEQUESTER INPUT_STATE AND OUTPUT_STATE USER SPECIFIATIONS FOR user_params
 # FIX: ``value`` should not be used as the name of the variable arg for states
 #              too easily confused with their ``value`` attributes;  should be switched back to ``variable``
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
-# FIX:  del NAME_ARG, AND CHANGE NAME_ARG -> NAME
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
 # FIX: IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
-# FIX:  ALLOW NAME_ARG TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
+# FIX:  ALLOW NAME TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
 # FIX: MAKE SURE THAT ANY ControlProjections ASSIGNED TO A CONTROLLER ARE FOR A MECHANISM IN THE SAME SYSTEM
 #           AS ANY PRE-EXISTING ONES;  SAME FOR INPUTSTATE CREATION
 
