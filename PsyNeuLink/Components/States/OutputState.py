@@ -105,10 +105,6 @@ Like all PsyNeuLink components, it has the three following core attributes:
   ``value`` attribute to which it is assigned (in its ``index`` attribute).
 
 * ``function``: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.
-  COMMENT:
-     AT PRESENT THIS IS NOT USEFUL;  HOWEVER, IT MAY BE IN THE FUTURE WHEN PROJECTIONS TO OUTPUTSTATES (E.G,. GATING)
-     ARE IMPLEMENTED.
-  COMMENT
 
 * ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its ``calculate``
   parameter, and used as the input to any projections that it sends.
@@ -239,14 +235,8 @@ class OutputState(State_Base):
     function : Function or method : default LinearCombination(operation=SUM)
         function used to aggregate the values of the projections received by the outputState.
         It must produce a result that has the same format (number and type of elements) as its ``value``.
-
-        .. note::
-           Currently PsyNeuLink does not support projections to outputStates.  The ``function`` attribute is
-           implemented for consistency with other states classes, and for potential future use.  The default simply
-           passes its input to its output. The ``function`` attribute can be modified to change this behavior.
-           However, for compatibility with future versions, it is *strongly* recommended that such functionality
-           be implemented by assigning the desired function to the ``calculate`` attribute; this will insure
-           compatibility with future versions.
+        It is implemented for consistency with other states, but is not actively used by PsyNeuLInk at the moment
+        (see note under a description of the ``function`` attribute below).
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
@@ -289,6 +279,14 @@ class OutputState(State_Base):
         performs an element-wise (Hadamard) aggregation  of the ``values`` of the projections received by the
         outputState.  The result is combined with the result of the calculate function and assigned as the ``value``
         of the outputState, and the corresponding item of the owner's ``outputValue``.
+
+        .. note::
+           Currently PsyNeuLink does not support projections to outputStates.  The ``function`` attribute is
+           implemented for consistency with other states classes, and for potential future use.  The default simply
+           passes its input to its output. The ``function`` attribute can be modified to change this behavior.
+           However, for compatibility with future versions, it is *strongly* recommended that such functionality
+           be implemented by assigning the desired function to the ``calculate`` attribute; this will insure
+           compatibility with future versions.
 
     value : number, list or np.ndarray
         assigned the result of the ``calculate`` function, combined with any result of the outputState's ``function``,

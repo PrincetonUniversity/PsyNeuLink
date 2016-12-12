@@ -53,7 +53,7 @@ transfer_mechanism_X = TransferMechanism(function=Logistic(bias=0,
                                          rate=(0.1, ControlProjection),
                                          params={OUTPUT_STATES:10.0},
                                          # params={OUTPUT_STATES:['JDC OUTPUT STATE',
-                                         #                        {NAME_ARG:TRANSFER_MEAN,
+                                         #                        {NAME:TRANSFER_MEAN,
                                          #                         CALCULATE:lambda x: np.mean(x)}]},
                                          name='MY_TRANSFER_MECH'
                                          )

@@ -30,10 +30,10 @@
 # FIX: ``value`` should not be used as the name of the variable arg for states
 #              too easily confused with their ``value`` attributes;  should be switched back to ``variable``
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
-# FIX:  del NAME_ARG, AND CHANGE NAME_ARG -> NAME
+# FIX:  del NAME, AND CHANGE NAME -> NAME
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
 # FIX: IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
-# FIX:  ALLOW NAME_ARG TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
+# FIX:  ALLOW NAME TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES NAME ARGUMENT OF CONSTRUCTOR)
 # FIX: MAKE SURE THAT ANY ControlProjections ASSIGNED TO A CONTROLLER ARE FOR A MECHANISM IN THE SAME SYSTEM
 #           AS ANY PRE-EXISTING ONES;  SAME FOR INPUTSTATE CREATION
 
