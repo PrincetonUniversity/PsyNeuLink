@@ -214,8 +214,8 @@ outputState (designated by its <a class="reference internal" href="#outputstate-
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In all cases, the <code class="docutils literal"><span class="pre">variable</span></code> of the outputState must be compatible (that is, have the same number and
-type of elements) as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned (see [LINK]).</p>
+<p class="last">In all cases, the <code class="docutils literal"><span class="pre">variable</span></code> of the outputState must be match (that is, have the same number and type
+of elements) as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned (see [LINK]).</p>
 </div>
 </div></blockquote>
 <p id="outputstate-index-and-calculate">Most mechanisms assign an outputState for each item of their owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and some assign additional
@@ -241,12 +241,11 @@ maintained in its <code class="docutils literal"><span class="pre">sendsToProjec
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">variable</span></code>:  this must match (both in number and types of elements) the value of the item of its owner mechanism&#8217;s
 <code class="docutils literal"><span class="pre">value</span></code> attribute to which it is assigned (in its <code class="docutils literal"><span class="pre">index</span></code> attribute).</li>
-<li><code class="docutils literal"><span class="pre">function</span></code>: this is implemented for potential future use (if/when outputStates are allowed to receive projections),
-but is not currently used by PsyNeuLink.</li>
+<li><code class="docutils literal"><span class="pre">function</span></code>: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.</li>
 <li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the outputState`s <code class="docutils literal"><span class="pre">function</span></code>, possibly modifed by its <code class="docutils literal"><span class="pre">calculate</span></code>
 parameter, and used as the input to any projections that it sends.</li>
 </ul>
-<p>In addition, an outputState has two attribute that determine its operation:</p>
+<p>An outputState also has two additional attributes that determine its operation:</p>
 <ul class="simple" id="outputstate-index">
 <li><code class="docutils literal"><span class="pre">index</span></code>: this determines the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned.  By default, this is
 set to 0, which assigns it to the first item.</li>
@@ -261,7 +260,7 @@ outputState&#8217;s <code class="docutils literal"><span class="pre">function</s
 </ul>
 </div>
 <div class="section" id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="outputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the mechanism places the results of its execution in its <code class="docutils literal"><span class="pre">value</span></code> attribute, and the value of the
 outputState is then updated by calling its <code class="docutils literal"><span class="pre">calculate</span></code> function using as its input the item of the onwer mechanism&#8217;s
