@@ -47,8 +47,8 @@ in a manner that:
  ..
  - interface (API) can easily be constructed to other powerful tools for implementing individual components, such as:
 
-   * MatLab (general purpose math tools);
-   * TensorFlow, Teano (deep learning; ODEs);
+   * MatLab (general purpose mathematical tools);
+   * TensorFlow, Teano (ODE's, deep learning);
    * Emergent (broad class of neurally-plausible connectionist models);
    * ACT-R (sybmolic, production system models).
 
@@ -61,6 +61,7 @@ constraints as possible on what it is possible to implement or ask the model to 
 Overview
 --------
 
+PsyNeuLink is written in Python, and conforms to the syntax and (most of the) coding standards for the language.
 The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.
 
 :doc:`Mechanism`.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
@@ -86,8 +87,8 @@ parameters of the mechanisms' function so as to optimize the objective function.
 
 .. note::
    The functionality described under **Execution** below is still being implemented.  At present, all mechanisms
-   operate in :keyword:`trial` mode, and some operate in :keyword:`time_step` mode;  however, mixed
-   execution and coordination has not yet been fully implemented and debugged.
+   operate in :keyword:`trial` mode, and some operate in :keyword:`time_step` mode;  however, the coordination and
+   has execution of components with mixed time scales has not yet been fully implemented and debugged.
 
 **Execution**.  Mechanisms in PsyNeuLink can be run at one of two time scales.  In :keyword:`trial` mode, the
 transformation computed by a mechanism is "complete" (i.e., the result is stationary.  For example, for an

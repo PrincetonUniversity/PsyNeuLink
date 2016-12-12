@@ -65,15 +65,14 @@ name for the outputState to be  created, and its value is one of the specificati
     * A **value**.  This creates a default outputState using the specified value as the outputState's ``variable``.
       This must be compatible with the item of the owner mechanism's ``value`` that will be assigned to the
       outputState (designated by its :ref:`index attribute <OutputState_Index>`).
+      COMMENT:
+         AT PRESENT THIS IS NOT USEFUL;  HOWEVER, IN THE FUTURE (E.G., WHEN GATING PROJECTIONS TO OUTPUT STATES
+         IS ADDED) IT MAY BE USEFUL FOR SPECIFYING A BASEVALUE (E.G., DEFAULT) FOR THE OUTPUTSTATE.
+      COMMENT
 
     .. note::
-       In all cases, the ``variable`` of the inputState must be compatible (that is, have the same number and
-       type of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
-
-COMMENT:
-             WHAT IS THE POINT OF THE VALUE SPECIFICATION??
-             reference_value IS THE ITEM OF outputValue CORRESPONDING TO THE outputState
-COMMENT
+       In all cases, the ``variable`` of the outputState must be match (that is, have the same number and type
+       of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
 
 .. _OutputState_Index_and_Calculate:
 
@@ -105,13 +104,12 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
   ``value`` attribute to which it is assigned (in its ``index`` attribute).
 
-* ``function``: this is implemented for potential future use (if/when outputStates are allowed to receive projections),
-  but is not currently used by PsyNeuLink.
+* ``function``: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.
 
 * ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its ``calculate``
   parameter, and used as the input to any projections that it sends.
 
-In addition, an outputState has two attribute that determine its operation:
+An outputState also has two additional attributes that determine its operation:
 
 .. _OutputState_Index:
 
@@ -127,6 +125,7 @@ In addition, an outputState has two attribute that determine its operation:
   the item to which the outputState is assigned.  Note that the ``calculate`` function is distinct from the
   outputState's ``function`` parameter (which is reserved for future use).
 
+.. _OutputState_Execution:
 
 Execution
 ---------
@@ -172,7 +171,6 @@ class OutputState(State_Base):
     """
     OutputState(                               \
     owner,                                     \
-    reference_value,                           \
     value=None,                                \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
@@ -218,7 +216,10 @@ class OutputState(State_Base):
         the outputState is created.
 
     reference_value : number, list or np.ndarray
-        the component of the owner mechanism's ``outputValue`` attribute to which the outputState corresponds.
+        a template for the item of the owner mechanism's ``value`` attribute to which the outputState will be assigned
+        (specified by the ``index`` argument).  This must match (in number and type of elements) the ``variable``
+        argument; it is used to insure the compatibility of the source of the input to the outputState and its
+        ``variable`` (used for its ``function`` and ``calculate`` routines).
 
     value : number, list or np.ndarray
         used as the template for ``variable``.
@@ -234,6 +235,8 @@ class OutputState(State_Base):
     function : Function or method : default LinearCombination(operation=SUM)
         function used to aggregate the values of the projections received by the outputState.
         It must produce a result that has the same format (number and type of elements) as its ``value``.
+        It is implemented for consistency with other states, but is not actively used by PsyNeuLInk at the moment
+        (see note under a description of the ``function`` attribute below).
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
@@ -277,6 +280,14 @@ class OutputState(State_Base):
         outputState.  The result is combined with the result of the calculate function and assigned as the ``value``
         of the outputState, and the corresponding item of the owner's ``outputValue``.
 
+        .. note::
+           Currently PsyNeuLink does not support projections to outputStates.  The ``function`` attribute is
+           implemented for consistency with other states classes, and for potential future use.  The default simply
+           passes its input to its output. The ``function`` attribute can be modified to change this behavior.
+           However, for compatibility with future versions, it is *strongly* recommended that such functionality
+           be implemented by assigning the desired function to the ``calculate`` attribute; this will insure
+           compatibility with future versions.
+
     value : number, list or np.ndarray
         assigned the result of the ``calculate`` function, combined with any result of the outputState's ``function``,
         which is also assigned to the corresopnding item of the owner mechanism's ``outputValue``.
@@ -288,7 +299,7 @@ class OutputState(State_Base):
         (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
 
         .. note::
-            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
+            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
             the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
             mechanism: states within a mechanism with the same base name are appended an index in the order of their
             creation.
@@ -321,7 +332,7 @@ class OutputState(State_Base):
     def __init__(self,
                  owner,
                  reference_value,
-                 value=None,
+                 variable=None,
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:function_type=Linear,
                  function=LinearCombination(operation=SUM),
@@ -345,7 +356,7 @@ class OutputState(State_Base):
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,
-                         value=value,
+                         variable=variable,
                          params=params,
                          name=name,
                          prefs=prefs,
