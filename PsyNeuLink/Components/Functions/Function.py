@@ -494,13 +494,6 @@ class Reduce(CombinationFunction): # -------------------------------------------
     """
     componentName = kwReduce
 
-    # # Operation indicators
-    # class Operation(Enum):
-    #     SUM = 0
-    #     PRODUCT = 1
-    #     SUBTRACT = 2
-    #     DIVIDE = 3
-    #
     variableClassDefault = [0, 0]
     # variableClassDefault_locked = True
 

@@ -250,18 +250,18 @@ class ComparatorMechanism(MonitoringMechanism_Base):
                        TARGET],  #    and name them using keyword names
         PARAMETER_STATES: None,             # This suppresses parameterStates
         OUTPUT_STATES:[
-            {NAME_ARG:COMPARISON_RESULT},
+            {NAME:COMPARISON_RESULT},
 
-            {NAME_ARG:COMPARISON_MEAN,
+            {NAME:COMPARISON_MEAN,
              CALCULATE:lambda x: np.mean(x)},
 
-            {NAME_ARG:COMPARISON_SUM,
+            {NAME:COMPARISON_SUM,
              CALCULATE:lambda x: np.sum(x)},
 
-            {NAME_ARG:COMPARISON_SSE,
+            {NAME:COMPARISON_SSE,
              CALCULATE:lambda x: np.sum(x*x)},
 
-            {NAME_ARG:COMPARISON_MSE,
+            {NAME:COMPARISON_MSE,
              CALCULATE:lambda x: np.sum(x*x)/len(x)}
         ]})
 
