@@ -2055,7 +2055,7 @@ class Process_Base(Process):
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         variable = [list(i) for i in self.variable]
-        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str([["{:0.3}".format(float(i)) for i in value] for value in variable]))))
+        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str([[float("{:0.3}".format(float(i))) for i in value] for value in variable]))))
 
     def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
@@ -2073,7 +2073,7 @@ class Process_Base(Process):
                      # # MODIFIED 12/9/16 OLD:
                      # re.sub('[\[,\],\n]','',str(self.outputState.value))))
                      # MODIFIED 12/9/16 NEW:
-                     re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in self.outputState.value]))))
+                     re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
                      # MODIFIED 12/9/16 END
 
         if self.learning:
