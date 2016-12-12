@@ -184,15 +184,16 @@ is specified in the <code class="xref std std-keyword docutils literal"><span cl
 inferred from the context.</p>
 <p>If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
 mechanism, they can be specified in an entry of the mechanism&#8217;s parameter dictionary, using the key
-<code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> [LINK] and a value that specifies the outputState for each one to be added. For a single
+<code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> and a value that specifies the outputState for each one to be added. For a single
 outputState, the value can be any of the specifications in the the list below.  To create multiple outputStates,
 the value of the  <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry can be either a list, each item of which can be any of the
 specifications below;  or,  it can be an OrderedDict, in which the key for each entry is a string  specifying the
 name for the outputState to be  created, and its value is one of the specifications below:</p>
 <blockquote>
 <div><ul class="simple">
-<li>An existing <strong>outputState</strong> object or the name of one.  Its <code class="docutils literal"><span class="pre">value</span></code> must be compatible with the item of the
-owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned (designated by its <code class="docutils literal"><span class="pre">index</span></code> attribute) (see [LINK]).</li>
+<li>An existing <strong>outputState</strong> object.  Its <code class="docutils literal"><span class="pre">variable</span></code> must match (in the number and type of its elements)
+the item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which the outputState is assigned
+(designated by its <a class="reference internal" href="#outputstate-index"><span class="std std-ref">index attribute</span></a>).</li>
 </ul>
 <ul class="simple">
 <li>The <a class="reference internal" href="#module-OutputState" title="OutputState"><code class="xref py py-class docutils literal"><span class="pre">OutputState</span></code></a> <strong>class</strong> or a string.  This creates a default outputState that is assigned the first
@@ -201,22 +202,34 @@ assigned to the state;  if a string is, it is assigned as the name of the output
 conventions).</li>
 </ul>
 <ul class="simple">
-<li>A <strong>specification dictionary</strong>.  This can include entries with keywords using any of the arguments in an
-outputState&#8217;s constructor and a value for that argument.  By default, the outputState is assigned to the
-first item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However, the <code class="docutils literal"><span class="pre">index</span></code> argument can be used to assign it
-to different one.</li>
+<li>A <strong>specification dictionary</strong>.  This can include entries with keys using any of the arguments in an
+outputState&#8217;s constructor, and a value for that argument.  By default, the outputState is assigned to the
+first item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However, the <a class="reference internal" href="#outputstate-index"><span class="std std-ref">index argument</span></a>
+can be used to assign the outputState to different item.</li>
 </ul>
+<ul class="simple">
+<li>A <strong>value</strong>.  This creates a default outputState using the specified value as the outputState&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.
+This must be compatible with the item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> that will be assigned to the
+outputState (designated by its <a class="reference internal" href="#outputstate-index"><span class="std std-ref">index attribute</span></a>).</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In all cases, the <code class="docutils literal"><span class="pre">variable</span></code> of the outputState must be match (that is, have the same number and type
+of elements) as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned (see [LINK]).</p>
+</div>
 </div></blockquote>
-<p id="outputstate-index-and-caclulate">Most mechanisms assign an outputState for each item of their owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and some assign additional
+<p id="outputstate-index-and-calculate">Most mechanisms assign an outputState for each item of their owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and some assign additional
 outputStates that calculate values derived from one more more of those items.  Assigning outputStates
-explicitly (i.e., including an <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry in the mechanism&#8217;s params dictionary) supercedes the
-automatic generation of outputStates for that mechanism, however outputStates can be added by using the
-assign_output_state method [LINK]. By default, a specified outputState will use the first item of the owner
-mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However, it can be assigned a different item by specifying its <code class="docutils literal"><span class="pre">index</span></code> parameter [LINK].
-The <code class="docutils literal"><span class="pre">variable</span></code> of an outputState must match (in the number and type of its elements) the item of the mechanism&#8217;s
-<code class="docutils literal"><span class="pre">value</span></code> to which it is assigned. An outputState can also be configured to transform the value of the
-item, by specifying a function for its <code class="docutils literal"><span class="pre">calculate</span></code> parameter [LINK];  the function must be able to take as
-input a value that is compatible with the item to which the outputState is assigned.</p>
+explicitly (i.e., including an <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry in the mechanism&#8217;s params dictionary) adds them to any
+that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
+automatically generated, the name will be suffixed with a numerical index and added (that is, it will <em>not</em> replace
+the one automatically generated). OutputStates can also be added by using the assign_output_state method [LINK]. By
+default, a specified outputState  will use the first item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However, it can be
+assigned a different item by  specifying its <code class="docutils literal"><span class="pre">index</span></code> parameter [LINK]. The <code class="docutils literal"><span class="pre">variable</span></code> of an outputState must match
+(in the number and type of  its elements) the item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned. An outputState
+can also be configured to transform the value of the item, by specifying a function for its <code class="docutils literal"><span class="pre">calculate</span></code> parameter
+[LINK];  the function must be able to take as input a value that is compatible with the item to which the
+outputState is assigned.</p>
 </div>
 <div class="section" id="structure">
 <span id="outputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -228,15 +241,16 @@ maintained in its <code class="docutils literal"><span class="pre">sendsToProjec
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">variable</span></code>:  this must match (both in number and types of elements) the value of the item of its owner mechanism&#8217;s
 <code class="docutils literal"><span class="pre">value</span></code> attribute to which it is assigned (in its <code class="docutils literal"><span class="pre">index</span></code> attribute).</li>
-<li><code class="docutils literal"><span class="pre">function</span></code>: this is implemented for potential future use (if/when outputStates are allowed to receive projections),
-but is not currently used by PsyNeuLink.</li>
+<li><code class="docutils literal"><span class="pre">function</span></code>: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.</li>
 <li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the outputState`s <code class="docutils literal"><span class="pre">function</span></code>, possibly modifed by its <code class="docutils literal"><span class="pre">calculate</span></code>
 parameter, and used as the input to any projections that it sends.</li>
 </ul>
-<p>In addition, an outputState has two attribute that determine its operation:</p>
-<ul class="simple">
+<p>An outputState also has two additional attributes that determine its operation:</p>
+<ul class="simple" id="outputstate-index">
 <li><code class="docutils literal"><span class="pre">index</span></code>: this determines the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned.  By default, this is
 set to 0, which assigns it to the first item.</li>
+</ul>
+<ul class="simple" id="outputstate-calculate">
 <li><code class="docutils literal"><span class="pre">calculate</span></code>:  this specifies the function used to convert the item to which the outputState is assigned to
 the outputState&#8217;s value.  The result is assigned to the outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute. The default for
 <code class="docutils literal"><span class="pre">calculate</span></code> is the identity function, which simply assigns the item of the mechanism&#8217;sm <code class="docutils literal"><span class="pre">value</span></code> unmodified as
@@ -246,7 +260,7 @@ outputState&#8217;s <code class="docutils literal"><span class="pre">function</s
 </ul>
 </div>
 <div class="section" id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="outputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the mechanism places the results of its execution in its <code class="docutils literal"><span class="pre">value</span></code> attribute, and the value of the
 outputState is then updated by calling its <code class="docutils literal"><span class="pre">calculate</span></code> function using as its input the item of the onwer mechanism&#8217;s
@@ -256,6 +270,128 @@ for which the outputState is the sender.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="outputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="OutputState.OutputState">
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">OutputState</code><span class="sig-paren">(</span><em>owner</em>, <em>value=None</em>, <em>index=PRIMARY_OUTPUT_STATE</em>, <em>calculate=Linear</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.OutputState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements subclass of State that represents the output of a mechanism</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a>) &#8211; the mechanism to which the outputState belongs; it must be specified or determinable from the context in which
+the outputState is created.</li>
+<li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; a template for the item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute to which the outputState will be assigned
+(specified by the <code class="docutils literal"><span class="pre">index</span></code> argument).  This must match (in number and type of elements) the <code class="docutils literal"><span class="pre">variable</span></code>
+argument; it is used to insure the compatibility of the source of the input to the outputState and its
+<code class="docutils literal"><span class="pre">variable</span></code> (used for its <code class="docutils literal"><span class="pre">function</span></code> and <code class="docutils literal"><span class="pre">calculate</span></code> routines).</li>
+<li><strong>value</strong> (<em>number, list or np.ndarray</em>) &#8211; used as the template for <code class="docutils literal"><span class="pre">variable</span></code>.</li>
+<li><strong>index</strong> (<em>int : default PRIMARY_OUTPUT_STATE</em>) &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the <code class="docutils literal"><span class="pre">calculate</span></code> function, to determine
+the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</li>
+<li><strong>calculate</strong> (<em>function or method : default Linear</em>) &#8211; used to convert item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> (and corresponding
+item of owner&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.  It must accept a value that has the same format as the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.</li>
+<li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; function used to aggregate the values of the projections received by the outputState.
+It must produce a result that has the same format (number and type of elements) as its <code class="docutils literal"><span class="pre">value</span></code>.
+It is implemented for consistency with other states, but is not actively used by PsyNeuLInk at the moment
+(see note under a description of the <code class="docutils literal"><span class="pre">function</span></code> attribute below).</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
+and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).</li>
+<li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) &#8211; a string used for the name of the outputState.
+If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+belongs (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the PreferenceSet for the outputState.
+If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="OutputState.OutputState.owner">
+<code class="descname">owner</code><a class="headerlink" href="#OutputState.OutputState.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism</em> &#8211; the mechanism to which the outputState belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.sendsToProjections">
+<code class="descname">sendsToProjections</code><a class="headerlink" href="#OutputState.OutputState.sendsToProjections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the projections sent by the outputState (i.e., for which the outputState is a <code class="docutils literal"><span class="pre">sender</span></code>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.variable">
+<code class="descname">variable</code><a class="headerlink" href="#OutputState.OutputState.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; assigned an item of the <code class="docutils literal"><span class="pre">outputValue</span></code> of its owner mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.index">
+<code class="descname">index</code><a class="headerlink" href="#OutputState.OutputState.index" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the <code class="docutils literal"><span class="pre">calculate</span></code> function, to determine
+the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.calculate">
+<code class="descname">calculate</code><a class="headerlink" href="#OutputState.OutputState.calculate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function or method : default Linear</em> &#8211; function used to convert the item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> specified by the <code class="docutils literal"><span class="pre">index</span></code> attribute;  it is
+combined with the result of the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to determine it&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and the corresponding
+item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>. Default is Linear (identity function) which simply transfers the
+value as is.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.function">
+<code class="descname">function</code><a class="headerlink" href="#OutputState.OutputState.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CombinationFunction : default LinearCombination(operation=SUM))</em> &#8211; performs an element-wise (Hadamard) aggregation  of the <code class="docutils literal"><span class="pre">values</span></code> of the projections received by the
+outputState.  The result is combined with the result of the calculate function and assigned as the <code class="docutils literal"><span class="pre">value</span></code>
+of the outputState, and the corresponding item of the owner&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently PsyNeuLink does not support projections to outputStates.  The <code class="docutils literal"><span class="pre">function</span></code> attribute is
+implemented for consistency with other states classes, and for potential future use.  The default simply
+passes its input to its output. The <code class="docutils literal"><span class="pre">function</span></code> attribute can be modified to change this behavior.
+However, for compatibility with future versions, it is <em>strongly</em> recommended that such functionality
+be implemented by assigning the desired function to the <code class="docutils literal"><span class="pre">calculate</span></code> attribute; this will insure
+compatibility with future versions.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.value">
+<code class="descname">value</code><a class="headerlink" href="#OutputState.OutputState.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; assigned the result of the <code class="docutils literal"><span class="pre">calculate</span></code> function, combined with any result of the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>,
+which is also assigned to the corresopnding item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.name">
+<code class="descname">name</code><a class="headerlink" href="#OutputState.OutputState.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; name of the outputState.
+Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+assigned by the StateRegistry of the mechanism to which the outputState belongs
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unlike other PsyNeuLink components, state names are &#8220;scoped&#8221; within a mechanism, meaning that states with
+the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
+mechanism: states within a mechanism with the same base name are appended an index in the order of their
+creation.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="OutputState.OutputState.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#OutputState.OutputState.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the PreferenceSet for the outputState.
+Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
+assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see Description under PreferenceSet for details) [LINK].</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 

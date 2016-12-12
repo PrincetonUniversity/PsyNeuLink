@@ -109,7 +109,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
             except (KeyError, NameError):
                 pass
             try:
-                name = kargs[NAME_ARG]
+                name = kargs[NAME]
             except (KeyError, NameError):
                 pass
             try:
