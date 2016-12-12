@@ -1545,7 +1545,7 @@ class System_Base(System):
         for mech_tuple in self._terminal_mech_tuples:
             if mech_tuple.mechanism.phaseSpec == (CentralClock.time_step % self.numPhases):
                 print("- output for {0}: {1}".format(mech_tuple.mechanism.name,
-                                                 re.sub('[\[,\],\n]','',str(mech_tuple.mechanism.outputState.value))))
+                                                 re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 
 
     class InspectOptions(AutoNumber):
