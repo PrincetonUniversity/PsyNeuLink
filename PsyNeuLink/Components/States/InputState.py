@@ -303,7 +303,7 @@ class InputState(State_Base):
     def __init__(self,
                  owner,
                  reference_value=None,
-                 value=None,
+                 variable=None,
                  function=LinearCombination(operation=SUM),
                  params=None,
                  name=None,
@@ -318,7 +318,7 @@ class InputState(State_Base):
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
-                                                  value=value,
+                                                  variable=variable,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
