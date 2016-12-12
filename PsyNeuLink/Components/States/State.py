@@ -1739,14 +1739,14 @@ def _instantiate_state(owner,                   # Object to which state will bel
             pass
         # MODIFIED 12/7/16 OLD:
         # try:
-        #     state_name = state_spec[NAME_ARG]
-        #     del state_spec[NAME_ARG]
+        #     state_name = state_spec[NAME]
+        #     del state_spec[NAME]
         # except KeyError:
         #     pass
         # MODIFIED 12/7/16 NEW:
         # Add state_spec[STATE_PARAMS] to state_params
         for spec in state_spec:
-            if spec is NAME_ARG:
+            if spec is NAME:
                 # Assign state name
                 state_name = state_spec[spec]
                 # Do not include in params dict for state
