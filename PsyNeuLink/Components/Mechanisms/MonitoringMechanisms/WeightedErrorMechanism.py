@@ -250,18 +250,9 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
-    def _instantiate_attributes_before_function(self, context=None):
-
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[WEIGHTED_ERRORS] = WeightedErrorOutput.ERROR_SIGNAL.value
-
-        super()._instantiate_attributes_before_function(context=context)
-
-
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -273,7 +264,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         if not context:
             context = EXECUTING + self.name
 
-        self._check_args(variable=variable, params=params, context=context)
+        self._check_args(variable=variable, params=runtime_params, context=context)
 
         # Get error signal from monitoring mechanism for next mechanism in the process
         error = self.variable[0]
@@ -297,7 +288,11 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         # Compute summed error for use by callers to decide whether to update
         self.summedErrorSignal = np.sum(self.weightedErrorSignal)
 
-        # Assign output values
-        self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = self.weightedErrorSignal
+        # # MODIFIED 12/9/16 OLD:
+        # # Assign output values
+        # self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = self.weightedErrorSignal
+        # return self.outputValue
+        # MODIFIED 12/9/16 NEW:
+        return self.weightedErrorSignal
+        # MODIFIED 12/9/16 END
 
-        return self.outputValue

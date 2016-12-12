@@ -285,12 +285,16 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
-        # FUNCTION:TransferFunction,
         INPUT_STATES: None,
-        OUTPUT_STATES:[TRANSFER_RESULT,
-                       TRANSFER_MEAN,
-                       TRANSFER_VARIANCE]
-    })
+        OUTPUT_STATES:[
+            {NAME_ARG:TRANSFER_RESULT},
+
+            {NAME_ARG:TRANSFER_MEAN,
+             CALCULATE:lambda x: np.mean(x)},
+
+            {NAME_ARG:TRANSFER_VARIANCE,
+             CALCULATE:lambda x: np.var(x)}
+        ]})
 
     paramNames = paramClassDefaults.keys()
 
@@ -387,25 +391,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
 
-
-        # super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-
     def _instantiate_attributes_before_function(self, context=None):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
 
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
-        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
-        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
+        # MODIFIED 12/7/16 OLD:
+        # # Map indices of output to outputState(s)
+        # self._outputStateValueMapping = {}
+        # self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
+        # self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
+        # self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
+        # MODIFIED 12/7/16 END
 
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute TransferMechanism function and return transform of input
@@ -481,21 +483,27 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.previous_input = current_input
 
         # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=params)
+        output_vector = self.function(variable=current_input, params=runtime_params)
 
         if range:
             minCapIndices = np.where(output_vector < range[0])
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
             output_vector[maxCapIndices] = np.max(range)
-        mean = np.mean(output_vector)
-        variance = np.var(output_vector)
 
-        self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        self.outputValue[Transfer_Output.MEAN.value] = mean
-        self.outputValue[Transfer_Output.VARIANCE.value] = variance
+        # # MODIFIED 12/7/16 OLD:
+        # mean = np.mean(output_vector)
+        # variance = np.var(output_vector)
+        #
+        # self.outputValue[Transfer_Output.RESULT.value] = output_vector
+        # self.outputValue[Transfer_Output.MEAN.value] = mean
+        # self.outputValue[Transfer_Output.VARIANCE.value] = variance
+        #
+        # return self.outputValue
+        # MODIFIED 12/7/16 NEW:
+        return output_vector
+        # MODIFIED 12/7/16 END
 
-        return self.outputValue
         #endregion
 
 
