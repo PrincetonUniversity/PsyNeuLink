@@ -17,13 +17,20 @@ An inputState of a mechanism accepts inputs from projections coming from other m
 and/or the input to the process or system itself (if the mechanism to which the inputState belongs is the
 :keyword:`ORIGIN` mechanism [LINK] of that process or system).  A list of projections received by an inputState is
 kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs,
-and the result is assigned to a corresponding item in the owner mechanism's ``variable``.
+and the result is assigned to a corresponding item in the owner mechanism's ``variable`` and ``inputValue`` attributes.
 
 .. _InputState_Creation:
 
 Creating an InputState
 ----------------------
 
+InputStates are created automatically when a mechanism is created.  For example, if a mechanism is created within
+the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as the ``receiver``
+of a MappingProjection from the  preceding mechanism in the pathway;  and a :doc:`ControlMechanism` creates an
+inputState for each mechanism that it monitors.  Although inputStates cannot be created explicitly (at the moment),
+they can modified as described below.
+
+COMMENT:
 An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
 usually automatically create the inputState(s) it needs when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as
@@ -41,37 +48,43 @@ can be either a list, each item of which can be any of the specifications below;
 in which the key for each entry is a string specifying the name for the inputState to be created, and its value is
 one of the specifications below:
 
-    * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with item of the owner
-      mechanism's ``variable`` to which it will be assigned (see [LINK]).
+    * An existing **inputState** object or the name of one.  Its ``value`` must be compatible with the item of the
+      owner mechanism's ``variable`` to which it will be assigned (see [LINK]).
     ..
-    * The :class:`InputState` **class** or a string.  This creates a default inputState using the owner
-      mechanism's ``variable`` as the template for the inputState's ``value``. [LINK]  If :keyword:`InputState`
-      is used, a default name is assigned to the state;  if a string is, it is assigned as the name
-      of the inputState (see [LINK] for naming conventions).
+    * The :class:`InputState` **class** or a string.  This creates a default inputState using the the first item of
+      the owner mechanism's ``variable`` as the inputState's ``variable``. [LINK]  If :keyword:`InputState`
+      is used, a default name is assigned to the state;  if a string is, it is assigned as the name of the inputState
+      (see [LINK] for naming conventions).
     ..
-    * A **value**.  This creates a default inputState using the specified value as inputState's ``value``.  This must
-      be compatible with the owner mechanism's ``variable``.
+    * A **value**.  This creates a default inputState using the specified value as inputState's ``variable``.
+      This must be compatible with the item of the owner mechanism's ``variable`` to which the inputState is assigned.
     ..
-    * A **Projection subclass**. This creates a default inputState using the owner mechanism's ``variable`` as
-      the template for the inputState's ``value`` [LINK], and a projection of the specified type to the inputState
-      also using the owner mechanism's ``variable`` as the template for its ``value``.
+    * A **Projection subclass**. This creates a default inputState using the first item of the owner mechanism's
+      ``variable`` as the inputState's ``variable`` [LINK], and a projection of the specified type to the
+      inputState using its ``variable`` as the template for the projection's ``value``.
     ..
-    * A **Projection object**.  This creates a default inputState using the owner mechanism's ``variable`` as
-      the template for the inputState's ``value`` [LINK], and assigns the state as the projection's ``receiver``.
-      The projection's ``value`` must be compatible with the ``variable`` of the mechanism to which the inputState
-      belongs.
+    COMMENT:
+       CONFIRM THAT THIS IS TRUE:
+    COMMENT
+    * A **Projection object**.  This creates a default inputState using the first item of the owner mechanism's
+    ``variable`` as the template for the inputState's ``variable``, and assigns the state as the projection's
+    ``receiver``. The projection's ``value`` must be compatible with the inputState's ``variable``.
     ..
-    * A **specification dictionary**.  This creates the specified inputState using the owner mechanism's ``variable``
-      as the template for the inputState's ``value`` [LINK].  In addition to the standard entries of a parameter
-      dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry, the value of which can be a
-      Projection, projection specification dictionary [LINK], or a list containing items that are either of those.
+    * A **specification dictionary**.  This creates the specified inputState using the first item of the owner
+      mechanism's ``variable`` as the inputState's ``variable`` [LINK].  In addition to the standard
+      entries of a parameter dictionary [LINK], the dictionary can have a :keyword:`STATE_PROJECTIONS` entry,
+      the value of which can be a Projection, projection specification dictionary [LINK], or a list containing items
+      that are either of those.
     ..
-    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its ``value``,
-      and assigns the state as the ``receiver`` of the ``projection`` item.
+    * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its
+    ``variable``, and assigns the state as the ``receiver`` of the ``projection`` item.
 
     .. note::
        In all cases, the resulting ``value`` of the inputState must be compatible (that is, have the same number and
        type of elements) as the item of its owner mechanism's ``variable`` to which it is assigned (see [LINK]).
+       This is insured by the default ``function`` (:any:`LinearCombination`), since this preserves the format of its
+       input;  it must also be true for any other function that is assigned as the ``function`` for an inputState.
+COMMENT
 
 COMMENT:
    CHECK THIS:
@@ -83,6 +96,7 @@ COMMENT:
              reference_value IS THE ITEM OF variable CORRESPONDING TO THE inputState
 COMMENT
 
+COMMENT:
 Assigning inputStates using the :keyword:`INPUT_STATES` entry of a mechanism's parameter dictionary adds them to any
 that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
 automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
@@ -95,6 +109,7 @@ that inputState must have the same number of items as the  mechanisms's ``variab
 multiple inputStates, the order in which they are specified in the list or OrderedDict must parallel the order of
 the items to which they will be assined in the mechanism's ``variable``; furthemore, as noted above, the ``value`` for
 each inputState must match (in number and types of elements) the item of ``variable`` to which it will be assigned.
+COMMENT
 
 Structure
 ---------

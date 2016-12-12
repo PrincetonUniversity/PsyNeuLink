@@ -45,6 +45,12 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 
 my_control = ControlProjection(name='MY CONTROL')
 
+transfer_mechanism_Y = TransferMechanism(function=lambda x, y: x + y,
+                                         name='MY_TRANSFER_MECH_Y'
+                                         )
+
+transfer_mechanism_Y.exeucte([2, 3])
+
 transfer_mechanism_X = TransferMechanism(function=Logistic(bias=0,
                                                            gain=ControlProjection()),
                                          # noise=(0.3, CONTROL_PROJECTION),
@@ -55,8 +61,9 @@ transfer_mechanism_X = TransferMechanism(function=Logistic(bias=0,
                                          # params={OUTPUT_STATES:['JDC OUTPUT STATE',
                                          #                        {NAME:TRANSFER_MEAN,
                                          #                         CALCULATE:lambda x: np.mean(x)}]},
-                                         name='MY_TRANSFER_MECH'
+                                         name='MY_TRANSFER_MECH_X'
                                          )
+
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
                                                          gain=CONTROL_PROJECTION
                                                          ),
