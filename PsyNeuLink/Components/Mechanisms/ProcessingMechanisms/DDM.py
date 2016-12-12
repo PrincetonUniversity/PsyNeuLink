@@ -517,22 +517,22 @@ class DDM(ProcessingMechanism_Base):
         # User accessible params are assigned in _assign_defaults_to_paramClassDefaults (in __init__)
         # # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
         OUTPUT_STATES:[                                        # Full set specified to include Navarro and Fuss outputs
-            {NAME_ARG:DDM_DECISION_VARIABLE,
+            {NAME:DDM_DECISION_VARIABLE,
              INDEX:DDM_Output.DECISION_VARIABLE.value},
 
-            {NAME_ARG:DDM_RESPONSE_TIME,
+            {NAME:DDM_RESPONSE_TIME,
              INDEX:DDM_Output.RESPONSE_TIME.value},
 
-            {NAME_ARG:DDM_PROBABILITY_UPPER_THRESHOLD,          # Probability of hitting upper bound
+            {NAME:DDM_PROBABILITY_UPPER_THRESHOLD,          # Probability of hitting upper bound
              INDEX:DDM_Output.P_UPPER_MEAN.value},
 
-            {NAME_ARG:DDM_PROBABILITY_LOWER_THRESHOLD,          # Probability of hitting lower bound
+            {NAME:DDM_PROBABILITY_LOWER_THRESHOLD,          # Probability of hitting lower bound
              INDEX:DDM_Output.P_LOWER_MEAN.value},
 
-            {NAME_ARG:DDM_RT_CORRECT_MEAN,                      # NavarroAnd Fuss only
+            {NAME:DDM_RT_CORRECT_MEAN,                      # NavarroAnd Fuss only
              INDEX:DDM_Output.RT_CORRECT_MEAN.value},
 
-            {NAME_ARG:DDM_RT_CORRECT_VARIANCE,                  # NavarroAnd Fuss only
+            {NAME:DDM_RT_CORRECT_VARIANCE,                  # NavarroAnd Fuss only
              INDEX:DDM_Output.RT_CORRECT_VARIANCE.value}
         ]
     })
