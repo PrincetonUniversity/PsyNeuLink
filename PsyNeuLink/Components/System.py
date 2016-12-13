@@ -51,7 +51,7 @@ are permitted, as are recurrent projections, but projections from mechanisms in 
 Creating a System
 -----------------
 
-Systems are created by calling the ``system`` "factory" method.  If no arguments are provided, a system with a
+Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
 single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
 Whenever a system is created, a :doc:`ControlMechanism` is created for it and assigned as its controller.  The
 controller can be specified using the ``controller`` parameter, by referencing an existing ControlMechanism,
@@ -67,16 +67,19 @@ Structure
 Graph
 ~~~~~
 
-When an instance of a system is created, a graph is constructed that describes the connections (edges) among its mechanisms
-(nodes).  The graph is stored in the system's ``graph`` attribute [LINK], as a dict of dependencies, that can be
-passed to graph theoretical tools for analysis.  A system can contain recurrent paths, such as feedback loops, in which
-case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which
-its mechanisms are executed.  In order to execute such systems in an orderly manner, the graph must be acyclic.  So,
-for execution, PsyNeuLink constructs an ``executionGraph`` [LINK] from the system's ``graph``.  If the system is acyclic,
-these are the same.  However, if the ``graph`` is cyclic, then the ``executionGraph`` is a subset of the ``graph`` in
-which the dependencies (edges) associated with projections that close a loop have been removed.  Note that this only
-impacts the order of execution;  the projections themselves remain in effect, and will be fully functional during
-the execution of the affected mechanisms (see [LINK] below for a more detailed discussion of execution).
+When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
+mechanisms (nodes).  The graph is stored in the system's :py:data:`graph <System_Base.graph>` attribute,
+as a dict of dependencies,  that can be passed to graph theoretical tools for analysis.  A system can contain
+recurrent paths, such as feedback  loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses
+the graph of a system to determine the order in which its mechanisms are executed.  In order to execute such systems
+in an orderly manner, the graph must be acyclic.  So, for execution, PsyNeuLink constructs an
+:py:data:`executionGraph <System_Base.executionGraph>` from the system's :py:data:`graph <System_Base.graph>`.
+If the  system is acyclic, these are the same.  However, if the graph is cyclic, then the
+:py:data:`executionGraph <System_Base.executionGraph>` is a subset of the :py:data:`graph <System_Base.graph>`
+in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
+this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
+during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed discussion).
+
 
 .. _System_Mechanisms:
 
@@ -145,7 +148,8 @@ COMMENT
 Execution
 ---------
 
-A system can be executed by calling either its ``execute`` or ``run`` methods.
+A system can be executed by calling either its :py:meth:`execute <System_Base.execute>` or
+:py:meth:`run <System_Base.run>` methods.
 
 .. _System_Execution_Order:
 
@@ -154,9 +158,10 @@ Order
 Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
 processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
 system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
-represented by the executionGraph, which is a subset of the system's graph that has been "pruned" to be acyclic
-(i.e., devoid of recurrent loops).  While the executionGraph is acyclic, all recurrent projections in the system
-remain intact during execution and can be initialized at the start of execution (see below).
+represented by the :py:data:`executionGraph <System_Base.executionGraph>`, which is a subset of the system's graph that
+has been "pruned" to be acyclic (i.e., devoid of recurrent loops).  While the
+:py:data:`executionGraph <System_Base.executionGraph>` is acyclic, all recurrent projections in the system remain
+intact during execution and can be initialized at the start of execution (see below).
 
 .. _System_Execution_Phase:
 
@@ -318,9 +323,9 @@ def system(default_input_value=None,
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default inputs for ORIGIN mechanism of each Process
+    default_input_value : list or ndarray of values : default default inputs for :keyword:`ORIGIN` mechanism of each Process
         the input to the system if none is provided in a call to the execute() method or run() function.
-        Should contain one item corresponding to the input of each ORIGIN mechanism in the system.
+        Should contain one item corresponding to the input of each :keyword:`ORIGIN` mechanism in the system.
 
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
@@ -333,9 +338,9 @@ def system(default_input_value=None,
 
     initial_values : dict of mechanism:value entries
         a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
-        INITIALIZE_CYCLE).
-        The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
-        compatible with the format of the first item of the mechanism's value (i.e., mechanism.value[0]).
+        :keyword:`INITIALIZE_CYCLE`). The key for each entry is a mechanism object, and the value is a number,
+        list or 1d np.array that must be compatible with the format of the first item of the mechanism's value
+        (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
         the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
@@ -451,7 +456,7 @@ class System_Base(System):
     ----------
 
     processes : list of Process objects
-        List of processes in the system specified by the process parameter.
+        list of processes in the system specified by the process parameter.
 
         .. can be appended with prediction processes by EVCMechanism
            used with self.inputs to constsruct self.process_tuples
@@ -459,30 +464,31 @@ class System_Base(System):
         .. _processList : ProcessList
             Provides access to (process, input) tuples.
             Derived from self.inputs and self.processes.
-            Used to construct self.executionGraph and execute the System
+            Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     graph : OrderedDict
-        Contains a graph of the system.
+        contains a graph of the system.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies;
         The key of each entry is a receiver mech_tuple
         the value is a set of mech_tuples that send projections to the receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
-        Contains an acyclic subset of the system's graph, hierarchically organized by a toposort.
+        contains an acyclic subset of the system's graph, hierarchically organized by a toposort.
         Used to specify the order in which mechanisms are executed.
 
     execution_sets : list of sets
-        Contains a list of mechanism sets.
+        contains a list of mechanism sets.
         Each set contains mechanism to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
     executionList : list of Mechanism objects
-        Contains a list of mechanisms in the order in which they are executed.
-        The list is a random sample of the permissible orders constrained by the executionGraph
+        contains a list of mechanisms in the order in which they are executed.
+        The list is a random sample of the permissible orders constrained by the
+        :py:data:`executionGraph <System_Base.executionGraph>`
 
     mechanisms : list of Mechanism objects
-        Contains a list of all mechanisms in the system.
+        contains a list of all mechanisms in the system.
 
         .. property that points to _allMechanisms.mechanisms (see below)
 
@@ -521,45 +527,46 @@ class System_Base(System):
             Tuple for the controller in the system.
 
     originMechanisms : MechanismList
-        Contains all ORIGIN mechanisms in the system (i.e., that don't receive projections from any other mechanisms.
+        contains all :keyword:`ORIGIN` mechanisms in the system (i.e., that don't receive projections from any other
+        mechanisms.
 
         .. based on _origin_mech_tuples
-           system.input contains the input to each ORIGIN mechanism
+           system.input contains the input to each :keyword:`ORIGIN` mechanism
 
     terminalMechanisms : MechanismList
-        Contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms).
+        contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms).
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of each TERMINAL mechanism
 
     monitoringMechanisms : MechanismList)
-        Contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
+        contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
 
     controlMechanisms : MechanismList
-        Contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
+        contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
 
     value : 3D ndarray
-        Contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.
+        contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.
 
         .. _phaseSpecMax : int
             Maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
             ProcessingMechanism(s) to be executed in the system.
 
     numPhases : int
-        Number of phases for system (read-only).
+        number of phases for system (read-only).
 
         .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
-        Values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`)
+        values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`)
         must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system
         (self.recurrentInitMechanisms).
 
     timeScale : TimeScale  : default TimeScale.TRIAL
-       determines the default TimeScale value used by mechanisms in the system.
+        determines the default TimeScale value used by mechanisms in the system.
 
     results : List[outputState.value]
-        List of return values (outputState.value) from the sequence of executions.
+        list of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-<index>
         the name of the system;
@@ -1447,8 +1454,8 @@ class System_Base(System):
             time_scale=None):
         """Run a sequence of executions
 
-        Call execute method for each execution in a sequence specified by inputs.  See ``run`` function [LINK] for
-        details of formatting input specifications.
+        Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run`` for details of
+        formatting input specifications.
 
         Arguments
         ---------

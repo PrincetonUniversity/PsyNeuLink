@@ -209,7 +209,7 @@ as their output.</p>
 </div>
 <div class="section" id="creating-a-system">
 <span id="system-creation"></span><h2>Creating a System<a class="headerlink" href="#creating-a-system" title="Permalink to this headline">¶</a></h2>
-<p>Systems are created by calling the <code class="docutils literal"><span class="pre">system</span></code> &#8220;factory&#8221; method.  If no arguments are provided, a system with a
+<p>Systems are created by calling the <a class="reference internal" href="#System.system" title="System.system"><code class="xref py py-func docutils literal"><span class="pre">system()</span></code></a> function.  If no arguments are provided, a system with a
 single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
 Whenever a system is created, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> is created for it and assigned as its controller.  The
 controller can be specified using the <code class="docutils literal"><span class="pre">controller</span></code> parameter, by referencing an existing ControlMechanism,
@@ -219,16 +219,18 @@ or simply specifying its class;   if one is none specified, a <a class="referenc
 <span id="system-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="graph">
 <span id="system-graph"></span><h3>Graph<a class="headerlink" href="#graph" title="Permalink to this headline">¶</a></h3>
-<p>When an instance of a system is created, a graph is constructed that describes the connections (edges) among its mechanisms
-(nodes).  The graph is stored in the system&#8217;s <code class="docutils literal"><span class="pre">graph</span></code> attribute [LINK], as a dict of dependencies, that can be
-passed to graph theoretical tools for analysis.  A system can contain recurrent paths, such as feedback loops, in which
-case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which
-its mechanisms are executed.  In order to execute such systems in an orderly manner, the graph must be acyclic.  So,
-for execution, PsyNeuLink constructs an <code class="docutils literal"><span class="pre">executionGraph</span></code> [LINK] from the system&#8217;s <code class="docutils literal"><span class="pre">graph</span></code>.  If the system is acyclic,
-these are the same.  However, if the <code class="docutils literal"><span class="pre">graph</span></code> is cyclic, then the <code class="docutils literal"><span class="pre">executionGraph</span></code> is a subset of the <code class="docutils literal"><span class="pre">graph</span></code> in
-which the dependencies (edges) associated with projections that close a loop have been removed.  Note that this only
-impacts the order of execution;  the projections themselves remain in effect, and will be fully functional during
-the execution of the affected mechanisms (see [LINK] below for a more detailed discussion of execution).</p>
+<p>When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
+mechanisms (nodes).  The graph is stored in the system&#8217;s <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref py py-data docutils literal"><span class="pre">graph</span></code></a> attribute,
+as a dict of dependencies,  that can be passed to graph theoretical tools for analysis.  A system can contain
+recurrent paths, such as feedback  loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses
+the graph of a system to determine the order in which its mechanisms are executed.  In order to execute such systems
+in an orderly manner, the graph must be acyclic.  So, for execution, PsyNeuLink constructs an
+<a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a> from the system&#8217;s <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref py py-data docutils literal"><span class="pre">graph</span></code></a>.
+If the  system is acyclic, these are the same.  However, if the graph is cyclic, then the
+<a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a> is a subset of the <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref py py-data docutils literal"><span class="pre">graph</span></code></a>
+in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
+this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
+during the execution of the affected mechanisms (see <a class="reference internal" href="#system-execution"><span class="std std-ref">Execution</span></a> below for a more detailed discussion).</p>
 </div>
 <div class="section" id="mechanisms">
 <span id="system-mechanisms"></span><h3>Mechanisms<a class="headerlink" href="#mechanisms" title="Permalink to this headline">¶</a></h3>
@@ -268,15 +270,17 @@ can monitor and/or control mechanisms belonging to more than one process.</span>
 </div>
 <div class="section" id="execution">
 <span id="system-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A system can be executed by calling either its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods.</p>
+<p>A system can be executed by calling either its <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> methods.</p>
 <div class="section" id="order">
 <span id="system-execution-order"></span><h3>Order<a class="headerlink" href="#order" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
 processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
 system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
-represented by the executionGraph, which is a subset of the system&#8217;s graph that has been &#8220;pruned&#8221; to be acyclic
-(i.e., devoid of recurrent loops).  While the executionGraph is acyclic, all recurrent projections in the system
-remain intact during execution and can be initialized at the start of execution (see below).</p>
+represented by the <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a>, which is a subset of the system&#8217;s graph that
+has been &#8220;pruned&#8221; to be acyclic (i.e., devoid of recurrent loops).  While the
+<a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a> is acyclic, all recurrent projections in the system remain
+intact during execution and can be initialized at the start of execution (see below).</p>
 </div>
 <div class="section" id="phase">
 <span id="system-execution-phase"></span><h3>Phase<a class="headerlink" href="#phase" title="Permalink to this headline">¶</a></h3>
@@ -330,15 +334,15 @@ if a params dictionary is included, it is passed to the instantiated system.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>default_input_value</strong> (<em>list or ndarray of values : default default inputs for ORIGIN mechanism of each Process</em>) &#8211; the input to the system if none is provided in a call to the execute() method or run() function.
-Should contain one item corresponding to the input of each ORIGIN mechanism in the system.</li>
+<li><strong>default_input_value</strong> (list or ndarray of values : default default inputs for <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of each Process) &#8211; the input to the system if none is provided in a call to the execute() method or run() function.
+Should contain one item corresponding to the input of each <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in the system.</li>
 <li><strong>processes</strong> (<em>list of process specifications : default list(''DefaultProcess'')</em>) &#8211; a list of the processes to include in the system.
 Process specifications can be an instance, the class name (creates a default Process, or a specification
 dictionary (see Processes for details).</li>
 <li><strong>initial_values</strong> (<em>dict of mechanism:value entries</em>) &#8211; a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
-INITIALIZE_CYCLE).
-The key for each entry is a mechanism object, and the value is a number, list or 1d np.array that must be
-compatible with the format of the first item of the mechanism&#8217;s value (i.e., mechanism.value[0]).</li>
+<code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>). The key for each entry is a mechanism object, and the value is a number,
+list or 1d np.array that must be compatible with the format of the first item of the mechanism&#8217;s value
+(i.e., mechanism.value[0]).</li>
 <li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
 monitor_for_control, and specify the value of ControlProjections in the system.</li>
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <code class="docutils literal"><span class="pre">controller</span></code> is executed during system execution.</li>
@@ -374,13 +378,13 @@ They should be instantiated using the <a class="reference internal" href="#Syste
 <dl class="attribute">
 <dt id="System.System_Base.processes">
 <code class="descname">processes</code><a class="headerlink" href="#System.System_Base.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Process objects</em> &#8211; List of processes in the system specified by the process parameter.</p>
+<dd><p><em>list of Process objects</em> &#8211; list of processes in the system specified by the process parameter.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.graph">
 <code class="descname">graph</code><a class="headerlink" href="#System.System_Base.graph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em> &#8211; Contains a graph of the system.
+<dd><p><em>OrderedDict</em> &#8211; contains a graph of the system.
 Each entry specifies a set of &lt;Receiver&gt;: {sender, sender...} dependencies;
 The key of each entry is a receiver mech_tuple
 the value is a set of mech_tuples that send projections to the receiver.
@@ -390,14 +394,14 @@ If a key (receiver) has no dependents, its value is an empty set.</p>
 <dl class="attribute">
 <dt id="System.System_Base.executionGraph">
 <code class="descname">executionGraph</code><a class="headerlink" href="#System.System_Base.executionGraph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em> &#8211; Contains an acyclic subset of the system&#8217;s graph, hierarchically organized by a toposort.
+<dd><p><em>OrderedDict</em> &#8211; contains an acyclic subset of the system&#8217;s graph, hierarchically organized by a toposort.
 Used to specify the order in which mechanisms are executed.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.execution_sets">
 <code class="descname">execution_sets</code><a class="headerlink" href="#System.System_Base.execution_sets" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of sets</em> &#8211; Contains a list of mechanism sets.
+<dd><p><em>list of sets</em> &#8211; contains a list of mechanism sets.
 Each set contains mechanism to be executed at the same time.
 The sets are ordered in the sequence with which they should be executed.</p>
 </dd></dl>
@@ -405,14 +409,15 @@ The sets are ordered in the sequence with which they should be executed.</p>
 <dl class="attribute">
 <dt id="System.System_Base.executionList">
 <code class="descname">executionList</code><a class="headerlink" href="#System.System_Base.executionList" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em> &#8211; Contains a list of mechanisms in the order in which they are executed.
-The list is a random sample of the permissible orders constrained by the executionGraph</p>
+<dd><p><em>list of Mechanism objects</em> &#8211; contains a list of mechanisms in the order in which they are executed.
+The list is a random sample of the permissible orders constrained by the
+<a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.mechanisms">
 <code class="descname">mechanisms</code><a class="headerlink" href="#System.System_Base.mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Mechanism objects</em> &#8211; Contains a list of all mechanisms in the system.</p>
+<dd><p><em>list of Mechanism objects</em> &#8211; contains a list of all mechanisms in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -426,43 +431,44 @@ The key of each entry is a Mechanism object, and the value of each entry is a li
 <dl class="attribute">
 <dt id="System.System_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#System.System_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; Contains all ORIGIN mechanisms in the system (i.e., that don&#8217;t receive projections from any other mechanisms.</p>
+<dd><p><em>MechanismList</em> &#8211; contains all <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms in the system (i.e., that don&#8217;t receive projections from any other
+mechanisms.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#System.System_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; Contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
+<dd><p><em>MechanismList</em> &#8211; contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#System.System_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList)</em> &#8211; Contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).</p>
+<dd><p><em>MechanismList)</em> &#8211; contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.controlMechanisms">
 <code class="descname">controlMechanisms</code><a class="headerlink" href="#System.System_Base.controlMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; Contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).</p>
+<dd><p><em>MechanismList</em> &#8211; contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#System.System_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3D ndarray</em> &#8211; Contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.</p>
+<dd><p><em>3D ndarray</em> &#8211; contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.numPhases">
 <code class="descname">numPhases</code><a class="headerlink" href="#System.System_Base.numPhases" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; Number of phases for system (read-only).</p>
+<dd><p><em>int</em> &#8211; number of phases for system (read-only).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.initial_values">
 <code class="descname">initial_values</code><a class="headerlink" href="#System.System_Base.initial_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list or ndarray of values :  default array of zero arrays</em> &#8211; Values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
+<dd><p><em>list or ndarray of values :  default array of zero arrays</em> &#8211; values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
 must be the same length as the list of <code class="xref std std-keyword docutils literal"><span class="pre">INITIAL_CYCLE</span></code> mechanisms in the system
 (self.recurrentInitMechanisms).</p>
 </dd></dl>
@@ -476,7 +482,7 @@ must be the same length as the list of <code class="xref std std-keyword docutil
 <dl class="attribute">
 <dt id="System.System_Base.results">
 <code class="descname">results</code><a class="headerlink" href="#System.System_Base.results" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[outputState.value]</em> &#8211; List of return values (outputState.value) from the sequence of executions.</p>
+<dd><p><em>List[outputState.value]</em> &#8211; list of return values (outputState.value) from the sequence of executions.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -523,8 +529,8 @@ assigned using <code class="docutils literal"><span class="pre">classPreferences
 <dt id="System.System_Base.run">
 <code class="descname">run</code><span class="sig-paren">(</span><em>inputs</em>, <em>num_executions=None</em>, <em>reset_clock=True</em>, <em>initialize=False</em>, <em>targets=None</em>, <em>learning=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>time_scale=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions</p>
-<p>Call execute method for each execution in a sequence specified by inputs.  See <code class="docutils literal"><span class="pre">run</span></code> function [LINK] for
-details of formatting input specifications.</p>
+<p>Call execute method for each execution in a sequence specified by inputs.  See <span class="xref doc">Run`</span> for details of
+formatting input specifications.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
