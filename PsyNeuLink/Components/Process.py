@@ -84,14 +84,16 @@ process. (Note:: The :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a p
 :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)
 
+.. _Process_Mechanism_Specification:
+
 Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
 use any supported format for specifying a mechanism (see :ref:`Mechanism_Creation`).  Alternatively,
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
-specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
-belongs) is executed, but otherwise they do not remain associated with the mechanism
-(see :ref:`Mechanism_Runtime_Parameters`).  The phase specification determines the time_step at which the mechanism
-is executed when it is executed as part of a system (see System :ref:`System_Phase` for an explanation of phases).
-Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
+specification.  The **runtime parameters** will be used for that mechanism whenever the process (or a system to which
+it belongs) is executed, but otherwise they do not remain associated with the mechanism
+(see :ref:`Mechanism_Runtime_Parameters`).  The **phase** specification determines the time_step at which the mechanism
+is executed when it is executed as part of a system (see :ref:`System phase <System_Phase>` for an explanation of
+phases). Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
 assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
 (Note: irrespective of the format in which a mechanism is specified in a pathway, it's entry is converted internally
 to a :class:`MechanismTuple` namedtuple, information about which is stored in a :class:`MechanismList`

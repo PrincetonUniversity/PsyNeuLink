@@ -3,6 +3,8 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
+# FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
+
 # IMPLEMENT / DOCUMENT:  MODIFY ``function`` ATTRIBUTE SO THAT, IF IT IS NOT A SUBCLASS OF Function
 #                        (E.G., IT IS A LAMBDA FUNCTION), THEN FUNCTION_PARAMS IS DISABLED.
 #                        -- SEE EXAMPLE OF transfer_mechanism_Y in Scratch Pad
