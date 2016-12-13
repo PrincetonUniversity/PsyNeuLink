@@ -184,8 +184,8 @@ also be specified for the entire process, in which case the projections between 
 </div>
 <div class="section" id="creating-a-process">
 <span id="process-creation"></span><h2>Creating a Process<a class="headerlink" href="#creating-a-process" title="Permalink to this headline">¶</a></h2>
-<p>Processes are created by calling the <code class="docutils literal"><span class="pre">process</span></code> &#8220;factory&#8221; method.  If no arguments are provided, a process with a
-single default mechanism will be returned (see [LINK for default] for default mechanism).</p>
+<p>Processes are created by calling the <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a> method.  If no arguments are provided,
+a process with a single default mechanism will be returned (see [LINK] for default] for default mechanism).</p>
 </div>
 <div class="section" id="structure">
 <span id="process-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -308,7 +308,7 @@ mapping from the Process&#8217; input value to <code class="xref std std-keyword
 Learning can be configured for the projection to a particular mechanism in a process, or for the entire process.
 It is specified for a particular mechanism by including a
 <span class="xref std std-ref">LearningProjection specification</span> &lt;&lt;LearningProjection_Creation&gt;` in the specification for the projection
-to that mechanism [LINK].  It is specified for the entire process by assigning to its <code class="docutils literal"><span class="pre">learning</span></code> argument either a
+to that mechanism.  It is specified for the entire process by assigning to its <code class="docutils literal"><span class="pre">learning</span></code> argument either a
 LearningProjection specification, or the keyword <code class="xref std std-keyword docutils literal"><span class="pre">LEARNING</span></code>. Specifying learning for a process will
 implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
 the process&#8217; inputState to its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and projections from the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism to
@@ -441,7 +441,9 @@ in a round of executions.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
 </li>
-<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; the type of matrix used for default projections (see &#8216;&#8217;matrix&#8217;&#8217; parameter for &#8216;&#8217;MappingProjection()&#8217;&#8217; projection) [LINK]</li>
+<li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; the type of matrix used for default projections
+(see <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter
+for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <span class="xref std std-ref">learning</span> for all
 eligible projections in the process.</li>
 <li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> to which a
