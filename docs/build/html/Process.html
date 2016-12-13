@@ -213,14 +213,14 @@ process. The last mechanism is designated at the <code class="xref std std-keywo
 process. (Note:: The <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of a process are not necessarily
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of a system; see System).
 .. note: designations are stored in the mechanism.processes attribute (see _instantiate_graph below, and Mechanism)</p>
-<p>Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
+<p id="process-mechanism-specification">Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
 use any supported format for specifying a mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">Creating a Mechanism</span></a>).  Alternatively,
 mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
-specification.  The runtime parameters will be used for that mechanism whenever the process (or a system to which it
-belongs) is executed, but otherwise they do not remain associated with the mechanism
-(see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).  The phase specification determines the time_step at which the mechanism
-is executed when it is executed as part of a system (see System <span class="xref std std-ref">System_Phase</span> for an explanation of phases).
-Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
+specification.  The <strong>runtime parameters</strong> will be used for that mechanism whenever the process (or a system to which
+it belongs) is executed, but otherwise they do not remain associated with the mechanism
+(see <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a>).  The <strong>phase</strong> specification determines the time_step at which the mechanism
+is executed when it is executed as part of a system (see <span class="xref std std-ref">System phase</span> for an explanation of
+phases). Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
 assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
 (Note: irrespective of the format in which a mechanism is specified in a pathway, it&#8217;s entry is converted internally
 to a <code class="xref py py-class docutils literal"><span class="pre">MechanismTuple</span></code> namedtuple, information about which is stored in a <code class="xref py py-class docutils literal"><span class="pre">MechanismList</span></code>

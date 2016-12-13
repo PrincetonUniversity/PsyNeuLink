@@ -109,6 +109,8 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its ``calculate``
   parameter, and used as the input to any projections that it sends.
 
+.. _OutputState_Attributes:
+
 An outputState also has two additional attributes that determine its operation:
 
 .. _OutputState_Index:

@@ -75,7 +75,7 @@ Creating a Mechanism
 --------------------
 
 Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
-constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a  ``mechanism`` [LINK] "factory"
+constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a  :any:`mechanism` "factory"
 method that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).
 Mechanisms can also be specified "in context," for example in the ``pathway`` attribute of a process.  This can be done
 in either of the ways mentioned above, or one of the following ways:
@@ -112,10 +112,9 @@ it automatically creates the parameterStates it needs to represent the parameter
 creates any inputStates and outputStates required for the projections it has been assigned.  However, inputStates and
 outputStates, and corresponding projections, can also be specified in the mechanism's parameter dictionary, using
 entries with the keys ``INPUT_STATES`` and ``OUTPUT_STATES``, respectively. The value of each entry can be the name
-of the state's class (to create a default), an existing state, the name of one,  a specification dictionary for one,
-or a list containing of any of these to create multiple states.  Each type of state also allows additional forms of
-specification, as described in the documentation for :ref:`InputStates <InputState_Creation>` and
-:ref:`OutputStates <OuputState_In_Context_Specification>`, respectively.
+of the state's class (to create a default), an existing state, a specification dictionary for one, a value (used
+as the state's ``variable``) or a list containing of any of these to create multiple states (see
+:ref:`InputStates <InputState_Creation>` and :ref:`OutputStates <OuputState_In_Context_Specification>` for details).
 
 COMMENT:
     PUT EXAMPLE HERE
@@ -140,19 +139,25 @@ and bias parameters can also be specified as shown in the following example::
 
     my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
 
+COMMENT:
+    NOT CURRENTLY IMPLEMENTED
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
 functions can be any Python function, including an inline (lambda) function, so long as it generates a result
 with a type that is consistent with the type expected by the mechanism (see :doc:`Function`;  also see
 :ref:'Mechanism_Specifying_Parameters` below).
+COMMENT
 
-The input to a mechanism's function is contained in the mechanism's ``variable`` attribute, and the result of its
-function is contained in the mechanism's ``value`` attribute.
+The input to a mechanism's ``function`` comes from the mechanism's ``variable`` attribute, which is a 2d array that
+has one item for each of the mechanism's inputStates.  The result of the ``function`` is placed in the mechanism's
+``value`` attribute, which is also a 2d array that may have one or more items.  These are used by the mechanism's
+outputStates to generate their ``value`` attributes, each of which is assigned as an item in the mechanism's
+``outputValue`` attribute.
 
 .. note::
-   The input to a mechanism is not necessarily the same as the input to its function (i.e., its ``variable`` attribute);
-   the mechanism's input is processed by its ``inputState(s)`` before being submitted to its function
+   The input to a mechanism is not necessarily the same as the input to its ``function`` (i.e., its ``variable``
+   attribute): the mechanism's input is processed by its ``inputState(s)`` before being submitted to its function
    (see :ref:`InputStates`).  Similarly, the result of a mechanism's function (i.e., its ``value`` attribute)  is not
-   necessarily the same as the mechanism's output;  the result of the function is processed by the mechanism's
+   necessarily the same as the mechanism's output:  the result of the ``function`` is processed by the mechanism's
    ``outputstate(s)`` which is then assigned to the mechanism's ``outputValue`` attribute (see :ref:`OutputStates`)
 
 .. _Mechanism_States:
@@ -174,29 +179,37 @@ Every mechanism has three types of states (shown schematically in the figure bel
 InputStates
 ^^^^^^^^^^^
 
-These receive and represent the input to a mechanism. A mechanism usually has only one InputState, kept in its
+These receive and represent the input to a mechanism. A mechanism usually has only one inputState, kept in its
 ``inputState`` attribute.  However some mechanisms have more than one.  For example, ComparatorMechanism
 mechanisms have one inputState for their ``sample`` and another for their ``target`` input.  If a mechanism has
-more than one inputState, they are kept in an OrderedDict in the mechanism's ``inputStates`` attribute;  the key of
-each entry is the name of an inputState and its value is that inputState.  If a mechanism has multiple
-inputStates, the first -- designated its *primary* inputState -- is also assigned to its ``inputState`` attribute.
+more than one inputState, they are kept in an OrderedDict in the mechanism's ``inputStates`` attribute (note the
+plural);  the key of each entry is the name of an inputState and its value is the inputState.  If a mechanism has
+multiple inputStates, the first -- designated its *primary* inputState -- is also assigned to its ``inputState``
+attribute.
 COMMENT:
 [TBI:]
 If the inputState are created automatically, or are not assigned a name when specified, then each is named
 using the following template: ???XXXX
 COMMENT
 
-.. _Mechanism_Variable:
 
 Each inputState of a mechanism can receive one or more projections from other mechanisms or, if the mechanism is an
-:keyword:`ORIGIN` mechanism [LINK], from the input to the process to which it belongs.  Each inputState's ``function``
-aggregates the values received from its projections (usually by summing them), and assigns the result to its
-``value`` attribute.  The ``value`` attributes for all of a mechanism's inputStates are kept in a 2d np.array assigned
-to the mechanism's ``inputValue`` attribute, and to its ``variable`` attribute which serves as the input
-to the  mechanism's ``function``.  Therefore, the number of inputStates for the mechanism must match the number of
-items specified for the mechanism's ``variable`` (that is, its size along its first dimension, axis 0).  An exception
-is if the mechanism's ``variable`` has more than one item, but only a single inputState;  in that case,
-the ``value`` of that inputState must have the same number of items as the mechanisms's ``variable``.
+:keyword:`ORIGIN` :ref:`mechanism <Mechanism_Role_In_Processes_And_Systems>`, from the input to the process to which it
+belongs. Each inputState's ``function`` aggregates the values received from its projections (usually by summing them),
+and assigns the result to its ``value`` attribute.
+
+.. _Mechanism_Variable:
+
+The value of each inputState for the mechanism is placed in an item of the mechanism's ``variable`` attribute
+(a 2d array), as well as in a corresponding item of its ``inputValue`` attribute (a list).  The ``variable``
+provides the input to the mechanism's ``function``.
+
+COMMENT:
+Therefore, the number of inputStates for the mechanism must match the number of tems specified for the mechanism's
+``variable`` (that is, its size along its first dimension, axis 0).  An exception is if the mechanism's ``variable``
+has more than one item, but only a single inputState;  in that case, the ``value`` of that inputState must have the
+same number of items as the mechanisms's ``variable``.
+COMMENT
 
 .. _Mechanism_ParameterStates:
 
@@ -218,18 +231,18 @@ These represent the output(s) of a mechanism. A mechanism can have several outpu
 sender for projections, to transmit  its value to other  mechanisms and/or the output of a process or system.
 Similar to inputStates, the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState``
 attribute, while all of its outputStates (including the primary one) are stored in an OrderedDict in its
-``outputStates`` attribute;  the key for each entry is the name of an outputState, and the value is the outputState
-itself.  Every mechanism has at  least one ("primary") outputState, that is kept in its ``outputState`` attribute.
-This is assigned an unmodified  copy of the first item of the owner mechanism's ``value`` (often the direct output
-of the mechanism's ``function``).  OutputStates may also be used for other purposes.  For example, some Processing
-mechanisms (such as the :doc:`TransferMechanism`) use outputStates to represent values derived from its primary out
-(e.g., its mean and variance).   :doc:`ControlMechanisms` can have multiple outputStates, one for each of their
+``outputStates`` attribute (note the plural);  the key for each entry is the name of an outputState, and the value is
+the outputState itself.  Every mechanism has at least one ("primary") outputState, the ``value`` of which is assigned
+an unmodified copy of the first item of the owner mechanism's ``value`` (usually the direct output of the mechanism's
+``function``).  Other outputStates may be used for other purposes.  For example, some Processing mechanisms (such as
+the :doc:`TransferMechanism`) use outputStates to represent values derived from its primary output (e.g., its mean and
+variance).  :doc:`ControlMechanisms` assign one outputState for each of their
 :doc:`ControlProjections  <ControlProjection>`.  The item of the mechanism's ``value`` to which an outputState is
 assigned can be specified using its ``INDEX`` parameter, and the function used to convert that item into the
 outputState's ``value`` can be customized using its ``CALCULATE`` parameter (see :ref:`OutputStates_Creation`).
-The ``value`` attributes of all of a mechanism's outputStates  are concatenated into a 2d np.array and assigned to
-the  mechanism's ``outputValue`` attribute.  Note that this is distinct from the mechanism's ``value`` attribute,
-which contains the full and unmodified results of its execution.
+The ``value`` attributes of all of a mechanism's outputStates  are assigned to the  mechanism's ``outputValue``
+attribute (a list), in the same order in which they appear in the ``outputStates`` attribute.  Note that this is
+distinct from the mechanism's ``value`` attribute, which contains the full and unmodified results of its execution.
 
 .. _Mechanism_Specifying_Parameters:
 
@@ -615,7 +628,8 @@ class Mechanism_Base(Mechanism):
 
     phaseSpec : int or float :  default 0
         Specifies the time_step(s) on which the mechanism is executed as part of a system
-        (see Process for specification [LINK], and System for how phases are used. [LINK])
+        (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
+        for how phases are used).
 
     processes : Dict[Process, str]:
         Contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
