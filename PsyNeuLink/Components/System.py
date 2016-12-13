@@ -1239,8 +1239,8 @@ class System_Base(System):
             self.outputStates[mech.name] = mech.outputStates
 
     def initialize(self):
-        """Assign ``initial_values`` to mechanisms designated as :keyword:`INITIALIZE_CYCLE` \
-        and contained in recurrentInitMechanisms
+        """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
+        :keyword:`INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUTS??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
