@@ -212,9 +212,10 @@ COMMENT:
     (listed in :py:data:`monitoredOutputStates <System_Base.monitoredOutputStates>`),
 COMMENT
 and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
-(see :doc:`ControlMechanism` for a description of how to specify which outputStates are monitored and which
-parameters are controlled). The controller is executed after all other mechanisms in the system are executed,
-and sets the values of any parameters that it controls, which then take effect in the next round of execution.
+(see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
+monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
+executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
+controls, which then take effect in the next round of execution.
 
 COMMENT:
    Examples
@@ -356,7 +357,7 @@ def system(default_input_value=None,
         monitor_for_control, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
-        specifies whether the ``controller`` is executed during system execution.
+        specifies whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
 
     monitor_for_control : list of OutputState objects or specifications : default None
         specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
