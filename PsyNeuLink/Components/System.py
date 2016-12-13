@@ -481,7 +481,7 @@ class System_Base(System):
         ``monitor_for_control`` argument, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
-        determines whether the ``controller`` is executed during system execution.
+        determines whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
 
     graph : OrderedDict
         contains a graph of the system.
@@ -1252,7 +1252,8 @@ class System_Base(System):
                 inputs=None,
                 time_scale=None,
                 context=None):
-        """Execute mechanisms in system at specified phases in order specified by ``executionGraph``
+        """Execute mechanisms in system at specified :py:data:`phases <System_Base.phase>` in order specified by the
+        :py:data:`executionGraph <System_Base.executionGraph> attribute.
 
         Assign inputs to :keyword:`ORIGIN` mechanisms
 
