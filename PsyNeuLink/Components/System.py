@@ -54,8 +54,9 @@ Creating a System
 Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
 single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
 Whenever a system is created, a :doc:`ControlMechanism` is created for it and assigned as its controller.  The
-controller can be specified using the ``controller`` parameter, by referencing an existing ControlMechanism,
-or simply specifying its class;   if one is none specified, a :doc:`DefaultControlMechanism` is created.
+controller can be specified using the :py:data:`controller <System_Base.controller>` parameter, by referencing an
+existing ControlMechanism, or simply specifying its class;   if one is none specified,
+a :doc:`DefaultControlMechanism` is created.
 
 .. _System_Structure:
 
