@@ -178,16 +178,18 @@ When a mechanism is executed, it receives input from any other mechanisms that p
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a system is specified in the ``inputs`` argument of either its ``execute`` or ``run`` method.  In both
-cases, the input for a single trial must be a list or ndarray of values, each of which is an appropriate input for the
-corresponding :keyword:`ORIGIN` mechanism (listed in ``originMechanisms``). If the ``execute`` method
-is used, input for only a single trial is provided, and only a single trial is executed.  The ``run`` method can be used
-for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs, one for each
-round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
-initialization values, and a list or ndarray of target values.  Initialization values are assigned, at the start
-execution, as input to mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`),
-and target values are assigned to the target attribute of :doc:`Monitoringmechanisms` (see learning below;  also, see
-:doc:`Run` for additional details of formatting input specifications).
+The input to a system is specified in the ``input`` argument of either its :py:meth:`execute <System_Base.execute>` or
+:py:meth:`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of
+values, each of which is an appropriate input for the corresponding :keyword:`ORIGIN` mechanism (listed in
+:py:data:`originMechanisms <System_Base.originMechanisms>`). If the :py:meth:`execute <System_Base.execute>` method
+is used, input for only a single trial is provided, and only a single trial is executed.  The
+:py:meth:`run <System_Base.run>` method can be used for a sequence of executions (time_steps or trials),
+by providing it with a list or ndarray of inputs, one for each round of execution.  In both cases, two other types of
+input can be provided:  a list or ndarray of initialization values, and a list or ndarray of target values.
+Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops (
+designated as :keyword:`INITIALIZE_CYCLE`), and target values are assigned to the target attribute of
+:doc:`Monitoringmechanisms` (see learning below;  also, see :doc:`Run` for additional details of formatting input
+specifications).
 
 .. _System_Execution_Learning:
 
@@ -195,18 +197,24 @@ Learning
 ~~~~~~~~
 The system will execute learning for any process that specifies it.  Learning is executed for each process
 after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
-A target list or ndarray must be provided in the call to the system's execute() or the run().  It must contain
-a value for the target attribute of the monitoring mechanism of each process in the system that specifies learning.
+A target list or ndarray must be provided in the call to the system's :py:meth:`execute <System_Base.execute>` or
+:py:meth:`run <System_Base.run>` method.  It must contain a value for the
+:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the :doc:`ComparatorMechanism` of
+each process in the system that specifies learning.
 
 .. _System_Execution_Control:
 
 Control
 ~~~~~~~
-Every system is associated with a single controller (by default, the ``DefaultController``).  The controller monitors
-the outputState(s) of specified mechanisms and uses that information to set the parameter values for the fuctions of
-those or other mechanisms in the system (see :doc:`ControlMechanism`).  The controller is executed after all other
-mechanisms in the system are executed, and sets the values of any parameters that it controls, which then take
-effect in the next round of execution.
+Every system is associated with a single :py:data:`controller <System_Base.controller>`.  The controller monitors
+the outputState(s) of one or more mechanisms in the system
+COMMENT:
+    (listed in :py:data:`monitoredOutputStates <System_Base.monitoredOutputStates>`),
+COMMENT
+and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
+(see :doc:`ControlMechanism` for a description of how to specify which outputStates are monitored and which
+parameters are controlled). The controller is executed after all other mechanisms in the system are executed,
+and sets the values of any parameters that it controls, which then take effect in the next round of execution.
 
 COMMENT:
    Examples
@@ -344,7 +352,7 @@ def system(default_input_value=None,
         (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
-        the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
+        specifies the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
         monitor_for_control, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
@@ -466,6 +474,13 @@ class System_Base(System):
             Provides access to (process, input) tuples.
             Derived from self.inputs and self.processes.
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
+
+    controller : ControlMechanism : default DefaultController
+        the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
+        ``monitor_for_control`` argument, and specify the value of ControlProjections in the system.
+
+    enable_controller :  bool : default :keyword:`False`
+        determines whether the ``controller`` is executed during system execution.
 
     graph : OrderedDict
         contains a graph of the system.
