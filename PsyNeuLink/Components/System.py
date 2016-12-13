@@ -361,7 +361,7 @@ def system(default_input_value=None,
 
     monitor_for_control : list of OutputState objects or specifications : default None
         specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
-        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` parameter).
+        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` argument).
 
     params : dict : default None
         a dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
@@ -1239,7 +1239,9 @@ class System_Base(System):
             self.outputStates[mech.name] = mech.outputStates
 
     def initialize(self):
-        # Assign intitial_values to mechanisms desginated as INITIALIZE_CYCLE and containted in recurrentInitMechanisms
+        """Assign ``initial_values`` to mechanisms designated as :keyword:`INITIALIZE_CYCLE` \
+        and contained in recurrentInitMechanisms
+        """
         # FIX:  INITIALIZE PROCESS INPUTS??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
         # FIX: ADD OPTION THAT IMPLEMENTS/ENFORCES INITIALIZATION
@@ -1252,8 +1254,8 @@ class System_Base(System):
                 inputs=None,
                 time_scale=None,
                 context=None):
-        """Execute mechanisms in system at specified :py:data:`phases <System_Base.phase>` in order specified by the
-        :py:data:`executionGraph <System_Base.executionGraph> attribute.
+        """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
+        specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
 
         Assign inputs to :keyword:`ORIGIN` mechanisms
 
@@ -1472,7 +1474,7 @@ class System_Base(System):
             time_scale=None):
         """Run a sequence of executions
 
-        Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run`` for details of
+        Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
         formatting input specifications.
 
         Arguments
@@ -1483,10 +1485,11 @@ class System_Base(System):
             requirements and options).
 
         reset_clock : bool : default :keyword:`True`
-            if True, resets the ``CentralClock`` to 0 before a sequence of executions.
+            if True, resets the :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default :keyword:`False`
-            if :keyword:`True`, calls the ``initialize`` method of the system before a sequence of executions.
+            if :keyword:`True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the system before a
+            sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default :keyword:`None`
             the target values for the MonitoringMechanisms of the system for each execution (used for learning).

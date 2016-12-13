@@ -10,13 +10,16 @@ from enum import Enum
 
 # Time scale modes
 class TimeScale(Enum):
-        TIME_STEP = 0
-        TRIAL = 1
-        BOUNDS = 2 # Used for type checking where TimeScale value is passed
+    """Values used to specify ``time_scale`` argument for mechanisms, processes, and systems.
+    """
+    TIME_STEP = 0
+    TRIAL = 1
+    BOUNDS = 2 # Used for type checking where TimeScale value is passed
 
 # Central clock
 class CentralClock:
-
+    """Central clock used by all mechanisms, processes and systems.
+    """
     time_step = 0
     trial = 0
     block = 0
