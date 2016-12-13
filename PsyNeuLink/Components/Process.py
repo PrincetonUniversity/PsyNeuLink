@@ -45,8 +45,8 @@ also be specified for the entire process, in which case the projections between 
 Creating a Process
 ------------------
 
-Processes are created by calling the ``process`` "factory" method.  If no arguments are provided, a process with a
-single default mechanism will be returned (see [LINK for default] for default mechanism).
+Processes are created by calling the :py:func:`process` method.  If no arguments are provided,
+a process with a single default mechanism will be returned (see [LINK] for default] for default mechanism).
 
 .. _Process_Structure:
 
@@ -167,7 +167,7 @@ Learning modifies projections so that the input to a given mechanism generates a
 Learning can be configured for the projection to a particular mechanism in a process, or for the entire process.
 It is specified for a particular mechanism by including a
 :ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
-to that mechanism [LINK].  It is specified for the entire process by assigning to its ``learning`` argument either a
+to that mechanism.  It is specified for the entire process by assigning to its ``learning`` argument either a
 LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
 implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
 the process' inputState to its :keyword:`ORIGIN` mechanism, and projections from the :keyword:`TERMINAL` mechanism to
@@ -431,7 +431,9 @@ def process(process_spec=None,
         :keyword:`ORIGIN` mechanism every time it is executed in a round of executions.
 
     default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
-        the type of matrix used for default projections (see ''matrix'' parameter for ''MappingProjection()'' projection) [LINK]
+        the type of matrix used for default projections
+        (see :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter
+        for :doc:`MappingProjection`).
 
     learning : Optional[LearningProjection spec]
         implements :ref:`learning <LearningProjection_CreationLearningSignal>` for all
