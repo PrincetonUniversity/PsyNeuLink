@@ -169,8 +169,8 @@ by a ControlMechanism to adapt the ControlProjection&#8217;s <code class="docuti
 <div class="section" id="creating-a-controlprojection">
 <span id="controlprojection-creation"></span><h2>Creating a ControlProjection<a class="headerlink" href="#creating-a-controlprojection" title="Permalink to this headline">¶</a></h2>
 <p>A ControlProjection can be created using any of the standard ways to  <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a projection</span></a>,
-or by including it in the <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">specification of a parameter</span></a> for a <code class="docutils literal"><span class="pre">function</span></code>
-belonging to a mechanism or MappingProjection.  If a ConrolProjection is created using its constructor on its own,
+or by including it in the <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">specification of a parameter</span></a> for a mechanism,
+MappingProjection, or their <code class="docutils literal"><span class="pre">function</span></code>.  If a ConrolProjection is created using its constructor on its own,
 the <code class="docutils literal"><span class="pre">receiver</span></code> argument must be specified.  If it is included in a parameter specification, the parameterState for
 the parameter being specified will be assigned as the ControlProjection&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code>.  If its <code class="docutils literal"><span class="pre">sender</span></code> is not
 specified, its assignment depends on the <code class="docutils literal"><span class="pre">receiver</span></code>.  If the receiver belongs to a mechanism that is part of a

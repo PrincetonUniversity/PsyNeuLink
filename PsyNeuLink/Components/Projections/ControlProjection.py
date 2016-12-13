@@ -27,8 +27,8 @@ Creating a ControlProjection
 ----------------------------
 
 A ControlProjection can be created using any of the standard ways to  :ref:`create a projection <Projection_Creation>`,
-or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a ``function``
-belonging to a mechanism or MappingProjection.  If a ConrolProjection is created using its constructor on its own,
+or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism,
+MappingProjection, or their ``function``.  If a ConrolProjection is created using its constructor on its own,
 the ``receiver`` argument must be specified.  If it is included in a parameter specification, the parameterState for
 the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If its ``sender`` is not
 specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism that is part of a
