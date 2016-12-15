@@ -1810,7 +1810,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         generates mean response time (RT) and mean error rate (ER) as described in:
             Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
             decision making: a formal analysis of models of performance in two-alternative forced-choice
-            tasks.  Psychological review, 113(4), 700.
+            tasks.  Psychological review, 113(4), 700. (`PubMed entry <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_)
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)
