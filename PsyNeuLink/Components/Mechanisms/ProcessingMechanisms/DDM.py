@@ -110,8 +110,8 @@ COMMENT
 DDM Functions
 ~~~~~~~~~~~~~
 
-The ``function`` parameter can be used to select one of two analytic solutions (:any:`BogaczEtAl` and
-:any:`NavarroAndFuss`) that are used when ``time_scale`` is set to :keyword:`TimeScale.TRIAL`.  These
+The ``function`` parameter can be used to select one of two analytic solutions (:py:class:`Funtion.BogaczEtAl` and
+:py:class:`Function.NavarroAndFuss`) that are used when ``time_scale`` is set to :keyword:`TimeScale.TRIAL`.  These
 both return an expected mean response time and accuracy, while :keyword:`NavarroAndFuss` also returns an expected
 mean correct response time and accuracy.
 
