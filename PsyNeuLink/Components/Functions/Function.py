@@ -1952,6 +1952,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         generates distributions of response time (RT) and error rate (ER) as described in:
             Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
             Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
+            (`ScienceDirect entry <http://www.sciencedirect.com/science/article/pii/S0022249609000200>`_)
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)
