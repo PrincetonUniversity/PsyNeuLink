@@ -170,12 +170,14 @@
 <span id="weightederrormechanism"></span><h1>WeightedErrorMechanism<a class="headerlink" href="#module-WeightedErrorMechanism" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A WeightedErrorMechanism monitors the outputState of it&#8217;s <code class="docutils literal"><span class="pre">errorSource</span></code>: a ProcessingMechanism that projects to
-another mechanism in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  It computes the contribution of each element of the output of the
-<code class="docutils literal"><span class="pre">errorSource</span></code> to the error in the output of the mechanism to which the <code class="docutils literal"><span class="pre">errorSource</span></code> projects
-(the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>).  The WeightedErrorMechanism <code class="docutils literal"><span class="pre">function``returns</span> <span class="pre">an</span> <span class="pre">error</span> <span class="pre">array</span> <span class="pre">that</span> <span class="pre">can</span> <span class="pre">be</span> <span class="pre">used</span> <span class="pre">by</span> <span class="pre">a</span>
-<span class="pre">:doc:`LearningProjection`</span> <span class="pre">to</span> <span class="pre">adjust</span> <span class="pre">a</span> <span class="pre">MappingProjection</span> <span class="pre">the</span> <span class="pre">``errorSource</span></code>, so as to reduce its future contribution to
-the weightedErrorSignal.</p>
+<p>A WeightedErrorMechanism monitors the outputState of it&#8217;s <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>:
+a ProcessingMechanism that projects to another mechanism in a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  It computes the contribution of each
+element of the output of the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> to the error in the output of
+the mechanism to which the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> projects
+(the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>).  The WeightedErrorMechanism
+<a href="#id1"><span class="problematic" id="id2">``</span></a>function``returns an error array that can be used by a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to adjust a MappingProjection the
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>, so as to reduce its future contribution to the
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-weightederrormechanism">
 <span id="weightederror-creation"></span><h2>Creating A WeightedErrorMechanism<a class="headerlink" href="#creating-a-weightederrormechanism" title="Permalink to this headline">¶</a></h2>
@@ -187,30 +189,35 @@ are also created automatically when a process system is created for which learni
 assigned a projection from the outputState of a ProcessingMechanism that receives a MappingProjection being
 learned, and a LearningProjection to that MappingProjection
 (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>, and
-:ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>automatic creation of LearningSignals &lt;LearningProjection_Automatic_Creation&gt; for details).</p>
+:ref:<a href="#id3"><span class="problematic" id="id4">`</span></a>automatic creation of LearningSignals &lt;LearningProjection_Automatic_Creation&gt; for details).</p>
 </div>
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A WeightedErrorMechanism has a single inputState, a <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> parameter, and a single
-(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The <strong>inputState</strong> receives a MappingProjection from its <code class="docutils literal"><span class="pre">errorSource</span></code> &#8211;
-the Processing mechanism for which it computes the error.  <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> is assigned to the MappingProjection
-projection from the primary outputState of the <code class="docutils literal"><span class="pre">errorSource</span></code> to the next mechanism in the process.  Each row of it&#8217;s
-<code class="docutils literal"><span class="pre">matrix</span></code> parameter corresponds to an element of the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code>, each column corresponds to an
-element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which it projects, and each element of the matrix is the weight of the
-association between the two.  The <strong>outputState</strong> of a WeightedErrorMechanism is typically assigned a
-<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> that is used to modify the <code class="docutils literal"><span class="pre">matrix</span></code> parameter of a MappingProjection to the
-<code class="docutils literal"><span class="pre">errorSource</span></code> (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>).</p>
+(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.  The <strong>inputState</strong> receives a MappingProjection from its
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> &#8211; the Processing mechanism for which it computes the
+error.  <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code> is assigned to the MappingProjection projection from the
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> of the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>
+to the next mechanism in the process.  Each row of it&#8217;s <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a>
+parameter corresponds to an element of the <code class="docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>
+each column corresponds to an element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which it projects, and each element of the
+matrix is the weight of the association between the two.  The <strong>outputState</strong> of a WeightedErrorMechanism is
+typically assigned a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> that is used to modify the
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter of a MappingProjection to the
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> (as shown in <a class="reference internal" href="Process.html#process-learning-figure"><span class="std std-ref">this figure</span></a>).</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A WeightedErrorMechanism always executes after the mechanism it is monitoring.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> computes the
-contribution of each element of the <code class="docutils literal"><span class="pre">value</span></code> of the <code class="docutils literal"><span class="pre">errorSource</span></code> to the <code class="docutils literal"><span class="pre">error_signal</span></code>:  the error associated
-with each element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the <code class="docutils literal"><span class="pre">errorSource</span></code> projects, scaled both by the weight of
-its association to that element  specified by from <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>) and the differential of the
+contribution of each element of the <code class="docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>
+to the <code class="docutils literal"><span class="pre">error_signal</span></code>:  the error associated with each element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> projects, scaled both by the weight of its association to
+that element specified by from <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>) and the differential of the
 <code class="docutils literal"><span class="pre">function</span></code> for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
 &#8220;backpropagation&#8221;) learning algorithm (REFS AND [LINK]). The <code class="docutils literal"><span class="pre">function</span></code> returns an array with the weighted errors
-for each element of the <code class="docutils literal"><span class="pre">errorSource</span></code>, which is placed in its <code class="docutils literal"><span class="pre">value</span></code> and  <code class="docutils literal"><span class="pre">outputValue</span></code> attributes,
-and the value of of its (:keyword:<a href="#id3"><span class="problematic" id="id4">`</span></a>WEIGHTED_ERROR) outputState.</p>
+for each element of the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>, which is placed in its <code class="docutils literal"><span class="pre">value</span></code>
+and  <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attributes, and the value of of its
+(:keyword:<a href="#id5"><span class="problematic" id="id6">`</span></a>WEIGHTED_ERROR) outputState.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="weightederror-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -235,8 +242,9 @@ and/or a custom function and its parameters (see <a class="reference internal" h
 Includes the following entry:</p>
 <ul>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>:  MappingProjection;
-its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is used to calculate the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>;
-it&#8217;s width (number of columns) must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</li>
+its <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter is used to calculate the
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>; it&#8217;s width (number of columns)
+must match the length of <code class="docutils literal"><span class="pre">error_signal</span></code>.</li>
 </ul>
 </li>
 <li><strong>name</strong> (<em>str : default WeightedErrorMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
@@ -254,27 +262,27 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dt id="WeightedErrorMechanism.WeightedErrorMechanism.errorSource">
 <code class="descname">errorSource</code><a class="headerlink" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ProcessingMechanism</em> &#8211; the mechanism that projects to the WeightedErrorMechanism,
-and for which it calculates the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
+and for which it calculates the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="WeightedErrorMechanism.WeightedErrorMechanism.next_level_projection">
 <code class="descname">next_level_projection</code><a class="headerlink" href="#WeightedErrorMechanism.WeightedErrorMechanism.next_level_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>MappingProjection</em> &#8211; projection from the <code class="docutils literal"><span class="pre">errorSource</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">next</span> <span class="pre">mechanism</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">process;</span>&#160; <span class="pre">its</span> <span class="pre">``matrix</span></code> parameter is
-used to calculate the <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
+used to calculate the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="WeightedErrorMechanism.WeightedErrorMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#WeightedErrorMechanism.WeightedErrorMechanism.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d np.array</em> &#8211; error_signal from mechanism to which next_level_projection projects;  used by <code class="docutils literal"><span class="pre">function</span></code> to compute
-weightedErrorSignal.</p>
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="WeightedErrorMechanism.WeightedErrorMechanism.value">
 <code class="descname">value</code><a class="headerlink" href="#WeightedErrorMechanism.WeightedErrorMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>, same as <code class="docutils literal"><span class="pre">weightedErrorSignal</span></code>.</p>
+<dd><p><em>1d np.array</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>, same as <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal" title="WeightedErrorMechanism.WeightedErrorMechanism.weightedErrorSignal"><code class="xref py py-data docutils literal"><span class="pre">weightedErrorSignal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
