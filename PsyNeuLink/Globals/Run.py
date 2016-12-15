@@ -269,27 +269,24 @@ def run(object,
         time_scale:tc.optional(tc.enum)=None):
     """Run a sequence of executions for a process or system
 
-    First, validate inputs.  Then, for each round of execution:
-
-    * call call_before_trial if specified;
-
-    * for each time_step in the trial:
-
-        * call call_before_time_step if specified;
-
-        * call ``object.execute`` with inputs, and append result to ``object.results``;
-
-        * call call_after_time_step if specified;
-
-    * call call_after_trial if specified.
-
+    First, validate inputs (and targets, if learning is enabled).  Then, for each round of execution:
+        * call call_before_trial if specified;
+        * for each time_step in the trial:
+            * call call_before_time_step if specified;
+            * call ``object.execute`` with inputs, and append result to ``object.results``;
+            * call call_after_time_step if specified;
+        * call call_after_trial if specified.
     Return ``object.results``.
 
     The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-
         * the inner-most dimension must equal the length of object.variable (i.e., the input to the object);
-
         * for mechanism format, the length of the value of all entries must be equal (== number of executions);
+        * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
+            Note: num_input_sets need not equal num_executions (the number of executions to actually run)
+                  if num_executions > num_input_sets:
+                      executions will cycle through input_sets, with the final one being only a partial cycle
+                  if num_executions < num_input_sets:
+                      the executions will only partially sample the input sets
 
     The targets argument must be the same length as the inputs argument.
 
@@ -297,7 +294,7 @@ def run(object,
         * if num_executions is :keyword:`None`, a number of executions is run equal to the length of the input
           (i.e., size of axis 0)
 
-    Arguments
+   Arguments
     ---------
 
     inputs : List[input] or ndarray(input) : default default_input_value for a single execution
