@@ -234,9 +234,9 @@ which uses the output of the ProcessingMechanism(s) to which the errorSource pro
 <div class="section" id="execution">
 <span id="learningprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>LearningSignals are executed after all of the mechanisms in a process or system have executed, including the
-MonitoringMechanisms that provide the <code class="docutils literal"><span class="pre">errorSignal</span></code> to each LearningProjection.  When the LearningProjection is executed,
-it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> of its <code class="docutils literal"><span class="pre">mappingProjection</span></code>. Changes to the
-<code class="docutils literal"><span class="pre">matrix</span></code> are  calculated so as to reduce the <code class="docutils literal"><span class="pre">errorSignal</span></code>. The changes are assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the
+MonitoringMechanisms that provide the <code class="docutils literal"><span class="pre">errorSignal</span></code> to each LearningProjection.  When the LearningProjection is
+executed, it uses its <code class="docutils literal"><span class="pre">errorSignal</span></code> to calculate changes to the <code class="docutils literal"><span class="pre">matrix</span></code> of its <code class="docutils literal"><span class="pre">mappingProjection</span></code>. Changes to
+the <code class="docutils literal"><span class="pre">matrix</span></code> are  calculated so as to reduce the <code class="docutils literal"><span class="pre">errorSignal</span></code>. The changes are assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the
 LearningProjection, but are not applied to the <code class="docutils literal"><span class="pre">matrix</span></code> unit the next time the <code class="docutils literal"><span class="pre">mappingProjection</span></code> is executed
 (see <span class="xref std std-ref">Lazy_Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).</p>
 </div>

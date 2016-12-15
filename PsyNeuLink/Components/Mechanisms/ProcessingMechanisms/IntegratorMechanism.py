@@ -37,11 +37,12 @@ Structure
 An IntegratorMechanism has a single inputState, the ``value`` of which is used as the ``variable`` for its
 ``function``.   The ``default_input_value`` argument specifies the format of the ``value`` (i.e., whether it is a
 single scalar or an array), as well as the value to use if none is provided when mechanism is executed.  The default
-``function`` is Integrator, with ``weighting=:keyword`ADAPTIVE```  and ``rate=0.5``.  However a custom function
-can also be specified,  so long as it  takes a numeric value or  list or np.ndarray of numeric values as its input, and
-returns a value of the same type and format.  The default function -- :any:`Integrator` -- has two parameters
-(``weighting`` and ``rate``) that determine the type and,  well, yes, the *rate* of integration.  The mechanism has a
-single outputState, the ``value`` of which is assigned the result of the call to the mechanism's ``function``.
+``function`` is Integrator, with ``weighting`` = :keyword:`ADAPTIVE`  and ``rate`` =0.5.  However a custom function
+can also be specified,  so long as it  takes a numeric value or list or np.ndarray of numeric values as its input, and
+returns a value of the same type and format.  The default function -- :py:class:`Function.Integrator` -- has two
+parameters (``weighting`` and ``rate``) that determine the type and,  well, yes, the *rate* of integration.  The
+mechanism has a single outputState, the ``value`` of which is assigned the result of the call to the mechanism's
+``function``.
 
 .. _IntegratorMechanism_Execution
 
@@ -49,8 +50,8 @@ Execution
 ---------
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the ``value`` of its (primary) outputState.  For the default function (:any:`Integrator`), if the
-value specified for ``default_input_value`` is a list or array, each element of the array will be independently
+result to the ``value`` of its (primary) outputState.  For the default function (:py:class:`Function.Integrator`),
+if the value specified for ``default_input_value`` is a list or array, each element of the array will be independently
 integrated.  If its ``rate`` parameter is a single value, that rate will be used for integrating each element.  If
 the ``rate`` parameter is a list or array, then each element will be used as the rate for the corresponding element
 of the input (in this case, ``rate`` must be the same length as the value specified for ``default_input_value``).
@@ -116,7 +117,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     ---------
 
     default_input_value : number, list or np.ndarray
-        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+        the input to the mechanism to use if none is provided in a call to its
+        :py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
         of the mechanism.
 

@@ -160,35 +160,38 @@
 <div class="section" id="overview">
 <span id="mapping-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>MappingProjections transmit value from an outputState of one ProcessingMechanism (its <code class="docutils literal"><span class="pre">sender</span></code>) to the inputState of
-another (its <code class="docutils literal"><span class="pre">receiver</span></code>).  Its default <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref py py-class docutils literal"><span class="pre">LinearMatrix</span></code>, which uses the projection&#8217;s <code class="docutils literal"><span class="pre">matrix</span></code>
-parameter to transform an array received from its <code class="docutils literal"><span class="pre">sender</span></code>, transforms it, and transmits the result to its
-<code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+another (its <code class="docutils literal"><span class="pre">receiver</span></code>).  Its default <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref py py-class docutils literal"><span class="pre">LinearMatrix</span></code>, which uses the projection&#8217;s
+<a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> attribute to transform an array received from its <code class="docutils literal"><span class="pre">sender</span></code>, transforms
+it, and transmits the result to its <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
 </div>
 <div class="section" id="creating-a-mappingprojection">
 <span id="mapping-creation"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mappingprojection" title="Permalink to this headline">¶</a></h2>
 <p>A MappingProjection can be created in any of the ways that can be used to create a
 <span class="xref std std-ref">projection</span>
 of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
-using a <code class="docutils literal"><span class="pre">matrix</span></code> appropriate to the circumstance  (matrix types are described in :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>Mapping_Structure):</p>
+using a matrix appropriate to the circumstance (matrix types are described in :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>Mapping_Structure below):</p>
 <ul class="simple">
-<li>in a <strong>process</strong>, between adjacent mechanisms in the <code class="docutils literal"><span class="pre">pathway</span></code> for which none has been assigned;
-the matrix will use <code class="xref std std-keyword docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code>, which determines the appropriate matrix by context.</li>
+<li>in a <strong>process</strong>, between adjacent mechanisms in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> for which no
+projection been assigned; the matrix will use <code class="xref std std-keyword docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code>, which determines the appropriate
+matrix by context.</li>
 </ul>
 <ul class="simple">
-<li>by a <strong>ControlMechanism</strong>, from outputStates listed in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> attribute to assigned
-inputStates in the ControlMechanism (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">Creating A ControlMechanism</span></a>);  a
-<code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> will be used.</li>
+<li>by a <strong>ControlMechanism</strong>, from outputStates listed in its
+<code class="xref py py-data docutils literal"><span class="pre">monitoredOutputStates</span></code> attribute to assigned
+inputStates in the ControlMechanism (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">Creating A ControlMechanism</span></a>); a <code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> will be used.</li>
 <li>by a <strong>LearningProjection</strong>, from a mechanism that is the source of an error signal, to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a>
-that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
-depends on the <code class="docutils literal"><span class="pre">function</span></code> parameter of the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.[LINK]</li>
+that is used to evaluate that error and generate a learning signal from it
+(see <span class="xref std std-ref">LearningProjection_Automatic_Creation);  the matrix used depends on the ``function`</span> parameter of the
+<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</li>
 </ul>
-<p>When a MappingProjection is created, its <code class="docutils literal"><span class="pre">matrix</span></code> and <code class="docutils literal"><span class="pre">param_modulation_operation</span></code> attributes can be specified,
+<p>When a MappingProjection is created, its <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> and
+<code class="xref py py-data docutils literal"><span class="pre">param_modulation_operation</span></code> attributes can be specified,
 or they can be assigned by default (see below).</p>
 </div>
 <div class="section" id="structure">
 <span id="mapping-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>In addition to its <code class="docutils literal"><span class="pre">function</span></code>, MappingProjections use the following two the primary parameters:</p>
-<p id="mapping-matrix"><code class="docutils literal"><span class="pre">matrix</span></code></p>
+<p id="mapping-matrix"><a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a></p>
 <blockquote>
 <div><p>Used by the MappingProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to execute a matrix transformation of its input.
 It can be specified using any of the following formats:</p>
@@ -215,16 +218,16 @@ assigns an <code class="xref std std-keyword docutils literal"><span class="pre"
 <p><code class="xref py py-class docutils literal"><span class="pre">random_matrix</span></code>.  This is a convenience function that provides more flexibility than
 <code class="xref std std-keyword docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>.  It generates a random matrix sized for a sender, receiver,
 with random numbers drawn from a uniform distribution within a specified range and with a specified offset.</p>
-<p><em>Tuple</em>.  This is used to specify a projection to the parameterState of a <code class="docutils literal"><span class="pre">matrix</span></code> along with the <code class="docutils literal"><span class="pre">matrix</span></code> itself.
-The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
-<a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection specification</span></a>.</p>
+<p><em>Tuple</em>.  This is used to specify a projection to the parameterState for a <code class="docutils literal"><span class="pre">matrix</span></code> along with the <code class="docutils literal"><span class="pre">matrix</span></code>
+itself. The tuple must have two items:  the first can be any of the specifications described above;  the second
+must be a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection specification</span></a>.</p>
 </div></blockquote>
-<p id="mapping-parameter-modulation-operation"><code class="docutils literal"><span class="pre">parameter_modulation_operation</span></code></p>
+<p id="mapping-parameter-modulation-operation"><code class="xref py py-data docutils literal"><span class="pre">parameter_modulation_operation</span></code></p>
 <blockquote>
 <div>Used to determine how the value of any projections to the <span class="xref doc">parameterState</span> for the <code class="docutils literal"><span class="pre">matrix</span></code> parameter
 influence it.  For example, this is used for a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to apply weight changes to <code class="docutils literal"><span class="pre">matrix</span></code>
 during learning.  <code class="docutils literal"><span class="pre">parameter_modulation_operation</span></code> must be assigned a value of <code class="xref py py-class docutils literal"><span class="pre">ModulationOperation</span></code>
-and the operation is always applied in an element-wise (Hadamard[LINK]) manner. The default operation is <code class="docutils literal"><span class="pre">ADD</span></code>.</div></blockquote>
+and the operation is always applied in an element-wise (Hadamard) manner. The default operation is <code class="docutils literal"><span class="pre">ADD</span></code>.</div></blockquote>
 </div>
 <div class="section" id="execution">
 <span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>

@@ -178,9 +178,10 @@ The comparison can be done using subtraction or division.</p>
 <span id="comparator-creation"></span><h2>Creating a ComparatorMechanism<a class="headerlink" href="#creating-a-comparatormechanism" title="Permalink to this headline">¶</a></h2>
 <p>A ComparatorMechanism can be created either directly, by calling its constructor, or using the
 <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code> function and specifying &#8220;ComparatorMechanism&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument. The type of comparison
-is specified in the <code class="docutils literal"><span class="pre">comparison_operation</span></code>, which can be the keyword <code class="xref std std-keyword docutils literal"><span class="pre">SUBTRACTION</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">DIVISION</span></code>.
-It can also be created by <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">in context specification of a LearningProjection</span></a>
-for a projection to the  <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism [LINK] of a process.  One or more ComparatorMechanisms are also
+is specified in the <code class="docutils literal"><span class="pre">comparison_operation</span></code> argument, which can be the keyword <code class="xref std std-keyword docutils literal"><span class="pre">SUBTRACTION</span></code> or
+<code class="xref std std-keyword docutils literal"><span class="pre">DIVISION</span></code>.  It can also be created by
+<a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">in context specification of a LearningProjection</span></a> for a projection to the
+<code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a process.  One or more ComparatorMechanisms are also
 created automatically when a process or system is created for which learning is specified; each is assigned a
 projection from the outputState of a <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism that receives a MappingProjection being learned,
 and a LearningProjection to that MappingProjection  (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>,
@@ -204,15 +205,18 @@ the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET
 <blockquote id="comparator-results">
 <div><ul class="simple">
 <li>the <strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, the value of
-its <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_RESULT</span></code> outputState, and to the 1st item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+its <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_RESULT</span></code> outputState, and to the 1st item of its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 <li>the <strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MEAN</span></code> outputState,
-and to the 2nd item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+and to the 2nd item of its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 <li>the <strong>sum</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SUM</span></code> outputState,
-and to the 3rd item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+and to the 3rd item of its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 <li>the <strong>sum of squares</strong> of the result&#8217;s elements (&#8220;sum squared error&#8221;) is assigned to value of the mechanism&#8217;s
-<code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SSE</span></code> outputState, and to the 4th item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+<code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_SSE</span></code> outputState, and to the 4th item of its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 <li>the <strong>mean of the squares</strong> of the result&#8217;s elements (&#8220;mean squared error&#8221;) is assigned to value of the
-mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MSE</span></code> outputState, and to the 5th item of its <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARISON_MSE</span></code> outputState, and to the 5th item of its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 </ul>
 </div></blockquote>
 </div>
@@ -227,7 +231,8 @@ mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span clas
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_sample_and_target</strong> (<em>Optional[List[array, array] or 2d np.array]</em>) &#8211; the input to the ComparatorMechanism to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods.
+<li><strong>default_sample_and_target</strong> (<em>Optional[List[array, array] or 2d np.array]</em>) &#8211; the input to the ComparatorMechanism to use if none is provided in a call to its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or <code class="xref py py-meth docutils literal"><span class="pre">run</span> <span class="pre">&lt;Mechanism.Mechanism_Base.run()</span></code> methods.
 The first item is the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> input and the second is the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> input, which must be the
 same length.  This also serves as a template to specify the length of inputs to the <code class="docutils literal"><span class="pre">function</span></code>.</li>
 <li><strong>comparison_operation</strong> (<em>keyword[SUBTRACTION or DIVISION] : default SUBTRACTION</em>) &#8211; specifies how the <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> will be compared:
@@ -286,7 +291,7 @@ and is the second <code class="docutils literal"><span class="pre">value</span><
 <dl class="attribute">
 <dt id="ComparatorMechanism.ComparatorMechanism.value">
 <code class="descname">value</code><a class="headerlink" href="#ComparatorMechanism.ComparatorMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[1d np.array, float, float, float, float]</em> &#8211; same as <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+<dd><p><em>2d np.array</em> &#8211; holds the output of the comparison operation carried out by the ComparatorMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">

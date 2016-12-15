@@ -26,14 +26,17 @@ performance under each allocation policy, selects the one that generates the bes
 control signal values designated by that policy to the corresponding ControlProjections.  When the system is next
 those values are used to set the parameters for the mechanisms (and/or functions) they control.
 
-The set of allocation policies that are tested is held in the EVCMechanism's ``controlSignalSearchSpace`` attribute
+The set of allocation policies that are tested is held in the EVCMechanism's
+:py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute
 (see :ref:`EVCMechanism_ControlSignalSearchSpace`. The EVCMechanism executes the system using each allocation policy
-in the ``controlSignalSearchSpace``, evaluates its performance under that policy and, from that, calculates the
+in the :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`,
+evaluates its performance under that policy and, from that, calculates the
 expected value of control (EVC) for that policy. The EVC is a cost-benefit analysis for the given policy, calculated
 as the difference between the outcome of performance and the cost of the control signals used to generate that
 outcome.  The outcome is assessed by aggregating the ``value`` of each outputState listed in the
-``monitoredOutputStates`` attribute.  The cost of the control signals is assessed by aggregating the cost associated
-with each ControlProjection (based on its ``value`` for the policy,  and contained in its ``cost`` attribute).  The
+:py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute.  The cost of the control signals is
+assessed by aggregating the cost associated with each ControlProjection (based on its ``value`` for the policy,
+and contained in its :py:data:`cost <ControlProjection.ControlProjection.cost>` attribute).  The
 policy that generates the maximum EVC is implemented, and used on the next round of execution. The calculation of the
 EVC can be customized as described in :ref:`EVCMechanism_Parameters` and
 :ref:`EVCMechanism_Parameterizing_EVC_Calculation>` below.
@@ -57,8 +60,9 @@ it is generated automatically when a system is created and an EVCMechanism is sp
     run by the EVCMechanism (see :ref:`EVCMechanism_Execution`).  A prediction mechanism is created for each
     :keyword:`ORIGIN` (input) mechanism in the system; a MappingProjection is created that projects to it from the
     corresponding :keyword:`ORIGIN` mechanism; and the pair are assigned to their own *prediction process*.  The
-    prediction mechanisms and prediction processes for an EVCMechanism are listed in its ``predictionMechanisms``
-    and ``predictionProcesses`` attributes, respectively.
+    prediction mechanisms and prediction processes for an EVCMechanism are listed in its
+    :py:data:`predictionMechanisms <EVCMechanism.predictionMechanisms>` and
+    :py:data:`predictionProcesses <EVCMechanism.predictionProcesses>` attributes, respectively.
   ..
   * **ControlProjections** -- these are used by the EVCMechanism to regulate the parameters of mechanisms, or their
     functions that have been specified for control.  A ControlProjection can be assigned to a parameter wherever the
@@ -75,9 +79,9 @@ An EVCMechanism computes the EVC for each control allocation policy using three 
 ``function``, ``outcome_aggregation_function`` and ``cost_aggregation_function`` parameters. These functions,  their
 parameters, and the other parameters that govern the operation of the EVCMechanism can be set in the arguments of its
 constructor.  However, as noted above, EVCMechanisms are more commonly created automatically as part of a system.
-In that case, the EVCMechanism is assigned as the system's ``controller`` attribute, and can be configured by
-assigning a params dictionary to the controller's ``params`` attribute using the following keys for its entries
-(see :ref:`Mechanism_Specifying_Parameters` for details of parameter specification):
+In that case, the EVCMechanism is assigned as the system's :py:data:`controller <System.System_Base.controller>`
+attribute, and can be configured by assigning a params dictionary to the controller's ``params`` attribute using the
+following keys for its entries (see :ref:`Mechanism_Specifying_Parameters` for details of parameter specification):
 COMMENT:
     ADD MENTION OF assign_params HERE??
 COMMENT
@@ -86,20 +90,22 @@ COMMENT
       of performance for the EVC calculation (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying
       monitored outputStates).  The default is: :keyword:`MonitoredOutputStateOption.PRIMARY_OUTPUT_STATES`,
       which uses the value of the primary outputState of every :keyword:`TERMINAL` mechanism in the system (see
-      :ref:`_Mechanism_Role_In_Processes_And_Systems`).  Each outputState in ``monitoredOutputStates`` can be
-      assigned an exponent and a weight to parameterize its contribution to the aggregate value (see
-      :ref:`EVCMechanism_Parameterizing_EVC_Calculation`).
+      :ref:`_Mechanism_Role_In_Processes_And_Systems`).  Each outputState in
+      :py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` can be assigned an exponent and a weight
+      to parameterize its contribution to the aggregate value (see :ref:`EVCMechanism_Parameterizing_EVC_Calculation`).
 ..
     * :keyword:`FUNCTION` - combines the aggregated value of the monitored outputStates with the aggregated cost of
       the control signal values for a given control allocation policy, to determine the **EVC** for that policy.  The
       default is the :class:`LinearCombination` function, which subtracts the aggregated cost from the aggregate value.
     ..
     * :keyword:`OUTCOME_AGGREGATION_FUNCTION` - combines the values of the outputStates in the EVCMechanism's
-    ``monitoredOutputStates`` attribute to generate an aggregate **value** of the outcome for a given allocation policy.
-      The default is the :class:`LinearCombination` function, that computes an elementwise (Hadamard) product of the
-      outputState values.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively,
-      to scale and/or exponentiate the contribution of each outputState's value to the aggregated outcome.  The
-      length of the array for these arguments must equal the number of outputStates in``monitoredOutputStates``.
+      :py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute to generate an aggregate
+      **value** of the outcome for a given allocation policy. The default is the :py:class:`LinearCombination`
+      function, that computes an elementwise (Hadamard) product of the outputState values.  The ``weights`` and
+      ``exponents`` arguments of the function can be used, respectively, to scale and/or exponentiate the
+      contribution of each outputState's value to the aggregated outcome.  The length of the array for these
+      arguments must equal the number of outputStates in
+      :py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>`.
       These specifications will supercede any made for individual outputStates in a tuple of the
       ``monitor_for_control`` argument, or MONITOR_FOR_CONTROL entry of a params specification dictionary (see
       :ref:`ControlMechanism_Monitored_OutputStates`).
@@ -108,7 +114,8 @@ COMMENT
       for a given *control allocation policy*.  The default is the :class:`LinearCombination` function, that sums the
       costs.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively, to scale and/or
       exponentiate the contribution of each control signal's cost to the value to the aggregated cost.  The length of
-      the array for those arguments must equal the number of ControlProjections in the ``controlProjections`` attribute.
+      the array for those arguments must equal the number of ControlProjections in the
+      :py:data:`controlProjections <EVCMechanism.controlProjections>` attribute.
     ..
     * :keyword:`PREDICTION_MECHANISM_TYPE` - the type of prediction mechanism to use for generating the input
       to the system in each simulation run (see :ref:`EVCMechanism_Execution`).  The default is an
@@ -117,7 +124,8 @@ COMMENT
     * :keyword:`PREDICTION_MECHANISM_PARAMS` - parameters to use for the prediction mechanism.
     ..
     * :keyword:`SAVE_ALL_VALUES_AND_POLICIES` - specifies whether to save the results of the full EVC evaluation
-      for each simulation run (see ``EVCvalues`` and ``EVCpolicies`` attributes in :ref:`EVCMechanism_Class_Reference`).
+      for each simulation run (see :py:data:`EVCvalues <EVCMechanism.EVCvalues>` and
+      see :py:data:`EVCpolicies <EVCMechanism.EVCpolicies>`).
 
 
 .. _EVCMechanism_ControlSignalSearchSpace:
@@ -125,13 +133,15 @@ COMMENT
 Constructing the ControlSignalSearchSpace
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``controlSignalSearchSpace`` is constructed from the ``allocationSamples`` attribute of each of the
+The :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` is constructed from the
+:py:data:`allocationSamples <ControlProjection.ControlProjection.allocationSamples>` attribute of each of the
 EVCMechanism's control signals (corresponding to each of its ControlProjections).  The ``allocationSamples``
 attribute of a control signal is an array of values to sample for the parameter controlled by a given
-ControlProjection.   A control allocation policy is made up of one value from the ``allocationSamples`` attribute of
-each of the EVCMechanism's control signals.  When an EVCMechanism is created, it constructs all possible control
+ControlProjection.   A control allocation policy is made up of one value from the
+:py:data:`allocationSamples <ControlProjection.ControlProjection.allocationSamples>` attribute of each of the
+EVCMechanism's control signals.  When an EVCMechanism is created, it constructs all possible control
 allocation policies (i.e., all possible combinations of values for its control signals), which is placed in its
-``controlSignalSearchSpace`` attribute.
+:py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute.
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -147,26 +157,29 @@ Parameterizing the EVC Calculation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The EVC calculation can be parameterized by specifying any of the three functions described above, and/or specifying
-how each outputState in its ``monitoredOutputStates`` attribute contributes to the outcome of a control allocation
-policy calculated by the :keyword:`OUTCOME_AGGREGATION_FUNCTION`.  The latter can be done by using the tuples format
-to specify an outputState in the ``monitored_states_argument`` of an EVCMechanism or system constructor, or the
-:keyword:`MONITOR_FOR_CONTROL` entry of a specification dict assigned to their ``params`` argument (see
-:ref:`ControlMechanism_Monitored_OutputStates`). The tuples format can be used to assign an exponent to an outputState
-(e.g., to make it a divisor), and/or a weight (i.e., to scale its value), for use when it is combined with the others
-by the :keyword:`OUTCOME_AGGREGATION_FUNCTION`.  OutputStates not specified in a tuple are assigned an exponent and
-weight of 1 (see :ref:`EVC_Mechanism_Examples`).
+how each outputState in its
+:py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute contributes to the outcome of a
+control allocation policy calculated by the :keyword:`OUTCOME_AGGREGATION_FUNCTION`.  The latter can be done by using
+the tuples format to specify an outputState in the py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>`
+of an EVCMechanism or system constructor, or the :keyword:`MONITOR_FOR_CONTROL` entry of a specification dict
+assigned to their ``params`` argument (see :ref:`ControlMechanism_Monitored_OutputStates`). The tuples format can be
+used to assign an exponent to an outputState (e.g., to make it a divisor), and/or a weight (i.e., to scale its
+value), for use when it is combined with the others by the :keyword:`OUTCOME_AGGREGATION_FUNCTION`.
+OutputStates not specified in a tuple are assigned an exponent and weight of 1 (see :ref:`EVC_Mechanism_Examples`).
 
 .. _EVCMechanism_Execution:
 
 Execution
 ---------
 
-When an EVCMechanism is executed, it tests all of the allocation policies in its ``controlSignalSearchSpace``,
-evaluates the EVC for each policy, picks the policy that maximizes the EVC, and implements that policy for the next
-execution of the System.  Details of the procedure for each test are as follows:
+When an EVCMechanism is executed, it tests all of the allocation policies in its
+:py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`, evaluates the EVC for each policy,
+picks the policy that maximizes the EVC, and implements that policy for the next execution of the System.
+Details of the procedure for each test are as follows:
 
 * **Select an allocation policy**: pick the next allocation policy in the
-``controlSignalSearchSpace``, and assign the specified value to each control signal.
+  :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`,
+  and assign the specified value to each control signal.
 ..
 * **Simulate execution of the system**:  use the prediction process for each :keyword:`ORIGIN` mechanism in the
   system to specify its input (this uses the history of previous trials to generate an average expected input value),
@@ -175,16 +188,20 @@ execution of the System.  Details of the procedure for each test are as follows:
 ..
 * **Calculate the EVC for the allocation policy**:
     * calculate the **value** of the policy using the EVCMechanism's ``outcome_aggregation_function`` to aggregate
-      the value of the outputStates listed in the EVCMechanism's ``monitoredOutputStates`` attribute;
+      the value of the outputStates listed in the EVCMechanism's
+      :py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute;
     * calculate the **cost** of the policy using the EVCMechanism's ``cost_aggregation_function`` to aggregate the
-      cost associated with each control signal (in the associated ControlProjection's ``cost`` attribute).
+      cost associated with each control signal (in the associated ControlProjection's
+      :py:data:`cost <ControlProjection.ControlProjection.cost>` attribute).
     * calculate the **EVC** using the EVCMechanism's ``function`` to subtract the aggregated cost from the
       aggregated value for the allocation policy.
 ..
 * **Save** the values associated with the policy that generated the maximum EVC in the ControlMechanism's
-    ``allocationPolicy`` and ``value`` attributes.  If the **save_all_values_and_policies** attribute is
-    :keyword:`True`, then the values associated with each policy are saved in its ``EVCvalues`` attribute
-    and the policies in its ``EVCpolicies`` attribute.
+    :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` and ``value`` attributes.  If the
+    :py:data:`save_all_values_and_policies <EVCMechanism.save_all_values_and_policies>` attribute is
+    :keyword:`True`, then the values associated with each policy are
+    saved in its :py:data:`EVCvalues <EVCMechanism.EVCvalues>` attribute and the policies in its
+    :py:data:`EVCpolicies <EVCMechanism.EVCpolicies>` attribute.
 
 Once the all control allocation policies in the controlSignalSearchSpace have been evaluated, the policy generating the
 maximum EVC is implemented, by assigning the value it specifies for each ControlProjection.  These are then used by the
@@ -318,7 +335,8 @@ class EVCMechanism(ControlMechanism_Base):
         and assigned an outputState named based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        a parameter dictionary passed to ``prediction_mechanism_type`` constructor.
+        a parameter dictionary passed to the constructor for the
+        :py:data:`prediction_mechanism_type <EVCMechanism.prediction_mechanism_type>` mechanism.
         The same set is passed to all PredictionMechanisms.
 
     monitor_for_control : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
