@@ -865,7 +865,6 @@ def _validate_targets(object, targets, num_input_sets):
 
     return num_target_sets
 
-
 def get_object_type(object):
     if isinstance(object, Mechanism):
         return MECHANISM
