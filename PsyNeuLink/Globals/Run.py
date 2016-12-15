@@ -491,7 +491,7 @@ def _construct_inputs(object, inputs, targets=None):
                if phase (from mech tuple) is modulus of time step:
                    draw from each list; else pad with zero
     DIMENSIONS:
-       axis 0: num_executions
+       axis 0: num_input_sets
        axis 1: object._phaseSpecMax
        axis 2: len(object.originMechanisms)
        axis 3: len(mech.inputStates)
@@ -549,7 +549,7 @@ def _construct_from_stimulus_list(object, stimuli, targets):
         inputs_array = np.concatenate(inputs_array)
     inputs = inputs_array.tolist()
 
-    num_executions = _validate_inputs(object=object,
+    num_input_sets = _validate_inputs(object=object,
                                       inputs=inputs,
                                       num_phases=1,
                                       context='contruct_inputs for ' + object.name)
@@ -566,7 +566,7 @@ def _construct_from_stimulus_list(object, stimuli, targets):
     execution_offset = 0  # Used for indexing w/ headers
     stim_list = []
 
-    for execution in range(num_executions):
+    for execution in range(num_input_sets):
         execution_len = 0  # Used for indexing w/ headers
         stimuli_in_execution = []
         for phase in range(object.numPhases):
@@ -639,17 +639,17 @@ def _construct_from_stimulus_dict(object, stimuli, targets):
                                   format(stim, append_type_to_name(mech), mech.variable))
 
     stim_lists = list(stimuli.values())
-    num_executions = len(stim_lists[0])
+    num_input_sets = len(stim_lists[0])
 
     # Check that all lists have the same number of stimuli
-    if not all(len(np.array(stim_list)) == num_executions for stim_list in stim_lists):
+    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
         raise SystemError("The length of all the stimulus lists must be the same")
 
     stim_list = []
 
     # If stimuli are for a process, construct stimulus list from dict without worrying about phases
     if object_type in {MECHANISM, PROCESS}:
-        for i in range(num_executions):
+        for i in range(num_input_sets):
             stims_in_execution = []
             for mech in stimuli:
                 stims_in_execution.append(stimuli[mech][i])
@@ -657,7 +657,7 @@ def _construct_from_stimulus_dict(object, stimuli, targets):
 
     # Otherwise, for system, construct stimulus from dict with phases
     else:
-        for execution in range(num_executions):
+        for execution in range(num_input_sets):
             stimuli_in_execution = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
@@ -690,7 +690,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
             axis 1: inputs for each time step of a trial (len == _phaseSpecMax of system (no. of time_steps per trial)
             axis 2: inputs to the system, one for each process (len == number of processes in system)
 
-    returns number of executions implicit in inputs
+    returns number of input_sets (one per execution)
     """
 
     object_type = get_object_type(object)
@@ -751,7 +751,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
         # Calcluate total number of executions
         num_mechs = len(object.originMechanisms)
         mechs = list(object.originMechanisms)
-        num_executions = 0
+        num_input_sets = 0
         executions_remain = True
         input_num = 0
         inputs_array = np.array(inputs)
@@ -786,32 +786,38 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
                                                                      inputs[inner_input_num],
                                                                      mech_len,
                                                                      append_type_to_name(mechs[inner_input_num],'mechanism'),
-                                                                     num_executions))
+                                                                     num_input_sets))
                                         inner_input_num += 1
                                         mech_len = np.size(mechs[inner_input_num].variable)
                                 elif np.size(inner_input) != mech_len * num_phases:
                                     raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
                                                       "of input for {} in execution {}".
                                                       format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
-                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_executions))
+                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_input_sets))
                                 else:
                                     inner_input_num += 1
                             input_num += 1
                             break
                     input_num += 1
-                num_executions += 1
+                num_input_sets += 1
             except IndexError:
                 executions_remain = False
 
-        return num_executions
+        return num_input_sets
 
-def _validate_targets(object, targets, num_executions):
+    else:
+        raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
+                       format(object.__class__.__name__))
+
+
+def _validate_targets(object, targets, num_input_sets):
     """
     num_targets = number of target stimuli per execution
-    num_target_executions = number sets of targets (one for each execution) in targets;  must match num_executions
+    num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
     """
 
     object_type = get_object_type(object)
+    num_target_sets = None
 
     if object_type is PROCESS:
 
@@ -819,10 +825,10 @@ def _validate_targets(object, targets, num_executions):
         if targets and object._learning_enabled:
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])
-            num_targets = np.size(target_array, 0)
+            num_target_sets = np.size(target_array, 0)
 
             if target_len != np.size(object.comparatorMechanism.target):
-                if num_targets > 1:
+                if num_target_sets > 1:
                     plural = 's'
                 else:
                     plural = ''
@@ -835,11 +841,16 @@ def _validate_targets(object, targets, num_executions):
                 raise RunError("Not all of the targets specified for {} are of the same length".
                                    format(append_type_to_name(object)))
 
-            if num_targets != num_executions:
+            if num_target_sets != num_input_sets:
                 raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                                   format(num_targets, num_executions, append_type_to_name(object)))
+                                   format(num_target_sets, num_input_sets, append_type_to_name(object)))
 
     elif object_type is SYSTEM:
+
+        # FIX: VALIDATE THE LEARNING IS ENABLED
+        # FIX: ALSO NEED TO VALIDATE THAT num_target_ets == num_input_sets
+        # FIX: CONSOLIDATE WITH TESTS FOR PROCESS ABOVE?
+
         # Check that number of target values in each execution equals the number of target mechanisms in the system
         if targets and any(process._learning_enabled for process in object.processes):
             if np.size(targets,0) != len(object.targetMechanisms):
@@ -849,7 +860,11 @@ def _validate_targets(object, targets, num_executions):
                                          object.name,
                                          len(object.targetMechanisms)))
     else:
-        pass
+        raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_targets in Run module for ".
+                       format(object.__class__.__name__))
+
+    return num_target_sets
+
 
 def get_object_type(object):
     if isinstance(object, Mechanism):
