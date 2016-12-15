@@ -74,10 +74,10 @@ the range.  After each execution of the mechanism:
       outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
     * **mean** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_MEAN` outputState,
-      and to the 2nd item of the mechanism's ``outputValue`` attribute;
+      and to the 2nd item of the mechanism's :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute;
     ..
     * **variance** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_VARIANCE` outputState,
-      and to the 3rd item of the mechanism's ``outputValue`` attribute.
+      and to the 3rd item of the mechanism's :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
 
 COMMENT
 
@@ -169,7 +169,8 @@ class TransferMechanism(ProcessingMechanism_Base):
     ---------
 
     default_input_value : number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+        the input to the mechanism to use if none is provided in a call to its
+        :py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
         of the mechanism.
 
@@ -235,8 +236,8 @@ class TransferMechanism(ProcessingMechanism_Base):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
 
-    value : List[1d np.array, float, float]
-        same as ``outputValue``.
+    value : 2d np.array [array(float64)]
+        result of executing the TransferMechanism's ``function``; same value as fist item of ``outputValue``.
 
     COMMENT:
         CORRECTED:
@@ -245,7 +246,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             and the first item of ``outputValue``.
     COMMENT
 
-    outputValue : List[1d np.array, float, float]
+    outputValue : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of :keyword:`TRANSFER_RESULT` outputState);
         * **mean** of the result (``value`` of :keyword:`TRANSFER_MEAN` outputState)

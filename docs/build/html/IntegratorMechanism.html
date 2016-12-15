@@ -85,31 +85,10 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanisms</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">IntegratorMechanism</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-an-integratormechanism">Creating an IntegratorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MonitoringMechanism.html">MonitoringMechanisms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
@@ -198,17 +177,18 @@ specified in the <code class="docutils literal"><span class="pre">function</span
 <p>An IntegratorMechanism has a single inputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is used as the <code class="docutils literal"><span class="pre">variable</span></code> for its
 <code class="docutils literal"><span class="pre">function</span></code>.   The <code class="docutils literal"><span class="pre">default_input_value</span></code> argument specifies the format of the <code class="docutils literal"><span class="pre">value</span></code> (i.e., whether it is a
 single scalar or an array), as well as the value to use if none is provided when mechanism is executed.  The default
-<code class="docutils literal"><span class="pre">function</span></code> is Integrator, with <code class="docutils literal"><span class="pre">weighting=:keyword`ADAPTIVE`</span></code>  and <code class="docutils literal"><span class="pre">rate=0.5</span></code>.  However a custom function
-can also be specified,  so long as it  takes a numeric value or  list or np.ndarray of numeric values as its input, and
-returns a value of the same type and format.  The default function &#8211; <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> &#8211; has two parameters
-(<code class="docutils literal"><span class="pre">weighting</span></code> and <code class="docutils literal"><span class="pre">rate</span></code>) that determine the type and,  well, yes, the <em>rate</em> of integration.  The mechanism has a
-single outputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is assigned the result of the call to the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<code class="docutils literal"><span class="pre">function</span></code> is Integrator, with <code class="docutils literal"><span class="pre">weighting</span></code> = <code class="xref std std-keyword docutils literal"><span class="pre">ADAPTIVE</span></code>  and <code class="docutils literal"><span class="pre">rate</span></code> =0.5.  However a custom function
+can also be specified,  so long as it  takes a numeric value or list or np.ndarray of numeric values as its input, and
+returns a value of the same type and format.  The default function &#8211; <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref py py-class docutils literal"><span class="pre">Function.Integrator</span></code></a> &#8211; has two
+parameters (<code class="docutils literal"><span class="pre">weighting</span></code> and <code class="docutils literal"><span class="pre">rate</span></code>) that determine the type and,  well, yes, the <em>rate</em> of integration.  The
+mechanism has a single outputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is assigned the result of the call to the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">function</span></code>.</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the <code class="docutils literal"><span class="pre">value</span></code> of its (primary) outputState.  For the default function (<a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a>), if the
-value specified for <code class="docutils literal"><span class="pre">default_input_value</span></code> is a list or array, each element of the array will be independently
+result to the <code class="docutils literal"><span class="pre">value</span></code> of its (primary) outputState.  For the default function (<a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref py py-class docutils literal"><span class="pre">Function.Integrator</span></code></a>),
+if the value specified for <code class="docutils literal"><span class="pre">default_input_value</span></code> is a list or array, each element of the array will be independently
 integrated.  If its <code class="docutils literal"><span class="pre">rate</span></code> parameter is a single value, that rate will be used for integrating each element.  If
 the <code class="docutils literal"><span class="pre">rate</span></code> parameter is a list or array, then each element will be used as the rate for the corresponding element
 of the input (in this case, <code class="docutils literal"><span class="pre">rate</span></code> must be the same length as the value specified for <code class="docutils literal"><span class="pre">default_input_value</span></code>).</p>
@@ -224,7 +204,8 @@ of the input (in this case, <code class="docutils literal"><span class="pre">rat
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_input_value</strong> (<em>number, list or np.ndarray</em>) &#8211; the input to the mechanism to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods;
+<li><strong>default_input_value</strong> (<em>number, list or np.ndarray</em>) &#8211; the input to the mechanism to use if none is provided in a call to its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> methods;
 also serves as a template to specify the length of <code class="docutils literal"><span class="pre">variable</span></code> for <code class="docutils literal"><span class="pre">function</span></code>, and the primary  outputState
 of the mechanism.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies function used to transform input;  can be <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Logistic</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code>,

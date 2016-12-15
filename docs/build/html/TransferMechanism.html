@@ -189,11 +189,11 @@ outputState, and to the 1st item of the mechanism&#8217;s <code class="docutils 
 </ul>
 <ul class="simple">
 <li><strong>mean</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_MEAN</span></code> outputState,
-and to the 2nd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute;</li>
+and to the 2nd item of the mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute;</li>
 </ul>
 <ul class="simple">
 <li><strong>variance</strong> of the result is assigned to the value of the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code> outputState,
-and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.</li>
+and to the 3rd item of the mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 </ul>
 </div></blockquote>
 <dl class="class">
@@ -211,7 +211,8 @@ and to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><spa
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>default_input_value</strong> (<em>number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; the input to the mechanism to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods;
+<li><strong>default_input_value</strong> (<em>number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -&gt; SHOULD RESOLVE TO VALUE</em>) &#8211; the input to the mechanism to use if none is provided in a call to its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> methods;
 also serves as a template to specify the length of <code class="docutils literal"><span class="pre">variable</span></code> for <code class="docutils literal"><span class="pre">function</span></code>, and the primary  outputState
 of the mechanism.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies function used to transform input;  can be <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Logistic</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code>,
@@ -267,13 +268,13 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="TransferMechanism.TransferMechanism.value">
 <code class="descname">value</code><a class="headerlink" href="#TransferMechanism.TransferMechanism.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[1d np.array, float, float]</em> &#8211; same as <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+<dd><p><em>2d np.array [array(float64)]</em> &#8211; result of executing the TransferMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>; same value as fist item of <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="TransferMechanism.TransferMechanism.outputValue">
 <code class="descname">outputValue</code><a class="headerlink" href="#TransferMechanism.TransferMechanism.outputValue" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[1d np.array, float, float]</em> &#8211; a list with the following items:
+<dd><p><em>List[array(float64), float, float]</em> &#8211; a list with the following items:
 * <strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_RESULT</span></code> outputState);
 * <strong>mean</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_MEAN</span></code> outputState)
 * <strong>variance</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code> outputState)</p>

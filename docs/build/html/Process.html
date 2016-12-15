@@ -522,9 +522,10 @@ mechanism.  Each processInputState sends a MappingProjection to one or more inpu
 <dt id="Process.Process_Base.input">
 <code class="descname">input</code><a class="headerlink" href="#Process.Process_Base.input" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[List[value] or ndarray]</em> &#8211; input to the process on each round of execution;  it is assigned the value of the <code class="docutils literal"><span class="pre">input</span></code> argument in a call
-to the process` <code class="docutils literal"><span class="pre">execute</span></code>  or <code class="docutils literal"><span class="pre">run</span></code> method. It&#8217;s value is assigned to <code class="docutils literal"><span class="pre">variable</span></code>, each item of
-which is assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the corresponding ProcessInputState in <code class="docutils literal"><span class="pre">processInputStates</span></code>.
-Each item must match the format of the corresponding inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</p>
+to the process` <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a>  or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> method. It&#8217;s
+value is assigned to <code class="docutils literal"><span class="pre">variable</span></code>, each item of which is assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the corresponding
+ProcessInputState in <a class="reference internal" href="#Process.Process_Base.processInputStates" title="Process.Process_Base.processInputStates"><code class="xref py py-data docutils literal"><span class="pre">processInputStates</span></code></a>. Each item must match the
+format of the <code class="docutils literal"><span class="pre">variable</span></code> for the corresponding inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal"><span class="pre">input</span></code> attribute of a process preserves its value throughout the execution of the process.
