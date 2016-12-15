@@ -2,6 +2,9 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENT: params dictionary -> ``params`` dictionary
+#           parameter dictionary -> ``params`` dictionary
+
 # FIX: Are attribute docsrings supposed to be capitalized or not?
 
 # FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
