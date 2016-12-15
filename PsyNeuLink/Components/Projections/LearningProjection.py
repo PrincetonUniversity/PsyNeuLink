@@ -122,9 +122,9 @@ Execution
 ---------
 
 LearningSignals are executed after all of the mechanisms in a process or system have executed, including the
-MonitoringMechanisms that provide the ``errorSignal`` to each LearningProjection.  When the LearningProjection is executed,
-it uses its ``errorSignal`` to calculate changes to the ``matrix`` of its ``mappingProjection``. Changes to the
-``matrix`` are  calculated so as to reduce the ``errorSignal``. The changes are assigned as the ``value`` of the
+MonitoringMechanisms that provide the ``errorSignal`` to each LearningProjection.  When the LearningProjection is
+executed, it uses its ``errorSignal`` to calculate changes to the ``matrix`` of its ``mappingProjection``. Changes to
+the ``matrix`` are  calculated so as to reduce the ``errorSignal``. The changes are assigned as the ``value`` of the
 LearningProjection, but are not applied to the ``matrix`` unit the next time the ``mappingProjection`` is executed
 (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
 

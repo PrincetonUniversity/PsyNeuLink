@@ -14,7 +14,7 @@ Overview
 
 A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a :doc:`process <Process>` or
 :doc:`system <System>`, which is evaluated by its ``function``.  This can generate an error signal (e.g.,
-for learning[LINK]) or some other value (e.g., conflict).
+for use in :doc:`learning <LearningProjection>`) or some other value (e.g., a conflict signal).
 
 .. _MonitoringMechanism_Creation:
 

@@ -209,6 +209,8 @@ of the PsyNeuLink package.  Once the jupyter notebook opens, within the list of 
 "PsyNeuLink Tutorial.ipynb".  This will open the tutorial, that will provide any additional information needed to get
 started.
 
+If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
+
 
 .. _Contributors:
 

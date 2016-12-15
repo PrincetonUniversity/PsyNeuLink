@@ -66,8 +66,7 @@ one of the specifications below:
       inputState using its ``variable`` as the template for the projection's ``value``.
     ..
 
-   CONFIRM THAT THIS IS TRUE:
-
+       CONFIRM THAT THIS IS TRUE:
     * A **Projection object**.  This creates a default inputState using the first item of the owner mechanism's
     ``variable`` as the template for the inputState's ``variable``, and assigns the state as the projection's
     ``receiver``. The projection's ``value`` must be compatible with the inputState's ``variable``.

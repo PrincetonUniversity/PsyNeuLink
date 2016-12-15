@@ -15,7 +15,7 @@ Overview
 ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a :doc:`System` to assess the
 outcome of processing by those mechanisms, and use this to regulate the value of
 :doc:`ControlProjections <ControlProjection>` to other ProcessingMechanisms in the system for which the
-ControlMechanism is a ``controller``.
+ControlMechanism is a :py:data:`controller <System.System_Base.controller>`.
 
 .. _ControlMechanism_Creation:
 
@@ -80,10 +80,10 @@ The specification of whether an outputState is monitored by a ControlMechanism c
     :class:`MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
 
     * :keyword:`PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the :keyword:`TERMINAL` mechanism(s)
-      in the system for which the ControlMechanism is the ``controller``.
+      in the system for which the ControlMechanism is the :py:data:`controller <System.System_Base.controller>`.
 
     * :keyword:`ALL_OUTPUT_STATES`:  all of the outputStates of the :keyword:`TERMINAL` mechanism(s)
-      in the system for which the ControlMechanism is the ``controller``.
+      in the system for which the ControlMechanism is the :py:data:`controller <System.System_Base.controller>`..
   ..
   * :keyword:`None`.
 
@@ -230,13 +230,16 @@ class ControlMechanism_Base(Mechanism_Base):
 
     controlProjections : List[ControlProjection]
         list of :doc:`ControlProjections <ControlProjection>` managed by the ControlMechanism.
-        There is one for each ouputState in the ``outputStates`` dictionary.
+        There is one for each ouputState in the :py:data:`outputStates <Mechanism.Mechanism_Base.outputStates>`
+        dictionary.
 
     controlProjectionCosts : 2d np.array
-        array of costs associated with each of the control signals in the ``controlProjections`` attribute.
+        array of costs associated with each of the control signals in the
+        :py:data:`controlProjections <ControlMechansm_Base.controlProjections>` attribute.
 
     allocationPolicy : 2d np.array
-        array of values assigned to each control signal in the ``controlProjections`` attribute.
+        array of values assigned to each control signal in the
+        :py:data:`controlProjections <ControlMechansm_Base.controlProjections>` attribute.
         This is the same as the ControlMechanism's ``value`` attribute.
 
 
