@@ -38,13 +38,14 @@ system, then the ControlProjection's ``sender`` is assigned to an outputState of
 :any:`DefaultControlMechanism`.
 
 The four functions used to calculate the :ref:`cost of a control signal <ControlProjection_Cost_Functions>`
-can be specified  either in arguments to the ControlProjection's constructor, or in a params dictionary[LINK](see
-below [LINK]). A custom function can be assigned to any cost function, so long as it accepts the appropriate type of
-value (see below [LINK]) and returns a scalar.  Each of the cost functions can be :ref:`enabled or disabled
-<ControlProjection_Toggle_Costs>`, to select which make contributions to the ControlProjection's
-:py:data:`cost <ControlProjection.cost>`.  A cost function can also be permanently disabled for its ControlProjection
-by assigning :keyword:`None` to the argument for that function in its constructor (or the appropriate entry in its
-``params`` dictionary). Cost functions that are permanently disabled in this way cannot be re-enabled.
+can be specified  either in arguments to the ControlProjection's constructor, or in a ``params dictionary`` (see
+:ref:`ControlProjection_Cost_Functions` below). A custom function can be assigned to any cost function, so long as
+it accepts the appropriate type of value and returns a scalar.  Each of the cost functions can be
+:ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
+ControlProjection's :py:data:`cost <ControlProjection.cost>`.  A cost function can also be permanently disabled for
+its ControlProjection by assigning :keyword:`None` to the argument for that function in its constructor (or the
+appropriate entry in its ``params`` dictionary). Cost functions that are permanently disabled in this way cannot be
+re-enabled.
 
 A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
 specifies the values of its :py:data:`allocation <ControlProjection.allocation>` that will be sampled by
@@ -271,7 +272,7 @@ class ControlProjection(Projection_Base):
 
     function : TransferFunction : default Linear
         converts the ControlProjection's :py:data:`allocation <ControlProjection.allocation>` into its
-        control signal ``intensity`` (equal to its ``value``).
+        control signal :py:data:`intensity <ControlProjection.intensity>` (equal to its ``value``).
 
     intensity_cost_function : Optional[TransferFuntion] : default Exponential
         calculates a cost based on the control signal :py:data:`intensity <ControlProjection.intensity>`.
@@ -296,7 +297,7 @@ class ControlProjection(Projection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
         By default, it contains an entry for the projection's default ``function`` and cost function assignments.
 
     name : str : default ControlProjection-<index>
@@ -341,8 +342,8 @@ class ControlProjection(Projection_Base):
         calculates "intensityCost`` from the curent value of :py:data:`intensity <ControlProjection.intensity>`.
 
     adjustmentCostFunction : TransferFunction : default Linear
-        calculates ``adjustmentCost`` based on the change in :py:data:`intensity <ControlProjection.intensity>`
-        from its last value.
+        calculates :py:data:`adjustmentCost <ControlProjection.adjustmentCost>` based on the change in
+        :py:data:`intensity <ControlProjection.intensity>` from its last value.
 
     durationCostFunction : IntegratorFunction : default Linear
         calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
