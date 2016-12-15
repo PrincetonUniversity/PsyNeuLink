@@ -683,6 +683,7 @@ def _construct_from_stimulus_dict(object, stimuli, targets):
             stim_list.append(stimuli_in_execution)
     return stim_list
 
+
 def _validate_inputs_and_targets(object, inputs=None, targets=None, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
