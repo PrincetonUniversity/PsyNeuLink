@@ -410,7 +410,7 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    __validate_inputs(object=object, inputs=inputs, targets=targets, context="Run " + object.name)
+    _validate_inputs_and_targets(object=object, inputs=inputs, targets=targets, context="Run " + object.name)
 
     if reset_clock:
         CentralClock.trial = 0
@@ -537,7 +537,7 @@ def _construct_inputs(object, inputs, targets=None):
             inputs_array = np.concatenate(inputs_array)
         inputs = inputs_array.tolist()
 
-        num_executions = __validate_inputs(object=object,
+        num_executions = _validate_inputs_and_targets(object=object,
                                      inputs=inputs,
                                      targets=targets,
                                      num_phases=1,
@@ -673,7 +673,7 @@ def _construct_inputs(object, inputs, targets=None):
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
-def __validate_inputs(object, inputs=None, targets=None, num_phases=None, context=None):
+def _validate_inputs_and_targets(object, inputs=None, targets=None, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
@@ -760,6 +760,15 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                                   format(np.size(inputs,PROCESSES_DIM),
                                          object.name,
                                          len(object.originMechanisms)))
+
+            # Check that number of target values in each execution equals the number of target mechanisms in the system
+            if targets and any(process._learning_enabled for process in object.processes):
+                if np.size(targets,0) != len(object.targetMechanisms):
+                    raise SystemError("The number of target values ({}) for each execution in the call to {}.run() "
+                                      "does not match the number of target mechanisms ({}) in the system".
+                                      format(np.size(targets,0),
+                                             object.name,
+                                             len(object.targetMechanisms)))
 
 
         # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED

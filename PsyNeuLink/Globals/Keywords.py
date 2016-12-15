@@ -235,6 +235,8 @@ CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
+MONITORING = 'MONITORING'
+LEARNING_TARGET = 'TARGET'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
