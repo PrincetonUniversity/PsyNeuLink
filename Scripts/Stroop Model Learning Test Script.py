@@ -17,15 +17,25 @@ words = TransferMechanism(default_input_value=[0,0],
                         function=Linear,
                         name="Words")
 
+decision = TransferMechanism(default_input_value=[0,0],
+                           function=Logistic,
+                           name="Decision")
+
 response = TransferMechanism(default_input_value=[0,0],
                            function=Logistic,
                            name="Response")
 
+response2 = TransferMechanism(default_input_value=[0,0],
+                           function=Logistic,
+                           name="Response2")
+
+
 color_naming_process = process(
     default_input_value=[1, 2.5],
     # pathway=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
-    pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
-    learning=LEARNING_PROJECTION,
+    # pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
+    pathway=[colors, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response],
+    learning=LEARNING,
     target=[2,2],
     name='Color Naming',
     prefs=process_prefs
@@ -33,9 +43,10 @@ color_naming_process = process(
 
 word_reading_process = process(
     default_input_value=[.5, 3],
-    pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
+    # pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
+    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response2],
     name='Word Reading',
-    learning=LEARNING_PROJECTION,
+    learning=LEARNING,
     target=[3,3],
     prefs=process_prefs
 )

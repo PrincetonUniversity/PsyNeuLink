@@ -90,21 +90,23 @@ Mechanisms
 Mechanisms are assigned the following designations based on the position they occupy in the graph structure and/or
 the role they play in a system:
 
-    :keyword:`ORIGIN`: receives input to the system, and begins execution
+    :keyword:`ORIGIN`: receives input to the system, and begins execution;
 
-    :keyword:`TERMINAL`: final point of execution, and provides an output of the system
+    :keyword:`TERMINAL`: final point of execution, and provides an output of the system;
 
-    :keyword:`SINGLETON`: both an :keyword:`ORIGIN` and a :keyword:`TERMINAL` mechanism
+    :keyword:`SINGLETON`: both an :keyword:`ORIGIN` and a :keyword:`TERMINAL` mechanism;
 
-    :keyword:`CYCLE`: receives a projection that closes a recurrent loop
+    :keyword:`CYCLE`: receives a projection that closes a recurrent loop;
 
-    :keyword:`INITIALIZE_CYCLE`: sends a projection that closes a recurrent loop; can be assigned an initial value
+    :keyword:`INITIALIZE_CYCLE`: sends a projection that closes a recurrent loop; can be assigned an initial value;
 
-    :keyword:`MONITORING`: monitors value of another mechanism for use in learning
+    :keyword:`MONITORING`: monitors value of another mechanism for use in learning;
 
-    :keyword:`CONTROL`:  monitors value of another mechanism for use in real-time control
+    :keyword:`TARGET`: a :keyword:`TERMINAL` mechanism in a system, belonging to a process with learning enabled;
 
-    :keyword:`INTERNAL`: processing mechanism that does not fall into any of the categories above
+    :keyword:`CONTROL`:  monitors the value of another mechanism used to control parameters values;
+
+    :keyword:`INTERNAL`: processing mechanism that does not fall into any of the categories above.
 
     .. note:: Any :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system must be, respectively,
        the :keyword:`ORIGIN` or :keyword:`TERMINAL` of any process(es) to which they belong.  However, it is not
@@ -270,6 +272,7 @@ OUTPUT_STATE_NAMES = 'output_state_names'
 OUTPUT_VALUE_ARRAY = 'output_value_array'
 NUM_PHASES_PER_TRIAL = 'num_phases'
 MONITORING_MECHANISMS = 'monitoring_mechanisms'
+TARGET_MECHANISMS = 'target_mechanisms'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
 CONTROL_MECHANISMS = 'control_mechanisms'
 CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
@@ -485,10 +488,10 @@ class System_Base(System):
         determines whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
 
     graph : OrderedDict
-        contains a graph of the system.
-        Each entry specifies a set of <Receiver>: {sender, sender...} dependencies;
-        The key of each entry is a receiver mech_tuple
-        the value is a set of mech_tuples that send projections to the receiver.
+        contains a graph of all of the mechanisms in the system.
+        Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
+        The key of each entry is a receiver mech_tuple, and
+        the value is a set of mech_tuples that send projections to that receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
@@ -537,6 +540,11 @@ class System_Base(System):
         .. _monitoring_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
             Tuples for all MonitoringMechanisms in the system (used for learning).
 
+        .. _target_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all ComparatorMechanisms  in the system that are a :keyword:`TERMINAL` for at least on process
+            to which it belongs and that process has learning enabled --  the criteria for being a target used in
+            learning.
+
         .. _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
             Tuples for all LearningMechanisms in the system (used for learning).
 
@@ -562,6 +570,9 @@ class System_Base(System):
 
     monitoringMechanisms : MechanismList)
         contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
+
+    targetMechanisms : MechanismList)
+        contains all TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
 
     COMMENT:
        IS THIS CORRECT:
@@ -652,7 +663,9 @@ class System_Base(System):
                                                  monitor_for_control=monitor_for_control,
                                                  params=params)
 
-        self.pathway = None
+        # MODIFIED 12/15/16 OLD:
+        # self.pathway = None
+        # MODIFIED 12/15/16 END
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.function = self.execute
@@ -1162,45 +1175,62 @@ class System_Base(System):
 
         # For each mechanism (represented by its tuple) in the graph, add entry to relevant list(s)
         # Note: ignore mechanisms belonging to controllerProcesses (e.g., instantiated by EVCMechanism)
-        #       as they are for internal use only
+        #       as they are for internal use only;
+        #       this also ignored learning-related mechanisms (they are handled below)
         self._origin_mech_tuples = []
         self._terminal_mech_tuples = []
         self.recurrent_init_mech_tuples = []
         self._control_mech_tuple = []
-        self.__monitoring_mech_tuples = []
 
         for mech_tuple in self.executionGraph:
+
             mech = mech_tuple.mechanism
+
             if mech.systems[self] in {ORIGIN, SINGLETON}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self._origin_mech_tuples.append(mech_tuple)
                     break
+
             if mech_tuple.mechanism.systems[self] in {TERMINAL, SINGLETON}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self._terminal_mech_tuples.append(mech_tuple)
                     break
+
             if mech_tuple.mechanism.systems[self] in {INITIALIZE_CYCLE}:
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
                     self.recurrent_init_mech_tuples.append(mech_tuple)
                     break
+
             if isinstance(mech_tuple.mechanism, ControlMechanism_Base):
                 if not mech_tuple.mechanism in self._control_mech_tuple:
                     self._control_mech_tuple.append(mech_tuple)
+
+        self._monitoring_mech_tuples = []
+        self._target_mech_tuples = []
+
+        for mech_tuple in self._all_mech_tuples:
+
             if isinstance(mech_tuple.mechanism, MonitoringMechanism_Base):
-                if not mech_tuple.mechanism in self.__monitoring_mech_tuples:
-                    self.__monitoring_mech_tuples.append(mech_tuple)
+                if not mech_tuple.mechanism in self._monitoring_mech_tuples:
+                    self._monitoring_mech_tuples.append(mech_tuple)
+
+            if isinstance(mech_tuple.mechanism, ComparatorMechanism):
+                if not mech_tuple.mechanism in self._target_mech_tuples:
+                    self._target_mech_tuples.append(mech_tuple)
+
 
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
         self.terminalMechanisms = MechanismList(self, self._terminal_mech_tuples)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mech_tuples)
         self.controlMechanism = MechanismList(self, self._control_mech_tuple)
-        self.monitoringMechanisms = MechanismList(self, self.__monitoring_mech_tuples)
+        self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
+        self.targetMechanisms = MechanismList(self, self._target_mech_tuples)
 
         try:
             self.execution_sets = list(toposort(self.executionGraph))
@@ -1735,6 +1765,8 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
+            :keyword:`TARGET_MECHANISMS`:list of TARGET mechanisms
+
             :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 
             :keyword:`CONTROL_MECHANISMS`:list of CONTROL mechanisms
@@ -1799,6 +1831,7 @@ class System_Base(System):
             OUTPUT_VALUE_ARRAY: output_value_array,
             NUM_PHASES_PER_TRIAL: self.numPhases,
             MONITORING_MECHANISMS: self.monitoringMechanisms,
+            TARGET_MECHANISMS: self.targetMechanisms,
             LEARNING_PROJECTION_RECEIVERS: learning_projections,
             CONTROL_MECHANISMS: self.controlMechanism,
             CONTROL_PROJECTION_RECEIVERS: controlled_parameters,

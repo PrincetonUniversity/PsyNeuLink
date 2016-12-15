@@ -986,7 +986,6 @@ class Process_Base(Process):
         self._allMechanisms = MechanismList(self, self._mech_tuples)
         self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
 
-
     def _standardize_config_entries(self, pathway, context=None):
 
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
@@ -1705,8 +1704,27 @@ class Process_Base(Process):
                 parameter_state._deferred_init()
                 self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # Add _monitoring_mech_tuples to _mech_tuples for execution
+        # Label monitoring mechanisms and add _monitoring_mech_tuples to _mech_tuples for execution
         if self._monitoring_mech_tuples:
+
+            # Add designations to newly created MonitoringMechanisms:
+            for mech_tuple in self._monitoring_mech_tuples:
+                mech = mech_tuple[OBJECT]
+                # If
+                # - mech is a ComparatorMechanism, and
+                # - mech is also a TERMINAL for the current process, and
+                # - current process has learning enabled,
+                # then designate mech as a LEARNING_TARGET
+                if (isinstance(mech, ComparatorMechanism) and
+                        any(projection.sender.owner.processes[self] == TERMINAL
+                            for projection in mech.inputStates[SAMPLE].receivesFromProjections) and
+                        self.learning
+                            ):
+                    mech_tuple[0].processes[self] = LEARNING_TARGET
+                else:
+                    mech_tuple[0].processes[self] = MONITORING
+
+            # Add _monitoring_mech_tuples to _mech_tuples
             self._mech_tuples.extend(self._monitoring_mech_tuples)
 
             # IMPLEMENTATION NOTE:
@@ -1822,7 +1840,7 @@ class Process_Base(Process):
 
         else:
             self.comparatorMechanism = comparators[0]
-            self.comparatorMechanism.processes[self] = ComparatorMechanism
+            # self.comparatorMechanism.processes[self] = ComparatorMechanism
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".
                       format(self.comparatorMechanism.name, self.name))

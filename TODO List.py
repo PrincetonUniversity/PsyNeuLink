@@ -9,6 +9,9 @@
 
 # FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
 
+# IMPLEMENT: learning argument and attribute for System (that assigns learning to all of its processes and,
+#            and raises and exception if they can't handle it
+
 # IMPLEMENT: OutputStates:
     # COMMENT:
     #     OutputStates can also be added by using the assign_output_state method [LINK].
