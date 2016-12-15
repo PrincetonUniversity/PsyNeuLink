@@ -343,6 +343,8 @@ def run(object,
     """
 
     inputs = _construct_stimulus_sets(object, inputs)
+    if targets:
+        targets = _construct_stimulus_sets(object, targets)
 
     object_type = get_object_type(object)
 
@@ -434,7 +436,7 @@ def run(object,
 
             input_num = execution%len(inputs)
 
-            if object_type == PROCESS and targets:
+            if object_type == PROCESS and not targets is None:
                 object.target = targets[input_num]
 
             result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
@@ -467,7 +469,7 @@ def run(object,
     return object.results
 
 @tc.typecheck
-def _construct_stimulus_sets(object, inputs):
+def _construct_stimulus_sets(object, stimuli):
     """Return an nparray of stimuli suitable for use as inputs arg for system.run()
 
     If inputs is a list:
@@ -506,15 +508,15 @@ def _construct_stimulus_sets(object, inputs):
     object_type = get_object_type(object)
 
     # Stimuli in list format
-    if isinstance(inputs, (list, np.ndarray)):
-        stim_list = _construct_from_stimulus_list(object, inputs)
+    if isinstance(stimuli, (list, np.ndarray)):
+        stim_list = _construct_from_stimulus_list(object, stimuli)
 
     # Stimuli in dict format
-    elif isinstance(inputs, dict):
-        stim_list = _construct_from_stimulus_dict(object, inputs)
+    elif isinstance(stimuli, dict):
+        stim_list = _construct_from_stimulus_dict(object, stimuli)
 
     else:
-        raise SystemError("inputs arg for {}._construct_inputs() must be a dict or list".format(object.name))
+        raise SystemError("inputs arg for {}._construct_stimulus_sets() must be a dict or list".format(object.name))
 
     stim_list_array = np.array(stim_list)
     return stim_list_array
@@ -822,7 +824,7 @@ def _validate_targets(object, targets, num_input_sets):
     if object_type is PROCESS:
 
         # If learning is enabled, validate target
-        if targets and object._learning_enabled:
+        if not targets is None and object._learning_enabled:
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
