@@ -17,9 +17,10 @@ An inputState of a mechanism receives the input from projections from other mech
 and/or the input for a process or system itself (if the mechanism to which the inputState belongs is the
 :keyword:`ORIGIN` mechanism of that process or system --
 see :ref:`role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`).
-A list of projections received by an inputState is kept in its ``receivesFromProjections`` attribute.  It's
-``function`` combines the values of these inputs, and the result is assigned to a corresponding item in the owner
-mechanism's ``variable`` and ``inputValue`` attributes (see :ref:`Mechanism_InputStates`).
+A list of projections received by an inputState is kept in its
+:py:data:`receivesFromProjections <InputState.receivesFromProjections>` attribute. It's ``function`` combines the
+values of these inputs, and the result is assigned to a corresponding item in the owner mechanism's ``variable`` and
+:py:data:`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes (see :ref:`Mechanism_InputStates`).
 
 .. _InputState_Creation:
 
@@ -78,7 +79,7 @@ one of the specifications below:
       that are either of those.
     ..
     * A :any:`ParamValueProjection` tuple.  This creates a default inputState using the ``value`` item as its
-    ``variable``, and assigns the state as the ``receiver`` of the ``projection`` item.
+    ``variable``, and assigns the state as the ``receiver`` of the projection item.
 
     .. note::
        In all cases, the resulting ``value`` of the inputState must be compatible (that is, have the same number and
@@ -117,8 +118,9 @@ Structure
 
 Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
 mechanisms, as well as from the process to which its owner belongs (if it is the :keyword:`ORIGIN` [LINK] mechanism
-for that process.  A list of projections received by an inputState is kept in its ``receivesFromProjections`` attribute.
-Like all PsyNeuLink components, it has the three following core attributes:
+for that process.  A list of projections received by an inputState is kept in its
+:py:data:`receivesFromProjections <InputState.receivesFromProjections>` attribute. Like all PsyNeuLink components,
+it has the three following core attributes:
 
 * ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
   each must match both the number and type of elements of the inputState's ``variable``.
@@ -143,7 +145,7 @@ Execution
 An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the inputStat executes any projections it receives, calls its ``function`` to aggregate their
 values, and then assigns this to its ``value`` attribute.  This, in turn, is assigned as the value of the item in the
-mechanism's ``variable`` and ``inputValue`` attributes to which the inputState is assigned
+mechanism's ``variable`` and :py:data`inputValue <InputState.inputValue>` attributes to which the inputState is assigned
 (see :ref:`mechanism variable and inputValue attributes <Mechanism_Variable>`)`.
 
 .. _InputState_Class_Reference:

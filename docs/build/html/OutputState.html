@@ -169,15 +169,15 @@ variance (if it is an array).  As a different example, the <code class="docutils
 results (such as decision accuracy and response time), each of which is assigned as the value of a different
 outputState.  The outputState(s) of a mechanism can serve as the input to other  mechanisms (by way of
 <span class="xref doc">projections</span>), or as the output of a process and/or system.  A list of  the  outgoing
-projections from an outputState is kept in its <code class="docutils literal"><span class="pre">sendsToProjections</span></code> attribute.</p>
+projections from an outputState is kept in its <a class="reference internal" href="#OutputState.OutputState.sendsToProjections" title="OutputState.OutputState.sendsToProjections"><code class="xref py py-data docutils literal"><span class="pre">sendsToProjections</span></code></a> attribute.</p>
 </div>
 <div class="section" id="creating-an-outputstate">
 <span id="outputstates-creation"></span><h2>Creating an OutputState<a class="headerlink" href="#creating-an-outputstate" title="Permalink to this headline">¶</a></h2>
 <p>An outputState can be created by calling its constructor, but in general this is not necessary as a mechanism
 usually creates the outputState(s) it needs automatically when it is created.  For example, if the mechanism is
 being created within the <a class="reference internal" href="Process.html#process-pathway"><span class="std std-ref">pathway of a process</span></a>, an outputState will be created and assigned
-as the <code class="docutils literal"><span class="pre">sender</span></code> of a MappingProjection to the next mechanism in the pathway, or to the process&#8217;s <code class="docutils literal"><span class="pre">output</span></code> if it is
-the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of that process.</p>
+as the <code class="docutils literal"><span class="pre">sender</span></code> of a MappingProjection to the next mechanism in the pathway, or to the process&#8217;s
+<a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a> if it is the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of that process.</p>
 <p>An outputState must be owned by a mechanism. Therefore, if the outputState is created directly,
 the mechanism to which it belongs must be specified in the <code class="docutils literal"><span class="pre">owner</span></code> argument of its constructor; if the outputState
 is specified in the <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry of the parameter dictionary for a mechanism, then the owner is
@@ -226,53 +226,55 @@ outputState (designated by its <a class="reference internal" href="#outputstate-
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In all cases, the <code class="docutils literal"><span class="pre">variable</span></code> of the outputState must be match (that is, have the same number and type
-of elements) as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned (see [LINK]).</p>
+<p class="last">In all cases, the <code class="docutils literal"><span class="pre">variable</span></code> of the outputState must match (have the same number and type of elements)
+as the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned.</p>
 </div>
 </div></blockquote>
 <p id="outputstate-index-and-calculate">By default, an explicitly specified outputState will use the first item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.  However,
-it can be assigned a different item by specifying its <code class="docutils literal"><span class="pre">index</span></code> parameter [LINK]. The <code class="docutils literal"><span class="pre">variable</span></code> of an
-outputState must match (in the number and type of its elements) the item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it
+it can be assigned a different item by specifying its <a class="reference internal" href="#outputstate-index"><span class="std std-ref">index</span></a> parameter The <code class="docutils literal"><span class="pre">variable</span></code> of
+an outputState must match (in the number and type of its elements) the item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it
 is assigned. An outputState can also be configured to transform the value of the item, by specifying a function for
-its <code class="docutils literal"><span class="pre">calculate</span></code> parameter [LINK];  the function must be able to take as input a value that is compatible with the
-item to which the outputState is assigned.</p>
+its <span class="xref std std-ref">OutputState_Calculate</span> parameter;  the function must be able to take as input a value that is compatible
+with the item to which the outputState is assigned.</p>
 </div>
 <div class="section" id="structure">
 <span id="outputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every outputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>. It can send one or more MappingProjections to other
 mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
-<code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> [LINK] mechanism for that process or system).  A list of projections sent by an outputState is
-maintained in its <code class="docutils literal"><span class="pre">sendsToProjections</span></code> attribute.</p>
+<code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism for that process or system &#8211; see <a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a>).  A list of projections
+sent by an outputState is maintained in its <a class="reference internal" href="#OutputState.OutputState.sendsToProjections" title="OutputState.OutputState.sendsToProjections"><code class="xref py py-data docutils literal"><span class="pre">sendsToProjections</span></code></a> attribute.</p>
 <p>Like all PsyNeuLink components, it has the three following core attributes:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">variable</span></code>:  this must match (both in number and types of elements) the value of the item of its owner mechanism&#8217;s
-<code class="docutils literal"><span class="pre">value</span></code> attribute to which it is assigned (in its <code class="docutils literal"><span class="pre">index</span></code> attribute).</li>
+<code class="docutils literal"><span class="pre">value</span></code> attribute to which it is assigned (in its <a class="reference internal" href="#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref py py-data docutils literal"><span class="pre">index</span></code></a> attribute).</li>
 <li><code class="docutils literal"><span class="pre">function</span></code>: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.</li>
-<li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the outputState`s <code class="docutils literal"><span class="pre">function</span></code>, possibly modifed by its <code class="docutils literal"><span class="pre">calculate</span></code>
-parameter, and used as the input to any projections that it sends.</li>
+<li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the outputState`s <code class="docutils literal"><span class="pre">function</span></code>, possibly modifed by its
+<a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> parameter, and used as the input to any projections that it sends.</li>
 </ul>
 <p id="outputstate-attributes">An outputState also has two additional attributes that determine its operation:</p>
 <ul class="simple" id="outputstate-index">
-<li><code class="docutils literal"><span class="pre">index</span></code>: this determines the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is assigned.  By default, this is
-set to 0, which assigns it to the first item.</li>
+<li><a class="reference internal" href="#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref py py-data docutils literal"><span class="pre">index</span></code></a>: this determines the item of its owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which it is
+assigned.  By default, this is set to 0, which assigns it to the first item.</li>
 </ul>
 <ul class="simple" id="outputstate-calculate">
-<li><code class="docutils literal"><span class="pre">calculate</span></code>:  this specifies the function used to convert the item to which the outputState is assigned to
-the outputState&#8217;s value.  The result is assigned to the outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute. The default for
-<code class="docutils literal"><span class="pre">calculate</span></code> is the identity function, which simply assigns the item of the mechanism&#8217;sm <code class="docutils literal"><span class="pre">value</span></code> unmodified as
-the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.  However, it can be assigned any function that can take as input the  value of
-the item to which the outputState is assigned.  Note that the <code class="docutils literal"><span class="pre">calculate</span></code> function is distinct from the
-outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> parameter (which is reserved for future use).</li>
+<li><a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a>:  this specifies the function used to convert the item to which the
+outputState is assigned to the outputState&#8217;s value.  The result is assigned to the outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code>
+attribute. The default for <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> is the identity function, which simply
+assigns the item of the mechanism&#8217;sm <code class="docutils literal"><span class="pre">value</span></code> unmodified as the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.  However,
+it can be assigned any function that can take as input the  value of the item to which the outputState is assigned.
+Note that the <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> function is distinct from the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>
+parameter (which is reserved for future use).</li>
 </ul>
 </div>
 <div class="section" id="execution">
 <span id="outputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the mechanism places the results of its execution in its <code class="docutils literal"><span class="pre">value</span></code> attribute, and the value of the
-outputState is then updated by calling its <code class="docutils literal"><span class="pre">calculate</span></code> function using as its input the item of the onwer mechanism&#8217;s
-<code class="docutils literal"><span class="pre">value</span></code> to which the outputState is assigned.  The result is assigned to the outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, as well as
-to a corresponding item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code> attribute.  It is also used as the input to any projections
-for which the outputState is the sender.</p>
+outputState is then updated by calling its <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> function using as its input
+the item of the onwer mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to which the outputState is assigned.  The result is assigned to the
+outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, as well as to a corresponding item of the mechanism&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute.  It is also used as the input to any
+projections for which the outputState is the sender.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="outputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -292,10 +294,11 @@ the outputState is created.</li>
 argument; it is used to insure the compatibility of the source of the input to the outputState and its
 <code class="docutils literal"><span class="pre">variable</span></code> (used for its <code class="docutils literal"><span class="pre">function</span></code> and <code class="docutils literal"><span class="pre">calculate</span></code> routines).</li>
 <li><strong>value</strong> (<em>number, list or np.ndarray</em>) &#8211; used as the template for <code class="docutils literal"><span class="pre">variable</span></code>.</li>
-<li><strong>index</strong> (<em>int : default PRIMARY_OUTPUT_STATE</em>) &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the <code class="docutils literal"><span class="pre">calculate</span></code> function, to determine
-the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</li>
+<li><strong>index</strong> (<em>int : default PRIMARY_OUTPUT_STATE</em>) &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the
+<a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> function, to determine the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</li>
 <li><strong>calculate</strong> (<em>function or method : default Linear</em>) &#8211; used to convert item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> (and corresponding
-item of owner&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.  It must accept a value that has the same format as the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.</li>
+item of owner&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>.  It must accept a value
+that has the same format (number and type of elements) as the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.</li>
 <li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; function used to aggregate the values of the projections received by the outputState.
 It must produce a result that has the same format (number and type of elements) as its <code class="docutils literal"><span class="pre">value</span></code>.
 It is implemented for consistency with other states, but is not actively used by PsyNeuLInk at the moment
@@ -328,23 +331,24 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="OutputState.OutputState.variable">
 <code class="descname">variable</code><a class="headerlink" href="#OutputState.OutputState.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; assigned an item of the <code class="docutils literal"><span class="pre">outputValue</span></code> of its owner mechanism.</p>
+<dd><p><em>number, list or np.ndarray</em> &#8211; assigned an item of the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> of its owner mechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="OutputState.OutputState.index">
 <code class="descname">index</code><a class="headerlink" href="#OutputState.OutputState.index" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the <code class="docutils literal"><span class="pre">calculate</span></code> function, to determine
-the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</p>
+<dd><p><em>int</em> &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the
+<a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> function, to determine the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="OutputState.OutputState.calculate">
 <code class="descname">calculate</code><a class="headerlink" href="#OutputState.OutputState.calculate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function or method : default Linear</em> &#8211; function used to convert the item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> specified by the <code class="docutils literal"><span class="pre">index</span></code> attribute;  it is
-combined with the result of the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to determine it&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and the corresponding
-item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>. Default is Linear (identity function) which simply transfers the
-value as is.</p>
+<dd><p><em>function or method : default Linear</em> &#8211; function used to convert the item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> specified by the
+<a class="reference internal" href="#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref py py-data docutils literal"><span class="pre">index</span></code></a> attribute;  it is combined with the result of the outputState&#8217;s
+<code class="docutils literal"><span class="pre">function</span></code> to determine it&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and the corresponding item of the owner mechanism&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>. Default is Linear (identity function)
+which simply transfers the value as is.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -352,23 +356,25 @@ value as is.</p>
 <code class="descname">function</code><a class="headerlink" href="#OutputState.OutputState.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>CombinationFunction : default LinearCombination(operation=SUM))</em> &#8211; performs an element-wise (Hadamard) aggregation  of the <code class="docutils literal"><span class="pre">values</span></code> of the projections received by the
 outputState.  The result is combined with the result of the calculate function and assigned as the <code class="docutils literal"><span class="pre">value</span></code>
-of the outputState, and the corresponding item of the owner&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+of the outputState, and the corresponding item of the owner&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Currently PsyNeuLink does not support projections to outputStates.  The <code class="docutils literal"><span class="pre">function</span></code> attribute is
 implemented for consistency with other states classes, and for potential future use.  The default simply
 passes its input to its output. The <code class="docutils literal"><span class="pre">function</span></code> attribute can be modified to change this behavior.
 However, for compatibility with future versions, it is <em>strongly</em> recommended that such functionality
-be implemented by assigning the desired function to the <code class="docutils literal"><span class="pre">calculate</span></code> attribute; this will insure
-compatibility with future versions.</p>
+be implemented by assigning the desired function to the <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a>
+attribute; this will insure compatibility with future versions.</p>
 </div>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="OutputState.OutputState.value">
 <code class="descname">value</code><a class="headerlink" href="#OutputState.OutputState.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; assigned the result of the <code class="docutils literal"><span class="pre">calculate</span></code> function, combined with any result of the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>,
-which is also assigned to the corresopnding item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>.</p>
+<dd><p><em>number, list or np.ndarray</em> &#8211; assigned the result of the <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> function, combined with any result of
+the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, which is also assigned to the corresopnding item of the owner mechanism&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
