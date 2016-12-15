@@ -1810,7 +1810,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         generates mean response time (RT) and mean error rate (ER) as described in:
             Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
             decision making: a formal analysis of models of performance in two-alternative forced-choice
-            tasks.  Psychological review, 113(4), 700.
+            tasks.  Psychological review, 113(4), 700. (`PubMed entry <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_)
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)
@@ -1952,6 +1952,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         generates distributions of response time (RT) and error rate (ER) as described in:
             Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
             Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
+            (`ScienceDirect entry <http://www.sciencedirect.com/science/article/pii/S0022249609000200>`_)
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)

@@ -103,9 +103,10 @@ In addition to its ``function``, MappingProjections use the following two the pr
   with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
   .. _Mapping_Tuple_Specification:
-  *Tuple*.  This is used to specify a projection to the parameterState for a ``matrix`` along with the ``matrix``
-  itself. The tuple must have two items:  the first can be any of the specifications described above;  the second
-  must be a :ref:`projection specification <Projection_In_Context_Specification>`.
+  *Tuple*.  This is used to specify a projection to the parameterState for the
+  :py:data:`matrix <MappingProjection.matrx>` along with the matrix itself. The tuple must have two items:
+  the first can be any of the specifications described above;  the second must be a :ref:`projection specification
+  <Projection_In_Context_Specification>`.
   COMMENT:
       XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
                 BUT ALSO A CONTROL_PROJECTION OR A MAPPING_PROJECTION
@@ -116,9 +117,10 @@ In addition to its ``function``, MappingProjections use the following two the pr
 
 :py:data:`parameter_modulation_operation <MappingProjection.parameter_modulation_operation>`
 
-  Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
-  influence it.  For example, this is used for a :doc:`LearningProjection` to apply weight changes to ``matrix``
-  during learning.  ``parameter_modulation_operation`` must be assigned a value of :py:class:`ModulationOperation`
+  Used to determine how the value of any projections to the :doc:`parameterState` for the
+  :py:data:`matrix <MappingProjection.matrx>` parameter influence it.  For example, this is used for a
+  :doc:`LearningProjection` to apply weight changes to :py:data:`matrix <MappingProjection.matrx>` during learning.
+  ``parameter_modulation_operation`` must be assigned a value of :py:class:`ModulationOperation`
   and the operation is always applied in an element-wise (Hadamard) manner. The default operation is ``ADD``.
 
 .. _Projection_Execution:
@@ -126,13 +128,13 @@ In addition to its ``function``, MappingProjections use the following two the pr
 Execution
 ---------
 
-A MappingProjection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
-and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
-cause the value of any projections (e.g., a LearningProjection) it receives to be applied to the matrix. This will bring
-into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
-Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
-``matrix`` will not show the effects of projections to its parameterState until the MappingProjection has been
-executed).
+A MappingProjection uses its ``function`` and :py:data:`matrix <MappingProjection.matrx> parameters to
+transform the value of its ``sender``, and assign this as the variable for its ``receiver``.  When it is executed,
+updating the matrix parameterState will cause the value of any projections (e.g., a LearningProjection) it
+receives to be applied to the matrix. This will bring into effect any changes that occurred during the previous
+execution (e.g., due to learning).  Because of :ref:`Lazy Evaluation`[LINK], those changes will only be effective
+after the current execution (in other words, inspecting :py:data:`matrix <MappingProjection.matrx>` will not show
+the effects of projections to its parameterState until the MappingProjection has been executed).
 
 .. _Projection_Class_Reference:
 
@@ -218,12 +220,12 @@ class MappingProjection(Projection_Base):
         the matrix used by ``function`` (default: LinearCombination) to transform the value of the ``sender``.
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
-        the operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
-        Most commonly used with LearningProjections.
+        the operation used to combine the value of any projections to the matrix's parameterState with the
+        :py:data:`matrix <MappingProjection.matrx>`.  Most commonly used with LearningProjections.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
         By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
 
     name : str : default MappingProjection-<index>
