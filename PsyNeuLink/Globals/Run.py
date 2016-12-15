@@ -549,11 +549,10 @@ def _construct_from_stimulus_list(object, stimuli, targets):
         inputs_array = np.concatenate(inputs_array)
     inputs = inputs_array.tolist()
 
-    num_executions = _validate_inputs_and_targets(object=object,
-                                 inputs=inputs,
-                                 targets=targets,
-                                 num_phases=1,
-                                 context='contruct_inputs for ' + object.name)
+    num_executions = _validate_inputs(object=object,
+                                      inputs=inputs,
+                                      num_phases=1,
+                                      context='contruct_inputs for ' + object.name)
 
     # If inputs are for a process, no need to deal with phase so just return
     if object_type in {MECHANISM, PROCESS}:
