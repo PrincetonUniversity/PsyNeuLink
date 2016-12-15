@@ -40,6 +40,24 @@ the mechanism to which it belongs must be specified in the ``owner`` argument of
 is specified in the :keyword:`OUTPUT_STATES` entry of the parameter dictionary for a mechanism, then the owner is
 inferred from the context.
 
+.. _OutputState_Primary:
+
+Every mechanism has at least one ("primary") outputState that is automatically created, and assigned to the first
+(and often only) item of the mechanism's ``value``.  The primary outputState is assigned to the mechanism's
+:py:data:`outputState <Mechanism.Mechanism_Base.outputStates> attribute (note the singular), and also as the first
+entry in the OrderedDictionary of the mechanism's :py:data:`outputStates <Mechanism.Mechanism_Base.outputStates>
+attribute (note the plural).
+
+In addition to the primary outputState, many mechanisms also assign an outputState for each addtional item of their
+owner mechanism's ``value``, and some assign  additional outputStates that calculate values derived from one more
+more of those items.  Assigning outputStates explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the
+mechanism's params dictionary) adds them to any that are automatically generated for that mechanism.  If the name of
+an explicitly specified outputState is the same  as one automatically generated, the name of the former will be
+suffixed with a numerical index,  and the outputState will be added to the list (that is, it will *not* replace the
+one automatically generated).
+
+.. _OutputState_Specification:
+
 If one or more custom outputStates need to be added when a mechanism is created, or added to an existing
 mechanism, they can be specified in an entry of the mechanism's parameter dictionary, using the key
 :keyword:`OUTPUT_STATES` and a value that specifies the outputState for each one to be added. For a single
@@ -74,20 +92,18 @@ name for the outputState to be  created, and its value is one of the specificati
        In all cases, the ``variable`` of the outputState must be match (that is, have the same number and type
        of elements) as the item of its owner mechanism's ``value`` to which it is assigned (see [LINK]).
 
+COMMENT:
+    OutputStates can also be added by using the assign_output_state method [LINK].
+COMMENT
+
 .. _OutputState_Index_and_Calculate:
 
-Most mechanisms assign an outputState for each item of their owner mechanism's ``value``, and some assign additional
-outputStates that calculate values derived from one more more of those items.  Assigning outputStates
-explicitly (i.e., including an :keyword:`OUTPUT_STATES` entry in the mechanism's params dictionary) adds them to any
-that are automatically generated for that mechanism;  if the name of one explicitly specified is them same as one
-automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
-the one automatically generated). OutputStates can also be added by using the assign_output_state method [LINK]. By
-default, a specified outputState  will use the first item of the owner mechanism's ``value``.  However, it can be
-assigned a different item by  specifying its ``index`` parameter [LINK]. The ``variable`` of an outputState must match
-(in the number and type of  its elements) the item of the mechanism's ``value`` to which it is assigned. An outputState
-can also be configured to transform the value of the item, by specifying a function for its ``calculate`` parameter
-[LINK];  the function must be able to take as input a value that is compatible with the item to which the
-outputState is assigned.
+By default, an explicitly specified outputState will use the first item of the owner mechanism's ``value``.  However,
+it can be assigned a different item by specifying its ``index`` parameter [LINK]. The ``variable`` of an
+outputState must match (in the number and type of its elements) the item of the mechanism's ``value`` to which it
+is assigned. An outputState can also be configured to transform the value of the item, by specifying a function for
+its ``calculate`` parameter [LINK];  the function must be able to take as input a value that is compatible with the
+item to which the outputState is assigned.
 
 .. _OutputState_Structure:
 

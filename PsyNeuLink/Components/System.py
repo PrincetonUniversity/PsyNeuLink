@@ -186,10 +186,11 @@ is used, input for only a single trial is provided, and only a single trial is e
 :py:meth:`run <System_Base.run>` method can be used for a sequence of executions (time_steps or trials),
 by providing it with a list or ndarray of inputs, one for each round of execution.  In both cases, two other types of
 input can be provided:  a list or ndarray of initialization values, and a list or ndarray of target values.
-Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops (
-designated as :keyword:`INITIALIZE_CYCLE`), and target values are assigned to the target attribute of
-:doc:`Monitoringmechanisms` (see learning below;  also, see :doc:`Run` for additional details of formatting input
-specifications).
+Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops
+(designated as :keyword:`INITIALIZE_CYCLE`, and listed in
+:py:data:`recurrentInitMechanisms <System_Base.recurrentInitMechanisms>`), and target values are assigned to the
+:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of :doc:`ComparatorMechanisms`
+(see learning below;  also, see :doc:`Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
 
@@ -410,7 +411,7 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=:keyword:`None`   \
+    monitor_for_control=:keyword:`None`,      \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -509,10 +510,9 @@ class System_Base(System):
 
         .. property that points to _allMechanisms.mechanisms (see below)
 
-    mechanismsDict : dict
-        contains a dictionary of Mechanism:Process entries for all mechanisms in the system.
-        The key of each entry is a Mechanism object, and the value of each entry is a list of processes
-        (since mechanisms can be in several Processes)
+    mechanismsDict : Dict[Mechanism:Process]
+        contains a dictionary of all mechanisms in the system, listing the processes to which they belong.
+        The key of each entry is a Mechanism object, and the value of each entry is a list of processes.
 
         .. Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
               xxx_mech_tuples are lists of tuples defined in the Process pathways;
@@ -551,13 +551,21 @@ class System_Base(System):
            system.input contains the input to each :keyword:`ORIGIN` mechanism
 
     terminalMechanisms : MechanismList
-        contains all TERMINAL mechanisms in the system (i.e., that don't project to any other mechanisms).
+        contains all :keyword:`TERMINAL` mechanisms in the system (i.e., that don't project to any other mechanisms).
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of each TERMINAL mechanism
 
+    recurrentInitMechanisms : MechanismList
+        contains mechanisms with recurrent projections that are candidates for \
+        :ref:`initialization <System_Execution_Input_And_Initialization>`.
+
     monitoringMechanisms : MechanismList)
         contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
+
+    COMMENT:
+       IS THIS CORRECT:
+    COMMENT
 
     controlMechanisms : MechanismList
         contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
@@ -575,9 +583,9 @@ class System_Base(System):
         .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
-        values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`)
-        must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system
-        (self.recurrentInitMechanisms).
+        values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`).
+        Must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system contained in
+        :py:data:`recurrentInitMechanisms <System_Base.recurrentInitMechanisms>.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
         determines the default TimeScale value used by mechanisms in the system.

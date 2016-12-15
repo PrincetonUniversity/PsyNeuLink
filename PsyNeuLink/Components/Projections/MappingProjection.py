@@ -15,9 +15,9 @@ Overview
 --------
 
 MappingProjections transmit value from an outputState of one ProcessingMechanism (its ``sender``) to the inputState of
-another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, which uses the projection's ``matrix``
-parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
-``receiver``.
+another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, which uses the projection's
+:py:data:`matrix <MappingProjection.matrix>` attribute to transform an array received from its ``sender``, transforms
+it, and transmits the result to its ``receiver``.
 
 .. _Mapping_Creation:
 
@@ -34,20 +34,23 @@ COMMENT
 A MappingProjection can be created in any of the ways that can be used to create a
 :ref:`projection <_Projection_Creation>) or by specifying it in the:ref:`pathway <_Process_Projections>`
 of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
-using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
+using a matrix appropriate to the circumstance (matrix types are described in :ref:`Mapping_Structure below):
 
-* in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
-  the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.
+* in a **process**, between adjacent mechanisms in the :py:data:`pathway <Process.Process_Base.pathway>` for which no
+  projection been assigned; the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate
+  matrix by context.
 ..
-* by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
-  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creation`);  a
-  :keyword:`IDENTITY_MATRIX` will be used.
+* by a **ControlMechanism**, from outputStates listed in its
+  :py:data:`monitoredOutputStates <ControlMechanism.ControlMechanism_Base.monitoredOutputStates>` attribute to assigned
+  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creation`); a :keyword:`IDENTITY_MATRIX` will be used.
 
 * by a **LearningProjection**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
-  that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
-  depends on the ``function`` parameter of the :doc:`LearningProjection`.[LINK]
+  that is used to evaluate that error and generate a learning signal from it
+  (see :ref:`LearningProjection_Automatic_Creation);  the matrix used depends on the ``function`` parameter of the
+  :doc:`LearningProjection`.
 
-When a MappingProjection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
+When a MappingProjection is created, its :py:data:`matrix <MappingProjection.matrix>` and
+:py:data:`param_modulation_operation <MappingProjection.param_modulation_operation>` attributes can be specified,
 or they can be assigned by default (see below).
 
 .. _Mapping_Structure:
@@ -67,7 +70,7 @@ In addition to its ``function``, MappingProjections use the following two the pr
 
 .. _Mapping_Matrix:
 
-``matrix``
+:py:data:`matrix <MappingProjection.matrix>`
 
   Used by the MappingProjection's ``function`` to execute a matrix transformation of its input.
   It can be specified using any of the following formats:
@@ -95,14 +98,14 @@ In addition to its ``function``, MappingProjections use the following two the pr
   * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
     assigns an :keyword:`IDENTITY_MATRIX`.
   ..
-  :class:`random_matrix`.  This is a convenience function that provides more flexibility than
+  :py:class:`random_matrix`.  This is a convenience function that provides more flexibility than
   :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
   with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
   .. _Mapping_Tuple_Specification:
-  *Tuple*.  This is used to specify a projection to the parameterState of a ``matrix`` along with the ``matrix`` itself.
-  The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
-  :ref:`projection specification <Projection_In_Context_Specification>`.
+  *Tuple*.  This is used to specify a projection to the parameterState for a ``matrix`` along with the ``matrix``
+  itself. The tuple must have two items:  the first can be any of the specifications described above;  the second
+  must be a :ref:`projection specification <Projection_In_Context_Specification>`.
   COMMENT:
       XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
                 BUT ALSO A CONTROL_PROJECTION OR A MAPPING_PROJECTION
@@ -111,12 +114,12 @@ In addition to its ``function``, MappingProjections use the following two the pr
 
 .. _Mapping_Parameter_Modulation_Operation:
 
-``parameter_modulation_operation``
+:py:data:`parameter_modulation_operation <MappingProjection.parameter_modulation_operation>`
 
   Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
   influence it.  For example, this is used for a :doc:`LearningProjection` to apply weight changes to ``matrix``
-  during learning.  ``parameter_modulation_operation`` must be assigned a value of :class:`ModulationOperation`
-  and the operation is always applied in an element-wise (Hadamard[LINK]) manner. The default operation is ``ADD``.
+  during learning.  ``parameter_modulation_operation`` must be assigned a value of :py:class:`ModulationOperation`
+  and the operation is always applied in an element-wise (Hadamard) manner. The default operation is ``ADD``.
 
 .. _Projection_Execution:
 

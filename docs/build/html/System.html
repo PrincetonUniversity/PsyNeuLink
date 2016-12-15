@@ -256,7 +256,7 @@ necessarily the case that the <code class="xref std std-keyword docutils literal
 </div>
 </div></blockquote>
 <p id="system-full-fig"><strong>Components of a System</strong></p>
-<div class="figure" id="id1">
+<div class="figure" id="id3">
 <a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="#"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
@@ -301,10 +301,11 @@ is used, input for only a single trial is provided, and only a single trial is e
 <a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> method can be used for a sequence of executions (time_steps or trials),
 by providing it with a list or ndarray of inputs, one for each round of execution.  In both cases, two other types of
 input can be provided:  a list or ndarray of initialization values, and a list or ndarray of target values.
-Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops (
-designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>), and target values are assigned to the target attribute of
-<span class="xref doc">Monitoringmechanisms</span> (see learning below;  also, see <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for additional details of formatting input
-specifications).</p>
+Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops
+(designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>, and listed in
+<a class="reference internal" href="#System.System_Base.recurrentInitMechanisms" title="System.System_Base.recurrentInitMechanisms"><code class="xref py py-data docutils literal"><span class="pre">recurrentInitMechanisms</span></code></a>), and target values are assigned to the
+<a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref py py-data docutils literal"><span class="pre">target</span></code></a> attribute of <span class="xref doc">ComparatorMechanisms</span>
+(see learning below;  also, see <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for additional details of formatting input specifications).</p>
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
@@ -375,7 +376,7 @@ values in the dictionary will override argument values</li>
 
 <dl class="class">
 <dt id="System.System_Base">
-<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=SystemDefaultControlMechanism</em>, <em>enable_controller=:keyword:`False`</em>, <em>monitor_for_control=:keyword:`None`       params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=SystemDefaultControlMechanism</em>, <em>enable_controller=:keyword:`False`</em>, <em>monitor_for_control=:keyword:`None`</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for System.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -443,9 +444,8 @@ The list is a random sample of the permissible orders constrained by the
 <dl class="attribute">
 <dt id="System.System_Base.mechanismsDict">
 <code class="descname">mechanismsDict</code><a class="headerlink" href="#System.System_Base.mechanismsDict" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict</em> &#8211; contains a dictionary of Mechanism:Process entries for all mechanisms in the system.
-The key of each entry is a Mechanism object, and the value of each entry is a list of processes
-(since mechanisms can be in several Processes)</p>
+<dd><p><em>Dict[Mechanism:Process]</em> &#8211; contains a dictionary of all mechanisms in the system, listing the processes to which they belong.
+The key of each entry is a Mechanism object, and the value of each entry is a list of processes.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -458,7 +458,13 @@ mechanisms.</p>
 <dl class="attribute">
 <dt id="System.System_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#System.System_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains all TERMINAL mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
+<dd><p><em>MechanismList</em> &#8211; contains all <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="System.System_Base.recurrentInitMechanisms">
+<code class="descname">recurrentInitMechanisms</code><a class="headerlink" href="#System.System_Base.recurrentInitMechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MechanismList</em> &#8211; contains mechanisms with recurrent projections that are candidates for         <a class="reference internal" href="#system-execution-input-and-initialization"><span class="std std-ref">initialization</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -488,9 +494,9 @@ mechanisms.</p>
 <dl class="attribute">
 <dt id="System.System_Base.initial_values">
 <code class="descname">initial_values</code><a class="headerlink" href="#System.System_Base.initial_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list or ndarray of values :  default array of zero arrays</em> &#8211; values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>)
-must be the same length as the list of <code class="xref std std-keyword docutils literal"><span class="pre">INITIAL_CYCLE</span></code> mechanisms in the system
-(self.recurrentInitMechanisms).</p>
+<dd><p><em>list or ndarray of values :  default array of zero arrays</em> &#8211; values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>).
+Must be the same length as the list of <code class="xref std std-keyword docutils literal"><span class="pre">INITIAL_CYCLE</span></code> mechanisms in the system contained in
+:py:data:<a href="#id1"><span class="problematic" id="id2">`</span></a>recurrentInitMechanisms &lt;System_Base.recurrentInitMechanisms&gt;.</p>
 </dd></dl>
 
 <dl class="attribute">

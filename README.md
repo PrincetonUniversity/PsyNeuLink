@@ -37,6 +37,8 @@ To install the package, navigate to the cloned directory in a terminal, switch t
 
 There is a tutorial available to introduce the basic syntax and usage of PsyNeuLink. To access it, make sure you fulfill the requirements mentioned above, then run the terminal command "jupyter notebook" from the root PsyNeuLink directory. Once the directory opens in your browser, click on "PsyNeuLink Tutorial.ipynb"
 
+If you have trouble installing PsyNeuLink, or run into other problems, please contact psyneulinkhelp@princeton.edu. 
+
 ## Purpose
 
 To provide an environment for implementing models of mind/brain function that is modular, customizable and extensible.  
