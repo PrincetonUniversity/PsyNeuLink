@@ -179,7 +179,7 @@
 <p>ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> to assess the
 outcome of processing by those mechanisms, and use this to regulate the value of
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to other ProcessingMechanisms in the system for which the
-ControlMechanism is a <code class="docutils literal"><span class="pre">controller</span></code>.</p>
+ControlMechanism is a <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
@@ -244,9 +244,9 @@ overridden in a params dictionary specification for the mechanism (see above).</
 (except those that override it with their own <code class="docutils literal"><span class="pre">monitor_for_control</span></code> specification). If the value of
 <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> appears alone in the list, it is treated as follows:<ul>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>: only the primary (first) outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism(s)
-in the system for which the ControlMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</li>
+in the system for which the ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>.</li>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code>:  all of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism(s)
-in the system for which the ControlMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</li>
+in the system for which the ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>..</li>
 </ul>
 </li>
 </ul>
@@ -304,19 +304,22 @@ They should be instantiated using the constructor for a <a class="reference inte
 <dt id="ControlMechanism.ControlMechanism_Base.controlProjections">
 <code class="descname">controlProjections</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlProjections" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[ControlProjection]</em> &#8211; list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> managed by the ControlMechanism.
-There is one for each ouputState in the <code class="docutils literal"><span class="pre">outputStates</span></code> dictionary.</p>
+There is one for each ouputState in the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref py py-data docutils literal"><span class="pre">outputStates</span></code></a>
+dictionary.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ControlMechanism.ControlMechanism_Base.controlProjectionCosts">
 <code class="descname">controlProjectionCosts</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlProjectionCosts" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the <code class="docutils literal"><span class="pre">controlProjections</span></code> attribute.</p>
+<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the
+<code class="xref py py-data docutils literal"><span class="pre">controlProjections</span></code> attribute.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ControlMechanism.ControlMechanism_Base.allocationPolicy">
 <code class="descname">allocationPolicy</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.allocationPolicy" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array of values assigned to each control signal in the <code class="docutils literal"><span class="pre">controlProjections</span></code> attribute.
+<dd><p><em>2d np.array</em> &#8211; array of values assigned to each control signal in the
+<code class="xref py py-data docutils literal"><span class="pre">controlProjections</span></code> attribute.
 This is the same as the ControlMechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
 </dd></dl>
 

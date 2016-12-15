@@ -58,7 +58,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
                 explicitly specified in its constructor).
 
             An inputState and outputState is created for each ControlProjection assigned:
-                the inputState is assigned the ``defaultControlAllocation`` value;
+                the inputState is assigned the
+                :py:constant:`defaultControlAllocation <Defaults.defaultControlAllocation>` value;
                 when the DefaultControlMechanism executes, it simply assigns the same value to the ControlProjection.
 
             Class attributes:

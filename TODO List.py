@@ -2,6 +2,18 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: Are attribute docsrings supposed to be capitalized or not?
+
+# FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
+
+# IMPLEMENT: OutputStates:
+    # COMMENT:
+    #     OutputStates can also be added by using the assign_output_state method [LINK].
+    # COMMENT
+
+# IMPLEMENT: System.monitoredOutputStates:
+#              @property, that gets list of all outputStates monitored by the system's controller
+#              object should include their names, objects, and the inputState used to monitor it
 
 # IMPLEMENT / DOCUMENT:  MODIFY ``function`` ATTRIBUTE SO THAT, IF IT IS NOT A SUBCLASS OF Function
 #                        (E.G., IT IS A LAMBDA FUNCTION), THEN FUNCTION_PARAMS IS DISABLED.
@@ -26,8 +38,15 @@
 #                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
 #
 
-# DOCUMENT:  "item" used to refer to element in any array at any level higher than the highest dimension (axis)
-#             which is referred to as an element (i.e, an entry at the highest dimension / axis)
+# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
+#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
+#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
+#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
+#            "argument" refers to a specifiable value in a method or function call
+#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
+#            componentAttribute:  user accessible attribute for which there is no constructor argument
+#            _component_attribute:  internal attribute
+
 
 # DOCUMENTATION: add show to Systsem and Process
 #

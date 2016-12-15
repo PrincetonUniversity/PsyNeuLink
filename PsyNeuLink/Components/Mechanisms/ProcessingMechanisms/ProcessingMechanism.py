@@ -10,6 +10,12 @@
 
 """
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+COMMENT:
+  MOVE TO ProcessingMechanisms overview:
+  Different ProcessingMechanisms transform their input in different ways, and some allow this to be customized
+  by modifying their ``function`` parameter.  For example, a :doc:`TransferMechanism` can be configured to produce a
+  linear, logistic, or exponential transform of its input.
+COMMENT
 
 """
 

@@ -13,11 +13,13 @@
 Overview
 --------
 
-An inputState of a mechanism accepts inputs from projections coming from other mechanisms in a process or system,
-and/or the input to the process or system itself (if the mechanism to which the inputState belongs is the
-:keyword:`ORIGIN` mechanism [LINK] of that process or system).  A list of projections received by an inputState is
-kept in its ``receivesFromProjections`` attribute.  It's ``function`` combines the values of these inputs,
-and the result is assigned to a corresponding item in the owner mechanism's ``variable`` and ``inputValue`` attributes.
+An inputState of a mechanism receives the input from projections from other mechanisms in a process or system,
+and/or the input for a process or system itself (if the mechanism to which the inputState belongs is the
+:keyword:`ORIGIN` mechanism of that process or system --
+see :ref:`role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`).
+A list of projections received by an inputState is kept in its ``receivesFromProjections`` attribute.  It's
+``function`` combines the values of these inputs, and the result is assigned to a corresponding item in the owner
+mechanism's ``variable`` and ``inputValue`` attributes (see :ref:`Mechanism_InputStates`).
 
 .. _InputState_Creation:
 
@@ -26,9 +28,9 @@ Creating an InputState
 
 InputStates are created automatically when a mechanism is created.  For example, if a mechanism is created within
 the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as the ``receiver``
-of a MappingProjection from the  preceding mechanism in the pathway;  and a :doc:`ControlMechanism` creates an
-inputState for each mechanism that it monitors.  Although inputStates cannot be created explicitly (at the moment),
-they can modified as described below.
+of a MappingProjection from the  preceding mechanism in the pathway;  and a :doc:`ControlMechanism`
+automatically creates an inputState for each mechanism that it monitors.  PsyNeuLink does not currently support the
+explicit creation of inputStates (this may be implemented in the future).  However they can modified as described below.
 
 COMMENT:
 An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
@@ -63,9 +65,8 @@ one of the specifications below:
       ``variable`` as the inputState's ``variable`` [LINK], and a projection of the specified type to the
       inputState using its ``variable`` as the template for the projection's ``value``.
     ..
-    COMMENT:
+
        CONFIRM THAT THIS IS TRUE:
-    COMMENT
     * A **Projection object**.  This creates a default inputState using the first item of the owner mechanism's
     ``variable`` as the template for the inputState's ``variable``, and assigns the state as the projection's
     ``receiver``. The projection's ``value`` must be compatible with the inputState's ``variable``.
@@ -116,34 +117,34 @@ Structure
 
 Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
 mechanisms, as well as from the process to which its owner belongs (if it is the :keyword:`ORIGIN` [LINK] mechanism
-for that process.  A list of projections received by an inputState is maintained in its ``receivesFromProjections``
-attribute.  Like all PsyNeuLink components, it has the three following core attributes:
+for that process.  A list of projections received by an inputState is kept in its ``receivesFromProjections`` attribute.
+Like all PsyNeuLink components, it has the three following core attributes:
 
 * ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
-  each must match both the number and type of elements of its ``variable``.
-
-* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
-   received by the inputState.  The default function is :any:`LinearCombination` that sums the values.
-   A custom function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in
-   some way), so long as it generates a result that is compatible with the ``value`` expected for the inputState
-   by the mechanism's ``variable``.  It assigns the result to the inputState's ``value`` attribute.
-
+  each must match both the number and type of elements of the inputState's ``variable``.
+..
+* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``value`` of all of the projections
+  received by the inputState.  The default function is :any:`LinearCombination` that sums the values.
+  A custom function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in
+  some way), so long as it generates a result that is compatible with the ``value`` expected for the inputState
+  by the mechanism's ``variable``.  It assigns the result to the inputState's ``value`` attribute.
+..
 * ``value``:  this is the aggregated value of the projections received by the inputState, assigned to it by the
   inputState's ``function``.  It must be compatible
   COMMENT:
   both with the inputState's ``variable`` (since the ``function``
   of an inputState only combines the values of its projections, but does not otherwise transform its input),
   COMMENT
-  with its corresponding item of the owner mechanism's ``variable``.
+  with item of the owner mechanism's ``variable`` to which it is assigned.
 
 Execution
 ---------
 
 An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the inputStat executes any projections it receives, calls its ``function`` to aggregate their
-values, and then assigns this to its ``value`` attribute.  This is also assigned as the value of the item for the
-inputState in the mechanism's ``inputValue`` and ``variable`` attributes (see :ref:`Mechanism InputStates
-<_Mechanism_Variable>`.
+values, and then assigns this to its ``value`` attribute.  This, in turn, is assigned as the value of the item in the
+mechanism's ``variable`` and ``inputValue`` attributes to which the inputState is assigned
+(see :ref:`mechanism variable and inputValue attributes <Mechanism_Variable>`)`.
 
 .. _InputState_Class_Reference:
 
