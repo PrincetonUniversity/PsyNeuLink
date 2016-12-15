@@ -105,8 +105,8 @@ corresponding entry in its ``params`` dictionary).  If a cost function is perman
 it cannot be re-enabled using :py:meth:`toggle_cost_function <ControlProjection.toggle_cost_function>`.
 
 *Additional Attributes*.  In addition to the intensity and cost attributes described above, a ControlProjection has
-:py:data:`last_allocation <ControlProjection.last_allocation>` and
-:py:data:`last_intensity <ControlProjection.last_intensity>` attributes that store the values associated with its
+:py:data:`lastAllocation <ControlProjection.lastAllocation>` and
+:py:data:`lastIntensity <ControlProjection.lastIntensity>` attributes that store the values associated with its
 previous execution. Finally, it has an :py:data:`allocation_samples <ControlProjection.allocation_samples>` attribute,
 that is a  list of used by :ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of
 :py:data:`allocation <ControlProjection.allocation>` for the ControlProjection, in order to adaptively adjust the
@@ -379,10 +379,10 @@ class ControlProjection(Projection_Base):
         ControlSignal_History_Attributes:
     COMMENT
 
-    last_allocation : float
+    lastAllocation : float
         :py:data:`allocation <ControlProjection.allocation>` for last execution of the ControlProjection.
 
-    last_intensity : float
+    lastIntensity : float
         :py:data:`intensity <ControlProjection.intensity>` for last execution of the ControlProjection.
 
         .. _ControlProjection_Cost_Functions:
@@ -603,7 +603,7 @@ class ControlProjection(Projection_Base):
         # Default intensity params
         self.default_allocation = defaultControlAllocation
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
-        self.last_allocation = self.allocation
+        self.lastAllocation = self.allocation
         self.intensity = self.allocation
 
         # Default cost params
@@ -627,7 +627,7 @@ class ControlProjection(Projection_Base):
     def _instantiate_attributes_after_function(self, context=None):
 
         self.intensity = self.function(self.allocation)
-        self.last_intensity = self.intensity
+        self.lastIntensity = self.intensity
 
     def _instantiate_sender(self, context=None):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
@@ -724,8 +724,8 @@ class ControlProjection(Projection_Base):
         """
 
         # store previous state
-        self.last_allocation = self.allocation
-        self.last_intensity = self.intensity
+        self.lastAllocation = self.allocation
+        self.lastIntensity = self.intensity
         self.last_cost = self.cost
         self.last_duration_cost = self.durationCost
 
@@ -739,7 +739,7 @@ class ControlProjection(Projection_Base):
             self.intensity = self.allocation
         else:
             self.intensity = self.function(self.allocation, params)
-        intensity_change = self.intensity-self.last_intensity
+        intensity_change = self.intensity-self.lastIntensity
 
         if self.prefs.verbosePref:
             intensity_change_string = "no change"
