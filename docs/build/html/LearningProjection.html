@@ -278,9 +278,9 @@ LearningProjection. If it is not specified, one will be
 the LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.errorSource" title="LearningProjection.LearningProjection.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>.</li>
 <li><strong>receiver</strong> (Optional[MappingProjection or ParameterState for <code class="docutils literal"><span class="pre">matrix</span></code> parameter of one]) &#8211; a MappingProjection, the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> of which is modified by
 the LearningProjection.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that specifies the parameters for the projection, parameters for its function,
-and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).[LINK]
-By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> and parameter assignments.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that specifies the parameters for the projection, its function, and/or a custom function and its
+parameters (see <span class="xref doc">Component</span> for specification of a params dict). By default, it contains an entry for
+the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> and parameter assignments.</li>
 <li><strong>name</strong> (<em>str : default LearningProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the LearningProjection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>

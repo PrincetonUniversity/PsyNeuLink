@@ -85,11 +85,31 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ParameterState</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-parameters">Specifying Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -161,8 +181,8 @@
 <p>A parameterState belongs to either a mechanism or a MappingProjection, and is used to represent and possibly modify
 the value of a parameter of its owner or it owner&#8217;s function. It can receive one or more ControlProjections and/or
 LearningProjections that modify that parameter.   A list of the projections received by a parameterState is kept in
-its <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines the values of these inputs, and uses the result
-to modify the value of the parameter for which it is responsible.</p>
+its <a class="reference internal" href="#ParameterState.ParameterState.receivesFromProjections" title="ParameterState.ParameterState.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receivesFromProjections</span></code></a> attribute.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines
+the values of these inputs, and uses the result to modify the value of the parameter for which it is responsible.</p>
 </div>
 <div class="section" id="creating-a-parameterstate">
 <span id="parameterstate-creation"></span><h2>Creating a ParameterState<a class="headerlink" href="#creating-a-parameterstate" title="Permalink to this headline">¶</a></h2>
@@ -177,24 +197,20 @@ responsible, as described below.</p>
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several places:</p>
 <blockquote>
-<div><ul>
-<li><p class="first">in an <strong>argument for the parameter</strong> in the constructor for the object and/or its function
-(see also <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details);</p>
-</li>
-<li><p class="first">in a <strong>parameter dictionary</strong> as the <code class="docutils literal"><span class="pre">params</span></code> argument in the constructor;  the entry for each parameter
+<div><ul class="simple">
+<li>in an <strong>argument for the parameter</strong> in the constructor for the object and/or its function
+(see also <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details);</li>
+</ul>
+<ul class="simple">
+<li>in a <strong>parameter dictionary</strong> as the <code class="docutils literal"><span class="pre">params</span></code> argument in the constructor;  the entry for each parameter
 must use the keyword for the parameter as its key, and the parameter&#8217;s specification as its value
 (see <span class="xref std std-ref">ParameterState_Parameter_Specification_Examples</span> below);  parameters for an object&#8217;s <code class="docutils literal"><span class="pre">function</span></code> must
 be specified in an entry with the key <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code>, the value of which is a parameter dictionary
-containing an entry for each parameter of the function to be specified;</p>
-</li>
-<li><dl class="first docutils">
-<dt>in the <code class="docutils literal"><span class="pre">assign_params</span></code> method for the object</dt>
-<dd><p class="first last">or <code class="docutils literal"><span class="pre">run</span></code> methods</p>
-</dd>
-</dl>
-</li>
+containing an entry for each parameter of the function to be specified;</li>
 </ul>
-<p>.</p>
+<ul class="simple">
+<li>in the <code class="xref py py-meth docutils literal"><span class="pre">assign_params</span></code> method for the object.</li>
+</ul>
 </div></blockquote>
 <p>The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
 or by default) is assigned to the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and any projections assigned to it are added to its
