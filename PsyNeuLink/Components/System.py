@@ -102,7 +102,7 @@ the role they play in a system:
 
     :keyword:`MONITORING`: monitors value of another mechanism for use in learning;
 
-    :keyword:`TARGET`: a :keyword:`TERMINAL` mechanism in a system, belonging to a process with learning enabled;
+    :keyword:`LEARNING_TARGET`: :keyword:`TERMINAL` mechanism in a system, belonging to a process with learning enabled;
 
     :keyword:`CONTROL`:  monitors the value of another mechanism used to control parameters values;
 
@@ -572,7 +572,7 @@ class System_Base(System):
         contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
 
     targetMechanisms : MechanismList)
-        contains all TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
+        contains all LEARNING_TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
 
     COMMENT:
        IS THIS CORRECT:
@@ -1765,7 +1765,7 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :keyword:`TARGET_MECHANISMS`:list of TARGET mechanisms
+            :keyword:`TARGET_MECHANISMS`:list of LEARNING_TARGET mechanisms
 
             :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 

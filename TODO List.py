@@ -2,10 +2,19 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
+# TEST: SYSTEM LEARNING:
+#       • ASSYMETRIC SYSTEM WITH LEARNING, IN WHICH ON PROCESS TERMIMNATES ON AN INTERNAL MECHANISM OF ANOTHER
+#       • VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
+#       • ORDER OF LISTING OF PROCESSES IS STABLE (SO IT CAN BE ALIGNED WITH TARGETS)
+#       • DICTIONARY-STYLE TARGET SPECIFICATION (PARALELLING INPUT), SO DON'T HAVE TO WORRY ABOUT ORDERING OF
+#                TARGETS/PROCESSES AND ALSO CAN CROSS-VALIDATE ASSIGNMENT BY NAME (DOCUMENT THAT THIS IS SAFER)
+#       • DOCUMENT ADDITIONALS TO RUN (DICT FORMAT FOR TARGETS)
+
+
+
 # DOCUMENT: params dictionary -> ``params`` dictionary
 #           parameter dictionary -> ``params`` dictionary
-
-# FIX: Are attribute docsrings supposed to be capitalized or not?
 
 # FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
 

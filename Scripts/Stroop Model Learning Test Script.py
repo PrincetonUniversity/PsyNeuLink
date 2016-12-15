@@ -97,10 +97,29 @@ def show_target():
     print ('MSE: \n', response.outputValue)
 
 
+#   - as a dictionary of stimulus lists; for each entry:
+#     key is name of an origin mechanism in the system
+#     value is a list of its sequence of stimuli (one for each trial)
+# stim_list_dict = {colors:[[1], [1]],
+#                   words:[[2], [2]]}
+stim_list_dict = {colors:[1, 1],
+                  words:[2, 2]}
+
+target_list_dict = {response:[1, 1],
+                    response2:[2, 2]}
+
+#   - as a list of trials;
+#     each item in the list contains the stimuli for a given trial,
+#     one for each origin mechanism in the system
+trial_list = [[1, 1], [1, 1]]
+reversed_trial_list = [[words, colors], [1, 1], [1, 1]]
+
+
 mySystem.run(num_executions=10,
-      # inputs=stim_list,
-      inputs=[[1, 1],[1, 1]],
-      targets=[[1, 1]],
+      inputs=stim_list_dict,
+      # inputs=[[1, 1],[1, 1]],
+      # targets=[[1, 1],[1, 1]],
+      targets=target_list_dict,
       call_before_trial=print_header,
       call_after_trial=show_target)
 
