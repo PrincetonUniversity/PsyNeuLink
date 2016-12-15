@@ -254,13 +254,13 @@ SYSTEM = 'system'
 
 @tc.typecheck
 def run(object,
-        # inputs:tc.any(list, dict, np.ndarray),
-        inputs,
+        # inputs,
+        inputs:tc.any(list, dict, np.ndarray),
         num_executions:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
-        targets:tc.optional(tc.any(list, np.ndarray))=None,
+        targets:tc.optional(tc.any(list, dict, np.ndarray))=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(function_type)=None,
         call_after_trial:tc.optional(function_type)=None,
@@ -342,7 +342,7 @@ def run(object,
         or of the outputStates of the :keyword:`TERMINAL` mechanisms for the process or system run
     """
 
-    inputs = _construct_inputs(object, inputs, targets)
+    inputs = _construct_inputs(object, inputs)
 
     object_type = get_object_type(object)
 
@@ -467,7 +467,7 @@ def run(object,
     return object.results
 
 @tc.typecheck
-def _construct_inputs(object, inputs, targets=None):
+def _construct_inputs(object, inputs):
     """Return an nparray of stimuli suitable for use as inputs arg for system.run()
 
     If inputs is a list:
@@ -507,11 +507,11 @@ def _construct_inputs(object, inputs, targets=None):
 
     # Stimuli in list format
     if isinstance(inputs, (list, np.ndarray)):
-        stim_list = _construct_from_stimulus_list(object, inputs, targets)
+        stim_list = _construct_from_stimulus_list(object, inputs)
 
     # Stimuli in dict format
     elif isinstance(inputs, dict):
-        stim_list = _construct_from_stimulus_dict(object, inputs, targets)
+        stim_list = _construct_from_stimulus_dict(object, inputs)
 
     else:
         raise SystemError("inputs arg for {}._construct_inputs() must be a dict or list".format(object.name))
@@ -519,7 +519,7 @@ def _construct_inputs(object, inputs, targets=None):
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
-def _construct_from_stimulus_list(object, stimuli, targets):
+def _construct_from_stimulus_list(object, stimuli):
 
     object_type = get_object_type(object)
 
@@ -594,7 +594,7 @@ def _construct_from_stimulus_list(object, stimuli, targets):
         execution_offset += execution_len
     return stim_list
 
-def _construct_from_stimulus_dict(object, stimuli, targets):
+def _construct_from_stimulus_dict(object, stimuli):
 
     object_type = get_object_type(object)
 
