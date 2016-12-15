@@ -410,7 +410,8 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    _validate_inputs_and_targets(object=object, inputs=inputs, targets=targets, context="Run " + object.name)
+    num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context="Run " + object.name)
+    _validate_targets(object, targets, num_inputs_sets)
 
     if reset_clock:
         CentralClock.trial = 0
