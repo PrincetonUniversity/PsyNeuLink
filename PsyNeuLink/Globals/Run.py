@@ -683,8 +683,7 @@ def _construct_from_stimulus_dict(object, stimuli, targets):
             stim_list.append(stimuli_in_execution)
     return stim_list
 
-
-def _validate_inputs_and_targets(object, inputs=None, targets=None, num_phases=None, context=None):
+def _validate_inputs(object, inputs=None, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
@@ -716,30 +715,7 @@ def _validate_inputs_and_targets(object, inputs=None, targets=None, num_phases=N
                 raise SystemError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))
 
-        # If learning is enabled, validate target
-        if targets and object._learning_enabled:
-            num_inputs = np.size(inputs, inputs.ndim-3)
-            target_array = np.atleast_2d(targets)
-            target_len = np.size(target_array[0])
-            num_targets = np.size(target_array, 0)
-
-            if target_len != np.size(object.comparatorMechanism.target):
-                if num_targets > 1:
-                    plural = 's'
-                else:
-                    plural = ''
-                raise RunError("Length ({}) of target{} specified for run of {}"
-                                   " does not match expected target length of {}".
-                                   format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
-
-            if any(np.size(target) != target_len for target in target_array):
-                raise RunError("Not all of the targets specified for {} are of the same length".
-                                   format(append_type_to_name(object)))
-
-            if num_targets != num_inputs:
-                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                                   format(num_targets, num_inputs, append_type_to_name(object)))
+        return np.size(inputs, inputs.ndim-3)
 
     elif object_type is SYSTEM:
 
@@ -771,16 +747,6 @@ def _validate_inputs_and_targets(object, inputs=None, targets=None, num_phases=N
                                   format(np.size(inputs,PROCESSES_DIM),
                                          object.name,
                                          len(object.originMechanisms)))
-
-            # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if targets and any(process._learning_enabled for process in object.processes):
-                if np.size(targets,0) != len(object.targetMechanisms):
-                    raise SystemError("The number of target values ({}) for each execution in the call to {}.run() "
-                                      "does not match the number of target mechanisms ({}) in the system".
-                                      format(np.size(targets,0),
-                                             object.name,
-                                             len(object.targetMechanisms)))
-
 
         # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
 
@@ -841,6 +807,52 @@ def _validate_inputs_and_targets(object, inputs=None, targets=None, num_phases=N
                 executions_remain = False
 
         return num_executions
+
+def _validate_targets(object, targets, num_executions):
+    """
+    num_targets = number of target stimuli per execution
+    num_target_executions = number sets of targets (one for each execution) in targets;  must match num_executions
+    """
+
+    object_type = get_object_type(object)
+
+    if object_type is PROCESS:
+
+        # If learning is enabled, validate target
+        if targets and object._learning_enabled:
+            target_array = np.atleast_2d(targets)
+            target_len = np.size(target_array[0])
+            num_targets = np.size(target_array, 0)
+
+            if target_len != np.size(object.comparatorMechanism.target):
+                if num_targets > 1:
+                    plural = 's'
+                else:
+                    plural = ''
+                raise RunError("Length ({}) of target{} specified for run of {}"
+                                   " does not match expected target length of {}".
+                                   format(target_len, plural, append_type_to_name(object),
+                                          np.size(object.comparatorMechanism.target)))
+
+            if any(np.size(target) != target_len for target in target_array):
+                raise RunError("Not all of the targets specified for {} are of the same length".
+                                   format(append_type_to_name(object)))
+
+            if num_targets != num_executions:
+                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
+                                   format(num_targets, num_executions, append_type_to_name(object)))
+
+    elif object_type is SYSTEM:
+        # Check that number of target values in each execution equals the number of target mechanisms in the system
+        if targets and any(process._learning_enabled for process in object.processes):
+            if np.size(targets,0) != len(object.targetMechanisms):
+                raise SystemError("The number of target values ({}) for each execution in the call to {}.run() "
+                                  "does not match the number of target mechanisms ({}) in the system".
+                                  format(np.size(targets,0),
+                                         object.name,
+                                         len(object.targetMechanisms)))
+    else:
+        pass
 
 def get_object_type(object):
     if isinstance(object, Mechanism):
