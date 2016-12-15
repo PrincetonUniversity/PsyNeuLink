@@ -85,31 +85,11 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">ParameterState</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#specifying-parameters">Specifying Parameters</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -181,8 +161,8 @@
 <p>A parameterState belongs to either a mechanism or a MappingProjection, and is used to represent and possibly modify
 the value of a parameter of its owner or it owner&#8217;s function. It can receive one or more ControlProjections and/or
 LearningProjections that modify that parameter.   A list of the projections received by a parameterState is kept in
-its <code class="docutils literal"><span class="pre">receivesFromProjections</span></code> attribute.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines the values of these inputs, and uses the result
-to modify the value of the parameter for which it is responsible.</p>
+its <a class="reference internal" href="#ParameterState.ParameterState.receivesFromProjections" title="ParameterState.ParameterState.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receivesFromProjections</span></code></a> attribute.  It&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines
+the values of these inputs, and uses the result to modify the value of the parameter for which it is responsible.</p>
 </div>
 <div class="section" id="creating-a-parameterstate">
 <span id="parameterstate-creation"></span><h2>Creating a ParameterState<a class="headerlink" href="#creating-a-parameterstate" title="Permalink to this headline">¶</a></h2>
@@ -197,35 +177,33 @@ responsible, as described below.</p>
 <span id="parameterstate-specifying-parameters"></span><h3>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several places:</p>
 <blockquote>
-<div><ul>
-<li><p class="first">in an <strong>argument for the parameter</strong> in the constructor for the object and/or its function
-(see also <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details);</p>
-</li>
-<li><p class="first">in a <strong>parameter dictionary</strong> as the <code class="docutils literal"><span class="pre">params</span></code> argument in the constructor;  the entry for each parameter
+<div><ul class="simple">
+<li>in an <strong>argument for the parameter</strong> in the constructor for the object and/or its function
+(see also <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for additional details);</li>
+</ul>
+<ul class="simple">
+<li>in a <strong>parameter dictionary</strong> as the <code class="docutils literal"><span class="pre">params</span></code> argument in the constructor;  the entry for each parameter
 must use the keyword for the parameter as its key, and the parameter&#8217;s specification as its value
 (see <span class="xref std std-ref">ParameterState_Parameter_Specification_Examples</span> below);  parameters for an object&#8217;s <code class="docutils literal"><span class="pre">function</span></code> must
 be specified in an entry with the key <code class="xref std std-keyword docutils literal"><span class="pre">FUNCTION_PARAMS</span></code>, the value of which is a parameter dictionary
-containing an entry for each parameter of the function to be specified;</p>
-</li>
-<li><dl class="first docutils">
-<dt>in the <code class="docutils literal"><span class="pre">assign_params</span></code> method for the object</dt>
-<dd><p class="first last">or <code class="docutils literal"><span class="pre">run</span></code> methods</p>
-</dd>
-</dl>
-</li>
+containing an entry for each parameter of the function to be specified;</li>
 </ul>
-<p>.</p>
+<ul class="simple">
+<li>in the <code class="xref py py-meth docutils literal"><span class="pre">assign_params</span></code> method for the object.</li>
+</ul>
 </div></blockquote>
 <p>The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
-or by default) is assigned to the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and any projections assigned to it are added to its
-<code class="docutils literal"><span class="pre">receiveFromProjections</span></code> attribute.   When the owner is executed,  the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code> is combined
-with the value of the projections it receives to determine the value of the parameter for which it is responsible
+or by default) is assigned to the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>, and any projections
+assigned to it are added to its <a class="reference internal" href="#ParameterState.ParameterState.receivesFromProjections" title="ParameterState.ParameterState.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receiveFromProjections</span></code></a> attribute.
+When the owner is executed, the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> is combined with the
+value of the projections it receives to determine the value of the parameter for which it is responsible
 (see <span class="xref std std-ref">Execution</span> for details).</p>
 <p>The specification of a parameter can take any of the following forms:</p>
 <blockquote>
 <div><ul class="simple">
 <li>A <strong>value</strong>.  This must be a valid the value of the parameter.  The creates a default parameterState, assigns
-the parameter&#8217;s name as the parameterState&#8217;s name, and assigns the specified value as its <code class="docutils literal"><span class="pre">baseValue</span></code>. [LINK]</li>
+the parameter&#8217;s name as the parameterState&#8217;s name, and assigns the specified value as its
+<a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>.</li>
 </ul>
 <ul class="simple">
 <li>An existing <strong>parameterState</strong> object or the name of one.  It&#8217;s name must be the name of a parameter of the
@@ -234,17 +212,18 @@ for generality and potential future use, but its use is not advised.</li>
 </ul>
 <ul class="simple">
 <li>A ref:<cite>projection specification &lt;Projection_In_Context_Specification&gt;</cite>.  This creates a default parameterState,
-assigns the parameter&#8217;s default value as the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and assigns the parameter&#8217;s name as
-the name of the parameterState;  it also creates and/or assigns the specified projection, and assigns the
-parameterState as the projection&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code>.  The projection must be a ControlProjection or
-LearningProjection, and its value must be a valid one for the parameter.</li>
+assigns the parameter&#8217;s default value as the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>,
+and assigns the parameter&#8217;s name as the name of the parameterState;  it also creates and/or assigns the
+specified projection, and assigns the parameterState as the projection&#8217;s <code class="docutils literal"><span class="pre">receiver</span></code>.  The projection must be
+a ControlProjection or LearningProjection, and its value must be a valid one for the parameter.</li>
 </ul>
 <ul class="simple">
 <li>A <code class="xref any docutils literal"><span class="pre">ParamValueProjection</span></code> or 2-item (value, projection specification) <strong>tuple</strong>.  This creates a default
-parameterState, uses the <code class="docutils literal"><span class="pre">value</span></code> (1st) item of the tuple as parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code>, and assigns the
-parameter&#8217;s name as the name of the parameterState.  The <code class="docutils literal"><span class="pre">projection</span></code> (2nd) item of the tuple is used to
-creates and/or assign the specified projection, that is assigned the parameterState as its <code class="docutils literal"><span class="pre">receiver</span></code>.  The
-projection must be a ControlProjection or LearningProjection, and its value must be a valid one for the parameter.</li>
+parameterState, uses the <code class="docutils literal"><span class="pre">value</span></code> (1st) item of the tuple as parameterState&#8217;s
+<a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>, and assigns the parameter&#8217;s name as the name of the
+parameterState.  The projection (2nd) item of the tuple is used to creates and/or assign the specified
+projection, that is assigned the parameterState as its <code class="docutils literal"><span class="pre">receiver</span></code>.  The projection must be a
+ControlProjection or LearningProjection, and its value must be a valid one for the parameter.</li>
 </ul>
 </div></blockquote>
 <div class="admonition note">
@@ -271,8 +250,9 @@ each of which is specified using a different format:</p>
 assigned a value and a ControlProjection; the third (<code class="docutils literal"><span class="pre">param_c</span></code>) is assigned a value and a <a class="reference internal" href="ControlProjection.html#controlprojection-structure"><span class="std std-ref">ControlProjection
 with a specified function</span></a>; and the fourth (<code class="docutils literal"><span class="pre">param_d</span></code>) is assigned just a
 ControlProjection (the default vaue for the parameter will be used).</p>
-<p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its <code class="docutils literal"><span class="pre">matrix</span></code> parameter is assigned a
-a random weight matrix (using a <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">matrix keyword</span></a>) and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>:</p>
+<p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter is assigned a random weight matrix (using
+a <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">matrix keyword</span></a>) and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mapping_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">my_input_mechanism</span><span class="p">,</span>
                                           <span class="n">receiver</span><span class="o">=</span><span class="n">my_output_mechanism</span><span class="p">,</span>
                                           <span class="n">matrix</span><span class="o">=</span><span class="p">(</span><span class="n">RANDOM_CONNECTIVITY_MATRIX</span><span class="p">,</span> <span class="n">LearningProjection</span><span class="p">))</span>
@@ -280,9 +260,9 @@ a random weight matrix (using a <a class="reference internal" href="MappingProje
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">the <code class="docutils literal"><span class="pre">matrix</span></code> parameter belongs to the MappingProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code>;  however, since it has only one
-standard function, its arguments are available in the constructor for the projection
-(see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for a more detailed explanation).</p>
+<p class="last">the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter belongs to the MappingProjection&#8217;s
+<code class="docutils literal"><span class="pre">function</span></code>;  however, since it has only one standard function, its arguments are available in the constructor
+for the projection (see <span class="xref std std-ref">Component_Specifying_Functions_and_Parameters</span> for a more detailed explanation).</p>
 </div>
 </div>
 </div>
@@ -294,8 +274,9 @@ However, the format for the value of each (i.e., the number and type of its elem
 parameter for which the parameterState is responsible.  When the parameterState is updated (i.e., the owner is executed)
 the values of its projections will be combined (using the  parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>) and the result will be used
 to modify the parameter for which the parameterState is responsible (see <span class="xref std std-ref">Execution</span>
-below).  A list of projections received by a parameterState is maintained in its  <code class="docutils literal"><span class="pre">receivesFromProjections</span></code>
-attribute. Like all PsyNeuLink components, it has the three following core attributes:</p>
+below).  A list of projections received by a parameterState is maintained in its
+<a class="reference internal" href="#ParameterState.ParameterState.receivesFromProjections" title="ParameterState.ParameterState.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receiveFromProjections</span></code></a> attribute. Like all PsyNeuLink components,
+it has the three following core attributes:</p>
 <ul>
 <li><p class="first"><code class="docutils literal"><span class="pre">variable</span></code>:  this serves as a template for the <code class="docutils literal"><span class="pre">value</span></code> of each projection that the parameterState receives; it
 must match the format (the number and type of elements) of the parameter for which the parameterState is responsible.
@@ -310,44 +291,71 @@ some way), so long as it generates a result that is compatible with the <code cl
 </dl>
 </li>
 <li><p class="first"><code class="docutils literal"><span class="pre">value</span></code>:  this is the value assigned to the parameter for which the parameterState is responsible.  It is the
-<code class="docutils literal"><span class="pre">baseValue</span></code> of the parameterState, modified by aggregated value of the projections received by the parameterState.</p>
+<a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> of the parameterState, modified by aggregated value of the
+projections received by the parameterState.</p>
 </li>
 </ul>
 <p>In addition, a parameterState has two other attributes that are used to determine the value it assigns to the
 parameter for which it is responsible (as shown in the <a class="reference internal" href="#parameterstate-figure"><span class="std std-ref">figure</span></a> below):</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">baseValue</span></code>:  this is the default value of the parameter for which the parameterState is responsible.
-It is combined with the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, which aggregates the values received from its
-projections, to determine the value of the parameter for which the parameterState is responsible.</li>
+<li><a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>:  this is the default value of the parameter for which the
+parameterState is responsible.  It is combined with the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, which aggregates
+the values received from its projections, to determine the value of the parameter for which the parameterState is
+responsible.</li>
 </ul>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">parameterModulationOperation</span></code>: this determines how the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (the
-aggregrated values of the projections it receives) is combined with its <code class="docutils literal"><span class="pre">baseValue</span></code> to generate the value assigned
-to the parameter for which it is responsible.  This must be a value of <code class="xref any docutils literal"><span class="pre">ModulationOperation</span></code>.  It can be
-specified in either the <code class="docutils literal"><span class="pre">parameter_modulation_operation</span></code> argument
+<li><a class="reference internal" href="#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref py py-data docutils literal"><span class="pre">parameterModulationOperation</span></code></a>: this determines how the
+result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (the aggregrated values of the projections it receives) is combined
+with its <code class="docutils literal"><span class="pre">baseValue</span></code> to generate the value assigned to the parameter for which it is responsible.  This must be a
+value of <code class="xref any docutils literal"><span class="pre">ModulationOperation</span></code>.  It can be specified in either the <code class="docutils literal"><span class="pre">parameter_modulation_operation</span></code> argument
 or in a <code class="xref std std-keyword docutils literal"><span class="pre">PARAMETER_MODULATION_OPERATION</span></code> entry of a params dictionary in parameterState constructor.
 The default is <code class="xref std std-keyword docutils literal"><span class="pre">ModulationOperation.PRODUCT</span></code>, which multiples the aggregated value of the projections
-times the parameterState&#8217;s <code class="docutils literal"><span class="pre">baseValue</span></code> to determine the value of the parameter.</li>
+times the parameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> to determine the value of the parameter.</li>
 </ul>
 <p>The value a parameter of the object is accessible as an attribute with the corresponding name, and the value of
 a parameter of its <code class="docutils literal"><span class="pre">function</span></code> is accessible either as <code class="docutils literal"><span class="pre">object.function_object.&lt;param_name&gt;</span></code> in its
 <code class="docutils literal"><span class="pre">function_params</span></code> dictionary as <code class="docutils literal"><span class="pre">object.function_params[&lt;PARAM_KEYWORD&gt;]</span></code>.  Parameter attribute values are
-read-only.  To re-assign the value of a parameter for an object or its <code class="docutils literal"><span class="pre">function</span></code>, use its <code class="docutils literal"><span class="pre">assign_params</span></code> method.</p>
+read-only.  To re-assign the value of a parameter for an object or its <code class="docutils literal"><span class="pre">function</span></code>, use its
+<code class="xref py py-meth docutils literal"><span class="pre">assign_params</span></code> method.</p>
 <p id="parameterstate-figure">The figure below shows how these factors are combined by the parameterState to determine a parameter value.</p>
 <blockquote>
 <div><p><strong>How a ParameterState Determines the Value of a Parameter</strong></p>
 <div class="figure">
 <a class="reference internal image-reference" href="_images/ParameterState_fig.png"><img alt="ParameterState" src="_images/ParameterState_fig.png" style="width: 7737.75px; height: 4449.75px;" /></a>
 <div class="legend">
-In example, the values for the parameters (shown in brown) —&nbsp;<code class="docutils literal"><span class="pre">param_x</span></code> for the mechanism, and <code class="docutils literal"><span class="pre">param_y</span></code>
-for its <code class="docutils literal"><span class="pre">function</span></code>, specify the  <code class="docutils literal"><span class="pre">baseValue</span></code> of the paramterStates for each parameter (labeled &#8220;A&#8221; in the
-figure and shown in brown);  these are the values that will be used for those parameters absent any other
-influences. However, param_y is assigned a ControlProjection, so its value will also be determined by the
-value of the ControlProjection to its parameterState;  that will be combined with its <code class="docutils literal"><span class="pre">baseValue</span></code> using the
-<code class="docutils literal"><span class="pre">parameterModulationOperation</span></code> specified for the mechanism (<code class="docutils literal"><span class="pre">ModulationOperation.SUM</span></code>, shown in green).
-If there had been more than one ControlProjection specified, their values would have been combined using the
-parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (lableled &#8220;B&#8221; and shown in blue in the figure), before combining the result
-with the baseValue.</div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Component</th>
+<th class="head">Impact of ParameterState on Parameter Value (including at runtime)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>A (brown)</td>
+<td><code class="docutils literal"><span class="pre">baseValue</span></code> (default value of parameter``)</td>
+</tr>
+<tr class="row-odd"><td>B (blue)</td>
+<td>parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> combines <code class="docutils literal"><span class="pre">value</span></code> of  projections</td>
+</tr>
+<tr class="row-even"><td>C (green)</td>
+<td>parameterState&#8217;s parameterModulationOperation combines projections and <code class="docutils literal"><span class="pre">baseValue</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>In example, the values for the parameters (shown in brown) —&nbsp;<code class="docutils literal"><span class="pre">param_x</span></code> for the mechanism, and <code class="docutils literal"><span class="pre">param_y</span></code>
+for its <code class="docutils literal"><span class="pre">function</span></code>, specify the <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> of the paramterStates for
+each parameter (labeled &#8220;A&#8221; in the figure and shown in brown);  these are the values that will be used for
+those parameters absent any other influences. However, param_y is assigned a ControlProjection, so its value
+will also be determined by the value of the ControlProjection to its parameterState;  that will be combined
+with its <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> using the
+<a class="reference internal" href="#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref py py-data docutils literal"><span class="pre">parameterModulationOperation</span></code></a>
+specified for the mechanism (<code class="docutils literal"><span class="pre">ModulationOperation.SUM</span></code>, shown in green). If there had been more than one
+ControlProjection specified, their values would have been combined using the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>
+(lableled &#8220;B&#8221; and shown in blue in the figure), before combining the result with the baseValue.</p>
+</div>
 </div>
 </div></blockquote>
 </div>
@@ -355,8 +363,8 @@ with the baseValue.</div>
 <span id="parameterstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When this occurs, the parameterState executes any ControlProjections and/or LearningProjections it receives,
-calls its <code class="docutils literal"><span class="pre">function</span></code> to aggregate their values, combines this with its <code class="docutils literal"><span class="pre">baseValue</span></code> using the
-<code class="docutils literal"><span class="pre">paramModulationOperation</span></code>,
+calls its <code class="docutils literal"><span class="pre">function</span></code> to aggregate their values, combines this with its <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>
+using the <a class="reference internal" href="#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref py py-data docutils literal"><span class="pre">parameterModulationOperation</span></code></a>,
 and then assigns the result as the <code class="docutils literal"><span class="pre">value</span></code> of the parameterState which is used as the value of the parameter for
 which it is responsible.</p>
 </div>
@@ -378,7 +386,8 @@ which the parameterState is created.</li>
 <li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; function used to aggregate the values of the projections received by the parameterState.
 It must produce a result that has the same format (number and type of elements) as its input.</li>
 <li><strong>parameter_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.MULTIPLY</em>) &#8211; specifies the operation by which the values of the projections received by the parameterState are used
-to modify its <code class="docutils literal"><span class="pre">baseValue</span></code> before assigning it to the parameter for which it is responsible.</li>
+to modify its <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> before assigning it to the parameter for
+which it is responsible.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the inputState, parameters for its function,
 and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).</li>
 <li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) &#8211; a string used for the name of the inputState.
@@ -423,22 +432,24 @@ parameterState.</p>
 <dt id="ParameterState.ParameterState.baseValue">
 <code class="descname">baseValue</code><a class="headerlink" href="#ParameterState.ParameterState.baseValue" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number, list or np.ndarray</em> &#8211; the default value for the parameterState.  It is combined with the aggregated value of any projections it
-receives using the <code class="docutils literal"><span class="pre">parameterModulationOperation</span></code> and then assigned to <code class="docutils literal"><span class="pre">value</span></code>.</p>
+receives using the <a class="reference internal" href="#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref py py-data docutils literal"><span class="pre">parameterModulationOperation</span></code></a>
+and then assigned to <code class="docutils literal"><span class="pre">value</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.parameterModulationOperation">
 <code class="descname">parameterModulationOperation</code><a class="headerlink" href="#ParameterState.ParameterState.parameterModulationOperation" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ModulationOperation : default ModulationOperation.PRODUCT</em> &#8211; the arithmetic operation used to combine the aggregated value of any projections is receives
-(the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>) with its <code class="docutils literal"><span class="pre">baseValue</span></code>, the result of which is assigned to
-<code class="docutils literal"><span class="pre">value</span></code>.</p>
+(the result of the parameterState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>) with its <a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a>,
+the result of which is assigned to <code class="docutils literal"><span class="pre">value</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.value">
 <code class="descname">value</code><a class="headerlink" href="#ParameterState.ParameterState.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; the aggregated value of the projections received by the inputState, combined with the <code class="docutils literal"><span class="pre">baseValue</span></code> using
-the parameterModulationOperation
+<dd><p><em>number, list or np.ndarray</em> &#8211; the aggregated value of the projections received by the inputState, combined with the
+<a class="reference internal" href="#ParameterState.ParameterState.baseValue" title="ParameterState.ParameterState.baseValue"><code class="xref py py-data docutils literal"><span class="pre">baseValue</span></code></a> using the
+<a class="reference internal" href="#ParameterState.ParameterState.parameterModulationOperation" title="ParameterState.ParameterState.parameterModulationOperation"><code class="xref py py-data docutils literal"><span class="pre">parameterModulationOperation</span></code></a>
 .  This is the value assigned to the parameter for which the parameterState is responsible.</p>
 </dd></dl>
 
