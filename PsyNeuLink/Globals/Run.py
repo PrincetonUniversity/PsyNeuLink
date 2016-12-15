@@ -342,7 +342,7 @@ def run(object,
         or of the outputStates of the :keyword:`TERMINAL` mechanisms for the process or system run
     """
 
-    inputs = _construct_inputs(object, inputs)
+    inputs = _construct_stimulus_sets(object, inputs)
 
     object_type = get_object_type(object)
 
@@ -467,7 +467,7 @@ def run(object,
     return object.results
 
 @tc.typecheck
-def _construct_inputs(object, inputs):
+def _construct_stimulus_sets(object, inputs):
     """Return an nparray of stimuli suitable for use as inputs arg for system.run()
 
     If inputs is a list:
