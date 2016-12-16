@@ -44,7 +44,7 @@ color_naming_process = process(
 word_reading_process = process(
     default_input_value=[.5, 3],
     # pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
-    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response2],
+    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response],
     name='Word Reading',
     learning=LEARNING,
     target=[3,3],
@@ -107,6 +107,9 @@ stim_list_dict = {colors:[1, 1],
 
 target_list_dict = {response:[1, 1],
                     response2:[2, 2]}
+
+# target_list_dict = {response:[1, 1]}
+
 
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,

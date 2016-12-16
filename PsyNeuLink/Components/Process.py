@@ -672,9 +672,15 @@ class Process_Base(Process):
 
       .. _origin_mech_tuples : List[MechanismTuple]
              Contains a tuple for the :keyword:`ORIGIN` mechanism of the process.
+             (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _terminal_mech_tuples : List[MechanismTuple]
              Contains a tuple for the :keyword:`TERMINAL` mechanism of the process.
+             (Note:  the use of a list is for compatibility with the MechanismList object)
+
+      .. _target_mech_tuples : List[MechanismTuple]
+             Contains a tuple for the :keyword:`TARGET` mechanism of the process.
+             (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _monitoring_mech_tuples : List[MechanismTuple]
              :py:class:`MechanismTuples <Mechanism.MechanismTuples>` for all :doc:`MonitoringMechanisms` in the
@@ -693,13 +699,17 @@ class Process_Base(Process):
         a list of the mechanisms in the process.
 
     originMechanisms : MechanismList
-        a list of the :keyword:`ORIGIN` mechanism of the process.
+        a list with the :keyword:`ORIGIN` mechanism of the process.
+        (Note:  a process can have only one :keyword:`TERMINAL` mechanism; the use of a list is for compatibility with
+        methods that are also used for systems.)
 
         .. based on _origin_mech_tuples
            process.input contains the input to :keyword:`ORIGIN` mechanism.
 
     terminalMechanisms : MechanismList
-        a list of the :keyword:`TERMINAL` mechanism of the process.
+        a list with the :keyword:`TERMINAL` mechanism of the process.
+        (Note:  a process can have only one :keyword:`TERMINAL` mechanism; the use of a list is for compatibility with
+        methods that are also used for systems.)
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of :keyword:`TERMINAL` mechanism.
@@ -708,6 +718,14 @@ class Process_Base(Process):
         a list of all of the monitoring mechanisms in the process.
 
         .. based on _monitoring_mech_tuples
+
+    targetMechanisms : MechanismList
+        a list with the :keyword:`TARGET` mechanism of the process.
+        (Note:  a process can have only one :keyword:`TARGET` mechanism; the use of a list is for compatibility with
+        methods that are also used for systems.)
+
+        .. based on _target_mech_tuples
+           system.ouput contains the output of :keyword:`TERMINAL` mechanism.
 
     systems : List[System]
         a list of the systems to which the process belongs.
@@ -943,6 +961,7 @@ class Process_Base(Process):
         pathway = self.paramsCurrent[PATHWAY]
         self._mech_tuples = []
         self._monitoring_mech_tuples = []
+        self._target_mech_tuples = []
 
         self._standardize_config_entries(pathway=pathway, context=context)
 
@@ -985,6 +1004,7 @@ class Process_Base(Process):
 
         self._allMechanisms = MechanismList(self, self._mech_tuples)
         self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
+        self.targetMechanisms = MechanismList(self, self._target_mech_tuples)
 
     def _standardize_config_entries(self, pathway, context=None):
 
@@ -1712,8 +1732,8 @@ class Process_Base(Process):
                 mech = mech_tuple[OBJECT]
                 # If
                 # - mech is a ComparatorMechanism, and
-                # - mech is also a TERMINAL for the current process, and
-                # - current process has learning enabled,
+                # - the mech that projects to mech is a TERMINAL for the current process, and
+                # - current process has learning specified
                 # then designate mech as a LEARNING_TARGET
                 if (isinstance(mech, ComparatorMechanism) and
                         any(projection.sender.owner.processes[self] == TERMINAL
@@ -1840,6 +1860,7 @@ class Process_Base(Process):
 
         else:
             self.comparatorMechanism = comparators[0]
+            self._target_mech_tuples.append(MechanismTuple(comparators[0], None, None))
             # self.comparatorMechanism.processes[self] = ComparatorMechanism
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".
