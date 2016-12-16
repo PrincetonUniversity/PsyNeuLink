@@ -280,6 +280,10 @@ class Projection_Base(Projection):
         -----------
             Projection category of Component class (default type:  MappingProjection)
 
+        Gotchas
+        -------
+            When referring to the mechanism that is a projection's sender or receiver mechanism, must add ".owner"
+
         Class attributes
         ----------------
             + componentCategory (str): kwProjectionFunctionCategory
