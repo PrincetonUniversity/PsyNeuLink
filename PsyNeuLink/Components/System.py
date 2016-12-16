@@ -1453,22 +1453,20 @@ class System_Base(System):
         if not EVC_SIMULATION in context:
             for process in self.processes:
                 if process.learning and process._learning_enabled:
-                    # MODIFIED 12/4/16 NEW:
                     # for mech in process.monitoring_mechanisms:
                     for mech_tuple in process.monitoringMechanisms.mech_tuples:
                         mech_tuple.mechanism.execute(time_scale=self.timeScale,
                                                      runtime_params=mech_tuple.params,
                                                      context=context)
-                    # MODIFIED 12/4/16 END
 
                     process._execute_learning(context=context)
 
-                    # MODIFIED 12/4/16 NEW:
-                    if report_system_output:
-                        if report_process_output:
+                    # Report output of the process if reporting is enabled for system and process
+                    #   and the process has a targetMechanism
+                    #   (note: it may not, as it may terminate on an internal mechanism of another process
+                    #          and therefore use that process' targetMechanism as the source of its error signal)
+                    if report_system_output and report_process_output and process.targetMechanisms:
                             process._report_process_completion()
-                    # MODIFIED 12/4/16 END
-
         # endregion
 
 

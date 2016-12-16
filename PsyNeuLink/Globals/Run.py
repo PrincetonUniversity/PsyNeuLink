@@ -954,19 +954,16 @@ def _validate_targets(object, targets, num_input_sets):
         # FIX: ALSO ALIGN SETS WITH NAMES OF object.targetMechanisms
         # FIX: CONSOLIDATE WITH TESTS FOR PROCESS ABOVE?
 
-        # MODIFIED 12/15/16 NEW:
-        # if isinstance(targets, np.ndarray):
-        # If there are targets, and the system has any process with learning enabled
-        # if not targets is None and any(process._learning_enabled for process in object.processes):
+        # If the system has any process with learning enabled
         if any(process._learning_enabled for process in object.processes):
 
-            HOMOGENOUS_INPUTS = 1
-            HETEROGENOUS_INPUTS = 0
+            HOMOGENOUS_TARGETS = 1
+            HETEROGENOUS_TARGETS = 0
 
             if targets.dtype in {np.dtype('int64'),np.dtype('float64')}:
-                process_structure = HOMOGENOUS_INPUTS
+                process_structure = HOMOGENOUS_TARGETS
             elif targets.dtype is np.dtype('O'):
-                process_structure = HETEROGENOUS_INPUTS
+                process_structure = HETEROGENOUS_TARGETS
             else:
                 raise SystemError("Unknown data type for inputs in {}".format(object.name))
 
@@ -979,7 +976,8 @@ def _validate_targets(object, targets, num_input_sets):
                 raise SystemError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
                                   format(object.name, expected_dim))
 
-            num_targets = np.size(targets,PROCESSES_DIM)
+            # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
+            num_targets = np.size(targets,PROCESSES_DIM-1)
             # Check that number of target values in each execution equals the number of target mechanisms in the system
             if num_targets != len(object.targetMechanisms):
                 raise SystemError("The number of target values for each execution ({}) in the call to {}.run() "

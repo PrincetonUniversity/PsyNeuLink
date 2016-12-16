@@ -44,7 +44,8 @@ color_naming_process = process(
 word_reading_process = process(
     default_input_value=[.5, 3],
     # pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
-    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response],
+    # pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response2],
+    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision],
     name='Word Reading',
     learning=LEARNING,
     target=[3,3],
@@ -94,7 +95,7 @@ def show_target():
     # print ('\nInput Weights: \n', Input_Weights.matrix)
     # print ('Middle Weights: \n', Middle_Weights.matrix)
     # print ('Output Weights: \n', Output_Weights.matrix)
-    print ('MSE: \n', response.outputValue)
+    print ('Response: \n', response.outputValue[0])
 
 
 #   - as a dictionary of stimulus lists; for each entry:
@@ -105,10 +106,10 @@ def show_target():
 stim_list_dict = {colors:[1, 1],
                   words:[2, 2]}
 
-target_list_dict = {response:[1, 1],
-                    response2:[2, 2]}
+# target_list_dict = {response:[1, 1],
+#                     response2:[2, 2]}
 
-# target_list_dict = {response:[1, 1]}
+target_list_dict = {response:[1, 1]}
 
 
 #   - as a list of trials;

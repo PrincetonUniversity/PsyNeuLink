@@ -3,22 +3,32 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
-# TEST: SYSTEM LEARNING:
-#       • ASSYMETRIC SYSTEM WITH LEARNING, IN WHICH ON PROCESS TERMIMNATES ON AN INTERNAL MECHANISM OF ANOTHER
-#       • VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
-#       • ORDER OF LISTING OF PROCESSES IS STABLE (SO IT CAN BE ALIGNED WITH TARGETS)
-#       • DICTIONARY-STYLE TARGET SPECIFICATION (PARALELLING INPUT), SO DON'T HAVE TO WORRY ABOUT ORDERING OF
-#                TARGETS/PROCESSES AND ALSO CAN CROSS-VALIDATE ASSIGNMENT BY NAME (DOCUMENT THAT THIS IS SAFER)
-#       • DOCUMENT ADDITIONALS TO RUN (DICT FORMAT FOR TARGETS)
-#       • DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
-#                   THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN CHECK THIS BY USING show() -- WRITE NEW ONE?
-#                   GET STRAIGHT MEANING OF "TARGET":  IS IT THE COMPARATOR OR THE MECHANISM BEING TRAINED?
+# SYSTEM LEARNING:
+#       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
+#       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
+#       - GET STRAIGHT MEANING OF "TARGET":  IS IT THE COMPARATOR OR THE TERMINAL MECHANISM BEING TRAINED?
+#       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
+#       DOCUMENT: DICTIONARY-STYLE TARGET SPECIFICATION (PARALELLING INPUT), SO DON'T HAVE TO WORRY ABOUT ORDERING OF
+#                 TARGETS/PROCESSES - THIS IS SAFER THAN LIST METHOD
+#       DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
+#                 THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN CHECK THIS BY USING show() -- WRITE NEW ONE?
+#       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
+#       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
 
+# DOCUMENTATION: params dictionary -> ``params`` dictionary
+#                parameter dictionary -> ``params`` dictionary
+# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
+#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
+#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
+#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
+#            "argument" refers to a specifiable value in a method or function call
+#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
+#            componentAttribute:  user accessible attribute for which there is no constructor argument
+#            _component_attribute:  internal attribute
 
-
-# DOCUMENT: params dictionary -> ``params`` dictionary
-#           parameter dictionary -> ``params`` dictionary
-
+# DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
+#           variable and value are 2d np.arrays that are used as internal datastructures
+#
 # FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
 
 # IMPLEMENT: learning argument and attribute for System (that assigns learning to all of its processes and,
@@ -43,7 +53,6 @@
 # DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
 #            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
 
-# DOCUMENT:  "params dictionary" vs. "parameter dictionary"
 
 # DOCUMENT:  FIGURES FOR:
 #                   inputState: inputValue vs. variable
@@ -55,17 +64,6 @@
 #                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
 #                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
 #
-
-# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
-#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
-#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
-#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
-#            "argument" refers to a specifiable value in a method or function call
-#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
-#            componentAttribute:  user accessible attribute for which there is no constructor argument
-#            _component_attribute:  internal attribute
-
-
 # DOCUMENTATION: add show to Systsem and Process
 #
 
