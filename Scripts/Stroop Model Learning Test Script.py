@@ -111,7 +111,6 @@ stim_list_dict = {colors:[1, 1],
 
 target_list_dict = {response:[1, 1]}
 
-
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,
 #     one for each origin mechanism in the system
