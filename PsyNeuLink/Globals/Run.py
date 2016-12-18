@@ -15,62 +15,70 @@ Overview
 
 The ``run`` function is used for executing a mechanism, process or system.  It can be called directly, however,
 it is typically invoked by calling the ``run`` method of the object to be run.  It  executes an object by calling the
-object's ``execute`` method.  While an object's execute method can be called directy, using ``run`` is much easier
-because it:
+object's ``execute`` method.  While an object's execute method can be called directy, using its ``run`` method is much
+easier because it:
 
     * allows multiple rounds of execution to be run in sequence; the ``execute`` method of an object
       runs only a single execution of the object);
-
-    * uses simpler formats for specifying inputs (see below);
-
-    * manages timing factors (such as updating the ``CentralClock`` and presenting inputs at the correct time
-      for execution (see below).
-
-    * automatically aggregates results across executions and stores these in the results attribute of the object.
+    ..
+    * uses simpler formats for specifying :ref:`inputs <Run_Inputs>` and :ref:`targets <Run_Targets>`;
+    ..
+    * manages timing factors (such as updating the :py:class:`CentralClock <TimeScale.CentralClock>` and presenting
+    inputs in the correct :ref:`phase of execution <System_Execution_Phase>` of a system.
+    ..
+    * automatically aggregates results across executions and stores them in the results attribute of the object.
 
 COMMENT:
 Note:: The ``run`` function uses the ``construct_input`` function to convert the input into the format required by
 ``execute`` methods.
 COMMENT
 
-There are a few concepts to understand that will help in using the ``run`` function.  These are discussed below.
+Understanding a few basic concepts about how the ``run`` function operates will make it easier to use the ``execute``
+and ``run`` methods of PsyNeuLink objects.  These are discussed below.
+
+
+Scope of Execution
+~~~~~~~~~~~~~~~~~~
+
+When the ``run`` method of an object is called, it executes that object and all others within its scope of execution.
+For a mechanism [LINK], the scope of execution is simply that mechanism.  For a process [LINK], the scope of execution
+is all of the mechanisms specified in its :py:data:`pathway <Process.Process_Base.pathway>` parameter.  For a
+:doc:`system <System>`, the scope of execution is all of the mechanisms in the processes specified in the system's
+:py:data:`processes <System.System_Base.processes>` parameter.
 
 .. _Run_Timing:
 
 Timing
 ~~~~~~
 
-When ``run`` is called, it executes objects within the scope of execution.  For a mechanism [LINK], the scope of 
-execution is simply that mechanism.  For a process [LINK], the scope of execution is all of the mechanisms specified 
-in its ``pathway`` [LINK] parameter.  For a system [LINK], the scope of execution is all of the mechanisms in the 
-processes specified in the system's ``processes`` parameter.
+PsyNeuLink supports two time scales for executing objects: :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>` and
+:py:data:`TRIAL <TimeScale.TimeScale.TRIAL>`.  Every mechanism defines how it is executed at one or both of these time
+scales, and its current mode of execution is determined by its
+:py:data:`timeScale <Mechanism.Mechanism_Base.timeScale>` parameter.
 
-PsyNeuLink supports two time scales for executing objects:``time_step`` and ``trial``.  Every mechanism in
-PsyNeuLink defines its execution at one or both of these time scales, and its current mode of execution can be set
-using its ``TimeScale`` [LINK] parameter.
+* :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>`:  this mode of execution is a mechanism's closest approximation
+  to continuous, or "real time" processing.  Execution of a time_step is defined as a single execution of all objects
+  in the scope of execution at their time_step time scale.  Mechanisms called upon to execute a time_step that do
+  not support that time scale of execution have the option of generating an exception, being ignored, or providing
+  their trial mode response, either on the first time_step, every time_step, or the last time_step in the sequence
+  being run (see :ref:`Timing <LINK> for further details).
 
-* **time_step**:  this mode of execution is a mechanism's closest approximation to continuous, or "real time"
-  processing.  Execution of a time_step is defined as a single execution of all objects in the scope of
-  execution for at their time_step time scale.  Mechanisms called upon to execute a time_step that do not support
-  that time scale of execution have the option of generating an exception, being ignored, or providing their trial
-  mode response, either on the first time_step, every time_step, or the last time_step in the sequence being run
-  (see Timing [LINK] for further details).
+* :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>`: this mode of execution is the "ballistic" execution of a
+  mechanism to a state that would have been achieved with time_step execution to a specified criterion.  The
+  criterion can be specified in terms of the number of time_steps, or a condition to be met by the mechanism's
+  output.  It is up to the mechanism how it implements its trial mode of execution (i.e., whether this is done by
+  internal numerical iteration or an analytic calculation). Execution of a trial is defined as the execution of a
+  trial of all of the objects in the scope of execution.
 
-* **trial**: this mode of execution is defined as the "ballistic" execution of a mechanism to a state that would
-  have been achieved with time_step execution to a specified criterion.  The criterion can be specified in terms of
-  the number of time_steps, or a condition to be met by the mechanism's output.  It is up to the mechanism how it
-  implements its trial mode of execution (i.e., whether this is done by internal numerical iteration or an analytic
-  calculation). A trial of execution is defined as the execution of a trial of all of the objects in the scope of
-  execution.
-
-The TimeScale argument to ``run`` determines the time scale for each round of execution: a time_step or a trial.
-When a process is run, each  mechanism is executed in the order that it appears in the ``pathway`` parameter of the
-process, once per round of execution.  When a system is run, the order of execution is determined by the system's `
-`executionList``, which is based on a graph analysis of the system's processes that determines the dependencies
-among its mechanisms (both within and  between processes). Execution of the mechanisms in a system also depends on
-the ``phaseSpec`` of each mechanism: this determines *when* in an execution sequence it should be run.  The
-``CentralClock``[LINK] is used to control timing, so executing a system requires that the ``CentralClock``
-be appropriately updated.
+The ``time_scale argument`` of an ``execute`` or ``run`` method determines the time scale for each round of
+execution: a time_step or a trial.  When a process is run, each mechanism is executed in the order that it appears
+in the :py:data:`pathway <Process.Process_Base.pathway>` parameter of the process, once per round of execution.  When a
+system is run, the order of execution is determined by the system's
+:py:data:`executionList <System.System_Base.executionList>` parameter, which is based on the system's
+:ref:`graph <System_Graph>` (a list of the dependencies among all of the mechanisms in the system).  Execution of the
+mechanisms in a system also depends on the :py:data:`phaseSpec <Mechanism.Mechanism_Base.phaseSpec>` of each mechanism:
+this determines *when* in an execution sequence it should be executed. The py:class:`CentralClock
+<TimeScale.CentralClock>` is used to control timing, so executing a system requires that it be appropriately updated.
 
 The ``run`` function handles all of the above factors automatically.
 
