@@ -648,7 +648,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 
-        # Check that each target referenced in the dict (key in the dict)
+        # Check that each target referenced in the dict (key)
         #     is the name of a mechanism that projects to a target (comparator) in the system
         terminal_to_target_mapping = {}
         for mech in stimuli.keys():
@@ -660,7 +660,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get target mech (comparator) for each entry in stimuli dict:
             terminal_to_target_mapping[mech] = mech.outputState.sendsToProjections[0]
 
-        # FIX: MAKE target stimuli AND and targets in targetMechanism ARE IN SAME THE ORDER; MOVE TO ORDERED DICT?
+        # Insure that target lists in dict are accessed in the same order as the
+        #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
         from collections import OrderedDict
         ordered_targets = OrderedDict()
         for target in object.targetMechanisms:
@@ -678,11 +679,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             try:
                 ordered_targets[terminal_mech] = stimuli[terminal_mech]
             except KeyError:
-                # raise RunError("No entry found in target specification for run of {} that matches {}; should be \'{}\'".
-                #                format(object.name, target.name, process.terminalMechanisms[0].name))
                 raise RunError("{} (of {} process) not found target specification for run of {}".
                                format(terminal_mech, object.name))
-
         stimuli = ordered_targets
 
     # Convert all items to 2D arrays:

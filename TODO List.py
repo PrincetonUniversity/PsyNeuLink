@@ -3,6 +3,11 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
+# FIX: ``SAMPLE`` -> ``COMPARATOR_SAMPLE``
+# FIX: ``TARGET`` -> ``COMPARATOR_TARGET``,
+# FIX: ``LEARNING_TARGET`` -> ``TARGET``,
+# FIX: ADD ERROR MESSAGE IF MECHANISM REFERENCED IN KEY OF TARGET DICT (FOR run()) IS AN INTERNAL MECHANISM VS. MISSING
+
 # SYSTEM LEARNING:
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
 #       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
@@ -12,6 +17,9 @@
 #                 TARGETS/PROCESSES - THIS IS SAFER THAN LIST METHOD
 #       DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
 #                 THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN CHECK THIS BY USING show() -- WRITE NEW ONE?
+#       DOCUMENT: NOTE CASE IN WHICH ONE LEARNING PROCESS TERMINATES ON THE INTERNAL MECHANISM OF ANOTHER
+#                   (AND SO DOESN'T REQUIRE A TARGET LIST IN THE CALL TO RUN)
+#                   THOUGH IT DOES REQUIRE A TARGET LIST FOR LEARNING IF RUN ON ITS OWN
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
 
@@ -25,6 +33,8 @@
 #            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
 #            componentAttribute:  user accessible attribute for which there is no constructor argument
 #            _component_attribute:  internal attribute
+#            <definite article> :keyword:`<item>`;  <indefinite article> item;
+#            e.g.: the :keyword:`errorSource`;  an errorSource
 
 # DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures

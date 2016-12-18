@@ -90,23 +90,32 @@ Mechanisms
 Mechanisms are assigned the following designations based on the position they occupy in the graph structure and/or
 the role they play in a system:
 
-    :keyword:`ORIGIN`: receives input to the system, and begins execution;
+    COMMENT:
+        DOCUMENTATION: MAKE EACH :keyword:`<KEYWORD>` AN ATTRIBUTE OF A CLASS OF KEYWORDS WHERE THEY ARE DESCRIBED.
+        keywords
+    COMMENT
 
-    :keyword:`TERMINAL`: final point of execution, and provides an output of the system;
+    :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`: receives input to the system, and begins execution;
 
-    :keyword:`SINGLETON`: both an :keyword:`ORIGIN` and a :keyword:`TERMINAL` mechanism;
+    :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>`: final point of execution, and provides an output of the system;
 
-    :keyword:`CYCLE`: receives a projection that closes a recurrent loop;
+    :py:data:`SINGLETON <Keywords.Keywords.SINGLETON>`: both an :keyword:`ORIGIN` and a :keyword:`TERMINAL` mechanism;
 
-    :keyword:`INITIALIZE_CYCLE`: sends a projection that closes a recurrent loop; can be assigned an initial value;
+    :py:data:`CYCLE <Keywords.Keywords.CYCLE>`: receives a projection that closes a recurrent loop;
 
-    :keyword:`MONITORING`: monitors value of another mechanism for use in learning;
+    :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`: sends a projection that closes a recurrent loop;
+    can be assigned an initial value;
 
-    :keyword:`LEARNING_TARGET`: :keyword:`TERMINAL` mechanism in a system, belonging to a process with learning enabled;
+    :py:data:`MONITORING <Keywords.Keywords.MONITORING>`: monitors value of another mechanism for use in learning;
 
-    :keyword:`CONTROL`:  monitors the value of another mechanism used to control parameters values;
+    :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>`: ComparatorMechanism that monitors a
+    :keyword:`TERMINAL` mechanism of a process
 
-    :keyword:`INTERNAL`: processing mechanism that does not fall into any of the categories above.
+    :py:data:`CONTROL <Keywords.Keywords.CONTROL>`: monitors the value of another mechanism used to control
+    parameters values;
+
+    :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>`: processing mechanism that does not fall into any of the
+    categories above.
 
     .. note:: Any :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system must be, respectively,
        the :keyword:`ORIGIN` or :keyword:`TERMINAL` of any process(es) to which they belong.  However, it is not
@@ -152,7 +161,8 @@ Execution
 ---------
 
 A system can be executed by calling either its :py:meth:`execute <System_Base.execute>` or
-:py:meth:`run <System_Base.run>` methods.
+:py:meth:`run <System_Base.run>` methods. :py:meth:`execute <System_Base.execute>` executes each mechanism in the
+system once, whereas :py:meth:`run <System_Base.run>` allows a series of executions to be carried out.
 
 .. _System_Execution_Order:
 
@@ -200,10 +210,17 @@ Learning
 ~~~~~~~~
 The system will execute learning for any process that specifies it.  Learning is executed for each process
 after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
-A target list or ndarray must be provided in the call to the system's :py:meth:`execute <System_Base.execute>` or
-:py:meth:`run <System_Base.run>` method.  It must contain a value for the
-:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the :doc:`ComparatorMechanism` of
-each process in the system that specifies learning.
+The stimuli (both inputs and targets for learning) used as inputs can be specified in one of two formats (list or
+dict), that are described in the :doc:`Run` module.  Both formats require that an input be provided for each
+:py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
+:py:data:`originMechanisms <System_Base.originMechanisms>` attribute), and that a target be provided for each
+:py:data:`LEARNING_TARGET` <Keywords.Keywords.LEARNING_TARGET>` mechanism (listed in its
+:py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).
+
+.. note::
+   A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
+   :py:data:`targetMechanism <System_Base.targetMechanisms>` of the system to which it belongs
+   (see :ref:`LearningProjection_Target`).
 
 .. _System_Execution_Control:
 

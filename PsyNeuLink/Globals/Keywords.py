@@ -12,6 +12,30 @@
 # ******************************************    CONSTANTS    ***********************************************************
 # **********************************************************************************************************************
 
+class Keywords:
+    """
+    Attributes
+    ----------
+
+    ORIGIN : 'ORIGIN`
+    INTERNAL : 'INTERNAL'
+    CYCLE : 'CYCLE'
+    INITIALIZE_CYCLE : 'INITIALIZE_CYCLE'
+    TERMINAL : 'TERMINAL'
+    SINGLETON : 'ORIGIN AND TERMINAL'
+    MONITORING : 'MONITORING'
+    LEARNING_TARGET : 'TARGET'
+    """
+    def __init__(self):
+        self.ORIGIN = ORIGIN
+        self.INTERNAL = INTERNAL
+        self.CYCLE = CYCLE
+        self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
+        self.TERMINAL = TERMINAL
+        self.SINGLETON = SINGLETON
+        self.MONITORING = MONITORING
+        self.LEARNING_TARGET = LEARNING_TARGET
+
 # parameter_keywords = set()
 
 ON = True
