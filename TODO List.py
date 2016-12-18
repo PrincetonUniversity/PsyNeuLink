@@ -963,10 +963,10 @@
 
 # - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
 #             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
-#                 target = [target]
+#                 target = [COMPARATOR_TARGET]
 #             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
 #             if all(isinstance(i, numbers.Number) for i in target):
-#                 target = [target]
+#                 target = [COMPARATOR_TARGET]
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
