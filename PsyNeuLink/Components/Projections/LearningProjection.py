@@ -216,8 +216,8 @@ MOVE TO ARGUMENTS SECTION??
 **Target(s)**.  This specifies the value with which the output of an
 :py:data:`errorSource <LearningProjection.errorSource>` is compared, to calculate the
 :py:data:`errorSignal <LearningProjection.errorSignal>`.  It is required by the :doc:`run <Run>` method of a process
-or sysetm when learning is specified. provides to the :keyword:`TARGET` inputState of a :doc:`ComparatorMechanism`
-mechanism.
+or sysetm when learning is specified. provides to the :keyword:`COMPARATOR_TARGET` inputState of a
+:doc:`ComparatorMechanism` mechanism.
 
 
 .. _LearningProjection_Execution:
@@ -242,9 +242,11 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, SAMPLE
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
+                                                                                      COMPARATOR_SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, NEXT_LEVEL_PROJECTION
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
+                                                                                         NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
@@ -911,7 +913,7 @@ FROM TODO:
                     elif self.function.componentName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = MappingProjection(sender=monitored_state,
-                                                         receiver=monitoring_mechanism.inputStates[SAMPLE],
+                                                         receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +

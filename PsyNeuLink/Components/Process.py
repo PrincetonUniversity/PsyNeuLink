@@ -451,7 +451,7 @@ def process(process_spec=None,
         eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
-        the value assigned to the :keyword:`TARGET` inputState of a :doc:`MonitoringMechanism` to which a
+        the value assigned to the :keyword:`COMPARATOR_TARGET` inputState of a :doc:`MonitoringMechanism` to which a
         :keyword:`TERMINAL` mechanism of a process or system projects (used for :ref:`learning <Process_Learning>`).
         It must be the same length as the :keyword:`TERMINAL` mechanism's output.
 
@@ -1737,7 +1737,7 @@ class Process_Base(Process):
                 # then designate mech as a LEARNING_TARGET
                 if (isinstance(mech, ComparatorMechanism) and
                         any(projection.sender.owner.processes[self] == TERMINAL
-                            for projection in mech.inputStates[SAMPLE].receivesFromProjections) and
+                            for projection in mech.inputStates[COMPARATOR_SAMPLE].receivesFromProjections) and
                         self.learning
                             ):
                     mech_tuple[0].processes[self] = LEARNING_TARGET
@@ -1876,7 +1876,7 @@ class Process_Base(Process):
         target = np.atleast_1d(self.target)
 
         # Create ProcessInputState for target and assign to comparatorMechanism's target inputState
-        comparator_target = self.comparatorMechanism.inputStates[TARGET]
+        comparator_target = self.comparatorMechanism.inputStates[COMPARATOR_TARGET]
 
         # Check that length of process' target input matches length of comparatorMechanism's target input
         if len(target) != len(comparator_target.variable):
@@ -1886,7 +1886,7 @@ class Process_Base(Process):
         target_input_state = ProcessInputState(owner=self,
                                                 variable=target,
                                                 prefs=self.prefs,
-                                                name=TARGET)
+                                                name=COMPARATOR_TARGET)
         self.targetInputStates.append(target_input_state)
 
         # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState

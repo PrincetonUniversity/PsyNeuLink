@@ -247,7 +247,8 @@ from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import SAMPLE, TARGET
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_SAMPLE, \
+                                                                                      COMPARATOR_TARGET
 
 class RunError(Exception):
      def __init__(object, error_value):
@@ -278,7 +279,7 @@ def run(object,
 
     # DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
     #           THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN SEE THIS BY USING show() METHOD (WRITE NEW ONE?)
-    #           GET STRAIGHT MEANING OF "TARGET":  IS IT THE COMPARATOR OR THE MECHANISM BEING TRAINED?
+    #           GET STRAIGHT MEANING OF "COMPARATOR_TARGET":  IS IT THE COMPARATOR OR THE MECHANISM BEING TRAINED?
     """Run a sequence of executions for a process or system
 
     First, validate inputs (and targets, if learning is enabled).  Then, for each round of execution:
@@ -647,10 +648,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.inputStates[SAMPLE].receivesFromProjections
+                       projection in target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections
                        for mech in stimuli.keys()):
                     raise SystemError("Entry for {} is missing from specification of targets for run of {}".
-                                      format(target.inputStates[SAMPLE].receivesFromProjections[0].sender.owner.name,
+                                      format(target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections[0].sender.owner.name,
                                              object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
@@ -675,7 +676,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the target mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.inputStates[TARGET].receivesFromProjections if
+                               projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
