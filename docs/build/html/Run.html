@@ -316,32 +316,57 @@ must match that of the corresponding item of the target inputState for the monit
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10d88e438&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10dc05f98&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10daecb38&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10daecba8&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10d985828&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10d985668&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10d985940&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10d985b38&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10dc0ff28&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10da92518&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10da92668&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10da9b588&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10da9bcc0&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10da9bcf8&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10da9bdd8&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10da9be48&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10da9beb8&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10da9bf28&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10da9bf98&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
-<p>First, validate inputs.  Then, for each round of execution:</p>
-<ul>
+<blockquote>
+<div><dl class="docutils">
+<dt>First, validate inputs (and targets, if learning is enabled).  Then, for each round of execution:</dt>
+<dd><ul class="first last">
 <li><p class="first">call call_before_trial if specified;</p>
 </li>
-<li><p class="first">for each time_step in the trial:</p>
-<blockquote>
-<div><ul class="simple">
+<li><dl class="first docutils">
+<dt>for each time_step in the trial:</dt>
+<dd><ul class="first last simple">
 <li>call call_before_time_step if specified;</li>
 <li>call <code class="docutils literal"><span class="pre">object.execute</span></code> with inputs, and append result to <code class="docutils literal"><span class="pre">object.results</span></code>;</li>
 <li>call call_after_time_step if specified;</li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 <li><p class="first">call call_after_trial if specified.</p>
 </li>
 </ul>
+</dd>
+</dl>
 <p>Return <code class="docutils literal"><span class="pre">object.results</span></code>.</p>
-<p>The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:</p>
-<blockquote>
-<div><ul class="simple">
-<li>the inner-most dimension must equal the length of object.variable (i.e., the input to the object);</li>
-<li>for mechanism format, the length of the value of all entries must be equal (== number of executions);</li>
+<dl class="docutils">
+<dt>The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:</dt>
+<dd><ul class="first last">
+<li><p class="first">the inner-most dimension must equal the length of object.variable (i.e., the input to the object);</p>
+</li>
+<li><p class="first">for mechanism format, the length of the value of all entries must be equal (== number of executions);</p>
+</li>
+<li><dl class="first docutils">
+<dt>the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)</dt>
+<dd><dl class="first last docutils">
+<dt>Note: num_input_sets need not equal num_executions (the number of executions to actually run)</dt>
+<dd><dl class="first last docutils">
+<dt>if num_executions &gt; num_input_sets:</dt>
+<dd><p class="first last">executions will cycle through input_sets, with the final one being only a partial cycle</p>
+</dd>
+<dt>if num_executions &lt; num_input_sets:</dt>
+<dd><p class="first last">the executions will only partially sample the input sets</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 <p>The targets argument must be the same length as the inputs argument.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -350,38 +375,44 @@ must match that of the corresponding item of the target inputState for the monit
 (i.e., size of axis 0)</li>
 </ul>
 </div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (<em>List[input] or ndarray(input) : default default_input_value for a single execution</em>) &#8211; the input for each execution in a sequence (see <a class="reference internal" href="#"><span class="doc">Run</span></a> for detailed description of formatting
-requirements and options).</li>
-<li><strong>reset_clock</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>) &#8211; if <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, resets <code class="docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
-<li><strong>initialize</strong> (bool default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; calls the <code class="docutils literal"><span class="pre">initialize</span></code> method of the system prior to a sequence of executions.</li>
-<li><strong>initial_values</strong> (Dict[Mechanism, List[input] or np.ndarray(input)] : default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; the initial values for mechanisms designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> [LINK].</li>
-<li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; the target values for monitoring mechanisms for each execution (used for learning).
-The length must be equal to inputs.</li>
-<li><strong>learning</strong> (bool :  default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; enables or disables learning during execution.
+</div></blockquote>
+<dl class="docutils">
+<dt>Arguments</dt>
+<dd><dl class="first docutils">
+<dt>inputs</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">List[input] or ndarray(input)</span> <span class="classifier-delimiter">:</span> <span class="classifier">default default_input_value for a single execution</span><dd>the input for each execution in a sequence (see <a class="reference internal" href="#"><span class="doc">Run</span></a> for detailed description of formatting
+requirements and options).</dd>
+<dt>reset_clock</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code></span><dd>if <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, resets <code class="docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</dd>
+<dt>initialize</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code></span><dd>calls the <code class="docutils literal"><span class="pre">initialize</span></code> method of the system prior to a sequence of executions.</dd>
+<dt>initial_values</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Dict[Mechanism, List[input] or np.ndarray(input)]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>the initial values for mechanisms designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> [LINK].</dd>
+<dt>targets</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">List[input] or np.ndarray(input)</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>the target values for monitoring mechanisms for each execution (used for learning).
+The length must be equal to inputs.</dd>
+<dt>learning</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>enables or disables learning during execution.
 If it is not specified, current state is left intact.
-If <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, learning is forced on; if <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>, learning is forced off.</li>
-<li><strong>call_before_trial</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called before each trial in the sequence is executed.</li>
-<li><strong>call_after_trial</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called after each trial in the sequence is executed.</li>
-<li><strong>call_before_time_step</strong> (Function : default= <cite>:keyword:`None</cite>) &#8211; called before each time_step is executed.</li>
-<li><strong>call_after_time_step</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called after each time_step is executed.</li>
-<li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; specifies whether mechanisms are executed for a single time step or a trial</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;object&gt;.results</strong> &#8211; list of the values, for each execution, of the outputStates for a mechanism run directly,
-or of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms for the process or system run</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[outputState.value]</p>
-</td>
-</tr>
-</tbody>
-</table>
+If <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, learning is forced on; if <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>, learning is forced off.</dd>
+<dt>call_before_trial</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called before each trial in the sequence is executed.</dd>
+<dt>call_after_trial</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called after each trial in the sequence is executed.</dd>
+<dt>call_before_time_step</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <cite>:keyword:`None</cite></span><dd>called before each time_step is executed.</dd>
+<dt>call_after_time_step</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called after each time_step is executed.</dd>
+<dt>time_scale</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">TimeScale</span> <span class="classifier-delimiter">:</span> <span class="classifier">default TimeScale.TRIAL</span><dd>specifies whether mechanisms are executed for a single time step or a trial</dd>
+</dl>
+<dl class="last docutils">
+<dt>&lt;object&gt;.results</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">List[outputState.value]</span><dd>list of the values, for each execution, of the outputStates for a mechanism run directly,
+or of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms for the process or system run</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

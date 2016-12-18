@@ -593,19 +593,31 @@ process.</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#Process.Process_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process.</p>
+<dd><p><em>MechanismList</em> &#8211; a list with the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process.
+(Note:  a process can have only one <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism; the use of a list is for compatibility with
+methods that are also used for systems.)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#Process.Process_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process.</p>
+<dd><p><em>MechanismList</em> &#8211; a list with the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process.
+(Note:  a process can have only one <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism; the use of a list is for compatibility with
+methods that are also used for systems.)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#Process.Process_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>MechanismList</em> &#8211; a list of all of the monitoring mechanisms in the process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Process.Process_Base.targetMechanisms">
+<code class="descname">targetMechanisms</code><a class="headerlink" href="#Process.Process_Base.targetMechanisms" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>MechanismList</em> &#8211; a list with the <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> mechanism of the process.
+(Note:  a process can have only one <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> mechanism; the use of a list is for compatibility with
+methods that are also used for systems.)</p>
 </dd></dl>
 
 <dl class="attribute">
