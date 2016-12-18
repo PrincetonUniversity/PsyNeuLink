@@ -3,18 +3,14 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
-# FIX: ``SAMPLE`` -> ``COMPARATOR_SAMPLE``
-# FIX: ``TARGET`` -> ``COMPARATOR_TARGET``,
-# FIX: ``TARGET`` -> ``TARGET``,
 # FIX: ADD ERROR MESSAGE IF MECHANISM REFERENCED IN KEY OF TARGET DICT (FOR run()) IS AN INTERNAL MECHANISM VS. MISSING
 
 # SYSTEM LEARNING:
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
 #       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
-#       - GET STRAIGHT MEANING OF "TARGET":  IS IT THE COMPARATOR OR THE TERMINAL MECHANISM BEING TRAINED?
 #       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
 #       DOCUMENT: DICTIONARY-STYLE TARGET SPECIFICATION (PARALELLING INPUT), SO DON'T HAVE TO WORRY ABOUT ORDERING OF
-#                 TARGETS/PROCESSES - THIS IS SAFER THAN LIST METHOD
+#                 TARGETS/PROCESSES - THIS IS SAFER THAN LIST METHOD - PUT IN DOCS FOR RUN
 #       DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
 #                 THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN CHECK THIS BY USING show() -- WRITE NEW ONE?
 #       DOCUMENT: NOTE CASE IN WHICH ONE LEARNING PROCESS TERMINATES ON THE INTERNAL MECHANISM OF ANOTHER
@@ -98,8 +94,6 @@
 #    Features:  graph support, logging, hierarchical preferences
 #
 #    System:  Control and Learning under Structure
-#    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
-#                       that has a ComparatorMechanism (and for which a target is specified)
 #    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
 
 # FIX *************
@@ -111,10 +105,6 @@
 #                    rename reference_value??
 
 # FIX: SYSTEM LEARNING:
-#      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
-#                     on the hidden layer of another process)
-#      2) System:  parse learning mechanism assignments to be sure that comparators are replaced with weighterorrs
-#                     where pathways converge.
 
 # DOCUMENT: Component:  :keyword:`NotImplemented` can be assigned to a parameter in the definition of paramClassDefaults
 #                          to allow it to pass _validate_params without having to make an assignment (i.e., to
@@ -536,13 +526,6 @@
 
 # IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
-# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
-#               IS PROBABILITY_UPPER_THRESHOLD THE CORRECT PARAM IN EVC System Laming Validation Test Script??
-# PROBLEM: IN Process, WAS ADDING +1 TO _phaseSpecMax for monitoringMechanisms (for learning)
-#                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
-#          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
-#                     (SINCE THEY WILL BE RUN LAST ANYHOW, DUE TO THEIR PROJECTIONS)
-
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 # IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
@@ -672,7 +655,8 @@
 #                0) Linear layer as penultimate layer (one for which output weights will be modified);
 #                       (note: slope gets parameterState that is controlled by learning_rate of LearningProjection)
 #                1) Use Softmax as final output layer
-#                2) ComparatorMechanism:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
+#                2) ComparatorMechanism:  constrain len(COMPARATOR_SAMPLE) = len(COMPARATOR_TARGET) = 1
+#                          (rather than len(terminalMechanism.outputState)
 #                3) FullConnectivity MappingProjection from terminalMechanism->ComparatorMechanism
 #                4) LearningProjection.learningRate sets slope of Linear layer
 #                ----------------
@@ -705,8 +689,6 @@
 #            (replace existing function in ParameterStates)
 # IMPLEMENT: Factor _instantiate_pathway so that parsing/instantiation of mechanism/projection specs
 #            can also be called after _deferred_init
-# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
-#                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
 # IMPLEMENT: _instantiate_pathway:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
@@ -796,13 +778,10 @@
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
 
-# 7/26/16:
-# TEST specification of kwCompartorSample and TARGET
-
 # 7/25/16:
 #
 # FIX handling of inputStates (SAMPLE and TARGET) in ComparatorMechanism:
-#              requirecParamClassDefaults
+#              requiredParamClassDefaults
 #              _instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
 #
