@@ -192,9 +192,9 @@ LearningProjection and the associated components required for learning to occur 
 <a class="reference internal" href="#learningprojection-structure"><span class="std std-ref">Structure</span></a> below).  These are generated for each MappingProjection that will
 be modified by learning;  for a process, this includes the MappingProjections between each of the mechanisms in the
 process.</p>
-<p id="learningprojection-simple-learning-figure"><strong>Figure: Components of Learning</strong></p>
-<blockquote>
-<div><div class="figure" id="id5">
+<blockquote id="learningprojection-simple-learning-figure">
+<div><p><strong>Components of Learning</strong></p>
+<div class="figure" id="id1">
 <a class="reference internal image-reference" href="_images/LearningProjection_Simple_Learning_fig.png"><img alt="Schematic of mechanisms and projections involved in learning" src="_images/LearningProjection_Simple_Learning_fig.png" style="width: 3433.5px; height: 5033.5px;" /></a>
 <p class="caption"><span class="caption-text">Learning mechanisms (darker background) and associated projections created for a set of mechanisms specified for
 learning (lighter backgrounds).  Each mechanism is labeled by its type (uppler line, in bold) and its designated
@@ -206,71 +206,74 @@ mechanism indicate the attributes of the LearningProjection with which they are 
 </div>
 <div class="section" id="structure">
 <span id="learningprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>The folowing components (shown in <span class="xref std std-ref">the figure above</span>) are required
-for learning:</p>
-<p><strong>LearningProjection</strong>:  its <code class="docutils literal"><span class="pre">receiver</span></code> is the parameterState of the MappingProjection to be modified by learning;
-its <code class="docutils literal"><span class="pre">sender</span></code> is a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> that provides it with an
-<a class="reference internal" href="#LearningProjection.LearningProjection.errorSignal" title="LearningProjection.LearningProjection.errorSignal"><code class="xref py py-data docutils literal"><span class="pre">errorSignal</span></code></a>.  The LearningProjection uses its errorSignal to calculate a
-<a class="reference internal" href="#LearningProjection.LearningProjection.weightChangeMatrix" title="LearningProjection.LearningProjection.weightChangeMatrix"><code class="xref py py-data docutils literal"><span class="pre">weightChangeMatrix</span></code></a>, that is then applied to the
-<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter of the MappingProjection to which it
-projects.</p>
-<p><strong>MappingProjection</strong>: owner of the parameterState to which the LearningProjection projects, and of the
-<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> modified by learning.  It is assigned as the
+<p>The following components are required for learning
+(see <a class="reference internal" href="#learningprojection-simple-learning-figure"><span class="std std-ref">figure above</span></a>):</p>
+<p><strong>MappingProjection</strong>: owner of the <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> to be modified by
+learning, and of the corresponding parameterState to which the LearningProjection projects. It is referenced in the
 LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.mappingProjection" title="LearningProjection.LearningProjection.mappingProjection"><code class="xref py py-data docutils literal"><span class="pre">mappingProjection</span></code></a> attribute.</p>
-<p><strong>Error source</strong>: the ProcessingMechanism to which the
-<a class="reference internal" href="#LearningProjection.LearningProjection.mappingProjection" title="LearningProjection.LearningProjection.mappingProjection"><code class="xref py py-data docutils literal"><span class="pre">mappingProjection</span></code></a> projects.  Each
-<a class="reference internal" href="#LearningProjection.LearningProjection.errorSource" title="LearningProjection.LearningProjection.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> must project to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> that calculates
-the  <a class="reference internal" href="#LearningProjection.LearningProjection.errorSignal" title="LearningProjection.LearningProjection.errorSignal"><code class="xref py py-data docutils literal"><span class="pre">errorSignal</span></code></a> used by LearningProjection. By default, the
-<span class="xref std std-ref">primary outputState</span> of the errorSource projects to the MonitoringMechanism. However, a different
-outputState can be specified by including an entry with <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_LEARNING</span></code> as its key in a <code class="docutils literal"><span class="pre">params</span></code>
-dictionary for the errorSource, and assigning it a list with the desired outputState(s) as its value.  When a
-LearningProjection is :ref`created automatically &lt;LearningProjection_Automatic_Creation&gt;`, if its errorSource already
-has a projection to a MonitoringMechanism, then that mechanism is assigned as its <code class="docutils literal"><span class="pre">sender</span></code>; if its errorSource does
-not project to any MonitoringMechanism, then one of an appropriate type (see below) is created for it when the
-LearningProjection is created.</p>
+<p><strong>Error source</strong>: ProcessingMechanism to which the <a class="reference internal" href="#LearningProjection.LearningProjection.mappingProjection" title="LearningProjection.LearningProjection.mappingProjection"><code class="xref py py-data docutils literal"><span class="pre">mappingProjection</span></code></a>
+that is being learned projects;  it is the mechanism responsible for the component of the error that the associated
+LearningProjection tries to correct.  It is referenced by the LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.errorSource" title="LearningProjection.LearningProjection.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> attribute.  Each errorSource must project to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> (see below). By default, the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> of the
+errorSource projects to the MonitoringMechanism. However, a different outputState can be specified by including an
+entry with <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_LEARNING</span></code> as its key in a <code class="docutils literal"><span class="pre">params</span></code> dictionary for the errorSource, and assigning
+it a list with the desired outputState(s) as its value. When a LearningProjection is
+<a class="reference internal" href="#learningprojection-automatic-creation"><span class="std std-ref">created automatically</span></a>, if its errorSource already has a projection to a
+MonitoringMechanism, then that one is used; if its errorSource does not project to any MonitoringMechanism,
+then one of an appropriate type is created (see below) and assigned a MappingProjection from the errorSource.</p>
 <p><strong>Monitoring Mechanism</strong>: calculates the <a class="reference internal" href="#LearningProjection.LearningProjection.errorSignal" title="LearningProjection.LearningProjection.errorSignal"><code class="xref py py-data docutils literal"><span class="pre">errorSignal</span></code></a> used by the
-LearningProjection, and serves as its <code class="docutils literal"><span class="pre">sender</span></code>. The type of the MonitoringMechanism, and how it calculates its
-errorSignal, depend on the type of learning specified.   For <span class="xref std std-ref">Reinforcement Learning</span>, a
-<a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is used.  This receives a MappingProjection  directly from the errorSource, and receives
-a <strong>target</strong> stimulus from the process or system to which the errorSource belongs.  It calculates the errorSignal
-by comparing the output of the errorSource with a target stimulus provided as input to the process or system when it is
-<a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">run</span></a>.  For:ref:<cite>backpropagation &lt;LINK&gt;</cite>, the type of MonitoringMechanism depends on the errorSource.
-If the errorSource is a standalone mechanism (one not in a process or system), the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a
-standalone process (i.e., one not in a system), or the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a system, then a
-ComparatorMechanism is used.  As for Reinforcement Learning, this compares the output of the errorSource with a target
-stimulus to generate the errorSignal.  If the errorSource lies deeper in any process to which it belongs &#8211; that is,
-if it is an <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">INTERNAL</span></code> mechanism &#8211; then a <a class="reference internal" href="WeightedErrorMechanism.html"><span class="doc">WeightedErrorMechanism</span></a> mechanism is
-used.  This receives a MappingProjection carrying its error information from the MonitoringMechanism for the
-errorSource &#8220;above&#8221; it (i.e., the one to which it projects, and that is one closer to the target). It calculates
-its errorSignal by taking account of the contribution that its errorSource makes to the errorSignal of the next
-mechanism in the process or system.</p>
-<p id="learningprojection-target"><a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> <a href="#id1"><span class="problematic" id="id2">**</span></a>mechanism: this is a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> that
-receives the target from a process or system specified for learning.  The ComparatorMechanism receives a
-MappingProjection from the errorSource to its <code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> inputState, and a projection from the process or
-system to its <code class="xref std std-keyword docutils literal"><span class="pre">TARGET</span></code> inputState (that provides it with the target stimulus).  The MonitoringMechanism created
-for an errorSource using <span class="xref std std-ref">Reinforcement Learning</span> is always a
-<a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> mechanism (that is, it is always a ComparatorMechanism).
-For backpropagation, the status of a mechanism in a system takes precedence over its status in any of the proceses to
-which it belongs.  This means that, although all of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of
-a system are assigned ComparatorMechanisms that serve as <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a>
-mechanisms for the system, this <em>not</em> true for the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of all
-processes.  This is because a mechanism may be the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a
-process, but not of the system to which it belongs
+LearningProjection to reduce the errorSource&#8217;s contribution to the error; serves as the LearningProjection&#8217;s <code class="docutils literal"><span class="pre">sender</span></code>.
+The type of the MonitoringMechanism required, and how it calculates its errorSignal, depend on the type of learning
+specified. For <span class="xref std std-ref">Reinforcement Learning</span>, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is used.  This receives a
+MappingProjection directly from the errorSource, and receives a <strong>target</strong> stimulus from the process or system to
+which the errorSource belongs.  It calculates the errorSignal by comparing the output of the errorSource with a
+target stimulus provided as input to the process or system when it is <span class="xref std std-ref">run</span>.  For
+<span class="xref std std-ref">backpropagation</span>, the type of MonitoringMechanism depends on the errorSource. If the errorSource
+receives a target directly, then a ComparatorMechanism is used.  This is the case if the errorSource is a standalone
+mechanism (one not in a process or system), the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a standalone process (i.e., one not
+in a system), or the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a system.  However, if the errorSource lies deeper in any process
+to which it  belongs (i.e., it is an <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">INTERNAL</span></code> mechanism), and therefore does not
+receive a target directly, then a <a class="reference internal" href="WeightedErrorMechanism.html"><span class="doc">WeightedErrorMechanism</span></a> mechanism is used.  This receives a MappingProjection
+carrying its error information from the MonitoringMechanism for the errorSource &#8220;above&#8221; it (i.e., the one to which it
+projects, and that is one closer to the target), rather than from a target stimulu. It calculates its errorSignal by
+taking account of the contribution that its errorSource makes to the errorSignal of the next mechanism in the process
+or system.</p>
+<p><strong>LearningProjection</strong>:  this calculates the changes to the
+<a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter of the MappingProjection to which it
+projects (its <code class="docutils literal"><span class="pre">receiver</span></code>), so as to reduce the error generated by its
+<a class="reference internal" href="#LearningProjection.LearningProjection.errorSource" title="LearningProjection.LearningProjection.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>. It uses the
+<a class="reference internal" href="#LearningProjection.LearningProjection.errorSignal" title="LearningProjection.LearningProjection.errorSignal"><code class="xref py py-data docutils literal"><span class="pre">errorSignal</span></code></a> received from the
+<a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> that is its <code class="docutils literal"><span class="pre">sender</span></code> (and is associated with its errorSource).
+The changes to the weights it provides to its <code class="docutils literal"><span class="pre">receiver</span></code> are stored in its
+<a class="reference internal" href="#LearningProjection.LearningProjection.weightChangeMatrix" title="LearningProjection.LearningProjection.weightChangeMatrix"><code class="xref py py-data docutils literal"><span class="pre">weightChangeMatrix</span></code></a> attribute.</p>
+<p id="learningprojection-targets"><strong>TARGET mechanisms</strong>: When a process or system is created for which learning is specified, it identifies the learning
+mechanisms that will receive its <span class="xref std std-ref">targets</span> (specified in the call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code>
+method), and designates these as <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> mechanisms.
+All other learning mechanisms are designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">MONITORING</span></code></a>.
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> mechanisms must be ComparatorMechanisms;
+if backpropagation is used for learning, they must also be associated with (i.e., receive a projection from) a
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism.  It is important to note that, for this purpose,
+the status of a mechanism in a system takes precedence over its status in any of the processes to which it belongs.
+This means that, although all of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a system are
+associated with <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> mechanisms, this <em>not</em> necessarily true
+for the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process.  This is because a mechanism may be
+the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process, but not of the system to which it belongs
 (see <span class="xref std std-ref">figure below</span> for an example).  In such cases, the mechanism
-is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learning, and is <em>not</em> designated as a
+is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learning, and is designated as a
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.MONITORING" title="Keywords.Keywords.MONITORING"><code class="xref py py-data docutils literal"><span class="pre">MONITORING</span></code></a> mechanism and <em>not</em> a
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> mechanism.</p>
-<p id="learningprojection-target-vs-terminal-figure"><a href="#id3"><span class="problematic" id="id4">**</span></a>Figure: <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> and           <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a> Mechanisms in Learning</p>
-<blockquote>
-<div><div class="figure" id="id6">
+<blockquote id="learningprojection-target-vs-terminal-figure">
+<div><p><strong>TERMINAL</strong> and <strong>TARGET</strong> Mechanisms in Learning</p>
+<div class="figure" id="id2">
 <a class="reference internal image-reference" href="_images/LearningProjection_TERMINAL_vs_TARGET_fig.png"><img alt="Schematic of mechanisms and projections involved in learning" src="_images/LearningProjection_TERMINAL_vs_TARGET_fig.png" style="width: 4458.5px; height: 4583.5px;" /></a>
-<p class="caption"><span class="caption-text">Mechanism_3 is the <code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code> &lt;Keywords.Keywords.TERMINAL&gt;` mechanism for Process_A,
-However, it is also an <code class="xref py py-data docutils literal"><span class="pre">INTERNAL</span></code> &lt;Keywords.Keywords.INTERNAL&gt;` mechanism of Process_B,
-while Mechanism_4 is the <code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code> &lt;Keywords.Keywords.TERMINAL&gt;` mechanism for both Process_B
-and, critically, the system.  As a consequence, if backpropagation is used for learning, then Mechanism_4
-is assigned a ComparatorMechanism and designated as a
-<a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a>, but Mechanism_3 is <em>not</em>.
-Rather, it is assigned a WeightedErrorMechanism.  This means that, as long as Process_A is included as a process
-in system, it cannot be executed on its own with learning enabled (since it will have no
+<p class="caption"><span class="caption-text">Mechanism 3 is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for Process A,
+However, it is also an <a class="reference internal" href="Keywords.html#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref py py-data docutils literal"><span class="pre">INTERNAL</span></code></a> mechanism of Process B.
+Therefore, Mechanism 3 is designated as an <a class="reference internal" href="Keywords.html#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref py py-data docutils literal"><span class="pre">INTERNAL</span></code></a> mechanism for the
+system, and Mechanism 4 is its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism.
+As a consequence, if backpropagation is used for learning, then Mechanism 4 is assigned a ComparatorMechanism
+and designated as a <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a>, while Mechanism 3 is
+assigned a WeightedErrorMechanism and designated as a <a class="reference internal" href="Keywords.html#Keywords.Keywords.MONITORING" title="Keywords.Keywords.MONITORING"><code class="xref py py-data docutils literal"><span class="pre">MONITORING</span></code></a>
+mechanism.  This also means that, as long as Process A is specified as part of that system, it cannot be executed
+on its own with learning enabled (since it will have no
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.LEARNING_TARGET" title="Keywords.Keywords.LEARNING_TARGET"><code class="xref py py-data docutils literal"><span class="pre">LEARNING_TARGET</span></code></a>)</span></p>
 </div>
 </div></blockquote>
