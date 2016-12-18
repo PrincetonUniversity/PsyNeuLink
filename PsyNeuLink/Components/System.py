@@ -210,8 +210,8 @@ Learning
 ~~~~~~~~
 The system will execute learning for any process that specifies it.  Learning is executed for each process
 after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
-The stimuli (both inputs and targets for learning) used as inputs can be specified in one of two formats (list or
-dict), that are described in the :doc:`Run` module.  Both formats require that an input be provided for each
+The stimuli (both inputs and targets for learning) can be specified in one of two formats (list or dict),
+that are described in the :doc:`Run` module.  Both formats require that an input be provided for each
 :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
 :py:data:`originMechanisms <System_Base.originMechanisms>` attribute), and that a target be provided for each
 :py:data:`LEARNING_TARGET` <Keywords.Keywords.LEARNING_TARGET>` mechanism (listed in its
@@ -220,7 +220,7 @@ dict), that are described in the :doc:`Run` module.  Both formats require that a
 .. note::
    A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
    :py:data:`targetMechanism <System_Base.targetMechanisms>` of the system to which it belongs
-   (see :ref:`LearningProjection_Target`).
+   (see :ref:`LearningProjection_Targets`).
 
 .. _System_Execution_Control:
 
