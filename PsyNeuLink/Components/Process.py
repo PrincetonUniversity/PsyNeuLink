@@ -1734,13 +1734,13 @@ class Process_Base(Process):
                 # - mech is a ComparatorMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and
                 # - current process has learning specified
-                # then designate mech as a LEARNING_TARGET
+                # then designate mech as a TARGET
                 if (isinstance(mech, ComparatorMechanism) and
                         any(projection.sender.owner.processes[self] == TERMINAL
                             for projection in mech.inputStates[COMPARATOR_SAMPLE].receivesFromProjections) and
                         self.learning
                             ):
-                    mech_tuple[0].processes[self] = LEARNING_TARGET
+                    mech_tuple[0].processes[self] = TARGET
                 else:
                     mech_tuple[0].processes[self] = MONITORING
 

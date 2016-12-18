@@ -161,21 +161,21 @@ The changes to the weights it provides to its ``receiver`` are stored in its
 
 **TARGET mechanisms**: When a process or system is created for which learning is specified, it identifies the learning
 mechanism(s) that will receive its :ref:`targets <Run_Targets>` (specified in the call to its ``execute`` or ``run``
-method), and designates these as :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanisms.
+method), and designates these as :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms.
 These are listed in the process or system's :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute.
-All other learning mechanisms are designated as :py:data:`MONITORING <Keywords.Keywords.LEARNING_TARGET>`.
-:py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanisms must be ComparatorMechanisms;
+All other learning mechanisms are designated as :py:data:`MONITORING <Keywords.Keywords.TARGET>`.
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms must be ComparatorMechanisms;
 if backpropagation is used for learning, they must also be associated with (i.e., receive a projection from) a
 :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism.  It is important to note that, for this purpose,
 the status of a mechanism in a system takes precedence over its status in any of the processes to which it belongs.
 This means that, although all of the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanisms of a system are
-associated with :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanisms, this *not* necessarily true
+associated with :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms, this *not* necessarily true
 for the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism of a process.  This is because a mechanism may be
 the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism of a process, but not of the system to which it belongs
 (see :ref:`figure below <_LearningProjection_Target_vs_Terminal_Figure>` for an example).  In such cases, the mechanism
 is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learning, and is designated as a
 :py:data:`MONITORING <Keywords.Keywords.MONITORING>` mechanism and *not* a
-:py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanism.
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism.
 
 .. _LearningProjection_Target_vs_Terminal_Figure:
 
@@ -190,11 +190,11 @@ is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learn
        Therefore, Mechanism 3 is designated as an :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>` mechanism for the
        system, and Mechanism 4 is its :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism.
        As a consequence, if backpropagation is used for learning, then Mechanism 4 is assigned a ComparatorMechanism
-       and designated as a :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>`, while Mechanism 3 is
+       and designated as a :py:data:`TARGET <Keywords.Keywords.TARGET>`, while Mechanism 3 is
        assigned a WeightedErrorMechanism and designated as a :py:data:`MONITORING <Keywords.Keywords.MONITORING>`
        mechanism.  This also means that, as long as Process A is specified as part of that system, it cannot be executed
        on its own with learning enabled (since it will have no
-       :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>`)
+       :py:data:`TARGET <Keywords.Keywords.TARGET>`)
 
 .. _LearningProjection_Function:
 
