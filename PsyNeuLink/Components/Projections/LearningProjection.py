@@ -160,8 +160,9 @@ The changes to the weights it provides to its ``receiver`` are stored in its
 .. _LearningProjection_Targets:
 
 **TARGET mechanisms**: When a process or system is created for which learning is specified, it identifies the learning
-mechanisms that will receive its :ref:`targets <Run_Targets>` (specified in the call to its ``execute`` or ``run``
+mechanism(s) that will receive its :ref:`targets <Run_Targets>` (specified in the call to its ``execute`` or ``run``
 method), and designates these as :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanisms.
+These are listed in the process or system's :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute.
 All other learning mechanisms are designated as :py:data:`MONITORING <Keywords.Keywords.LEARNING_TARGET>`.
 :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanisms must be ComparatorMechanisms;
 if backpropagation is used for learning, they must also be associated with (i.e., receive a projection from) a
@@ -175,24 +176,6 @@ the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism of a process, but
 is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learning, and is designated as a
 :py:data:`MONITORING <Keywords.Keywords.MONITORING>` mechanism and *not* a
 :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanism.
-
-COMMENT:
-:py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` **mechanism: this is a :doc:`ComparatorMechanism` that
-receives the target from a process or system specified for learning.  The ComparatorMechanism receives a
-MappingProjection from the errorSource to its :keyword:`SAMPLE` inputState, and a projection from the process or
-system to its :keyword:`TARGET` inputState (that provides it with the target stimulus).  The MonitoringMechanism created
-for an errorSource using :ref:`Reinforcement Learning <LINK>` is always a
-:py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanism (that is, it is always a ComparatorMechanism).
-For backpropagation, the status of a mechanism in a system takes precedence over its status in any of the proceses to
-which it belongs.  This means that, although all of the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanisms of
-a system are assigned ComparatorMechanisms that serve as :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>`
-mechanisms for the system, this *not* true for the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanisms of all
-processes.  This is because a mechanism may be the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism of a
-process, but not of the system to which it belongs
-(see :ref:`figure below <_LearningProjection_Target_vs_Terminal_Figure>` for an example).  In such cases, the mechanism
-is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learning, and is *not* designated as a
-:py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>` mechanism.
-COMMENT
 
 .. _LearningProjection_Target_vs_Terminal_Figure:
 
@@ -228,14 +211,6 @@ errorSource  will generate an error.
 
 .. _LearningProjection_Terminal_vs_Target:
 
-
-COMMENT:
-#       TERMINAL MECHANISM vs. TARGET MECHANISM (COMPARATOR)
-#       NOTE CASE IN WHICH ONE LEARNING PROCESS TERMINATES ON THE INTERNAL MECHANISM OF ANOTHER
-#            (AND SO DOESN'T REQUIRE A TARGET LIST IN THE CALL TO RUN)
-#             THOUGH IT DOES REQUIRE A TARGET LIST FOR LEARNING IF RUN ON ITS OWN
-
-COMMENT
 
 MOVE TO ARGUMENTS SECTION??
 **Target(s)**.  This specifies the value with which the output of an
