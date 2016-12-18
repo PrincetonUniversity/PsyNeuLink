@@ -199,7 +199,8 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         the function used to compare :keyword:`COMPARATOR_SAMPLE` with :keyword:`COMPARATOR_TARGET`.
 
     comparison_operation : SUBTRACTION or DIVISION : default SUBTRACTION
-        determines the operation used by ``function`` to compare the :keyword:`SAMPLE` with :keyword:`TARGET`.
+        determines the operation used by ``function`` to compare the :keyword:`COMPARATOR_SAMPLE` with
+        :keyword:`_COMPARATOR_TARGET`.
         * :keyword:`SUBTRACTION`: :keyword:`COMPARATOR_TARGET` - :keyword:`COMPARATOR_SAMPLE`;
         * :keyword:`DIVISION`: :keyword:`COMPARATOR_TARGET` ÷ :keyword:`COMPARATOR_SAMPLE`.
 

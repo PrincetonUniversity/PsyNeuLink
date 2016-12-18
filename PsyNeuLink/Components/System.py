@@ -108,7 +108,7 @@ the role they play in a system:
 
     :py:data:`MONITORING <Keywords.Keywords.MONITORING>`: monitors value of another mechanism for use in learning;
 
-    :py:data:`LEARNING_TARGET <Keywords.Keywords.LEARNING_TARGET>`: ComparatorMechanism that monitors a
+    :py:data:`TARGET <Keywords.Keywords.TARGET>`: ComparatorMechanism that monitors a
     :keyword:`TERMINAL` mechanism of a process
 
     :py:data:`CONTROL <Keywords.Keywords.CONTROL>`: monitors the value of another mechanism used to control
@@ -214,7 +214,7 @@ The stimuli (both inputs and targets for learning) can be specified in one of tw
 that are described in the :doc:`Run` module.  Both formats require that an input be provided for each
 :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
 :py:data:`originMechanisms <System_Base.originMechanisms>` attribute), and that a target be provided for each
-:py:data:`LEARNING_TARGET` <Keywords.Keywords.LEARNING_TARGET>` mechanism (listed in its
+:py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism (listed in its
 :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).
 
 .. note::
@@ -589,7 +589,7 @@ class System_Base(System):
         contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
 
     targetMechanisms : MechanismList)
-        contains all LEARNING_TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
+        contains all TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
 
     COMMENT:
        IS THIS CORRECT:
@@ -1780,7 +1780,7 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :keyword:`TARGET_MECHANISMS`:list of LEARNING_TARGET mechanisms
+            :keyword:`TARGET_MECHANISMS`:list of TARGET mechanisms
 
             :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 

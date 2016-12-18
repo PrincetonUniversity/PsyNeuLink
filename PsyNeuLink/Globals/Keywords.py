@@ -24,7 +24,7 @@ class Keywords:
     TERMINAL : 'TERMINAL'
     SINGLETON : 'ORIGIN AND TERMINAL'
     MONITORING : 'MONITORING'
-    LEARNING_TARGET : 'TARGET'
+    TARGET : 'TARGET'
     """
     def __init__(self):
         self.ORIGIN = ORIGIN
@@ -34,7 +34,7 @@ class Keywords:
         self.TERMINAL = TERMINAL
         self.SINGLETON = SINGLETON
         self.MONITORING = MONITORING
-        self.LEARNING_TARGET = LEARNING_TARGET
+        self.TARGET = TARGET
 
 # parameter_keywords = set()
 
@@ -260,7 +260,7 @@ INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 MONITORING = 'MONITORING'
-LEARNING_TARGET = 'TARGET'
+TARGET = 'TARGET'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
