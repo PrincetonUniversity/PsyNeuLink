@@ -51,8 +51,8 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 ComparatorMechanism = 'ComparatorMechanism'
 
 # ComparatorMechanism parameter keywords:
-SAMPLE = "comparatorSampleSource"
-TARGET = "comparatorTargetSource"
+COMPARATOR_SAMPLE = "comparatorSampleSource"
+COMPARATOR_TARGET = "comparatorTargetSource"
 COMPARISON_OPERATION = "comparison_operation"
 
 # ComparatorMechanism outputs (used to create and name outputStates):

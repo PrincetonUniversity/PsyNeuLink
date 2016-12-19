@@ -6,7 +6,7 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Run import run, _construct_inputs
+from PsyNeuLink.Globals.Run import run, _construct_stimulus_sets
 
 
 # Preferences:

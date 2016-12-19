@@ -303,12 +303,12 @@ class ControlProjection(Projection_Base):
     name : str : default ControlProjection-<index>
         a string used for the name of the ControlProjection.
         If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the PreferenceSet for the ControlProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -392,13 +392,13 @@ class ControlProjection(Projection_Base):
         the name of the ControlProjection.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the PreferenceSet for projection.
         Specified in the prefs argument of the call to create the projection;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     """

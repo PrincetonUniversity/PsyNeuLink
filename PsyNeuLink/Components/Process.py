@@ -45,8 +45,8 @@ also be specified for the entire process, in which case the projections between 
 Creating a Process
 ------------------
 
-Processes are created by calling the :py:func:`process` method.  If no arguments are provided,
-a process with a single default mechanism will be returned (see [LINK] for default] for default mechanism).
+Processes are created by calling the :py:func:`process` function.  If no arguments are provided, a process with a
+single :ref:`default mechanism <LINK>` will be created.
 
 .. _Process_Structure:
 
@@ -171,9 +171,10 @@ The output of a process is a 2D np.array containing the values of its :keyword:`
 Learning
 ~~~~~~~~
 
-Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for the projection to a particular mechanism in a process, or for the entire process.
-It is specified for a particular mechanism by including a
+Learning modifies projections between mechanisms in a process's :py:data:`pathway <Process_Base.pathway>`,
+so that a given input produces a specified output ("target").  Learning occurs when mechanism(s) or process(es)
+for which it has been specified are executed. Learning can be configured for the projection to a particular mechanism
+in a process, or for the entire process. It is specified for a particular mechanism by including a
 :ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
 to that mechanism.  It is specified for the entire process by assigning to its ``learning`` argument either a
 LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
@@ -190,10 +191,15 @@ When learning is specified, the following objects are automatically created (see
 * :doc:`LearningProjection` from the MonitoringMechanism to the projection being learned
   (i.e., the one that projects to the mechanism being monitored).
 
-Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation[LINK]), that will
-implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
-specified type of learning.  However, as noted above, all mechanisms that receive projections being learned must
-be compatible with learning.
+Different learning algorithms can be specified (e.g.,
+:py:class:`Reinforcement <Function.Reinforcement>`, :py:class:`Backpropagation <Function.BackPropagation>`),
+that will implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals
+required for the specified type of learning. However, as noted above, all mechanisms that receive projections being
+learned must be compatible with learning.
+
+When a process -- or any of its mechanisms -- is specified for learning, then a set of
+:ref:`target values <Run_Targets>` must be provided (along with the inputs) as an argument in its
+:py:meth:`execute <Process_Base.execute>` or :py:meth:`run <Process_Base.run>` method.
 
 .. _Process_Learning_Figure:
 
@@ -451,7 +457,7 @@ def process(process_spec=None,
         eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
-        the value assigned to the :keyword:`TARGET` inputState of a :doc:`MonitoringMechanism` to which a
+        the value assigned to the :keyword:`COMPARATOR_TARGET` inputState of a :doc:`MonitoringMechanism` to which a
         :keyword:`TERMINAL` mechanism of a process or system projects (used for :ref:`learning <Process_Learning>`).
         It must be the same length as the :keyword:`TERMINAL` mechanism's output.
 
@@ -672,9 +678,15 @@ class Process_Base(Process):
 
       .. _origin_mech_tuples : List[MechanismTuple]
              Contains a tuple for the :keyword:`ORIGIN` mechanism of the process.
+             (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _terminal_mech_tuples : List[MechanismTuple]
              Contains a tuple for the :keyword:`TERMINAL` mechanism of the process.
+             (Note:  the use of a list is for compatibility with the MechanismList object)
+
+      .. _target_mech_tuples : List[MechanismTuple]
+             Contains a tuple for the :keyword:`TARGET` mechanism of the process.
+             (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _monitoring_mech_tuples : List[MechanismTuple]
              :py:class:`MechanismTuples <Mechanism.MechanismTuples>` for all :doc:`MonitoringMechanisms` in the
@@ -693,13 +705,17 @@ class Process_Base(Process):
         a list of the mechanisms in the process.
 
     originMechanisms : MechanismList
-        a list of the :keyword:`ORIGIN` mechanism of the process.
+        a list with the :keyword:`ORIGIN` mechanism of the process.
+        (Note:  a process can have only one :keyword:`TERMINAL` mechanism; the use of a list is for compatibility with
+        methods that are also used for systems.)
 
         .. based on _origin_mech_tuples
            process.input contains the input to :keyword:`ORIGIN` mechanism.
 
     terminalMechanisms : MechanismList
-        a list of the :keyword:`TERMINAL` mechanism of the process.
+        a list with the :keyword:`TERMINAL` mechanism of the process.
+        (Note:  a process can have only one :keyword:`TERMINAL` mechanism; the use of a list is for compatibility with
+        methods that are also used for systems.)
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of :keyword:`TERMINAL` mechanism.
@@ -708,6 +724,14 @@ class Process_Base(Process):
         a list of all of the monitoring mechanisms in the process.
 
         .. based on _monitoring_mech_tuples
+
+    targetMechanisms : MechanismList
+        a list with the :keyword:`TARGET` mechanism of the process.
+        (Note:  a process can have only one :keyword:`TARGET` mechanism; the use of a list is for compatibility with
+        methods that are also used for systems.)
+
+        .. based on _target_mech_tuples
+           system.ouput contains the output of :keyword:`TERMINAL` mechanism.
 
     systems : List[System]
         a list of the systems to which the process belongs.
@@ -747,13 +771,13 @@ class Process_Base(Process):
         the name of the process.
         Specified in the name argument of the call to create the process;
         if not is specified, a default is assigned by ProcessRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
         the PreferenceSet for the process.
         Specified in the prefs argument of the call to create the process;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details).[LINK]
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     """
@@ -943,6 +967,7 @@ class Process_Base(Process):
         pathway = self.paramsCurrent[PATHWAY]
         self._mech_tuples = []
         self._monitoring_mech_tuples = []
+        self._target_mech_tuples = []
 
         self._standardize_config_entries(pathway=pathway, context=context)
 
@@ -985,7 +1010,7 @@ class Process_Base(Process):
 
         self._allMechanisms = MechanismList(self, self._mech_tuples)
         self.monitoringMechanisms = MechanismList(self, self._monitoring_mech_tuples)
-
+        self.targetMechanisms = MechanismList(self, self._target_mech_tuples)
 
     def _standardize_config_entries(self, pathway, context=None):
 
@@ -1705,8 +1730,27 @@ class Process_Base(Process):
                 parameter_state._deferred_init()
                 self._instantiate__deferred_init_projections(parameter_state.receivesFromProjections)
 
-        # Add _monitoring_mech_tuples to _mech_tuples for execution
+        # Label monitoring mechanisms and add _monitoring_mech_tuples to _mech_tuples for execution
         if self._monitoring_mech_tuples:
+
+            # Add designations to newly created MonitoringMechanisms:
+            for mech_tuple in self._monitoring_mech_tuples:
+                mech = mech_tuple[OBJECT]
+                # If
+                # - mech is a ComparatorMechanism, and
+                # - the mech that projects to mech is a TERMINAL for the current process, and
+                # - current process has learning specified
+                # then designate mech as a TARGET
+                if (isinstance(mech, ComparatorMechanism) and
+                        any(projection.sender.owner.processes[self] == TERMINAL
+                            for projection in mech.inputStates[COMPARATOR_SAMPLE].receivesFromProjections) and
+                        self.learning
+                            ):
+                    mech_tuple[0].processes[self] = TARGET
+                else:
+                    mech_tuple[0].processes[self] = MONITORING
+
+            # Add _monitoring_mech_tuples to _mech_tuples
             self._mech_tuples.extend(self._monitoring_mech_tuples)
 
             # IMPLEMENTATION NOTE:
@@ -1822,7 +1866,8 @@ class Process_Base(Process):
 
         else:
             self.comparatorMechanism = comparators[0]
-            self.comparatorMechanism.processes[self] = ComparatorMechanism
+            self._target_mech_tuples.append(MechanismTuple(comparators[0], None, None))
+            # self.comparatorMechanism.processes[self] = ComparatorMechanism
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".
                       format(self.comparatorMechanism.name, self.name))
@@ -1837,7 +1882,7 @@ class Process_Base(Process):
         target = np.atleast_1d(self.target)
 
         # Create ProcessInputState for target and assign to comparatorMechanism's target inputState
-        comparator_target = self.comparatorMechanism.inputStates[TARGET]
+        comparator_target = self.comparatorMechanism.inputStates[COMPARATOR_TARGET]
 
         # Check that length of process' target input matches length of comparatorMechanism's target input
         if len(target) != len(comparator_target.variable):
@@ -1847,7 +1892,7 @@ class Process_Base(Process):
         target_input_state = ProcessInputState(owner=self,
                                                 variable=target,
                                                 prefs=self.prefs,
-                                                name=TARGET)
+                                                name=COMPARATOR_TARGET)
         self.targetInputStates.append(target_input_state)
 
         # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
