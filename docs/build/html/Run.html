@@ -92,11 +92,12 @@
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Run</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#timing">Timing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inputs">Inputs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#targets">Targets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#initial-values">Initial Values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Targets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Targets</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
@@ -152,11 +153,12 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Run</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#timing">Timing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inputs">Inputs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#targets">Targets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#initial-values">Initial Values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Targets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Targets</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
@@ -168,50 +170,62 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal"><span class="pre">run</span></code> function is used for executing a mechanism, process or system.  It can be called directly, however,
 it is typically invoked by calling the <code class="docutils literal"><span class="pre">run</span></code> method of the object to be run.  It  executes an object by calling the
-object&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method.  While an object&#8217;s execute method can be called directy, using <code class="docutils literal"><span class="pre">run</span></code> is much easier
-because it:</p>
+object&#8217;s <code class="docutils literal"><span class="pre">execute</span></code> method.  While an object&#8217;s execute method can be called directy, using its <code class="docutils literal"><span class="pre">run</span></code> method is much
+easier because it:</p>
 <blockquote>
 <div><ul class="simple">
 <li>allows multiple rounds of execution to be run in sequence; the <code class="docutils literal"><span class="pre">execute</span></code> method of an object
 runs only a single execution of the object);</li>
-<li>uses simpler formats for specifying inputs (see below);</li>
-<li>manages timing factors (such as updating the <code class="docutils literal"><span class="pre">CentralClock</span></code> and presenting inputs at the correct time
-for execution (see below).</li>
-<li>automatically aggregates results across executions and stores these in the results attribute of the object.</li>
 </ul>
+<ul class="simple">
+<li>uses simpler formats for specifying <a class="reference internal" href="#run-inputs"><span class="std std-ref">inputs</span></a> and <span class="xref std std-ref">targets</span>;</li>
+</ul>
+<ul class="simple">
+<li>manages timing factors (such as updating the <a class="reference internal" href="TimeScale.html#TimeScale.CentralClock" title="TimeScale.CentralClock"><code class="xref py py-class docutils literal"><span class="pre">CentralClock</span></code></a> and presenting</li>
+</ul>
+<p>inputs in the correct <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase of execution</span></a> of a system.
+..
+* automatically aggregates results across executions and stores them in the results attribute of the object.</p>
 </div></blockquote>
-<p>There are a few concepts to understand that will help in using the <code class="docutils literal"><span class="pre">run</span></code> function.  These are discussed below.</p>
+<p>Understanding a few basic concepts about how the <code class="docutils literal"><span class="pre">run</span></code> function operates will make it easier to use the <code class="docutils literal"><span class="pre">execute</span></code>
+and <code class="docutils literal"><span class="pre">run</span></code> methods of PsyNeuLink objects.  These are discussed below.</p>
+<div class="section" id="scope-of-execution">
+<h3>Scope of Execution<a class="headerlink" href="#scope-of-execution" title="Permalink to this headline">¶</a></h3>
+<p>When the <code class="docutils literal"><span class="pre">run</span></code> method of an object is called, it executes that object and all others within its scope of execution.
+For a mechanism [LINK], the scope of execution is simply that mechanism.  For a process [LINK], the scope of execution
+is all of the mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> parameter.  For a
+<a class="reference internal" href="System.html"><span class="doc">system</span></a>, the scope of execution is all of the mechanisms in the processes specified in the system&#8217;s
+<a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref py py-data docutils literal"><span class="pre">processes</span></code></a> parameter.</p>
+</div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
-<p>When <code class="docutils literal"><span class="pre">run</span></code> is called, it executes objects within the scope of execution.  For a mechanism [LINK], the scope of
-execution is simply that mechanism.  For a process [LINK], the scope of execution is all of the mechanisms specified
-in its <code class="docutils literal"><span class="pre">pathway</span></code> [LINK] parameter.  For a system [LINK], the scope of execution is all of the mechanisms in the
-processes specified in the system&#8217;s <code class="docutils literal"><span class="pre">processes</span></code> parameter.</p>
-<p>PsyNeuLink supports two time scales for executing objects:<code class="docutils literal"><span class="pre">time_step</span></code> and <code class="docutils literal"><span class="pre">trial</span></code>.  Every mechanism in
-PsyNeuLink defines its execution at one or both of these time scales, and its current mode of execution can be set
-using its <code class="docutils literal"><span class="pre">TimeScale</span></code> [LINK] parameter.</p>
+<p>PsyNeuLink supports two time scales for executing objects: <code class="xref py py-data docutils literal"><span class="pre">TIME_STEP</span></code> and
+<code class="xref py py-data docutils literal"><span class="pre">TRIAL</span></code>.  Every mechanism defines how it is executed at one or both of these time
+scales, and its current mode of execution is determined by its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.timeScale" title="Mechanism.Mechanism_Base.timeScale"><code class="xref py py-data docutils literal"><span class="pre">timeScale</span></code></a> parameter.</p>
 <ul class="simple">
-<li><strong>time_step</strong>:  this mode of execution is a mechanism&#8217;s closest approximation to continuous, or &#8220;real time&#8221;
-processing.  Execution of a time_step is defined as a single execution of all objects in the scope of
-execution for at their time_step time scale.  Mechanisms called upon to execute a time_step that do not support
-that time scale of execution have the option of generating an exception, being ignored, or providing their trial
-mode response, either on the first time_step, every time_step, or the last time_step in the sequence being run
-(see Timing [LINK] for further details).</li>
-<li><strong>trial</strong>: this mode of execution is defined as the &#8220;ballistic&#8221; execution of a mechanism to a state that would
-have been achieved with time_step execution to a specified criterion.  The criterion can be specified in terms of
-the number of time_steps, or a condition to be met by the mechanism&#8217;s output.  It is up to the mechanism how it
-implements its trial mode of execution (i.e., whether this is done by internal numerical iteration or an analytic
-calculation). A trial of execution is defined as the execution of a trial of all of the objects in the scope of
-execution.</li>
+<li><code class="xref py py-data docutils literal"><span class="pre">TIME_STEP</span></code>:  this mode of execution is a mechanism&#8217;s closest approximation
+to continuous, or &#8220;real time&#8221; processing.  Execution of a time_step is defined as a single execution of all objects
+in the scope of execution at their time_step time scale.  Mechanisms called upon to execute a time_step that do
+not support that time scale of execution have the option of generating an exception, being ignored, or providing
+their trial mode response, either on the first time_step, every time_step, or the last time_step in the sequence
+being run (see :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>Timing &lt;LINK&gt; for further details).</li>
+<li><code class="xref py py-data docutils literal"><span class="pre">TIME_STEP</span></code>: this mode of execution is the &#8220;ballistic&#8221; execution of a
+mechanism to a state that would have been achieved with time_step execution to a specified criterion.  The
+criterion can be specified in terms of the number of time_steps, or a condition to be met by the mechanism&#8217;s
+output.  It is up to the mechanism how it implements its trial mode of execution (i.e., whether this is done by
+internal numerical iteration or an analytic calculation). Execution of a trial is defined as the execution of a
+trial of all of the objects in the scope of execution.</li>
 </ul>
-<p>The TimeScale argument to <code class="docutils literal"><span class="pre">run</span></code> determines the time scale for each round of execution: a time_step or a trial.
-When a process is run, each  mechanism is executed in the order that it appears in the <code class="docutils literal"><span class="pre">pathway</span></code> parameter of the
-process, once per round of execution.  When a system is run, the order of execution is determined by the system&#8217;s `
-<cite>executionList`</cite>, which is based on a graph analysis of the system&#8217;s processes that determines the dependencies
-among its mechanisms (both within and  between processes). Execution of the mechanisms in a system also depends on
-the <code class="docutils literal"><span class="pre">phaseSpec</span></code> of each mechanism: this determines <em>when</em> in an execution sequence it should be run.  The
-<code class="docutils literal"><span class="pre">CentralClock``[LINK]</span> <span class="pre">is</span> <span class="pre">used</span> <span class="pre">to</span> <span class="pre">control</span> <span class="pre">timing,</span> <span class="pre">so</span> <span class="pre">executing</span> <span class="pre">a</span> <span class="pre">system</span> <span class="pre">requires</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">``CentralClock</span></code>
-be appropriately updated.</p>
+<p>The <code class="docutils literal"><span class="pre">time_scale</span> <span class="pre">argument</span></code> of an <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> method determines the time scale for each round of
+execution: a time_step or a trial.  When a process is run, each mechanism is executed in the order that it appears
+in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> parameter of the process, once per round of execution.  When a
+system is run, the order of execution is determined by the system&#8217;s
+<a class="reference internal" href="System.html#System.System_Base.executionList" title="System.System_Base.executionList"><code class="xref py py-data docutils literal"><span class="pre">executionList</span></code></a> parameter, which is based on the system&#8217;s
+<a class="reference internal" href="System.html#system-graph"><span class="std std-ref">graph</span></a> (a list of the dependencies among all of the mechanisms in the system).  Execution of the
+mechanisms in a system also depends on the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.phaseSpec" title="Mechanism.Mechanism_Base.phaseSpec"><code class="xref py py-data docutils literal"><span class="pre">phaseSpec</span></code></a> of each mechanism:
+this determines <em>when</em> in an execution sequence it should be executed. The py:class:<cite>CentralClock
+&lt;TimeScale.CentralClock&gt;</cite> is used to control timing, so executing a system requires that it be appropriately updated.</p>
 <p>The <code class="docutils literal"><span class="pre">run</span></code> function handles all of the above factors automatically.</p>
 </div>
 <div class="section" id="inputs">
@@ -273,7 +287,7 @@ axis 3 for the input to each inputState of a mechanism.  Note that if <em>any</e
 one of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms of a process or system) has more than one inputState, then an axis must be
 committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
 (i.e., even for those mechanisms that have a single inputState).</p>
-<div class="figure align-center" id="id3">
+<div class="figure align-center" id="id5">
 <a class="reference internal image-reference" href="_images/Sequence_format_input_specs_fig.png"><img alt="Example input specifications in sequence format" src="_images/Sequence_format_input_specs_fig.png" style="width: 1553.25px; height: 1622.25px;" /></a>
 <p class="caption"><span class="caption-text">Example input specifications in sequence format</span></p>
 </div>
@@ -288,7 +302,7 @@ item of the list to specify the inputs for each of the mechanism&#8217;s inputSt
 used, axis 0 is used for the sequence of rounds. If the mechanism has a single inputState, then axis 1 is used for
 the input for each round.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates,
 and axis 2 is used for the input to each inputState for each round.</p>
-<div class="last figure align-center" id="id4">
+<div class="last figure align-center" id="id6">
 <img alt="Mechanism format input specification" src="_images/Mechanism_format_input_specs_fig.png" />
 <p class="caption"><span class="caption-text">Mechanism format input specification</span></p>
 </div>
@@ -310,8 +324,8 @@ initial value.  The size of the input (length of the outermost level if it is a 
 must equal the number of inputStates of the mechanism, and the size of each value must match that of the variable
 for the corresponding inputState.</p>
 </div>
-<div class="section" id="id1">
-<span id="id2"></span><h3>Targets<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<span id="id4"></span><h3>Targets<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>If a process or system uses learning, then target values must be provided (in the <code class="docutils literal"><span class="pre">targets</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>).
 Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
 level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
@@ -322,7 +336,7 @@ must match that of the corresponding item of the target inputState for the monit
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10d8d4f98&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10d8d4cc0&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10d8e1d30&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10da6a550&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10da6a240&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10d6b3278&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10da87a20&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10da87ba8&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10da87b70&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10da87c18&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10d847358&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10d847390&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10dab8cf8&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10daa81d0&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10daa8b70&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10daa86a0&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10daa8b00&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10d7f59e8&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10dae0588&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10dae05c0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <blockquote>
 <div><dl class="docutils">

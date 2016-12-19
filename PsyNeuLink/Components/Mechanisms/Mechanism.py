@@ -67,10 +67,11 @@ Creating a Mechanism
 --------------------
 
 Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
-constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a  :any:`mechanism` "factory"
-method that can be used to instantiate a specified type of mechanism or a  default mechanism (see [LINK]).
-Mechanisms can also be specified "in context," for example in the :py:data:`pathway <Process.Process_Base.pathway>`
-attribute of a process.  This can be done in either of the ways mentioned above, or one of the following ways:
+constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a
+:py:func:`mechanism <Mechanism.mechanism>` function that can be used to instantiate a specified type of mechanism or
+a default mechanism. Mechanisms can also be specified "in context," for example in the
+:py:data:`pathway <Process.Process_Base.pathway>` attribute of a process.  This can be done in either of the ways
+mentioned above, or one of the following ways:
 
   * name of an **existing mechanism**;
   ..
@@ -82,7 +83,7 @@ attribute of a process.  This can be done in either of the ways mentioned above,
 
       * :keyword:`MECHANISM_TYPE`: <name of a mechanism type>
 
-          if this entry is absent, a default mechanism will be created (see [LINK]: Mechanism_Base.defaultMechanism)
+          if this entry is absent, a :ref:`default mechanism <LINK> will be created.
 
       * <name of argument>:<value>
 
@@ -193,9 +194,9 @@ values received from its projections (usually by summing them), and assigns the 
 
 .. _Mechanism_Variable:
 
-The value of each inputState for the mechanism is placed in an item of the mechanism's ``variable`` attribute
-(a 2d np.array), as well as in a corresponding item of its :py:data:`inputValue <Mechanism_Base.inputValue>` attribute
-(a list).  The ``variable`` provides the input to the mechanism's ``function``.
+The value of each inputState for the mechanism is assigned as the value of an item of the mechanism's ``variable``
+attribute (a 2d np.array), as well as in a corresponding item of its :py:data:`inputValue <Mechanism_Base.inputValue>`
+attribute (a list).  The ``variable`` provides the input to the mechanism's ``function``.
 
 COMMENT:
 Therefore, the number of inputStates for the mechanism must match the number of tems specified for the mechanism's
@@ -652,13 +653,13 @@ class Mechanism_Base(Mechanism):
         the name of the mechanism.
         Specified in the name argument of the call to create the mechanism;  if not is specified,
         a default is assigned by MechanismRegistry based on the mechanism's subclass
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the PreferenceSet for the mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details).[LINK]
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
         .. _stateRegistry : Registry
                registry containing dicts for each state type (InputState, OutputState and ParameterState) with instance

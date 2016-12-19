@@ -168,7 +168,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    default_input_value : number, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         the input to the mechanism to use if none is provided in a call to its
         :py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
@@ -178,7 +178,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
 
-    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    initial_value :  value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         specifies the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
@@ -207,12 +207,12 @@ class TransferMechanism(ProcessingMechanism_Base):
     name : str : default TransferMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     .. context=componentType+INITIALIZING):
             context : str : default ''None''
@@ -226,7 +226,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    variable : value: default :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         the input to mechanism's ``function``.
 
     function : Function :  default Linear
@@ -259,13 +259,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the PreferenceSet for mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 

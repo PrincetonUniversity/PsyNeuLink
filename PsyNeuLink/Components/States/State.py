@@ -39,8 +39,9 @@ Creating a State
 ----------------
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, and/or through specification in context (e.g., when specifying
-the parameters of a mechanism's function to be controlled [LINK], or MappingProjections to be learned [LINK]).
+automatically by the objects to which they belong, and/or through specification in context (e.g., when
+:ref:`specifying the parameters <ParameterState_Specifying_Parameters>` of a mechanism or its function to be controlled,
+or :ref:`MappingProjections to be learned <MappingProjection_Tuple_Specification>).
 
 Structure
 ---------
@@ -256,7 +257,7 @@ class State_Base(State):
         the name of the state.
         Specified in the name argument of the call to create the state;  if not is specified,
         a default is assigned by StateRegistry based on the states's subclass
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
             Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
@@ -268,7 +269,7 @@ class State_Base(State):
         the PreferenceSet for the state.
         Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 

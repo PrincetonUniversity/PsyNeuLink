@@ -321,7 +321,7 @@ class EVCMechanism(ControlMechanism_Base):
         system : System
             system for which the EVCMechanism is the controller;  this is a required parameter.
 
-        default_input_value : Optional[number, list or np.ndarray] : ``defaultControlAllocation`` [LINK]
+        default_input_value : Optional[number, list or np.ndarray] : :py:data:`defaultControlAllocation <LINK]>`
 
     COMMENT
 
@@ -372,12 +372,12 @@ class EVCMechanism(ControlMechanism_Base):
     name : str : default EVCMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
         the PreferenceSet for the mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------

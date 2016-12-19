@@ -2,8 +2,15 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
+# DOCUMENTATION: replace ``variable`` with
+#                    :py:data:`variable <Module.variable>` or
+#                    :py:data:`variable <Component.variable>`
+#                same for ``function`` and ``value``
 
 # FIX: ADD ERROR MESSAGE IF MECHANISM REFERENCED IN KEY OF TARGET DICT (FOR run()) IS AN INTERNAL MECHANISM VS. MISSING
+# DOCUMENTATION: LINK FIST APPEARANCE OF :keyword:'ORIGIN` and :keyword:'TERMINAL` TO Keywords.Keywords IN A SECTION
+#                AND THEN JUST CAPITALIZE ALL REMAINING MENTIONS
 
 # SYSTEM LEARNING:
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
@@ -42,7 +49,7 @@
 
 # IMPLEMENT: OutputStates:
     # COMMENT:
-    #     OutputStates can also be added by using the assign_output_state method [LINK].
+    #     OutputStates can also be added by using the :py:func:`assign_output_state <OutputState.assign_output_state>`.
     # COMMENT
 
 # IMPLEMENT: System.monitoredOutputStates:
@@ -1347,7 +1354,7 @@
 
 # Dereference variable values
 #   Example (line 295 in DDM):
-#      default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+#      default_input_value : value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 # Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
 # How to underline?
 # Why does adding ": default _______ " to parameter specification suppress italicization??
