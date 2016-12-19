@@ -87,8 +87,8 @@ during the execution of the affected mechanisms (see :ref:`System_Execution` bel
 Mechanisms
 ~~~~~~~~~~
 
-Mechanisms are assigned the following designations based on the position they occupy in the graph structure and/or
-the role they play in a system:
+The mechanisms in a system are assigned the following designations based on the position they occupy in the graph
+structure and/or the role they play in a system:
 
     COMMENT:
         DOCUMENTATION: MAKE EACH :keyword:`<KEYWORD>` AN ATTRIBUTE OF A CLASS OF KEYWORDS WHERE THEY ARE DESCRIBED.
@@ -1673,8 +1673,8 @@ class System_Base(System):
         DICT_OUTPUT = ()
 
     def show(self, options=None):
-        """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms,
-        ``outputs`` and their labels for the system.
+        """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN`, :keyword:`TERMINAL` mechanisms,
+        :keyword:`TARGET` mechahinsms, ``outputs`` and their labels for the system.
 
         Arguments
         ---------

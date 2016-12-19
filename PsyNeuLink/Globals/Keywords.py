@@ -17,14 +17,66 @@ class Keywords:
     Attributes
     ----------
 
-    ORIGIN : 'ORIGIN`
-    INTERNAL : 'INTERNAL'
-    CYCLE : 'CYCLE'
-    INITIALIZE_CYCLE : 'INITIALIZE_CYCLE'
-    TERMINAL : 'TERMINAL'
-    SINGLETON : 'ORIGIN AND TERMINAL'
-    MONITORING : 'MONITORING'
-    TARGET : 'TARGET'
+    ORIGIN
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
+        and that receives the input to the process or system when it is :ref:`executed or run <Run>`.  A process may
+        have only one :keyword:`ORIGIN` mechanism, but a system may have many.  Note that the :keyword:`ORIGIN`
+        mechanism of a process is not necessarily an :keyword:`ORIGIN` of the system to which it belongs, as it may
+        receive projections from other processes in the system. The :keyword:`ORIGIN` mechanisms of a process or
+        system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
+        method.  For additional details about :keyword:`ORIGIN` mechanisms in processes, see
+        :ref:`Process Mechanisms <Process_Mechanisms>` and
+        :ref:`Process Input and Output <Process_Input_And_Ouput>`; and for systems see
+        :ref:`System Mechanisms <System_Mechanisms>` and
+        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    INTERNAL
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+
+    CYCLE
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is *not* an :py:data:`ORIGIN <Keywords.ORIGIN>`
+        mechanism, and receives a projection that closes a recurrent loop in a process and/or system.  If it is an
+        :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism, then it is designated as an
+        :py:data:`INITIALIZE_CYCLE  <Keywords.INITIALIZE_CYCLE>` mechanism.
+
+    INITIALIZE_CYCLE
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the ``sender`` of a projection that closes a loop in
+        a process or system, and that is not an :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism.  An
+        :ref:`initial value  <Run_InitialValues>` can be assigned to such mechanisms, that will be used to initialize
+        the process or system when it is first run.  For additional information, see :ref:`Run <Run_Initial_Values>`,
+        :ref:`System Mechanisms <System_Mechanisms>` and
+        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    TERMINAL
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
+        that provides the output to the process or system when it is :ref:`executed or run <Run>`.  A process may
+        have only one :keyword:`TERMINAL` mechanism, but a system may have many.  Note that the :keyword:`TERMINAL`
+        mechanism of a process is not necessarily a :keyword:`TERMINAL` mechanism of the system to which it belongs,
+        as it may send projections to other processes in the system.  The :keyword:`TERMINAL` mechanisms of a process
+        or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details about :keyword:`TERMINAL` mechanisms in processes, see
+        :ref:`Process_Mechanisms` and :ref:`Process_Input_And_Ouput`; and for systems see :ref:`System_Mechanisms`.
+
+    SINGLETON
+        A :doc:`ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
+        of an :py:data:`ORIGIN <Keywords.ORIGIN>` and/or a :py:data:`TERMINAL <Keywords.TERMINAL>` mechanism.
+
+    MONITORING
+        A :doc:`MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a TARGET; that is, it
+        is associated with an :py:data:`INTERNAL <Keywords.INTERNAL>` rather than a :py:data:`TERMINAL
+        <Keywords.TERMINAL>` ProcessingMechanism in the process and/or system to which it belongs. For
+        :py:class:`backpropagation <Function.BackPropagation>` learning, it is a :doc:WeightedErrorMechanism.
+        See :ref:`MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
+
+    TARGET
+        A :doc:`ComparatorMechanism <ComparatorMechanism>` of a process and/or system configured for learning that
+        receives a target value from its ``execute`` or ``run`` method.  It must be associated with the
+        :py:data:`TERMINAL <Keyword.TERMINAL>` mechanism of the process or system. The :keyword:`TARGET` mechanisms of
+        a process or system are listed in its :keyword:`targetMechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details, see :ref:`TARGET mechanisms <LearningProjection_Targets>`
+        and specifying :ref:`target values <Run_Targets>`.
+
+
     """
     def __init__(self):
         self.ORIGIN = ORIGIN

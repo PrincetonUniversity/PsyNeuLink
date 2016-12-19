@@ -171,9 +171,10 @@ The output of a process is a 2D np.array containing the values of its :keyword:`
 Learning
 ~~~~~~~~
 
-Learning modifies projections so that the input to a given mechanism generates a desired output ("target").
-Learning can be configured for the projection to a particular mechanism in a process, or for the entire process.
-It is specified for a particular mechanism by including a
+Learning modifies projections between mechanisms in a process's :py:data:`pathway <Process_Base.pathway>`,
+so that a given input produces a specified output ("target").  Learning occurs when mechanism(s) or process(es)
+for which it has been specified are executed. Learning can be configured for the projection to a particular mechanism
+in a process, or for the entire process. It is specified for a particular mechanism by including a
 :ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
 to that mechanism.  It is specified for the entire process by assigning to its ``learning`` argument either a
 LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
@@ -195,6 +196,10 @@ Different learning algorithms can be specified (e.g.,
 that will implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals
 required for the specified type of learning. However, as noted above, all mechanisms that receive projections being
 learned must be compatible with learning.
+
+When a process -- or any of its mechanisms -- is specified for learning, then a set of
+:ref:`target values <Run_Targets>` must be provided (along with the inputs) as an argument in its
+:py:meth:`execute <Process_Base.execute>` or :py:meth:`run <Process_Base.run>` method.
 
 .. _Process_Learning_Figure:
 

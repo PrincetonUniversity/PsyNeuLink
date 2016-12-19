@@ -297,9 +297,9 @@ If a mechanism has more than one inputState, they are kept in an OrderedDict in 
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of a process, it also receives a projection from the
 <a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">ProcessInputState</span></a> for that process. Each inputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code> aggregates the
 values received from its projections (usually by summing them), and assigns the result to its <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
-<p id="mechanism-variable">The value of each inputState for the mechanism is placed in an item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> attribute
-(a 2d np.array), as well as in a corresponding item of its <a class="reference internal" href="#Mechanism.Mechanism_Base.inputValue" title="Mechanism.Mechanism_Base.inputValue"><code class="xref py py-data docutils literal"><span class="pre">inputValue</span></code></a> attribute
-(a list).  The <code class="docutils literal"><span class="pre">variable</span></code> provides the input to the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<p id="mechanism-variable">The value of each inputState for the mechanism is assigned as the value of an item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>
+attribute (a 2d np.array), as well as in a corresponding item of its <a class="reference internal" href="#Mechanism.Mechanism_Base.inputValue" title="Mechanism.Mechanism_Base.inputValue"><code class="xref py py-data docutils literal"><span class="pre">inputValue</span></code></a>
+attribute (a list).  The <code class="docutils literal"><span class="pre">variable</span></code> provides the input to the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
 </div>
 <div class="section" id="parameterstates">
 <span id="mechanism-parameterstates"></span><h4>ParameterStates<a class="headerlink" href="#parameterstates" title="Permalink to this headline">¶</a></h4>
