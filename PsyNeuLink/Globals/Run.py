@@ -224,10 +224,10 @@ Any mechanism that is the ``sender`` of a projection that closes a loop in a pro
 :keyword:`ORIGIN` mechanism, is designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`.
 An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
 first run.  These values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry
-must be a mechanism designated as :keyword:`INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as
-its initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an
-np.ndarray), must equal the number of inputStates of the mechanism, and the size of each value must match that of the
-variable for the corresponding inputState.
+must be a mechanism designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`, and its value an
+input for the mechanism to be used as its initial value.  The size of the input (length of the outermost level if it
+is a list, or axis 0 if it is an np.ndarray), must equal the number of inputStates of the mechanism, and the size of
+each value must match that of the variable for the corresponding inputState.
 
 .. _Run_Targets:
 
@@ -238,12 +238,13 @@ If a process or system uses learning, then target values for each round of execu
 :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism in the process or system being run.  These are specified
 in the ``targets`` argument of the ``execute`` or ``run`` method.  The same two formats used for inputs
 (:ref:`sequence <Run_Sequence>` and ref:`mechanism <Run_Mechanism>`) can also be used for targets.  However, the format
-of the lists or ndarrays is simpler, since each TARGET mechanism is assigned only a single target value;  so there is
-never the need for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of
-inputs.  The number of targets specified for each mechanism (corresponding to the number executions) must equal the
-number specified for the inputs, and the format of each target value must match (in number and type of elements) that
-of the :py:data:`comparator_target <ComparatorMechanism.ComparatorMechanism.target>` parameter of the
-TARGET mechanism for which it is intended.
+of the lists or ndarrays is simpler, since each :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism is assigned
+only a single target value;  so there is never the need for the extra level of nesting (or dimension of ndarray) used
+for inputStates in the specification of inputs.  The number of targets specified for each mechanism (corresponding to
+the number executions) must equal the number specified for the inputs, and the format of each target value must match
+(in number and type of elements) that of the :py:data:`comparator_target
+<ComparatorMechanism.ComparatorMechanism.target>` parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>`
+mechanism for which it is intended.
 
 **Sequence format** *(List[values] or ndarray):*
 There are at most only three levels of nesting (or dimensions) required for targets: one for executions,
