@@ -72,8 +72,8 @@ name for the outputState to be  created, and its value is one of the specificati
     ..
     * The :class:`OutputState` **class** or a string.  This creates a default outputState that is assigned the first
       item of the owner mechanism's ``value`` as its value.  If :keyword:`OutputState` is used, a default name is
-      assigned to the state;  if a string is, it is assigned as the name of the outputState (see [LINK] for naming
-      conventions).
+      assigned to the state;  if a string is, it is assigned as the name of the outputState
+      (see :ref:`naming conventions <LINK>`).
     ..
     * A **specification dictionary**.  This can include entries with keys using any of the arguments in an
       outputState's constructor, and a value for that argument.  By default, the outputState is assigned to the
@@ -93,7 +93,7 @@ name for the outputState to be  created, and its value is one of the specificati
        as the item of its owner mechanism's ``value`` to which it is assigned.
 
 COMMENT:
-    OutputStates can also be added by using the assign_output_state method [LINK].
+    OutputStates can also be added by using the :py:func:`assign_output_state <OutputState.assign_output_state>` method.
 COMMENT
 
 .. _OutputState_Index_and_Calculate:
@@ -266,12 +266,12 @@ class OutputState(State_Base):
     name : str : default OutputState-<index>
         a string used for the name of the outputState.
         If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
-        belongs (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
         the PreferenceSet for the outputState.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     Attributes
@@ -320,7 +320,7 @@ class OutputState(State_Base):
         name of the outputState.
         Specified in the name argument of the call to create the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
             Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
@@ -332,7 +332,7 @@ class OutputState(State_Base):
         the PreferenceSet for the outputState.
         Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 

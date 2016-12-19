@@ -219,15 +219,17 @@ After each execution of the mechanism:
       the value is the mean response time (in seconds) estimated by the analytic solution used in ``function``.
       COMMENT:
         [TBI:]
-        If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
-        since the start of the current execution in the current phase [LINK].  If execution completes, this is the
-        number of time_steps it took for the decision variable to reach the (positive or negative) value of the
-        ``threshold`` parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds
-        to the time_step at which the interruption occurred.
+        If ``times_scale`` is :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`, the value is the number
+        of time_steps that have transpired since the start of the current execution in the current
+        :ref:`phase <System_Execution_Phase>`.  If execution completes, this is the number of time_steps it took for
+        the decision variable to reach the (positive or negative) value of the :py:data:`threshold <DDM.threshold>`
+        parameter;  if execution was interrupted (using :py:meth:`terminate_function <DDM.terminate_function>`),
+        then it corresponds to the time_step at which the interruption occurred.
       COMMENT
     ..
-    The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
-    corresponding attributes is :keyword:`None`.
+    The following assignments are made only if :py:data.`timeScale <DDM.timeScale>` is
+    :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`;  otherwise the value of the corresponding
+    attributes is :keyword:`None`.
 
     * **probability of reaching the upper threshold** is assigned to the 3rd item of the mechanism's ``outputValue``
       attribute, and as the value of its ``PROBABILITY_UPPER_THRESHOLD`` outputState.  If ``time_scale`` is
@@ -239,8 +241,9 @@ After each execution of the mechanism:
       [TBI:]
           If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
           indicating whether the decision process reached the upper (positive) threshold. If execution was interrupted
-          (using ``terminate_function``, sometimes referred to as the "interrogation protocol"[LINK]), then the value
-          corresponds to the current likelihood that the upper threshold would have been reached.
+          (using :py:meth:`terminate_function <DDM.terminate_function>`, sometimes referred to as the
+          :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
+          threshold would have been reached.
       COMMENT
     ..
     * **probability of reaching the lower threshold** is assigned to the 4th item of the mechanism's ``outputValue``
@@ -253,8 +256,9 @@ After each execution of the mechanism:
           [TBI:]
           If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
           indicating whether the decision process reached the lower (negative) threshold. If execution was interrupted
-          (using ``terminate_function``, sometimes referred to as the "interrogation protocol"[LINK]), then the value
-          corresponds to the current likelihood that the lower threshold would have been reached.
+          (using :py:method:`terminate_method <DDM.terminate_function>`, sometimes referred to as the
+          :ref:`interrogation protocol <LINK>`), then the value corresponds to the current likelihood that the lower
+          threshold would have been reached.
       COMMENT:
     ..
     The following assignments are made only assigned if the :keyword:`NavarroAndFuss`` function is used,
@@ -379,7 +383,8 @@ class DDM(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : keyword:`FUNCTION_PARAMS`[keyword:`STARTING_POINT`] [LINK]
+    default_input_value : value, list or np.ndarray : default \
+                          keyword:`FUNCTION_PARAMS`[:py:data:`STARTING_POINT <DDM.starting_point>`]
         the input to the mechanism to use if none is provided in a call to its
         :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
@@ -388,13 +393,15 @@ class DDM(ProcessingMechanism_Base):
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if ``time_scale`` is set to
         :keyword:`TimeScale.TRIAL`; can be :class:`BogaczEtAl` or :class:`NavarroAndFuss` (note:  the latter requires
-        that the MatLab engine is installed). If ``time_scale`` is set to :keyword:`TimeScale.TIME_STEP`,
-        ``function`` is automatically assigned to :class:`Integrator`.
+        that the MatLab engine is installed). If ``time_scale`` is set to
+        :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`, ``function`` is automatically assigned to
+        :py:class:`Integrator <Function.Integrator>`.
 
-    time_scale :  TimeScale : default TimeScale.TRIAL
-        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
-        This must be set to :keyword:`TimeScale.TRIAL` to use one of the analytic solutions specified by ``function``.
-        This must be set to :keyword:`TimeScale.TIME_STEP` to numerically integrate the decision variable.
+    time_scale :  TimeScale : default :py:data:`TimeScale.TRIAL <TimeScale.TimeScale.TRIAL>`
+        specifies whether the mechanism is executed on the time_step or trial time scale.
+        This must be set to :py:data:`TimeScale.TRIAL <TimeScale.TimeScale.TRIAL> to use one of the analytic solutions
+        specified by ``function``. This must be set to :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>
+        to numerically (path) integrate the decision variable.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
@@ -403,12 +410,12 @@ class DDM(ProcessingMechanism_Base):
     name : str : default DDM-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for the process.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     .. context=componentType+INITIALIZING):
             context : str : default ''None''
@@ -469,13 +476,13 @@ class DDM(ProcessingMechanism_Base):
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         a PreferenceSet for the mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:

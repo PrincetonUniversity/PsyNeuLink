@@ -625,14 +625,14 @@ class System_Base(System):
         the name of the system;
         Specified in the name argument of the call to create the system;
         if not is specified, a default is assigned by SystemRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
         the PreferenceSet for system.
         Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details).[LINK]
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 

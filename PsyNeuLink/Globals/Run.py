@@ -41,10 +41,10 @@ Scope of Execution
 ~~~~~~~~~~~~~~~~~~
 
 When the ``run`` method of an object is called, it executes that object and all others within its scope of execution.
-For a mechanism [LINK], the scope of execution is simply that mechanism.  For a process [LINK], the scope of execution
-is all of the mechanisms specified in its :py:data:`pathway <Process.Process_Base.pathway>` parameter.  For a
-:doc:`system <System>`, the scope of execution is all of the mechanisms in the processes specified in the system's
-:py:data:`processes <System.System_Base.processes>` parameter.
+For a :doc:`mechanism <Mechanism>`, the scope of execution is simply that mechanism.  For a :doc:`process <Process>`,
+the scope of execution is all of the mechanisms specified in its :py:data:`pathway <Process.Process_Base.pathway>`
+parameter.  For a :doc:`system <System>`, the scope of execution is all of the mechanisms in the processes specified
+in the system's :py:data:`processes <System.System_Base.processes>` parameter.
 
 .. _Run_Timing:
 
@@ -90,10 +90,10 @@ Inputs
 
 COMMENT:
     OUT-TAKES
-    The inputs for a single execution must contain a value for each inputState [LINK] of each :keyword:`ORIGIN`
-    mechanism [LINK] in the process or system, using the same format used for the format of the input for the execute
-    method of a process or system.  This can be specified as a nested set of lists, or an ndarray.  The exact structure
-    is determined by a number of factors, as described below.
+    The inputs for a single execution must contain a value for each :doc:`inputState <InputState> of each
+    :py:data:`ORIGIN` <Keywords.Keywords.ORIGIN>` mechanism in the process or system, using the same format
+    used for the format of the input for the execute method of a process or system.  This can be specified as a
+    nested set of lists, or an ndarray.  The exact structure is determined by a number of factors, as described below.
     the number of :keyword:`ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
     number of inputStates for each :keyword:`ORIGIN` mechanism, and whether the input to those inputStates is
     single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
@@ -117,9 +117,9 @@ COMMENT
 The primary purpose of the ``run`` function is to present the inputs for each round of execution to the inputStates of
 the relevant mechanisms.  The ``inputs`` argument is used to specify those input values.  For a mechanism, this is the
 input values for each of the mechanism's inputStates.  For a process or system, it assigns the inputs to the
-inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK].  Input values can be specified either as a nested list or
-an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
-(number of axes) for an ndarray:
+inputState(s) of the :py:data:`ORIGIN` <Keywords.Keywords.ORIGIN>` mechanism(s).  Input values can be specified
+either as a nested list or an ndarray. There are four factors that determine the levels of nesting for a list,
+or the dimensionality (number of axes) for an ndarray:
 
 * **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of
   execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
@@ -132,11 +132,11 @@ an ndarray. There are four factors that determine the levels of nesting for a li
   relevant when run is used for a single mechanism, a process (which only ever has one :keyword:`ORIGIN` mechanism),
   or a system that has only one :keyword:`ORIGIN` mechanism.
 
-* **Number of inputStates.** In general, mechanisms have a single ("primary") inputState [LINK];  however, some types
-  of mechanisms can have more than one (e.g., ComparatorMechanisms [LINK] have two: one for their ``sample_input`` and
-  the other for their ``target_input``).  If any :keyword:`ORIGIN` mechanism in a process or system has more than one
-  inputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the set of
-  inputStates for each mechanism.
+* **Number of inputStates.** In general, mechanisms have a single ("primary") :ref:`inputState <Mechanism_InputStates>;
+  however, some types of mechanisms can have more than one (e.g., :doc:`ComparatorMechanisms` have two: one for
+  their ``sample_input`` and the other for their ``target_input``).  If any :keyword:`ORIGIN` mechanism in a process or
+  system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
+  is used for the set of inputStates for each mechanism.
 
 * **Number of elements for the value of an inputState.** The input to an inputState can be a single element (e.g.,
   a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an inputState is only a
@@ -213,14 +213,14 @@ DOCUMENTATION NEEDED HERE
 Initial Values
 ~~~~~~~~~~~~~~
 
-Any mechanism that is the source (sender) of a projection that closes a processing loop in a process or system, and
-that is not an :keyword:`ORIGIN` mechanism, is designated as :keyword:`INITIALIZE_CYCLE`. [LINK]  An initial value
-can be assigned to such mechanisms, that will be used to initialize the process or system when it is first run.  These
-values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry must be a
-mechanism designated as :keyword:`INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as its
-initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
-must equal the number of inputStates of the mechanism, and the size of each value must match that of the variable
-for the corresponding inputState.
+Any mechanism that is the ``sender`` of a projection that closes a loop in a process or system, and that is not an
+:keyword:`ORIGIN` mechanism, is designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`.
+An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
+first run.  These values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry
+must be a mechanism designated as :keyword:`INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as
+its initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an
+np.ndarray), must equal the number of inputStates of the mechanism, and the size of each value must match that of the
+variable for the corresponding inputState.
 
 .. _Run_Targets:
 
@@ -329,7 +329,7 @@ def run(object,
         calls the ``initialize`` method of the system prior to a sequence of executions.
 
     initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default :keyword:`None`
-        the initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK].
+        the initial values for mechanisms designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALZE_CYCLE>`.
 
     targets : List[input] or np.ndarray(input) : default :keyword:`None`
         the target values for monitoring mechanisms for each execution (used for learning).

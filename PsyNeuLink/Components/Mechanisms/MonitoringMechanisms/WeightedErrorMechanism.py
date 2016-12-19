@@ -64,11 +64,12 @@ contribution of each element of the ``value`` of the :py:data:`errorSource <Weig
 to the ``error_signal``:  the error associated with each element of the ``value`` of the mechanism to which the
 :py:data:`errorSource <WeightedErrorMechanism.errorSource>` projects, scaled both by the weight of its association to
 that element specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
-``function`` for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
-"backpropagation") learning algorithm (REFS AND [LINK]). The ``function`` returns an array with the weighted errors
-for each element of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`, which is placed in its ``value``
+``function`` for that mechanism.  This implements a core computation of the
+`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  (or "backpropagation")
+learning algorithm. The ``function`` returns an array with the weighted errors for each element of the
+:py:data:`errorSource <WeightedErrorMechanism.errorSource>`, which is placed in its ``value``
 and  :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attributes, and the value of of its
-(:keyword:`WEIGHTED_ERROR) outputState.
+(:keyword:`WEIGHTED_ERROR`) outputState.
 
 .. _WeightedError_Class_Reference:
 
@@ -154,12 +155,12 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
     name : str : default WeightedErrorMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -191,13 +192,13 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the PreferenceSet for mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     """

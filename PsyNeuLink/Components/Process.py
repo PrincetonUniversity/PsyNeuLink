@@ -45,8 +45,8 @@ also be specified for the entire process, in which case the projections between 
 Creating a Process
 ------------------
 
-Processes are created by calling the :py:func:`process` method.  If no arguments are provided,
-a process with a single default mechanism will be returned (see [LINK] for default] for default mechanism).
+Processes are created by calling the :py:func:`process` function.  If no arguments are provided, a process with a
+single :ref:`default mechanism <LINK>` will be created.
 
 .. _Process_Structure:
 
@@ -190,10 +190,11 @@ When learning is specified, the following objects are automatically created (see
 * :doc:`LearningProjection` from the MonitoringMechanism to the projection being learned
   (i.e., the one that projects to the mechanism being monitored).
 
-Different learning algorithms can be specified (e.g., Reinforcement Learning, Backpropagation[LINK]), that will
-implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals required for the
-specified type of learning.  However, as noted above, all mechanisms that receive projections being learned must
-be compatible with learning.
+Different learning algorithms can be specified (e.g.,
+:py:class:`Reinforcement <Function.Reinforcement>`, :py:class:`Backpropagation <Function.BackPropagation>`),
+that will implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals
+required for the specified type of learning. However, as noted above, all mechanisms that receive projections being
+learned must be compatible with learning.
 
 .. _Process_Learning_Figure:
 
@@ -765,13 +766,13 @@ class Process_Base(Process):
         the name of the process.
         Specified in the name argument of the call to create the process;
         if not is specified, a default is assigned by ProcessRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
         the PreferenceSet for the process.
         Specified in the prefs argument of the call to create the process;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details).[LINK]
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     """
