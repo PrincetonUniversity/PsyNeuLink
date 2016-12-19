@@ -45,11 +45,11 @@ word_reading_process = process(
     default_input_value=[.5, 3],
     # pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
     # 12/19/16: COMMENT THIS TO DEBUG:
-    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response2],
+    # pathway=[words, FULL_CONNECTIVITY_MATRIX, decision, FULL_CONNECTIVITY_MATRIX, response2],
     # 12/19/16: UNCOMMENT THIS TO DEBUG:
-    # pathway=[words, FULL_CONNECTIVITY_MATRIX, decision],
+    pathway=[words, FULL_CONNECTIVITY_MATRIX, decision],
     name='Word Reading',
-    learning=LEARNING,
+    # learning=LEARNING,
     target=[3,3],
     prefs=process_prefs
 )
@@ -59,7 +59,7 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
                   prefs=system_prefs
                   )
 
-mySystem.show()
+# mySystem.show()
 
 TEST = True
 
@@ -114,12 +114,12 @@ stim_list_dict = {colors:[1, 1],
 
 words_list_dict = {words:[1, 1]}
 
-target_list_dict = {response:[1, 1],
-                    response2:[2, 2]}
+# target_list_dict = {response:[1, 1],
+#                     response2:[2, 2]}
 
-# target_list_dict = {response:[1, 1]}
+target_list_dict = {response:[1, 1]}
 
-word_target_list_dict = {decision:[1, 1]}
+# word_target_list_dict = {decision:[1, 1]}
 
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,
@@ -127,14 +127,14 @@ word_target_list_dict = {decision:[1, 1]}
 trial_list = [[1, 1], [1, 1]]
 reversed_trial_list = [[words, colors], [1, 1], [1, 1]]
 
-# # 12/19/16: UNCOMMENT THIS TO DEBUG:
+# 12/19/16: UNCOMMENT THIS TO DEBUG:
 # word_reading_process.run(num_executions=10,
 #       # inputs=stim_list_dict,
 #       inputs=words_list_dict,
 #       # inputs=[[1, 1],[1, 1]],
 #       # targets=[[1, 1],[1, 1]],
-#       targets=word_target_list_dict,
-#       # targets=target_list_dict,
+#       # targets=word_target_list_dict,
+#       targets=target_list_dict,
 #       # call_before_trial=print_header,
 #       # call_after_trial=show_target
 #                          )
