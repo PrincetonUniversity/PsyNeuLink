@@ -3,6 +3,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
 
+
 process_prefs = {REPORT_OPUTPUT_PREF: True,
                  VERBOSE_PREF: False}
 
