@@ -685,7 +685,7 @@ class Process_Base(Process):
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _target_mech_tuples : List[MechanismTuple]
-             Contains a tuple for the :keyword:`TARGET` mechanism of the process.
+             Contains a tuple for the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism of the process.
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _monitoring_mech_tuples : List[MechanismTuple]
@@ -726,9 +726,9 @@ class Process_Base(Process):
         .. based on _monitoring_mech_tuples
 
     targetMechanisms : MechanismList
-        a list with the :keyword:`TARGET` mechanism of the process.
-        (Note:  a process can have only one :keyword:`TARGET` mechanism; the use of a list is for compatibility with
-        methods that are also used for systems.)
+        a list with the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism of the process.
+        (Note:  a process can have only one :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism; the use of a list
+        is for compatibility with methods that are also used for systems.)
 
         .. based on _target_mech_tuples
            system.ouput contains the output of :keyword:`TERMINAL` mechanism.
