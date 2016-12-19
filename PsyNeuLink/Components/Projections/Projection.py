@@ -59,7 +59,7 @@ Projections can be created in several ways.  The simplest is to use the standard
 constructor for the desired type of projection.  However, projections can also be specified "in context," for example
 in the :py:data:`pathway <Process.Process_Base.pathway>` attribute of a process, or when a tuple is used to specify the
 parameter of a function (such as a :ref:`ControlProjection for a mechanism <Mechanism_Assigning_A_ControlProjection>`,
-or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specification>`).
+or a :ref:`LearningProjection for a MappingProjection <MappingProjection_Tuple_Specification>`).
 
 .. _Projection_In_Context_Specification:
 
@@ -87,21 +87,21 @@ or a :ref:`LearningProjection for a MappingProjection <Mapping_Tuple_Specificati
   *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
   specifying the value of parameters used to instantiate it. These should take the following form:
 
-  * :keyword:`PROJECTION_TYPE`: <name of a projection type>
+      * :keyword:`PROJECTION_TYPE`: <name of a projection type>
 
-      if this entry is absent, a default projection will be created that is appropriate for the context
-      (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
+          if this entry is absent, a default projection will be created that is appropriate for the context
+          (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
 
-  * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
+      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
 
-      the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
-      below), and the value should be the value of the parameter.  It can contain any of the standard parameters
-      for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
-      projection (see documentation for subclass).  Note that parameter values in the specification dict will be
-      used to instantiate the projection.  These can be overridden during execution by specifying
-      :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the
-      :py:meth:`execute <Mechanism.Mechanism_Base.execute>` method for a mechanism` directly, or where it is
-      specified in the :py:data:`pathway <Process.Process_Base.pathway>` of a process.
+          the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
+          below), and the value should be the value of the parameter.  It can contain any of the standard parameters
+          for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
+          projection (see documentation for subclass).  Note that parameter values in the specification dict will be
+          used to instantiate the projection.  These can be overridden during execution by specifying
+          :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the
+          :py:meth:`execute <Mechanism.Mechanism_Base.execute>` method for a mechanism` directly, or where it is
+          specified in the :py:data:`pathway <Process.Process_Base.pathway>` of a process.
 
 .. _Projection_Automatic_Creation:
 
@@ -141,8 +141,9 @@ with a mechanism that can be determined from context, then a default mechanism o
 is used, and its primary outputState is assigned as the sender. The type of default mechanism type used by each type
 of projection is specified in its ``paramClassDefaults[PROJECTION_SENDER]`` class attribute, and is assigned as follows:
 
-  * :doc:`MappingProjection`: the :doc:`DefaultProcessingMechanism` is used, and its primary outputState is assigned as
-    the ``sender``.
+  * :doc:`MappingProjection`: the
+    :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
+    is used, and its primary outputState is assigned as the ``sender``.
   ..
   COMMENT:
      CONFIRM THIS IS TRUE
@@ -280,6 +281,10 @@ class Projection_Base(Projection):
         -----------
             Projection category of Component class (default type:  MappingProjection)
 
+        Gotchas
+        -------
+            When referring to the mechanism that is a projection's sender or receiver mechanism, must add ".owner"
+
         Class attributes
         ----------------
             + componentCategory (str): kwProjectionFunctionCategory
@@ -335,13 +340,13 @@ class Projection_Base(Projection):
         the name of the projection.
         Specified in the name argument of the call to create the projection;  if not is specified,
         a default is assigned by ProjectionRegistry based on the projection's subclass
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the PreferenceSet for the projection.
         Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 

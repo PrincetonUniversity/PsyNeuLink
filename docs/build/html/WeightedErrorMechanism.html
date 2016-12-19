@@ -213,11 +213,12 @@ contribution of each element of the <code class="docutils literal"><span class="
 to the <code class="docutils literal"><span class="pre">error_signal</span></code>:  the error associated with each element of the <code class="docutils literal"><span class="pre">value</span></code> of the mechanism to which the
 <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a> projects, scaled both by the weight of its association to
 that element specified by from <code class="xref std std-keyword docutils literal"><span class="pre">NEXT_LEVEL_PROJECTION</span></code>) and the differential of the
-<code class="docutils literal"><span class="pre">function</span></code> for that mechanism.  This implements a core computation of the Generalized Delta Rule (or
-&#8220;backpropagation&#8221;) learning algorithm (REFS AND [LINK]). The <code class="docutils literal"><span class="pre">function</span></code> returns an array with the weighted errors
-for each element of the <a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>, which is placed in its <code class="docutils literal"><span class="pre">value</span></code>
+<code class="docutils literal"><span class="pre">function</span></code> for that mechanism.  This implements a core computation of the
+<a class="reference external" href="http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html">Generalized Delta Rule</a>  (or &#8220;backpropagation&#8221;)
+learning algorithm. The <code class="docutils literal"><span class="pre">function</span></code> returns an array with the weighted errors for each element of the
+<a class="reference internal" href="#WeightedErrorMechanism.WeightedErrorMechanism.errorSource" title="WeightedErrorMechanism.WeightedErrorMechanism.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>, which is placed in its <code class="docutils literal"><span class="pre">value</span></code>
 and  <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attributes, and the value of of its
-(:keyword:<a href="#id5"><span class="problematic" id="id6">`</span></a>WEIGHTED_ERROR) outputState.</p>
+(<code class="xref std std-keyword docutils literal"><span class="pre">WEIGHTED_ERROR</span></code>) outputState.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="weightederror-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -249,10 +250,10 @@ must match the length of <code class="docutils literal"><span class="pre">error_
 </li>
 <li><strong>name</strong> (<em>str : default WeightedErrorMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for mechanism.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</li>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
 </tr>
@@ -305,7 +306,7 @@ projects.</p>
 <dd><p><em>str : default WeightedErrorMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
 Specified in the name argument of the call to create the projection;
 if not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -314,7 +315,7 @@ if not is specified, a default is assigned by MechanismRegistry
 <dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for mechanism.
 Specified in the prefs argument of the call to create the mechanism;
 if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</p>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
 </dd></dl>

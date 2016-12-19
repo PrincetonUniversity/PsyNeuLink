@@ -102,7 +102,7 @@ In addition to its ``function``, MappingProjections use the following two the pr
   :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
   with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
-  .. _Mapping_Tuple_Specification:
+  .. _MappingProjection_Tuple_Specification:
   *Tuple*.  This is used to specify a projection to the parameterState for the
   :py:data:`matrix <MappingProjection.matrx>` along with the matrix itself. The tuple must have two items:
   the first can be any of the specifications described above;  the second must be a :ref:`projection specification
@@ -132,8 +132,8 @@ A MappingProjection uses its ``function`` and :py:data:`matrix <MappingProjectio
 transform the value of its ``sender``, and assign this as the variable for its ``receiver``.  When it is executed,
 updating the matrix parameterState will cause the value of any projections (e.g., a LearningProjection) it
 receives to be applied to the matrix. This will bring into effect any changes that occurred during the previous
-execution (e.g., due to learning).  Because of :ref:`Lazy Evaluation`[LINK], those changes will only be effective
-after the current execution (in other words, inspecting :py:data:`matrix <MappingProjection.matrx>` will not show
+execution (e.g., due to learning).  Because of :ref:`Lazy Evaluation <LINK>`, those changes will only be effective
+after the current execution (in other words, inspecting :py:data:`matrix <MappingProjection.matrix>` will not show
 the effects of projections to its parameterState until the MappingProjection has been executed).
 
 .. _Projection_Class_Reference:
@@ -231,12 +231,12 @@ class MappingProjection(Projection_Base):
     name : str : default MappingProjection-<index>
         a string used for the name of the MappingProjection.
         If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the PreferenceSet for the MappingProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -251,13 +251,13 @@ class MappingProjection(Projection_Base):
         the name of the MappingProjection.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the PreferenceSet for projection.
         Specified in the prefs argument of the call to create the projection;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 

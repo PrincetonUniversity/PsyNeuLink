@@ -2,16 +2,50 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# DOCUMENT: params dictionary -> ``params`` dictionary
-#           parameter dictionary -> ``params`` dictionary
+# IMPLEMENT: add targetMechanisms to System show() method
 
-# FIX: Are attribute docsrings supposed to be capitalized or not?
+# DOCUMENT: Learning and Control in System
+# DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
+# DOCUMENTATION: replace ``variable`` with
+#                    :py:data:`variable <Module.variable>` or
+#                    :py:data:`variable <Component.variable>`
+#                same for ``function`` and ``value``
 
+# FIX: ADD ERROR MESSAGE IF MECHANISM REFERENCED IN KEY OF TARGET DICT (FOR run()) IS AN INTERNAL MECHANISM VS. MISSING
+# DOCUMENTATION: LINK FIST APPEARANCE OF :keyword:'ORIGIN` and :keyword:'TERMINAL` TO Keywords.Keywords IN A SECTION
+#                AND THEN JUST CAPITALIZE ALL REMAINING MENTIONS
+
+# SYSTEM LEARNING:
+#       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
+#       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
+#       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
+#       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
+#       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
+
+# DOCUMENTATION: params dictionary -> ``params`` dictionary
+#                parameter dictionary -> ``params`` dictionary
+# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
+#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
+#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
+#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
+#            "argument" refers to a specifiable value in a method or function call
+#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
+#            componentAttribute:  user accessible attribute for which there is no constructor argument
+#            _component_attribute:  internal attribute
+#            <definite article> :keyword:`<item>`;  <indefinite article> item;
+#            e.g.: the :keyword:`errorSource`;  an errorSource
+
+# DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
+#           variable and value are 2d np.arrays that are used as internal datastructures
+#
 # FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
+
+# IMPLEMENT: learning argument and attribute for System (that assigns learning to all of its processes and,
+#            and raises and exception if they can't handle it
 
 # IMPLEMENT: OutputStates:
     # COMMENT:
-    #     OutputStates can also be added by using the assign_output_state method [LINK].
+    #     OutputStates can also be added by using the :py:func:`assign_output_state <OutputState.assign_output_state>`.
     # COMMENT
 
 # IMPLEMENT: System.monitoredOutputStates:
@@ -28,7 +62,6 @@
 # DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
 #            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
 
-# DOCUMENT:  "params dictionary" vs. "parameter dictionary"
 
 # DOCUMENT:  FIGURES FOR:
 #                   inputState: inputValue vs. variable
@@ -40,17 +73,6 @@
 #                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
 #                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
 #
-
-# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
-#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
-#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
-#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
-#            "argument" refers to a specifiable value in a method or function call
-#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
-#            componentAttribute:  user accessible attribute for which there is no constructor argument
-#            _component_attribute:  internal attribute
-
-
 # DOCUMENTATION: add show to Systsem and Process
 #
 
@@ -75,8 +97,6 @@
 #    Features:  graph support, logging, hierarchical preferences
 #
 #    System:  Control and Learning under Structure
-#    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
-#                       that has a ComparatorMechanism (and for which a target is specified)
 #    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
 
 # FIX *************
@@ -88,10 +108,6 @@
 #                    rename reference_value??
 
 # FIX: SYSTEM LEARNING:
-#      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
-#                     on the hidden layer of another process)
-#      2) System:  parse learning mechanism assignments to be sure that comparators are replaced with weighterorrs
-#                     where pathways converge.
 
 # DOCUMENT: Component:  :keyword:`NotImplemented` can be assigned to a parameter in the definition of paramClassDefaults
 #                          to allow it to pass _validate_params without having to make an assignment (i.e., to
@@ -513,13 +529,6 @@
 
 # IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
-# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
-#               IS PROBABILITY_UPPER_THRESHOLD THE CORRECT PARAM IN EVC System Laming Validation Test Script??
-# PROBLEM: IN Process, WAS ADDING +1 TO _phaseSpecMax for monitoringMechanisms (for learning)
-#                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
-#          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
-#                     (SINCE THEY WILL BE RUN LAST ANYHOW, DUE TO THEIR PROJECTIONS)
-
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 # IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
@@ -649,7 +658,8 @@
 #                0) Linear layer as penultimate layer (one for which output weights will be modified);
 #                       (note: slope gets parameterState that is controlled by learning_rate of LearningProjection)
 #                1) Use Softmax as final output layer
-#                2) ComparatorMechanism:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
+#                2) ComparatorMechanism:  constrain len(COMPARATOR_SAMPLE) = len(COMPARATOR_TARGET) = 1
+#                          (rather than len(terminalMechanism.outputState)
 #                3) FullConnectivity MappingProjection from terminalMechanism->ComparatorMechanism
 #                4) LearningProjection.learningRate sets slope of Linear layer
 #                ----------------
@@ -682,8 +692,6 @@
 #            (replace existing function in ParameterStates)
 # IMPLEMENT: Factor _instantiate_pathway so that parsing/instantiation of mechanism/projection specs
 #            can also be called after _deferred_init
-# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
-#                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
 # IMPLEMENT: _instantiate_pathway:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
@@ -773,13 +781,10 @@
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
 
-# 7/26/16:
-# TEST specification of kwCompartorSample and TARGET
-
 # 7/25/16:
 #
 # FIX handling of inputStates (SAMPLE and TARGET) in ComparatorMechanism:
-#              requirecParamClassDefaults
+#              requiredParamClassDefaults
 #              _instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
 #
@@ -940,10 +945,10 @@
 
 # - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
 #             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
-#                 target = [target]
+#                 target = [COMPARATOR_TARGET]
 #             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
 #             if all(isinstance(i, numbers.Number) for i in target):
-#                 target = [target]
+#                 target = [COMPARATOR_TARGET]
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
@@ -1345,7 +1350,7 @@
 
 # Dereference variable values
 #   Example (line 295 in DDM):
-#      default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+#      default_input_value : value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 # Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
 # How to underline?
 # Why does adding ": default _______ " to parameter specification suppress italicization??
