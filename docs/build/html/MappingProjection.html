@@ -236,8 +236,8 @@ and the operation is always applied in an element-wise (Hadamard) manner. The de
 <span class="pre">transform</span> <span class="pre">the</span> <span class="pre">value</span> <span class="pre">of</span> <span class="pre">its</span> <span class="pre">``sender`</span></code>, and assign this as the variable for its <code class="docutils literal"><span class="pre">receiver</span></code>.  When it is executed,
 updating the matrix parameterState will cause the value of any projections (e.g., a LearningProjection) it
 receives to be applied to the matrix. This will bring into effect any changes that occurred during the previous
-execution (e.g., due to learning).  Because of <span class="xref std std-ref">Lazy Evaluation`[LINK], those changes will only be effective
-after the current execution (in other words, inspecting :py:data:`matrix</span> will not show
+execution (e.g., due to learning).  Because of <span class="xref std std-ref">Lazy Evaluation</span>, those changes will only be effective
+after the current execution (in other words, inspecting <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> will not show
 the effects of projections to its parameterState until the MappingProjection has been executed).</p>
 </div>
 <div class="section" id="class-reference">

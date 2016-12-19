@@ -130,6 +130,8 @@ it a list with the desired outputState(s) as its value. When a LearningProjectio
 MonitoringMechanism, then that one is used; if its errorSource does not project to any MonitoringMechanism,
 then one of an appropriate type is created (see below) and assigned a MappingProjection from the errorSource.
 
+.. _LearningProjection_MonitoringMechanism:
+
 **MonitoringMechanism**: calculates the :py:data:`errorSignal <LearningProjection.errorSignal>` used by the
 LearningProjection to reduce the errorSource's contribution to the error; serves as the LearningProjection's ``sender``.
 The type of the MonitoringMechanism required, and how it calculates its errorSignal, depend on the type of learning
@@ -208,17 +210,6 @@ functions that implement different learning algorithms, as long as it is compati
 the LearningProjection's errorSource (how the error signal is computed depends on the nature of the function that
 generated the error); failure to match the ``function`` of the LearningProjection with the ``function`` of the
 errorSource  will generate an error.
-
-.. _LearningProjection_Terminal_vs_Target:
-
-
-MOVE TO ARGUMENTS SECTION??
-**Target(s)**.  This specifies the value with which the output of an
-:py:data:`errorSource <LearningProjection.errorSource>` is compared, to calculate the
-:py:data:`errorSignal <LearningProjection.errorSignal>`.  It is required by the :doc:`run <Run>` method of a process
-or sysetm when learning is specified. provides to the :keyword:`COMPARATOR_TARGET` inputState of a
-:doc:`ComparatorMechanism` mechanism.
-
 
 .. _LearningProjection_Execution:
 

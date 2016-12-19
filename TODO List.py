@@ -2,6 +2,9 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT: add targetMechanisms to System show() method
+
+# DOCUMENT: Learning and Control in System
 # DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
 # DOCUMENTATION: replace ``variable`` with
 #                    :py:data:`variable <Module.variable>` or
@@ -16,13 +19,6 @@
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
 #       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
 #       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
-#       DOCUMENT: DICTIONARY-STYLE TARGET SPECIFICATION (PARALELLING INPUT), SO DON'T HAVE TO WORRY ABOUT ORDERING OF
-#                 TARGETS/PROCESSES - THIS IS SAFER THAN LIST METHOD - PUT IN DOCS FOR RUN
-#       DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
-#                 THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN CHECK THIS BY USING show() -- WRITE NEW ONE?
-#       DOCUMENT: NOTE CASE IN WHICH ONE LEARNING PROCESS TERMINATES ON THE INTERNAL MECHANISM OF ANOTHER
-#                   (AND SO DOESN'T REQUIRE A TARGET LIST IN THE CALL TO RUN)
-#                   THOUGH IT DOES REQUIRE A TARGET LIST FOR LEARNING IF RUN ON ITS OWN
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
 

@@ -178,12 +178,12 @@ automatically creates an inputState for each mechanism that it monitors.  PsyNeu
 explicit creation of inputStates (this may be implemented in the future).  However they can modified as described below.</p>
 </div>
 <div class="section" id="structure">
-<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="inputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every inputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>. It can receive one or more MappingProjections from other
-mechanisms, as well as from the process to which its owner belongs (if it is the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> [LINK] mechanism
-for that process.  A list of projections received by an inputState is kept in its
-<a class="reference internal" href="#InputState.InputState.receivesFromProjections" title="InputState.InputState.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receivesFromProjections</span></code></a> attribute. Like all PsyNeuLink components,
-it has the three following core attributes:</p>
+mechanisms, as well as from the process to which its owner belongs (if it is the
+<code class="xref py py-data docutils literal"><span class="pre">ORIGIN</span></code> &lt;keyword:<cite>Keywords.Keywords.ORIGIN&gt;</cite> mechanism for that process).  A list of projections received
+by an inputState is kept in its <a class="reference internal" href="#InputState.InputState.receivesFromProjections" title="InputState.InputState.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receivesFromProjections</span></code></a> attribute.
+Like all PsyNeuLink components, it has the three following core attributes:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">variable</span></code>:  this serves as a template for the <code class="docutils literal"><span class="pre">value</span></code> of each projection that the inputState receives;
 each must match both the number and type of elements of the inputState&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>.</li>

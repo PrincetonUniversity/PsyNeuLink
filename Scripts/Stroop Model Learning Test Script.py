@@ -57,6 +57,8 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
                   prefs=system_prefs
                   )
 
+TEST = True
+
 # TEST REPORT_OUTPUT_PREFs:
 # colors.reportOutputPref = True
 # words.reportOutputPref = True
