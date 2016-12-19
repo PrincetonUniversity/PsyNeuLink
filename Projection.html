@@ -202,7 +202,7 @@ context of a <a class="reference internal" href="System.html"><span class="doc">
 constructor for the desired type of projection.  However, projections can also be specified &#8220;in context,&#8221; for example
 in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> attribute of a process, or when a tuple is used to specify the
 parameter of a function (such as a <span class="xref std std-ref">ControlProjection for a mechanism</span>,
-or a <a class="reference internal" href="MappingProjection.html#mapping-tuple-specification"><span class="std std-ref">LearningProjection for a MappingProjection</span></a>).</p>
+or a <a class="reference internal" href="MappingProjection.html#mappingprojection-tuple-specification"><span class="std std-ref">LearningProjection for a MappingProjection</span></a>).</p>
 <p id="projection-in-context-specification"><em>In context specification</em>.  Any of the following can be used:</p>
 <blockquote>
 <div><p><em>Constructor</em>.  Used the same way in context as it is ordinarily.</p>
@@ -223,7 +223,8 @@ as will a MappingProjection from the error source to the MonitoringMechanism
 specified type.</p>
 <p><em>Specification dictionary</em>.  This can contain an entry specifying the type of projection, and/or entries
 specifying the value of parameters used to instantiate it. These should take the following form:</p>
-<ul>
+<blockquote>
+<div><ul>
 <li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_TYPE</span></code>: &lt;name of a projection type&gt;</p>
 <blockquote>
 <div><p>if this entry is absent, a default projection will be created that is appropriate for the context
@@ -243,6 +244,7 @@ specified in the <a class="reference internal" href="Process.html#Process.Proces
 </div></blockquote>
 </li>
 </ul>
+</div></blockquote>
 </div></blockquote>
 <p id="projection-automatic-creation"><em>Automatic creation</em>.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
 a process automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent mechanisms in its
@@ -276,8 +278,9 @@ is used, and its primary outputState is assigned as the sender. The type of defa
 of projection is specified in its <code class="docutils literal"><span class="pre">paramClassDefaults[PROJECTION_SENDER]</span></code> class attribute, and is assigned as follows:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>: the <span class="xref doc">DefaultProcessingMechanism</span> is used, and its primary outputState is assigned as
-the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+<li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>: the
+<code class="xref py py-const docutils literal"><span class="pre">DefaultProcessingMechanism</span></code>
+is used, and its primary outputState is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>: if the projection&#8217;s receiver belongs to a system, then the system&#8217;s

@@ -281,8 +281,9 @@ item of its <a class="reference internal" href="Mechanism.html#Mechanism.Mechani
 the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>,
 the value is the mean response time (in seconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
 </ul>
-<p>The following assignments are made only if time_scale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>;  otherwise the value of the
-corresponding attributes is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
+<p>The following assignments are made only if :py:data.`timeScale &lt;DDM.timeScale&gt;` is
+<code class="xref py py-data docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>;  otherwise the value of the corresponding
+attributes is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
 <ul class="simple">
 <li><strong>probability of reaching the upper threshold</strong> is assigned to the 3rd item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputValue</span></code>
 attribute, and as the value of its <code class="docutils literal"><span class="pre">PROBABILITY_UPPER_THRESHOLD</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is
@@ -334,25 +335,27 @@ when <code class="docutils literal"><span class="pre">time_scale</span></code> i
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_input_value</strong> (value, list or np.ndarray : keyword:<cite>FUNCTION_PARAMS`[keyword:`STARTING_POINT</cite>] [LINK]) &#8211; the input to the mechanism to use if none is provided in a call to its
+<li><strong>default_input_value</strong> (value, list or np.ndarray : default                           keyword:<cite>FUNCTION_PARAMS`[:py:data:`STARTING_POINT &lt;DDM.starting_point&gt;</cite>]) &#8211; the input to the mechanism to use if none is provided in a call to its
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref py py-data docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref py py-data docutils literal"><span class="pre">run</span></code></a> methods;
 also serves as a template to specify the length of <code class="docutils literal"><span class="pre">variable</span></code> for <code class="docutils literal"><span class="pre">function</span></code>, and the primary  outputState
 of the mechanism (see <span class="xref std std-ref">Input</span> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) &#8211; specifies the analytic solution to use for the decision process if <code class="docutils literal"><span class="pre">time_scale</span></code> is set to
 <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>; can be <code class="xref py py-class docutils literal"><span class="pre">BogaczEtAl</span></code> or <code class="xref py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code> (note:  the latter requires
-that the MatLab engine is installed). If <code class="docutils literal"><span class="pre">time_scale</span></code> is set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
-<code class="docutils literal"><span class="pre">function</span></code> is automatically assigned to <code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code>.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
-This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code> to use one of the analytic solutions specified by <code class="docutils literal"><span class="pre">function</span></code>.
-This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> to numerically integrate the decision variable.</li>
+that the MatLab engine is installed). If <code class="docutils literal"><span class="pre">time_scale</span></code> is set to
+<code class="xref py py-data docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, <code class="docutils literal"><span class="pre">function</span></code> is automatically assigned to
+<a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code></a>.</li>
+<li><strong>time_scale</strong> (TimeScale : default <code class="xref py py-data docutils literal"><span class="pre">TimeScale.TRIAL</span></code>) &#8211; specifies whether the mechanism is executed on the time_step or trial time scale.
+This must be set to <code class="xref py py-data docutils literal"><span class="pre">TimeScale.TRIAL</span> <span class="pre">&lt;TimeScale.TimeScale.TRIAL&gt;</span> <span class="pre">to</span> <span class="pre">use</span> <span class="pre">one</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">analytic</span> <span class="pre">solutions</span>
+<span class="pre">specified</span> <span class="pre">by</span> <span class="pre">``function`</span></code>. This must be set to :py:data:<a href="#id3"><span class="problematic" id="id4">`</span></a>TimeScale.TIME_STEP &lt;TimeScale.TimeScale.TIME_STEP&gt;
+to numerically (path) integrate the decision variable.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
 and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a params dict).</li>
 <li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for the process.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</li>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 <li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
 <dt>context</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &#8216;&#8217;None&#8217;&#8216;</span><dd>string used for contextualization of instantiation, hierarchical calls, executions, etc.</dd>
@@ -424,7 +427,7 @@ only assigned if <code class="docutils literal"><span class="pre">function</span
 <dd><p><em>str : default DDM-&lt;index&gt;</em> &#8211; the name of the mechanism.
 Specified in the name argument of the call to create the projection;
 if not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -433,7 +436,7 @@ if not is specified, a default is assigned by MechanismRegistry
 <dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; a PreferenceSet for the mechanism.
 Specified in the prefs argument of the call to create the mechanism;
 if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</p>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
 <dl class="method">

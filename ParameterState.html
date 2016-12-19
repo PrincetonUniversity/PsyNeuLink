@@ -85,11 +85,31 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="State.html">States</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ParameterState</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-parameters">Specifying Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
@@ -169,7 +189,7 @@ the values of these inputs, and uses the result to modify the value of the param
 <p>A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
 parameterStates are created automatically when the mechanism or projection to which they belong is created.  The owner
 of a parameterState must be a mechanism or MappingProjection.  If the owner is not explicitly specified, and
-can&#8217;t be determined by context, the parameterState will be assigned to the <code class="xref any docutils literal"><span class="pre">DefaultProcessingMechanism</span></code> [LINK].
+can&#8217;t be determined by context, the parameterState will be assigned to the <code class="xref py py-class docutils literal"><span class="pre">DefaultProcessingMechanism</span></code>.
 One parameterState is created for each configurable parameter of its owner object, as well as for each parameter of
 that object&#8217;s  <code class="docutils literal"><span class="pre">function</span></code>.  Each parameterState is created using the specification of the parameter for which it is
 responsible, as described below.</p>
@@ -392,10 +412,10 @@ which it is responsible.</li>
 and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).</li>
 <li><strong>name</strong> (<em>str : default InputState-&lt;index&gt;</em>) &#8211; a string used for the name of the inputState.
 If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the PreferenceSet for the inputState.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</li>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
 </tr>
@@ -459,7 +479,7 @@ the result of which is assigned to <code class="docutils literal"><span class="p
 <dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; the name of the inputState.
 Specified in the name argument of the call to create the outputState.  If not is specified, a default is
 assigned by the StateRegistry of the mechanism to which the outputState belongs
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Unlike other PsyNeuLink components, states names are &#8220;scoped&#8221; within a mechanism, meaning that states with
@@ -475,7 +495,7 @@ creation.</p>
 <dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the PreferenceSet for the inputState.
 Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
 assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</p>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
 </dd></dl>

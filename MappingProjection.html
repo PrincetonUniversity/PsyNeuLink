@@ -236,8 +236,8 @@ and the operation is always applied in an element-wise (Hadamard) manner. The de
 <span class="pre">transform</span> <span class="pre">the</span> <span class="pre">value</span> <span class="pre">of</span> <span class="pre">its</span> <span class="pre">``sender`</span></code>, and assign this as the variable for its <code class="docutils literal"><span class="pre">receiver</span></code>.  When it is executed,
 updating the matrix parameterState will cause the value of any projections (e.g., a LearningProjection) it
 receives to be applied to the matrix. This will bring into effect any changes that occurred during the previous
-execution (e.g., due to learning).  Because of <span class="xref std std-ref">Lazy Evaluation`[LINK], those changes will only be effective
-after the current execution (in other words, inspecting :py:data:`matrix</span> will not show
+execution (e.g., due to learning).  Because of <span class="xref std std-ref">Lazy Evaluation</span>, those changes will only be effective
+after the current execution (in other words, inspecting <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> will not show
 the effects of projections to its parameterState until the MappingProjection has been executed).</p>
 </div>
 <div class="section" id="class-reference">
@@ -263,10 +263,10 @@ and/or a custom function and its parameters (see <span class="xref doc">Componen
 By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> assignment (LinearCombination);</li>
 <li><strong>name</strong> (<em>str : default MappingProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the MappingProjection.
 If not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the PreferenceSet for the MappingProjection.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</li>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
 </tr>
@@ -290,7 +290,7 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dd><p><em>str : default MappingProjection-&lt;index&gt;</em> &#8211; the name of the MappingProjection.
 Specified in the name argument of the call to create the projection;
 if not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -299,7 +299,7 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the PreferenceSet for projection.
 Specified in the prefs argument of the call to create the projection;
 if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</p>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
 </dd></dl>
