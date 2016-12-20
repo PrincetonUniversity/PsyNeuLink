@@ -672,7 +672,7 @@ class Mechanism_Base(Mechanism):
     """
 
     #region CLASS ATTRIBUTES
-    componentCategory = kwMechanismFunctionCategory
+    componentCategory = kwMechanismComponentCategory
     className = componentCategory
     suffix = " " + className
 

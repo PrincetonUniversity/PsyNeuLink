@@ -21,14 +21,14 @@ from PsyNeuLink.Globals.Keywords import *
 RegistryVerbosePrefs = {
     kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
     kwComponentPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
-    kwProcessFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwMechanismFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwStateFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
+    kwProcessComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
+    kwMechanismComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
+    kwStateComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
     kwInputState: DEFAULT_REGISTRY_VERBOSITY,
     kwParameterState: DEFAULT_REGISTRY_VERBOSITY,
     OUTPUT_STATE: DEFAULT_REGISTRY_VERBOSITY,
     kwDDM: DEFAULT_REGISTRY_VERBOSITY,
-    kwProjectionFunctionCategory: DEFAULT_REGISTRY_VERBOSITY,
+    kwProjectionComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
     CONTROL_PROJECTION: DEFAULT_REGISTRY_VERBOSITY,
     MAPPING_PROJECTION: DEFAULT_REGISTRY_VERBOSITY,
     kwComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
@@ -55,7 +55,7 @@ def register_category(entry,
                       context='Registry'):
 # MODIFIED 9/10/16 END
 # DOCUMENT:
-    """Maintains registry of subclasses for base_class, names instances incrementally, and sets default
+    """Maintains registry of subclasses for base_class, names instances incrementally (if duplicates), and sets default
 
     Arguments:
     - entry (object or class)
@@ -85,7 +85,7 @@ def register_category(entry,
         # # MechanismRegistry ------------------------------------------------------------------------
         # #
         # # Dictionary of registered Mechanism subclasses; each entry has:
-        # #     - key: Mechanism function type name (componentType)
+        # #     - key: Mechanism component type name (componentType)
         # #     - value: MechanismEntry tuple (mechanism, instanceCount, default)
         # #              Notes:
         # #              * instanceCount is incremented each time a new default instance is created
@@ -101,7 +101,7 @@ def register_category(entry,
     """
 
     if not issubclass(base_class, object):
-        raise RegistryError("base_class ({0}) for registry must be a subclass of Function".format(base_class))
+        raise RegistryError("base_class ({0}) for registry must be a subclass of Component".format(base_class))
 
     # if registry is NotImplemented:
     #     try:
@@ -122,20 +122,20 @@ def register_category(entry,
     #         raise RegistryError("sub_group_attr arg ({0}) must be an attribute of {1} ".
     #                             format(sub_group_attr,entry.__class__.__name__))
     #
-    # If entry is an instance (presumably of a function type of the base class):
+    # If entry is an instance (presumably of a component type of the base class):
     if isinstance(entry, base_class):
 
-        function_type_name = entry.__class__.__name__
+        component_type_name = entry.__class__.__name__
 
-        # Function type is registered (i.e., there is an entry for function_type_name)
-        if function_type_name in registry:
+        # Component type is registered (i.e., there is an entry for component_type_name)
+        if component_type_name in registry:
             register_instance(entry=entry,
                               name=name,
                               base_class=base_class,
                               registry=registry,
-                              sub_dict=function_type_name)
+                              sub_dict=component_type_name)
 
-        # If function type is not already registered in registry, then:
+        # If component type is not already registered in registry, then:
         else:
             # Set instance's name to first instance:
             # If name was not provided, assign componentType-1 as default;
@@ -147,22 +147,22 @@ def register_category(entry,
             # Create instance dict:
             instanceDict = {entry.name: entry}
 
-            # Register function type with instance count of 1:
-            registry[function_type_name] = RegistryEntry(type(entry), instanceDict, 1, False)
+            # Register component type with instance count of 1:
+            registry[component_type_name] = RegistryEntry(type(entry), instanceDict, 1, False)
 
 
-    # If entry is a reference to the function type (rather than an instance of it)
+    # If entry is a reference to the component type (rather than an instance of it)
     elif issubclass(entry, base_class):
-        function_type_name = entry.__name__
+        component_type_name = entry.__name__
         # If it is already there, ignore
-        if function_type_name in registry:
+        if component_type_name in registry:
             pass
         # If it is not there:
-        # - create entry for function type in registry
+        # - create entry for component type in registry
         # - instantiate empty instanceDict
         # - set instance count = 0
         else:
-            registry[function_type_name] = RegistryEntry(entry, {}, 0, False)
+            registry[component_type_name] = RegistryEntry(entry, {}, 0, False)
 
     else:
         raise RegistryError("Requested entry {0} not of type {1}".format(entry, base_class))
@@ -173,13 +173,13 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             # Get and increment instanceCount
             instanceCount = registry[sub_dict].instanceCount + 1
 
-            # If instance does not have a name, set instance's name to "function_type_name-1"
+            # If instance does not have a name, set instance's name to "component_type_name-1"
             if not name:
                 entry.name = sub_dict+'-1'
             else:
                 entry.name = name
 
-            # Check for instance name in instanceDict for its function type;
+            # Check for instance name in instanceDict for its component type;
             # - if name exists, add numerical suffix if none, and increment if already present
             old_entry_name = entry.name
             while entry.name in registry[sub_dict].instanceDict:
@@ -205,7 +205,7 @@ def register_instance(entry, name, base_class, registry, sub_dict):
             registry[sub_dict] = registry[sub_dict]._replace(instanceCount=instanceCount)
 
 # def set_default_mechanism(mechanism_subclass):
-#     """Sets DefaultMechanism to specified function type
+#     """Sets DefaultMechanism to specified component type
 #
 #     :param mechanism_subclass:
 #     :return:
@@ -216,13 +216,13 @@ def register_instance(entry, name, base_class, registry, sub_dict):
 #
 #     # Remove existing default flag
 #     old_default_name = NotImplemented
-#     for function_type_name in MechanismRegistry:
-#         if MechanismRegistry[function_type_name].default:
-#             old_default_name = function_type_name
-#             MechanismRegistry[function_type_name] = MechanismRegistry[function_type_name]._replace(default=False)
+#     for component_type_name in MechanismRegistry:
+#         if MechanismRegistry[component_type_name].default:
+#             old_default_name = component_type_name
+#             MechanismRegistry[component_type_name] = MechanismRegistry[component_type_name]._replace(default=False)
 #
 #
-#     # Flag specified function type as default
+#     # Flag specified component type as default
 #     try:
 #         MechanismRegistry[mechanism_subclass.componentType] =\
 #             MechanismRegistry[mechanism_subclass.componentType]._replace(default=True)
