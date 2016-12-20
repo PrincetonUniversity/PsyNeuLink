@@ -200,10 +200,10 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Functi
 
 # Function Categories   -----------------
 
-kwProcessFunctionCategory = "Process_Base"
-kwMechanismFunctionCategory = "Mechanism_Base"
-kwStateFunctionCategory = "State_Base"
-kwProjectionFunctionCategory = "Projection_Base"
+kwProcessComponentCategory = "Process_Base"
+kwMechanismComponentCategory = "Mechanism_Base"
+kwStateComponentCategory = "State_Base"
+kwProjectionComponentCategory = "Projection_Base"
 kwComponentCategory = "Function_Base"
 
 # Function TYPES  -----------------
