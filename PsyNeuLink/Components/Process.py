@@ -782,7 +782,7 @@ class Process_Base(Process):
 
     """
 
-    componentCategory = kwProcessFunctionCategory
+    componentCategory = kwProcessComponentCategory
     className = componentCategory
     suffix = " " + className
     componentType = "Process"
@@ -2038,6 +2038,17 @@ class Process_Base(Process):
             for input_state in mech.inputStates.values():
                 # For each projection in the list
                 for projection in input_state.receivesFromProjections:
+
+                    # MODIFIED 12/19/16 NEW:
+                    # Skip learning if projection is an input from the Process or System
+                    # or comes from a mechanism that belongs to another process
+                    #    (this is to prevent "double-training" of projections from mechanisms belonging
+                    #     to different processes when call to _execute_learning() comes from a system)
+                    sender = projection.sender.owner
+                    if isinstance(sender, Process_Base) or not self in (sender.processes):
+                        continue
+                    # MODIFIED 12/19/16 END
+
                     # For each parameter_state of the projection
                     try:
                         for parameter_state in projection.parameterStates.values():

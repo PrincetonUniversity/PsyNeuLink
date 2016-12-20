@@ -542,7 +542,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         # Update self.outputState and self.outputStates
         try:
-            self.outputStates[output_state_name] = state
+            self.outputStates[state.name] = state
         except AttributeError:
             self.outputStates = OrderedDict({output_state_name:state})
             self.outputState = self.outputStates[output_state_name]
