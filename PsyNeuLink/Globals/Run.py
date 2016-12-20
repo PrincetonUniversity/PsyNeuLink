@@ -675,6 +675,9 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             if not mech in object.originMechanisms.mechanisms:
                 raise SystemError("{} is not an origin mechanism in {}".format(mech.name, object.name))
 
+    # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
+    #       and is handled where stimuli for a system are assigned to phases below
+
     # Stimuli are targets:
     #    - validate that there is a one-to-one mapping of target entries to target mechanisms in the process or system;
     #    - insure that order of target stimuli in dict parallels order of target mechanisms in targetMechanisms list
@@ -711,7 +714,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         from collections import OrderedDict
         ordered_targets = OrderedDict()
         for target in object.targetMechanisms:
-            # Get the process to which the target mechanism belongs:
+            # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
                                projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections if
@@ -720,7 +723,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
                                "supposed to be in targetMechanisms for {}".
                                format(target.name, object.name))
-            # Get stimuli specified for terminal mechanism of process associated with target mechanism
+            # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
             terminal_mech = process.terminalMechanisms[0]
             try:
                 ordered_targets[terminal_mech] = stimuli[terminal_mech]
@@ -775,12 +778,22 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stim_list.append(stims_in_execution)
 
     # Otherwise, for inputs to a system, construct stimulus from dict with phases
-    else:
+    elif object_type is SYSTEM:
         for execution in range(num_input_sets):
             stimuli_in_execution = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
-                for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
+
+                # MODIFIED 12/19/16 OLD:
+                # for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
+                # MODIFIED 12/19/16 NEW:
+                # Only assign inputs to processes for which there were originMechanisms specified
+                #    (i.e., *not* processes constructed during initialization, such as EVC prediction mechanisms)
+                #    and assign them in the order they appear in object.processes
+                for i in range(len(object.originMechanisms)):
+                    mech, runtime_params, phase_spec = object.processes[i]._mech_tuples[0]
+                # MODIFIED 12/19/16 END
+
                     for process, status in mech.processes.items():
                         if process._isControllerProcess:
                             continue
@@ -797,6 +810,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                         stimuli_in_phase.append(stimulus)
                 stimuli_in_execution.append(stimuli_in_phase)
             stim_list.append(stimuli_in_execution)
+
+    else:
+        raise RunError("PROGRAM ERROR: run does not support object of type {}".format(object_type))
+
     return stim_list
 
 def _validate_inputs(object, inputs=None, num_phases=None, context=None):
@@ -930,7 +947,6 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
     else:
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
                        format(object.__class__.__name__))
-
 
 def _validate_targets(object, targets, num_input_sets):
     """
