@@ -330,10 +330,10 @@ and axis 2 is used for the input to each inputState for each round.</p>
 <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, is designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>.
 An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
 first run.  These values are specified in the <code class="docutils literal"><span class="pre">initial_values</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>, as a dict.  The key for each entry
-must be a mechanism designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>, and its value an input for the mechanism to be used as
-its initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an
-np.ndarray), must equal the number of inputStates of the mechanism, and the size of each value must match that of the
-variable for the corresponding inputState.</p>
+must be a mechanism designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>, and its value an
+input for the mechanism to be used as its initial value.  The size of the input (length of the outermost level if it
+is a list, or axis 0 if it is an np.ndarray), must equal the number of inputStates of the mechanism, and the size of
+each value must match that of the variable for the corresponding inputState.</p>
 </div>
 <div class="section" id="targets">
 <span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
@@ -341,12 +341,12 @@ variable for the corresponding inputState.</p>
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the process or system being run.  These are specified
 in the <code class="docutils literal"><span class="pre">targets</span></code> argument of the <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> method.  The same two formats used for inputs
 (<span class="xref std std-ref">sequence</span> and ref:<cite>mechanism &lt;Run_Mechanism&gt;</cite>) can also be used for targets.  However, the format
-of the lists or ndarrays is simpler, since each TARGET mechanism is assigned only a single target value;  so there is
-never the need for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of
-inputs.  The number of targets specified for each mechanism (corresponding to the number executions) must equal the
-number specified for the inputs, and the format of each target value must match (in number and type of elements) that
-of the <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref py py-data docutils literal"><span class="pre">comparator_target</span></code></a> parameter of the
-TARGET mechanism for which it is intended.</p>
+of the lists or ndarrays is simpler, since each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism is assigned
+only a single target value;  so there is never the need for the extra level of nesting (or dimension of ndarray) used
+for inputStates in the specification of inputs.  The number of targets specified for each mechanism (corresponding to
+the number executions) must equal the number specified for the inputs, and the format of each target value must match
+(in number and type of elements) that of the <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref py py-data docutils literal"><span class="pre">comparator_target</span></code></a> parameter of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a>
+mechanism for which it is intended.</p>
 <p><strong>Sequence format</strong> <em>(List[values] or ndarray):</em>
 There are at most only three levels of nesting (or dimensions) required for targets: one for executions,
 one for mechanisms, and one for the elements of each input.  For a system with more than one TARGET mechanism,
@@ -367,7 +367,7 @@ the same as described for the mechanism format for <span class="xref std std-ref
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10dbcce80&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10dbcceb8&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10dbd9048&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10dbd9128&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10dbd9160&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10dbd9240&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10dbd92b0&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10dbd9320&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10dbd9390&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10dbd9400&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10c1977b8&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10c197828&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10c197278&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10c197470&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c197780&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10c197668&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10c1975c0&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10c197198&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10c1974a8&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10c1970b8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <blockquote>
 <div><dl class="docutils">
