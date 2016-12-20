@@ -2,7 +2,18 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# IMPLEMENT: add targetMechanisms to System show() method
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
+
+# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultCOntroller and passing to EVC)
+
+# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
+# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
+
+# IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
+# IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 
 # DOCUMENT: Learning and Control in System
 # DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)

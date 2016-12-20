@@ -636,7 +636,7 @@ class System_Base(System):
 
     """
 
-    componentCategory = kwProcessFunctionCategory
+    componentCategory = kwProcessComponentCategory
     className = componentCategory
     suffix = " " + className
     componentType = "System"
@@ -1674,7 +1674,7 @@ class System_Base(System):
 
     def show(self, options=None):
         """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN`, :keyword:`TERMINAL` mechanisms,
-        :keyword:`TARGET` mechahinsms, ``outputs`` and their labels for the system.
+        :py:data:`TARGET <Keywords.Keywords.TARGET>` mechahinsms, ``outputs`` and their labels for the system.
 
         Arguments
         ---------
@@ -1749,6 +1749,11 @@ class System_Base(System):
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
 
+        if any(process.learning for process in self.processes):
+            print ("\n\tTarget mechanisms: ".format(self.name))
+            for mech_tuple in self.targetMechanisms.mech_tuples:
+                print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
+
         print ("\n---------------------------------------------------------")
 
 
@@ -1780,7 +1785,7 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :keyword:`TARGET_MECHANISMS`:list of TARGET mechanisms
+            :py:data:`TARGET <Keywords.Keywords.TARGET>`:list of TARGET mechanisms
 
             :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 

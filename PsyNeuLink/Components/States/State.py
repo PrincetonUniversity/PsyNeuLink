@@ -276,7 +276,7 @@ class State_Base(State):
     #region CLASS ATTRIBUTES
 
     kpState = "State"
-    componentCategory = kwStateFunctionCategory
+    componentCategory = kwStateComponentCategory
     className = kwState
     suffix = " " + className
     paramsType = None
@@ -1587,7 +1587,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     :return state: (State)
     """
 
-# IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
+    # IMPLEMENTATION NOTE: CONSIDER MOVING MUCH IF NOT ALL OF THIS TO State.__init__()
 
     #region VALIDATE ARGS
     if not inspect.isclass(state_type) or not issubclass(state_type, State):
