@@ -1431,7 +1431,7 @@ class System_Base(System):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 mechanism.execute(time_scale=self.timeScale,
                                  runtime_params=params,
-                                 context=context)
+                                 context=context + ": `" + process.name + "` process")
 
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
                 # Report completion of process(es) for which mechanism is a TERMINAL
