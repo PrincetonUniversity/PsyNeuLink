@@ -810,7 +810,8 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("{0} is not implemented in mechanism class {1}".
                                      format(name, self.name))
 
-        self.value = None
+        self.value = self._old_value = None
+        self._status = INITIALIZING
         self._receivesProcessInput = False
         self.phaseSpec = None
         self.processes = {}
@@ -1418,10 +1419,18 @@ class Mechanism_Base(Mechanism):
                                       runtime_params=runtime_params,
                                       time_scale=time_scale,
                                       context=context)
+
         # MODIFIED 12/8/16 NEW:
         self.value = np.atleast_2d(self.value)
         # MODIFIED 12/8/16 END
+
+        # MODIFIED 12/20/16 NEW:
+        # Set status based on whether self.value has changed
+        self.status = self.value
+        # MODIFIED 12/20/16 END
+
         #endregion
+
 
         #region UPDATE OUTPUT STATE(S)
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
@@ -1697,6 +1706,22 @@ class Mechanism_Base(Mechanism):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+
+    # MODIFIED 12/20/16 NEW:
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, current_value):
+        # if current_value != self._old_value:
+        if np.array_equal(current_value, self._old_value):
+            self._status = UNCHANGED
+        else:
+            self._status = CHANGED
+            self._old_value = current_value
+    # MODIFIED 12/20/16 END
+
 
     @property
     def inputState(self):

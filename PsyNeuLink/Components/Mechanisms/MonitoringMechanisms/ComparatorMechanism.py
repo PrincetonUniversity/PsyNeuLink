@@ -467,33 +467,9 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.function(variable=self.variable, params=runtime_params)
 
-            # # MODIFIED 12/7/16 OLD:
-            # mean = np.mean(comparison_array)
-            # sum = np.sum(comparison_array)
-            # SSE = np.sum(comparison_array * comparison_array)
-            # MSE = SSE/len(comparison_array)
-            #
-            # self.summedErrorSignal = sum
-            #
-            # # Assign output values
-            # self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
-            # self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
-            # self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
-            # self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
-            # self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
-            #
-            # # if (self.prefs.reportOutputPref and EXECUTING in context):
-            # #     print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
-            # #                                                                  self.variable[0],
-            # #                                                                  self.variable[1]))
-            # #     print ("\nOutput:\n- Error: {}\n- MSE: {}".
-            # #            format(comparison_array, MSE))
-            #
-            # return self.outputValue
-            # MODIFIED 12/7/16 NEW:
             self.summedErrorSignal = sum
+
             return comparison_array
-            # MODIFIED 12/7/16 END
 
         else:
             raise MechanismError("time_scale not specified for ComparatorMechanism")

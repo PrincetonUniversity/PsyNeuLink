@@ -119,6 +119,9 @@ kwValidate = 'Validate'
 VALIDATE = kwValidate
 COMMAND_LINE = "COMMAND_LINE"
 kwParams = 'params'
+CHANGED = 'CHANGED'
+UNCHANGED = 'UNCHANGED'
+
 
 #endregion
 
