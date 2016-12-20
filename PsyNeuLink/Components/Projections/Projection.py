@@ -352,7 +352,7 @@ class Projection_Base(Projection):
 
     color = 0
 
-    componentCategory = kwProjectionFunctionCategory
+    componentCategory = kwProjectionComponentCategory
     className = componentCategory
     suffix = " " + className
 

@@ -2,6 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultCOntroller and passing to EVC)
+
+# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
+# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
+
 # IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
 # IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 

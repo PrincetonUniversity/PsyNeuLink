@@ -636,7 +636,7 @@ class System_Base(System):
 
     """
 
-    componentCategory = kwProcessFunctionCategory
+    componentCategory = kwProcessComponentCategory
     className = componentCategory
     suffix = " " + className
     componentType = "System"
