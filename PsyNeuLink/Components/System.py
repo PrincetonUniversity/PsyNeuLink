@@ -1280,6 +1280,113 @@ class System_Base(System):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                   format(value, self.name, append_type_to_name(self)))
 
+    def _instantiate_learning_graph(self):
+
+
+        def build_dependency_sets_by_traversing_projections(sender_mech):
+
+            # Delete any projections to mechanism from processes or mechanisms in processes not in current system
+            for input_state in sender_mech.inputStates.values():
+                for projection in input_state.receivesFromProjections:
+                    sender = projection.sender.owner
+                    system_processes = self.processes
+                    if isinstance(sender, Process):
+                        if not sender in system_processes:
+                            del projection
+                    elif not all(sender_process in system_processes for sender_process in sender.processes):
+                        del projection
+
+            # If sender_mech has no projections left, raise exception
+            if not any(any(projection for projection in input_state.receivesFromProjections)
+                       for input_state in sender_mech.inputStates.values()):
+                raise SystemError("{} only receives projections from other processes or mechanisms not"
+                                  " in the current system ({})".format(sender_mech.name, self.name))
+
+            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a ComparatorMechanism or
+            #     it projects only to ComparatorMechanism(s)
+            # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
+            #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
+            if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
+                    all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base, ControlMechanism_Base))
+                            for projection in output_state.sendsToProjections)
+                        for output_state in sender_mech.outputStates.values())):
+                try:
+                    if sender_mech.systems[self] is ORIGIN:
+                        sender_mech.systems[self] = SINGLETON
+                    else:
+                        sender_mech.systems[self] = TERMINAL
+                except KeyError:
+                    sender_mech.systems[self] = TERMINAL
+                return
+
+            for outputState in sender_mech.outputStates.values():
+
+                for projection in outputState.sendsToProjections:
+                    receiver = projection.receiver.owner
+                    receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
+
+                    try:
+                        self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                    except KeyError:
+                        self.graph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+
+                    # Use toposort to test whether the added dependency produced a cycle (feedback loop)
+                    # Do not include dependency (or receiver on sender) in executionGraph for this projection
+                    #  and end this branch of the traversal if the receiver has already been encountered,
+                    #  but do mark for initialization
+                    # Notes:
+                    # * This is because it is a feedback connection, which introduces a cycle into the graph
+                    #     that precludes use of toposort to determine order of execution;
+                    #     however, the feedback projection will still be used during execution
+                    #     so the sending mechanism should be designated as INITIALIZE_CYCLE
+                    # * Check for receiver mechanism and not its tuple,
+                    #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
+                    #     and would introduce a cycle irrespective of the tuple in which it appears in the graph
+                    # FIX: MODIFY THIS TO (GO BACK TO) USING if receiver_tuple in self.executionGraph
+                    # FIX  BUT CHECK THAT THEY ARE IN DIFFERENT PHASES
+                    if receiver in self.execution_graph_mechs:
+                        # Try assigning receiver as dependent of current mechanism and test toposort
+                        try:
+                            # If receiver_tuple already has dependencies in its set, add sender_mech to set
+                            if self.executionGraph[receiver_tuple]:
+                                self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            # If receiver_tuple set is empty, assign sender_mech to set
+                            else:
+                                self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                            # Use toposort to test whether the added dependency produced a cycle (feedback loop)
+                            list(toposort(self.executionGraph))
+                        # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
+                        except ValueError:
+                            self.executionGraph[receiver_tuple].remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
+                            if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
+                                sender_mech.systems[self] = INITIALIZE_CYCLE
+                            if not (receiver.systems[self] in {ORIGIN, SINGLETON}):
+                                receiver.systems[self] = CYCLE
+                            continue
+
+                    else:
+                        # Assign receiver as dependent on sender mechanism
+                        try:
+                            # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
+                            # FIX: DOES THAT SCREW UP ORIGINS?
+                            self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                        except KeyError:
+                            self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+
+                    if not sender_mech.systems:
+                        sender_mech.systems[self] = INTERNAL
+
+                    # Traverse list of mechanisms in process recursively
+                    build_dependency_sets_by_traversing_projections(receiver)
+
+        # Sort for consistency of output
+        sorted_processes = sorted(self.processes, key=lambda process : process.name)
+
+        for process in sorted_processes:
+            build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0])
+
+
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
