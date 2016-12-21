@@ -1383,11 +1383,8 @@ class System_Base(System):
             build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0])
 
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
-        temp = toposort_flatten(self.learningExecutionGraph, sort=False)
-        # self.executionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
-
-        TEST = True
-
+        self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
+        # self.learningExecutionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -1514,67 +1511,12 @@ class System_Base(System):
         # TEST PRINT:
         # for i in range(len(self.executionList)):
         #     print(self.executionList[i][0].name)
-        sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
+        # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
-        # MODIFIED 12/21/16 OLD:
-        # Execute each Mechanism in self.executionList, in the order listed during its phase
-#         for i in range(len(self.executionList)):
-#
-#             mechanism, params, phase_spec = self.executionList[i]
-#
-#             if report_system_output and report_process_output:
-#                 # Report initiation of process(es) for which mechanism is an ORIGIN
-#                 # Sort for consistency of reporting:
-#                 processes = list(mechanism.processes.keys())
-#                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-#                 for process in process_keys_sorted:
-#                     if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-#                         process._report_process_initiation()
-#
-#                 # for process, status in mechanism.processes.items():
-#                 #     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
-#                 #         process._report_process_initiation()
-#
-#             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-#             if phase_spec == (CentralClock.time_step % self.numPhases):
-#                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-#                 mechanism.execute(time_scale=self.timeScale,
-#                                  runtime_params=params,
-#                                  context=context + ": `" + process.name + "` process")
-#
-#                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-#                 # Report completion of process(es) for which mechanism is a TERMINAL
-#                 if report_system_output:
-#                     if report_process_output:
-#                         # Sort for consistency of reporting:
-#                         processes = list(mechanism.processes.keys())
-#                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-#                         for process in process_keys_sorted:
-#                             # MODIFIED 12/4/16 NEW:
-#                             if process.learning and process._learning_enabled:
-#                                 continue
-#                             # MODIFIED 12/4/16 END
-#                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
-#                                 process._report_process_completion()
-#
-#             if not i:
-#                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-#                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
-#                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-#                 # # MODIFIED 10/2/16 OLD:
-#                 # self.variable = self.variable * 0
-#                 # # MODIFIED 10/2/16 NEW:
-#                 # self.variable = self.inputs * 0
-#                 # MODIFIED 10/2/16 NEWER:
-#                 self.variable = convert_to_np_array(self.inputs, 2) * 0
-#                 # MODIFIED 10/2/16 END
-#             i += 1
-#         #endregion
         # MODIFIED 12/21/16 NEW:
         self._execute_processing(context=context)
         # MODIFIED 12/21/16 END
-
+        #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
 
@@ -1582,38 +1524,12 @@ class System_Base(System):
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context:
 
-            # # MODIFIED 12/21/16 OLD:
-            # for process in self.processes:
-            #     if process.learning and process._learning_enabled:
-            #         for mech_tuple in process.monitoringMechanisms.mech_tuples:
-            #             mech_tuple.mechanism.execute(time_scale=self.timeScale,
-            #                                          runtime_params=mech_tuple.params,
-            #                                          context=context)
-            # # # MODIFIED 12/20/16 OLD:
-            # #         process._execute_learning(context=context)
-            # #
-            # #         # Report output of the process if reporting is enabled for system and process
-            # #         #   and the process has a targetMechanism
-            # #         #   (note: it may not, as it may terminate on an internal mechanism of another process
-            # #         #          and therefore use that process' targetMechanism as the source of its error signal)
-            # #         if report_system_output and report_process_output and process.targetMechanisms:
-            # #                 process._report_process_completion()
-            # # MODIFIED 12/20/16 NEW:
-            # for process in self.processes:
-            #     process._execute_learning(context=context)
-            #
-            #     # Report output of the process if reporting is enabled for system and process
-            #     #   and the process has a targetMechanism
-            #     #   (note: it may not, as it may terminate on an internal mechanism of another process
-            #     #          and therefore use that process' targetMechanism as the source of its error signal)
-            #     if report_system_output and report_process_output and process.targetMechanisms:
-            #             process._report_process_completion()
-            # # MODIFIED 12/20/16 END
-
             # MODIFIED 12/21/16 NEW:
             # IMPLEMENT: EXECUTE self.learningGraph HERE:  EXECUTE MECHANISMS AND PROJECTIONS
             # Execute each Mechanism in self.executionList, in the order listed during its phase
-            self._execute_learning(context=context)
+            # self._execute_learning(context=context)
+            # self._execute_learning(context=context.replace("EXECUTING", "LEARNING"))
+            self._execute_learning(context=context + LEARNING)
             # MODIFIED 12/21/16 END
 
         # endregion
@@ -1646,11 +1562,12 @@ class System_Base(System):
         return self.terminalMechanisms.outputStateValues
 
     def _execute_processing(self, context=None):
+        # Execute each Mechanism in self.executionList, in the order listed during its phase
         for i in range(len(self.executionList)):
 
             mechanism, params, phase_spec = self.executionList[i]
 
-            if self._report_system_output and self._report_process_output:
+            if self._report_system_output and  self._report_process_output:
                 # Report initiation of process(es) for which mechanism is an ORIGIN
                 # Sort for consistency of reporting:
                 processes = list(mechanism.processes.keys())
@@ -1667,14 +1584,21 @@ class System_Base(System):
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
             if phase_spec == (CentralClock.time_step % self.numPhases):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+
+                processes = list(mechanism.processes.keys())
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
+
                 mechanism.execute(time_scale=self.timeScale,
                                  runtime_params=params,
-                                 context=context + ": `" + process.name + "` process")
+                                 context=context +
+                                         "| mechanism: " + mechanism.name +
+                                         " [in processes: " + str(process_names) + "]")
 
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
                 # Report completion of process(es) for which mechanism is a TERMINAL
-                if self._report_system_output:
-                    if self._report_process_output:
+                if  self._report_system_output:
+                    if  self._report_process_output:
                         # Sort for consistency of reporting:
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
@@ -1698,63 +1622,152 @@ class System_Base(System):
                 self.variable = convert_to_np_array(self.inputs, 2) * 0
                 # MODIFIED 10/2/16 END
             i += 1
-        #endregion
-
 
     def _execute_learning(self, context=None):
 
-        for i in range(len(self.executionList)):
 
-            mechanism, params, phase_spec = self.executionList[i]
+        # # MODIFIED 12/21/16 OLD:
+        # for process in self.processes:
+        #     if process.learning and process._learning_enabled:
+        #         for mech_tuple in process.monitoringMechanisms.mech_tuples:
+        #             mech_tuple.mechanism.execute(time_scale=self.timeScale,
+        #                                          runtime_params=mech_tuple.params,
+        #                                          context=context)
+        # # # MODIFIED 12/20/16 OLD:
+        # #         process._execute_learning(context=context)
+        # #
+        # #         # Report output of the process if reporting is enabled for system and process
+        # #         #   and the process has a targetMechanism
+        # #         #   (note: it may not, as it may terminate on an internal mechanism of another process
+        # #         #          and therefore use that process' targetMechanism as the source of its error signal)
+        # #         if report_system_output and report_process_output and process.targetMechanisms:
+        # #                 process._report_process_completion()
+        # # MODIFIED 12/20/16 NEW:
+        # for process in self.processes:
+        #     process._execute_learning(context=context)
+        #
+        #     # Report output of the process if reporting is enabled for system and process
+        #     #   and the process has a targetMechanism
+        #     #   (note: it may not, as it may terminate on an internal mechanism of another process
+        #     #          and therefore use that process' targetMechanism as the source of its error signal)
+        #     if self._report_system_output and self._report_process_output and process.targetMechanisms:
+        #             process._report_process_completion()
+        # # MODIFIED 12/20/16 END
+
+
+        # MODIFIED 12/21/16 NEW:
+
+        # FROM SYSTEM: ---------------------------------------------------------------------------------------------
+        for i in range(len(self.learningExecutionList)):
+
+            component = self.learningExecutionList[i]
+
+            # if self._report_system_output and self._report_process_output:
+            #     # Report initiation of process(es) for which mechanism is an ORIGIN
+            #     # Sort for consistency of reporting:
+            #     processes = list(component.processes.keys())
+            #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+            #     for process in process_keys_sorted:
+            #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+            #             process._report_process_initiation()
+            #
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if isinstance(component, MonitoringMechanism_Base):
+                component_type = "monitoringMechanism"
+                processes = list(component.processes.keys())
+            elif isinstance(component, MappingProjection):
+                component_type = "mappingProjection"
+                processes = list(component.sender.owner.processes.keys())
+            else:
+                raise SystemError("{} is not legal object for learning".format(component.name))
+
+            # Sort for consistency of reporting:
+            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+            process_names = list(p.name for p in process_keys_sorted)
 
             if self._report_system_output and self._report_process_output:
-                # Report initiation of process(es) for which mechanism is an ORIGIN
-                # Sort for consistency of reporting:
-                processes = list(mechanism.processes.keys())
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                for process in process_keys_sorted:
-                    if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                        process._report_process_initiation()
+                # FIX: Report learning here
+                pass
 
-                # for process, status in mechanism.processes.items():
-                #     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                #         process._report_process_initiation()
+            context_str = str("{} | {}: {} [in processes: {}]".
+                              format(context,
+                                     component_type,
+                                     component.name,
+                                     re.sub('[\[,\],\n]','',str(process_names))))
 
-            # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if phase_spec == (CentralClock.time_step % self.numPhases):
-                # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-                mechanism.execute(time_scale=self.timeScale,
-                                 runtime_params=params,
-                                 context=context + ": `" + process.name + "` process")
+            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            component.execute(time_scale=self.timeScale,
+                              context=context_str)
 
-                # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-                # Report completion of process(es) for which mechanism is a TERMINAL
-                if self._report_system_output:
-                    if self._report_process_output:
-                        # Sort for consistency of reporting:
-                        processes = list(mechanism.processes.keys())
-                        process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                        for process in process_keys_sorted:
-                            # MODIFIED 12/4/16 NEW:
-                            if process.learning and process._learning_enabled:
-                                continue
-                            # MODIFIED 12/4/16 END
-                            if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
-                                process._report_process_completion()
+            # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+            # Report completion of learning
+            if self._report_system_output:
+                if self._report_process_output:
+                    pass
+                    # # Sort for consistency of reporting:
+                    # processes = list(component.processes.keys())
+                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    # for process in process_keys_sorted:
+                    #     # MODIFIED 12/4/16 NEW:
+                    #     if process.learning and process._learning_enabled:
+                    #         continue
+                    #     # MODIFIED 12/4/16 END
+                    #     if component.processes[process] == TERMINAL and process.reportOutputPref:
+                    #         process._report_process_completion()
 
-            if not i:
-                # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
-                # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                # # MODIFIED 10/2/16 OLD:
-                # self.variable = self.variable * 0
-                # # MODIFIED 10/2/16 NEW:
-                # self.variable = self.inputs * 0
-                # MODIFIED 10/2/16 NEWER:
-                self.variable = convert_to_np_array(self.inputs, 2) * 0
-                # MODIFIED 10/2/16 END
-            i += 1
+            # if not i:
+            #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
+            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+            #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
+            #     # # MODIFIED 10/2/16 OLD:
+            #     # self.variable = self.variable * 0
+            #     # # MODIFIED 10/2/16 NEW:
+            #     # self.variable = self.inputs * 0
+            #     # MODIFIED 10/2/16 NEWER:
+            #     self.variable = convert_to_np_array(self.inputs, 2) * 0
+            #     # MODIFIED 10/2/16 END
+            # i += 1
+
+        # FROM PROCESS: ---------------------------------------------------------------------------------------------
+
+        # for item in self._mech_tuples:
+        #     mech = item.mechanism
+        #     params = item.params
+        #
+        #     # IMPLEMENTATION NOTE:
+        #     #    This implementation restricts learning to parameterStates of projections to inputStates
+        #     #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
+        #
+        #     # For each inputState of the mechanism
+        #     for input_state in mech.inputStates.values():
+        #         # For each projection in the list
+        #         for projection in input_state.receivesFromProjections:
+        #
+        #             # MODIFIED 12/19/16 NEW:
+        #             # Skip learning if projection is an input from the Process or System
+        #             # or comes from a mechanism that belongs to another process
+        #             #    (this is to prevent "double-training" of projections from mechanisms belonging
+        #             #     to different processes when call to _execute_learning() comes from a system)
+        #             sender = projection.sender.owner
+        #             if isinstance(sender, Process_Base) or not self in (sender.processes):
+        #                 continue
+        #             # MODIFIED 12/19/16 END
+        #
+        #             # For each parameter_state of the projection
+        #             try:
+        #                 for parameter_state in projection.parameterStates.values():
+        #                     # Call parameter_state.update with LEARNING in context to update LearningSignals
+        #                     # Note: do this rather just calling LearningSignals directly
+        #                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
+        #                     context = context + SEPARATOR_BAR + LEARNING
+        #                     parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
+        #
+        #             # Not all Projection subclasses instantiate parameterStates
+        #             except AttributeError as e:
+        #                 pass
+
+        # MODIFIED 12/21/16 END
+
 
 
     def run(self,
