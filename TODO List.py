@@ -2,6 +2,8 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
+# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
 # TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
 #                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
 #                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
@@ -15,6 +17,7 @@
 # IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
 # IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 
+# DOCUMENTATION: Update LearningProjection_TERMINAL_vs_TARGET_fig
 # DOCUMENT: LearningProjection.monitoringMechanism attribute
 # DOCUMENT: Learning and Control in System
 # DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
