@@ -1723,7 +1723,19 @@ class Process_Base(Process):
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
                 input_state._deferred_init()
-                self._instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
+                # # MODIFIED 12/20/16 OLD:
+                # self._instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
+                # MODIFIED 12/20/16 NEW:
+                # Restrict projections to those from mechanisms in the current process
+                projections = []
+                for projection in input_state.receivesFromProjections:
+                    try:
+                        if self in projection.sender.owner.processes:
+                            projections.append(projection)
+                    except AttributeError:
+                        pass
+                self._instantiate__deferred_init_projections(projections, context=context)
+                # MODIFIED 12/20/16 END
 
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
