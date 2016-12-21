@@ -1047,10 +1047,10 @@ FROM TODO:
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
-        # MODIFIED 12/20/16 NEW:
-        if self.monitoringMechanism.status is UNCHANGED:
-            return np.zeros_like(self.value)
-        # MODIFIED 12/20/16 END
+        # # MODIFIED 12/20/16 NEW:
+        # if self.monitoringMechanism.status is UNCHANGED:
+        #     return np.zeros_like(self.value)
+        # # MODIFIED 12/20/16 END
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from MappingProjection's sender mechanism's outputState
