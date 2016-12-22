@@ -1210,7 +1210,10 @@ class State_Base(State):
                 if LEARNING in context:
                 # MODIFIED 9/4/16 END
                     projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
-                    return
+
+                    # # MODIFIED 12/21/16 OLD:
+                    # return
+                    # # MODIFIED 12/21/16 END
                 else:
                     projection_value = projection.value
 
