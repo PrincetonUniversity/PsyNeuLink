@@ -417,7 +417,7 @@ def run(object,
         # Otherwise, assume multiple executions...
         # MORE HERE
 
-        object.target = targets
+    object.targets = targets
 
     time_scale = time_scale or TimeScale.TRIAL
 
@@ -812,7 +812,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stim_list.append(stimuli_in_execution)
 
     else:
-        raise RunError("PROGRAM ERROR: run does not support object of type {}".format(object_type))
+        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
+                       format(object_type))
 
     return stim_list
 

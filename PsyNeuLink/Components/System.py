@@ -270,7 +270,8 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
+                                                                                      COMPARATOR_TARGET
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -684,9 +685,11 @@ class System_Base(System):
         # MODIFIED 12/15/16 OLD:
         # self.pathway = None
         # MODIFIED 12/15/16 END
+        self.function = self.execute
         self.outputStates = {}
         self._phaseSpecMax = 0
-        self.function = self.execute
+        self.targets = None
+        self.learning = None
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -1469,16 +1472,12 @@ class System_Base(System):
         #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
         num_origin_mechs = len(list(self.originMechanisms))
         if inputs is None:
-            # # MODIFIED 12/4/16 OLD:
-            # pass
-            # MODIFIED 12/4/16 NEW:
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
             inputs = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
                 inputs[i] = self.originMechanisms[i].variableInstanceDefault
-            # MODIFIED 12/4/16 END
 
         else:
             num_inputs = np.size(inputs,0)
@@ -1627,7 +1626,8 @@ class System_Base(System):
 
     def _execute_learning(self, context=None):
 
-
+        # FIX: THIS IS STILL REQUIRED FOR RL TO WORK:
+        # FROM SYSTEM: ------------------------------------------------------------------------------------------
         # # MODIFIED 12/21/16 OLD:
         # for process in self.processes:
         #     if process.learning and process._learning_enabled:
@@ -1656,23 +1656,24 @@ class System_Base(System):
         #             process._report_process_completion()
         # # MODIFIED 12/20/16 END
 
-
         # MODIFIED 12/21/16 NEW:
 
-        # FROM SYSTEM: ---------------------------------------------------------------------------------------------
+        # IMPLEMENTATION NOTE:
+        # Assign target to inputState.variable of each targetMechanism:
+        #     The following doesn't work, beacuse gets over-written by ProcessInputState for ComparatorMechanism
+        #         which, if it is None, uses default value for target from the constructor for ComparatorMechanism
+        # for target_mech in self.targetMechanisms:
+        #     target_mech.inputStates[COMPARATOR_TARGET].variable = self.targets[CentralClock.trial]
+        #     So, instead, assign to the ProcessInputState for each targetMechanism
+        # Assign target for current trial to ProcessInputState of each targetMechanism:
+        for target_mech in self.targetMechanisms:
+            target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections[0].sender.value = \
+                self.targets[CentralClock.trial][0]
+
         for i in range(len(self.learningExecutionList)):
 
             component = self.learningExecutionList[i]
 
-            # if self._report_system_output and self._report_process_output:
-            #     # Report initiation of process(es) for which mechanism is an ORIGIN
-            #     # Sort for consistency of reporting:
-            #     processes = list(component.processes.keys())
-            #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-            #     for process in process_keys_sorted:
-            #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-            #             process._report_process_initiation()
-            #
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             if isinstance(component, MonitoringMechanism_Base):
                 component_type = "monitoringMechanism"
@@ -1689,6 +1690,15 @@ class System_Base(System):
 
             if self._report_system_output and self._report_process_output:
                 # FIX: Report learning here
+                # if self._report_system_output and self._report_process_output:
+                #     # Report initiation of process(es) for which mechanism is an ORIGIN
+                #     # Sort for consistency of reporting:
+                #     processes = list(component.processes.keys())
+                #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                #     for process in process_keys_sorted:
+                #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                #             process._report_process_initiation()
+                #
                 pass
 
             context_str = str("{} | {}: {} [in processes: {}]".
@@ -1705,7 +1715,7 @@ class System_Base(System):
             # Report completion of learning
             if self._report_system_output:
                 if self._report_process_output:
-                    pass
+                    # FIX: Report learning here
                     # # Sort for consistency of reporting:
                     # processes = list(component.processes.keys())
                     # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
@@ -1716,6 +1726,7 @@ class System_Base(System):
                     #     # MODIFIED 12/4/16 END
                     #     if component.processes[process] == TERMINAL and process.reportOutputPref:
                     #         process._report_process_completion()
+                    pass
 
             # if not i:
             #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
@@ -1729,48 +1740,7 @@ class System_Base(System):
             #     self.variable = convert_to_np_array(self.inputs, 2) * 0
             #     # MODIFIED 10/2/16 END
             # i += 1
-
-        # FROM PROCESS: ---------------------------------------------------------------------------------------------
-
-        # for item in self._mech_tuples:
-        #     mech = item.mechanism
-        #     params = item.params
-        #
-        #     # IMPLEMENTATION NOTE:
-        #     #    This implementation restricts learning to parameterStates of projections to inputStates
-        #     #    That means that other parameters (e.g. object or function parameters) are not currenlty learnable
-        #
-        #     # For each inputState of the mechanism
-        #     for input_state in mech.inputStates.values():
-        #         # For each projection in the list
-        #         for projection in input_state.receivesFromProjections:
-        #
-        #             # MODIFIED 12/19/16 NEW:
-        #             # Skip learning if projection is an input from the Process or System
-        #             # or comes from a mechanism that belongs to another process
-        #             #    (this is to prevent "double-training" of projections from mechanisms belonging
-        #             #     to different processes when call to _execute_learning() comes from a system)
-        #             sender = projection.sender.owner
-        #             if isinstance(sender, Process_Base) or not self in (sender.processes):
-        #                 continue
-        #             # MODIFIED 12/19/16 END
-        #
-        #             # For each parameter_state of the projection
-        #             try:
-        #                 for parameter_state in projection.parameterStates.values():
-        #                     # Call parameter_state.update with LEARNING in context to update LearningSignals
-        #                     # Note: do this rather just calling LearningSignals directly
-        #                     #       since parameter_state.update() handles parsing of LearningProjection-specific params
-        #                     context = context + SEPARATOR_BAR + LEARNING
-        #                     parameter_state.update(params=params, time_scale=TimeScale.TRIAL, context=context)
-        #
-        #             # Not all Projection subclasses instantiate parameterStates
-        #             except AttributeError as e:
-        #                 pass
-
         # MODIFIED 12/21/16 END
-
-
 
     def run(self,
             inputs,
