@@ -1626,107 +1626,107 @@ class System_Base(System):
 
     def _execute_learning(self, context=None):
 
-        # MODIFIED 12/21/16 OLD:
-        for process in self.processes:
-            if process.learning and process._learning_enabled:
-                for mech_tuple in process.monitoringMechanisms.mech_tuples:
-                    mech_tuple.mechanism.execute(time_scale=self.timeScale,
-                                                 runtime_params=mech_tuple.params,
-                                                 context=context)
-        # # MODIFIED 12/20/16 OLD:
-        #         process._execute_learning(context=context)
+        # # MODIFIED 12/21/16 OLD:
+        # for process in self.processes:
+        #     if process.learning and process._learning_enabled:
+        #         for mech_tuple in process.monitoringMechanisms.mech_tuples:
+        #             mech_tuple.mechanism.execute(time_scale=self.timeScale,
+        #                                          runtime_params=mech_tuple.params,
+        #                                          context=context)
+        # # # MODIFIED 12/20/16 OLD:
+        # #         process._execute_learning(context=context)
+        # #
+        # #         # Report output of the process if reporting is enabled for system and process
+        # #         #   and the process has a targetMechanism
+        # #         #   (note: it may not, as it may terminate on an internal mechanism of another process
+        # #         #          and therefore use that process' targetMechanism as the source of its error signal)
+        # #         if report_system_output and report_process_output and process.targetMechanisms:
+        # #                 process._report_process_completion()
+        # # MODIFIED 12/20/16 NEW:
+        # for process in self.processes:
+        #     process._execute_learning(context=context)
         #
-        #         # Report output of the process if reporting is enabled for system and process
-        #         #   and the process has a targetMechanism
-        #         #   (note: it may not, as it may terminate on an internal mechanism of another process
-        #         #          and therefore use that process' targetMechanism as the source of its error signal)
-        #         if report_system_output and report_process_output and process.targetMechanisms:
-        #                 process._report_process_completion()
-        # MODIFIED 12/20/16 NEW:
-        for process in self.processes:
-            process._execute_learning(context=context)
+        #     # Report output of the process if reporting is enabled for system and process
+        #     #   and the process has a targetMechanism
+        #     #   (note: it may not, as it may terminate on an internal mechanism of another process
+        #     #          and therefore use that process' targetMechanism as the source of its error signal)
+        #     if self._report_system_output and self._report_process_output and process.targetMechanisms:
+        #             process._report_process_completion()
+        # # MODIFIED 12/20/16 END
 
-            # Report output of the process if reporting is enabled for system and process
-            #   and the process has a targetMechanism
-            #   (note: it may not, as it may terminate on an internal mechanism of another process
-            #          and therefore use that process' targetMechanism as the source of its error signal)
-            if self._report_system_output and self._report_process_output and process.targetMechanisms:
-                    process._report_process_completion()
-        # MODIFIED 12/20/16 END
+        # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
-        # # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
-        #
-        # for i in range(len(self.learningExecutionList)):
-        #
-        #     component = self.learningExecutionList[i]
-        #
-        #     from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        #     if isinstance(component, MonitoringMechanism_Base):
-        #         component_type = "monitoringMechanism"
-        #         processes = list(component.processes.keys())
-        #     elif isinstance(component, MappingProjection):
-        #         component_type = "mappingProjection"
-        #         processes = list(component.sender.owner.processes.keys())
-        #     else:
-        #         raise SystemError("{} is not legal object for learning".format(component.name))
-        #
-        #     # Sort for consistency of reporting:
-        #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-        #     process_names = list(p.name for p in process_keys_sorted)
-        #
-        #     if self._report_system_output and self._report_process_output:
-        #         # FIX: Report learning here
-        #         # if self._report_system_output and self._report_process_output:
-        #         #     # Report initiation of process(es) for which mechanism is an ORIGIN
-        #         #     # Sort for consistency of reporting:
-        #         #     processes = list(component.processes.keys())
-        #         #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-        #         #     for process in process_keys_sorted:
-        #         #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-        #         #             process._report_process_initiation()
-        #         #
-        #         pass
-        #
-        #     context_str = str("{} | {}: {} [in processes: {}]".
-        #                       format(context,
-        #                              component_type,
-        #                              component.name,
-        #                              re.sub('[\[,\],\n]','',str(process_names))))
-        #
-        #     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-        #     component.execute(time_scale=self.timeScale,
-        #                       context=context_str)
-        #
-        #     # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-        #     # Report completion of learning
-        #     if self._report_system_output:
-        #         if self._report_process_output:
-        #             # FIX: Report learning here
-        #             # # Sort for consistency of reporting:
-        #             # processes = list(component.processes.keys())
-        #             # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-        #             # for process in process_keys_sorted:
-        #             #     # MODIFIED 12/4/16 NEW:
-        #             #     if process.learning and process._learning_enabled:
-        #             #         continue
-        #             #     # MODIFIED 12/4/16 END
-        #             #     if component.processes[process] == TERMINAL and process.reportOutputPref:
-        #             #         process._report_process_completion()
-        #             pass
-        #
-        #     # if not i:
-        #     #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-        #     #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
-        #     #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-        #     #     # # MODIFIED 10/2/16 OLD:
-        #     #     # self.variable = self.variable * 0
-        #     #     # # MODIFIED 10/2/16 NEW:
-        #     #     # self.variable = self.inputs * 0
-        #     #     # MODIFIED 10/2/16 NEWER:
-        #     #     self.variable = convert_to_np_array(self.inputs, 2) * 0
-        #     #     # MODIFIED 10/2/16 END
-        #     # i += 1
-        # # MODIFIED 12/21/16 END
+        for i in range(len(self.learningExecutionList)):
+
+            component = self.learningExecutionList[i]
+
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if isinstance(component, MonitoringMechanism_Base):
+                component_type = "monitoringMechanism"
+                processes = list(component.processes.keys())
+            elif isinstance(component, MappingProjection):
+                component_type = "mappingProjection"
+                processes = list(component.sender.owner.processes.keys())
+            else:
+                raise SystemError("{} is not legal object for learning".format(component.name))
+
+            # Sort for consistency of reporting:
+            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+            process_names = list(p.name for p in process_keys_sorted)
+
+            if self._report_system_output and self._report_process_output:
+                # FIX: Report learning here
+                # if self._report_system_output and self._report_process_output:
+                #     # Report initiation of process(es) for which mechanism is an ORIGIN
+                #     # Sort for consistency of reporting:
+                #     processes = list(component.processes.keys())
+                #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                #     for process in process_keys_sorted:
+                #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                #             process._report_process_initiation()
+                #
+                pass
+
+            context_str = str("{} | {}: {} [in processes: {}]".
+                              format(context,
+                                     component_type,
+                                     component.name,
+                                     re.sub('[\[,\],\n]','',str(process_names))))
+
+            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            component.execute(time_scale=self.timeScale,
+                              context=context_str)
+
+            # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+            # Report completion of learning
+            if self._report_system_output:
+                if self._report_process_output:
+                    # FIX: Report learning here
+                    # # Sort for consistency of reporting:
+                    # processes = list(component.processes.keys())
+                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    # for process in process_keys_sorted:
+                    #     # MODIFIED 12/4/16 NEW:
+                    #     if process.learning and process._learning_enabled:
+                    #         continue
+                    #     # MODIFIED 12/4/16 END
+                    #     if component.processes[process] == TERMINAL and process.reportOutputPref:
+                    #         process._report_process_completion()
+                    pass
+
+            # if not i:
+            #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
+            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+            #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
+            #     # # MODIFIED 10/2/16 OLD:
+            #     # self.variable = self.variable * 0
+            #     # # MODIFIED 10/2/16 NEW:
+            #     # self.variable = self.inputs * 0
+            #     # MODIFIED 10/2/16 NEWER:
+            #     self.variable = convert_to_np_array(self.inputs, 2) * 0
+            #     # MODIFIED 10/2/16 END
+            # i += 1
+        # MODIFIED 12/21/16 END
 
     def run(self,
             inputs,
