@@ -1660,18 +1660,6 @@ class System_Base(System):
         # # MODIFIED 12/20/16 END
 
         # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
-        # IMPLEMENTATION NOTE:
-        # Assignment of target to inputState.variable of each targetMechanism (per immediately below)
-        #     doesn't work because it gets over-written by ProcessInputState for ComparatorMechanism
-        #     which, if it is None, uses default value for target from the constructor for the ComparatorMechanism:
-        #     for target_mech in self.targetMechanisms:
-        #         target_mech.inputStates[COMPARATOR_TARGET].variable = self.targets[CentralClock.trial]
-        #     So, instead, assign to the ProcessInputState for each targetMechanism as per below:
-
-        # Assign target for current trial to ProcessInputState of each targetMechanism:
-        for target_mech in self.targetMechanisms:
-            comparator_target_input = target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections[0].sender
-            comparator_target_input.value = self.targets[CentralClock.trial][0]
 
         for i in range(len(self.learningExecutionList)):
 
