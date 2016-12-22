@@ -7,16 +7,6 @@
 # IMPLEMENT: check that target is within range specified for terminal mechanism's function (if it has one; else try
 # to infer it from max and min allowable values of type of mechanis'ms value??
 
-# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
-# FIX: RL with new System.learningGraph IMPLEMENTATION
-
-# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
-# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
-# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
-#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
-#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
-#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
-
 # IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultCOntroller and passing to EVC)
 
 # FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
@@ -44,7 +34,18 @@
 #       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
-
+#
+# FIX: Reporting of learning in system._execute_learning
+# FIX: targets.[CentralClock.trial][0] system._execute_learning
+# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX: RL with new System.learningGraph IMPLEMENTATION
+# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
+# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
+#
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
 # DOCUMENTATION: params dictionary -> ``params`` dictionary
 #                parameter dictionary -> ``params`` dictionary
 # DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
