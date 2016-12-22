@@ -392,17 +392,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
 
+    def _instantiate_parameter_states(self, context=None):
+
+        # MODIFIED 12/22/16 NEW:
+        from PsyNeuLink.Components.Functions.Function import Logistic
+        # If function is a logistic, and range has not been specified, bound it between 0 and 1
+        if ((isinstance(self.function, Logistic) or
+                 (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
+                not list(self.range)):
+            self.user_params[RANGE] = np.array([0,1])
+        # MODIFIED 12/22/16 END
+
+        super()._instantiate_parameter_states(context=context)
+
+
     def _instantiate_attributes_before_function(self, context=None):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
-
-        # MODIFIED 12/7/16 OLD:
-        # # Map indices of output to outputState(s)
-        # self._outputStateValueMapping = {}
-        # self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
-        # self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
-        # self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
-        # MODIFIED 12/7/16 END
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -486,7 +492,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
 
-        if range:
+        if list(range):
             minCapIndices = np.where(output_vector < range[0])
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
@@ -532,4 +538,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     """
     #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
 
+    @property
+    def range(self):
+        return self._range
 
+
+    @ range.setter
+    def range(self, value):
+        self._range = value

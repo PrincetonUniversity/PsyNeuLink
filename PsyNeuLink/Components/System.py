@@ -1654,7 +1654,13 @@ class System_Base(System):
         #             process._report_process_completion()
         # # MODIFIED 12/20/16 END
 
-        # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
+        # MODIFIED 12/21/16 OLD: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
+
+        # # MODIFIED 12/22/16 OLD [in place of doing it in run()]
+        # for target_mech in self.targetMechanisms:
+        #     target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections[0].sender.value = \
+        #         self.targets[CentralClock.trial][0]
+        # # MODIFIED 12/22/16 END
 
         for i in range(len(self.learningExecutionList)):
 

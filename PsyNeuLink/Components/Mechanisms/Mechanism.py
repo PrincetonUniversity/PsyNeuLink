@@ -1177,11 +1177,14 @@ class Mechanism_Base(Mechanism):
     def _instantiate_attributes_before_function(self, context=None):
 
         self._instantiate_input_states(context=context)
+        self._instantiate_parameter_states(context=context)
+        super()._instantiate_attributes_before_function(context=context)
+
+    def _instantiate_parameter_states(self, context=None):
 
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
         _instantiate_parameter_states(owner=self, context=context)
 
-        super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
@@ -1545,6 +1548,7 @@ class Mechanism_Base(Mechanism):
         self.variable = np.array(self.inputValue)
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+
         for state_name, state in self.parameterStates.items():
 
             state.update(params=runtime_params, time_scale=time_scale, context=context)

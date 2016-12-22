@@ -2,6 +2,10 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
+# DOCUMENT: TO IMPOSE A DEFAULT PARAMTER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
+#            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
+# IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't collide with range)
 # IMPLEMENT:  Make use of learning attribute of System (set it to True if any of its processes use learning)
 # IMPLEMENT: target attribute for mechanism, and use for Comparator Mechanism (in run)
 # IMPLEMENT: check that target is within range specified for terminal mechanism's function (if it has one; else try

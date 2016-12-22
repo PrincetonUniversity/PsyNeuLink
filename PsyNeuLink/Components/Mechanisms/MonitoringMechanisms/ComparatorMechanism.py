@@ -450,6 +450,12 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
         self._check_args(variable=variable, params=runtime_params, context=context)
 
+        # Assign sample and target attributes
+        #    which also checks (by way of target property) that target is within range of sample
+        #    if the sample's source mechanism specifies a range parameter
+        #
+        self.sample = self.inputStates[COMPARATOR_SAMPLE].value
+        self.target = self.inputStates[COMPARATOR_TARGET].value
 
         # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.TIME_STEP:
@@ -490,19 +496,27 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     @target.setter
     def target(self, value):
+        """Check that target is within range if specified for sample
+
+        Check that target is compatible with the value of all projections to sample
+           from source mechanisms that specify a range parameter;
+        Note:  range must be in the form of a list or 1d np.array;
+            first item: lower bound of target value (inclusive)
+            second item: upper bound of target value (inclusive)
+        """
         try:
             for projection in self.inputStates[COMPARATOR_SAMPLE].receivesFromProjections:
                 sample_source = projection.sender.owner
                 try:
                     sample_range = sample_source.range
-                    for target_item in value:
-                        if not sample_range[0] <= target_item <= sample_range[1]:
-                            raise ComparatorError("Item of target ({}) is out of range ({}) "
-                                                  "for mechanism being monitored ({})".
-                                                  format(target_item, sample_range, sample_source.name))
+                    if list(sample_range):
+                        for target_item in value:
+                            if not sample_range[0] <= target_item <= sample_range[1]:
+                                raise ComparatorError("Item of target ({}) is out of range for {}: {}) ".
+                                                      format(target_item, sample_source.name, sample_range))
                 except AttributeError:
                     pass
-        except AttributeError:
+        except (AttributeError):
             pass
         self._target = value
 
