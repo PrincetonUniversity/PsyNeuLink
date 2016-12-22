@@ -325,7 +325,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 
-
         super()._validate_variable(variable=variable, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -484,5 +483,27 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
         # IMPLEMENTATION NOTE:  TBI when time_step is implemented for ComparatorMechanism
+
+    @property
+    def target(self):
+        return self._target
+
+    @target.setter
+    def target(self, value):
+        try:
+            for projection in self.inputStates[COMPARATOR_SAMPLE].receivesFromProjections:
+                sample_source = projection.sender.owner
+                try:
+                    sample_range = sample_source.range
+                    for target_item in value:
+                        if not sample_range[0] <= target_item <= sample_range[1]:
+                            raise ComparatorError("Item of target ({}) is out of range ({}) "
+                                                  "for mechanism being monitored ({})".
+                                                  format(target_item, sample_range, sample_source.name))
+                except AttributeError:
+                    pass
+        except AttributeError:
+            pass
+        self._target = value
 
 
