@@ -804,6 +804,7 @@ class System_Base(System):
         self._instantiate_graph(context=context)
 
         # MODIFIED 12/20/16 NEW:
+
         self._instantiate_learning_graph(context=context)
         # MODIFIED 12/20/16 END
 
@@ -1380,7 +1381,8 @@ class System_Base(System):
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
         for process in sorted_processes:
-            build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0])
+            if process.learning and process._learning_enabled:
+                build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0])
 
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
