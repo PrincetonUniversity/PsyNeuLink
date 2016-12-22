@@ -2,6 +2,14 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# IMPLEMENT:  Make use of learning attribute of System (set it to True if any of its processes use learning)
+# IMPLEMENT: target attribute for mechanism, and use for Comparator Mechanism (in run)
+# IMPLEMENT: check that target is within range specified for terminal mechanism's function (if it has one; else try
+# to infer it from max and min allowable values of type of mechanis'ms value??
+
+# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX: RL with new System.learningGraph IMPLEMENTATION
+
 # FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
 # FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
 # TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
