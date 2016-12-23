@@ -500,27 +500,12 @@ def run(object,
                     # This assumes that target order is aligned with order of targets in targetMechanisms list;
                     # it is tested for dict format in _construct_stimulus_sets, but can't be insured for list format.
                     for i, target in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
-
-                        # # MODIFIED 12/22/16 OLD:
-                        # # This no longer works, since process is not executed by system for learning
-                        # # (uses learningGraph instead)
-                        # for process in target.processes:
-                        #     if not process.learning:
-                        #         continue
-                        #     process.target = targets[input_num][i]
-
-                        # FIX: ONLY WORKS IF RESTRICTED TO FIRST PROJECTION TO TERMINAL MECHANISM MONITORED BY TARGET
-                        # FIX: IF A TARGET IS ASSIGNED TO ALL PROJECTIONS, CAUSES PROBLEMS
                         # Assign current target to value attribute of ProcessInputState of each process
                         # to which the targetMechanism belongs (i.e., that project to it's COMPARATOR_TARGET inputState)
                         # MODIFIED 12/22/16 NEW:
                         for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
                             process_target_projection.sender.value = targets[input_num][i]
-                        # # MODIFIED 12/22/16 NEWER:
-                        # process_input_state = target.inputStates[COMPARATOR_TARGET].receivesFromProjections[0].sender
-                        # process_input_state.value = targets[input_num][i]
                         # MODIFIED 12/22/16 END
-                        pass
 
             result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
 
