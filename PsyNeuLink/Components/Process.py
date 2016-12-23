@@ -1999,8 +1999,13 @@ class Process_Base(Process):
         # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
             for process in list(self.targetMechanisms)[0].processes:
                 process.targetInputStates[0].value *= 0
-            self.targetInputStates[0].variable = np.array(self.target)
-            # self.targetInputStates[0].value = np.array(self.target)
+            if callable(self.target):
+                pass
+                # self.targetInputStates[0].variable = self.target
+                # self.targetInputStates[0].variable = np.array(self.target())
+            else:
+                self.targetInputStates[0].value = np.array(self.target)
+        TEST = True
 
         # for projection in list(self.targetMechanisms)[0].inputStates[COMPARATOR_TARGET].receivesFromProjections:
         #     if projection.sender.owner != self:
@@ -2012,6 +2017,10 @@ class Process_Base(Process):
         # Generate header and report input
         if report_output:
             self._report_process_initiation(separator=True)
+
+        # # Execute ProcessInputStates (to convert variable into values in case variable is a function)
+        # for process_input_state in self.processInputStates:
+        #     process_input_state.update(context=context)
 
         # Execute each Mechanism in the pathway, in the order listed
         for i in range(len(self._mech_tuples)):
@@ -2075,6 +2084,17 @@ class Process_Base(Process):
                     sender = projection.sender.owner
                     if isinstance(sender, Process_Base) or not self in (sender.processes):
                         continue
+                    # # # MODIFIED 12/19/16 NEWER:
+                    # # Skip learning if projection is an input from the Process or a system (other than target input)
+                    # # or comes from a mechanism that belongs to another process
+                    # #    (this is to prevent "double-training" of projections from mechanisms belonging to other
+                    # # processes)
+                    # sender = projection.sender.owner
+                    # if isinstance(sender, Process_Base):
+                    #     if not mech is self.targetMechanisms[0]:
+                    #         continue
+                    # elif not self in (sender.processes):
+                    #     continue
                     # MODIFIED 12/19/16 END
 
                     # For each parameter_state of the projection
@@ -2337,6 +2357,12 @@ class ProcessInputState(OutputState):
         self.sendsToProjections = []
         self.owner = owner
         self.value = variable
+        # self.receivesFromProjections = []
+        # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
+        # from PsyNeuLink.Components.Functions.Function import Linear
+        # self.index = PRIMARY_OUTPUT_STATE
+        # self.calculate = Linear
+
 
 
 ProcessTuple = namedtuple('ProcessTuple', 'process, input')
