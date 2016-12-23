@@ -235,6 +235,24 @@ class TransferMechanism(ProcessingMechanism_Base):
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
+    initial_value :  value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        determines the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
+
+    noise : float or function : default 0.0
+        a stochastically-sampled value added to the output of the ``function``.
+        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+        If it is a function, it must return a scalar value.
+
+    rate : float : default 1.0
+        the time constant for exponential time averaging of input
+        when the mechanism is executed at the time_step time scale:
+        input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
+
+    range : Optional[Tuple[float, float]]
+        determines the allowable range of the result: the first value specifies the minimum allowable value
+        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+        is set to the limit it exceeds.  If :py:data:`function` is the :py:class:`Logistic <Function.Logistic>`
+        function, the :keyword:`range` is set by default to (0,1).
 
     value : 2d np.array [array(float64)]
         result of executing the TransferMechanism's ``function``; same value as fist item of ``outputValue``.
@@ -392,17 +410,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
 
+    def _instantiate_parameter_states(self, context=None):
+
+        # MODIFIED 12/22/16 NEW:
+        from PsyNeuLink.Components.Functions.Function import Logistic
+        # If function is a logistic, and range has not been specified, bound it between 0 and 1
+        if ((isinstance(self.function, Logistic) or
+                 (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
+                not list(self.range)):
+            self.user_params[RANGE] = np.array([0,1])
+        # MODIFIED 12/22/16 END
+
+        super()._instantiate_parameter_states(context=context)
+
+
     def _instantiate_attributes_before_function(self, context=None):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
-
-        # MODIFIED 12/7/16 OLD:
-        # # Map indices of output to outputState(s)
-        # self._outputStateValueMapping = {}
-        # self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
-        # self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
-        # self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
-        # MODIFIED 12/7/16 END
 
         super()._instantiate_attributes_before_function(context=context)
 
@@ -486,24 +510,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
 
-        if range:
+        if list(range):
             minCapIndices = np.where(output_vector < range[0])
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
             output_vector[maxCapIndices] = np.max(range)
 
-        # # MODIFIED 12/7/16 OLD:
-        # mean = np.mean(output_vector)
-        # variance = np.var(output_vector)
-        #
-        # self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        # self.outputValue[Transfer_Output.MEAN.value] = mean
-        # self.outputValue[Transfer_Output.VARIANCE.value] = variance
-        #
-        # return self.outputValue
-        # MODIFIED 12/7/16 NEW:
         return output_vector
-        # MODIFIED 12/7/16 END
 
         #endregion
 
@@ -532,4 +545,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     """
     #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
 
+    @property
+    def range(self):
+        return self._range
 
+
+    @ range.setter
+    def range(self, value):
+        self._range = value

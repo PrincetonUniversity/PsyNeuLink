@@ -39,3 +39,5 @@ for i in range(10):
     # Note: this shows weights updated on prior trial, not current one
     #       (this is a result of parameterState "lazy updating" -- only updated when called)
     print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+
+# result = p.run(num_executions=10, inputs=[1, 1, 1], targets=reward)

@@ -260,6 +260,7 @@ Class Reference
 import math
 import re
 from collections import UserList, Iterable
+from collections import OrderedDict
 
 from toposort import *
 # from PsyNeuLink.Globals.toposort.toposort import toposort
@@ -269,7 +270,8 @@ from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
+                                                                                      COMPARATOR_TARGET
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -683,9 +685,11 @@ class System_Base(System):
         # MODIFIED 12/15/16 OLD:
         # self.pathway = None
         # MODIFIED 12/15/16 END
+        self.function = self.execute
         self.outputStates = {}
         self._phaseSpecMax = 0
-        self.function = self.execute
+        self.targets = None
+        self.learning = None
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -802,6 +806,11 @@ class System_Base(System):
         self._instantiate_processes(inputs=self.variable, context=context)
         self._instantiate_graph(context=context)
 
+        # MODIFIED 12/20/16 NEW:
+
+        self._instantiate_learning_graph(context=context)
+        # MODIFIED 12/20/16 END
+
     def _instantiate_function(self, context=None):
         """Suppress validation of function
 
@@ -823,9 +832,9 @@ class System_Base(System):
         else:
             self.value = self.processes[-1].outputState.value
 
+    def _instantiate_processes(self, inputs=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
-    def _instantiate_processes(self, inputs=None, context=None):
         """Instantiate processes of system
 
         Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
@@ -1135,7 +1144,6 @@ class System_Base(System):
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver)
 
-        from collections import OrderedDict
         self.graph = OrderedDict()
         self.executionGraph = OrderedDict()
 
@@ -1280,6 +1288,109 @@ class System_Base(System):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                   format(value, self.name, append_type_to_name(self)))
 
+    def _instantiate_learning_graph(self, context=None):
+        """Build graph of monitoringMechanisms and learningProjections for use in learning
+        """
+
+        self.learningGraph = OrderedDict()
+        self.learningExecutionGraph = OrderedDict()
+
+        def build_dependency_sets_by_traversing_projections(sender_mech):
+
+            # MappingProjections are legal recipients of learning projections (hence the call)
+            #  but do not send any projections, so no need to consider further
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if isinstance(sender_mech, MappingProjection):
+                return
+
+            # All other sender_mechs should be MonitoringMechanisms
+            elif not isinstance(sender_mech, MonitoringMechanism_Base):
+                raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
+                                  "must be a MonitoringMechanism or a MappingProjection".format(sender_mech))
+
+            # Delete any projections to mechanism from processes or mechanisms in processes not in current system
+            for input_state in sender_mech.inputStates.values():
+                for projection in input_state.receivesFromProjections:
+                    sender = projection.sender.owner
+                    system_processes = self.processes
+                    if isinstance(sender, Process):
+                        if not sender in system_processes:
+                            del projection
+                    elif not all(sender_process in system_processes for sender_process in sender.processes):
+                        del projection
+
+            # If sender_mech has no projections left, raise exception
+            if not any(any(projection for projection in input_state.receivesFromProjections)
+                       for input_state in sender_mech.inputStates.values()):
+                raise SystemError("{} only receives projections from other processes or mechanisms not"
+                                  " in the current system ({})".format(sender_mech.name, self.name))
+
+            for outputState in sender_mech.outputStates.values():
+
+                for projection in outputState.sendsToProjections:
+                    receiver = projection.receiver.owner
+                    try:
+                        self.learningGraph[receiver].add(sender_mech)
+                    except KeyError:
+                        self.learningGraph[receiver] = {sender_mech}
+
+                    # Use toposort to test whether the added dependency produced a cycle (feedback loop)
+                    # Do not include dependency (or receiver on sender) in learningExecutionGraph for this projection
+                    #  and end this branch of the traversal if the receiver has already been encountered,
+                    #  but do mark for initialization
+                    # Notes:
+                    # * This is because it is a feedback connection, which introduces a cycle into the learningGraph
+                    #     that precludes use of toposort to determine order of execution;
+                    #     however, the feedback projection will still be used during execution
+                    #     so the sending mechanism should be designated as INITIALIZE_CYCLE
+                    # * Check for receiver mechanism and not its tuple,
+                    #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
+                    #     and would introduce a cycle irrespective of the tuple in which it appears in the learningGraph
+
+                    if receiver in self.learningExecutionGraph:
+                    # if receiver in self.learning_execution_graph_mechs:
+                        # Try assigning receiver as dependent of current mechanism and test toposort
+                        try:
+                            # If receiver already has dependencies in its set, add sender_mech to set
+                            if self.learningExecutionGraph[receiver]:
+                                self.learningExecutionGraph[receiver].add(sender_mech)
+                            # If receiver set is empty, assign sender_mech to set
+                            else:
+                                self.learningExecutionGraph[receiver] = {sender_mech}
+                            # Use toposort to test whether the added dependency produced a cycle (feedback loop)
+                            list(toposort(self.learningExecutionGraph))
+                        # If making receiver dependent on sender produced a cycle, remove from learningGraph
+                        except ValueError:
+                            self.learningExecutionGraph[receiver].remove(sender_mech)
+                            receiver.systems[self] = CYCLE
+                            continue
+
+                    else:
+                        # Assign receiver as dependent on sender mechanism
+                        try:
+                            # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
+                            # FIX: DOES THAT SCREW UP ORIGINS?
+                            self.learningExecutionGraph[receiver].add(sender_mech)
+                        except KeyError:
+                            self.learningExecutionGraph[receiver] = {sender_mech}
+
+                    if not sender_mech.systems:
+                        sender_mech.systems[self] = MONITORING
+
+                    # Traverse list of mechanisms in process recursively
+                    build_dependency_sets_by_traversing_projections(receiver)
+
+        # Sort for consistency of output
+        sorted_processes = sorted(self.processes, key=lambda process : process.name)
+
+        for process in sorted_processes:
+            if process.learning and process._learning_enabled:
+                build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0])
+
+        # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
+        self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
+        # self.learningExecutionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
+
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
@@ -1350,9 +1461,9 @@ class System_Base(System):
 
         if not context:
             context = EXECUTING + self.name
-        report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
-        if report_system_output:
-            report_process_output = any(process.reportOutputPref for process in self.processes)
+        self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
+        if self._report_system_output:
+            self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
@@ -1361,16 +1472,12 @@ class System_Base(System):
         #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
         num_origin_mechs = len(list(self.originMechanisms))
         if inputs is None:
-            # # MODIFIED 12/4/16 OLD:
-            # pass
-            # MODIFIED 12/4/16 NEW:
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
             inputs = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
                 inputs[i] = self.originMechanisms[i].variableInstanceDefault
-            # MODIFIED 12/4/16 END
 
         else:
             num_inputs = np.size(inputs,0)
@@ -1396,7 +1503,7 @@ class System_Base(System):
         self.inputs = inputs
         #endregion
 
-        if report_system_output:
+        if self._report_system_output:
             self._report_system_initiation()
 
 
@@ -1405,14 +1512,63 @@ class System_Base(System):
         # TEST PRINT:
         # for i in range(len(self.executionList)):
         #     print(self.executionList[i][0].name)
-        sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
+        # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
+        # MODIFIED 12/21/16 NEW:
+        self._execute_processing(context=context)
+        # MODIFIED 12/21/16 END
+        #endregion
+
+        # region EXECUTE LEARNING FOR EACH PROCESS
+
+        # FIX: NEED TO CHECK PHASE HERE
+        # Don't execute learning for simulation runs
+        if not EVC_SIMULATION in context:
+
+            # MODIFIED 12/21/16 NEW:
+            # IMPLEMENT: EXECUTE self.learningGraph HERE:  EXECUTE MECHANISMS AND PROJECTIONS
+            # Execute each Mechanism in self.executionList, in the order listed during its phase
+            # self._execute_learning(context=context)
+            # self._execute_learning(context=context.replace("EXECUTING", "LEARNING"))
+            self._execute_learning(context=context + LEARNING)
+            # MODIFIED 12/21/16 END
+
+        # endregion
+
+
+        #region EXECUTE CONTROLLER
+
+# FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
+# FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
+
+        # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
+        if not EVC_SIMULATION in context and self.enable_controller:
+            try:
+                if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
+                    self.controller.execute(time_scale=TimeScale.TRIAL,
+                                            runtime_params=None,
+                                            context=context)
+                    if self._report_system_output:
+                        print("{0}: {1} executed".format(self.name, self.controller.name))
+
+            except AttributeError:
+                if not 'INIT' in context:
+                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+        #endregion
+
+        # Report completion of system execution and value of designated outputs
+        if self._report_system_output:
+            self._report_system_completion()
+
+        return self.terminalMechanisms.outputStateValues
+
+    def _execute_processing(self, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
         for i in range(len(self.executionList)):
 
             mechanism, params, phase_spec = self.executionList[i]
 
-            if report_system_output and report_process_output:
+            if self._report_system_output and  self._report_process_output:
                 # Report initiation of process(es) for which mechanism is an ORIGIN
                 # Sort for consistency of reporting:
                 processes = list(mechanism.processes.keys())
@@ -1429,14 +1585,21 @@ class System_Base(System):
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
             if phase_spec == (CentralClock.time_step % self.numPhases):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+
+                processes = list(mechanism.processes.keys())
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
+
                 mechanism.execute(time_scale=self.timeScale,
                                  runtime_params=params,
-                                 context=context)
+                                 context=context +
+                                         "| mechanism: " + mechanism.name +
+                                         " [in processes: " + str(process_names) + "]")
 
                 # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
                 # Report completion of process(es) for which mechanism is a TERMINAL
-                if report_system_output:
-                    if report_process_output:
+                if  self._report_system_output:
+                    if  self._report_process_output:
                         # Sort for consistency of reporting:
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
@@ -1460,58 +1623,98 @@ class System_Base(System):
                 self.variable = convert_to_np_array(self.inputs, 2) * 0
                 # MODIFIED 10/2/16 END
             i += 1
-        #endregion
 
+    def _execute_learning(self, context=None):
 
-        # region EXECUTE LEARNING FOR EACH PROCESS
+        # # MODIFIED 12/21/16 OLD:
+        # for process in self.processes:
+        #     if process.learning and process._learning_enabled:
+        #         for mech_tuple in process.monitoringMechanisms.mech_tuples:
+        #             mech_tuple.mechanism.execute(time_scale=self.timeScale,
+        #                                          runtime_params=mech_tuple.params,
+        #                                          context=context)
+        # for process in self.processes:
+        #     process._execute_learning(context=context)
+        #
+        #     # Report output of the process if reporting is enabled for system and process
+        #     #   and the process has a targetMechanism
+        #     #   (note: it may not, as it may terminate on an internal mechanism of another process
+        #     #          and therefore use that process' targetMechanism as the source of its error signal)
+        #     if self._report_system_output and self._report_process_output and process.targetMechanisms:
+        #             process._report_process_completion()
 
-        # FIX: NEED TO CHECK PHASE HERE
-        # Don't execute learning for simulation runs
-        if not EVC_SIMULATION in context:
-            for process in self.processes:
-                if process.learning and process._learning_enabled:
-                    # for mech in process.monitoring_mechanisms:
-                    for mech_tuple in process.monitoringMechanisms.mech_tuples:
-                        mech_tuple.mechanism.execute(time_scale=self.timeScale,
-                                                     runtime_params=mech_tuple.params,
-                                                     context=context)
+        # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
+        for i in range(len(self.learningExecutionList)):
 
-                    process._execute_learning(context=context)
+            component = self.learningExecutionList[i]
 
-                    # Report output of the process if reporting is enabled for system and process
-                    #   and the process has a targetMechanism
-                    #   (note: it may not, as it may terminate on an internal mechanism of another process
-                    #          and therefore use that process' targetMechanism as the source of its error signal)
-                    if report_system_output and report_process_output and process.targetMechanisms:
-                            process._report_process_completion()
-        # endregion
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            if isinstance(component, MonitoringMechanism_Base):
+                component_type = "monitoringMechanism"
+                processes = list(component.processes.keys())
+            elif isinstance(component, MappingProjection):
+                component_type = "mappingProjection"
+                processes = list(component.sender.owner.processes.keys())
+            else:
+                raise SystemError("{} is not legal object for learning".format(component.name))
 
+            # Sort for consistency of reporting:
+            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+            process_names = list(p.name for p in process_keys_sorted)
 
-        #region EXECUTE CONTROLLER
+            if self._report_system_output and self._report_process_output:
+                # FIX: Report learning here
+                # if self._report_system_output and self._report_process_output:
+                #     # Report initiation of process(es) for which mechanism is an ORIGIN
+                #     # Sort for consistency of reporting:
+                #     processes = list(component.processes.keys())
+                #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                #     for process in process_keys_sorted:
+                #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                #             process._report_process_initiation()
+                #
+                pass
 
-# FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
-# FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
+            context_str = str("{} | {}: {} [in processes: {}]".
+                              format(context,
+                                     component_type,
+                                     component.name,
+                                     re.sub('[\[,\],\n]','',str(process_names))))
 
-        # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
-        if not EVC_SIMULATION in context and self.enable_controller:
-            try:
-                if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
-                    self.controller.execute(time_scale=TimeScale.TRIAL,
-                                            runtime_params=None,
-                                            context=context)
-                    if report_system_output:
-                        print("{0}: {1} executed".format(self.name, self.controller.name))
+            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            component.execute(time_scale=self.timeScale,
+                              context=context_str)
 
-            except AttributeError:
-                if not 'INIT' in context:
-                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
-        #endregion
+            # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
+            # Report completion of learning
+            if self._report_system_output:
+                if self._report_process_output:
+                    # FIX: Report learning here
+                    # # Sort for consistency of reporting:
+                    # processes = list(component.processes.keys())
+                    # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    # for process in process_keys_sorted:
+                    #     # MODIFIED 12/4/16 NEW:
+                    #     if process.learning and process._learning_enabled:
+                    #         continue
+                    #     # MODIFIED 12/4/16 END
+                    #     if component.processes[process] == TERMINAL and process.reportOutputPref:
+                    #         process._report_process_completion()
+                    pass
 
-        # Report completion of system execution and value of designated outputs
-        if report_system_output:
-            self._report_system_completion()
-
-        return self.terminalMechanisms.outputStateValues
+            # if not i:
+            #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
+            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+            #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
+            #     # # MODIFIED 10/2/16 OLD:
+            #     # self.variable = self.variable * 0
+            #     # # MODIFIED 10/2/16 NEW:
+            #     # self.variable = self.inputs * 0
+            #     # MODIFIED 10/2/16 NEWER:
+            #     self.variable = convert_to_np_array(self.inputs, 2) * 0
+            #     # MODIFIED 10/2/16 END
+            # i += 1
+        # MODIFIED 12/21/16 END
 
     def run(self,
             inputs,
@@ -1913,3 +2116,11 @@ class System_Base(System):
         :rtype: list of Mechanism objects
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
+
+    # @property
+    # def learning_execution_graph_mechs(self):
+    #     """Mechanisms whose mech_tuples appear as keys in self.executionGraph
+    #
+    #     :rtype: list of Mechanism objects
+    #     """
+    #     return list(mech_tuple[0] for mech_tuple in self.learningExecutionGraph)
