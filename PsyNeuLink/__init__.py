@@ -18,13 +18,14 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import System
+from PsyNeuLink.Components.System import System, system
 from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
 
 __all__ = ['System',
+           'system',
            'process',
            'TransferMechanism',
            'IntegratorMechanism',
@@ -61,7 +62,7 @@ __all__ = ['System',
            'IDENTITY_MATRIX',
            'FULL_CONNECTIVITY_MATRIX',
            'DEFAULT_MATRIX',
-            'ALL',
-            'MAX_VAL',
-            'MAX_INDICATOR',
-            'PROB']
+           'ALL',
+           'MAX_VAL',
+           'MAX_INDICATOR',
+           'PROB']
