@@ -281,8 +281,8 @@ RUN = 'Run'
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
+PROCESS = "PROCESS"
 kwProcesses = "processes"
-kwProcess = "PROCESS"
 kwProcessInit = 'Process.__init__'
 PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
@@ -297,6 +297,7 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
+MECHANISM = 'MECHANISM'
 kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"

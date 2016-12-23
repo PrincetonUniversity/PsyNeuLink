@@ -116,6 +116,6 @@ stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 z.run(num_executions=10,
       # inputs=stim_list,
       inputs=[[-1, 30],[2, 10]],
-      targets=[[0, 0, 1],[0, 0, 2]],
+      targets=[[0, 0, 1],[0, 0, 1]],
       call_before_trial=print_header,
       call_after_trial=show_target)

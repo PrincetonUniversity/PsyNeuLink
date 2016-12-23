@@ -1971,7 +1971,7 @@ class Process_Base(Process):
         """
 
         if not context:
-            context = EXECUTING + self.name
+            context = EXECUTING + " " + PROCESS + " " + self.name
 
         # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -1992,6 +1992,16 @@ class Process_Base(Process):
         # If target was not provided to execute, use value provided on instantiation
         if not target is None:
             self.target = target
+
+        # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
+        self.targetInputStates[0].value = self.target
+        # # Zero any input from projections to target from any other processes
+        # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
+        # for projection in list(self.targetMechanisms)[0].inputStates[COMPARATOR_TARGET].receivesFromProjections:
+        #     if projection.sender.owner != self:
+        #         # projection.sender.value = np.zeros_like(projection.value.sender.value)
+        #         # projection.sender.value[:] = 0
+        #         projection.sender.value *= 0
 
         # Generate header and report input
         if report_output:
@@ -2051,8 +2061,8 @@ class Process_Base(Process):
                 # For each projection in the list
                 for projection in input_state.receivesFromProjections:
 
-                    # MODIFIED 12/19/16 NEW:
-                    # Skip learning if projection is an input from the Process or System
+                    # # MODIFIED 12/19/16 NEW:
+                    # Skip learning if projection is an input from the Process or a system
                     # or comes from a mechanism that belongs to another process
                     #    (this is to prevent "double-training" of projections from mechanisms belonging
                     #     to different processes when call to _execute_learning() comes from a system)
