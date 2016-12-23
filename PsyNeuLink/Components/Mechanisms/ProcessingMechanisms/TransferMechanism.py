@@ -498,18 +498,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             output_vector[minCapIndices] = np.min(range)
             output_vector[maxCapIndices] = np.max(range)
 
-        # # MODIFIED 12/7/16 OLD:
-        # mean = np.mean(output_vector)
-        # variance = np.var(output_vector)
-        #
-        # self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        # self.outputValue[Transfer_Output.MEAN.value] = mean
-        # self.outputValue[Transfer_Output.VARIANCE.value] = variance
-        #
-        # return self.outputValue
-        # MODIFIED 12/7/16 NEW:
         return output_vector
-        # MODIFIED 12/7/16 END
 
         #endregion
 

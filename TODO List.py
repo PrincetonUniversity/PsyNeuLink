@@ -3,7 +3,7 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 
-# DOCUMENT: TO IMPOSE A DEFAULT PARAMTER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
+# DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
 #            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
 # IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't collide with range)
 # IMPLEMENT:  Make use of learning attribute of System (set it to True if any of its processes use learning)
