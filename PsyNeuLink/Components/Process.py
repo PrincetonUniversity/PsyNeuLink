@@ -2203,19 +2203,6 @@ class Process_Base(Process):
         #              re.sub('[\[,\],\n]','',
         #                     str(mechanism.outputState.value))))
 
-    # def _report_process_learning(self, separator=False):
-    #
-    #     print("\n\'{}' learning:\n- output: {}".
-    #           format(append_type_to_name(self),
-    #                  re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
-    #
-    #     if self.learning:
-    #       print("\n- MSE: {:0.3}".
-    #               format(float(self.comparatorMechanism.outputValue[ComparatorOutput.COMPARISON_MSE.value])))
-    #
-    #     elif separator:
-    #         print("\n\n****************************************\n")
-
     def _report_process_completion(self, separator=False):
 
         print("\n\'{}' completed:\n- output: {}".
