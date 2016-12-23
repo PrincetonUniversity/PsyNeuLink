@@ -118,7 +118,7 @@ The ``run`` function presents the inputs for each round of execution to the inpu
 These are specified in the ``inputs`` argument of the ``exeucte`` or ``run`` method.  For a mechanism, they comprise
 the input value for each of the mechanism's inputStates.  For a process or system, they comprise the input values for
 the inputState(s) of the :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism(s).  Input values can be specified in
-one of two ways: :ref:`sequence format <Run_Sequence_Format>` and :ref:`mechanism format <Run_Dict_format>`.
+one of two ways: :ref:`sequence format <Run_Inputs_Sequence_Format>` and :ref:`mechanism format <Run_Dict_format>`.
 Sequence format is more complex, but does not require the specification of mechanisms by name, and thus may be more
 suitable for use with automated means of generating inputs.  Mechanism format requires that inputs be assigned to
 mechanisms by name, but is easier to use (as the order in which the mechanisms are specified does not matter).  Both
@@ -158,7 +158,7 @@ formats.
 With these factors in mind, inputs can be specified in the simplest form possible (least number of nestings for a list,
 or lowest dimension of an ndarray).  Inputs can be specified using one of two formats:
 
-.. _Run_Sequence_Format:
+.. _Run_Inputs_Sequence_Format:
 
 **Sequence format** *(List[values] or ndarray):*  This uses a nested list or ndarray to fully specify the input for
 each round of execution in a sequence.  It is more complex than the mechanism format, and for systems requires that the
@@ -196,6 +196,8 @@ sequence format for all of the combinations of the factors listed above.  The fi
        :align: center
 
        Example input specifications in sequence format
+
+.. _Run_Inputs_Mechanism_Format:
 
 **Mechanism format** *(Dict[mechanism, List[values] or ndarray]):* This provides a simpler format for specifying
 inputs than the sequence format, and does not require that inputs for each mechanism be specified in a particular
@@ -237,21 +239,34 @@ Targets
 
 If a process or system uses learning, then target values for each round of execution must be provided for each
 :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism in the process or system being run.  These are specified
-in the ``targets`` argument of the ``execute`` or ``run`` method.  The same two formats used for inputs
-(:ref:`sequence <Run_Sequence>` and ref:`mechanism <Run_Mechanism>`) can also be used for targets.  However, the format
-of the lists or ndarrays is simpler, since each :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism is assigned
-only a single target value;  so there is never the need for the extra level of nesting (or dimension of ndarray) used
-for inputStates in the specification of inputs.  The number of targets specified for each mechanism must equal the
-number specified for the inputs;  as for inputs, if the number of executions specified is greater than the number
-of inputs (and targets), then the list will be cycled until the number of executions specified is completed. The
-format of each target value must match (in number and type of elements) that  of the
-:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` parameter of the
-:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended.  Furthermore, if a range is specified
-for the output of the :keyword:`TERMINAL` mechanism with which the target is compared (that is, the mechanism that
-provides the ComparatorMechanism's :py:data:`sample <ComparatorMechanism.ComparatorMechanism.sample>`
+in the ``targets`` argument of the ``execute`` or ``run`` method, which can be in any of three formats.
+The two formats used for inputs (:ref:`sequence <Run_Inputs_Sequence_Format>` and ref:`mechanism
+<Run_Inputs_Mechanism_Format>`) can also be used for targets.  However, the format of the lists or ndarrays is simpler,
+since each :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism is assigned only a single target value;  so there
+is never the need for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of
+inputs.  Details concerning the use of the :ref:`sequence <Run_Targets_Sequence_Format>`  and
+:ref:`mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
+as a :ref:`function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of
+processing).
+
+If either the sequence or mechanism format is used, then the number of targets specified for each mechanism must
+equal the number specified for the inputs;  as with inputs, if the number of executions specified is greater than the
+number of inputs (and targets), then the list will be cycled until the number of executions specified is completed.
+If the function format is used, then it wil, be used to generate a target for each round of execution.
+
+The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
+the function format, must equal the number of :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms for the process
+or system being run (see process py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` or system
+:py:data:`targetMechanism <System.System_Base.targetMechanisms>` respectively), and the value of each target must
+match (in number and type of elements) that  of the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
+parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended.  Furthermore, if a
+range is specified for the output of the :keyword:`TERMINAL` mechanism with which the target is compared (that is,
+the mechanism that provides the ComparatorMechanism's :py:data:`sample <ComparatorMechanism.ComparatorMechanism.sample>`
 parameter, then the target must be within that range (for example, if the :keyword:`TERMINAL` mechanism is a
 :doc:`TransferMechanism` that uses a :py:class:`Logistic function <Function.Logistic>`, it's
 :py:data:`range <TransferMechanism.TransferMechanism.range>` is [0,1], so the target must be within that range).
+
+.. _Run_Targets_Sequence_Format:
 
 **Sequence format** *(List[values] or ndarray):*
 There are at most only three levels of nesting (or dimensions) required for targets: one for executions,
@@ -261,6 +276,8 @@ the targets must be specified in the same order as they appear in the system's
 they are declared, and can be displayed using the system's :py:meth:`show <System.System_Base.show>` method). All
 other requirements are the same as those described for the sequence format for :ref:`inputs <Run_Sequence>`.
 
+.. _Run_Targets_Mechanism_Format:
+
 **Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
 There must be one entry in the dictionary for each of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms
 in the process or system being run, though the entries can be specified in any order.  For this reason, this format
@@ -269,6 +286,16 @@ one for each round of execution. There are at most only two levels of nesting (o
 entry: one for the execution, and the other for the elements of each input.  In all other respects,, the format is
 the same as described for the mechanism format for :ref:`inputs <Run_Mechanism>`.
 
+.. _Run_Targets_Function_Format:
+
+**Function format**[Function]:*
+The function must return an array with a number of items equal to the number of
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms for the process  or system being run, each of which must
+match (in nummber and type of elements) the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
+parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended. This format allows
+targets to be constructed programatically, in response to computations made during the run.
+COMMENT:
+    ADD EXAMPLE HERE
 COMMENT
 
 COMMENT:
@@ -311,7 +338,7 @@ def run(object,
         reset_clock:bool=True,
         initialize:bool=False,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
-        targets:tc.optional(tc.any(list, dict, np.ndarray))=None,
+        targets:tc.optional(tc.any(list, dict, np.ndarray, function_type))=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(function_type)=None,
         call_after_trial:tc.optional(function_type)=None,
@@ -497,7 +524,10 @@ def run(object,
             # Assign targets:
             if not targets is None:
 
-                if object_type == PROCESS:
+                if isinstance(targets, function_type):
+                    object.target = targets
+
+                elif object_type == PROCESS:
                     object.target = targets[input_num]
 
                 elif object_type == SYSTEM:
@@ -506,10 +536,8 @@ def run(object,
                     for i, target in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
                         # Assign current target to value attribute of ProcessInputState of each process
                         # to which the targetMechanism belongs (i.e., that project to it's COMPARATOR_TARGET inputState)
-                        # MODIFIED 12/22/16 NEW:
                         for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
                             process_target_projection.sender.value = targets[input_num][i]
-                        # MODIFIED 12/22/16 END
 
             result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
 
@@ -587,8 +615,16 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     elif isinstance(stimuli, dict):
         stim_list = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
 
+    elif is_target and isinstance(stimuli, function_type):
+        return stimuli
+
     else:
-        raise SystemError("inputs arg for {}._construct_stimulus_sets() must be a dict or list".format(object.name))
+        if is_target:
+            stim_type = 'targets'
+        else:
+            stim_type = 'inputs'
+        raise SystemError("{} arg for {}._construct_stimulus_sets() must be a dict or list".
+                          format(stim_type, object.name))
 
     stim_list_array = np.array(stim_list)
     return stim_list_array
@@ -965,26 +1001,33 @@ def _validate_targets(object, targets, num_input_sets):
     object_type = get_object_type(object)
     num_target_sets = None
 
+    if isinstance(targets, function_type):
+        # Check that function returns a number of items equal to the number of target mechanisms
+        generated_targets = targets()
+        num_targets = len(generated_targets)
+        num_target_mechs = len(object.targetMechanisms)
+        if num_targets != num_target_mechs:
+            raise RunError("function for target argument of run returns {} items "
+                           "but {} has {} targets".
+                           format(num_targets, object.name, num_target_mechs))
+
+        # Check that each target generated is compatible with the targetMechanism for which it is intended
+        for target, targetMechanism in zip(generated_targets, object.targetMechanisms):
+            target_len = np.size(target)
+            if target_len != np.size(targetMechanism.target):
+                if num_target_sets > 1:
+                    plural = 's'
+                else:
+                    plural = ''
+                raise RunError("Length ({}) of target{} specified for run of {}"
+                                   " does not match expected target length of {}".
+                                   format(target_len, plural, append_type_to_name(object),
+                                          np.size(object.comparatorMechanism.target)))
+        return
+
     if object_type is PROCESS:
 
-        # # MODIFIED 12/15/16 NEW:
-        # # If targets are heterogeneous, inputs.ndim should be 2:
-        # if targets.dtype is np.dtype('O') and targets.ndim != 2:
-        #     raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
-        #                       format(object.name))
-        #
-        # # If targets are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
-        # if targets.dtype in {np.dtype('int64'),np.dtype('float64')}:
-        #     # Get a sample length (use first one listed, since it is convenient and all are the same)
-        #     mech_len = len(object.targetMechanisms[0].target)
-        #     if not ((mech_len == 1 and targets.ndim == 2) or targets.ndim == 3):
-        #         raise SystemError("targets arg in call to {}.run() must be a 3d np.array or comparable list".
-        #                           format(object.name))
-        # # MODIFIED 12/15/16 END
-
-
         # If learning is enabled, validate target
-        # if not targets is None and object._learning_enabled:
         if object._learning_enabled:
             target_array = np.atleast_2d(targets)
             target_len = np.size(target_array[0])
@@ -1008,18 +1051,9 @@ def _validate_targets(object, targets, num_input_sets):
                 raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
                                    format(num_target_sets, num_input_sets, append_type_to_name(object)))
 
-        # # MODIFIED 12/15/16 NEW:
-        # num_target_sets = np.size(targets, targets.ndim-3)
-        #
-        # return num_target_sets
-        # # MODIFIED 12/15/16 END
-
-
     elif object_type is SYSTEM:
 
         # FIX: VALIDATE THE LEARNING IS ENABLED
-        # FIX: ALSO NEED TO VALIDATE THAT num_target_sets == num_input_sets
-        # FIX: ALSO ALIGN SETS WITH NAMES OF object.targetMechanisms
         # FIX: CONSOLIDATE WITH TESTS FOR PROCESS ABOVE?
 
         # If the system has any process with learning enabled
@@ -1045,15 +1079,45 @@ def _validate_targets(object, targets, num_input_sets):
                                   format(object.name, expected_dim))
 
             # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
-            num_targets = np.size(targets,PROCESSES_DIM-1)
+            num_target_sets = np.size(targets,PROCESSES_DIM-1)
             # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if num_targets != len(object.targetMechanisms):
+            if num_target_sets != len(object.targetMechanisms):
                 raise SystemError("The number of target values for each execution ({}) in the call to {}.run() "
                                   "does not match the number of processes in the system ({})".
-                                  format(np.size(targets,PROCESSES_DIM),
+                                  format(
+                                         # np.size(targets,PROCESSES_DIM),
+                                         num_target_sets,
                                          object.name,
                                          len(object.originMechanisms)))
-        # MODIFIED 12/15/16 END
+
+            # MODIFIED 12/23/16 NEW:
+            # Validate that each target is compatible with its corresponding targetMechanism
+            # FIX: CONSOLIDATE WITH TESTS FOR PROCESS AND FOR function_type ABOVE
+            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.targetMechanisms
+            target_array = np.atleast_2d(targets)
+
+            for target, targetMechanism in zip(targets, object.targetMechanisms):
+                target_len = np.size(target)
+                if target_len != np.size(targetMechanism.target):
+                    if num_target_sets > 1:
+                        plural = 's'
+                    else:
+                        plural = ''
+                    raise RunError("Length ({}) of target{} specified for run of {}"
+                                       " does not match expected target length of {}".
+                                       format(target_len, plural, append_type_to_name(object),
+                                              np.size(object.comparatorMechanism.target)))
+
+                if any(np.size(target) != target_len for target in target_array):
+                    raise RunError("Not all of the targets specified for {} are of the same length".
+                                       format(append_type_to_name(object)))
+
+                if num_target_sets != num_input_sets:
+                    raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
+                                       format(num_target_sets, num_input_sets, append_type_to_name(object)))
+            # MODIFIED 12/23/16 END
+
+
 
     else:
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_targets in Run module for ".
