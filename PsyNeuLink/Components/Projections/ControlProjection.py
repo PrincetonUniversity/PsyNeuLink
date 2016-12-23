@@ -154,7 +154,7 @@ parameter_keywords.update({CONTROL_PROJECTION})
 #     BADGER_MODE = 1.0
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.2)
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
