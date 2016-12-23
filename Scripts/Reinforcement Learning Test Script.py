@@ -1,7 +1,11 @@
 import numpy as np
+# import random
 
 from PsyNeuLink import *
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
+
+# random.seed(0)
+# np.random.seed(0)
 
 input_layer = TransferMechanism(default_input_value=[0,0,0],
                        name='Input Layer')

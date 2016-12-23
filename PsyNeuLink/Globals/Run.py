@@ -303,10 +303,6 @@ class RunError(Exception):
      def __str__(object):
          return repr(object.error_value)
 
-MECHANISM = "mechanism"
-PROCESS = "process"
-SYSTEM = 'system'
-
 @tc.typecheck
 def run(object,
         # inputs,
