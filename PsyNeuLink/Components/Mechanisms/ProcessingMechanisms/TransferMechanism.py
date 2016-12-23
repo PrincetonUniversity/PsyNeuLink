@@ -74,10 +74,10 @@ the range.  After each execution of the mechanism:
       outputState, and to the 1st item of the mechanism's ``outputValue`` attribute;
     ..
     * **mean** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_MEAN` outputState,
-      and to the 2nd item of the mechanism's ``outputValue`` attribute;
+      and to the 2nd item of the mechanism's :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute;
     ..
     * **variance** of the result is assigned to the value of the mechanism's :keyword:`TRANSFER_VARIANCE` outputState,
-      and to the 3rd item of the mechanism's ``outputValue`` attribute.
+      and to the 3rd item of the mechanism's :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
 
 COMMENT
 
@@ -168,8 +168,9 @@ class TransferMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
-        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+    default_input_value : number, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        the input to the mechanism to use if none is provided in a call to its
+        :py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
         of the mechanism.
 
@@ -177,7 +178,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies function used to transform input;  can be :class:`Linear`, :class:`Logistic`, :class:`Exponential`,
         or a custom function.
 
-    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    initial_value :  value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         specifies the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
     noise : float or function : default 0.0
@@ -206,12 +207,12 @@ class TransferMechanism(ProcessingMechanism_Base):
     name : str : default TransferMechanism-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for mechanism.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     .. context=componentType+INITIALIZING):
             context : str : default ''None''
@@ -225,7 +226,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    variable : value: default Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+    variable : value: default :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         the input to mechanism's ``function``.
 
     function : Function :  default Linear
@@ -234,9 +235,27 @@ class TransferMechanism(ProcessingMechanism_Base):
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
+    initial_value :  value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        determines the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
 
-    value : List[1d np.array, float, float]
-        same as ``outputValue``.
+    noise : float or function : default 0.0
+        a stochastically-sampled value added to the output of the ``function``.
+        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+        If it is a function, it must return a scalar value.
+
+    rate : float : default 1.0
+        the time constant for exponential time averaging of input
+        when the mechanism is executed at the time_step time scale:
+        input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
+
+    range : Optional[Tuple[float, float]]
+        determines the allowable range of the result: the first value specifies the minimum allowable value
+        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+        is set to the limit it exceeds.  If :py:data:`function` is the :py:class:`Logistic <Function.Logistic>`
+        function, the :keyword:`range` is set by default to (0,1).
+
+    value : 2d np.array [array(float64)]
+        result of executing the TransferMechanism's ``function``; same value as fist item of ``outputValue``.
 
     COMMENT:
         CORRECTED:
@@ -245,7 +264,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             and the first item of ``outputValue``.
     COMMENT
 
-    outputValue : List[1d np.array, float, float]
+    outputValue : List[array(float64), float, float]
         a list with the following items:
         * **result** of the ``function`` calculation (value of :keyword:`TRANSFER_RESULT` outputState);
         * **mean** of the result (``value`` of :keyword:`TRANSFER_MEAN` outputState)
@@ -258,13 +277,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the PreferenceSet for mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -285,12 +304,16 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
-        # FUNCTION:TransferFunction,
         INPUT_STATES: None,
-        OUTPUT_STATES:[TRANSFER_RESULT,
-                       TRANSFER_MEAN,
-                       TRANSFER_VARIANCE]
-    })
+        OUTPUT_STATES:[
+            {NAME:TRANSFER_RESULT},
+
+            {NAME:TRANSFER_MEAN,
+             CALCULATE:lambda x: np.mean(x)},
+
+            {NAME:TRANSFER_VARIANCE,
+             CALCULATE:lambda x: np.var(x)}
+        ]})
 
     paramNames = paramClassDefaults.keys()
 
@@ -334,7 +357,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                        # context=context,
                                        context=self)
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and mechanism params
 
         """
@@ -387,25 +410,29 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError("The first item of the range parameter ({}) must be less than the second".
                                     format(range, self.name))
 
+    def _instantiate_parameter_states(self, context=None):
 
-        # super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        # MODIFIED 12/22/16 NEW:
+        from PsyNeuLink.Components.Functions.Function import Logistic
+        # If function is a logistic, and range has not been specified, bound it between 0 and 1
+        if ((isinstance(self.function, Logistic) or
+                 (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
+                not list(self.range)):
+            self.user_params[RANGE] = np.array([0,1])
+        # MODIFIED 12/22/16 END
+
+        super()._instantiate_parameter_states(context=context)
 
 
     def _instantiate_attributes_before_function(self, context=None):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault
 
-        # Map indices of output to outputState(s)
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[TRANSFER_RESULT] = Transfer_Output.RESULT.value
-        self._outputStateValueMapping[TRANSFER_MEAN] = Transfer_Output.MEAN.value
-        self._outputStateValueMapping[TRANSFER_VARIANCE] = Transfer_Output.VARIANCE.value
-
         super()._instantiate_attributes_before_function(context=context)
 
     def __execute__(self,
                 variable=None,
-                params=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute TransferMechanism function and return transform of input
@@ -481,21 +508,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.previous_input = current_input
 
         # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=params)
+        output_vector = self.function(variable=current_input, params=runtime_params)
 
-        if range:
+        if list(range):
             minCapIndices = np.where(output_vector < range[0])
             maxCapIndices = np.where(output_vector > range[1])
             output_vector[minCapIndices] = np.min(range)
             output_vector[maxCapIndices] = np.max(range)
-        mean = np.mean(output_vector)
-        variance = np.var(output_vector)
 
-        self.outputValue[Transfer_Output.RESULT.value] = output_vector
-        self.outputValue[Transfer_Output.MEAN.value] = mean
-        self.outputValue[Transfer_Output.VARIANCE.value] = variance
+        return output_vector
 
-        return self.outputValue
         #endregion
 
 
@@ -523,4 +545,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     #     """
     #     # IMPLEMENTATION NOTE:  TBI when time_step is implemented for TransferMechanism
 
+    @property
+    def range(self):
+        return self._range
 
+
+    @ range.setter
+    def range(self, value):
+        self._range = value

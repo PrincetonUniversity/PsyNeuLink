@@ -10,6 +10,12 @@
 
 """
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+COMMENT:
+  MOVE TO ProcessingMechanisms overview:
+  Different ProcessingMechanisms transform their input in different ways, and some allow this to be customized
+  by modifying their ``function`` parameter.  For example, a :doc:`TransferMechanism` can be configured to produce a
+  linear, logistic, or exponential transform of its input.
+COMMENT
 
 """
 
@@ -43,11 +49,11 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
     # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
-    variableClassDefault = [defaultControlAllocation]
+    variableClassDefault = defaultControlAllocation
 
     def __init__(self,
-                 variable=NotImplemented,
-                 params=NotImplemented,
+                 variable=None,
+                 params=None,
                  name=None,
                  prefs=None,
                  context=None):

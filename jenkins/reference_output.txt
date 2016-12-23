@@ -61,7 +61,7 @@ EVCMechanism-1
 ############################ TRIAL 0 ############################
 
 'Decision' mechanism executed:
-- input:   0.5
+- input:  0.5
 - params:
 	function: BogaczEtAl
 		drift_rate: 1.0
@@ -72,53 +72,45 @@ EVCMechanism-1
 - output: 1.0
 
 'Input_PredictionMechanism'  executed:
-- input:   0.5
+- input:  0.5
 - params:
 	function: Integrator
 		rate: 0.5
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Input_PredictionMechanismOutput'
-- output:  0.25
+- output: 0.25
 
 RESULTS (time step 0): 
-	Drift rate control signal (from EVC): [ 1.]
-	Threshold control signal (from EVC): [ 1.]
+	Drift rate control signal (from EVC): 1.0
+	Threshold control signal (from EVC): 1.0
 	DDM_decision_variable: 1.0
-	DDM_probability_lowerBound: 0.01798620996209156
-	DDM_probability_upperBound: 0.9820137900379085
-	DDM_response_time: 2.378055160151634
+	DDM_probability_lowerBound: 0.018
+	DDM_probability_upperBound: 0.982
+	DDM_response_time: 2.38
 
 'Reward_PredictionMechanism'  executed:
-- input:   20.
+- input:  20.0
 - params:
 	function: Integrator
 		rate: 0.5
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Reward_PredictionMechanismOutput'
-- output:  10.
-
-FINAL:
-	max tuple:
-		EVC_max: [ 8.09580525]
-		EVC_max_state_values: [[  3.49637662]
- [  0.88079708]
- [ 10.        ]]
-		EVC_max_policy: [ 0.1  0.1]
+- output: 10.0
 
 RESULTS (time step 1): 
-	Drift rate control signal (from EVC): [ 1.]
-	Threshold control signal (from EVC): [ 1.]
+	Drift rate control signal (from EVC): 1.0
+	Threshold control signal (from EVC): 1.0000000000000002
 	DDM_decision_variable: 1.0
-	DDM_probability_lowerBound: 0.11920292202211755
-	DDM_probability_upperBound: 0.8807970779778824
-	DDM_response_time: 3.4963766238230596
+	DDM_probability_lowerBound: 0.119
+	DDM_probability_upperBound: 0.881
+	DDM_response_time: 3.5
 
 ############################ TRIAL 1 ############################
 
 'Decision' mechanism executed:
-- input:   0.123
+- input:  0.123
 - params:
 	function: BogaczEtAl
 		drift_rate: 1.0
@@ -126,51 +118,43 @@ RESULTS (time step 1):
 		starting_point: 0
 		t0: 0.45
 		threshold: 1.0
-- output: -0.1
+- output: 0.1
 
 'Input_PredictionMechanism'  executed:
-- input:   0.123
+- input:  0.123
 - params:
 	function: Integrator
 		rate: 0.5
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Input_PredictionMechanismOutput'
-- output:  0.1865
+- output: 0.186
 
 RESULTS (time step 2): 
-	Drift rate control signal (from EVC): [ 0.1]
-	Threshold control signal (from EVC): [ 0.1]
-	DDM_decision_variable: [-0.1]
-	DDM_probability_lowerBound: 0.4975400198490558
-	DDM_probability_upperBound: 0.5024599801509442
-	DDM_response_time: 0.48999967725112503
+	Drift rate control signal (from EVC): 0.1
+	Threshold control signal (from EVC): 0.1
+	DDM_decision_variable: 0.1
+	DDM_probability_lowerBound: 0.498
+	DDM_probability_upperBound: 0.502
+	DDM_response_time: 0.49
 
 'Reward_PredictionMechanism'  executed:
-- input:   20.
+- input:  20.0
 - params:
 	function: Integrator
 		rate: 0.5
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Reward_PredictionMechanismOutput'
-- output:  15.
-
-FINAL:
-	max tuple:
-		EVC_max: [ 13.20998552]
-		EVC_max_state_values: [[  3.84279648]
- [  0.81637827]
- [ 15.        ]]
-		EVC_max_policy: [ 0.1  0.1]
+- output: 15.0
 
 RESULTS (time step 3): 
-	Drift rate control signal (from EVC): [ 1.]
-	Threshold control signal (from EVC): [ 1.]
-	DDM_decision_variable: [-1.]
-	DDM_probability_lowerBound: 0.18362172811482297
-	DDM_probability_upperBound: 0.8163782718851771
-	DDM_response_time: 3.8427964813423814
+	Drift rate control signal (from EVC): 1.0
+	Threshold control signal (from EVC): 1.0000000000000002
+	DDM_decision_variable: 1.0
+	DDM_probability_lowerBound: 0.184
+	DDM_probability_upperBound: 0.816
+	DDM_response_time: 3.84
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -187,16 +171,16 @@ RUNNING Multilayer Learning Test Script.py
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array(-1 30)
+- input: -1.0 30.0
 
 ''Process_Base-1' component' completed:
-- output:  0.8344837   0.87072018  0.89997433
+- output: 0.834 0.871 0.9
 
-- MSE: 0.48817393811101323
+- MSE: 0.488
 
 
 Input: [array([-1, 30])]
-Target: [0, 0, 1]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -223,16 +207,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array( 2 10)
+- input: 2.0 10.0
 
 ''Process_Base-1' component' completed:
-- output:  0.78250395  0.83555015  0.90418478
+- output: 0.783 0.836 0.904
 
-- MSE: 0.43987901067581364
+- MSE: 0.44
 
 
 Input: [array([ 2, 10])]
-Target: [0, 0, 2]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -259,16 +243,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array(-1 30)
+- input: -1.0 30.0
 
 ''Process_Base-1' component' completed:
-- output:  0.70155393  0.77724667  0.90303564
+- output: 0.702 0.777 0.903
 
-- MSE: 0.3685641255067724
+- MSE: 0.369
 
 
 Input: [array([-1, 30])]
-Target: [0, 0, 1]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -295,16 +279,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array( 2 10)
+- input: 2.0 10.0
 
 ''Process_Base-1' component' completed:
-- output:  0.60319517  0.7016824   0.90711958
+- output: 0.603 0.702 0.907
 
-- MSE: 0.2882764592244467
+- MSE: 0.288
 
 
 Input: [array([ 2, 10])]
-Target: [0, 0, 2]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -331,16 +315,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array(-1 30)
+- input: -1.0 30.0
 
 ''Process_Base-1' component' completed:
-- output:  0.49441942  0.59869294  0.90601288
+- output: 0.494 0.599 0.906
 
-- MSE: 0.20390579054350055
+- MSE: 0.204
 
 
 Input: [array([-1, 30])]
-Target: [0, 0, 1]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -367,16 +351,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array( 2 10)
+- input: 2.0 10.0
 
 ''Process_Base-1' component' completed:
-- output:  0.40223962  0.49288451  0.9104091 
+- output: 0.402 0.493 0.91
 
-- MSE: 0.13758612725744707
+- MSE: 0.138
 
 
 Input: [array([ 2, 10])]
-Target: [0, 0, 2]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -403,16 +387,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array(-1 30)
+- input: -1.0 30.0
 
 ''Process_Base-1' component' completed:
-- output:  0.33564733  0.40150751  0.90963658
+- output: 0.336 0.402 0.91
 
-- MSE: 0.09401098624844186
+- MSE: 0.094
 
 
 Input: [array([-1, 30])]
-Target: [0, 0, 1]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -439,16 +423,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array( 2 10)
+- input: 2.0 10.0
 
 ''Process_Base-1' component' completed:
-- output:  0.28478285  0.33227994  0.91415906
+- output: 0.285 0.332 0.914
 
-- MSE: 0.0662932995885134
+- MSE: 0.0663
 
 
 Input: [array([ 2, 10])]
-Target: [0, 0, 2]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -475,16 +459,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array(-1 30)
+- input: -1.0 30.0
 
 ''Process_Base-1' component' completed:
-- output:  0.25246043  0.28644662  0.91341337
+- output: 0.252 0.286 0.913
 
-- MSE: 0.051095059711610165
+- MSE: 0.0511
 
 
 Input: [array([-1, 30])]
-Target: [0, 0, 1]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -511,16 +495,16 @@ Output Weights:
 
 ''Process_Base-1' component' executing with:
 - pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: array( 2 10)
+- input: 2.0 10.0
 
 ''Process_Base-1' component' completed:
-- output:  0.22301725  0.24868459  0.91774162
+- output: 0.223 0.249 0.918
 
-- MSE: 0.03944905449851459
+- MSE: 0.0394
 
 
 Input: [array([ 2, 10])]
-Target: [0, 0, 2]
+Target: [0 0 1]
 
 
 Input Weights: 
@@ -563,54 +547,54 @@ reward prediction weights:
  [[ 1.    0.    0.  ]
  [ 0.    1.    0.  ]
  [ 0.    0.    0.95]]
-result:  [ 0.    0.    0.95]
-
-reward prediction weights: 
- [[ 0.95  0.    0.  ]
- [ 0.    1.    0.  ]
- [ 0.    0.    0.95]]
 result:  [ 0.  1.  0.]
 
 reward prediction weights: 
- [[ 0.95    0.      0.    ]
- [ 0.      1.      0.    ]
- [ 0.      0.      0.9025]]
-result:  [ 0.    0.95  0.  ]
+ [[ 1.    0.    0.  ]
+ [ 0.    1.    0.  ]
+ [ 0.    0.    0.95]]
+result:  [ 0.    0.    0.95]
 
 reward prediction weights: 
- [[ 0.95    0.      0.    ]
- [ 0.      0.95    0.    ]
- [ 0.      0.      0.9025]]
-result:  [ 0.      0.9025  0.    ]
-
-reward prediction weights: 
- [[ 0.95    0.      0.    ]
- [ 0.      0.9025  0.    ]
- [ 0.      0.      0.9025]]
-result:  [ 0.95  0.    0.  ]
-
-reward prediction weights: 
- [[ 0.95      0.        0.      ]
- [ 0.        0.857375  0.      ]
- [ 0.        0.        0.9025  ]]
-result:  [ 0.        0.857375  0.      ]
-
-reward prediction weights: 
- [[ 0.9025    0.        0.      ]
- [ 0.        0.857375  0.      ]
- [ 0.        0.        0.9025  ]]
+ [[ 1.    0.    0.  ]
+ [ 0.    1.    0.  ]
+ [ 0.    0.    0.95]]
 result:  [ 0.      0.      0.9025]
 
 reward prediction weights: 
- [[ 0.9025      0.          0.        ]
- [ 0.          0.81450625  0.        ]
- [ 0.          0.          0.9025    ]]
-result:  [ 0.          0.81450625  0.        ]
+ [[ 1.      0.      0.    ]
+ [ 0.      1.      0.    ]
+ [ 0.      0.      0.9025]]
+result:  [ 0.  1.  0.]
 
 reward prediction weights: 
- [[ 0.9025      0.          0.        ]
- [ 0.          0.81450625  0.        ]
- [ 0.          0.          0.857375  ]]
+ [[ 1.        0.        0.      ]
+ [ 0.        1.        0.      ]
+ [ 0.        0.        0.857375]]
+result:  [ 0.        0.        0.857375]
+
+reward prediction weights: 
+ [[ 1.        0.        0.      ]
+ [ 0.        0.95      0.      ]
+ [ 0.        0.        0.857375]]
+result:  [ 0.    0.95  0.  ]
+
+reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          0.95        0.        ]
+ [ 0.          0.          0.81450625]]
+result:  [ 0.      0.9025  0.    ]
+
+reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          0.9025      0.        ]
+ [ 0.          0.          0.81450625]]
+result:  [ 0.        0.857375  0.      ]
+
+reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          0.857375    0.        ]
+ [ 0.          0.          0.81450625]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -643,7 +627,7 @@ Preference:                           Base Value:                         Curren
 
 
 'My_DDM-1' mechanism executed:
-- input:   40.
+- input:  40.0
 - params:
 	function: BogaczEtAl
 		drift_rate: 1.0
@@ -654,7 +638,7 @@ Preference:                           Base Value:                         Curren
 - output: 10.0
 
 'My_DDM_2' mechanism executed:
-- input:   10.
+- input:  10.0
 - params:
 	function: BogaczEtAl
 		drift_rate: 2.0
@@ -665,7 +649,7 @@ Preference:                           Base Value:                         Curren
 - output: 20.0
 
 'My_DDM_3' mechanism executed:
-- input:   20.
+- input:  20.0
 - params:
 	function: BogaczEtAl
 		drift_rate: 3.0
@@ -693,12 +677,12 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.88079708  0.88079708
+- output: 0.881 0.881
 
-- MSE: 16.967832712795552
+- MSE: 0.395
 [[ 1.  1.]
  [ 1.  1.]]
 [[ 1.  1.]
@@ -710,14 +694,14 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99234704  0.99234704
+- output: 0.978 0.982
 
-- MSE: 16.061282285301708
-[[ 1.43248988  1.43248988]
- [ 1.43248988  1.43248988]]
+- MSE: 0.483
+[[ 0.90752196  1.01251554]
+ [ 0.90752196  1.01251554]]
 [[ 1.  1.]
  [ 1.  1.]]
 
@@ -727,16 +711,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.9932183  0.9932183
+- output: 0.974 0.982
 
-- MSE: 16.054299595536637
-[[ 1.46292559  1.46292559]
- [ 1.46292559  1.46292559]]
-[[ 1.03043571  1.03043571]
- [ 1.03043571  1.03043571]]
+- MSE: 0.475
+[[ 0.81504391  1.02503108]
+ [ 0.81504391  1.02503108]]
+[[ 1.00045488  0.98306117]
+ [ 1.00045488  0.98306117]]
 
 
 ****************************************
@@ -744,16 +728,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99390805  0.99390805
+- output: 0.973 0.982
 
-- MSE: 16.048772702718765
-[[ 1.48991411  1.48991411]
- [ 1.48991411  1.48991411]]
-[[ 1.05742422  1.05742422]
- [ 1.05742422  1.05742422]]
+- MSE: 0.482
+[[ 0.7905525   1.02533892]
+ [ 0.7905525   1.02533892]]
+[[ 1.00090976  0.96612234]
+ [ 1.00090976  0.96612234]]
 
 
 ****************************************
@@ -761,16 +745,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99446824  0.99446824
+- output: 0.972 0.981
 
-- MSE: 16.044284704154965
-[[ 1.51417034  1.51417034]
- [ 1.51417034  1.51417034]]
-[[ 1.08168046  1.08168046]
- [ 1.08168046  1.08168046]]
+- MSE: 0.472
+[[ 0.76606108  1.02564675]
+ [ 0.76606108  1.02564675]]
+[[ 1.00162129  0.94849495]
+ [ 1.00162129  0.94849495]]
 
 
 ****************************************
@@ -778,16 +762,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99493257  0.99493257
+- output: 0.97 0.98
 
-- MSE: 16.040565089010595
-[[ 1.53620542  1.53620542]
- [ 1.53620542  1.53620542]]
-[[ 1.10371554  1.10371554]
- [ 1.10371554  1.10371554]]
+- MSE: 0.481
+[[ 0.73932012  1.02599805]
+ [ 0.73932012  1.02599805]]
+[[ 1.00233282  0.93086757]
+ [ 1.00233282  0.93086757]]
 
 
 ****************************************
@@ -795,16 +779,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99532394  0.99532394
+- output: 0.969 0.98
 
-- MSE: 16.03743035685939
-[[ 1.55639796  1.55639796]
- [ 1.55639796  1.55639796]]
-[[ 1.12390808  1.12390808]
- [ 1.12390808  1.12390808]]
+- MSE: 0.469
+[[ 0.71257916  1.02634934]
+ [ 0.71257916  1.02634934]]
+[[ 1.00319388  0.9120514 ]
+ [ 1.00319388  0.9120514 ]]
 
 
 ****************************************
@@ -812,16 +796,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99565842  0.99565842
+- output: 0.967 0.979
 
-- MSE: 16.034751477182414
-[[ 1.57503651  1.57503651]
- [ 1.57503651  1.57503651]]
-[[ 1.14254662  1.14254662]
- [ 1.14254662  1.14254662]]
+- MSE: 0.48
+[[ 0.68318683  1.02675293]
+ [ 0.68318683  1.02675293]]
+[[ 1.00405494  0.89323523]
+ [ 1.00405494  0.89323523]]
 
 
 ****************************************
@@ -829,16 +813,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99594768  0.99594768
+- output: 0.965 0.978
 
-- MSE: 16.032434986869095
-[[ 1.59234619  1.59234619]
- [ 1.59234619  1.59234619]]
-[[ 1.15985631  1.15985631]
- [ 1.15985631  1.15985631]]
+- MSE: 0.466
+[[ 0.65379449  1.02715652]
+ [ 0.65379449  1.02715652]]
+[[ 1.00511444  0.8730696 ]
+ [ 1.00511444  0.8730696 ]]
 
 
 ****************************************
@@ -846,16 +830,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99620037  0.99620037
+- output: 0.963 0.977
 
-- MSE: 16.030411474523387
-[[ 1.60850614  1.60850614]
- [ 1.60850614  1.60850614]]
-[[ 1.17601626  1.17601626]
- [ 1.17601626  1.17601626]]
+- MSE: 0.478
+[[ 0.62123188  1.02762442]
+ [ 0.62123188  1.02762442]]
+[[ 1.00617395  0.85290396]
+ [ 1.00617395  0.85290396]]
 
 
 ****************************************
@@ -863,16 +847,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99642306  0.99642306
+- output: 0.961 0.976
 
-- MSE: 16.028628280958664
-[[ 1.6236613  1.6236613]
- [ 1.6236613  1.6236613]]
-[[ 1.19117141  1.19117141]
- [ 1.19117141  1.19117141]]
+- MSE: 0.462
+[[ 0.58866926  1.02809233]
+ [ 0.58866926  1.02809233]]
+[[ 1.0075031   0.83119511]
+ [ 1.0075031   0.83119511]]
 
 
 ****************************************
@@ -880,16 +864,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99662084  0.99662084
+- output: 0.958 0.975
 
-- MSE: 16.027044714014735
-[[ 1.63793061  1.63793061]
- [ 1.63793061  1.63793061]]
-[[ 1.20544073  1.20544073]
- [ 1.20544073  1.20544073]]
+- MSE: 0.477
+[[ 0.55226639  1.02864041]
+ [ 0.55226639  1.02864041]]
+[[ 1.00883226  0.80948626]
+ [ 1.00883226  0.80948626]]
 
 
 ****************************************
@@ -897,16 +881,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99679768  0.99679768
+- output: 0.955 0.974
 
-- MSE: 16.025628819718634
-[[ 1.65141296  1.65141296]
- [ 1.65141296  1.65141296]]
-[[ 1.21892308  1.21892308]
- [ 1.21892308  1.21892308]]
+- MSE: 0.456
+[[ 0.51586351  1.02918849]
+ [ 0.51586351  1.02918849]]
+[[ 1.01053802  0.78599814]
+ [ 1.01053802  0.78599814]]
 
 
 ****************************************
@@ -914,16 +898,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99695676  0.99695676
+- output: 0.951 0.973
 
-- MSE: 16.024355148236005
-[[ 1.66419145  1.66419145]
- [ 1.66419145  1.66419145]]
-[[ 1.23170156  1.23170156]
- [ 1.23170156  1.23170156]]
+- MSE: 0.475
+[[ 0.4747426   1.02983804]
+ [ 0.4747426   1.02983804]]
+[[ 1.01224378  0.76251003]
+ [ 1.01224378  0.76251003]]
 
 
 ****************************************
@@ -931,16 +915,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99710065  0.99710065
+- output: 0.948 0.972
 
-- MSE: 16.023203173709526
-[[ 1.67633658  1.67633658]
- [ 1.67633658  1.67633658]]
-[[ 1.2438467  1.2438467]
- [ 1.2438467  1.2438467]]
+- MSE: 0.449
+[[ 0.43362168  1.03048759]
+ [ 0.43362168  1.03048759]]
+[[ 1.01449236  0.73695184]
+ [ 1.01449236  0.73695184]]
 
 
 ****************************************
@@ -948,16 +932,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99723144  0.99723144
+- output: 0.943 0.97
 
-- MSE: 16.022156154606325
-[[ 1.68790872  1.68790872]
- [ 1.68790872  1.68790872]]
-[[ 1.25541884  1.25541884]
- [ 1.25541884  1.25541884]]
+- MSE: 0.472
+[[ 0.38661698  1.03126777]
+ [ 0.38661698  1.03126777]]
+[[ 1.01674093  0.71139366]
+ [ 1.01674093  0.71139366]]
 
 
 ****************************************
@@ -965,16 +949,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99735084  0.99735084
+- output: 0.938 0.969
 
-- MSE: 16.021200297369386
-[[ 1.69895995  1.69895995]
- [ 1.69895995  1.69895995]]
-[[ 1.26647006  1.26647006]
- [ 1.26647006  1.26647006]]
+- MSE: 0.441
+[[ 0.33961227  1.03204794]
+ [ 0.33961227  1.03204794]]
+[[ 1.01980082  0.68340271]
+ [ 1.01980082  0.68340271]]
 
 
 ****************************************
@@ -982,16 +966,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99746029  0.99746029
+- output: 0.932 0.967
 
-- MSE: 16.02032413301096
-[[ 1.70953552  1.70953552]
- [ 1.70953552  1.70953552]]
-[[ 1.27704563  1.27704563]
- [ 1.27704563  1.27704563]]
+- MSE: 0.47
+[[ 0.28516004  1.03299957]
+ [ 0.28516004  1.03299957]]
+[[ 1.0228607   0.65541175]
+ [ 1.0228607   0.65541175]]
 
 
 ****************************************
@@ -999,16 +983,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Color Naming' component' executing with:
 - pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Color Naming' component' completed:
-- output:  0.99756099  0.99756099
+- output: 0.925 0.965
 
-- MSE: 16.019518045847587
-[[ 1.71967499  1.71967499]
- [ 1.71967499  1.71967499]]
-[[ 1.28718511  1.28718511]
- [ 1.28718511  1.28718511]]
+- MSE: 0.429
+[[ 0.23070781  1.03395119]
+ [ 0.23070781  1.03395119]]
+[[ 1.02718409  0.62452967]
+ [ 1.02718409  0.62452967]]
 
 
 ****************************************
@@ -1016,16 +1000,16 @@ RUNNING Stroop Model Test Script.py
 
 ''Word Reading' component' executing with:
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1 1
+- input: 1.0 1.0
 
 ''Word Reading' component' completed:
-- output:  0.99765395  0.99765395
+- output: 0.917 0.963
 
-- MSE: 16.01877391267086
-[[ 1.72941318  1.72941318]
- [ 1.72941318  1.72941318]]
-[[ 1.29692329  1.29692329]
- [ 1.29692329  1.29692329]]
+- MSE: 0.467
+[[ 0.16670876  1.03513291]
+ [ 0.16670876  1.03513291]]
+[[ 1.03150749  0.59364758]
+ [ 1.03150749  0.59364758]]
 
 'Stroop Model' system executing ********** (time_step 10) 
 
@@ -1037,18 +1021,94 @@ RUNNING Stroop Model Test Script.py
 - pathway: ['Words' 'Response' 'ComparatorMechanism-3']
 - input: 
 
-''Color Naming' component' completed:
-- output:  0.99774004  0.99774004
-
-- MSE: 16.01808482324148
-
-''Word Reading' component' completed:
-- output:  0.99774004  0.99774004
-
-- MSE: 16.01808482324148
+'Stroop Model' learning completed:
+- error for target ComparatorMechanism-3': 0.0927 -0.961
 
 'Stroop Model' system completed ***********(time_step 10)
-- output for Response:  0.99774004  0.99774004
+- output for Response: '0.907' '0.961'
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+RUNNING Stroop Model Learning Test Script.py
+
+
+
+**** TRIAL:  0
+
+'Stroop Model-1' system executing with: **** (time_step 0) 
+- processes: ['Color Naming-1', 'Word Reading-1']
+
+''Color Naming-1' component' executing with:
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'ComparatorMechanism-4' 'Color-Hidden Weights Weighted_Error']
+- input: 1.0 2.5
+
+''Word Reading-1' component' executing with:
+- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights Weighted_Error']
+- input: 0.5 3.0
+
+'Stroop Model-1' learning completed:
+- error for target ComparatorMechanism-4': 0.491 0.457
+
+'Stroop Model-1' system completed ***********(time_step 0)
+- output for Response-1: '0.509' '0.543'
+
+Color Naming
+	Input: None
+	Target: [2, 2]
+Wording Reading:
+	Input: None
+	Target: [3, 3]
+
+Response: 
+ [ 0.50899214  0.54318254]
+Hidden-Output:
+[[ 0.01462766  1.01351195]
+ [ 2.00220713  3.00203878]]
+Color-Hidden:
+[[ 0.01190129  1.0103412 ]
+ [ 2.01190129  3.0103412 ]]
+Word-Hidden:
+[[-0.02380258  0.9793176 ]
+ [ 1.97619742  2.9793176 ]]
+
+
+**** TRIAL:  1
+
+'Stroop Model-1' system executing ********** (time_step 1) 
+
+''Color Naming-1' component' executing with:
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'ComparatorMechanism-4' 'Color-Hidden Weights Weighted_Error']
+- input: 1.0 2.5
+
+''Word Reading-1' component' executing with:
+- pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights Weighted_Error']
+- input: 0.5 3.0
+
+'Stroop Model-1' learning completed:
+- error for target ComparatorMechanism-4': 0.488 0.446
+
+'Stroop Model-1' system completed ***********(time_step 1)
+- output for Response-1: '0.512' '0.554'
+
+Color Naming
+	Input: None
+	Target: [2, 2]
+Wording Reading:
+	Input: None
+	Target: [3, 3]
+
+Response: 
+ [ 0.51210763  0.55395822]
+Hidden-Output:
+[[ 0.04711917  1.0431747 ]
+ [ 2.00709948  3.00650529]]
+Color-Hidden:
+[[ 0.03840511  1.03307855]
+ [ 2.03840511  3.03307855]]
+Word-Hidden:
+[[-0.07681021  0.93384289]
+ [ 1.92318979  2.93384289]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1062,10 +1122,10 @@ RUNNING Mixed NN & DDM script.py
 
 ''Neural Network DDM Process' component' executing with:
 - pathway: ['Input Layer-2' 'Hidden Layer 1' 'My_DDM-2']
-- input: array(-1  2)
+- input: -1.0 2.0
 
 'Input Layer-2' mechanism executed:
-- input:  -1.  2.
+- input:  -1.0, 2.0
 - params:
 	function: Linear
 		intercept: 0.0
@@ -1073,10 +1133,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: -1.  2.
+- output: -1.0 2.0
 
 'Hidden Layer 1' mechanism executed:
-- input:   0.63205601  1.16136986  0.38133203  0.25516072  0.14194111
+- input:  -0.18, 0.00326, 1.11, 0.339, 0.982
 - params:
 	function: Logistic
 		bias: 0
@@ -1084,10 +1144,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output:  0.65295551  0.76158154  0.59419433  0.56344632  0.53542582
+- output: 0.455 0.501 0.753 0.584 0.727
 
 'My_DDM-2' mechanism executed:
-- input:   3.10760352
+- input:  3.02
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1110,10 +1170,10 @@ RUNNING Mixed NN & DDM script.py
 
 ''Neural Network DDM Process' component' executing with:
 - pathway: ['Input Layer-2' 'Hidden Layer 1' 'My_DDM-2']
-- input: array(2 3)
+- input: 2.0 3.0
 
 'Input Layer-2' mechanism executed:
-- input:   2.  3.
+- input:  2.0, 3.0
 - params:
 	function: Linear
 		intercept: 0.0
@@ -1121,10 +1181,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output:  2.  3.
+- output: 2.0 3.0
 
 'Hidden Layer 1' mechanism executed:
-- input:   2.36293668  3.57669831  1.84984762  1.04972528  0.27984181
+- input:  2.79, 1.03, 4.64, 2.67, 1.52
 - params:
 	function: Logistic
 		bias: 0
@@ -1132,10 +1192,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output:  0.91395703  0.97279303  0.86410921  0.74072214  0.56950744
+- output: 0.942 0.737 0.99 0.935 0.82
 
 'My_DDM-2' mechanism executed:
-- input:   4.06108885
+- input:  4.43
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1158,10 +1218,10 @@ RUNNING Mixed NN & DDM script.py
 
 ''Neural Network DDM Process' component' executing with:
 - pathway: ['Input Layer-2' 'Hidden Layer 1' 'My_DDM-2']
-- input: array(5 5)
+- input: 5.0 5.0
 
 'Input Layer-2' mechanism executed:
-- input:   5.  5.
+- input:  5.0, 5.0
 - params:
 	function: Linear
 		intercept: 0.0
@@ -1169,10 +1229,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output:  5.  5.
+- output: 5.0 5.0
 
 'Hidden Layer 1' mechanism executed:
-- input:   4.61196716  6.83480362  3.69157916  2.06715366  0.4982745 
+- input:  6.11, 2.21, 9.15, 5.48, 2.55
 - params:
 	function: Logistic
 		bias: 0
@@ -1180,10 +1240,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output:  0.99016542  0.99892548  0.97567391  0.88766946  0.62205375
+- output: 0.998 0.901 1.0 0.996 0.928
 
 'My_DDM-2' mechanism executed:
-- input:   4.47448802
+- input:  4.82
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1501,11 +1561,11 @@ F:  INITIALIZE_CYCLE
 
 RUNNING Documentation Examples Script.py
 
-1.0
+[ 1.]
+[ 1.]
 [-1.]
-1.0
-1.0
 [-1.]
+[ 1.]
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

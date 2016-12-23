@@ -20,6 +20,8 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
 # ORIGINAL:
 # transfer_mechanism_1 = TransferMechanism()
@@ -43,14 +45,25 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 
 my_control = ControlProjection(name='MY CONTROL')
 
-transfer_mechanism_X = TransferMechanism(function=Logistic(bias=99,
+transfer_mechanism_Y = TransferMechanism(function=lambda x, y: x + y,
+                                         name='MY_TRANSFER_MECH_Y'
+                                         )
+
+transfer_mechanism_Y.exeucte([2, 3])
+
+transfer_mechanism_X = TransferMechanism(function=Logistic(bias=0,
                                                            gain=ControlProjection()),
                                          # noise=(0.3, CONTROL_PROJECTION),
                                          noise=ControlProjection,
                                          # noise='MY CONTROL',
                                          rate=(0.1, ControlProjection),
-                                         name='MY_TRANSFER_MECH'
+                                         params={OUTPUT_STATES:10.0},
+                                         # params={OUTPUT_STATES:['JDC OUTPUT STATE',
+                                         #                        {NAME:TRANSFER_MEAN,
+                                         #                         CALCULATE:lambda x: np.mean(x)}]},
+                                         name='MY_TRANSFER_MECH_X'
                                          )
+
 transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
                                                          gain=CONTROL_PROJECTION
                                                          ),

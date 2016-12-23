@@ -1,7 +1,7 @@
 class Trial:
     def __init__(self,
                  name="Trial",
-                 number=NotImplemented,
+                 number=None,
                  stimuli=[]
                  ):
         """Initializes the default structure of a trial
@@ -14,7 +14,7 @@ class Trial:
 class Stimulus:
     def __init__(self,
                  name="Stimulus",
-                 number=NotImplemented,
+                 number=None,
                  stimulus=[],
                  onset_time=0,
                  duration=0

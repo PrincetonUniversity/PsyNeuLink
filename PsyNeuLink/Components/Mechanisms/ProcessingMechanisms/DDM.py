@@ -32,12 +32,11 @@ forced choice (TAFC) decision making ([REF]).  It can be executed analytically u
 Creating a DDM Mechanism
 -----------------------------
 
-A DDM Mechanism can be instantiated directly by calling its constructor, or by using the PsyNeuLink
-:class:`mechanism`[LINK] function and specifying DDM as its ``mech_spec`` argument.  The analytic solution used in
-:keyword:`TRIAL` mode is selected using the ``function`` argument.  The ``function`` argument can be simply the name
-of a DDM function (first example below), or a call to the function with arguments specifying its parameters
-(see :ref:`DDM_Execution` below for a description of DDM function parameters) and, optionally, a :doc:`ControlProjection`
-(second example)::
+A DDM Mechanism can be instantiated directly by calling its constructor, or by using the :py:func:`mechanism` function
+and specifying DDM as its ``mech_spec`` argument.  The analytic solution used in :keyword:`TRIAL` mode is selected
+using the ``function`` argument.  The ``function`` argument can be simply the name of a DDM function (first example
+below), or a call to the function with arguments specifying its parameters (see :ref:`DDM_Execution` below for a
+description of DDM function parameters) and, optionally, a :doc:`ControlProjection` (second example)::
 
     my_DDM = DDM(function=BogaczEtAl)
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlProjection))
@@ -69,10 +68,11 @@ Structure
 ---------
 
 The DDM mechanism implements a general form of the decision process.  A DDM mechanism has a single **inputState** the
-``value`` of which is used is assigned to the ``input`` specified by its ``execute`` or ``run`` methods, and that is
-used as the stimulus component of the :ref:`drift rate <DDM_Drift_Rate>` for the decision process.  The decision
-process can be configured to execute in different modes.  The ``function`` and ``time_scale`` parameters are the
-primary determinants of how the decision process is executed, and what information is returned. The ``function``
+``value`` of which is used is assigned to the ``input`` specified by its
+:py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods,
+and that is used as the stimulus component of the :ref:`drift rate <DDM_Drift_Rate>` for the decision process.  The
+decision process can be configured to execute in different modes.  The ``function`` and ``time_scale`` parameters are
+the primary determinants of how the decision process is executed, and what information is returned. The ``function``
 parameter specifies the analytical solution to use when ``time_scale`` is  set to :keyword:`TimeScale.TRIAL` (see
 :ref:`Functions <DDM_Functions>` below); when ``time_scale`` set to :keyword:`TimeScale.TIME_STEP`, executing the
 DDM mechanism numerically integrates the path of the decision variable (see :ref:`Execution <DDM_Execution>` below).
@@ -110,8 +110,8 @@ COMMENT
 DDM Functions
 ~~~~~~~~~~~~~
 
-The ``function`` parameter can be used to select one of two analytic solutions (:any:`BogaczEtAl` and
-:any:`NavarroAndFuss`) that are used when ``time_scale`` is set to :keyword:`TimeScale.TRIAL`.  These
+The ``function`` parameter can be used to select one of two analytic solutions (:py:class:`Funtion.BogaczEtAl` and
+:py:class:`Function.NavarroAndFuss`) that are used when ``time_scale`` is set to :keyword:`TimeScale.TRIAL`.  These
 both return an expected mean response time and accuracy, while :keyword:`NavarroAndFuss` also returns an expected
 mean correct response time and accuracy.
 
@@ -130,11 +130,11 @@ using the keywords in the list below, as in the following example::
                  time_scale=TimeScale.TIME_STEP}
 
 .. note::  Parameters specified in the ``params`` argument (as in the example above) will be used for both
-   :keyword:`TRIAL` and :keyword:`TIME_STEP` mode, since any parameters specified in the  ``params`` argument when
-   creating a mechanism override any corresponding ones specified as arguments to its ``function``).[LINK]
+   :keyword:`TRIAL` and :keyword:`TIME_STEP` mode, since parameters specified in the  ``params`` argument of a
+   mechanism's constructor override corresponding ones specified as arguments of its ``function`` (see :any:`COMPONENT`).
    In the example above, this means that even if the ``time_scale`` parameter is set to :keyword:`TimeScale.TRIAL``,
    the ``drift_rate`` of 0.2 will be used (rather than 0.1).  For parameters NOT specified as entries in
-   the params dictionary, the value specified for those in the function will be used in both :keyword:`TRIAL` and
+   the ``params`` dictionary, the value specified for those in the function will be used in both :keyword:`TRIAL` and
    :keyword:`TIME_STEP` mode.
 
 The parameters for the DDM are:
@@ -193,9 +193,10 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 COMMENT
 
 .. note::
-   DDM handles "runtime" parameters (specified in a call to its ``execute`` or ``run`` methods) differently than
-   standard Components: runtime parameters are added to the mechanism's current value of the corresponding
-   parameterState (rather than overriding it);  that is, they are combined additively with the value of
+   DDM handles "runtime" parameters (specified in a call to its
+   :py:meth:`execute <Mechanism.Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods)
+   differently than standard Components: runtime parameters are added to the mechanism's current value of the
+   corresponding parameterState (rather than overriding it);  that is, they are combined additively with the value of
    any :doc:`ControlProjection` it receives to determine the parameter's value for that execution.  The parameterState's
    value is then restored to its original value (i.e., either its default value or the one assigned when it was
    created) for the next execution.
@@ -210,22 +211,25 @@ COMMENT
 After each execution of the mechanism:
 
     * the value of the **decision variable** is assigned to the mechanism's ``value`` attribute, the value of the 1st
-      item of its ``outputValue`` attribute, and as the value of its :keyword:`DDM_DECISION_VARIABLE` outputState;
+      item of its :py:data:`outputValue <Mechanism.Mechanism_Base.outputState>` attribute, and as the value of its
+      :keyword:`DDM_DECISION_VARIABLE` outputState;
     ..
     * **response time** is assigned as the value of the 2nd item of the mechanism's ``outputValue`` attribute and as
       the value of its ``RESPONSE_TIME`` outputState.  If ``time_scale`` is :keyword:`TimeScale.TRIAL`,
       the value is the mean response time (in seconds) estimated by the analytic solution used in ``function``.
       COMMENT:
         [TBI:]
-        If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, the value is the number of time_steps that have transpired
-        since the start of the current execution in the current phase [LINK].  If execution completes, this is the
-        number of time_steps it took for the decision variable to reach the (positive or negative) value of the
-        ``threshold`` parameter;  if execution was interrupted (using ``terminate_function``), then it corresponds
-        to the time_step at which the interruption occurred.
+        If ``times_scale`` is :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`, the value is the number
+        of time_steps that have transpired since the start of the current execution in the current
+        :ref:`phase <System_Execution_Phase>`.  If execution completes, this is the number of time_steps it took for
+        the decision variable to reach the (positive or negative) value of the :py:data:`threshold <DDM.threshold>`
+        parameter;  if execution was interrupted (using :py:meth:`terminate_function <DDM.terminate_function>`),
+        then it corresponds to the time_step at which the interruption occurred.
       COMMENT
     ..
-    The following assignments are made only if time_scale is :keyword:`TimeScale.TRIAL`;  otherwise the value of the
-    corresponding attributes is :keyword:`None`.
+    The following assignments are made only if :py:data.`timeScale <DDM.timeScale>` is
+    :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`;  otherwise the value of the corresponding
+    attributes is :keyword:`None`.
 
     * **probability of reaching the upper threshold** is assigned to the 3rd item of the mechanism's ``outputValue``
       attribute, and as the value of its ``PROBABILITY_UPPER_THRESHOLD`` outputState.  If ``time_scale`` is
@@ -237,34 +241,38 @@ After each execution of the mechanism:
       [TBI:]
           If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
           indicating whether the decision process reached the upper (positive) threshold. If execution was interrupted
-          (using ``terminate_function``, sometimes referred to as the "interrogation protocol"[LINK]), then the value
-          corresponds to the current likelihood that the upper threshold would have been reached.
+          (using :py:meth:`terminate_function <DDM.terminate_function>`, sometimes referred to as the
+          :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
+          threshold would have been reached.
       COMMENT
     ..
     * **probability of reaching the lower threshold** is assigned to the 4th item of the mechanism's ``outputValue``
       attribute and as the value of its ``PROBABILITY_LOWER_THRESHOLD`` outputState.  If ``time_scale`` is
       :keyword:`TimeScale.TRIAL`, the value is the probability (calculated by the analytic solution used in
       ``function``) that the value of the decision variable reached the lower (negative) threshold.  Often, by
-      convention, the lower threshold is associated with the inccorrect response, in which case
+      convention, the lower threshold is associated with the incorrect response, in which case
       ``PROBABILITY_LOWER_THRESHOLD`` corresponds to the error rate of the decision process.
       COMMENT:
           [TBI:]
           If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
           indicating whether the decision process reached the lower (negative) threshold. If execution was interrupted
-          (using ``terminate_function``, sometimes referred to as the "interrogation protocol"[LINK]), then the value
-          corresponds to the current likelihood that the lower threshold would have been reached.
+          (using :py:method:`terminate_method <DDM.terminate_function>`, sometimes referred to as the
+          :ref:`interrogation protocol <LINK>`), then the value corresponds to the current likelihood that the lower
+          threshold would have been reached.
       COMMENT:
     ..
     The following assignments are made only assigned if the :keyword:`NavarroAndFuss`` function is used,
-    and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise, neither the ``outputValue`` nor the ``outputState``
-    attribute have a 6th item (if another function is assigned) or they are asssigned :keyword:`None` if ``time_scale``
-    is :keyword:`TimeScale.TIME_STEP`.
+    and ``time_scale`` is :keyword:`TimeScale.TRIAL`.  Otherwise, neither the
+    :py:data:`outputValue <Mechanism.Mechanism_Base.outputState>` nor the ``outputState`` attribute have a 6th item
+    (if another function is assigned) or they are asssigned :keyword:`None` if ``time_scale`` is
+    :keyword:`TimeScale.TIME_STEP`.
 
     * **mean correct response time** (in seconds) is assigned to the 5th item of the mechanism's ``outputValue``
       attribute and as  the value of its ``RT_CORRECT_MEAN`` outputState.
     ..
-    * **variance of correct response time** is assigned to the 6th item of the mechanism's ``outputValue`` attribute
-      and as the value of its ``RT_CORRECT_VARIANCE`` outputState.
+    * **variance of correct response time** is assigned to the 6th item of the mechanism's
+      :py:data:`outputValue <Mechanism.Mechanism_Base.outputState>` attribute and as the value of its
+      ``RT_CORRECT_VARIANCE`` outputState.
     COMMENT:
         In time_step mode, compute and report variance of the path
         (e.g., as confirmation of /deviation from noise param??)??
@@ -375,22 +383,25 @@ class DDM(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : value, list or np.ndarray : keyword:`FUNCTION_PARAMS`[keyword:`STARTING_POINT`] [LINK]
-        the input to the mechanism to use if none is provided in a call to its ``execute`` or ``run`` methods;
+    default_input_value : value, list or np.ndarray : default \
+                          keyword:`FUNCTION_PARAMS`[:py:data:`STARTING_POINT <DDM.starting_point>`]
+        the input to the mechanism to use if none is provided in a call to its
+        :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of ``variable`` for ``function``, and the primary  outputState
-        of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length of greater
-        than 1 is handled).
+        of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length of greater than 1 is handled).
 
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if ``time_scale`` is set to
         :keyword:`TimeScale.TRIAL`; can be :class:`BogaczEtAl` or :class:`NavarroAndFuss` (note:  the latter requires
-        that the MatLab engine is installed). If ``time_scale`` is set to :keyword:`TimeScale.TIME_STEP`,
-        ``function`` is automatically assigned to :class:`Integrator`.
+        that the MatLab engine is installed). If ``time_scale`` is set to
+        :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`, ``function`` is automatically assigned to
+        :py:class:`Integrator <Function.Integrator>`.
 
-    time_scale :  TimeScale : default TimeScale.TRIAL
-        specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
-        This must be set to :keyword:`TimeScale.TRIAL` to use one of the analytic solutions specified by ``function``.
-        This must be set to :keyword:`TimeScale.TIME_STEP` to numerically integrate the decision variable.
+    time_scale :  TimeScale : default :py:data:`TimeScale.TRIAL <TimeScale.TimeScale.TRIAL>`
+        specifies whether the mechanism is executed on the time_step or trial time scale.
+        This must be set to :py:data:`TimeScale.TRIAL <TimeScale.TimeScale.TRIAL> to use one of the analytic solutions
+        specified by ``function``. This must be set to :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>
+        to numerically (path) integrate the decision variable.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
@@ -399,12 +410,12 @@ class DDM(ProcessingMechanism_Base):
     name : str : default DDM-<index>
         a string used for the name of the mechanism.
         If not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for the process.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     .. context=componentType+INITIALIZING):
             context : str : default ''None''
@@ -420,14 +431,15 @@ class DDM(ProcessingMechanism_Base):
         the function used to compute the outcome of the decision process when ``timeScale`` is
         :keyword:`TimeScale.TRIAL`.  If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, ``function``
         is automatically assigned to :class`Integrator`, and used to compute the decision process by
-        stepwise integration of the decision variable (one step per ``CentralClock.time_step``).
+        stepwise integration of the decision variable
+        (one step per :py:class:`CentralClock.time_step <TimeScale.CentralClock.time_step>`).
 
     function_params : Dict[str, value]
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
 
-    value : List[float]
-        same as ``outputValue``.
+    value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
+        result of executing DDM ``function``; same items as ``outputValue``.
 
     COMMENT:
         CORRECTED:
@@ -436,7 +448,7 @@ class DDM(ProcessingMechanism_Base):
             and the first item of ``outputValue``.
     COMMENT
 
-    outputValue : List[float]
+    outputValue : List[array(float64),array(float64),array(float64),array(float64)]
         a list with the following items:
 
         * **decision variable** (value of :keyword:`DDM_DECISION_VARIABLE` outputState);
@@ -464,13 +476,13 @@ class DDM(ProcessingMechanism_Base):
         the name of the mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         a PreferenceSet for the mechanism.
         Specified in the prefs argument of the call to create the mechanism;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:
@@ -515,13 +527,26 @@ class DDM(ProcessingMechanism_Base):
         TIME_SCALE: TimeScale.TRIAL,
         # Assign internal params here (not accessible to user)
         # User accessible params are assigned in _assign_defaults_to_paramClassDefaults (in __init__)
-        OUTPUT_STATES:[DDM_DECISION_VARIABLE,        # Full set specified to include Navarro and Fuss outputs
-                       DDM_RESPONSE_TIME,
-                       DDM_PROBABILITY_UPPER_THRESHOLD, # Probability of hitting upper bound
-                       DDM_PROBABILITY_LOWER_THRESHOLD, # Probability of hitting lower bound
-                       DDM_RT_CORRECT_MEAN,         # NavarroAnd Fuss only
-                       DDM_RT_CORRECT_VARIANCE]     # NavarroAnd Fuss only
-        # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
+        # # MONITOR_FOR_CONTROL:[PROBABILITY_LOWER_THRESHOLD,(RESPONSE_TIME, -1, 1)]
+        OUTPUT_STATES:[                                        # Full set specified to include Navarro and Fuss outputs
+            {NAME:DDM_DECISION_VARIABLE,
+             INDEX:DDM_Output.DECISION_VARIABLE.value},
+
+            {NAME:DDM_RESPONSE_TIME,
+             INDEX:DDM_Output.RESPONSE_TIME.value},
+
+            {NAME:DDM_PROBABILITY_UPPER_THRESHOLD,          # Probability of hitting upper bound
+             INDEX:DDM_Output.P_UPPER_MEAN.value},
+
+            {NAME:DDM_PROBABILITY_LOWER_THRESHOLD,          # Probability of hitting lower bound
+             INDEX:DDM_Output.P_LOWER_MEAN.value},
+
+            {NAME:DDM_RT_CORRECT_MEAN,                      # NavarroAnd Fuss only
+             INDEX:DDM_Output.RT_CORRECT_MEAN.value},
+
+            {NAME:DDM_RT_CORRECT_VARIANCE,                  # NavarroAnd Fuss only
+             INDEX:DDM_Output.RT_CORRECT_VARIANCE.value}
+        ]
     })
 
     # Set default input_value to default bias for DDM
@@ -571,7 +596,7 @@ class DDM(ProcessingMechanism_Base):
     # MODIFIED 11/21/16 END
 
 
-    def _validate_params(self, request_set, target_set=NotImplemented, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -580,6 +605,11 @@ class DDM(ProcessingMechanism_Base):
             function_names = list(function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
                            format(FUNCTION, self.name, function_names))
+
+        if not isinstance(target_set[FUNCTION], NavarroAndFuss):
+            # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
+            del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
+            del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
 
         try:
             threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
@@ -592,36 +622,25 @@ class DDM(ProcessingMechanism_Base):
                 raise DDMError("{} param of {} ({}) must be >= zero".
                                format(THRESHOLD, self.name, threshold))
 
-
-    # def _instantiate_function(self, context=NotImplemented):
     def _instantiate_attributes_before_function(self, context=None):
         """Delete params not in use, call super.instantiate_execute_method
         """
 
-        # Assign output mappings:
-        self._outputStateValueMapping = {}
-        self._outputStateValueMapping[DDM_DECISION_VARIABLE] = DDM_Output.DECISION_VARIABLE.value
-        self._outputStateValueMapping[DDM_RESPONSE_TIME] = DDM_Output.RESPONSE_TIME.value
-        self._outputStateValueMapping[DDM_PROBABILITY_UPPER_THRESHOLD] = DDM_Output.P_UPPER_MEAN.value
-        self._outputStateValueMapping[DDM_PROBABILITY_LOWER_THRESHOLD] = DDM_Output.P_LOWER_MEAN.value
-
-        # If not using Navarro and Fuss, get rid of extra params:
-        if self.function is BogaczEtAl:
-            outputStates = self.params[OUTPUT_STATES]
-            try:
-                del outputStates[outputStates.index(DDM_RT_CORRECT_MEAN)]
-                del outputStates[outputStates.index(DDM_RT_CORRECT_VARIANCE)]
-            except ValueError:
-                pass
-        else:
-            self._outputStateValueMapping[DDM_RT_CORRECT_MEAN] = DDM_Output.RT_CORRECT_MEAN.value
-            self._outputStateValueMapping[DDM_RT_CORRECT_VARIANCE] = DDM_Output.RT_CORRECT_VARIANCE.value
-
         super()._instantiate_attributes_before_function(context=context)
 
+    # def _instantiate_attributes_after_function(self, context=None):
+    #
+    #     super()._instantiate_attributes_after_function(context=context)
+    #
+    #     if not isinstance(self.paramsCurrent[FUNCTION], NavarroAndFuss):
+    #         # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
+    #         del self.outputStates[DDM_RT_CORRECT_MEAN]
+    #         del self.outputStates[DDM_RT_CORRECT_VARIANCE]
+
+
     def __execute__(self,
-                variable=NotImplemented,
-                params=NotImplemented,
+                variable=None,
+                runtime_params=None,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute DDM function (currently only trial-level, analytic solution)
@@ -708,27 +727,50 @@ class DDM(ProcessingMechanism_Base):
                                            NOISE:noise,
                                            NON_DECISION_TIME:t0})
 
-            # Assign outputValue
-
+            # # MODIFIED 12/7/16 OLD:
+            # # Assign outputValue
+            # if isinstance(self.function.__self__, BogaczEtAl):
+            #     self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result
+            #     self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.P_LOWER_MEAN.value]
+            #
+            # elif isinstance(self.function.__self__, NavarroAndFuss):
+            #     self.outputValue[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
+            #     self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
+            #     self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
+            #     self.outputValue[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
+            #     self.outputValue[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+            #     # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
+            #
+            # # Convert ER to decision variable:
+            # if random() < self.outputValue[DDM_Output.P_LOWER_MEAN.value]:
+            #     self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
+            # else:
+            #     self.outputValue[DDM_Output.DECISION_VARIABLE.value] = threshold
+            #
+            # return self.outputValue
+            # MODIFIED 12/7/16 NEW:
             if isinstance(self.function.__self__, BogaczEtAl):
-                self.outputValue[DDM_Output.RESPONSE_TIME.value], self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result
-                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - self.outputValue[DDM_Output.P_LOWER_MEAN.value]
+                return_value = np.array([[0.0],[0.0],[0.0],[0.0]])
+                return_value[DDM_Output.RESPONSE_TIME.value], return_value[DDM_Output.P_LOWER_MEAN.value] = result
+                return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - return_value[DDM_Output.P_LOWER_MEAN.value]
 
             elif isinstance(self.function.__self__, NavarroAndFuss):
-                self.outputValue[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
-                self.outputValue[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
-                self.outputValue[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
-                self.outputValue[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
-                self.outputValue[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
+                return_value = np.array([[0],[0],[0],[0],[0],[0]])
+                return_value[DDM_Output.RESPONSE_TIME.value] = result[NF_Results.MEAN_DT.value]
+                return_value[DDM_Output.P_LOWER_MEAN.value] = result[NF_Results.MEAN_ER.value]
+                return_value[DDM_Output.P_UPPER_MEAN.value] = 1 - result[NF_Results.MEAN_ER.value]
+                return_value[DDM_Output.RT_CORRECT_MEAN.value] = result[NF_Results.MEAN_CORRECT_RT.value]
+                return_value[DDM_Output.RT_CORRECT_VARIANCE.value] = result[NF_Results.MEAN_CORRECT_VARIANCE.value]
                 # CORRECT_RT_SKEW = results[DDMResults.MEAN_CORRECT_SKEW_RT.value]
 
             # Convert ER to decision variable:
-            if random() < self.outputValue[DDM_Output.P_LOWER_MEAN.value]:
-                self.outputValue[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
+            if random() < return_value[DDM_Output.P_LOWER_MEAN.value]:
+                return_value[DDM_Output.DECISION_VARIABLE.value] = np.atleast_1d(-1 * threshold)
             else:
-                self.outputValue[DDM_Output.DECISION_VARIABLE.value] = threshold
+                return_value[DDM_Output.DECISION_VARIABLE.value] = threshold
 
-            return self.outputValue
+            return return_value
+            # MODIFIED 12/7/16 END
 
         else:
             raise MechanismError("time_scale not specified for DDM")
