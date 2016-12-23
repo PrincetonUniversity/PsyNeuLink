@@ -2000,9 +2000,8 @@ class Process_Base(Process):
             for process in list(self.targetMechanisms)[0].processes:
                 process.targetInputStates[0].value *= 0
             if callable(self.target):
-                pass
-                # self.targetInputStates[0].variable = self.target
-                # self.targetInputStates[0].variable = np.array(self.target())
+                # pass
+                self.targetInputStates[0].variable = self.target
             else:
                 self.targetInputStates[0].value = np.array(self.target)
         TEST = True
