@@ -4,6 +4,7 @@
 
 # **FIX**: FIX RL
 
+# IMPLEMENT: function format for inputs in Run
 # DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
 #            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
 # IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
