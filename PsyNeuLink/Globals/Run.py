@@ -130,7 +130,8 @@ formats.
 * **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of
   execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
   is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
-  used for the next relevant factor in the list below.
+  used for the next relevant factor in the list below.  If the number of inputs specified is less than the number of
+  executions, then the input list is cycled until the full number of executions is completed.
 ..
 * **Number of mechanisms.** If run is used for a system, and it has more than one :keyword:`ORIGIN` mechanism, then the
   next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms, with
@@ -240,16 +241,22 @@ in the ``targets`` argument of the ``execute`` or ``run`` method.  The same two 
 (:ref:`sequence <Run_Sequence>` and ref:`mechanism <Run_Mechanism>`) can also be used for targets.  However, the format
 of the lists or ndarrays is simpler, since each :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism is assigned
 only a single target value;  so there is never the need for the extra level of nesting (or dimension of ndarray) used
-for inputStates in the specification of inputs.  The number of targets specified for each mechanism (corresponding to
-the number executions) must equal the number specified for the inputs, and the format of each target value must match
-(in number and type of elements) that of the :py:data:`comparator_target
-<ComparatorMechanism.ComparatorMechanism.target>` parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>`
-mechanism for which it is intended.
+for inputStates in the specification of inputs.  The number of targets specified for each mechanism must equal the
+number specified for the inputs;  as for inputs, if the number of executions specified is greater than the number
+of inputs (and targets), then the list will be cycled until the number of executions specified is completed. The
+format of each target value must match (in number and type of elements) that  of the
+:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` parameter of the
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended.  Furthermore, if a range is specified
+for the output of the :keyword:`TERMINAL` mechanism with which the target is compared (that is, the mechanism that
+provides the ComparatorMechanism's :py:data:`sample <ComparatorMechanism.ComparatorMechanism.sample>`
+parameter, then the target must be within that range (for example, if the :keyword:`TERMINAL` mechanism is a
+:doc:`TransferMechanism` that uses a :py:class:`Logistic function <Function.Logistic>`, it's
+:py:data:`range <TransferMechanism.TransferMechanism.range>` is [0,1], so the target must be within that range).
 
 **Sequence format** *(List[values] or ndarray):*
 There are at most only three levels of nesting (or dimensions) required for targets: one for executions,
 one for mechanisms, and one for the elements of each input.  For a system with more than one TARGET mechanism,
-the targetes must be specified in the same order as they appear in the system's
+the targets must be specified in the same order as they appear in the system's
 :py:data:`targetMechanisms <System.System_Base.targetMechanisms>` attribute.  This should be the same order in which
 they are declared, and can be displayed using the system's :py:meth:`show <System.System_Base.show>` method). All
 other requirements are the same as those described for the sequence format for :ref:`inputs <Run_Sequence>`.
@@ -262,6 +269,7 @@ one for each round of execution. There are at most only two levels of nesting (o
 entry: one for the execution, and the other for the elements of each input.  In all other respects,, the format is
 the same as described for the mechanism format for :ref:`inputs <Run_Mechanism>`.
 
+COMMENT
 
 COMMENT:
    Module Contents
@@ -417,7 +425,7 @@ def run(object,
         # Otherwise, assume multiple executions...
         # MORE HERE
 
-        object.target = targets
+    object.targets = targets
 
     time_scale = time_scale or TimeScale.TRIAL
 
@@ -492,17 +500,20 @@ def run(object,
 
             # Assign targets:
             if not targets is None:
+
                 if object_type == PROCESS:
                     object.target = targets[input_num]
+
                 elif object_type == SYSTEM:
                     # This assumes that target order is aligned with order of targets in targetMechanisms list;
                     # it is tested for dict format in _construct_stimulus_sets, but can't be insured for list format.
                     for i, target in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
-                        for process in target.processes:
-                            if not process.learning:
-                                continue
-                            process.target = targets[input_num][i]
-
+                        # Assign current target to value attribute of ProcessInputState of each process
+                        # to which the targetMechanism belongs (i.e., that project to it's COMPARATOR_TARGET inputState)
+                        # MODIFIED 12/22/16 NEW:
+                        for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+                            process_target_projection.sender.value = targets[input_num][i]
+                        # MODIFIED 12/22/16 END
 
             result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
 
@@ -812,7 +823,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stim_list.append(stimuli_in_execution)
 
     else:
-        raise RunError("PROGRAM ERROR: run does not support object of type {}".format(object_type))
+        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
+                       format(object_type))
 
     return stim_list
 

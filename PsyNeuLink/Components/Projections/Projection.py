@@ -701,9 +701,38 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
+    # MODIFIED 12/21/16 NEW:
+    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+        for state_name, state in self.parameterStates.items():
+
+            state.update(params=runtime_params, time_scale=time_scale, context=context)
+
+            # Assign parameterState's value to parameter value in runtime_params
+            if runtime_params and state_name in runtime_params[PARAMETER_STATE_PARAMS]:
+                param = param_template = runtime_params
+            # Otherwise use paramsCurrent
+            else:
+                param = param_template = self.paramsCurrent
+
+            # Determine whether template (param to type-match) is at top level or in a function_params dictionary
+            try:
+                param_template[state_name]
+            except KeyError:
+                param_template = self.function_params
+
+            # Get its type
+            param_type = type(param_template[state_name])
+            # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
+            if param_type is tuple:
+                param_type = type(param_template[state_name][0])
+
+            # Assign version of parameterState.value matched to type of template
+            #    to runtime param or paramsCurrent (per above)
+            param[state_name] = type_match(state.value, param_type)
+    # MODIFIED 12/21/16 END
+
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
-
 
 # from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
 # from PsyNeuLink.Components.Projections.LearningProjection import is_learning_signal
@@ -772,7 +801,6 @@ def _is_projection_subclass(spec, keyword):
         if _is_projection_subclass(spec[keyword], keyword):
             return True
     return False
-
 
 def _add_projection_to(receiver, state, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
