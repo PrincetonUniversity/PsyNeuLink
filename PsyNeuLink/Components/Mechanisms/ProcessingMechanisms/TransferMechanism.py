@@ -235,6 +235,24 @@ class TransferMechanism(ProcessingMechanism_Base):
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
+    initial_value :  value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+        determines the starting value for time-averaged input (only relevant if ``rate`` parameter is not 1.0).
+
+    noise : float or function : default 0.0
+        a stochastically-sampled value added to the output of the ``function``.
+        If it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+        If it is a function, it must return a scalar value.
+
+    rate : float : default 1.0
+        the time constant for exponential time averaging of input
+        when the mechanism is executed at the time_step time scale:
+        input on current time_step = (rate * specified input) + (1-rate * input on previous time_step).
+
+    range : Optional[Tuple[float, float]]
+        determines the allowable range of the result: the first value specifies the minimum allowable value
+        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+        is set to the limit it exceeds.  If :py:data:`function` is the :py:class:`Logistic <Function.Logistic>`
+        function, the :keyword:`range` is set by default to (0,1).
 
     value : 2d np.array [array(float64)]
         result of executing the TransferMechanism's ``function``; same value as fist item of ``outputValue``.
