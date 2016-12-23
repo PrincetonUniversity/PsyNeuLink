@@ -1994,14 +1994,20 @@ class Process_Base(Process):
             self.target = target
 
         # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
-        self.targetInputStates[0].value = self.target
+        if self.learning:
         # # Zero any input from projections to target from any other processes
         # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
+            for process in list(self.targetMechanisms)[0].processes:
+                process.targetInputStates[0].value *= 0
+            self.targetInputStates[0].variable = np.array(self.target)
+            # self.targetInputStates[0].value = np.array(self.target)
+
         # for projection in list(self.targetMechanisms)[0].inputStates[COMPARATOR_TARGET].receivesFromProjections:
         #     if projection.sender.owner != self:
         #         # projection.sender.value = np.zeros_like(projection.value.sender.value)
         #         # projection.sender.value[:] = 0
         #         projection.sender.value *= 0
+
 
         # Generate header and report input
         if report_output:
@@ -2178,6 +2184,19 @@ class Process_Base(Process):
         #              mechanism.name,
         #              re.sub('[\[,\],\n]','',
         #                     str(mechanism.outputState.value))))
+
+    # def _report_process_learning(self, separator=False):
+    #
+    #     print("\n\'{}' learning:\n- output: {}".
+    #           format(append_type_to_name(self),
+    #                  re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
+    #
+    #     if self.learning:
+    #       print("\n- MSE: {:0.3}".
+    #               format(float(self.comparatorMechanism.outputValue[ComparatorOutput.COMPARISON_MSE.value])))
+    #
+    #     elif separator:
+    #         print("\n\n****************************************\n")
 
     def _report_process_completion(self, separator=False):
 
