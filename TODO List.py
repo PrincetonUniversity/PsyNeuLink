@@ -6,13 +6,13 @@
 
 # DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
 #            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
+# IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
 # IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't collide with range)
 # IMPLEMENT:  Make use of learning attribute of System (set it to True if any of its processes use learning)
-# IMPLEMENT: target attribute for mechanism, and use for Comparator Mechanism (in run)
-# IMPLEMENT: check that target is within range specified for terminal mechanism's function (if it has one; else try
-# to infer it from max and min allowable values of type of mechanis'ms value??
+# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultController and passing to EVC)
 
-# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultCOntroller and passing to EVC)
+# IMPLEMENT: add target (or targets) as arg in system.execute()
+# FIX: change "inputs" arg to "input" in system.execute()
 
 # FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
 # FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
