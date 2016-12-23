@@ -9,7 +9,30 @@
 # **************************************  DefaultControlMechanism ************************************************
 
 """
-**[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+
+The DefaultControlMechanism is created whenever PsyNeuLink is run.  It is assigned as the ControlMechanism for any
+:doc:`System` that is created for which no ControlMechanism is specified.  The DefaultControlMechanism creates
+an inputState for each ControlProjection it is assigned, and uses :any:`defaultControlAllocation` as the value for
+the control signal.  By default,  :any:`defaultControlAllocation` = 1, so that ControlProjections from the
+DefaultControlMechanism have no effect on their parameters.  Thus, for the most part, the DefaultControlMechanism
+serves as a place marker for ControlProjections (having on effect on the parameters it "controls"), until the system
+is assigned a more useful ControlMechanism (such as the :doc:`EVCMechanism`).  However, it can be used to uniformly
+control the parameters that receive ControlProjections from it, by manually changing the value of
+:any:`defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
+created, executed and their attributes.
+
+COMMENT:
+   ADD LINK FOR defaultControlAllocation
+
+    TEST FOR defaultControlAllocation:  |defaultControlAllocation|
+
+    ANOTHER TEST FOR defaultControlAllocation:  :py:print:`defaultControlAllocation`
+
+    AND YET ANOTHER TEST FOR defaultControlAllocation:  :py:print:|defaultControlAllocation|
+
+    LINK TO DEFAULTS: :doc:`Defaults`
+COMMENT
+
 
 """
 
@@ -19,40 +42,31 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 from PsyNeuLink.Components.ShellClasses import *
 
 
-ControlSignalChannel = namedtuple('ControlSignalChannel',
-                                  'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
+# ControlSignalChannel = namedtuple('ControlSignalChannel',
+#                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
 
 
 class DefaultControlMechanism(ControlMechanism_Base):
-    """Implement default control mechanism
+    """Implements the DefaultControlMechanism
 
-    Description:
-        Implement default source of control signals, with one inputState and outputState for each
-        Use defaultControlAllocation as input(s) and pass value(s) unchanged to ouputState(s) and ControlProjection(s)
+    COMMENT:
+        Description:
+            Implements default source of control signals, with one inputState and outputState for each.
+            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and ControlProjection(s)
 
+            Every ControlProjection is assigned this mechanism as its sender by default (i.e., unless a sender is
+                explicitly specified in its constructor).
 
-# DOCUMENTATION NEEDED
-    - EXPLAIN WHAT ControlSignalChannel IS:
-            A ControlSignalChannel is instantiated for each ControlProjection assigned to DefaultController
-        It simply passes the defaultControlAllocation value to the ControlProjection
+            An inputState and outputState is created for each ControlProjection assigned:
+                the inputState is assigned the
+                :py:constant:`defaultControlAllocation <Defaults.defaultControlAllocation>` value;
+                when the DefaultControlMechanism executes, it simply assigns the same value to the ControlProjection.
 
-
-    - EVERY DEFAULT CONTROL PROJECTION SHOULD ASSIGN THIS MECHANISM AS ITS SENDER
-    - AN OUTPUT STATE SHOULD BE CREATED FOR EACH OF THOSE SENDERS
-    - AN INPUT STATE SHOULD BE CREATED FOR EACH OUTPUTSTATE
-    - THE EXECUTE METHOD SHOULD SIMPLY MAP THE INPUT STATE TO THE OUTPUT STATE
-    - EVC CAN THEN BE A SUBCLASS THAT OVERRIDES EXECUTE METHOD AND DOES SOMETHING MORE SOPHISTICATED
-        (E.G,. KEEPS TRACK OF IT'S SENDER PROJECTIONS AND THEIR COSTS, ETC.)
-    * MAY NEED TO AUGMENT OUTPUT STATES TO KNOW ABOUT THEIR SENDERS
-    * MAY NEED TO ADD NEW CONSTRAINT ON ASSIGNING A STATE AS A SENDER:  IT HAS TO BE AN OUTPUTSTATE
-
-
-    Class attributes:
-        + componentType (str): System Default Mechanism
-        + paramClassDefaults (dict):
-            # + kwInputStateValue: [0]
-            # + kwOutputStateValue: [1]
-            + FUNCTION: Linear
+            Class attributes:
+                + componentType (str): System Default Mechanism
+                + paramClassDefaults (dict):
+                    + FUNCTION: Linear
+    COMMENT
     """
 
     componentType = "DefaultControlMechanism"
@@ -69,7 +83,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     # variableClassDefault = defaultControlAllocation
     # This must be a list, as there may be more than one (e.g., one per controlSignal)
-    variableClassDefault = [defaultControlAllocation]
+    variableClassDefault = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
@@ -88,7 +102,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        self.controlSignalChannels = OrderedDict()
 
         super(DefaultControlMechanism, self).__init__(default_input_value =default_input_value,
                                                          params=params,
@@ -98,63 +111,35 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
 
-    def __execute__(self, time_scale=TimeScale.TRIAL, runtime_params=None, context=None):
+    def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
 
-        for channel_name, channel in self.controlSignalChannels.items():
-
-            channel.inputState.value = defaultControlAllocation
-
-            # Note: self.execute is not implemented as a method;  it defaults to Linear
-            #       from paramClassDefaults[FUNCTION] (see above)
-            channel.outputState.value = self.function(channel.inputState.value, context=context)
-
-        # # FIX: CONSTRUCT np.array OF outputState.values
-        # return output
+        return self.inputValue or [defaultControlAllocation]
 
     def _instantiate_input_states(self, context=None):
-        """Suppress assignement of inputState(s) - this is done by instantiate_control_signal_channel
+        """Instantiate inputValue attribute
+
+        Otherwise, no need to do anything, as DefaultControllerMechanism only adds inputStates
+        when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state
         """
-        # IMPLEMENTATION NOTE:  Assigning to None currently causes problems, so just pass
-        # self.inputState = None
-        # self.inputStates = None
-        # # MODIFIED 9/15/16 OLD:
-        # pass
-        # MODIFIED 9/15/16 NEW:
-        self.inputValue = None
-        # # MODIFIED 9/15/16 END
+
+        try:
+            self.inputStates
+        except AttributeError:
+            self.inputValue = None
+        else:
+            pass
 
 
     def _instantiate_control_projection(self, projection, context=None):
-        # DOCUMENTATION NEEDED:  EXPLAIN WHAT CONTROL SIGNAL CHANNELS ARE
+        """Instantiate requested controlProjection and associated inputState
         """
 
-        Args:
-            projection:
-            context:
+        # Instantiate inputStates and allocationPolicy attribute for controlSignal allocations
+        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
+        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
+        self.allocationPolicy = self.inputValue
 
-        Returns:
-
-        """
-
-        # Instantiate inputStates and "channels" for controlSignal allocations
-        self.instantiate_control_signal_channel(projection=projection, context=context)
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
                                                       context=context)
-
-    def instantiate_control_signal_channel(self, projection, context=None):
-        """Instantiate inputState that passes defaultControlAllocation to ControlProjection
-
-        Instantiate an inputState with defaultControlAllocation as its value
-
-        Args:
-            projection:
-            context:
-
-        Returns:
-
-        """
-        input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
-
-        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
