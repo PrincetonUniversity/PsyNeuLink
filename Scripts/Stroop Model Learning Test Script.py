@@ -100,16 +100,16 @@ mySystem.run(num_executions=2,
 # PsyNeuLink response & weights after 1st trial:
 #
 # Response:
-#  [ 0.51421078  0.56130358]
+#  [ 0.50899214  0.54318254]
 # Hidden-Output:
-# [[ 0.04441875  1.0430904 ]
-#  [ 2.00670223  3.0065018 ]]
+# [[ 0.01462766  1.01351195]
+#  [ 2.00220713  3.00203878]]
 # Color-Hidden:
-# [[ 0.0379539   1.03231792]
-#  [ 2.0379539   3.03231792]]
+# [[ 0.01190129  1.0103412 ]
+#  [ 2.01190129  3.0103412 ]]
 # Word-Hidden:
-# [[-0.0759078   0.93536417]
-#  [ 1.9240922   2.93536417]]
+# [[-0.02380258  0.9793176 ]
+#  [ 1.97619742  2.9793176 ]]
 
 
 # correct response & weights after 1st trial:
@@ -128,58 +128,3 @@ mySystem.run(num_executions=2,
 # words-hidden weights
 #    -0.0238    0.9793
 #     1.9762    2.9793
-
-# JDC:
-# Response:
-#  [ 0.50899214  0.54318254]
-# Hidden-Output:
-# [[ 0.01462766  1.01351195]
-#  [ 2.00220713  3.00203878]]
-# Color-Hidden:
-# [[ 0.01190129  1.0103412 ]
-#  [ 2.01190129  3.0103412 ]]
-# Word-Hidden:
-# [[-0.02380258  0.9793176 ]
-#  [ 1.97619742  2.9793176 ]]
-
-
-# Response:
-#  [ 0.50899214  0.54318254]
-# Hidden-Output:
-# [[ 0.01462766  1.01351195]
-#  [ 2.00220713  3.00203878]]
-# Color-Hidden:
-# [[ 0.01225056  1.01035006]
-#  [ 2.01225056  3.01035006]]
-# Word-Hidden:
-# [[-0.02450112  0.97929987]
-#  [ 1.97549888  2.97929987]]
-#
-# ComparatorMechanism-1
-# Hidden-Output Weights
-# Word-Hidden Weights Weighted_Error
-# Color-Hidden Weights Weighted_Error
-# Word-Hidden Weights
-# Color-Hidden Weights
-
-# -------------
-#
-# Response:
-#  [ 0.50899214  0.54318254]
-# Hidden-Output:
-# [[ 0.01462766  1.01351195]
-#  [ 2.00220713  3.00203878]]
-# Color-Hidden:
-# [[ 0.01190129  1.0103412 ]
-#  [ 2.01190129  3.0103412 ]]
-# Word-Hidden:
-# [[-0.02450112  0.97929987]
-#  [ 1.97549888  2.97929987]]
-#
-# ComparatorMechanism-1
-# Color-Hidden Weights Weighted_Error
-# Hidden-Output Weights
-# Word-Hidden Weights Weighted_Error
-# Color-Hidden Weights
-# Word-Hidden Weights
-#
