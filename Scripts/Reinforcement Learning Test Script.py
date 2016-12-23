@@ -12,7 +12,7 @@ input_layer = TransferMechanism(default_input_value=[0,0,0],
 
 action_selection = TransferMechanism(default_input_value=[0,0,0],
                             function=SoftMax(output=PROB,
-                                             gain=10.0),
+                                             gain=1.0),
                             name='Action Selection')
 
 p = process(default_input_value=[0, 0, 0],
