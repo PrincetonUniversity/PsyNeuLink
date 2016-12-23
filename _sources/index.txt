@@ -65,18 +65,20 @@ PsyNeuLink is written in Python, and conforms to the syntax and (most of the) co
 The primary constructs in PsyNeuLink are mechanisms, projections, processes, and systems.
 
 :doc:`Mechanism`.  A PsyNeuLink mechanism takes an input, transforms it with a function in some way, and makes the
-output
-available to other mechanisms.  Mechanisms can take any form of input, use any funciton, and generate any form of
+output available to other mechanisms. Its primary purpose is representational transformation (that is, "information
+processing"). Mechanisms can take any form of input, use any function, and generate any form of
 output.  PsyNeuLink provides mechanisms with standard functions (e.g., linear and logistic transforms for scalars and
 arrays;  integrator functions, including various forms of drift diffusion processes; and matrix algebraic functions).
 However a mechanism can easily be customized with any function that can be written in or called from Python.
 
 :doc:`Projection` and :doc:`Processes <Process>`.  Mechanisms are composed into processes, by linking them into
 pathways with projections.  A projection takes the output of its sender mechanism, and transforms it as necessary to
-provide it as input to its receiver mechanism.  A process is a linear chain of mechanisms connected by projections.
-Projections within a pathway can be recurrent, but they cannot branch (that is done with systems, as described below)
-. Processes can also be configured for learning, in which the projections are trained to produce a specified output
-for each of a given set of inputs.
+provide it as input to its receiver mechanism.  The primary purpose of a projection is to convey information from one
+mechanism to another, converting the information from its sender into a form that is usable by its receiver.
+A process is a linear chain of mechanisms connected by projections.
+Projections within a pathway can be recurrent, but they cannot branch (that is done with systems, as described below).
+Processes can also be configured for learning, in which the projections are trained to produce a specified output for
+each of a given set of inputs.
 
 :doc:`System`.  A system is composed of a set of processes.  Typically, the processes of a system overlap -- that is,
 they share one or more mechanisms.  The network of processes in a system is explicitly represented as a graph, in which
@@ -128,6 +130,8 @@ the opportunity to test and explore how they interact with one another in a sing
             performs the core computation of a component.
         * ``params``
             dictionary of parameters for the function
+        * ``value``
+            the output of its the function
 
 
 .. _Component_Hierarchy:
@@ -166,9 +170,8 @@ PsyNeuLink uses the following primary constructs (illustrated in the :ref:`figur
              Takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of
              another mechanism. There are three primary types:
 
-
             + :doc:`MappingProjection`
-                Takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+                Takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
                 and provides it as input to that receiver mechanism.
 
             + :doc:`ControlProjection`
@@ -223,6 +226,7 @@ Contributors
 * **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
+* **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
