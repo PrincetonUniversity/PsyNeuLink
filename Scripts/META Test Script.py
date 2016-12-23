@@ -10,6 +10,7 @@ scripts =  [
             'Multilayer Learning Test Script.py',
             'Reinforcement Learning Test Script.py',
             'DDM Test Script.py',
+            'Stroop Model Test Script.py',
             'Stroop Model Learning Test Script.py',
             'Mixed NN & DDM script.py',
             'System Graph and Input Test Script.py',
