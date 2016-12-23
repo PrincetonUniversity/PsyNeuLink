@@ -52,7 +52,6 @@ def show_weights():
     print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
     print ('action selected: ', action_selection.outputState.value)
 
-
 p.run(num_executions=10,
       # inputs=[[[1, 1, 1]]],
       inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
