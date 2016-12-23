@@ -1626,28 +1626,10 @@ class System_Base(System):
 
     def _execute_learning(self, context=None):
 
-        # # MODIFIED 12/21/16 OLD:
-        # for process in self.processes:
-        #     if process.learning and process._learning_enabled:
-        #         for mech_tuple in process.monitoringMechanisms.mech_tuples:
-        #             mech_tuple.mechanism.execute(time_scale=self.timeScale,
-        #                                          runtime_params=mech_tuple.params,
-        #                                          context=context)
-        # for process in self.processes:
-        #     process._execute_learning(context=context)
-        #
-        #     # Report output of the process if reporting is enabled for system and process
-        #     #   and the process has a targetMechanism
-        #     #   (note: it may not, as it may terminate on an internal mechanism of another process
-        #     #          and therefore use that process' targetMechanism as the source of its error signal)
-        #     if self._report_system_output and self._report_process_output and process.targetMechanisms:
-        #             process._report_process_completion()
-
         # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
-        # first update all monitoring mechanisms
-        for i in range(len(self.learningExecutionList)):
 
-            component = self.learningExecutionList[i]
+        # First update all MonitoringMechanisms
+        for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             if isinstance(component, MappingProjection):
@@ -1669,13 +1651,11 @@ class System_Base(System):
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
             component.execute(time_scale=self.timeScale,
                               context=context_str)
-            # TEST PRINT:
-            print ("EXECUTING MONITORING UPDATES: ", component.name)
+            # # TEST PRINT:
+            # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
-        # first update all monitoring mechanisms
-        for i in range(len(self.learningExecutionList)):
-
-            component = self.learningExecutionList[i]
+        # Then update all MappingProjections
+        for component in self.learningExecutionList:
 
             if isinstance(component, MonitoringMechanism_Base):
                 continue
@@ -1698,9 +1678,25 @@ class System_Base(System):
             component.execute(time_scale=self.timeScale,
                               context=context_str)
 
-            # TEST PRINT:
-            print ("EXECUTING WEIGHT UPDATES: ", component.name)
+            # # TEST PRINT:
+            # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
+        if self._report_system_output and self._report_process_output:
+            # Report learning for targetMechanisms (and the processes to which they belong)
+            # Sort for consistency of reporting:
+            print("\n\'{}' learning completed:".format(self.name))
+
+            for target_mech in self.targetMechanisms:
+                processes = list(target_mech.processes.keys())
+                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                process_names = list(p.name for p in process_keys_sorted)
+                # print("\n\'- Target: {}' error: {} (processes: {})".
+                print("- error for target {}': {}".
+                      format(append_type_to_name(target_mech),
+                             re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
+                                                         for i in target_mech.outputState.value])),
+                             ))
+                             # process_names))
 
             # if not i:
             #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
@@ -1714,36 +1710,6 @@ class System_Base(System):
             #     self.variable = convert_to_np_array(self.inputs, 2) * 0
             #     # MODIFIED 10/2/16 END
             # i += 1
-
-        # if self._report_system_output and self._report_process_output:
-        #     # FIX: Report learning here
-        #     # if self._report_system_output and self._report_process_output:
-        #     #     # Report initiation of process(es) for which mechanism is an ORIGIN
-        #     #     # Sort for consistency of reporting:
-        #     #     processes = list(component.processes.keys())
-        #     #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-        #     #     for process in process_keys_sorted:
-        #     #         if component.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-        #     #             process._report_process_initiation()
-        #     #
-        #     pass
-
-        # # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-        # # Report completion of learning
-        # if self._report_system_output:
-        #     if self._report_process_output:
-        #         # FIX: Report learning here
-        #         # # Sort for consistency of reporting:
-        #         # processes = list(component.processes.keys())
-        #         # process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-        #         # for process in process_keys_sorted:
-        #         #     # MODIFIED 12/4/16 NEW:
-        #         #     if process.learning and process._learning_enabled:
-        #         #         continue
-        #         #     # MODIFIED 12/4/16 END
-        #         #     if component.processes[process] == TERMINAL and process.reportOutputPref:
-        #         #         process._report_process_completion()
-        #         pass
 
         # MODIFIED 12/21/16 END
 
