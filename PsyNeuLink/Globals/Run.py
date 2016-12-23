@@ -311,7 +311,7 @@ def run(object,
         reset_clock:bool=True,
         initialize:bool=False,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
-        targets:tc.optional(tc.any(list, dict, np.ndarray))=None,
+        targets:tc.optional(tc.any(list, dict, np.ndarray, function_type))=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(function_type)=None,
         call_after_trial:tc.optional(function_type)=None,
@@ -497,7 +497,10 @@ def run(object,
             # Assign targets:
             if not targets is None:
 
-                if object_type == PROCESS:
+                if isinstance(targets, function_type):
+                    object.target = targets
+
+                elif object_type == PROCESS:
                     object.target = targets[input_num]
 
                 elif object_type == SYSTEM:
@@ -587,8 +590,16 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     elif isinstance(stimuli, dict):
         stim_list = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
 
+    elif is_target and isinstance(stimuli, function_type):
+        return stimuli
+
     else:
-        raise SystemError("inputs arg for {}._construct_stimulus_sets() must be a dict or list".format(object.name))
+        if is_target:
+            stim_type = 'targets'
+        else:
+            stim_type = 'inputs'
+        raise SystemError("{} arg for {}._construct_stimulus_sets() must be a dict or list".
+                          format(stim_type, object.name))
 
     stim_list_array = np.array(stim_list)
     return stim_list_array
