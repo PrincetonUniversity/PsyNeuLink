@@ -1117,8 +1117,6 @@ def _validate_targets(object, targets, num_input_sets):
                                        format(num_target_sets, num_input_sets, append_type_to_name(object)))
             # MODIFIED 12/23/16 END
 
-
-
     else:
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_targets in Run module for ".
                        format(object.__class__.__name__))
