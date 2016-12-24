@@ -1499,7 +1499,7 @@ class System_Base(System):
                     continue
                 else:
                     # Assign input as value of corresponding Process inputState
-                    process._assign_input_values(input=input, context=context)
+                    process._assign_input_values(input=input_item, context=context)
         self.input = input
         #endregion
 
