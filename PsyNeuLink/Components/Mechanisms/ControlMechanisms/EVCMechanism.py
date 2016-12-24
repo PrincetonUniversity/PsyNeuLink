@@ -996,7 +996,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         """
 
-        simulation_inputs = np.empty_like(self.system.inputs, dtype=float)
+        simulation_inputs = np.empty_like(self.system.input, dtype=float)
 
         # For each prediction mechanism
         for prediction_mech in self.predictionMechanisms:
@@ -1312,7 +1312,7 @@ def _compute_EVC(args):
     for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
-        ctlr.system.execute(inputs=simulation_inputs, time_scale=time_scale, context=context)
+        ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
     CentralClock.time_step = time_step_buffer
 
     # Get control cost for this policy
