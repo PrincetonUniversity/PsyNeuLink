@@ -208,14 +208,17 @@ Initialization values are assigned, at the start execution, as input to mechanis
 
 Learning
 ~~~~~~~~
-The system will execute learning for any process that specifies it.  Learning is executed for each process
-after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
-The stimuli (both inputs and targets for learning) can be specified in one of two formats (list or dict),
-that are described in the :doc:`Run` module.  Both formats require that an input be provided for each
+The system will execute learning if it is specified for any process in the system.  The :py:data:`learning
+<System_Base.learning>` attribute indicates whether learning is enabled for the system. Learning is executed for any
+components (individual projections or processes) for which it is specified after all processing mechanisms in the
+system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
+learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
+see :ref:`Run_Inputs` and :ref:`Run_Targets`).  Both formats require that an input be provided for each
 :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
-:py:data:`originMechanisms <System_Base.originMechanisms>` attribute), and that a target be provided for each
-:py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism (listed in its
-:py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).
+:py:data:`originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or
+mechanism format, one target must be provided for each :py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism
+(listed in its :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified
+in a :ref:`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
 .. note::
    A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
@@ -268,7 +271,7 @@ from toposort import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple, OBJECT, PARAMS, PHASE
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
                                                                                       COMPARATOR_TARGET
@@ -506,6 +509,13 @@ class System_Base(System):
     enable_controller :  bool : default :keyword:`False`
         determines whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
 
+    learning : bool : default False
+        indicates whether learning is being used;  is set to True if learning is specified for any process in the system
+        COMMENT:
+            or for the system itself.
+        COMMENT
+        .
+
     graph : OrderedDict
         contains a graph of all of the mechanisms in the system.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
@@ -689,7 +699,7 @@ class System_Base(System):
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.targets = None
-        self.learning = None
+        self.learning = False
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -937,6 +947,8 @@ class System_Base(System):
 
             # Assign the Process a reference to this System
             process.systems.append(self)
+            if process.learning:
+                self.learning = True
 
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
@@ -972,7 +984,7 @@ class System_Base(System):
                         else:
                             if sender_mech_tuple.phase != existing_mech_tuple.phase:
                                 offending_tuple_field = 'phase'
-                                offending_value = PHASE_SPEC
+                                offending_value = PHASE
                             else:
                                 offending_tuple_field = 'process_input'
                                 offending_value = PARAMS
@@ -993,11 +1005,7 @@ class System_Base(System):
                 if not sender_mech_tuple in self._all_mech_tuples:
                     self._all_mech_tuples.append(sender_mech_tuple)
 
-            # MODIFIED 10/16/16 OLD:
-            # process.mechanisms = MechanismList(process, tuples_list=process._mech_tuples)
-            # MODIFIED 10/16/16 NEW:
             process._allMechanisms = MechanismList(process, tuples_list=process._mech_tuples)
-            # MODIFIED 10/16/16 END
 
         self.variable = convert_to_np_array(self.variable, 2)
 
@@ -1005,7 +1013,6 @@ class System_Base(System):
         # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
-        # MODIFIED 11/1/16 OLD:
         self.processes = self._processList.processes
 
     def _instantiate_graph(self, context=None):
@@ -1604,10 +1611,8 @@ class System_Base(System):
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
-                            # MODIFIED 12/4/16 NEW:
                             if process.learning and process._learning_enabled:
                                 continue
-                            # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
@@ -1615,13 +1620,7 @@ class System_Base(System):
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                # # MODIFIED 10/2/16 OLD:
-                # self.variable = self.variable * 0
-                # # MODIFIED 10/2/16 NEW:
-                # self.variable = self.input * 0
-                # MODIFIED 10/2/16 NEWER:
                 self.variable = convert_to_np_array(self.input, 2) * 0
-                # MODIFIED 10/2/16 END
             i += 1
 
     def _execute_learning(self, context=None):
@@ -1949,7 +1948,8 @@ class System_Base(System):
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
 
-        if any(process.learning for process in self.processes):
+        # if any(process.learning for process in self.processes):
+        if self.learning:
             print ("\n\tTarget mechanisms: ".format(self.name))
             for mech_tuple in self.targetMechanisms.mech_tuples:
                 print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))

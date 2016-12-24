@@ -2,29 +2,30 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# **FIX**: FIX RL
+# DOCUMENT: Learning and Control in System
+# DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
 
 # IMPLEMENT: function format for inputs in Run (e.g., for simulating staircasing):
 #                       needs to be coordinated with validation of num_targets (if it is not a function);
 #                       then document (paralleling targets, and maybe moving much of that to inputs function format)
-# DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
+# DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITIONALLY, NEED TO OVERRIDE _instantiate_parameter_states
 #            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
 # IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
-# IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't collide with range)
-# IMPLEMENT:  Make use of learning attribute of System (set it to True if any of its processes use learning)
+#                   DO THIS ONCE EVC MECHANISM IS AUGMENTED, AND MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCMECHANISM
+#                   THAT IS USED IF NO OTHER IS SPECIFED
+# IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)
 # IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultController and passing to EVC)
-
 # IMPLEMENT: add target (or targets) as arg in system.execute()
-# FIX: change "inputs" arg to "input" in system.execute()
-
-# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
-# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
-
 # IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
 # IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 
-# DOCUMENT: Learning and Control in System
-# DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
+# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
+# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
+# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
+# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
+
+
 # DOCUMENTATION: replace ``variable`` with
 #                    :py:data:`variable <Module.variable>` or
 #                    :py:data:`variable <Component.variable>`
@@ -41,12 +42,6 @@
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
 #
-# FIX: Reporting of learning in system._execute_learning
-# FIX: targets.[CentralClock.trial][0] system._execute_learning
-# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
-# FIX: RL with new System.learningGraph IMPLEMENTATION
-# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
-# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
 #
 # TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
 #                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
@@ -235,6 +230,7 @@
 # TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
 #              plural for input and target refers to executions, not number of mechanisms
+#              run: inputs;  execute: input
 #
 # DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
 #                       (including override)
