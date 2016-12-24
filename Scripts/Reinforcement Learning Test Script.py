@@ -44,7 +44,6 @@ reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.val
 #     #       (this is a result of parameterState "lazy updating" -- only updated when called)
 #     print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
 
-
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
