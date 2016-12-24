@@ -264,7 +264,7 @@ WEIGHT = 2
 #     BADGER_MODE = 1.0
 #     TEST_MODE = 240
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
