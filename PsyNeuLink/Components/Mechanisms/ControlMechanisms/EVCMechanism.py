@@ -1349,13 +1349,17 @@ def _compute_EVC(args):
 
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
+    if ctlr.value is None:
+        ctlr.value = ctlr.allocationPolicy
+
 
     #TEST PRINT
     print("-------- EVC SIMULATION --------");
 
     # Implement the current policy over ControlProjections
     for i in range(len(ctlr.controlSignals)):
-        ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
+        # ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
+        ctlr.value[i] = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
