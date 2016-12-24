@@ -795,3 +795,17 @@ class ControlSignal(OutputState):
         """Return three-element list with the values of ``intensityCost``, ``adjustmentCost`` and ``durationCost``
         """
         return [self.intensityCost, self.adjustmentCost, self.durationCost]
+
+
+
+    @property
+    def value(self):
+        if isinstance(self._value, str):
+            return self._value
+        else:
+            return self._intensity
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+
