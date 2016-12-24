@@ -349,6 +349,7 @@ PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
+CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'

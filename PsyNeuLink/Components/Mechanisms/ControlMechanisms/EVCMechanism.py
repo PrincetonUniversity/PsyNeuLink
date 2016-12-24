@@ -258,6 +258,52 @@ OBJECT = 0
 EXPONENT = 1
 WEIGHT = 2
 
+# # Default control allocation mode values:
+# class DefaultControlAllocationMode(Enum):
+#     GUMBY_MODE = 0.0
+#     BADGER_MODE = 1.0
+#     TEST_MODE = 240
+# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
+DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
+
+# -------------------------------------------    KEY WORDS  -------------------------------------------------------
+
+# ControlProjection Function Names
+CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
+
+INTENSITY_COST_FUNCTION = 'intensity_cost_function'
+ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
+DURATION_COST_FUNCTION = 'duration_cost_function'
+COST_COMBINATION_FUNCTION = 'cost_combination_function'
+costFunctionNames = [INTENSITY_COST_FUNCTION,
+                     ADJUSTMENT_COST_FUNCTION,
+                     DURATION_COST_FUNCTION,
+                     COST_COMBINATION_FUNCTION]
+
+# Attributes / KVO keypaths
+# kpLog = "Control Signal Log"
+kpAllocation = "Control Signal Allocation"
+kpIntensity = "Control Signal Intensity"
+kpCostRange = "Control Signal Cost Range"
+kpIntensityCost = "Control Signal Intensity Cost"
+kpAdjustmentCost = "Control Signal Adjustment Cost"
+kpDurationCost = "Control Signal DurationCost"
+kpCost = "Control Signal Cost"
+
+
+class ControlSignalCostOptions(IntEnum):
+    NONE               = 0
+    INTENSITY_COST     = 1 << 1
+    ADJUSTMENT_COST    = 1 << 2
+    DURATION_COST      = 1 << 3
+    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
+    DEFAULTS           = INTENSITY_COST
+
+ControlSignalValuesTuple = namedtuple('ControlSignalValuesTuple','intensity cost')
+
+ControlSignalChannel = namedtuple('ControlSignalChannel',
+                                  'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
+
 
 class EVCError(Exception):
     def __init__(self, error_value):
@@ -839,7 +885,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         return self.inputStates
 
-    def _instantiate_control_projection(self, projection, context=None):
+    def _instantiate_control_projection(self, projection, params=None, context=None):
         """
         """
         try:
@@ -850,7 +896,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
-                                                      context=context)
+                                                params=None,
+                                                context=context)
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System

@@ -490,10 +490,12 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def _instantiate_control_projection(self, projection, context=None):
+    def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
         # Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
+
+        Note:  params are expected to be params for controlSignal (outputState of ControlMechanism)
 
         Assume that:
             # - self.value is populated (in _update_value) with an array of allocations from self.allocationPolicy;
@@ -520,15 +522,15 @@ class ControlMechanism_Base(Mechanism_Base):
             output_state_index = len(self.outputStates)
         except AttributeError:
             output_state_index = 0
-        output_state_name = projection.receiver.name + '_ControlProjection' + '_Output'
+        output_state_name = projection.receiver.name + '_ControlSignal'
         output_state_value = self.allocationPolicy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.States.OutputState import OutputState
+        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
-                                            state_type=OutputState,
+                                            state_type=ControlSignal,
                                             state_name=output_state_name,
                                             state_spec=defaultControlAllocation,
-                                            state_params=None,
+                                            state_params=params,
                                             constraint_value=output_state_value,
                                             constraint_value_name='Default control allocation',
                                             # constraint_output_state_index=output_item_output_state_index,

@@ -26,9 +26,13 @@ Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
 Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
-                                                                      allocation_samples=np.arange(0.1, 1.01, 0.3))),
+                                                                      control_signal={
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                      )),
                                    threshold=(1.0, ControlProjection(function=Linear,
-                                                                     allocation_samples=np.arange(0.1, 1.01, 0.3))),
+                                                                      control_signal={
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                     )),
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
