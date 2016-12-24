@@ -1350,18 +1350,21 @@ def _compute_EVC(args):
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
     if ctlr.value is None:
+        # Initialize value if it is None
         ctlr.value = ctlr.allocationPolicy
 
 
-    #TEST PRINT
-    print("-------- EVC SIMULATION --------");
+    # #TEST PRINT
+    # print("-------- EVC SIMULATION --------");
 
-    # Implement the current policy over ControlProjections
+    # Implement the current allocationPolicy over ControlSignals (outputStates),
+    #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
     for i in range(len(ctlr.controlSignals)):
         # ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
         ctlr.value[i] = np.atleast_1d(allocation_vector[i])
+    ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-    # Execute self.system for the current policy
+    # Execute simulation run of system for the current allocationPolicy
     time_step_buffer = CentralClock.time_step
     for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
@@ -1372,7 +1375,8 @@ def _compute_EVC(args):
     # FIX: NEED TO UPDATE EVC CONTROL SIGNALS HERE (I.E., _update_output_states FOR EVC MECHANISM, TO GET COSTS)
     # FIX:   (DEVIATION FROM USUAL PRACTICE OF UPDATING OUTPUTSTATES *AFTER* FCT)
 
-    # Get control cost for this policy
+    # Get controlSignal costs
+    # IMPLEMENT:  MAKE THIS ``function`` (AND RELABEL CURRENT ONE "combinationFunction" OR THE LIKE
     # Iterate over all controlSignals
     for control_signal in ctlr.controlSignals.values():
         # ctlr.controlSignalCosts.append(np.atleast_2d(control_signal.cost))
@@ -1393,11 +1397,11 @@ def _compute_EVC(args):
     EVC_current = ctlr.function([total_current_value,
                                  -total_current_control_cost])
 
-    #TEST PRINT:
-    print("allocation_vector: {}".format(allocation_vector))
-    print("total_current_control_cost: {}".format(total_current_control_cost))
-    print("total_current_value: {}".format(total_current_value))
-    print("EVC_current: {}".format(EVC_current))
+    # #TEST PRINT:
+    # print("allocation_vector: {}".format(allocation_vector))
+    # print("total_current_control_cost: {}".format(total_current_control_cost))
+    # print("total_current_value: {}".format(total_current_value))
+    # print("EVC_current: {}".format(EVC_current))
 
     if PY_MULTIPROCESSING:
         return

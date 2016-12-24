@@ -486,6 +486,8 @@ class ControlProjection(Projection_Base):
         # else:
         super(ControlProjection, self)._instantiate_receiver(context=context)
 
-    def execute(self, variable=None, params=None, time_scale=None, context=None):
+    def execute(self, params=None, time_scale=None, context=None):
 
-        return self.function(variable=variable, params=params, time_scale=time_scale, context=context)
+        self.variable = self.sender.value
+        self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
+        return self.value

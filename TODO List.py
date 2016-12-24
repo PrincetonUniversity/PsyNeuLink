@@ -2,6 +2,10 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
+#           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
+# FIX: EVC simulation may leave system in different state than end of last trial:
+# FIX:      may need to duplicate the system, or buffer state for simulation and restore at end
 # FIX: EVC NOT GETTING PARAMS FROM ControlProjection spec in DDM of EVC System Laming Validation Test Script
 # FIX: NOT GENERATING CORRECT CONTROL SIGNALS:  cost is not being correctly calculated
 # FIX: MAKE EVC FUNCTION ITS SEARCH FUNCTION, AND MAKE ORIGINAL FUNCTION OF CONTROL PROJECTION A SPECIALTY FUNCTION
