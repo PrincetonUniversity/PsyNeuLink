@@ -148,53 +148,6 @@ from PsyNeuLink.Components.Functions.Function import *
 projection_keywords.update({CONTROL_PROJECTION})
 parameter_keywords.update({CONTROL_PROJECTION})
 
-# # Default control allocation mode values:
-# class DefaultControlAllocationMode(Enum):
-#     GUMBY_MODE = 0.0
-#     BADGER_MODE = 1.0
-#     TEST_MODE = 240
-# defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
-DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.1)
-
-# -------------------------------------------    KEY WORDS  -------------------------------------------------------
-
-# ControlProjection Function Names
-CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
-
-INTENSITY_COST_FUNCTION = 'intensity_cost_function'
-ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
-DURATION_COST_FUNCTION = 'duration_cost_function'
-COST_COMBINATION_FUNCTION = 'cost_combination_function'
-costFunctionNames = [INTENSITY_COST_FUNCTION,
-                     ADJUSTMENT_COST_FUNCTION,
-                     DURATION_COST_FUNCTION,
-                     COST_COMBINATION_FUNCTION]
-
-# Attributes / KVO keypaths
-# kpLog = "Control Signal Log"
-kpAllocation = "Control Signal Allocation"
-kpIntensity = "Control Signal Intensity"
-kpCostRange = "Control Signal Cost Range"
-kpIntensityCost = "Control Signal Intensity Cost"
-kpAdjustmentCost = "Control Signal Adjustment Cost"
-kpDurationCost = "Control Signal DurationCost"
-kpCost = "Control Signal Cost"
-
-
-class ControlSignalCostOptions(IntEnum):
-    NONE               = 0
-    INTENSITY_COST     = 1 << 1
-    ADJUSTMENT_COST    = 1 << 2
-    DURATION_COST      = 1 << 3
-    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
-    DEFAULTS           = INTENSITY_COST
-
-ControlSignalValuesTuple = namedtuple('ControlSignalValuesTuple','intensity cost')
-
-ControlSignalChannel = namedtuple('ControlSignalChannel',
-                                  'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
-
-
 class ControlProjectionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -202,26 +155,12 @@ class ControlProjectionError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-
-
-# IMPLEMENTATION NOTE:  ADD DESCRIPTION OF ControlProjection CHANNELS:  ADDED TO ANY SENDER OF A ControlProjection:
-    # USED, AT A MININUM, FOR ALIGNING VALIDATION OF inputStates WITH ITEMS IN variable
-    #                      ?? AND SAME FOR FOR outputStates WITH value
-    # SHOULD BE INCLUDED IN INSTANTIATION OF CONTROL MECHANISM (per SYSTEM DEFAULT CONTROL MECHANISM)
-    #     IN OVERRIDES OF _validate_variable AND
-    #     ?? WHEREVER variable OF outputState IS VALIDATED AGAINST value (search for FIX)
-
 class ControlProjection(Projection_Base):
     """
-    ControlProjection(                                    \
+    ControlProjection(                                \
      sender=None,                                     \
      receiver=None,                                   \
      function=Linear                                  \
-     intensity_cost_function=Exponential,             \
-     adjustment_cost_function=Linear,                 \
-     duration_cost_function=Integrator,               \
-     cost_combination_function=Reduce(operation=SUM), \
-     allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
      params=None,                                     \
      name=None,                                       \
      prefs=None)
@@ -416,31 +355,21 @@ class ControlProjection(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_SENDER: DefaultController,
-        PROJECTION_SENDER_VALUE: defaultControlAllocation,
-        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS})
+        PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
     @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
-                 function=Linear(slope=1, intercept=0),
-                 intensity_cost_function:(is_function_type)=Exponential,
-                 adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=Integrator,
-                 cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
-                 allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
+                 function=Linear,
+                 control_signal:tc.optional(dict)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  intensity_cost_function=intensity_cost_function,
-                                                  adjustment_cost_function=adjustment_cost_function,
-                                                  duration_cost_function=duration_cost_function,
-                                                  cost_combination_function=cost_combination_function,
-                                                  allocation_samples=allocation_samples)
+        params = self._assign_args_to_param_dicts(function=function)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if not receiver:
@@ -448,12 +377,8 @@ class ControlProjection(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
-            # Delete these as they have been moved to params dict (and so will not be recognized by Projection.__init__)
-            del self.init_args[ALLOCATION_SAMPLES]
-            del self.init_args[INTENSITY_COST_FUNCTION]
-            del self.init_args[ADJUSTMENT_COST_FUNCTION]
-            del self.init_args[DURATION_COST_FUNCTION]
-            del self.init_args[COST_COMBINATION_FUNCTION]
+            # Delete thi as it has to be moved to params dict (and so will not be recognized by Projection.__init__)
+            del self.init_args[CONTROL_SIGNAL]
 
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
@@ -469,168 +394,8 @@ class ControlProjection(Projection_Base):
                                             prefs=prefs,
                                             context=self)
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """validate allocation_samples and controlSignal cost functions
 
-        Checks if:
-        - cost functions are all appropriate
-        - allocation_samples is a list with 2 numbers
-        - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
-        - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
-
-        :param request_set:
-        :param target_set:
-        :param context:
-        :return:
-        """
-
-        # Validate cost functions:
-        for cost_function_name in costFunctionNames:
-            cost_function = request_set[cost_function_name]
-
-            # cost function assigned None: OK
-            if not cost_function:
-                continue
-
-            # cost_function is Function class specification:
-            #    instantiate it and test below
-            if inspect.isclass(cost_function) and issubclass(cost_function, Function):
-                cost_function = cost_function()
-
-            # cost_function is Function object:
-            #     COST_COMBINATION_FUNCTION must be CombinationFunction
-            #     DURATION_COST_FUNCTION must be an IntegratorFunction
-            #     others must be TransferFunction
-            if isinstance(cost_function, Function):
-                if cost_function_name == COST_COMBINATION_FUNCTION:
-                    if not isinstance(cost_function, CombinationFunction):
-                        raise ControlProjectionError("Assignment of Function to {} ({}) must be a CombinationFunction".
-                                                 format(COST_COMBINATION_FUNCTION, cost_function))
-                elif cost_function_name == DURATION_COST_FUNCTION:
-                    if not isinstance(cost_function, IntegratorFunction):
-                        raise ControlProjectionError("Assignment of Function to {} ({}) must be an IntegratorFunction".
-                                                 format(DURATION_COST_FUNCTION, cost_function))
-                elif not isinstance(cost_function, TransferFunction):
-                    raise ControlProjectionError("Assignment of Function to {} ({}) must be a TransferFunction".
-                                             format(cost_function_name, cost_function))
-
-            # cost_function is custom-specified function
-            #     DURATION_COST_FUNCTION and COST_COMBINATION_FUNCTION must accept an array
-            #     others must accept a scalar
-            #     all must return a scalar
-            elif isinstance(cost_function, function_type):
-                if cost_function_name in {DURATION_COST_FUNCTION, COST_COMBINATION_FUNCTION}:
-                    test_value = [1, 1]
-                else:
-                    test_value = 1
-                try:
-                    if not is_numeric(cost_function(test_value)):
-                        raise ControlProjectionError("Function assigned to {} ({}) must return a scalar".
-                                                 format(cost_function_name, cost_function))
-                except:
-                    raise ControlProjectionError("Function assigned to {} ({}) must accept {}".
-                                             format(cost_function_name, cost_function, type(test_value)))
-
-            # Unrecognized function assignment
-            else:
-                raise ControlProjectionError("Unrecognized function ({}) assigned to {}".
-                                         format(cost_function, cost_function_name))
-
-        # Validate allocation samples list:
-        # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
-        # - however, for convenience and compatibility, allow lists:
-        #    check if it is a list of numbers, and if so convert to np.array
-        allocation_samples = request_set[ALLOCATION_SAMPLES]
-        if isinstance(allocation_samples, list):
-            if iscompatible(allocation_samples, **{kwCompatibilityType: list,
-                                                       kwCompatibilityNumeric: True,
-                                                       kwCompatibilityLength: False,
-                                                       }):
-                # Convert to np.array to be compatible with default value
-                request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
-        elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
-            pass
-        else:
-            raise ControlProjectionError("allocation_samples argument ({}) in {} must be "
-                                         "a list or 1D np.array of numbers".
-                                     format(allocation_samples, self.name))
-
-
-        super()._validate_params(request_set=request_set,
-                                                   target_set=target_set,
-                                                   context=context)
-
-        # ControlProjection Cost Functions
-        for cost_function_name in costFunctionNames:
-            cost_function = target_set[cost_function_name]
-            if not cost_function:
-                continue
-            if (not isinstance(cost_function, (Function, function_type)) and not issubclass(cost_function, Function)):
-                raise ControlProjectionError("{0} not a valid Function".format(cost_function))
-
-    def _instantiate_attributes_before_function(self, context=None):
-
-        super()._instantiate_attributes_before_function(context=context)
-
-        # Instantiate cost functions (if necessary) and assign to attributes
-        for cost_function_name in costFunctionNames:
-            cost_function = self.paramsCurrent[cost_function_name]
-            # cost function assigned None
-            if not cost_function:
-                self.toggle_cost_function(cost_function_name, OFF)
-                continue
-            # cost_function is Function class specification
-            if inspect.isclass(cost_function) and issubclass(cost_function, Function):
-                cost_function = cost_function()
-            # cost_function is Function object
-            if isinstance(cost_function, Function):
-                cost_function.owner = self
-                cost_function = cost_function.function
-            # cost_function is custom-specified function
-            elif isinstance(cost_function, function_type):
-                pass
-            # safeguard/sanity check (should never happen if validation is working properly)
-            else:
-                raise ControlProjectionError("{} is not a valid cost function for {}".
-                                         format(cost_function, cost_function_name))
-
-            setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
-
-        self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
-
-        # Assign instance attributes
-        self.allocationSamples = self.paramsCurrent[ALLOCATION_SAMPLES]
-
-        # Default intensity params
-        self.default_allocation = defaultControlAllocation
-        self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
-        self.lastAllocation = self.allocation
-        self.intensity = self.allocation
-
-        # Default cost params
-        self.intensityCost = self.intensityCostFunction(self.intensity)
-        self.adjustmentCost = 0
-        self.durationCost = 0
-        self.last_duration_cost = self.durationCost
-        self.cost = self.intensityCost
-        self.last_cost = self.cost
-
-        # If intensity function (self.function) is identity function, set ignoreIntensityFunction
-        function = self.params[FUNCTION]
-        function_params = self.params[FUNCTION_PARAMS]
-        if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
-                function_params[SLOPE] == 1 and
-                function_params[INTERCEPT] == 0)):
-            self.ignoreIntensityFunction = True
-        else:
-            self.ignoreIntensityFunction = False
-
-    def _instantiate_attributes_after_function(self, context=None):
-
-        self.intensity = self.function(self.allocation)
-        self.lastIntensity = self.intensity
-
-    def _instantiate_sender(self, context=None):
+    def _instantiate_sender(self, params=None, context=None):
 # FIX: NEEDS TO BE BETTER INTEGRATED WITH super()._instantiate_sender
         """Check if DefaultController is being assigned and if so configures it for the requested ControlProjection
 
@@ -643,7 +408,9 @@ class ControlProjection(Projection_Base):
             - puts them in DefaultController's inputStates, outputStates, and ControlSignalChannels attributes
             - lengthens variable of DefaultController to accommodate the ControlProjection channel
             - updates value of DefaultController (in resposne to new variable)
-        Note: the default execute method of DefaultController simply maps the inputState value to the outputState
+        Notes:
+            * the default execute method of DefaultController simply maps the inputState value to the outputState
+            * the params arg is assumed to be a dictionary of params for the controlSignal of the ControlMechanism
 
         :return:
         """
@@ -669,10 +436,21 @@ class ControlProjection(Projection_Base):
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
             from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlSignal import ControlSignalError
             if isinstance(self.sender, ControlMechanism_Base):
-                self.sender._instantiate_control_projection(self, context=context)
+                # MODIFIED 12/23/16 NEW:
+                #   [TRY AND EXCEPT IS NEW, AS IS ADDITION OF param ARG IN CALL TO _instantiate_control_projection]
+                try:
+                    self.sender._instantiate_control_projection(self, params=params, context=context)
+                except ControlSignalError as error_msg:
+                    raise FunctionError("Error in attempt to specify controlSignal for {} of {}".
+                                        format(self.name, self.receiver.owner.name, error_msg))
+                # MODIFIED 12/23/16 END
+
         # Call super to instantiate sender
+
         super(ControlProjection, self)._instantiate_sender(context=context)
+
 
     def _instantiate_receiver(self, context=None):
         # FIX: THIS NEEDS TO BE PUT BEFORE _instantate_function SINCE THAT USES self.receiver
