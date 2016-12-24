@@ -1759,6 +1759,9 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
+OBJECT = 0
+PARAMS = 1
+PHASE = 2
 
 MechanismTuple = namedtuple('MechanismTuple', 'mechanism, params, phase')
 

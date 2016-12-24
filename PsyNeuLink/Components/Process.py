@@ -342,10 +342,6 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
 
 defaultInstanceCount = 0 # Number of default instances (used to index name)
 
-# Labels for items in pathway entry tuples
-OBJECT = 0
-PARAMS = 1
-PHASE = 2
 DEFAULT_PHASE_SPEC = 0
 
 # FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
