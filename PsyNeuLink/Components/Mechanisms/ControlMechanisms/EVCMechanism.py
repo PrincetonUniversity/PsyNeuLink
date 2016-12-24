@@ -1350,8 +1350,8 @@ def _compute_EVC(args):
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
-    # #TEST PRINT
-    # print("-------- EVC SIMULATION --------");
+    #TEST PRINT
+    print("-------- EVC SIMULATION --------");
 
     # Implement the current policy over ControlProjections
     for i in range(len(ctlr.controlSignals)):
@@ -1385,11 +1385,11 @@ def _compute_EVC(args):
     EVC_current = ctlr.function([total_current_value,
                                  -total_current_control_cost])
 
-    # #TEST PRINT:
-    # print("allocation_vector: {}".format(allocation_vector))
-    # print("total_current_control_cost: {}".format(total_current_control_cost))
-    # print("total_current_value: {}".format(total_current_value))
-    # print("EVC_current: {}".format(EVC_current))
+    #TEST PRINT:
+    print("allocation_vector: {}".format(allocation_vector))
+    print("total_current_control_cost: {}".format(total_current_control_cost))
+    print("total_current_value: {}".format(total_current_value))
+    print("EVC_current: {}".format(EVC_current))
 
     if PY_MULTIPROCESSING:
         return
