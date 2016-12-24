@@ -3,7 +3,7 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # FIX: EVC NOT GETTING PARAMS FROM ControlProjection spec in DDM of EVC System Laming Validation Test Script
-# FIX: NOT GENERATING CORRECT CONTROL SIGNALS
+# FIX: NOT GENERATING CORRECT CONTROL SIGNALS:  cost is not being correctly calculated
 # FIX: MAKE EVC FUNCTION ITS SEARCH FUNCTION, AND MAKE ORIGINAL FUNCTION OF CONTROL PROJECTION A SPECIALTY FUNCTION
 # FIX:    CALLED CombinationFunction OR THE LIKE, WITH DEDICATED PARAMETER FOR IT (AND DOCUMENT)
 
