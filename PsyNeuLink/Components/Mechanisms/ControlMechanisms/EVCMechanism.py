@@ -1369,11 +1369,15 @@ def _compute_EVC(args):
         ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
     CentralClock.time_step = time_step_buffer
 
+    # FIX: NEED TO UPDATE EVC CONTROL SIGNALS HERE (I.E., _update_output_states FOR EVC MECHANISM, TO GET COSTS)
+    # FIX:   (DEVIATION FROM USUAL PRACTICE OF UPDATING OUTPUTSTATES *AFTER* FCT)
+
     # Get control cost for this policy
     # Iterate over all controlSignals
     for control_signal in ctlr.controlSignals.values():
         # ctlr.controlSignalCosts.append(np.atleast_2d(control_signal.cost))
         ctlr.controlSignalCosts = np.append(ctlr.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
+        TEST = True
 
     total_current_control_cost = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(ctlr.controlSignalCosts)
 
