@@ -907,13 +907,13 @@ class System_Base(System):
                                   format(i, processes_spec[i].input))
 
             process = processes_spec[i].process
-            input = processes_spec[i].input
-            self.variable.append(input)
+            process_input = processes_spec[i].input
+            self.variable.append(process_input)
 
-            # If process item is a Process object, assign input as default
+            # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
-                if not input is None:
-                    process._assign_defaults(variable=input, context=context)
+                if not process_input is None:
+                    process._assign_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process
             if not isinstance(process, Process):
@@ -922,9 +922,9 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=input, context=self)
+                    process = Process(default_input_value=process_input, context=self)
                 elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here; include input as ??param, and context=self
+                    # IMPLEMENT:  HANDLE Process specification dict here; include process_input as ??param, and context=self
                     raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
@@ -941,7 +941,7 @@ class System_Base(System):
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
 
-            # FIX: SHOULD BE ABLE TO PASS INPUT HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
+            # FIX: SHOULD BE ABLE TO PASS PROCESS_INPUT HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY _instantiate_pathway TO ACCEPT input AS ARG
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process._instantiate_pathway(self.variable[i], context=context)
@@ -974,7 +974,7 @@ class System_Base(System):
                                 offending_tuple_field = 'phase'
                                 offending_value = PHASE_SPEC
                             else:
-                                offending_tuple_field = 'input'
+                                offending_tuple_field = 'process_input'
                                 offending_value = PARAMS
                             raise SystemError("The same mechanism in different processes must have the same parameters:"
                                               "the {} ({}) for {} in {} does not match the value({}) in {}".
