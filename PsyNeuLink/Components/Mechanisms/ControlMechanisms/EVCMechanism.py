@@ -1355,7 +1355,7 @@ def _compute_EVC(args):
 
     # Implement the current policy over ControlProjections
     for i in range(len(ctlr.controlSignals)):
-        ctlr.controlSignals[list(ctlr.controlSignals.keys())[i]].value = np.atleast_1d(allocation_vector[i])
+        ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
