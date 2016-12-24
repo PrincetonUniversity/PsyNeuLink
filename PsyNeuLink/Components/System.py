@@ -1558,9 +1558,9 @@ class System_Base(System):
                     if self._report_system_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))
 
-            except AttributeError:
+            except AttributeError as error_msg:
                 if not 'INIT' in context:
-                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+                    raise SystemError("{}; no controller instantiated for {}".format(error_msg, self.name))
         #endregion
 
         # Report completion of system execution and value of designated outputs

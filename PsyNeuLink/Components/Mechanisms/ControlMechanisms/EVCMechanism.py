@@ -494,11 +494,14 @@ class EVCMechanism(ControlMechanism_Base):
         their values are saved in ``EVCvalues``.
 
     EVCpolicies : 2d np.array
-        Array of allocation policies tested in ``controlSignalSearchSpace``.  The values of each are stored in
+        array of allocation policies tested in ``controlSignalSearchSpace``.  The values of each are stored in
         ``EVCvalues``.
 
     EVCvalues :  1d np.array
-        Array of EVC values corresponding to the policies in ``EVCPolicies``.
+        array of EVC values corresponding to the policies in ``EVCPolicies``.
+
+    controlSignals : OrderedDict[str, ControlSignal]
+        points to outputStates
 
     """
 
@@ -559,8 +562,6 @@ class EVCMechanism(ControlMechanism_Base):
                                                   cost_aggregation_function=cost_aggregation_function,
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
-
-        self.controlSignalChannels = OrderedDict()
 
         super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
                                            monitor_for_control=monitor_for_control,
@@ -899,6 +900,8 @@ class EVCMechanism(ControlMechanism_Base):
                                                 params=None,
                                                 context=context)
 
+        self.controlSignals = self.outputStates
+
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Process for each origin (input) Mechanism in System
 
@@ -1066,14 +1069,13 @@ class EVCMechanism(ControlMechanism_Base):
                     runtime_params=None,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Construct and search space of control signals for maximum EVC and set value of outputStates accordingly
+        """Construct and search space of control signals for maximum EVC and set value of controlSignals accordingly
 
-        * Get ``allocationSamples`` for each control signal (i.e., the ControlProjection for each outputState in
-          ``outputStates``).
+        * Get ``allocationSamples`` for each ``controlSignal``
         * Construct ``controlSignalSearchSpace``: a 2D np.array of control allocation policies, each policy of which
           is a different combination of values, one from the ``allocationSamples`` of each control signal.
         * Call ``system``.execute for each control allocation policy in ``controlSignalSearchSpace``
-        * Store an array of values for outputStates in ``monitoredOutputStates`` (i.e., the inputStates in
+        * Store an array of values for ControlSignals in ``monitoredOutputStates`` (i.e., the inputStates in
           ``inputStates``) for each control allocation policy.
         * Call ``execute`` to calculate the EVC for each control allocation policy, identify the maxium, and assign to
           ``EVCmax``.
@@ -1099,19 +1101,20 @@ class EVCMechanism(ControlMechanism_Base):
         #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
         #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
         control_signal_sample_lists = []
-        # Get allocationSamples for all ControlProjections of all outputStates in self.outputStates
-        num_output_states = len(self.outputStates)
+        control_signals = self.controlSignals
 
-        for output_state in self.outputStates:
-            for projection in self.outputStates[output_state].sendsToProjections:
-                control_signal_sample_lists.append(projection.allocationSamples)
+        # Get allocationSamples for all ControlSignals
+        num_control_signals = len(control_signals)
+
+        for control_signal in self.controlSignals.values():
+            control_signal_sample_lists.append(control_signal.allocationSamples)
 
         # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)
         # Reference for implementation below:
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.controlSignalSearchSpace = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_output_states)
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
         # END MOVE
         #endregion
 
@@ -1282,7 +1285,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         #region ASSIGN CONTROL SIGNAL VALUES
 
-        # Assign allocations to controlSignals (self.outputStates) for optimal allocation policy:
+        # Assign allocations to controlSignals for optimal allocation policy:
         EVCmaxStateValue = iter(self.EVCmaxStateValues)
 
         # Assign max values for optimal allocation policy to self.inputStates (for reference only)
@@ -1294,8 +1297,8 @@ class EVCMechanism(ControlMechanism_Base):
         if self.prefs.reportOutputPref:
             print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
             print ("ControlProjection allocation(s) for maximum EVC:")
-            for i in range(len(self.outputStates)):
-                print("\t{0}: {1}".format(list(self.outputStates.values())[i].name,
+            for i in range(len(self.controlSignals)):
+                print("\t{0}: {1}".format(list(self.controlSignals.values())[i].name,
                                         self.EVCmaxPolicy[i]))
             print()
 
@@ -1307,7 +1310,7 @@ class EVCMechanism(ControlMechanism_Base):
         #region ASSIGN AND RETURN allocationPolicy
         # Convert EVCmaxPolicy into 2d array with one controlSignal allocation per item,
         #     assign to self.allocationPolicy, and return (where it will be assigned to self.value).
-        #     (note:  the conversion is to be consistent with use of self.value for assignments to outputStates.value)
+        #     (note:  the conversion is to be consistent with use of self.value for assignments to controlSignals.value)
         self.allocationPolicy = np.array(self.EVCmaxPolicy).reshape(len(self.EVCmaxPolicy), -1)
         return self.allocationPolicy
         #endregion
@@ -1351,8 +1354,8 @@ def _compute_EVC(args):
     # print("-------- EVC SIMULATION --------");
 
     # Implement the current policy over ControlProjections
-    for i in range(len(ctlr.outputStates)):
-        ctlr.outputStates[list(ctlr.outputStates.keys())[i]].value = np.atleast_1d(allocation_vector[i])
+    for i in range(len(ctlr.controlSignals)):
+        ctlr.controlSignals[list(ctlr.controlSignals.keys())[i]].value = np.atleast_1d(allocation_vector[i])
 
     # Execute self.system for the current policy
     time_step_buffer = CentralClock.time_step
@@ -1363,17 +1366,10 @@ def _compute_EVC(args):
     CentralClock.time_step = time_step_buffer
 
     # Get control cost for this policy
-    # Iterate over all outputStates (controlSignals)
-    j = 0
-    ctlr_output_states_iter = iter(ctlr.outputStates.values())
-    for i in range(len(ctlr.outputStates)):
-        # Get projections for this outputState
-        output_state_projections = next(ctlr_output_states_iter).sendsToProjections
-        # Iterate over all projections for the outputState
-        for projection in output_state_projections:
-            # Get ControlProjection cost
-            ctlr.controlSignalCosts[j] = np.atleast_2d(projection.cost)
-            j += 1
+    # Iterate over all controlSignals
+    for control_signal in ctlr.controlSignals.values():
+        # ctlr.controlSignalCosts.append(np.atleast_2d(control_signal.cost))
+        ctlr.controlSignalCosts = np.append(ctlr.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
 
     total_current_control_cost = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(ctlr.controlSignalCosts)
 

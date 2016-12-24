@@ -601,7 +601,7 @@ class ControlSignal(OutputState):
         :return: (intensity)
         """
 
-        super(State_Base, self).update(params=params, time_scale=time_scale, context=context)
+        super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
 
         # store previous state
         self.lastAllocation = self.allocation
@@ -668,13 +668,13 @@ class ControlSignal(OutputState):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-        #region Record controlSignal values in receiver mechanism log
+        #region Record controlSignal values in owner mechanism's log
         # Notes:
         # * Log controlSignals for ALL states of a given mechanism in the mechanism's log
         # * Log controlSignals for EACH state in a separate entry of the mechanism's log
 
         # Get receiver mechanism and state
-        controller = self.receiver.owner
+        controller = self.owner
 
         # Get logPref for mechanism
         log_pref = controller.prefs.logPref
