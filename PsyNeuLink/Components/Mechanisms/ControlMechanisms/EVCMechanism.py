@@ -910,7 +910,7 @@ class EVCMechanism(ControlMechanism_Base):
             self.predictionProcesses.append(prediction_process)
 
         # Re-instantiate system with predictionMechanism Process(es) added
-        self.system._instantiate_processes(inputs=self.system.variable, context=context)
+        self.system._instantiate_processes(input=self.system.variable, context=context)
         self.system._instantiate_graph(context=context)
 
     def _instantiate_monitoring_input_state(self, monitored_state, context=None):
