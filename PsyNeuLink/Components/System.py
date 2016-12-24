@@ -356,7 +356,7 @@ def system(default_input_value=None,
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default inputs for :keyword:`ORIGIN` mechanism of each Process
+    default_input_value : list or ndarray of values : default default input for :keyword:`ORIGIN` mechanism of each Process
         the input to the system if none is provided in a call to the execute() method or run() function.
         Should contain one item corresponding to the input of each :keyword:`ORIGIN` mechanism in the system.
 
@@ -467,10 +467,10 @@ class System_Base(System):
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
-        - _instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs executionList
+        - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
         - _assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
-        - execute(inputs, time_scale, context):  executes Mechanisms in order specified by executionList
+        - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
        SystemRegistry
@@ -481,7 +481,7 @@ class System_Base(System):
         TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
         + input (list): contains Process.input for each process in self.processes
         + output (list): containts Process.ouput for each process in self.processes
-        [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
+        [TBI: + input (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
     COMMENT
 
@@ -492,11 +492,11 @@ class System_Base(System):
         list of processes in the system specified by the process parameter.
 
         .. can be appended with prediction processes by EVCMechanism
-           used with self.inputs to constsruct self.process_tuples
+           used with self.input to constsruct self.process_tuples
 
         .. _processList : ProcessList
             Provides access to (process, input) tuples.
-            Derived from self.inputs and self.processes.
+            Derived from self.input and self.processes.
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     controller : ControlMechanism : default DefaultController
@@ -724,7 +724,7 @@ class System_Base(System):
             # self.controller = self.paramsCurrent[kwController](system=self)
             # MODIFIED 11/6/16 END
 
-        # Check whether controller has inputs, and if not then disable
+        # Check whether controller has input, and if not then disable
         try:
             has_input_states = bool(self.controller.inputStates)
         except:
@@ -803,7 +803,7 @@ class System_Base(System):
 
         These calls must be made before _instantiate_function as the latter may be called during init for validation
         """
-        self._instantiate_processes(inputs=self.variable, context=context)
+        self._instantiate_processes(input=self.variable, context=context)
         self._instantiate_graph(context=context)
 
         # MODIFIED 12/20/16 NEW:
@@ -832,7 +832,7 @@ class System_Base(System):
         else:
             self.value = self.processes[-1].outputState.value
 
-    def _instantiate_processes(self, inputs=None, context=None):
+    def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of system
@@ -840,8 +840,8 @@ class System_Base(System):
         Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
-        If inputs is specified, check that it's length equals the number of processes
-        If inputs is not specified, compose from the input for each Process (value specified or, if None, default)
+        If input is specified, check that it's length equals the number of processes
+        If input is not specified, compose from the input for each Process (value specified or, if None, default)
         Note: specification of input for system takes precedence over specification for processes
 
         # ??STILL THE CASE, OR MOVED TO _instantiate_graph:
@@ -863,15 +863,15 @@ class System_Base(System):
             from PsyNeuLink.Components.Process import Process_Base
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
-        # If inputs to system are specified, number must equal number of processes with origin mechanisms
-        if not inputs is None and len(inputs) != len(self.originMechanisms):
-            raise SystemError("Number of inputs ({0}) must equal number of processes ({1}) in {} ".
-                              format(len(inputs), len(self.originMechanisms)),
+        # If input to system is specified, number of items must equal number of processes with origin mechanisms
+        if not input is None and len(input) != len(self.originMechanisms):
+            raise SystemError("Number of items in input ({0}) must equal number of processes ({1}) in {} ".
+                              format(len(input), len(self.originMechanisms)),
                               self.name)
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
-        # Convert all entries to (process, input) tuples, with None as filler for absent inputs
+        # Convert all entries to (process, input) tuples, with None as filler for absent input
         for i in range(len(processes_spec)):
 
             # Entry is not a tuple
@@ -883,8 +883,8 @@ class System_Base(System):
             if isinstance(processes_spec[i], tuple) and not isinstance(processes_spec[i], ProcessTuple):
                 processes_spec[i] = ProcessTuple(processes_spec[i][0], processes_spec[i][1])
 
-            if inputs is None:
-                # FIX: ASSIGN PROCESS INPUTS TO SYSTEM INPUTS
+            if input is None:
+                # FIX: ASSIGN PROCESS INPUT TO SYSTEM INPUT
                 process = processes_spec[i].process
                 process_input = []
                 for process_input_state in process.processInputStates:
@@ -898,7 +898,7 @@ class System_Base(System):
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
                     # Replace input item in tuple with one from variable
-                    processes_spec[i] = ProcessTuple(processes_spec[i].process, inputs[i])
+                    processes_spec[i] = ProcessTuple(processes_spec[i].process, input[i])
 
             # Validate input
             if (not processes_spec[i].input is None and
@@ -941,7 +941,7 @@ class System_Base(System):
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
 
-            # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
+            # FIX: SHOULD BE ABLE TO PASS INPUT HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY _instantiate_pathway TO ACCEPT input AS ARG
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process._instantiate_pathway(self.variable[i], context=context)
@@ -1408,7 +1408,7 @@ class System_Base(System):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
         :keyword:`INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
         """
-        # FIX:  INITIALIZE PROCESS INPUTS??
+        # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
         # FIX: ADD OPTION THAT IMPLEMENTS/ENFORCES INITIALIZATION
         # FIX: ADD SOFT_CLAMP AND HARD_CLAMP OPTIONS
@@ -1417,13 +1417,13 @@ class System_Base(System):
             mech.initialize(value)
 
     def execute(self,
-                inputs=None,
+                input=None,
                 time_scale=None,
                 context=None):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
 
-        Assign inputs to :keyword:`ORIGIN` mechanisms
+        Assign items of input to :keyword:`ORIGIN` mechanisms
 
         Execute mechanisms in the order specified in executionList and with phases equal to
         ``CentralClock.time_step % numPhases``.
@@ -1433,7 +1433,7 @@ class System_Base(System):
         Execute controller after all mechanisms have been executed (after each numPhases)
 
         .. Execution:
-            - the inputs arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
+            - the input arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
                 As with a process, ORIGIN mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
             - execute() calls mechanism.execute() for each mechanism in its execute_graph in sequence
@@ -1444,7 +1444,7 @@ class System_Base(System):
 
         Arguments
         ---------
-        inputs : list or ndarray
+        input : list or ndarray
             a list or array of input value arrays, one for each :keyword:`ORIGIN` mechanism in the system.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
@@ -1467,40 +1467,40 @@ class System_Base(System):
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
-        #region ASSIGN INPUTS TO PROCESSES
+        #region ASSIGN INPUT ITEMS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
         #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
         num_origin_mechs = len(list(self.originMechanisms))
-        if inputs is None:
+        if input is None:
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
-            inputs = np.zeros_like(self.variable)
+            input = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
-                inputs[i] = self.originMechanisms[i].variableInstanceDefault
+                input[i] = self.originMechanisms[i].variableInstanceDefault
 
         else:
-            num_inputs = np.size(inputs,0)
+            num_inputs = np.size(input,0)
             if num_inputs != num_origin_mechs:
-                # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
-                num_inputs = np.size(inputs)
-                if isinstance(inputs, np.ndarray) and inputs.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
+                # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
+                num_inputs = np.size(input)
+                if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
                     pass
                 else:
-                    raise SystemError("Number of inputs ({0}) to {1} does not match "
+                    raise SystemError("Number of items in input ({0}) to {1} does not match "
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
             for i in range(num_inputs):
-                input = inputs[i]
+                input_item = input[i]
                 process = self.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
-                if input is None:
+                if input_item is None:
                     continue
                 else:
                     # Assign input as value of corresponding Process inputState
                     process._assign_input_values(input=input, context=context)
-        self.inputs = inputs
+        self.input = input
         #endregion
 
         if self._report_system_output:
@@ -1613,14 +1613,14 @@ class System_Base(System):
 
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
                 # # MODIFIED 10/2/16 OLD:
                 # self.variable = self.variable * 0
                 # # MODIFIED 10/2/16 NEW:
-                # self.variable = self.inputs * 0
+                # self.variable = self.input * 0
                 # MODIFIED 10/2/16 NEWER:
-                self.variable = convert_to_np_array(self.inputs, 2) * 0
+                self.variable = convert_to_np_array(self.input, 2) * 0
                 # MODIFIED 10/2/16 END
             i += 1
 
@@ -1700,14 +1700,14 @@ class System_Base(System):
 
             # if not i:
             #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
             #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
             #     # # MODIFIED 10/2/16 OLD:
             #     # self.variable = self.variable * 0
             #     # # MODIFIED 10/2/16 NEW:
-            #     # self.variable = self.inputs * 0
+            #     # self.variable = self.input * 0
             #     # MODIFIED 10/2/16 NEWER:
-            #     self.variable = convert_to_np_array(self.inputs, 2) * 0
+            #     self.variable = convert_to_np_array(self.input, 2) * 0
             #     # MODIFIED 10/2/16 END
             # i += 1
 

@@ -4,7 +4,9 @@
 
 # **FIX**: FIX RL
 
-# IMPLEMENT: function format for inputs in Run
+# IMPLEMENT: function format for inputs in Run (e.g., for simulating staircasing):
+#                       needs to be coordinated with validation of num_targets (if it is not a function);
+#                       then document (paralleling targets, and maybe moving much of that to inputs function format)
 # DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
 #            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
 # IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
@@ -232,6 +234,7 @@
 
 # TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
+#              plural for input and target refers to executions, not number of mechanisms
 #
 # DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
 #                       (including override)
