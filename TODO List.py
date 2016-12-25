@@ -2,6 +2,9 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENT:  UserDefinedFunction:  wraps custom function, that can then be called using its function method;
+#                can take variable, params, time_scale, and context as params, along with any of its own
+
 # PROJECTIONS:
 # FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
 #           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
@@ -10,6 +13,7 @@
 # FIX:      may need to duplicate the system, or buffer state for simulation and restore at end
 
 # EVC:
+# FIX: Component: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
 # IMPLEMENT: ``function`` THAT DOES SEARCH (IN EVCMechanism)
 #             RENAME CURRENT ``function`` => ``VALUE_FUNCTION``WITH DEDICATED PARAM FOR IT (AND DOCUMENT)
 # IMPLEMENT:  NEW FUNCTION (VALUE_FUNCTION) THAT CALLS AGGREGATION AND COMBINE FUNCTIONS

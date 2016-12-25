@@ -567,14 +567,50 @@ class Component(object):
 
             # param corresponding to arg is NOT in paramClassDefaults, so add it
             except:
-                # If arg is function and it's default is not a class, set it to one
+                # If arg is FUNCTION and it's default is an instance (i.e., not a class)
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
-                    # Note: this is for compatibility with current implementation of _instantiate_function()
-                    # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
-                    self.paramClassDefaults[arg] = default(arg).__class__
 
-                    # Get params from instantiated function
-                    self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+                    # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
+
+                    # # MODIFIED 12/24/16 OLD:
+                    # # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # self.paramClassDefaults[arg] = default(arg).__class__
+                    # self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+
+                    # # MODIFIED 12/24/16 NEW:
+                    # # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # self.paramClassDefaults[arg] = default(arg).__class__
+                    # # Get params from instantiated function
+                    # try:
+                    #     self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+                    # except AttributeError:
+                    #     # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+                    #     # if self.verbosePref:
+                    #     #     warnings.warn("{} is not a PsyNeuLink Function;  "
+                    #     #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                    #     pass
+
+                    # MODIFIED 12/24/16 NEWER:
+                    function = default(arg)
+                    from PsyNeuLink.Components.Functions.Function import Function
+                    from inspect import isfunction
+
+                    # It is a PsyNeuLink Function
+                    if isinstance(function, Function):
+                        # Set it to the class (for compatibility with current implementation of _instantiate_function()
+                        # and put its params in FUNCTION_PARAMS
+                        self.paramClassDefaults[arg] = default(arg).__class__
+                        self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+
+                    # It is a generic function
+                    elif isfunction(function):
+                        # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
+                        # (_instantiate_function also tests for this and leaves it as is)
+                        self.paramClassDefaults[arg] = function
+                    else:
+                        raise ComponentError("Unrecognized object ({}) specified as function for {}".
+                                             format(function, self.name))
+                    # MODIFIED 12/24/16 END
 
                 # Get defaults values for args listed in FUNCTION_PARAMS
                 # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
@@ -613,11 +649,9 @@ class Component(object):
                     params[FUNCTION] = function
                     continue
 
-                # function arg is not a class (presumably an object), so convert it to one
-                # Note: this is for compatibility with current implementation of _instantiate_function()
+                # function arg is not a class (presumably an object)
                 # FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function
                 else:
-                    params[FUNCTION] = function.__class__
                     # Get params from instantiated function
                     # FIX: DOES THIS OVER-WRITE FUNCTION_PARAMS??
                     #      SHOULD IF THEY WERE DERIVED FROM PARAM_CLASS_DEFAULTS;
@@ -629,7 +663,50 @@ class Component(object):
                     # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-                    params[FUNCTION_PARAMS] = function.user_params.copy()
+
+                    # # MODIFIED 12/24/16 OLD:
+                    # # Convert it to a class
+                    # # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # params[FUNCTION] = function.__class__
+                    # params[FUNCTION_PARAMS] = function.user_params.copy()
+
+                    # # MODIFIED 12/24/16 NEW:
+                    # params[FUNCTION] = function.__class__
+                    # try:
+                    #     params[FUNCTION_PARAMS] = function.user_params.copy()
+                    # except (AttributeError, ValueError):
+                    #     # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+                    #     # if self.verbosePref:
+                    #     #     warnings.warn("{} is not a PsyNeuLink Function;  "
+                    #     #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                    #     pass
+
+                    # MODIFIED 12/24/16 NEWER:
+                    from PsyNeuLink.Components.Functions.Function import Function
+                    from inspect import isfunction
+
+                    # It is a PsyNeuLink Function
+                    if isinstance(function, Function):
+                        # Set it to the class (for compatibility with current implementation of _instantiate_function()
+                        # and put its params in FUNCTION_PARAMS
+                        params[FUNCTION] = function.__class__
+                        params[FUNCTION_PARAMS] = function.user_params.copy()
+
+                    # It is a generic function
+                    elif isfunction(function):
+                        # Assign as is (i.e., don't convert to class), since class is generic
+                        # (_instantiate_function also tests for this and leaves it as is)
+                        params[FUNCTION] = function
+                        # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+                        # if self.verbosePref:
+                        #     warnings.warn("{} is not a PsyNeuLink Function, "
+                        #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                    else:
+                        raise ComponentError("Unrecognized object ({}) specified as function for {}".
+                                             format(fct, self.name))
+
+                    # MODIFIED 12/24/16 END
+
                     ignore_FUNCTION_PARAMS = True
 
             elif arg_name is FUNCTION_PARAMS:
@@ -1634,6 +1711,12 @@ class Component(object):
                     warnings.warn("{0} assigned as function for {1}".
                                   format(self.paramsCurrent[FUNCTION].__self__.componentName,
                                          object_name))
+
+            # FUNCTION is a generic (presumably user-defined) function, so "wrap" it in UserDefinedFunction:
+            #   Note: calling UserDefinedFunction.function will call FUNCTION
+            elif inspect.isfunction(function):
+                from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+                self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
