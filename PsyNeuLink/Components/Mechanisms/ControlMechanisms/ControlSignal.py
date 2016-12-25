@@ -13,16 +13,6 @@
 Overview
 --------
 
-OutputState(s) represent the result(s) of executing a mechanism.  This may be the result(s) of its ``function`` and/or
-other derived values.  The full results are stored in the mechanism's ``value`` attribute;  outputStates
-are used to represent individual items of the ``value``, and/or useful quantities derived from them.  For example, the
-``function`` of a :doc:`TransferMechanism` generates a result (the transformed value of its input);  however, the
-mechanism has outputStates that represent not only that result, but also its mean and
-variance (if it is an array).  As a different example, the ``function`` of a :doc:`DDM` mechanism generates several
-results (such as decision accuracy and response time), each of which is assigned as the value of a different
-outputState.  The outputState(s) of a mechanism can serve as the input to other  mechanisms (by way of
-:doc:`projections <Projections>`), or as the output of a process and/or system.  A list of  the  outgoing
-projections from an outputState is kept in its :py:data:`sendsToProjections <OutputState.sendsToProjections>` attribute.
 
 .. _OutputStates_Creation:
 
@@ -166,8 +156,10 @@ Class Reference
 """
 
 # import Components
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import *
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state_list
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Functions.Function import *
 
 # class OutputStateLog(IntEnum):
@@ -176,6 +168,10 @@ from PsyNeuLink.Components.Functions.Function import *
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
 
+
+class ControlSignalError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
 PRIMARY_OUTPUT_STATE = 0
 
@@ -187,14 +183,17 @@ class OutputStateError(Exception):
         return repr(self.error_value)
 
 
-class OutputState(State_Base):
+class ControlSignal(OutputState):
     """
     OutputState(                               \
     owner,                                     \
     value=None,                                \
-    index=PRIMARY_OUTPUT_STATE,                \
-    calculate=Linear,                          \
     function=LinearCombination(operation=SUM), \
+    intensity_cost_function=Exponential,             \
+    adjustment_cost_function=Linear,                 \
+    duration_cost_function=Integrator,               \
+    cost_combination_function=Reduce(operation=SUM), \
+    allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -349,8 +348,11 @@ class OutputState(State_Base):
     #     kp<pref>: <setting>...}
 
     paramClassDefaults = State_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_TYPE: MAPPING_PROJECTION})
+    paramClassDefaults.update({
+        PROJECTION_TYPE: MAPPING_PROJECTION,
+        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS})
     #endregion
+
 
     tc.typecheck
     def __init__(self,
@@ -358,17 +360,27 @@ class OutputState(State_Base):
                  reference_value,
                  variable=None,
                  index=PRIMARY_OUTPUT_STATE,
-                 calculate:function_type=Linear,
+                 calculate=Linear,
                  function=LinearCombination(operation=SUM),
+                 intensity_cost_function:(is_function_type)=Exponential,
+                 adjustment_cost_function:tc.optional(is_function_type)=Linear,
+                 duration_cost_function:tc.optional(is_function_type)=Integrator,
+                 cost_combination_function:tc.optional(is_function_type)=Reduce(operation=SUM),
+                 allocation_samples=DEFAULT_ALLOCATION_SAMPLES,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
+        # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(index=index,
-                                                  calculate=calculate,
-                                                  function=function,
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  intensity_cost_function=intensity_cost_function,
+                                                  adjustment_cost_function=adjustment_cost_function,
+                                                  duration_cost_function=duration_cost_function,
+                                                  cost_combination_function=cost_combination_function,
+                                                  allocation_samples=allocation_samples,
                                                   params=params)
 
         self.reference_value = reference_value
@@ -380,7 +392,10 @@ class OutputState(State_Base):
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,
+                         reference_value,
                          variable=variable,
+                         index=index,
+                         calculate=calculate,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -414,132 +429,383 @@ class OutputState(State_Base):
                                                   self.reference_value))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate index and calculate parameters
+        """Validate allocation_samples and controlSignal cost functions
 
-        Validate that index is within the range of the number of items in the owner mechanism's ``value``,
-        and that the corresponding item is a valid input to the calculate function
-
+        Checks if:
+        - cost functions are all appropriate
+        - allocation_samples is a list with 2 numbers
+        - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
+        - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
         """
 
+        # Validate cost functions:
+        for cost_function_name in costFunctionNames:
+            cost_function = request_set[cost_function_name]
+
+            # cost function assigned None: OK
+            if not cost_function:
+                continue
+
+            # cost_function is Function class specification:
+            #    instantiate it and test below
+            if inspect.isclass(cost_function) and issubclass(cost_function, Function):
+                cost_function = cost_function()
+
+            # cost_function is Function object:
+            #     COST_COMBINATION_FUNCTION must be CombinationFunction
+            #     DURATION_COST_FUNCTION must be an IntegratorFunction
+            #     others must be TransferFunction
+            if isinstance(cost_function, Function):
+                if cost_function_name == COST_COMBINATION_FUNCTION:
+                    if not isinstance(cost_function, CombinationFunction):
+                        raise ControlSignalError("Assignment of Function to {} ({}) must be a CombinationFunction".
+                                                 format(COST_COMBINATION_FUNCTION, cost_function))
+                elif cost_function_name == DURATION_COST_FUNCTION:
+                    if not isinstance(cost_function, IntegratorFunction):
+                        raise ControlSignalError("Assignment of Function to {} ({}) must be an IntegratorFunction".
+                                                 format(DURATION_COST_FUNCTION, cost_function))
+                elif not isinstance(cost_function, TransferFunction):
+                    raise ControlSignalError("Assignment of Function to {} ({}) must be a TransferFunction".
+                                             format(cost_function_name, cost_function))
+
+            # cost_function is custom-specified function
+            #     DURATION_COST_FUNCTION and COST_COMBINATION_FUNCTION must accept an array
+            #     others must accept a scalar
+            #     all must return a scalar
+            elif isinstance(cost_function, function_type):
+                if cost_function_name in {DURATION_COST_FUNCTION, COST_COMBINATION_FUNCTION}:
+                    test_value = [1, 1]
+                else:
+                    test_value = 1
+                try:
+                    if not is_numeric(cost_function(test_value)):
+                        raise ControlSignalError("Function assigned to {} ({}) must return a scalar".
+                                                 format(cost_function_name, cost_function))
+                except:
+                    raise ControlSignalError("Function assigned to {} ({}) must accept {}".
+                                             format(cost_function_name, cost_function, type(test_value)))
+
+            # Unrecognized function assignment
+            else:
+                raise ControlSignalError("Unrecognized function ({}) assigned to {}".
+                                         format(cost_function, cost_function_name))
+
+        # Validate allocation samples list:
+        # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
+        # - however, for convenience and compatibility, allow lists:
+        #    check if it is a list of numbers, and if so convert to np.array
+        allocation_samples = request_set[ALLOCATION_SAMPLES]
+        if isinstance(allocation_samples, list):
+            if iscompatible(allocation_samples, **{kwCompatibilityType: list,
+                                                       kwCompatibilityNumeric: True,
+                                                       kwCompatibilityLength: False,
+                                                       }):
+                # Convert to np.array to be compatible with default value
+                request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
+        elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
+            pass
+        else:
+            raise ControlSignalError("allocation_samples argument ({}) in {} must be "
+                                         "a list or 1D np.array of numbers".
+                                     format(allocation_samples, self.name))
+
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        try:
-            self.owner.value[target_set[INDEX]]
-        except IndexError:
-            raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
-                                   "the outputValue ({}) for its owner mechanism ({})".
-                                   format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+        # ControlProjection Cost Functions
+        for cost_function_name in costFunctionNames:
+            cost_function = target_set[cost_function_name]
+            if not cost_function:
+                continue
+            if (not isinstance(cost_function, (Function, function_type)) and not issubclass(cost_function, Function)):
+                raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
-        # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
-        #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
-        try:
-            if isinstance(target_set[CALCULATE], type):
-                function = target_set[CALCULATE]().function
+    def _instantiate_attributes_before_function(self, context=None):
+
+        super()._instantiate_attributes_before_function(context=context)
+
+        # Instantiate cost functions (if necessary) and assign to attributes
+        for cost_function_name in costFunctionNames:
+            cost_function = self.paramsCurrent[cost_function_name]
+            # cost function assigned None
+            if not cost_function:
+                self.toggle_cost_function(cost_function_name, OFF)
+                continue
+            # cost_function is Function class specification
+            if inspect.isclass(cost_function) and issubclass(cost_function, Function):
+                cost_function = cost_function()
+            # cost_function is Function object
+            if isinstance(cost_function, Function):
+                cost_function.owner = self
+                cost_function = cost_function.function
+            # cost_function is custom-specified function
+            elif isinstance(cost_function, function_type):
+                pass
+            # safeguard/sanity check (should never happen if validation is working properly)
             else:
-                function = target_set[CALCULATE]
-            try:
-                function(self.owner.value[target_set[INDEX]])
-            except:
-                raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function specified for "
-                                       "the {} parameter of {} ({})"
-                                       "".format(target_set[INDEX],
-                                                 self.owner.name,
-                                                 self.owner.value[target_set[INDEX]],
-                                                 CALCULATE,
-                                                 self.name,
-                                                 target_set[CALCULATE]))
-        except KeyError:
-            pass
+                raise ControlSignalError("{} is not a valid cost function for {}".
+                                         format(cost_function, cost_function_name))
+
+            setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
+
+        self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
+
+        # Assign instance attributes
+        self.allocationSamples = self.paramsCurrent[ALLOCATION_SAMPLES]
+
+        # Default intensity params
+        self.default_allocation = defaultControlAllocation
+        self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
+        self.lastAllocation = self.allocation
+        self.intensity = self.allocation
+
+        # Default cost params
+        self.intensityCost = self.intensityCostFunction(self.intensity)
+        self.adjustmentCost = 0
+        self.durationCost = 0
+        self.last_duration_cost = self.durationCost
+        self.cost = self.intensityCost
+        self.last_cost = self.cost
+
+        # If intensity function (self.function) is identity function, set ignoreIntensityFunction
+        function = self.params[FUNCTION]
+        function_params = self.params[FUNCTION_PARAMS]
+        if ((isinstance(function, Linear) or (inspect.isclass(function) and issubclass(function, Linear)) and
+                function_params[SLOPE] == 1 and
+                function_params[INTERCEPT] == 0)):
+            self.ignoreIntensityFunction = True
+        else:
+            self.ignoreIntensityFunction = False
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function
         """
         super()._instantiate_attributes_after_function(context=context)
 
-        if isinstance(self.calculate, type):
-            self.calculate = self.calculate().function
-
+        self.intensity = self.function(self.allocation)
+        self.lastIntensity = self.intensity
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
+        """Adjust the control signal, based on the allocation value passed to it
 
-        super().update(params=params, time_scale=time_scale, context=context)
+        Computes new intensity and cost attributes from allocation
+        Returns ControlSignalValuesTuple (intensity, totalCost)
 
-        # FIX: FOR NOW, self.value IS ALWAYS None (SINCE OUTPUTSTATES DON'T GET PROJECTIONS, AND
-        # FIX:     AND State.update RETURNS None IF THERE ARE NO PROJECTIONS, SO IT ALWAYS USES CALCULATE (BELOW).
-        # FIX:     HOWEVER, NEED TO INTEGRATE self.value WITH calculate:
-        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE:
-        #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
-        #            WITH calculate(self.owner.value[index]) PER BELOW
+        Use self.function to assign intensity
+            - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):
+                ignore self.function
+                pass allocation (input to controlSignal) along as its output
+        Update cost
 
-        if not self.value:
-            self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
+        :parameter allocation: (single item list, [0-1])
+        :return: (intensity)
+        """
+
+        super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
+
+        # store previous state
+        self.lastAllocation = self.allocation
+        self.lastIntensity = self.intensity
+        self.last_cost = self.cost
+        self.last_duration_cost = self.durationCost
+
+        # update current intensity
+        # FIX: INDEX MUST BE ASSIGNED WHEN OUTPUTSTATE IS CREATED FOR ControlMechanism (IN PLACE OF LIST OF PROJECTIONS)
+        self.allocation = self.owner.value[self.index]
+        # self.allocation = self.sender.value
+
+        if self.ignoreIntensityFunction:
+            # self.set_intensity(self.allocation)
+            self.intensity = self.allocation
+        else:
+            self.intensity = self.function(self.allocation, params)
+        intensity_change = self.intensity-self.lastIntensity
+
+        if self.prefs.verbosePref:
+            intensity_change_string = "no change"
+            if intensity_change < 0:
+                intensity_change_string = str(intensity_change)
+            elif intensity_change > 0:
+                intensity_change_string = "+" + str(intensity_change)
+            if self.prefs.verbosePref:
+                warnings.warn("\nIntensity: {0} [{1}] (for allocation {2})".format(self.intensity,
+                                                                                   intensity_change_string,
+                                                                                   self.allocation))
+                warnings.warn("[Intensity function {0}]".format(["ignored", "used"][self.ignoreIntensityFunction]))
+
+        # compute cost(s)
+        new_cost = intensity_cost = adjustment_cost = duration_cost = 0
+
+        if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+            intensity_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
+            if self.prefs.verbosePref:
+                print("++ Used intensity cost")
+
+        if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+            adjustment_cost = self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
+            if self.prefs.verbosePref:
+                print("++ Used adjustment cost")
+
+        if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
+            duration_cost = self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
+            if self.prefs.verbosePref:
+                print("++ Used duration cost")
+
+        new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
+
+        if new_cost < 0:
+            new_cost = 0
+        self.cost = new_cost
 
 
-def _instantiate_output_states(owner, context=None):
-    # MODIFIED 12/7/16 NEW:
-    # ADD TO DOCUMENTATION BELOW:
-    # EXPAND constraint_value to match specification of outputStates (by # and function return values):
-    #            in order to both constrain spec and also match # states to # items in constraint
-    #            (checked in _instantiate_state_list)
-    # For each outputState:
-    #      check for index param:
-    #          if it is a state, get from attribute
-    #          if it is dict, look for param
-    #          if it is anything else, assume index is PRIMARY_OUTPUT_STATE
-    #      get indexed value from output.value
-    #      append the indexed value to constraint_value
+        # Report new values to stdio
+        if self.prefs.verbosePref:
+            cost_change = new_cost - self.last_cost
+            cost_change_string = "no change"
+            if cost_change < 0:
+                cost_change_string = str(cost_change)
+            elif cost_change > 0:
+                cost_change_string = "+" + str(cost_change)
+            print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-    # ALSO: INSTANTIATE CALCULATE FUNCTION
-    # MODIFIED 12/7/16 END
-    """Call State._instantiate_state_list() to instantiate orderedDict of outputState(s)
+        #region Record controlSignal values in owner mechanism's log
+        # Notes:
+        # * Log controlSignals for ALL states of a given mechanism in the mechanism's log
+        # * Log controlSignals for EACH state in a separate entry of the mechanism's log
 
-    Create OrderedDict of outputState(s) specified in paramsCurrent[INPUT_STATES]
-    If INPUT_STATES is not specified, use self.variable to create a default output state
-    When completed:
-        - self.outputStates contains an OrderedDict of one or more outputStates
-        - self.outputState contains first or only outputState in OrderedDict
-        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more outputStates)
-        - each outputState corresponds to an item in the output of the owner's function
-        - if there is only one outputState, it is assigned the full value
+        # Get receiver mechanism and state
+        controller = self.owner
 
-    (See State._instantiate_state_list() for additional details)
+        # Get logPref for mechanism
+        log_pref = controller.prefs.logPref
 
-    IMPLEMENTATION NOTE:
-        default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) is assigned here
-        rather than in _validate_params, as it requires function to have been instantiated first
+        # Get context
+        if not context:
+            context = controller.name + " " + self.name + kwAssign
+        else:
+            context = context + SEPARATOR_BAR + self.name + kwAssign
 
-    :param context:
-    :return:
-    """
+        # If context is consistent with log_pref:
+        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
+                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context))):
+            # record info in log
 
-    constraint_value = []
-    owner_value = np.atleast_2d(owner.value)
+# FIX: ENCODE ALL OF THIS AS 1D ARRAYS IN 2D PROJECTION VALUE, AND PASS TO .value FOR LOGGING
+            controller.log.entries[self.name + " " +
+                                      kpIntensity] = LogEntry(CurrentTime(), context, float(self.intensity))
+            if not self.ignoreIntensityFunction:
+                controller.log.entries[self.name + " " + kpAllocation] =     \
+                    LogEntry(CurrentTime(), context, float(self.allocation))
+                controller.log.entries[self.name + " " + kpIntensityCost] =  \
+                    LogEntry(CurrentTime(), context, float(self.intensityCost))
+                controller.log.entries[self.name + " " + kpAdjustmentCost] = \
+                    LogEntry(CurrentTime(), context, float(self.adjustmentCost))
+                controller.log.entries[self.name + " " + kpDurationCost] =   \
+                    LogEntry(CurrentTime(), context, float(self.durationCost))
+                controller.log.entries[self.name + " " + kpCost] =           \
+                    LogEntry(CurrentTime(), context, float(self.cost))
+    #endregion
 
-    if owner.paramsCurrent[OUTPUT_STATES]:
-        for output_state in owner.paramsCurrent[OUTPUT_STATES]:
-            # Default is PRIMARY_OUTPUT_STATE
-            index = PRIMARY_OUTPUT_STATE
-            # If output_state is already an OutputState object, get its index attribute
-            if isinstance(output_state, OutputState):
-                index = output_state.index
-            # If output_state is a specification dict, get its INDEX attribute if specified
-            elif isinstance(output_state, dict):
-                try:
-                    index = output_state[INDEX]
-                except KeyError:
-                    pass
-            constraint_value.append(owner_value[index])
-    else:
-        constraint_value = owner_value
+        self.value = self.intensity
 
-    owner.outputStates = _instantiate_state_list(owner=owner,
-                                                state_list=owner.paramsCurrent[OUTPUT_STATES],
-                                                state_type=OutputState,
-                                                state_param_identifier=OUTPUT_STATES,
-                                                constraint_value=constraint_value,
-                                                constraint_value_name="output",
-                                                context=context)
-    # Assign self.outputState to first outputState in dict
-    owner.outputState = list(owner.outputStates.values())[0]
+    @property
+    def allocationSamples(self):
+        return self._allocation_samples
+
+    @allocationSamples.setter
+    def allocationSamples(self, samples):
+        if isinstance(samples, (list, np.ndarray)):
+            self._allocation_samples = list(samples)
+            return
+        if isinstance(samples, tuple):
+            self._allocation_samples = samples
+            sample_range = samples
+        elif samples == AUTO:
+            # THIS IS A STUB, TO BE REPLACED BY AN ACTUAL COMPUTATION OF THE ALLOCATION RANGE
+            raise ControlSignalError("AUTO not yet supported for {} param of ControlProjection; default will be used".
+                                     format(ALLOCATION_SAMPLES))
+        else:
+            sample_range = DEFAULT_ALLOCATION_SAMPLES
+        self._allocation_samples = []
+        i = sample_range[0]
+        while i < sample_range[1]:
+            self._allocation_samples.append(i)
+            i += sample_range[2]
+
+    @property
+    def intensity(self):
+        return self._intensity
+
+    @intensity.setter
+    def intensity(self, new_value):
+        try:
+            old_value = self._intensity
+        except AttributeError:
+            old_value = 0
+        self._intensity = new_value
+        # if len(self.observers[kpIntensity]):
+        #     for observer in self.observers[kpIntensity]:
+        #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
+
+    def toggle_cost_function(self, cost_function_name, assignment=ON):
+        """Enables/disables use of a cost function.
+
+        ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
+        """
+
+        if cost_function_name == INTENSITY_COST_FUNCTION:
+            cost_option = ControlSignalCostOptions.INTENSITY_COST
+        elif cost_function_name == DURATION_COST_FUNCTION:
+            cost_option = ControlSignalCostOptions.DURATION_COST
+        elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
+            cost_option = ControlSignalCostOptions.ADJUSTMENT_COST
+        elif cost_function_name == COST_COMBINATION_FUNCTION:
+            raise ControlSignalError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
+        else:
+            raise ControlSignalError("toggle_cost_function: unrecognized cost function: {}".format(cost_function_name))
+
+        if assignment:
+            if not self.paramsCurrent[cost_function_name]:
+                raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
+                                         format(cost_function_name))
+            self.controlSignalCostOptions |= cost_option
+        else:
+            self.controlSignalCostOptions &= ~cost_option
+
+    # def set_intensity_cost(self, assignment=ON):
+    #     if assignment:
+    #         self.controlSignalCostOptions |= ControlSignalCostOptions.INTENSITY_COST
+    #     else:
+    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.INTENSITY_COST
+    #
+    # def set_adjustment_cost(self, assignment=ON):
+    #     if assignment:
+    #         self.controlSignalCostOptions |= ControlSignalCostOptions.ADJUSTMENT_COST
+    #     else:
+    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.ADJUSTMENT_COST
+    #
+    # def set_duration_cost(self, assignment=ON):
+    #     if assignment:
+    #         self.controlSignalCostOptions |= ControlSignalCostOptions.DURATION_COST
+    #     else:
+    #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
+    #
+    def get_costs(self):
+        """Return three-element list with the values of ``intensityCost``, ``adjustmentCost`` and ``durationCost``
+        """
+        return [self.intensityCost, self.adjustmentCost, self.durationCost]
+
+
+
+    @property
+    def value(self):
+        if isinstance(self._value, str):
+            return self._value
+        else:
+            return self._intensity
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
 
