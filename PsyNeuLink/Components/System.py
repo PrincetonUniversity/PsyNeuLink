@@ -271,7 +271,8 @@ from toposort import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple, OBJECT, PARAMS, PHASE
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
+                                                       OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
                                                                                       COMPARATOR_TARGET
@@ -984,10 +985,10 @@ class System_Base(System):
                         else:
                             if sender_mech_tuple.phase != existing_mech_tuple.phase:
                                 offending_tuple_field = 'phase'
-                                offending_value = PHASE
+                                offending_value = PHASE_ITEM
                             else:
                                 offending_tuple_field = 'process_input'
-                                offending_value = PARAMS
+                                offending_value = PARAMS_ITEM
                             raise SystemError("The same mechanism in different processes must have the same parameters:"
                                               "the {} ({}) for {} in {} does not match the value({}) in {}".
                                               format(offending_tuple_field,

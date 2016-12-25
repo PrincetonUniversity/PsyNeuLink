@@ -169,10 +169,12 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
-PARAMS_ARG = "params"
-NAME = "name"
 PREFS_ARG = "prefs"
-kwContextArg = "context"
+VARIABLE = "variable"
+NAME = "name"
+PARAMS = "params"
+CONTEXT = "context"
+
 kwInitialValues = 'initial_values'
 
 # inputs list/ndarray:
