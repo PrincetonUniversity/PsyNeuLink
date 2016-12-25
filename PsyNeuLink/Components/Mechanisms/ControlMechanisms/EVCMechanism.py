@@ -1049,6 +1049,39 @@ class EVCMechanism(ControlMechanism_Base):
                                       self.name,
                                       num_control_projections))
 
+    def _add_monitored_states(self, states_spec, context=None):
+        """Validate and then instantiate outputStates to be monitored by EVC
+
+        Use by other objects to add a state or list of states to be monitored by EVC
+        states_spec can be a Mechanism, OutputState or list of either or both
+        If item is a Mechanism, each of its outputStates will be used
+        All of the outputStates specified must be for a Mechanism that is in self.System
+
+        Args:
+            states_spec (Mechanism, MechanimsOutputState or list of either or both:
+            context:
+        """
+        states_spec = list(states_spec)
+        self._validate_monitored_state_spec(states_spec, context=context)
+        self._instantiate_monitored_output_states(states_spec, context=context)
+
+    def __execute__(self,
+                    variable=None,
+                    runtime_params=None,
+                    time_scale=TimeScale.TRIAL,
+                    context=None):
+        """Determine allocationPolicy for next run of system
+
+        Calls ``function``
+        Default for ``function`` is _control_signal_search_function()
+
+        """
+        return self.function(controller=self,
+                             variable=variable,
+                             runtime_params=runtime_params,
+                             time_scale=time_scale,
+                             context=context)
+
     def _get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
 
@@ -1077,7 +1110,6 @@ class EVCMechanism(ControlMechanism_Base):
     def _assign_simulation_inputs(self):
 
         # FIX: NEED TO COORDINATE THIS WITH _get_simulation_inputs (ABOVE) TO ELIMINATE NEED TO SPECIFY PHASE
-        #region ASSIGN SIMULATION INPUT(S)
         # For each prediction mechanism, assign its value as input to corresponding process for the simulation
         for mech in self.predictionMechanisms:
             # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
@@ -1088,269 +1120,6 @@ class EVCMechanism(ControlMechanism_Base):
                         input = mech.outputStates[output_state].value
                         projection.sender.owner.inputState.receivesFromProjections[0].sender.value = input
 
-        #endregion
-
-
-
-    def __execute__(self,
-                    variable=None,
-                    runtime_params=None,
-                    time_scale=TimeScale.TRIAL,
-                    context=None):
-        """Construct and search space of control signals for maximum EVC and set value of controlSignals accordingly
-
-        * Get ``allocationSamples`` for each ``controlSignal``
-        * Construct ``controlSignalSearchSpace``: a 2D np.array of control allocation policies, each policy of which
-          is a different combination of values, one from the ``allocationSamples`` of each control signal.
-        * Call ``system``.execute for each control allocation policy in ``controlSignalSearchSpace``
-        * Store an array of values for ControlSignals in ``monitoredOutputStates`` (i.e., the inputStates in
-          ``inputStates``) for each control allocation policy.
-        * Call ``execute`` to calculate the EVC for each control allocation policy, identify the maxium, and assign to
-          ``EVCmax``.
-        * Set ``EVCmaxPolicy`` to the control allocation policy (outputState.values) corresponding to EVCmax
-        * Set value for each control signal (outputState.value) to the values in ``EVCmaxPolicy``
-        * Return ``EVCmax``
-
-         Note:
-         * runtime_params is used for self.execute (that calculates the EVC for each call to system.execute);
-             it is NOT used for system.execute -- that uses the runtime_params
-              provided for the Mechanisms in each Process.congiruation
-
-        Args:
-            time_scale:
-            runtime_params:
-            context:
-
-        Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
-        """
-
-
-        #region CONSTRUCT SEARCH SPACE
-        # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
-        #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
-        #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
-        control_signal_sample_lists = []
-        control_signals = self.controlSignals
-
-        # Get allocationSamples for all ControlSignals
-        num_control_signals = len(control_signals)
-
-        for control_signal in self.controlSignals.values():
-            control_signal_sample_lists.append(control_signal.allocationSamples)
-
-        # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.controlSignalSearchSpace = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-        # END MOVE
-        #endregion
-
-        self._assign_simulation_inputs()
-
-        #region RUN SIMULATION
-
-        self.EVCmax = None
-        self.EVCvalues = []
-        self.EVCpolicies = []
-
-        # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
-        context = context.replace(EXECUTING, '{0} {1}'.format(self.name, EVC_SIMULATION))
-
-        if self.prefs.reportOutputPref:
-            progress_bar_rate_str = ""
-            search_space_size = len(self.controlSignalSearchSpace)
-            progress_bar_rate = int(10 ** (np.log10(search_space_size)-2))
-            if progress_bar_rate > 1:
-                progress_bar_rate_str = str(progress_bar_rate) + " "
-            print("\n{0} evaluating EVC for {1} (one dot for each {2}of {3} samples): ".
-                  format(self.name, self.system.name, progress_bar_rate_str, search_space_size))
-
-        # Evaluate all combinations of controlSignals (policies)
-        sample = 0
-        self.EVCmaxStateValues = self.variable.copy()
-        self.EVCmaxPolicy = self.controlSignalSearchSpace[0] * 0.0
-
-        # Parallelize using multiprocessing.Pool
-        # NOTE:  currently fails on attempt to pickle lambda functions
-        #        preserved here for possible future restoration
-        if PY_MULTIPROCESSING:
-            EVC_pool = Pool()
-            results = EVC_pool.map(_compute_EVC, [(self, arg, runtime_params, time_scale, context)
-                                                 for arg in self.controlSignalSearchSpace])
-
-        else:
-
-            # Parallelize using MPI
-            if MPI_IMPLEMENTATION:
-                Comm = MPI.COMM_WORLD
-                rank = Comm.Get_rank()
-                size = Comm.Get_size()
-
-                chunk_size = (len(self.controlSignalSearchSpace) + (size-1)) // size
-                print("Rank: {}\nChunk size: {}".format(rank, chunk_size))
-                start = chunk_size * rank
-                end = chunk_size * (rank+1)
-                if start > len(self.controlSignalSearchSpace):
-                    start = len(self.controlSignalSearchSpace)
-                if end > len(self.controlSignalSearchSpace):
-                    end = len(self.controlSignalSearchSpace)
-            else:
-                start = 0
-                end = len(self.controlSignalSearchSpace)
-
-            if MPI_IMPLEMENTATION:
-                print("START: {0}\nEND: {1}".format(start,end))
-
-            #region EVALUATE EVC
-
-            # Compute EVC for each allocation policy in controlSignalSearchSpace
-            # Notes on MPI:
-            # * breaks up search into chunks of size chunk_size for each process (rank)
-            # * each process computes max for its chunk and returns
-            # * result for each chunk contains EVC max and associated allocation policy for that chunk
-
-            result = None
-            EVC_max = float('-Infinity')
-            EVC_max_policy = np.empty_like(self.controlSignalSearchSpace[0])
-            EVC_max_state_values = np.empty_like(self.inputValue)
-            max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-            # FIX:  INITIALIZE TO FULL LENGTH AND ASSIGN DEFAULT VALUES (MORE EFFICIENT):
-            EVC_values = np.array([])
-            EVC_policies = np.array([[]])
-
-            for allocation_vector in self.controlSignalSearchSpace[start:end,:]:
-            # for iter in range(rank, len(self.controlSignalSearchSpace), size):
-            #     allocation_vector = self.controlSignalSearchSpace[iter,:]:
-
-                if self.prefs.reportOutputPref:
-                    increment_progress_bar = (progress_bar_rate < 1) or not (sample % progress_bar_rate)
-                    if increment_progress_bar:
-                        print(kwProgressBarChar, end='', flush=True)
-                sample +=1
-
-                # Calculate EVC for specified allocation policy
-                result_tuple = _compute_EVC(args=(self, allocation_vector, runtime_params, time_scale, context))
-                EVC, value, cost = result_tuple
-
-                EVC_max = max(EVC, EVC_max)
-                # max_result([t1, t2], key=lambda x: x1)
-
-                # Add to list of EVC values and allocation policies if save option is set
-                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-                    # FIX:  ASSIGN BY INDEX (MORE EFFICIENT)
-                    EVC_values = np.append(EVC_values, np.atleast_1d(EVC), axis=0)
-                    # Save policy associated with EVC for each process, as order of chunks
-                    #     might not correspond to order of policies in controlSignalSearchSpace
-                    if len(EVC_policies[0])==0:
-                        EVC_policies = np.atleast_2d(allocation_vector)
-                    else:
-                        EVC_policies = np.append(EVC_policies, np.atleast_2d(allocation_vector), axis=0)
-
-                # If EVC is greater than the previous value:
-                # - store the current set of monitored state value in EVCmaxStateValues
-                # - store the current set of controlSignals in EVCmaxPolicy
-                # if EVC_max > EVC:
-                if EVC == EVC_max:
-                    # Keep track of state values and allocation policy associated with EVC max
-                    # EVC_max_state_values = self.inputValue.copy()
-                    # EVC_max_policy = allocation_vector.copy()
-                    EVC_max_state_values = self.inputValue
-                    EVC_max_policy = allocation_vector
-                    max_value_state_policy_tuple = (EVC_max, EVC_max_state_values, EVC_max_policy)
-
-            #endregion
-
-            # Aggregate, reduce and assign global results
-
-            if MPI_IMPLEMENTATION:
-                # combine max result tuples from all processes and distribute to all processes
-                max_tuples = Comm.allgather(max_value_state_policy_tuple)
-                # get tuple with "EVC max of maxes"
-                max_of_max_tuples = max(max_tuples, key=lambda max_tuple: max_tuple[0])
-                # get EVCmax, state values and allocation policy associated with "max of maxes"
-                self.EVCmax = max_of_max_tuples[0]
-                self.EVCmaxStateValues = max_of_max_tuples[1]
-                self.EVCmaxPolicy = max_of_max_tuples[2]
-
-                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-                    self.EVCvalues = np.concatenate(Comm.allgather(EVC_values), axis=0)
-                    self.EVCpolicies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
-            else:
-                self.EVCmax = EVC_max
-                self.EVCmaxStateValues = EVC_max_state_values
-                self.EVCmaxPolicy = EVC_max_policy
-                if self.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
-                    self.EVCvalues = EVC_values
-                    self.EVCpolicies = EVC_policies
-            # # TEST PRINT:
-            # import re
-            # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".
-            #       format(re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[0])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[1])),
-            #              re.sub('[\[,\],\n]','',str(max_value_state_policy_tuple[2]))),
-            #       flush=True)
-
-            # FROM MIKE ANDERSON (ALTERNTATIVE TO allgather:  REDUCE USING A FUNCTION OVER LOCAL VERSION)
-            # a = np.random.random()
-            # mymax=Comm.allreduce(a, MPI.MAX)
-            # print(mymax)
-
-        if self.prefs.reportOutputPref:
-            print("\nEVC simulation completed")
-#endregion
-
-        # -----------------------------------------------------------------
-
-        #region ASSIGN CONTROL SIGNAL VALUES
-
-        # Assign allocations to controlSignals for optimal allocation policy:
-        EVCmaxStateValue = iter(self.EVCmaxStateValues)
-
-        # Assign max values for optimal allocation policy to self.inputStates (for reference only)
-        for i in range(len(self.inputStates)):
-            self.inputStates[list(self.inputStates.keys())[i]].value = np.atleast_1d(next(EVCmaxStateValue))
-
-
-        # Report EVC max info
-        if self.prefs.reportOutputPref:
-            print ("\nMaximum EVC for {0}: {1}".format(self.system.name, float(self.EVCmax)))
-            print ("ControlProjection allocation(s) for maximum EVC:")
-            for i in range(len(self.controlSignals)):
-                print("\t{0}: {1}".format(list(self.controlSignals.values())[i].name,
-                                        self.EVCmaxPolicy[i]))
-            print()
-
-        #endregion
-
-        # TEST PRINT:
-        # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(self.outputState.value))
-
-        #region ASSIGN AND RETURN allocationPolicy
-        # Convert EVCmaxPolicy into 2d array with one controlSignal allocation per item,
-        #     assign to self.allocationPolicy, and return (where it will be assigned to self.value).
-        #     (note:  the conversion is to be consistent with use of self.value for assignments to controlSignals.value)
-        self.allocationPolicy = np.array(self.EVCmaxPolicy).reshape(len(self.EVCmaxPolicy), -1)
-        return self.allocationPolicy
-        #endregion
-
-
-    def _add_monitored_states(self, states_spec, context=None):
-        """Validate and then instantiate outputStates to be monitored by EVC
-
-        Use by other objects to add a state or list of states to be monitored by EVC
-        states_spec can be a Mechanism, OutputState or list of either or both
-        If item is a Mechanism, each of its outputStates will be used
-        All of the outputStates specified must be for a Mechanism that is in self.System
-
-        Args:
-            states_spec (Mechanism, MechanimsOutputState or list of either or both:
-            context:
-        """
-        states_spec = list(states_spec)
-        self._validate_monitored_state_spec(states_spec, context=context)
-        self._instantiate_monitored_output_states(states_spec, context=context)
 
 def _compute_EVC(args):
     """compute EVC for a specified allocation policy
@@ -1406,7 +1175,6 @@ def _compute_EVC(args):
         return (EVC_current)
 
 
-# def __control_signal_search_function(controller=None, runtime_params=None, time_scale=None, context=None):
 def __control_signal_search_function(controller=None, **kwargs):
     """Grid searches combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
 
@@ -1423,8 +1191,8 @@ def __control_signal_search_function(controller=None, **kwargs):
             ctlr.outputValue is a list of current controlSignal values
     COMMENT
 
-
-    FROM EXECUTE:
+    Description
+    -----------
         Construct and search space of control signals for maximum EVC and set value of controlSignals accordingly
 
         * Get ``allocationSamples`` for each ``controlSignal``
@@ -1437,17 +1205,12 @@ def __control_signal_search_function(controller=None, **kwargs):
           ``EVCmax``.
         * Set ``EVCmaxPolicy`` to the control allocation policy (outputState.values) corresponding to EVCmax
         * Set value for each control signal (outputState.value) to the values in ``EVCmaxPolicy``
-        * Return ``EVCmax``
+        * Return ``allocationPolicy``
 
          Note:
          * runtime_params is used for self.execute (that calculates the EVC for each call to system.execute);
-             it is NOT used for system.execute -- that uses the runtime_params
-              provided for the Mechanisms in each Process.congiruation
-
-        Args:
-            time_scale:
-            runtime_params:
-            context:
+             it is NOT used for system.execute -- that uses the runtime_params provided for the Mechanisms in each
+             Process.congiruation
 
         Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
     FROM EXECUTE END
