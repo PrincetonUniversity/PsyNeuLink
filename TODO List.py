@@ -2,6 +2,19 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# PROJECTIONS:
+# FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
+#           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
+
+# FIX: EVC simulation may leave system in different state than end of last trial:
+# FIX:      may need to duplicate the system, or buffer state for simulation and restore at end
+
+# EVC:
+# IMPLEMENT: ``function`` THAT DOES SEARCH (IN EVCMechanism)
+#             RENAME CURRENT ``function`` => ``VALUE_FUNCTION``WITH DEDICATED PARAM FOR IT (AND DOCUMENT)
+# IMPLEMENT:  NEW FUNCTION (VALUE_FUNCTION) THAT CALLS AGGREGATION AND COMBINE FUNCTIONS
+
+
 # DOCUMENT: Learning and Control in System
 # DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
 

@@ -130,7 +130,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
             pass
 
 
-    def _instantiate_control_projection(self, projection, context=None):
+    def _instantiate_control_projection(self, projection, params=None, context=None):
         """Instantiate requested controlProjection and associated inputState
         """
 
