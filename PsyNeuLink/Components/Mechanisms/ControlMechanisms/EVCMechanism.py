@@ -302,10 +302,10 @@ class ControlSignalCostOptions(IntEnum):
 def _control_signal_search_function(allocation=None, ctlr=None):
     return [0]
 
-def _value_function(ctlr, outcomes, costs):
+def _value_function(ctlr, outcomes, costs, context):
 
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    aggregated_outcomes = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=outcomes)
+    aggregated_outcomes = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=outcomes, context=context)
 
     # Aggregate costs
     aggregated_costs = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(costs)
@@ -1393,7 +1393,7 @@ def _compute_EVC(args):
     #    stored in self.inputValue = list(self.variable)
         ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION](ctlr, ctlr.inputValue, ctlr.controlSignalCosts)
+    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION](ctlr, ctlr.inputValue, ctlr.controlSignalCosts, context=context)
 
     if PY_MULTIPROCESSING:
         return
