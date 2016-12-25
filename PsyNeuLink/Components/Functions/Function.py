@@ -883,7 +883,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
-
 #region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
 #endregion
 
