@@ -1345,17 +1345,13 @@ def _compute_EVC(args):
         context (value): context passed to ctlr.update
 
     Returns (float, float, float):
-        (EVC_current, total_current_value, total_current_control_costs)
+        (EVC_current, aggregated_outcomes, aggregated_costs)
 
     """
     ctlr, allocation_vector, runtime_params, time_scale, context = args
     if ctlr.value is None:
         # Initialize value if it is None
         ctlr.value = ctlr.allocationPolicy
-
-
-    # #TEST PRINT
-    # print("-------- EVC SIMULATION --------");
 
     # Implement the current allocationPolicy over ControlSignals (outputStates),
     #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
@@ -1372,39 +1368,29 @@ def _compute_EVC(args):
         ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
     CentralClock.time_step = time_step_buffer
 
-    # FIX: NEED TO UPDATE EVC CONTROL SIGNALS HERE (I.E., _update_output_states FOR EVC MECHANISM, TO GET COSTS)
-    # FIX:   (DEVIATION FROM USUAL PRACTICE OF UPDATING OUTPUTSTATES *AFTER* FCT)
-
-    # Get controlSignal costs
-    # IMPLEMENT:  MAKE THIS ``function`` (AND RELABEL CURRENT ONE "combinationFunction" OR THE LIKE
-    # Iterate over all controlSignals
+    # Get cost of each controlSignal
     for control_signal in ctlr.controlSignals.values():
-        # ctlr.controlSignalCosts.append(np.atleast_2d(control_signal.cost))
         ctlr.controlSignalCosts = np.append(ctlr.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-        TEST = True
+    # Get outcomes for current allocationPolicy
+    #    = the values of the monitored output states (self.inputStates)
+    #    stored in self.inputValues = list(self.variable)
+        ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-    total_current_control_cost = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(ctlr.controlSignalCosts)
+    # Aggregate costs
+    aggregated_costs = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(ctlr.controlSignalCosts)
 
-    # Get value of current policy = weighted sum of values of monitored output states
-    # Note:  ctlr.inputValue = value of monitored output states (self.inputStates) = self.variable
-    ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-    total_current_value = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=ctlr.inputValue,
+    # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
+    aggregated_outcomes = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=ctlr.inputValue,
                                                                                     params=runtime_params,
                                                                                     time_scale=time_scale,
                                                                                     context=context)
-
-    # Calculate EVC for the result (default: total value - total cost)
-    EVC_current = ctlr.function([total_current_value,
-                                 -total_current_control_cost])
-
-    # #TEST PRINT:
-    # print("allocation_vector: {}".format(allocation_vector))
-    # print("total_current_control_cost: {}".format(total_current_control_cost))
-    # print("total_current_value: {}".format(total_current_value))
-    # print("EVC_current: {}".format(EVC_current))
+    # IMPLEMENT:  RE-ASSIGN THIS AS "VALUE_FUNCTION"
+    # Calculate EVC for the result (default: aggregated_outcomes - aggregated_costs)
+    EVC_current = ctlr.function([aggregated_outcomes,
+                                 -aggregated_costs])
 
     if PY_MULTIPROCESSING:
         return
 
     else:
-        return (EVC_current, total_current_value, total_current_control_cost)
+        return (EVC_current, aggregated_outcomes, aggregated_costs)
