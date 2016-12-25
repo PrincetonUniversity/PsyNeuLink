@@ -913,7 +913,7 @@ class Process_Base(Process):
             super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            self.value = self.pathway[-1][OBJECT].outputState.value
+            self.value = self.pathway[-1][OBJECT_ITEM].outputState.value
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
@@ -972,12 +972,12 @@ class Process_Base(Process):
 
         # Identify origin and terminal mechanisms in the process and
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
-        self.firstMechanism = pathway[0][OBJECT]
+        self.firstMechanism = pathway[0][OBJECT_ITEM]
         self.firstMechanism.processes[self] = ORIGIN
         self._origin_mech_tuples = [pathway[0]]
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
 
-        self.lastMechanism = pathway[-1][OBJECT]
+        self.lastMechanism = pathway[-1][OBJECT_ITEM]
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
@@ -1226,7 +1226,7 @@ class Process_Base(Process):
                 # Item is a Mechanism
                 if isinstance(item, Mechanism):
 
-                    preceding_item = pathway[i-1][OBJECT]
+                    preceding_item = pathway[i-1][OBJECT_ITEM]
 
                     # PRECEDING ITEM IS A PROJECTION
                     if isinstance(preceding_item, Projection):
@@ -1365,11 +1365,11 @@ class Process_Base(Process):
                     #            and _parse_projection_ref() all to Projection_Base.__init__() and call that
                     #           VALIDATION OF PROJECTION OBJECT:
                     #                MAKE SURE IT IS A MappingProjection
-                    #                CHECK THAT SENDER IS pathway[i-1][OBJECT]
-                    #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT]
+                    #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
+                    #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT_ITEM]
 
-                    sender_mech=pathway[i-1][OBJECT]
-                    receiver_mech=pathway[i+1][OBJECT]
+                    sender_mech=pathway[i-1][OBJECT_ITEM]
+                    receiver_mech=pathway[i+1][OBJECT_ITEM]
 
                     # projection spec is an instance of a MappingProjection
                     if isinstance(item, MappingProjection):
@@ -1571,7 +1571,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self._mech_tuples)
+            mech_list = list(mech_tuple[OBJECT_ITEM] for mech_tuple in self._mech_tuples)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1713,7 +1713,7 @@ class Process_Base(Process):
 
         # For each mechanism in the Process, in backwards order through its _mech_tuples
         for item in reversed(self._mech_tuples):
-            mech = item[OBJECT]
+            mech = item[OBJECT_ITEM]
             mech._deferred_init()
 
             # For each inputState of the mechanism
@@ -1743,7 +1743,7 @@ class Process_Base(Process):
 
             # Add designations to newly created MonitoringMechanisms:
             for mech_tuple in self._monitoring_mech_tuples:
-                mech = mech_tuple[OBJECT]
+                mech = mech_tuple[OBJECT_ITEM]
                 # If
                 # - mech is a ComparatorMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and

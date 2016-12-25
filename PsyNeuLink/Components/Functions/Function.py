@@ -515,7 +515,7 @@ class UserDefinedFunction(Function_Base):
                  # context=None,
                  **kwargs):
         # raise FunctionError("Function must be provided for {}".format(self.componentType))
-        return self.user_defined_function(kwargs)
+        return self.user_defined_function(**kwargs)
 
 
 
