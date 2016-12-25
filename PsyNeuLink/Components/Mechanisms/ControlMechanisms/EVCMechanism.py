@@ -305,19 +305,13 @@ class EVCError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+# These are place-marker definitions to allow forward referencing of functions defined at end of module
 def _control_signal_search_function(allocation=None, ctlr=None):
-    return [0]
+    return __control_signal_search_function(allocation=None, ctlr=None)
 
 def _value_function(ctlr, outcomes, costs, context):
+    return __value_function(ctlr, outcomes, costs, context)
 
-    # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    aggregated_outcomes = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=outcomes, context=context)
-
-    # Aggregate costs
-    aggregated_costs = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(costs)
-
-    value = ctlr.paramsCurrent[COMBINE_OUTCOMES_AND_COSTS_FUNCTION].function([aggregated_outcomes, -aggregated_costs])
-    return (value, aggregated_outcomes, aggregated_costs)
 
 class EVCMechanism(ControlMechanism_Base):
     """EVCMechanism(                                                                        \
@@ -1399,3 +1393,16 @@ def _compute_EVC(args):
     else:
         return (EVC_current)
 
+
+def __control_signal_search_function(allocation=None, ctlr=None):
+    return [0]
+
+def __value_function(ctlr, outcomes, costs, context):
+    # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
+    aggregated_outcomes = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=outcomes, context=context)
+
+    # Aggregate costs
+    aggregated_costs = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(costs)
+
+    value = ctlr.paramsCurrent[COMBINE_OUTCOMES_AND_COSTS_FUNCTION].function([aggregated_outcomes, -aggregated_costs])
+    return (value, aggregated_outcomes, aggregated_costs)
