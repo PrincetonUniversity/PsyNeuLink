@@ -306,8 +306,8 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 # These are place-marker definitions to allow forward referencing of functions defined at end of module
-def _control_signal_search_function(allocation=None, ctlr=None):
-    return __control_signal_search_function(allocation=None, ctlr=None)
+def _control_signal_search_function(allocations=None, ctlr=None):
+    return __control_signal_search_function(ctlr=None)
 
 def _value_function(ctlr, outcomes, costs, context):
     return __value_function(ctlr, outcomes, costs, context)
@@ -1125,6 +1125,9 @@ class EVCMechanism(ControlMechanism_Base):
         # END MOVE
         #endregion
 
+        # FIX 12/25/16: MOVE THIS TO BEFORE NEW CALL TO ``function``:
+        # FIX:          API SHOULD NOT HAVE TO HANDLE THIS;  SHOULD JUST BE ABLE TO CALL SYSTEM.execute
+        # FIX:          NEED TO ALSO COORDINATE WITH _get_simulation_inputs TO ELIMINATE NEED TO SPECIFY PHASE
         #region ASSIGN SIMULATION INPUT(S)
         # For each prediction mechanism, assign its value as input to corresponding process for the simulation
         for mech in self.predictionMechanisms:
@@ -1369,6 +1372,7 @@ def _compute_EVC(args):
         ctlr.value[i] = np.atleast_1d(allocation_vector[i])
     ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
+    # FIX 12/25/16: SHOULD HANDLE THIS WITH CALL TO RUN METHOD WITH num_executions=1
     # Execute simulation run of system for the current allocationPolicy
     time_step_buffer = CentralClock.time_step
     for i in range(ctlr.system._phaseSpecMax+1):
@@ -1394,7 +1398,21 @@ def _compute_EVC(args):
         return (EVC_current)
 
 
-def __control_signal_search_function(allocation=None, ctlr=None):
+def __control_signal_search_function(ctlr=None):
+    """Grid searches combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
+
+    COMMENT:
+        NOTES ON API FOR CUSTOM VERSIONS:
+            ctlr._get_simulation_system_inputs gets inputs for a simulated run (using prediction mechamisms)
+            ctlr.run will execute a specified number of trials with the simulation inputs
+            ctlr.monitored_states is a list of the mechanism outputStates being monitored for outcomes
+            ctlr.inputValue is a list of current outcome values (values for monitored_states)
+            ctlr.controlSignals is a list of controlSignal objects
+            controlSignal.allocationSamples is the set of samples specified for that controlSignal
+            [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
+            ctlr.outputValue is a list of current controlSignal values
+
+    """
     return [0]
 
 def __value_function(ctlr, outcomes, costs, context):
