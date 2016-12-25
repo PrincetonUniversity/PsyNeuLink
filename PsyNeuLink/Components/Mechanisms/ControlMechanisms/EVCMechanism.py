@@ -253,7 +253,6 @@ if PY_MULTIPROCESSING:
 if MPI_IMPLEMENTATION:
     from mpi4py import MPI
 
-
 OBJECT = 0
 EXPONENT = 1
 WEIGHT = 2
@@ -299,6 +298,13 @@ class ControlSignalCostOptions(IntEnum):
     ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
     DEFAULTS           = INTENSITY_COST
 
+class EVCError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
 def _control_signal_search_function(allocation=None, ctlr=None):
     return [0]
 
@@ -312,14 +318,6 @@ def _value_function(ctlr, outcomes, costs, context):
 
     value = ctlr.paramsCurrent[COMBINE_OUTCOMES_AND_COSTS_FUNCTION].function([aggregated_outcomes, -aggregated_costs])
     return (value, aggregated_outcomes, aggregated_costs)
-
-
-class EVCError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
 
 class EVCMechanism(ControlMechanism_Base):
     """EVCMechanism(                                                                        \
@@ -1400,5 +1398,4 @@ def _compute_EVC(args):
 
     else:
         return (EVC_current)
-
 
