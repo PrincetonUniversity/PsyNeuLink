@@ -492,10 +492,10 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    context = context or "Run " + object.name
+    context = context or RUN + "validating " + object.name
     num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context=context)
     if not targets is None:
-        _validate_targets(object, targets, num_inputs_sets)
+        _validate_targets(object, targets, num_inputs_sets, context=context)
 
     # INITIALIZATION
     if reset_clock:
@@ -541,6 +541,8 @@ def run(object,
                         for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
                             process_target_projection.sender.value = targets[input_num][i]
 
+            if RUN in context:
+                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
             result = object.execute(inputs[input_num][time_step],time_scale=time_scale, context=context)
 
             if call_after_time_step:
@@ -661,7 +663,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
         inputs_array = np.concatenate(inputs_array)
     inputs = inputs_array.tolist()
 
-    context = context or 'contruct_inputs for ' + object.name
+    context = context or RUN + ' constructing stimuli for ' + object.name
     num_input_sets = _validate_inputs(object=object,
                                       inputs=inputs,
                                       num_phases=1,
@@ -995,7 +997,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
                        format(object.__class__.__name__))
 
-def _validate_targets(object, targets, num_input_sets):
+def _validate_targets(object, targets, num_input_sets, context=None):
     """
     num_targets = number of target stimuli per execution
     num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets

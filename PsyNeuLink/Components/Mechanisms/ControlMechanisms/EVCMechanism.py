@@ -584,10 +584,10 @@ class EVCMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
 
-        Instantiate PredictionMechanisms for origin mechanisms in System
-            - these will now be terminal mechanisms, and their associated input mechanisms will no longer be
-            - if an associated input mechanism must be monitored by the EVCMechanism, it must be specified explicitly
-                in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
+        Instantiate PredictionMechanisms for ORIGIN mechanisms in self.system; these will now be TERMINAL mechanisms
+            - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
+            - therefore if an associated input mechanism must be monitored by the EVCMechanism, it must be specified
+                explicitly in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
 
         Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
             - if specification in outputState is None:
@@ -913,7 +913,17 @@ class EVCMechanism(ControlMechanism_Base):
         self.controlSignals = self.outputStates
 
     def _instantiate_prediction_mechanisms(self, context=None):
-        """Add prediction Process for each origin (input) Mechanism in System
+        """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
+
+        For each ORIGIN mechanism in self.system:
+            - instantiate a corresponding predictionMechanism
+            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction mechanism
+            - add the process to self.system.processes
+
+        Instantiate self.predictedInput:
+            - one item of axis 0 for each predictionMechanism
+            - one item of axis 1 for each inputState of a predictionMechanism
+            - one item of axis 2 for each element of the input to an inputState of the predictionMechanism
 
         Args:
             context:
@@ -921,21 +931,20 @@ class EVCMechanism(ControlMechanism_Base):
 
         from PsyNeuLink.Components.Process import Process_Base
 
-        # Instantiate a predictionMechanism for each origin (input) Mechanism in self.system,
-        #    instantiate a Process (that maps the origin to the prediction mechanism),
-        #    and add that Process to System.processes list
         self.predictionMechanisms = []
         self.predictionProcesses = []
-        inputs = self.system.variable
+        self.predictedInput = []
 
         for mech in self.system.originMechanisms.mechanisms:
+
+            # Add array of values for inputStates to item of input for the ORIGIN mechanism
+            self.predictedInput.append(mech.inputValue)
 
             # Get any params specified for predictionMechanism(s) by EVCMechanism
             try:
                 prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
             except KeyError:
                 prediction_mechanism_params = {}
-
 
             # Add outputState with name based on originMechanism
             output_state_name = mech.name + '_' + PREDICTION_MECHANISM_OUTPUT
@@ -968,6 +977,8 @@ class EVCMechanism(ControlMechanism_Base):
             self.system.params[kwProcesses].append((prediction_process, None))
             # Add the process to the controller's list of prediction processes
             self.predictionProcesses.append(prediction_process)
+
+        self.predictedInput = np.array(self.predictedInput)
 
         # Re-instantiate system with predictionMechanism Process(es) added
         self.system._instantiate_processes(input=self.system.variable, context=context)
@@ -1076,6 +1087,11 @@ class EVCMechanism(ControlMechanism_Base):
         Default for ``function`` is _control_signal_search_function()
 
         """
+
+        # MODIFIED 12/26/16 NEW:
+        self._update_predicted_input()
+        # MODIFIED 12/26/16 END
+
         return self.function(controller=self,
                              variable=variable,
                              runtime_params=runtime_params,
@@ -1107,13 +1123,33 @@ class EVCMechanism(ControlMechanism_Base):
                     simulation_inputs[process_index] = np.atleast_1d(0)
         return simulation_inputs
 
+    def _update_predicted_input(self):
+        """Assign values of predictionMechanisms to predictedInput
+
+        Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
+
+        """
+
+        # For each predictionMechanism, corresponding to an ORIGIN mechanism fo the sysetm
+        for mech, i in zip(self.predictionMechanisms, range(len(self.predictionMechanisms))):
+
+            # Assign the values for the item of the predictedInput corresponding to that ORIGIN mechanism;
+            #   each value assigned to the item corresponds to an inputState of the ORIGIN mechanism which, in turn,
+            #   to the item of predictedInput corresponding each of the inputStates for the
+            #   corresonding to a different process that uses the same ORIGIN mechanism
+            for value, j in zip(mech.inputValue, range(len(mech.inputValue))):
+                self.predictedInput[i][j] = mech.outputState.value
+
+        TEST = True
+
+
     def _assign_simulation_inputs(self):
 
         # FIX: NEED TO COORDINATE THIS WITH _get_simulation_inputs (ABOVE) TO ELIMINATE NEED TO SPECIFY PHASE
         # For each prediction mechanism, assign its value as input to corresponding process for the simulation
         for mech in self.predictionMechanisms:
             # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
-            # Process.inputState for the origin Mechanism corresponding to mech
+            # Process.inputState for the ORIGIN mechanism corresponding to mech
             for output_state in mech.outputStates:
                 for input_state_name, input_state in list(mech.inputStates.items()):
                     for projection in input_state.receivesFromProjections:
@@ -1152,15 +1188,18 @@ def _compute_EVC(args):
     # FIX 12/25/16: SHOULD HANDLE THIS WITH CALL TO RUN METHOD WITH num_executions=1
     # Execute simulation run of system for the current allocationPolicy
     time_step_buffer = CentralClock.time_step
+
     # # MODIFIED 12/25/16 OLD:
-    for i in range(ctlr.system._phaseSpecMax+1):
-        CentralClock.time_step = i
-        simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
-        ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
-    # # MODIFIED 12/25/16 NEW:
-    # simulation_inputs = list(ctlr._get_simulation_system_inputs(phase=i))
-    # ctlr.system.run(inputs=simulation_inputs, time_scale=time_scale)
+    # for i in range(ctlr.system._phaseSpecMax+1):
+    #     CentralClock.time_step = i
+    #     simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
+    #     ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
+
+    # MODIFIED 12/25/16 NEW:
+    ctlr.system.run(inputs=list(ctlr.predictedInput), time_scale=time_scale, context=context)
+
     # MODIFIED 12/25/16 END
+
     CentralClock.time_step = time_step_buffer
 
     # Get cost of each controlSignal
