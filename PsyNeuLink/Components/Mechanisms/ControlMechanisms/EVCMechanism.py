@@ -1180,15 +1180,21 @@ def __control_signal_search_function(controller=None, **kwargs):
 
     COMMENT:
         NOTES ON API FOR CUSTOM VERSIONS:
-            ctlr._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
-            ctlr._assign_simulation_inputs assigns value of predictionMechanisms to inputs of ORIGIN mechanisms
-            ctlr.run will execute a specified number of trials with the simulation inputs
-            ctlr.monitored_states is a list of the mechanism outputStates being monitored for outcomes
-            ctlr.inputValue is a list of current outcome values (values for monitored_states)
-            ctlr.controlSignals is a list of controlSignal objects
+            Gets controller as argument (along with any params and time_scale specified in call)
+            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
+            controller._assign_simulation_inputs assigns value of predictionMechanisms to inputs of ORIGIN mechanisms
+            controller.run will execute a specified number of trials with the simulation inputs
+            controller.monitored_states is a list of the mechanism outputStates being monitored for outcomes
+            controller.inputValue is a list of current outcome values (values for monitored_states)
+            controller.controlSignals is a list of controlSignal objects
             controlSignal.allocationSamples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
-            ctlr.outputValue is a list of current controlSignal values
+            controller.outputValue is a list of current controlSignal values
+            controller.value_function - calls the three following functions (done explicitly, so each can be specified)
+            controller.outcome_aggregation function - aggregates outcomes (using specified weights and exponentiation)
+            controller.cost_aggregation_function  aggregate costs of control signals
+            controller.combine_outcomes_and_costs_function - combines outcoms and costs
+            Must return allocation policy
     COMMENT
 
     Description
@@ -1452,13 +1458,22 @@ def __control_signal_search_function(controller=None, **kwargs):
 
 
 
-def __value_function(ctlr, outcomes, costs, context):
+def __value_function(controller, outcomes, costs, context):
+    """aggregate outcomes, costs, combine, and return value
+    -------
+
+    """
+
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    aggregated_outcomes = ctlr.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=outcomes, context=context)
+    aggregated_outcomes = controller.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].function(variable=outcomes,
+                                                                                          context=context)
 
     # Aggregate costs
-    aggregated_costs = ctlr.paramsCurrent[COST_AGGREGATION_FUNCTION].function(costs)
+    aggregated_costs = controller.paramsCurrent[COST_AGGREGATION_FUNCTION].function(costs)
 
-    value = ctlr.paramsCurrent[COMBINE_OUTCOMES_AND_COSTS_FUNCTION].function([aggregated_outcomes, -aggregated_costs])
+    # Combine aggregate outcomes and costs to determine value
+    value = controller.paramsCurrent[COMBINE_OUTCOMES_AND_COSTS_FUNCTION].function([aggregated_outcomes,
+                                                                                    -aggregated_costs])
+
     return (value, aggregated_outcomes, aggregated_costs)
 
