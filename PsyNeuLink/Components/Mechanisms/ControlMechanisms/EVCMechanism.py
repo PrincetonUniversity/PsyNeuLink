@@ -1152,10 +1152,15 @@ def _compute_EVC(args):
     # FIX 12/25/16: SHOULD HANDLE THIS WITH CALL TO RUN METHOD WITH num_executions=1
     # Execute simulation run of system for the current allocationPolicy
     time_step_buffer = CentralClock.time_step
+    # # MODIFIED 12/25/16 OLD:
     for i in range(ctlr.system._phaseSpecMax+1):
         CentralClock.time_step = i
         simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
         ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
+    # # MODIFIED 12/25/16 NEW:
+    # simulation_inputs = list(ctlr._get_simulation_system_inputs(phase=i))
+    # ctlr.system.run(inputs=simulation_inputs, time_scale=time_scale)
+    # MODIFIED 12/25/16 END
     CentralClock.time_step = time_step_buffer
 
     # Get cost of each controlSignal
@@ -1180,7 +1185,12 @@ def __control_signal_search_function(controller=None, **kwargs):
 
     COMMENT:
         NOTES ON API FOR CUSTOM VERSIONS:
-            Gets controller as argument (along with any params and time_scale specified in call)
+            Gets controller as argument (along with any standard params specified in call)
+            Must include **kwargs to receive standard args (variable, params, time_scale, and context)
+            Must return an allocation policy compatible with controller.allocationPolicy:
+                2d np.array with one array for each allocation value
+
+            Following attributes are available:
             controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
             controller._assign_simulation_inputs assigns value of predictionMechanisms to inputs of ORIGIN mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
@@ -1189,12 +1199,12 @@ def __control_signal_search_function(controller=None, **kwargs):
             controller.controlSignals is a list of controlSignal objects
             controlSignal.allocationSamples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
+            controller.allocationPolicy - holds current allocationPolicy
             controller.outputValue is a list of current controlSignal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_aggregation function - aggregates outcomes (using specified weights and exponentiation)
             controller.cost_aggregation_function  aggregate costs of control signals
             controller.combine_outcomes_and_costs_function - combines outcoms and costs
-            Must return allocation policy
     COMMENT
 
     Description
@@ -1225,9 +1235,9 @@ def __control_signal_search_function(controller=None, **kwargs):
 
     # Get value of, or set default for standard args
     try:
-        context = kwargs[CONTEXT]
+        context = kwargs[VARIABLE]
     except KeyError:
-        context = None
+        variable = None
     try:
         runtime_params = kwargs[PARAMS]
     except KeyError:
@@ -1236,6 +1246,10 @@ def __control_signal_search_function(controller=None, **kwargs):
         time_scale = kwargs[TIME_SCALE]
     except KeyError:
         time_scale = TimeScale.TRIAL
+    try:
+        context = kwargs[CONTEXT]
+    except KeyError:
+        context = None
 
     if not controller:
         if INITIALIZING in context:
@@ -1455,7 +1469,6 @@ def __control_signal_search_function(controller=None, **kwargs):
     controller.allocationPolicy = np.array(controller.EVCmaxPolicy).reshape(len(controller.EVCmaxPolicy), -1)
     return controller.allocationPolicy
     #endregion
-
 
 
 def __value_function(controller, outcomes, costs, context):
