@@ -1724,7 +1724,8 @@ class System_Base(System):
             call_after_trial=None,
             call_before_time_step=None,
             call_after_time_step=None,
-            time_scale=None):
+            time_scale=None,
+            context=None):
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
@@ -1789,7 +1790,8 @@ class System_Base(System):
                    call_after_trial=call_after_trial,
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
-                   time_scale=time_scale)
+                   time_scale=time_scale,
+                   context=context)
 
     def _report_system_initiation(self):
         """Prints iniiation message, time_step, and list of processes in system being executed
