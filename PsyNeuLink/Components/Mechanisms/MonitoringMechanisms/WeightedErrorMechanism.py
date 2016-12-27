@@ -262,6 +262,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
     def __execute__(self,
                 variable=None,
                 runtime_params=None,
+                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 

@@ -465,6 +465,59 @@ class Contradiction(Function_Base): # Example
 #region ****************************************   FUNCTIONS   *********************************************************
 #endregion
 
+#region **********************************  USER-DEFINED FUNCTION  *****************************************************
+#endregion
+
+class UserDefinedFunction(Function_Base):
+    """Implement user-defined function
+
+    Initialization arguments:
+     - variable
+
+    Linear.function returns scalar result
+    """
+    componentName = kwUserDefinedFunction
+    componentType = kwUserDefinedFunctionType
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+                               kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 function,
+                 variable=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+        self.user_defined_function = function
+
+        super().__init__(variable_default=variable,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+        # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
+
+    def function(self,
+                 # variable=None,
+                 # params=None,
+                 # time_scale=TimeScale.TRIAL,
+                 # context=None,
+                 **kwargs):
+        # raise FunctionError("Function must be provided for {}".format(self.componentType))
+        return self.user_defined_function(**kwargs)
+
+
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
 
@@ -532,6 +585,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
     def function(self,
                 variable=None,
                 params=None,
+                time_scale=TimeScale.TRIAL,
                 context=None):
         """Combine a list or array of values
 

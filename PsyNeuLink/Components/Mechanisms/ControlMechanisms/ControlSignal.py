@@ -589,7 +589,6 @@ class ControlSignal(OutputState):
         """Adjust the control signal, based on the allocation value passed to it
 
         Computes new intensity and cost attributes from allocation
-        Returns ControlSignalValuesTuple (intensity, totalCost)
 
         Use self.function to assign intensity
             - if ignoreIntensityFunction is set (for effiency, if the the execute method it is the identity function):

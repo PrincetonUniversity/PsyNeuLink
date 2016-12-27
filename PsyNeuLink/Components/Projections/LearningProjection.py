@@ -1018,7 +1018,8 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
         DOCUMENT:
         LearnningSignal (Projection):
