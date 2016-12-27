@@ -1194,23 +1194,24 @@ def _compute_EVC(args):
     ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
     # Execute simulation run of system for the current allocationPolicy
-    time_step_buffer = CentralClock.time_step
-    trial_buffer = CentralClock.trial
+    # time_step_buffer = clock.time_step
+    # trial_buffer = clock.trial
+    sim_clock = CentralClock()
 
     # MODIFIED 12/25/16 OLD:
     for i in range(ctlr.system._phaseSpecMax+1):
-        CentralClock.time_step = i
+        # clock.time_step = i
+        sim_clock.time_step = i
         simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
-        ctlr.system.execute(input=simulation_inputs, clock=clock, time_scale=time_scale, context=context)
+        ctlr.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
-    # # MODIFIED 12/25/16 NEW:
-    # temp = ctlr.system.run(inputs=list(ctlr.predictedInput), time_scale=time_scale, context=context)
-    # # ctlr.system.run(inputs=ctlr.predictedInput, time_scale=time_scale, context=context)
+    # # # MODIFIED 12/25/16 NEW:
+    # ctlr.system.run(inputs=list(ctlr.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
 
     # MODIFIED 12/25/16 END
 
-    CentralClock.time_step = time_step_buffer
-    CentralClock.trial = trial_buffer
+    # clock.time_step = time_step_buffer
+    # clock.trial = trial_buffer
 
     # Get cost of each controlSignal
     for control_signal in ctlr.controlSignals.values():

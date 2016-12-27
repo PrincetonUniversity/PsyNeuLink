@@ -1514,7 +1514,7 @@ class System_Base(System):
         #endregion
 
         if self._report_system_output:
-            self._report_system_initiation()
+            self._report_system_initiation(clock=clock)
 
 
         #region EXECUTE MECHANISMS
@@ -1556,7 +1556,7 @@ class System_Base(System):
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
-                if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
+                if self.controller.phaseSpec == (clock.time_step % self.numPhases):
                     self.controller.execute(clock=clock,
                                             time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
@@ -1571,7 +1571,7 @@ class System_Base(System):
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
-            self._report_system_completion()
+            self._report_system_completion(clock=clock)
 
         return self.terminalMechanisms.outputStateValues
 
@@ -1597,7 +1597,7 @@ class System_Base(System):
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if phase_spec == (CentralClock.time_step % self.numPhases):
+            if phase_spec == (clock.time_step % self.numPhases):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
 
                 processes = list(mechanism.processes.keys())
@@ -1737,6 +1737,7 @@ class System_Base(System):
             call_after_trial=None,
             call_before_time_step=None,
             call_after_time_step=None,
+            clock=CentralClock,
             time_scale=None,
             context=None):
         """Run a sequence of executions
@@ -1804,9 +1805,10 @@ class System_Base(System):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale,
+                   clock=CentralClock,
                    context=context)
 
-    def _report_system_initiation(self):
+    def _report_system_initiation(self, clock=CentralClock):
         """Prints iniiation message, time_step, and list of processes in system being executed
         """
 
@@ -1815,18 +1817,18 @@ class System_Base(System):
         else:
             system_string = ' system'
 
-        if CentralClock.time_step == 0:
+        if clock.time_step == 0:
             print("\n\'{}\'{} executing with: **** (time_step {}) ".
-                  format(self.name, system_string, CentralClock.time_step))
+                  format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
 
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".
-                  format(self.name, system_string, CentralClock.time_step))
+                  format(self.name, system_string, clock.time_step))
 
-    def _report_system_completion(self):
+    def _report_system_completion(self, clock=CentralClock):
         """Prints completion message and outputValue of system
         """
 
@@ -1837,9 +1839,9 @@ class System_Base(System):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, CentralClock.time_step))
+        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
         for mech_tuple in self._terminal_mech_tuples:
-            if mech_tuple.mechanism.phaseSpec == (CentralClock.time_step % self.numPhases):
+            if mech_tuple.mechanism.phaseSpec == (clock.time_step % self.numPhases):
                 print("- output for {0}: {1}".format(mech_tuple.mechanism.name,
                                                  re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 

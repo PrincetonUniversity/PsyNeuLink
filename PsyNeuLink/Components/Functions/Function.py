@@ -518,7 +518,6 @@ class UserDefinedFunction(Function_Base):
         return self.user_defined_function(**kwargs)
 
 
-
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
 

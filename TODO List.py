@@ -7,20 +7,37 @@
 # CentralClock.XXX -> clock.XXX
 
 # FIX: SYSTEM:
-#         self._execute_processing(clock=clock, time_scale=time_scale, context=context)
-#         def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
-#         mechanism.execute(time_scale=self.timeScale,
+#     self._execute_processing(clock=clock, time_scale=time_scale, context=context)
+#     def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
+#     mechanism.execute(time_scale=self.timeScale,
 #     def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
 #     def execute(self,
 #                 input=None,
 #                 clock=CentralClock,
 #                 time_scale=None,
 #                 # time_scale=TimeScale.TRIAL
-#         self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
-#         component.execute(clock=clock,
-#                           time_scale=self.timeScale,
-#                           # time_scale=time_scale,
-#                           context=context_str)
+#     self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
+#     component.execute(clock=clock,
+#                       time_scale=self.timeScale,
+#                       # time_scale=time_scale,
+#                       context=context_str)
+#     def run(self,
+#             inputs,
+#             num_executions=None,
+#             reset_clock=True,
+#             initialize=False,
+#             targets=None,
+#             learning=None,
+#             call_before_trial=None,
+#             call_after_trial=None,
+#             call_before_time_step=None,
+#             call_after_time_step=None,
+#             clock=CentralClock,
+#             time_scale=None,
+#         #     time_scale=TimeScale.TRIAL,
+#             context=None):
+
+
 # FIX: PROCESS:
 #     def execute(self,
 #                 input=None,
@@ -40,7 +57,10 @@
 #         # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
 #     def _execute_learning(self, clock=CentralClock, context=None):
 #     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-
+#
+# FIX: ControlProjection, LearningProjection, MappingProjection:
+#     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
+#     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
 
 
 # IMPLEMENT: FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT

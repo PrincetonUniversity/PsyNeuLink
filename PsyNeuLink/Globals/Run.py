@@ -344,6 +344,7 @@ def run(object,
         call_after_trial:tc.optional(function_type)=None,
         call_before_time_step:tc.optional(function_type)=None,
         call_after_time_step:tc.optional(function_type)=None,
+        clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
         context=None):
 
@@ -499,8 +500,8 @@ def run(object,
 
     # INITIALIZATION
     if reset_clock:
-        CentralClock.trial = 0
-        CentralClock.time_step = 0
+        clock.trial = 0
+        clock.time_step = 0
     if initialize:
         object.initialize()
 
@@ -548,7 +549,7 @@ def run(object,
             if call_after_time_step:
                 call_after_time_step()
 
-            CentralClock.time_step += 1
+            clock.time_step += 1
 
         # object.results.append(result)
         if isinstance(result, Iterable):
@@ -560,7 +561,7 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        CentralClock.trial += 1
+        clock.trial += 1
 
     # Restore learning state
     try:
