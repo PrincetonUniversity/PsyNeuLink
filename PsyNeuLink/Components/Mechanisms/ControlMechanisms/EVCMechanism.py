@@ -1109,30 +1109,32 @@ class EVCMechanism(ControlMechanism_Base):
 
         return allocation_policy
 
-    def _get_simulation_system_inputs(self, phase):
-        """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
-
-        Returns: 2D np.array
-
-        """
-
-        simulation_inputs = np.empty_like(self.system.input, dtype=float)
-
-        # For each prediction mechanism
-        for prediction_mech in self.predictionMechanisms:
-
-            # Get the index for each process that uses simulated input from the prediction mechanism
-            for predicted_process in prediction_mech.use_for_processes:
-                # process_index = self.system.processes.index(predicted_process)
-                process_index = self.system._processList.processes.index(predicted_process)
-                # Assign the prediction mechanism's value as the simulated input for the process
-                #    in the phase at which it is used
-                if prediction_mech.phaseSpec == phase:
-                    simulation_inputs[process_index] = prediction_mech.value
-                # For other phases, assign zero as the simulated input to the process
-                else:
-                    simulation_inputs[process_index] = np.atleast_1d(0)
-        return simulation_inputs
+    # MODIFIED 12/27/16 OLD:
+    # def _get_simulation_system_inputs(self, phase):
+    #     """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
+    #
+    #     Returns: 2D np.array
+    #
+    #     """
+    #
+    #     simulation_inputs = np.empty_like(self.system.input, dtype=float)
+    #
+    #     # For each prediction mechanism
+    #     for prediction_mech in self.predictionMechanisms:
+    #
+    #         # Get the index for each process that uses simulated input from the prediction mechanism
+    #         for predicted_process in prediction_mech.use_for_processes:
+    #             # process_index = self.system.processes.index(predicted_process)
+    #             process_index = self.system._processList.processes.index(predicted_process)
+    #             # Assign the prediction mechanism's value as the simulated input for the process
+    #             #    in the phase at which it is used
+    #             if prediction_mech.phaseSpec == phase:
+    #                 simulation_inputs[process_index] = prediction_mech.value
+    #             # For other phases, assign zero as the simulated input to the process
+    #             else:
+    #                 simulation_inputs[process_index] = np.atleast_1d(0)
+    #     return simulation_inputs
+    # MODIFIED 12/27/16 END
 
     def _update_predicted_input(self):
         """Assign values of predictionMechanisms to predictedInput
@@ -1158,19 +1160,20 @@ class EVCMechanism(ControlMechanism_Base):
             for value, j in zip(origin_mech.inputValue, range(len(origin_mech.inputValue))):
                 self.predictedInput[i][j] = prediction_mech.outputState.value
 
-
-    def _assign_simulation_inputs(self):
-
-        # FIX: NEED TO COORDINATE THIS WITH _get_simulation_inputs (ABOVE) TO ELIMINATE NEED TO SPECIFY PHASE
-        # For each prediction mechanism, assign its value as input to corresponding process for the simulation
-        for mech in self.predictionMechanisms:
-            # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
-            # Process.inputState for the ORIGIN mechanism corresponding to mech
-            for output_state in mech.outputStates:
-                for input_state_name, input_state in list(mech.inputStates.items()):
-                    for projection in input_state.receivesFromProjections:
-                        input = mech.outputStates[output_state].value
-                        projection.sender.owner.inputState.receivesFromProjections[0].sender.value = input
+    # MODIFIED 12/27/16 OLD:
+    # def _assign_simulation_inputs(self):
+    #
+    #     # FIX: NEED TO COORDINATE THIS WITH _get_simulation_inputs (ABOVE) TO ELIMINATE NEED TO SPECIFY PHASE
+    #     # For each prediction mechanism, assign its value as input to corresponding process for the simulation
+    #     for mech in self.predictionMechanisms:
+    #         # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
+    #         # Process.inputState for the ORIGIN mechanism corresponding to mech
+    #         for output_state in mech.outputStates:
+    #             for input_state_name, input_state in list(mech.inputStates.items()):
+    #                 for projection in input_state.receivesFromProjections:
+    #                     input = mech.outputStates[output_state].value
+    #                     projection.sender.owner.inputState.receivesFromProjections[0].sender.value = input
+    # MODIFIED 12/27/16 END
 
 
 def _compute_EVC(args):
@@ -1338,7 +1341,9 @@ def __control_signal_search_function(controller=None, **kwargs):
     # END MOVE
     #endregion
 
-    controller._assign_simulation_inputs()
+    # MODIFIED 12/27/16 OLD:
+    # controller._assign_simulation_inputs()
+    # MODIFIED 12/27/16 END
 
     #region RUN SIMULATION
 

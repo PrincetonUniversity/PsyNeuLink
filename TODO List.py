@@ -2,26 +2,32 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# FIX: predictedInputs is assigning values backwards
-#      not incrementing allocation_policy
-
+# FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
 # TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
 
-# FIX: SYSTEM:
+# FIX AND TEST: CHANGE time_scale=None -> time_scale=TimeScale.TRIAL IN ALL THE FOLLOWING PLACES:
+#   SYSTEM:
 #     self._execute_processing(clock=clock, time_scale=time_scale, context=context)
+
 #     def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
+
 #     mechanism.execute(time_scale=self.timeScale,
+
 #     def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+
 #     def execute(self,
 #                 input=None,
 #                 clock=CentralClock,
 #                 time_scale=None,
 #                 # time_scale=TimeScale.TRIAL
+
 #     self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
+
 #     component.execute(clock=clock,
 #                       time_scale=self.timeScale,
 #                       # time_scale=time_scale,
 #                       context=context_str)
+
 #     def run(self,
 #             inputs,
 #             num_executions=None,
@@ -37,9 +43,7 @@
 #             time_scale=None,
 #         #     time_scale=TimeScale.TRIAL,
 #             context=None):
-
-
-# FIX: PROCESS:
+#  PROCESS:
 #     def execute(self,
 #                 input=None,
 #                 # params=None,
@@ -49,25 +53,56 @@
 #                 # time_scale=TimeScale.TRIAL,
 #                 runtime_params=None,
 #                 context=None
+
 #     mechanism.execute(clock=clock,
 #                       time_scale=self.timeScale,
 #                       # time_scale=time_scale,
+
 #     # Execute learningSignals
+
 #     if self._learning_enabled:
 #         self._execute_learning(clock=clock, context=context)
 #         # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
+
 #     def _execute_learning(self, clock=CentralClock, context=None):
+
 #     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
 #
-# FIX: ControlProjection, LearningProjection, MappingProjection:
+#  PROJECTION:
+#     ControlProjection, LearningProjection, MappingProjection:
+
 #     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
+
 #     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
 
 
 # IMPLEMENT: FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
 
-# DOCUMENT:  UserDefinedFunction:  wraps custom function, that can then be called using its function method;
+# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
 #                can take variable, params, time_scale, and context as params, along with any of its own
+
+#           FROM EVCMechanism.control_signal_search_function:
+#             Gets controller as argument (along with any standard params specified in call)
+#             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
+#             Must return an allocation policy compatible with controller.allocationPolicy:
+#                 2d np.array with one 1d array for each allocation value
+#
+#             Following attributes are available:
+#             controller.run: executes a specified number of trials with the simulation inputs
+#             controller.predictedInputs: ndarray of current value of outputState
+#                                          for each predictionMechanism in self.system.predictionMechanisms
+#             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
+#             controller.inputValue: list of current outcome values for monitored_states
+#             controller.controlSignals: list of controlSignal objects
+#             controlSignal.allocationSamples: set of samples specified for that controlSignal
+#             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
+#             controller.allocationPolicy: current allocationPolicy
+#             controller.outputValue: list of current controlSignal values
+#             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
+#             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
+#             controller.cost_aggregation_function:  aggregate costs of control signals
+#             controller.combine_outcomes_and_costs_function: combines outcomes and costs
+
 
 # PROJECTIONS:
 # FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
