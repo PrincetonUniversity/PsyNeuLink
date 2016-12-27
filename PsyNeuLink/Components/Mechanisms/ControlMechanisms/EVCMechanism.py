@@ -1242,7 +1242,7 @@ def _compute_EVC(args):
     # Execute simulation run of system for the current allocationPolicy
     sim_clock = Clock('EVC SIMULATION CLOCK')
 
-    # # MODIFIED 12/25/16 OLD:
+    # # MODIFIED 12/25/16 OLD [EXECUTES SYSTEM DIRECTLY]:
     # for i in range(ctlr.system._phaseSpecMax+1):
     #     sim_clock.time_step = i
     #     simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
@@ -1250,13 +1250,8 @@ def _compute_EVC(args):
     #     # # TEST PRINT:
     #     # print ("SIMULATION INPUT: ", simulation_inputs)
 
-    # MODIFIED 12/25/16 NEW:
+    # MODIFIED 12/25/16 NEW [USES SYSTEM.RUN]:
     ctlr.system.run(inputs=list(ctlr.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
-    # # TEST PRINT:
-    # print ("PREDICTED INPUT: ", list(ctlr.predictedInput))
-    # ctlr.system.run(inputs=ctlr.predictedInput, time_scale=time_scale, context=context)
-
-
 
     # Get cost of each controlSignal
     for control_signal in ctlr.controlSignals.values():
