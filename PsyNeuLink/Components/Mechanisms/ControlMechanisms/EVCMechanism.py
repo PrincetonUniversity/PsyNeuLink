@@ -1138,46 +1138,9 @@ class EVCMechanism(ControlMechanism_Base):
         """Assign values of predictionMechanisms to predictedInput
 
         Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
+        Note: must be assigned in order of self.system.processes
 
         """
-
-        # For each predictionMechanism, corresponding to an ORIGIN mechanism fo the sysetm
-        # for mech, i in zip(self.predictionMechanisms, range(len(self.predictionMechanisms))):
-        #
-        #     # Assign the values for the item of the predictedInput corresponding to that ORIGIN mechanism;
-        #     #   each value assigned to the item corresponds to an inputState of the ORIGIN mechanism which, in turn,
-        #     #   to the item of predictedInput corresponding each of the inputStates for the
-        #     #   corresponding to a different process that uses the same ORIGIN mechanism
-        #     # Must be assigned in order of self.system.processes
-        #     for value, j in zip(mech.inputValue, range(len(mech.inputValue))):
-        #         self.predictedInput[i][j] = mech.outputState.value
-
-        # for mech in self.predictionMechanisms:
-        #     for process in mech.processes:
-        #         origin_mech = process.originMechanisms[0]
-        #         origin_process = list(origin_mech.processes)[1]
-        #         i = self.system.processes.index(origin_process)
-        #
-        #         # TEST PRINT:
-        #         print("\nITERATION i: {}"
-        #               "\n\tprediction mech: {}"
-        #               "\n\tprocess: {}"
-        #               "\n\torigin mech: {}"
-        #               "\n\torigin process: {}\n".
-        #               format(i,
-        #                      mech.name,
-        #                      process.name,
-        #                      origin_mech.name,
-        #                      origin_process.name))
-        #
-        #         for value, j in zip(mech.inputValue, range(len(mech.inputValue))):
-        #             self.predictedInput[i][j] = mech.outputState.value
-
-        # Assign the values for the item of the predictedInput corresponding to that ORIGIN mechanism;
-        #   each value assigned to the item corresponds to an inputState of the ORIGIN mechanism which, in turn,
-        #   to the item of predictedInput corresponding each of the inputStates for the
-        #   corresponding to a different process that uses the same ORIGIN mechanism
-        # Must be assigned in order of self.system.processes
 
         # Assign predictedInput for each process in system.processes
 
@@ -1194,7 +1157,6 @@ class EVCMechanism(ControlMechanism_Base):
             #  (in case more than one process uses that (and therefore projects to) originMechanism
             for value, j in zip(origin_mech.inputValue, range(len(origin_mech.inputValue))):
                 self.predictedInput[i][j] = prediction_mech.outputState.value
-        TEST = True
 
 
     def _assign_simulation_inputs(self):
