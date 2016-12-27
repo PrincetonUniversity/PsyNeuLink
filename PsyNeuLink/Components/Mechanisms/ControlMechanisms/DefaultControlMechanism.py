@@ -111,7 +111,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
 
 
-    def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
+    def __execute__(self,
+                    variable=None,
+                    runtime_params=None,
+                    clock=CentralClock,
+                    time_scale=TimeScale.TRIAL,
+                    context=None):
 
         return self.inputValue or [defaultControlAllocation]
 

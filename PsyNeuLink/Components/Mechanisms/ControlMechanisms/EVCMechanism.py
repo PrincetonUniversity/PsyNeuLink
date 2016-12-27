@@ -1079,6 +1079,7 @@ class EVCMechanism(ControlMechanism_Base):
     def __execute__(self,
                     variable=None,
                     runtime_params=None,
+                    clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
         """Determine allocationPolicy for next run of system
@@ -1090,13 +1091,20 @@ class EVCMechanism(ControlMechanism_Base):
 
         # MODIFIED 12/26/16 NEW:
         self._update_predicted_input()
+        self.system._cache_state()
         # MODIFIED 12/26/16 END
 
-        return self.function(controller=self,
-                             variable=variable,
-                             runtime_params=runtime_params,
-                             time_scale=time_scale,
-                             context=context)
+        allocation_policy = self.function(controller=self,
+                                          variable=variable,
+                                          runtime_params=runtime_params,
+                                          time_scale=time_scale,
+                                          context=context)
+
+        # MODIFIED 12/26/16 NEW:
+        self.system._restore_state()
+        # MODIFIED 12/26/16 END
+
+        return allocation_policy
 
     def _get_simulation_system_inputs(self, phase):
         """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
@@ -1173,7 +1181,7 @@ def _compute_EVC(args):
         (EVC_current, aggregated_outcomes, aggregated_costs)
 
     """
-    ctlr, allocation_vector, runtime_params, time_scale, context = args
+    ctlr, allocation_vector, runtime_params, clock, time_scale, context = args
     if ctlr.value is None:
         # Initialize value if it is None
         ctlr.value = ctlr.allocationPolicy
@@ -1185,22 +1193,24 @@ def _compute_EVC(args):
         ctlr.value[i] = np.atleast_1d(allocation_vector[i])
     ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-    # FIX 12/25/16: SHOULD HANDLE THIS WITH CALL TO RUN METHOD WITH num_executions=1
     # Execute simulation run of system for the current allocationPolicy
     time_step_buffer = CentralClock.time_step
+    trial_buffer = CentralClock.trial
 
-    # # MODIFIED 12/25/16 OLD:
-    # for i in range(ctlr.system._phaseSpecMax+1):
-    #     CentralClock.time_step = i
-    #     simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
-    #     ctlr.system.execute(input=simulation_inputs, time_scale=time_scale, context=context)
+    # MODIFIED 12/25/16 OLD:
+    for i in range(ctlr.system._phaseSpecMax+1):
+        CentralClock.time_step = i
+        simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
+        ctlr.system.execute(input=simulation_inputs, clock=clock, time_scale=time_scale, context=context)
 
-    # MODIFIED 12/25/16 NEW:
-    ctlr.system.run(inputs=list(ctlr.predictedInput), time_scale=time_scale, context=context)
+    # # MODIFIED 12/25/16 NEW:
+    # temp = ctlr.system.run(inputs=list(ctlr.predictedInput), time_scale=time_scale, context=context)
+    # # ctlr.system.run(inputs=ctlr.predictedInput, time_scale=time_scale, context=context)
 
     # MODIFIED 12/25/16 END
 
     CentralClock.time_step = time_step_buffer
+    CentralClock.trial = trial_buffer
 
     # Get cost of each controlSignal
     for control_signal in ctlr.controlSignals.values():
@@ -1282,6 +1292,10 @@ def __control_signal_search_function(controller=None, **kwargs):
     except KeyError:
         runtime_params = None
     try:
+        clock = kwargs[CLOCK]
+    except KeyError:
+        clock = CentralClock
+    try:
         time_scale = kwargs[TIME_SCALE]
     except KeyError:
         time_scale = TimeScale.TRIAL
@@ -1351,7 +1365,7 @@ def __control_signal_search_function(controller=None, **kwargs):
     #        preserved here for possible future restoration
     if PY_MULTIPROCESSING:
         EVC_pool = Pool()
-        results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, time_scale, context)
+        results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, clock, time_scale, context)
                                              for arg in controller.controlSignalSearchSpace])
 
     else:
@@ -1405,7 +1419,11 @@ def __control_signal_search_function(controller=None, **kwargs):
             sample +=1
 
             # Calculate EVC for specified allocation policy
-            result_tuple = _compute_EVC(args=(controller, allocation_vector, runtime_params, time_scale, context))
+            result_tuple = _compute_EVC(args=(controller, allocation_vector,
+                                              runtime_params,
+                                              clock,
+                                              time_scale,
+                                              context))
             EVC, value, cost = result_tuple
 
             EVC_max = max(EVC, EVC_max)
