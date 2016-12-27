@@ -2,9 +2,10 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# FIX:
-# clock=None -> clock=CentralClock
-# CentralClock.XXX -> clock.XXX
+# FIX: predictedInputs is assigning values backwards
+#      not incrementing allocation_policy
+
+# TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
 
 # FIX: SYSTEM:
 #     self._execute_processing(clock=clock, time_scale=time_scale, context=context)

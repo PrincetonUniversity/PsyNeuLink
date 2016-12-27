@@ -542,9 +542,9 @@ def run(object,
                         for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
                             process_target_projection.sender.value = targets[input_num][i]
 
-            if RUN in context:
+            if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-            result = object.execute(inputs[input_num][time_step],time_scale=time_scale, context=context)
+            result = object.execute(inputs[input_num][time_step],clock=clock, time_scale=time_scale, context=context)
 
             if call_after_time_step:
                 call_after_time_step()

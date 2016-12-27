@@ -1805,7 +1805,7 @@ class System_Base(System):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale,
-                   clock=CentralClock,
+                   clock=clock,
                    context=context)
 
     def _report_system_initiation(self, clock=CentralClock):

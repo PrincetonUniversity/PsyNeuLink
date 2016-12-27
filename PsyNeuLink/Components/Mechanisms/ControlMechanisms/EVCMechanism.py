@@ -933,12 +933,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         self.predictionMechanisms = []
         self.predictionProcesses = []
-        self.predictedInput = []
 
         for mech in self.system.originMechanisms.mechanisms:
-
-            # Add array of values for inputStates to item of input for the ORIGIN mechanism
-            self.predictedInput.append(mech.inputValue)
 
             # Get any params specified for predictionMechanism(s) by EVCMechanism
             try:
@@ -978,7 +974,14 @@ class EVCMechanism(ControlMechanism_Base):
             # Add the process to the controller's list of prediction processes
             self.predictionProcesses.append(prediction_process)
 
+        # MODIFIED 12/27 NEW:
+        # Assign predictedInputs
+        self.predictedInput = []
+        for i in range(len(self.system.originMechanisms)):
+            # self.predictedInput.append(process[0].originMechanisms[0].inputValue)
+            self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
         self.predictedInput = np.array(self.predictedInput)
+        # MODIFIED 12/27 END
 
         # Re-instantiate system with predictionMechanism Process(es) added
         self.system._instantiate_processes(input=self.system.variable, context=context)
@@ -1089,10 +1092,10 @@ class EVCMechanism(ControlMechanism_Base):
 
         """
 
-        # MODIFIED 12/26/16 NEW:
-        self._update_predicted_input()
-        self.system._cache_state()
-        # MODIFIED 12/26/16 END
+        # # MODIFIED 12/27/16 NEW:
+        # self._update_predicted_input()
+        # self.system._cache_state()
+        # # MODIFIED 12/27/16 END
 
         allocation_policy = self.function(controller=self,
                                           variable=variable,
@@ -1100,9 +1103,9 @@ class EVCMechanism(ControlMechanism_Base):
                                           time_scale=time_scale,
                                           context=context)
 
-        # MODIFIED 12/26/16 NEW:
-        self.system._restore_state()
-        # MODIFIED 12/26/16 END
+        # # MODIFIED 12/26/16 NEW:
+        # self.system._restore_state()
+        # # MODIFIED 12/26/16 END
 
         return allocation_policy
 
@@ -1139,15 +1142,58 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         # For each predictionMechanism, corresponding to an ORIGIN mechanism fo the sysetm
-        for mech, i in zip(self.predictionMechanisms, range(len(self.predictionMechanisms))):
+        # for mech, i in zip(self.predictionMechanisms, range(len(self.predictionMechanisms))):
+        #
+        #     # Assign the values for the item of the predictedInput corresponding to that ORIGIN mechanism;
+        #     #   each value assigned to the item corresponds to an inputState of the ORIGIN mechanism which, in turn,
+        #     #   to the item of predictedInput corresponding each of the inputStates for the
+        #     #   corresponding to a different process that uses the same ORIGIN mechanism
+        #     # Must be assigned in order of self.system.processes
+        #     for value, j in zip(mech.inputValue, range(len(mech.inputValue))):
+        #         self.predictedInput[i][j] = mech.outputState.value
 
-            # Assign the values for the item of the predictedInput corresponding to that ORIGIN mechanism;
-            #   each value assigned to the item corresponds to an inputState of the ORIGIN mechanism which, in turn,
-            #   to the item of predictedInput corresponding each of the inputStates for the
-            #   corresonding to a different process that uses the same ORIGIN mechanism
-            for value, j in zip(mech.inputValue, range(len(mech.inputValue))):
-                self.predictedInput[i][j] = mech.outputState.value
+        # for mech in self.predictionMechanisms:
+        #     for process in mech.processes:
+        #         origin_mech = process.originMechanisms[0]
+        #         origin_process = list(origin_mech.processes)[1]
+        #         i = self.system.processes.index(origin_process)
+        #
+        #         # TEST PRINT:
+        #         print("\nITERATION i: {}"
+        #               "\n\tprediction mech: {}"
+        #               "\n\tprocess: {}"
+        #               "\n\torigin mech: {}"
+        #               "\n\torigin process: {}\n".
+        #               format(i,
+        #                      mech.name,
+        #                      process.name,
+        #                      origin_mech.name,
+        #                      origin_process.name))
+        #
+        #         for value, j in zip(mech.inputValue, range(len(mech.inputValue))):
+        #             self.predictedInput[i][j] = mech.outputState.value
 
+        # Assign the values for the item of the predictedInput corresponding to that ORIGIN mechanism;
+        #   each value assigned to the item corresponds to an inputState of the ORIGIN mechanism which, in turn,
+        #   to the item of predictedInput corresponding each of the inputStates for the
+        #   corresponding to a different process that uses the same ORIGIN mechanism
+        # Must be assigned in order of self.system.processes
+
+        # Assign predictedInput for each process in system.processes
+
+        # The number of originMechanisms requiring input should = the number of predictionMechanisms
+        for i in range(len(self.predictionMechanisms)):
+            # Get origin mechanism for each process
+            origin_mech = self.system.processes[i].originMechanisms[0]
+            # Get prediction process for which that is the origin mechanism
+            # FIX: PUT TEST HERE THAT THERE IS ONLY ONE (PUT NEXT INSIDE ALL, AND ASSIGN RESULT TO LIST AND CHECK LEN)
+            process = next((p for p in self.predictionProcesses if p.originMechanisms[0] is origin_mech), None)
+            # Get predictionMechanism for that process
+            prediction_mech = process.terminalMechanisms[0]
+            # Assign outputState.value of predictionMechanism to each inputState of the originMechanism
+            #  (in case more than one process uses that (and therefore projects to) originMechanism
+            for value, j in zip(origin_mech.inputValue, range(len(origin_mech.inputValue))):
+                self.predictedInput[i][j] = prediction_mech.outputState.value
         TEST = True
 
 
@@ -1181,7 +1227,7 @@ def _compute_EVC(args):
         (EVC_current, aggregated_outcomes, aggregated_costs)
 
     """
-    ctlr, allocation_vector, runtime_params, clock, time_scale, context = args
+    ctlr, allocation_vector, runtime_params, time_scale, context = args
     if ctlr.value is None:
         # Initialize value if it is None
         ctlr.value = ctlr.allocationPolicy
@@ -1194,24 +1240,17 @@ def _compute_EVC(args):
     ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
     # Execute simulation run of system for the current allocationPolicy
-    # time_step_buffer = clock.time_step
-    # trial_buffer = clock.trial
-    sim_clock = CentralClock()
+    sim_clock = Clock('EVC SIMULATION CLOCK')
 
     # MODIFIED 12/25/16 OLD:
     for i in range(ctlr.system._phaseSpecMax+1):
-        # clock.time_step = i
         sim_clock.time_step = i
         simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
         ctlr.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
-    # # # MODIFIED 12/25/16 NEW:
+    # # MODIFIED 12/25/16 NEW:
     # ctlr.system.run(inputs=list(ctlr.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
-
-    # MODIFIED 12/25/16 END
-
-    # clock.time_step = time_step_buffer
-    # clock.trial = trial_buffer
+    # # ctlr.system.run(inputs=ctlr.predictedInput, time_scale=time_scale, context=context)
 
     # Get cost of each controlSignal
     for control_signal in ctlr.controlSignals.values():
@@ -1366,7 +1405,7 @@ def __control_signal_search_function(controller=None, **kwargs):
     #        preserved here for possible future restoration
     if PY_MULTIPROCESSING:
         EVC_pool = Pool()
-        results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, clock, time_scale, context)
+        results = EVC_pool.map(_compute_EVC, [(controller, arg, runtime_params, time_scale, context)
                                              for arg in controller.controlSignalSearchSpace])
 
     else:
@@ -1422,7 +1461,6 @@ def __control_signal_search_function(controller=None, **kwargs):
             # Calculate EVC for specified allocation policy
             result_tuple = _compute_EVC(args=(controller, allocation_vector,
                                               runtime_params,
-                                              clock,
                                               time_scale,
                                               context))
             EVC, value, cost = result_tuple
