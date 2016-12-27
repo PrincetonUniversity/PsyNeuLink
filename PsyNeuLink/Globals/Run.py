@@ -344,7 +344,9 @@ def run(object,
         call_after_trial:tc.optional(function_type)=None,
         call_before_time_step:tc.optional(function_type)=None,
         call_after_time_step:tc.optional(function_type)=None,
-        time_scale:tc.optional(tc.enum)=None):
+        clock=CentralClock,
+        time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
+        context=None):
 
     # DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
     #           THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN SEE THIS BY USING show() METHOD (WRITE NEW ONE?)
@@ -491,14 +493,15 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context="Run " + object.name)
+    context = context or RUN + "validating " + object.name
+    num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context=context)
     if not targets is None:
-        _validate_targets(object, targets, num_inputs_sets)
+        _validate_targets(object, targets, num_inputs_sets, context=context)
 
     # INITIALIZATION
     if reset_clock:
-        CentralClock.trial = 0
-        CentralClock.time_step = 0
+        clock.trial = 0
+        clock.time_step = 0
     if initialize:
         object.initialize()
 
@@ -539,12 +542,14 @@ def run(object,
                         for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
                             process_target_projection.sender.value = targets[input_num][i]
 
-            result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
+            if RUN in context and not EVC_SIMULATION in context:
+                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+            result = object.execute(inputs[input_num][time_step],clock=clock, time_scale=time_scale, context=context)
 
             if call_after_time_step:
                 call_after_time_step()
 
-            CentralClock.time_step += 1
+            clock.time_step += 1
 
         # object.results.append(result)
         if isinstance(result, Iterable):
@@ -556,7 +561,7 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        CentralClock.trial += 1
+        clock.trial += 1
 
     # Restore learning state
     try:
@@ -629,7 +634,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
-def _construct_from_stimulus_list(object, stimuli, is_target):
+def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
 
     object_type = get_object_type(object)
 
@@ -659,10 +664,11 @@ def _construct_from_stimulus_list(object, stimuli, is_target):
         inputs_array = np.concatenate(inputs_array)
     inputs = inputs_array.tolist()
 
+    context = context or RUN + ' constructing stimuli for ' + object.name
     num_input_sets = _validate_inputs(object=object,
                                       inputs=inputs,
                                       num_phases=1,
-                                      context='contruct_inputs for ' + object.name)
+                                      context=context)
 
     # If inputs are for a mechanism or process, no need to deal with phase so just return
     if object_type in {MECHANISM, PROCESS} or is_target:
@@ -992,7 +998,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
                        format(object.__class__.__name__))
 
-def _validate_targets(object, targets, num_input_sets):
+def _validate_targets(object, targets, num_input_sets, context=None):
     """
     num_targets = number of target stimuli per execution
     num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
