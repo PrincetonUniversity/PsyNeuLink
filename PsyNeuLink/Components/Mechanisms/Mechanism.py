@@ -1210,7 +1210,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Components.Projections.Projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def execute(self, input=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
+    def execute(self, input=None, runtime_params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """Carry out a single execution of the mechanism.
 
         Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value
@@ -1343,6 +1343,7 @@ class Mechanism_Base(Mechanism):
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self.__execute__(variable=self.variable,
                                                  runtime_params=runtime_params,
+                                                 clock=clock,
                                                  time_scale=time_scale,
                                                  context=context)
                 return np.atleast_2d(return_value)
@@ -1420,6 +1421,7 @@ class Mechanism_Base(Mechanism):
 
         self.value = self.__execute__(variable=self.inputValue,
                                       runtime_params=runtime_params,
+                                      clock=clock,
                                       time_scale=time_scale,
                                       context=context)
 
@@ -1609,6 +1611,7 @@ class Mechanism_Base(Mechanism):
     def __execute__(self,
                     variable=None,
                     runtime_params=None,
+                    clock=CentralClock,
                     time_scale=None,
                     context=None):
         return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)

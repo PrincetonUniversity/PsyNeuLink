@@ -433,6 +433,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def __execute__(self,
                 variable=None,
                 runtime_params=None,
+                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute TransferMechanism function and return transform of input

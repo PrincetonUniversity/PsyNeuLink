@@ -1426,7 +1426,9 @@ class System_Base(System):
 
     def execute(self,
                 input=None,
+                clock=CentralClock,
                 time_scale=None,
+                # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
@@ -1523,7 +1525,8 @@ class System_Base(System):
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
         # MODIFIED 12/21/16 NEW:
-        self._execute_processing(context=context)
+        self._execute_processing(clock=clock, context=context)
+        # self._execute_processing(clock=clock, time_scale=time_scale, context=context)
         # MODIFIED 12/21/16 END
         #endregion
 
@@ -1538,7 +1541,8 @@ class System_Base(System):
             # Execute each Mechanism in self.executionList, in the order listed during its phase
             # self._execute_learning(context=context)
             # self._execute_learning(context=context.replace("EXECUTING", "LEARNING"))
-            self._execute_learning(context=context + LEARNING)
+            self._execute_learning(clock=clock, context=context + LEARNING)
+            # self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
             # MODIFIED 12/21/16 END
 
         # endregion
@@ -1553,7 +1557,8 @@ class System_Base(System):
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
-                    self.controller.execute(time_scale=TimeScale.TRIAL,
+                    self.controller.execute(clock=clock,
+                                            time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
                                             context=context)
                     if self._report_system_output:
@@ -1570,7 +1575,8 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
-    def _execute_processing(self, context=None):
+    def _execute_processing(self, clock=CentralClock, context=None):
+    # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
         for i in range(len(self.executionList)):
 
@@ -1599,7 +1605,9 @@ class System_Base(System):
                 process_names = list(p.name for p in process_keys_sorted)
 
                 mechanism.execute(time_scale=self.timeScale,
+                                 # time_scale=time_scale,
                                  runtime_params=params,
+                                 clock=clock,
                                  context=context +
                                          "| mechanism: " + mechanism.name +
                                          " [in processes: " + str(process_names) + "]")
@@ -1624,7 +1632,8 @@ class System_Base(System):
                 self.variable = convert_to_np_array(self.input, 2) * 0
             i += 1
 
-    def _execute_learning(self, context=None):
+    def _execute_learning(self, clock=CentralClock, context=None):
+    # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
 
         # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
@@ -1649,7 +1658,9 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(time_scale=self.timeScale,
+            component.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
                               context=context_str)
             # # TEST PRINT:
             # print ("EXECUTING MONITORING UPDATES: ", component.name)
@@ -1675,7 +1686,9 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(time_scale=self.timeScale,
+            component.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
                               context=context_str)
 
             # # TEST PRINT:
@@ -2069,6 +2082,43 @@ class System_Base(System):
             d_iter = iter(dependency_set)
             result.extend(sorted(dependency_set, key=lambda item : next(d_iter).mechanism.name))
         return result
+
+    def _cache_state(self):
+
+        # http://stackoverflow.com/questions/11218477/how-can-i-use-pickle-to-save-a-dict
+        # import pickle
+        #
+        # a = {'hello': 'world'}
+        #
+        # with open('filename.pickle', 'wb') as handle:
+        #     pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        #
+        # with open('filename.pickle', 'rb') as handle:
+        #     b = pickle.load(handle)
+        #
+        # print a == b
+
+        # >>> import dill
+        # >>> pik = dill.dumps(d)
+
+        # import pickle
+        # with open('cached_PNL_sys.pickle', 'wb') as handle:
+        #     pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        # import dill
+        # self.cached_system = dill.dumps(self, recurse=True)
+
+        # def mechanisms_cache:
+        #     self.input_value = []
+        #     self.value= []
+        #     self.output_value = []
+        #
+        # for mech in self.mechanisms:
+        #     for
+        pass
+
+    def _restore_state(self):
+        pass
 
     @property
     def mechanisms(self):

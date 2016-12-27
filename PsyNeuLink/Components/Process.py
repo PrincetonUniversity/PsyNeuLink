@@ -1921,7 +1921,9 @@ class Process_Base(Process):
                 input=None,
                 # params=None,
                 target=None,
+                clock=CentralClock,
                 time_scale=None,
+                # time_scale=TimeScale.TRIAL,
                 runtime_params=None,
                 context=None
                 ):
@@ -2024,7 +2026,9 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.execute(time_scale=self.timeScale,
+            mechanism.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
                               runtime_params=params,
                               context=context)
             if report_output:
@@ -2039,7 +2043,8 @@ class Process_Base(Process):
 
         # Execute learningSignals
         if self._learning_enabled:
-            self._execute_learning(context=context)
+            self._execute_learning(clock=clock, context=context)
+            # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
 
         if report_output:
             self._report_process_completion(separator=True)
@@ -2047,7 +2052,8 @@ class Process_Base(Process):
         # FIX:  SHOULD THIS BE JUST THE VALUE OF THE PRIMARY OUTPUTSTATE, OR OF ALL OF THEM?
         return self.outputState.value
 
-    def _execute_learning(self, context=None):
+    def _execute_learning(self, clock=CentralClock, context=None):
+    # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """ Update each LearningProjection for mechanisms in _mech_tuples of process
 
         # Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards

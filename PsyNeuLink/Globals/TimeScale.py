@@ -16,6 +16,7 @@ class TimeScale(Enum):
     TRIAL = 1
     BOUNDS = 2 # Used for type checking where TimeScale value is passed
 
+
 # Central clock
 class CentralClock:
     """Central clock used by all mechanisms, processes and systems.
@@ -24,6 +25,13 @@ class CentralClock:
     trial = 0
     block = 0
     task = 0
+
+    def __init__(self):
+        self.time_step = 0
+        self.trial = 0
+        self.block = 0
+        self.task = 0
+
 
 class CurrentTime:
     def __init__(self):
