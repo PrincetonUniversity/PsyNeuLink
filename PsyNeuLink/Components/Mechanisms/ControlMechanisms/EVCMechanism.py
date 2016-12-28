@@ -327,10 +327,10 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 # These are place-marker definitions to allow forward referencing of functions defined at end of module
-# def _control_signal_search_function(allocations=None, ctlr=None):
-#     return __control_signal_search_function(controller=None)
-def _control_signal_search_function(**kwargs):
-    return __control_signal_search_function(**kwargs)
+# def _control_signal_grid_search(allocations=None, ctlr=None):
+#     return __control_signal_grid_search(controller=None)
+def _control_signal_grid_search(**kwargs):
+    return __control_signal_grid_search(**kwargs)
 CONTROLLER = 'controller'
 
 
@@ -343,7 +343,7 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_type=IntegratorMechanism,                                          \
     prediction_mechanism_params=None,                                                       \
     monitor_for_control=None,                                                               \
-    function=_control_signal_search_function,                                               \
+    function=_control_signal_grid_search,                                                   \
     value_function=_value_function,                                                         \
     outcome_aggregation_function=LinearCombination(offset=0,scale=1,operation=PRODUCT),     \
     cost_aggregation_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM),        \
@@ -489,6 +489,8 @@ class EVCMechanism(ControlMechanism_Base):
         the function used to combine the aggregated value of the monitored outputStates with the aggregated cost of
         the control signal values for a given control allocation policy, to determine the **EVC** for that policy.
 
+    value_function : XXXXX
+
     outcome_aggregation_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,
     operation=PRODUCT)
         the function used to combine the values of the outputStates in ``monitoredOutputStates``.
@@ -497,6 +499,8 @@ class EVCMechanism(ControlMechanism_Base):
         the function used to combine the cost of the mechanism's ControlProjections.  The :keyword:``weights``
         argument can be used to scale the contribution of the cost of each control signal;  it must be an array of
         scalar values, the length of which is equal to the number of the EVCMechanism's outputStates.
+
+    combine_outcomes_and_costs_function : XXXXX
 
     controlSignalSearchSpace : 2d np.array
         an array that contains arrays of control allocation policies.  Each control allocation policy contains one
@@ -560,7 +564,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
-                 function=_control_signal_search_function,
+                 function=_control_signal_grid_search,
                  value_function=_value_function,
                  outcome_aggregation_function=LinearCombination(offset=0,
                                                                 scale=1,
@@ -1109,7 +1113,7 @@ class EVCMechanism(ControlMechanism_Base):
         """Determine allocationPolicy for next run of system
 
         Calls ``function``
-        Default for ``function`` is _control_signal_search_function()
+        Default for ``function`` is _control_signal_grid_search()
 
         """
 
@@ -1130,32 +1134,41 @@ class EVCMechanism(ControlMechanism_Base):
 
         return allocation_policy
 
-    # MODIFIED 12/27/16 OLD:
-    # def _get_simulation_system_inputs(self, phase):
-    #     """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
-    #
-    #     Returns: 2D np.array
-    #
-    #     """
-    #
-    #     simulation_inputs = np.empty_like(self.system.input, dtype=float)
-    #
-    #     # For each prediction mechanism
-    #     for prediction_mech in self.predictionMechanisms:
-    #
-    #         # Get the index for each process that uses simulated input from the prediction mechanism
-    #         for predicted_process in prediction_mech.use_for_processes:
-    #             # process_index = self.system.processes.index(predicted_process)
-    #             process_index = self.system._processList.processes.index(predicted_process)
-    #             # Assign the prediction mechanism's value as the simulated input for the process
-    #             #    in the phase at which it is used
-    #             if prediction_mech.phaseSpec == phase:
-    #                 simulation_inputs[process_index] = prediction_mech.value
-    #             # For other phases, assign zero as the simulated input to the process
-    #             else:
-    #                 simulation_inputs[process_index] = np.atleast_1d(0)
-    #     return simulation_inputs
-    # MODIFIED 12/27/16 END
+    def run_simulation(self, allocation_vector, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
+
+        if self.value is None:
+            # Initialize value if it is None
+            self.value = self.allocationPolicy
+
+        # Implement the current allocationPolicy over ControlSignals (outputStates),
+        #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
+        for i in range(len(self.controlSignals)):
+            # self.controlSignals[list(self.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
+            self.value[i] = np.atleast_1d(allocation_vector[i])
+        self._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+
+        # Execute simulation run of system for the current allocationPolicy
+        sim_clock = Clock('EVC SIMULATION CLOCK')
+
+        # # MODIFIED 12/25/16 OLD [EXECUTES SYSTEM DIRECTLY]:
+        # for i in range(self.system._phaseSpecMax+1):
+        #     sim_clock.time_step = i
+        #     simulation_inputs = self._get_simulation_system_inputs(phase=i)
+        #     self.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
+        #     # # TEST PRINT:
+        #     # print ("SIMULATION INPUT: ", simulation_inputs)
+
+        # MODIFIED 12/25/16 NEW [USES SYSTEM.RUN]:
+        self.system.run(inputs=list(self.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
+
+        # Get cost of each controlSignal
+        for control_signal in self.controlSignals.values():
+            self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
+        # Get outcomes for current allocationPolicy
+        #    = the values of the monitored output states (self.inputStates)
+        #    stored in self.inputValue = list(self.variable)
+            self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+
 
     def _update_predicted_input(self):
         """Assign values of predictionMechanisms to predictedInput
@@ -1182,9 +1195,36 @@ class EVCMechanism(ControlMechanism_Base):
                 self.predictedInput[i][j] = prediction_mech.outputState.value
 
     # MODIFIED 12/27/16 OLD:
+    # [USED BY __control_signal_grid_search() FOR DIRECT EXECUTION OF system;
+    #  REPLACED BY self.predictedInputs and system.run()]
+    #
+    # def _get_simulation_system_inputs(self, phase):
+    #     """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
+    #
+    #     Returns: 2D np.array
+    #
+    #     """
+    #
+    #     simulation_inputs = np.empty_like(self.system.input, dtype=float)
+    #
+    #     # For each prediction mechanism
+    #     for prediction_mech in self.predictionMechanisms:
+    #
+    #         # Get the index for each process that uses simulated input from the prediction mechanism
+    #         for predicted_process in prediction_mech.use_for_processes:
+    #             # process_index = self.system.processes.index(predicted_process)
+    #             process_index = self.system._processList.processes.index(predicted_process)
+    #             # Assign the prediction mechanism's value as the simulated input for the process
+    #             #    in the phase at which it is used
+    #             if prediction_mech.phaseSpec == phase:
+    #                 simulation_inputs[process_index] = prediction_mech.value
+    #             # For other phases, assign zero as the simulated input to the process
+    #             else:
+    #                 simulation_inputs[process_index] = np.atleast_1d(0)
+    #     return simulation_inputs
+    #
     # def _assign_simulation_inputs(self):
     #
-    #     # FIX: NEED TO COORDINATE THIS WITH _get_simulation_inputs (ABOVE) TO ELIMINATE NEED TO SPECIFY PHASE
     #     # For each prediction mechanism, assign its value as input to corresponding process for the simulation
     #     for mech in self.predictionMechanisms:
     #         # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
@@ -1197,7 +1237,7 @@ class EVCMechanism(ControlMechanism_Base):
     # MODIFIED 12/27/16 END
 
 
-def __control_signal_search_function(controller=None, **kwargs):
+def __control_signal_grid_search(controller=None, **kwargs):
     """Grid searches combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
 
     COMMENT:
@@ -1279,7 +1319,7 @@ def __control_signal_search_function(controller=None, **kwargs):
             return defaultControlAllocation
         else:
             raise EVCError("controller argument must be specified in call to "
-                           "EVCMechanism.__control_signal_search_function")
+                           "EVCMechanism.__control_signal_grid_search")
 
     #region CONSTRUCT SEARCH SPACE
     # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
@@ -1496,10 +1536,6 @@ def __control_signal_search_function(controller=None, **kwargs):
     return controller.allocationPolicy
     #endregion
 
-    def run_simulation(self):
-        pass
-
-
 def _compute_EVC(args):
     """compute EVC for a specified allocation policy
 
@@ -1519,40 +1555,10 @@ def _compute_EVC(args):
 
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
-    #region RUN SIMULATION
-    if ctlr.value is None:
-        # Initialize value if it is None
-        ctlr.value = ctlr.allocationPolicy
-
-    # Implement the current allocationPolicy over ControlSignals (outputStates),
-    #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
-    for i in range(len(ctlr.controlSignals)):
-        # ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
-        ctlr.value[i] = np.atleast_1d(allocation_vector[i])
-    ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-
-    # Execute simulation run of system for the current allocationPolicy
-    sim_clock = Clock('EVC SIMULATION CLOCK')
-
-    # # MODIFIED 12/25/16 OLD [EXECUTES SYSTEM DIRECTLY]:
-    # for i in range(ctlr.system._phaseSpecMax+1):
-    #     sim_clock.time_step = i
-    #     simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
-    #     ctlr.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
-    #     # # TEST PRINT:
-    #     # print ("SIMULATION INPUT: ", simulation_inputs)
-
-    # MODIFIED 12/25/16 NEW [USES SYSTEM.RUN]:
-    ctlr.system.run(inputs=list(ctlr.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
-
-    # Get cost of each controlSignal
-    for control_signal in ctlr.controlSignals.values():
-        ctlr.controlSignalCosts = np.append(ctlr.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-    # Get outcomes for current allocationPolicy
-    #    = the values of the monitored output states (self.inputStates)
-    #    stored in self.inputValue = list(self.variable)
-        ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-    #endregion
+    ctlr.run_simulation(allocation_vector=allocation_vector,
+                        runtime_params=runtime_params,
+                        time_scale=time_scale,
+                        context=context)
 
     #region COMPUTE EVC
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION](ctlr, ctlr.inputValue, ctlr.controlSignalCosts, context=context)
