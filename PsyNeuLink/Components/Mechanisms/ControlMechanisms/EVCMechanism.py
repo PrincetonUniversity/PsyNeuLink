@@ -8,6 +8,7 @@
 
 # *************************************************  EVCMechanism ******************************************************
 
+#FIX: SEARCH FOR :ref`xxx <LINK>`
 """
 Overview
 --------
@@ -16,30 +17,48 @@ An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that optimizes a
 so as to maximize the performance of the system to which it belongs. It implements a form of the EVC Theory described
 in Shenhav et al. (2013).  The *intensity* of each control signal determines the value of a parameter of a  mechanism
 in the system.  In each round of execution, the EVCMechanism searches for the configuration of control signals that
-yields the best performance for the sysetm according to a specified *objective function*.
+yields the best performance for the system according to a specified :ref:`objective function <LINK>`.
 
-Each control signal is implemented as a :doc:`ControlProjection`, that regulates the parameter of a mechanism,
-or the parameter of a mechanism's function, in the system.  The ``value`` of the ControlProjection represents the
-intensity of that control signal. Collectively, the control signals govern the system's behavior.  A particular
-combination of control signal values is called an *allocation policy*.  The EVCMechanism evaluates the  system's
-performance under each allocation policy, selects the one that generates the best performance, and then assigns the
+Each control signal is implemented as an outputState of the EVCMechanism, and a corresponding  :doc:`ControlProjection`
+that regulates the parameter of a mechanism or a mechanism's function in the system.  The ``value`` of the outputState
+(and its associated ControlProjection) represents the intensity of that control signal. Collectively, the control
+signals govern the system's behavior.  A particular combination of control signal values is called an
+:ref:`allocation policy <LINK>`.  The EVCMechanism evaluates the  system's performance under each allocation policy,
+selects the one that generates the best performance according to the objective function, and then assigns the
 control signal values designated by that policy to the corresponding ControlProjections.  When the system is next
-those values are used to set the parameters for the mechanisms (and/or functions) they control.
+executed, those values are used to set the parameters for the mechanisms (and/or functions) they control.
 
-The set of allocation policies that are tested is held in the EVCMechanism's
+The set of allocation policies to be tested are specified in the EVCMechanism's
 :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute
 (see :ref:`EVCMechanism_ControlSignalSearchSpace`. The EVCMechanism executes the system using each allocation policy
-in the :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`,
-evaluates its performance under that policy and, from that, calculates the
-expected value of control (EVC) for that policy. The EVC is a cost-benefit analysis for the given policy, calculated
-as the difference between the outcome of performance and the cost of the control signals used to generate that
-outcome.  The outcome is assessed by aggregating the ``value`` of each outputState listed in the
-:py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute.  The cost of the control signals is
-assessed by aggregating the cost associated with each ControlProjection (based on its ``value`` for the policy,
-and contained in its :py:data:`cost <ControlProjection.ControlProjection.cost>` attribute).  The
+in the :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`, uses its ``function`` to
+evaluate the system's performance and calculate the expected value of control (EVC) for that policy. The EVC is a
+cost-benefit analysis for the given policy.  The default method for evaluating the system's performance and
+calculating the EVC for a given policy are described under :ref:`XXXX <LINK>`.
+
+MOVE TO BELOW:
+The default ``function`` for the EVCMechanism assesses performance of the system by conducting an exhaustive sampling
+(*grid search*) of all combinations of the :py:data:`allocation_samples <EVCMechanism.allocation_samples>` specified for each control signal.  For each policy, it executes its :py:data:`value_function` which, in turn, calls each of the following following three functions to calculate the EVC for that policy.  The mechanism's ``function`` returns the allocation policy that yielded the maximum EVC.
+
+:  CARRIES OUT ALL OF THE FOLLOWING:
+
+The outcome is assessed by aggregating the ``value`` of each outputState listed in the
+:py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute.
+:py:data:`outcome_aggregation_function`
+
+The cost of the control signals is assessed by aggregating the cost associated with each ControlProjection, based on
+its ``value`` for the policy, and assigned to its :py:data:`cost <ControlProjection.ControlProjection.cost>` attribute.
+:py:data:`cost_aggregation_function`
+
+The EVC is calculated as the difference between the outcome of performance and the cost of the control signals used
+to generate that outcome.
+:py:data:`combine_outcomes_and_costs_function`
+
+The
 policy that generates the maximum EVC is implemented, and used on the next round of execution. The calculation of the
 EVC can be customized as described in :ref:`EVCMechanism_Parameters` and
 :ref:`EVCMechanism_Parameterizing_EVC_Calculation>` below.
+
 
 .. _EVCMechanism_Creation:
 
@@ -63,6 +82,8 @@ it is generated automatically when a system is created and an EVCMechanism is sp
     prediction mechanisms and prediction processes for an EVCMechanism are listed in its
     :py:data:`predictionMechanisms <EVCMechanism.predictionMechanisms>` and
     :py:data:`predictionProcesses <EVCMechanism.predictionProcesses>` attributes, respectively.
+
+* **Control Signals** -- THESE ARE OUTPUTSTATES,  HAVE INTENSITY AND COST
   ..
   * **ControlProjections** -- these are used by the EVCMechanism to regulate the parameters of mechanisms, or their
     functions that have been specified for control.  A ControlProjection can be assigned to a parameter wherever the
@@ -1176,65 +1197,6 @@ class EVCMechanism(ControlMechanism_Base):
     # MODIFIED 12/27/16 END
 
 
-def _compute_EVC(args):
-    """compute EVC for a specified allocation policy
-
-    IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
-
-    Args:
-        ctlr (EVCMechanism)
-        allocation_vector (1D np.array): allocation policy for which to compute EVC
-        runtime_params (dict): runtime params passed to ctlr.update
-        time_scale (TimeScale): time_scale passed to ctlr.update
-        context (value): context passed to ctlr.update
-
-    Returns (float, float, float):
-        (EVC_current, aggregated_outcomes, aggregated_costs)
-
-    """
-    ctlr, allocation_vector, runtime_params, time_scale, context = args
-    if ctlr.value is None:
-        # Initialize value if it is None
-        ctlr.value = ctlr.allocationPolicy
-
-    # Implement the current allocationPolicy over ControlSignals (outputStates),
-    #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
-    for i in range(len(ctlr.controlSignals)):
-        # ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
-        ctlr.value[i] = np.atleast_1d(allocation_vector[i])
-    ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-
-    # Execute simulation run of system for the current allocationPolicy
-    sim_clock = Clock('EVC SIMULATION CLOCK')
-
-    # # MODIFIED 12/25/16 OLD [EXECUTES SYSTEM DIRECTLY]:
-    # for i in range(ctlr.system._phaseSpecMax+1):
-    #     sim_clock.time_step = i
-    #     simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
-    #     ctlr.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
-    #     # # TEST PRINT:
-    #     # print ("SIMULATION INPUT: ", simulation_inputs)
-
-    # MODIFIED 12/25/16 NEW [USES SYSTEM.RUN]:
-    ctlr.system.run(inputs=list(ctlr.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
-
-    # Get cost of each controlSignal
-    for control_signal in ctlr.controlSignals.values():
-        ctlr.controlSignalCosts = np.append(ctlr.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-    # Get outcomes for current allocationPolicy
-    #    = the values of the monitored output states (self.inputStates)
-    #    stored in self.inputValue = list(self.variable)
-        ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-
-    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION](ctlr, ctlr.inputValue, ctlr.controlSignalCosts, context=context)
-
-    if PY_MULTIPROCESSING:
-        return
-
-    else:
-        return (EVC_current)
-
-
 def __control_signal_search_function(controller=None, **kwargs):
     """Grid searches combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
 
@@ -1533,6 +1495,74 @@ def __control_signal_search_function(controller=None, **kwargs):
     controller.allocationPolicy = np.array(controller.EVCmaxPolicy).reshape(len(controller.EVCmaxPolicy), -1)
     return controller.allocationPolicy
     #endregion
+
+    def run_simulation(self):
+        pass
+
+
+def _compute_EVC(args):
+    """compute EVC for a specified allocation policy
+
+    IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
+
+    Args:
+        ctlr (EVCMechanism)
+        allocation_vector (1D np.array): allocation policy for which to compute EVC
+        runtime_params (dict): runtime params passed to ctlr.update
+        time_scale (TimeScale): time_scale passed to ctlr.update
+        context (value): context passed to ctlr.update
+
+    Returns (float, float, float):
+        (EVC_current, aggregated_outcomes, aggregated_costs)
+
+    """
+
+    ctlr, allocation_vector, runtime_params, time_scale, context = args
+
+    #region RUN SIMULATION
+    if ctlr.value is None:
+        # Initialize value if it is None
+        ctlr.value = ctlr.allocationPolicy
+
+    # Implement the current allocationPolicy over ControlSignals (outputStates),
+    #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
+    for i in range(len(ctlr.controlSignals)):
+        # ctlr.controlSignals[list(ctlr.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
+        ctlr.value[i] = np.atleast_1d(allocation_vector[i])
+    ctlr._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+
+    # Execute simulation run of system for the current allocationPolicy
+    sim_clock = Clock('EVC SIMULATION CLOCK')
+
+    # # MODIFIED 12/25/16 OLD [EXECUTES SYSTEM DIRECTLY]:
+    # for i in range(ctlr.system._phaseSpecMax+1):
+    #     sim_clock.time_step = i
+    #     simulation_inputs = ctlr._get_simulation_system_inputs(phase=i)
+    #     ctlr.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
+    #     # # TEST PRINT:
+    #     # print ("SIMULATION INPUT: ", simulation_inputs)
+
+    # MODIFIED 12/25/16 NEW [USES SYSTEM.RUN]:
+    ctlr.system.run(inputs=list(ctlr.predictedInput), clock=sim_clock, time_scale=time_scale, context=context)
+
+    # Get cost of each controlSignal
+    for control_signal in ctlr.controlSignals.values():
+        ctlr.controlSignalCosts = np.append(ctlr.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
+    # Get outcomes for current allocationPolicy
+    #    = the values of the monitored output states (self.inputStates)
+    #    stored in self.inputValue = list(self.variable)
+        ctlr._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+    #endregion
+
+    #region COMPUTE EVC
+    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION](ctlr, ctlr.inputValue, ctlr.controlSignalCosts, context=context)
+    #endregion
+
+    if PY_MULTIPROCESSING:
+        return
+
+    else:
+        return (EVC_current)
 
 
 def __value_function(controller, outcomes, costs, context):
