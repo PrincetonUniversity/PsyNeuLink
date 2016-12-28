@@ -81,7 +81,7 @@
 # DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
 #                can take variable, params, time_scale, and context as params, along with any of its own
 
-#           FROM EVCMechanism.control_signal_search_function:
+#           FROM EVCMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
 #             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
 #             Must return an allocation policy compatible with controller.allocationPolicy:
