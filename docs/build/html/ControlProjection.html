@@ -242,12 +242,12 @@ The default is <code class="xref py py-class docutils literal"><span class="pre"
 <a class="reference internal" href="#ControlProjection.ControlProjection.durationCost" title="ControlProjection.ControlProjection.durationCost"><code class="xref py py-data docutils literal"><span class="pre">durationCost</span></code></a>),
 and the total cost (<a class="reference internal" href="#ControlProjection.ControlProjection.cost" title="ControlProjection.ControlProjection.cost"><code class="xref py py-data docutils literal"><span class="pre">cost</span></code></a>.</p>
 <p id="controlprojection-toggle-costs"><em>Toggling Cost Functions</em>.  Any of the cost functions (except the <code class="xref std std-keyword docutils literal"><span class="pre">COST_COMBINATION_FUNCTION</span></code>) can be
-enabled or disabled using the <a class="reference internal" href="#ControlProjection.ControlProjection.toggle_cost_function" title="ControlProjection.ControlProjection.toggle_cost_function"><code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code></a> method
+enabled or disabled using the <code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code> method
 to turn it <code class="xref std std-keyword docutils literal"><span class="pre">ON</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">OFF</span></code>.  If it is disabled, that component of the cost is not included in the
 ControlProjection&#8217;s <a class="reference internal" href="#ControlProjection.ControlProjection.cost" title="ControlProjection.ControlProjection.cost"><code class="xref py py-data docutils literal"><span class="pre">cost</span></code></a> attribute.  A cost function  can also be permanently
 disabled for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> to its argument in the constructor (or the
 corresponding entry in its <code class="docutils literal"><span class="pre">params</span></code> dictionary).  If a cost function is permanently disabled for a ControlProjection,
-it cannot be re-enabled using <a class="reference internal" href="#ControlProjection.ControlProjection.toggle_cost_function" title="ControlProjection.ControlProjection.toggle_cost_function"><code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code></a>.</p>
+it cannot be re-enabled using <code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code>.</p>
 <p><em>Additional Attributes</em>.  In addition to the intensity and cost attributes described above, a ControlProjection has
 <a class="reference internal" href="#ControlProjection.ControlProjection.lastAllocation" title="ControlProjection.ControlProjection.lastAllocation"><code class="xref py py-data docutils literal"><span class="pre">lastAllocation</span></code></a> and
 <a class="reference internal" href="#ControlProjection.ControlProjection.lastIntensity" title="ControlProjection.ControlProjection.lastIntensity"><code class="xref py py-data docutils literal"><span class="pre">lastIntensity</span></code></a> attributes that store the values associated with its
@@ -275,14 +275,8 @@ updating).</p>
 <div class="section" id="class-reference">
 <span id="controlprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="ControlProjection.ControlSignalCostOptions">
-<em class="property">class </em><code class="descclassname">ControlProjection.</code><code class="descname">ControlSignalCostOptions</code><a class="headerlink" href="#ControlProjection.ControlSignalCostOptions" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
-<dl class="class">
 <dt id="ControlProjection.ControlProjection">
-<em class="property">class </em><code class="descclassname">ControlProjection.</code><code class="descname">ControlProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear                                       intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ControlProjection.</code><code class="descname">ControlProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear                                       params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div>Implements a projection that controls the parameter of a mechanism&#8217;s function.</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -448,19 +442,6 @@ if not is specified, a default is assigned by ProjectionRegistry
 Specified in the prefs argument of the call to create the projection;
 if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlProjection.ControlProjection.toggle_cost_function">
-<code class="descname">toggle_cost_function</code><span class="sig-paren">(</span><em>cost_function_name</em>, <em>assignment=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection.toggle_cost_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enables/disables use of a cost function.</p>
-<p><code class="docutils literal"><span class="pre">cost_function_name</span></code> should be a keyword (list under <a class="reference internal" href="#controlprojection-structure"><span class="std std-ref">Structure</span></a>).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ControlProjection.ControlProjection.get_costs">
-<code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlProjection.ControlProjection.get_costs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensityCost</span></code>, <code class="docutils literal"><span class="pre">adjustmentCost</span></code> and <code class="docutils literal"><span class="pre">durationCost</span></code></p>
 </dd></dl>
 
 </dd></dl>
