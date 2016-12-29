@@ -14,118 +14,47 @@
 Overview
 --------
 
-A ControlProjection implements a control signal used to modify the value of a parameter of a mechanism's function.  It
-takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to compute the control signal's
-:py:data:`intensity <ControlProjection.intensity>`, which is assigned as the ControlProjection's value.  The
-parameterState that receives the ControlProjection uses its value to regulate the value of a parameter of a
-mechanism's ``function``. A ControlProjection also calculates a :py:data:`cost <ControlProjection.cost>` for the
-control signal, based on its intensity  and/or its time course, that can be used by a ControlMechanism to adapt the
-ControlProjection's :py:data:`allocation <ControlProjection.allocation>`.
+A ControlProjection is a :doc:`projection <Projection> that projects to the :doc:`parameterState <ParameterState>`
+of a mechanism.  It takes the value of an outputState of another mechanism (e.g., usually a :doc:`ControlMechanism`),
+and uses it to modify the value of the parameter associated with the parameterState to which it projects.
 
 .. _ControlProjection_Creation:
 
 Creating a ControlProjection
 ----------------------------
 
-A ControlProjection can be created using any of the standard ways to  :ref:`create a projection <Projection_Creation>`,
+A ControlProjection can be created using any of the standard ways to :ref:`create a projection <Projection_Creation>`,
 or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism,
-MappingProjection, or their ``function``.  If a ConrolProjection is created using its constructor on its own,
-the ``receiver`` argument must be specified.  If it is included in a parameter specification, the parameterState for
-the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If its ``sender`` is not
-specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism that is part of a
-system, then the ControlProjection's ``sender`` is assigned to an outputState of the system's
+MappingProjection, or the ``function`` of either of these.  If a ControlProjection is created using its constructor on
+its own, the ``receiver`` argument must be specified.  If it is included in a parameter specification,
+the parameterState for the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If
+its ``sender`` is not specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism
+that is part of a system, then the ControlProjection's ``sender`` is assigned to an outputState of the system's
 :ref:`controller  <System_Execution_Control>`. Otherwise, the ``sender`` is assigned to the outputState of a
 :any:`DefaultControlMechanism`.
-
-The four functions used to calculate the :ref:`cost of a control signal <ControlProjection_Cost_Functions>`
-can be specified  either in arguments to the ControlProjection's constructor, or in a ``params dictionary`` (see
-:ref:`ControlProjection_Cost_Functions` below). A custom function can be assigned to any cost function, so long as
-it accepts the appropriate type of value and returns a scalar.  Each of the cost functions can be
-:ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
-ControlProjection's :py:data:`cost <ControlProjection.cost>`.  A cost function can also be permanently disabled for
-its ControlProjection by assigning :keyword:`None` to the argument for that function in its constructor (or the
-appropriate entry in its ``params`` dictionary). Cost functions that are permanently disabled in this way cannot be
-re-enabled.
-
-A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
-specifies the values of its :py:data:`allocation <ControlProjection.allocation>` that will be sampled by
-ControlMechanisms that adaptively adjust ControlProjection allocations (e.g., :doc:`EVCMechanism`).  The default is
-an array of values from 0.1 to 1.0 in steps of 0.1.
 
 .. _ControlProjection_Structure:
 
 Structure
 ---------
 
-*Intensity*. The ControlProjection's ``function`` uses its :py:data:`allocation <ControlProjection.allocation>` to
-calculate a control signal :py:data:`intensity <ControlProjection.intensity>`. The default is an identity function
-``(Linear(slope=1, intercept=0))``: the ControlProjection sets its control signal
-:py:data:`intensity <ControlProjection.intensity>` equal to its :py:data:`allocation <ControlProjection.allocation>`.
-The ``function`` can be assigned another :py:doc:`TransferFunction`, or any other function that takes and returns a
-scalar value.
+A ControlProjection has the same structure as a :doc:`Projection`.  Its
+:py:data:`sender <Projection.Projection_Base.sender>` can be the outputState of any mechanism, but is generally a
+:doc:`ControlMechansm`, and commonly the :doc:`ControlSignal` of an :doc:`EVCMechanism.`.  Its
+:py:data:`receiver <Projection.Projection_Base.receiver>` is always the :doc:`paramterState <ParameterState>` of a
+mechanism or :doc:`MappingProjection`, that is associated with a parameter of either the parameterState's owner or
+it owner's ``function``.  The ``function`` of a ControlProjection is, by default, the identity function;  that is,
+it uses the value of its sender to modify the value of the parameter that it controls.
 
-*Costs*. A ControlProjection has four cost functions that determine how the ControlProjection computes the cost of
-its control signal, all of which can be customized, and the first three of which can be enabled or disabled:
-
-.. _ControlProjection_Cost_Functions:
-
-* :keyword:`INTENSTITY_COST_FUNCTION`
-    Calculates a cost based on the control signal :py:data:`intensity <ControlProjection.intensity>`.
-    It can be any :class:`TransferFunction`, or any other function  that takes and returns a scalar value.
-    The default is :class:`Exponential`.
-
-* :keyword:`ADJUSTMENT_COST_FUNCTION`
-    Calculates a cost based on a change in the control signal :py:data:`intensity <ControlProjection.intensity>`
-    from its last value. It can be any :class:`TransferFunction`, or any other function that takes and returns a
-    scalar value. The default is :py:class:`Function.Linear`.
-
-* :keyword:`DURATION_COST_FUNCTION`
-    Calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
-    It can be any :class:`IntegratorFunction`, or any other function  that takes a list or array of two values and
-    returns a scalar value. The default is :class:`Integrator`.
-
-* :keyword:`COST_COMBINATION_FUNCTION`
-    Combines the results of any cost functions that are enabled, and assigns the result as the ControlProjection's
-    :py:data:`cost <ControlProjection.cost>`.  It can be any function that takes an array and returns a scalar value.
-    The default is :py:class:`Reduce`.
-
-An attribute is assigned for each component of the cost
-(:py:data:`intensityCost <ControlProjection.intensityCost>`,
-:py:data:`adjustmentCost <ControlProjection.adjustmentCost>`, and
-:py:data:`durationCost <ControlProjection.durationCost>`),
-and the total cost (:py:data:`cost <ControlProjection.cost>`.
-
-.. _ControlProjection_Toggle_Costs:
-
-*Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
-enabled or disabled using the :py:meth:`toggle_cost_function <ControlProjection.toggle_cost_function>` method
-to turn it :keyword:`ON` or :keyword:`OFF`.  If it is disabled, that component of the cost is not included in the
-ControlProjection's :py:data:`cost <ControlProjection.cost>` attribute.  A cost function  can also be permanently
-disabled for the ControlProjection by assigning :keyword:`None` to its argument in the constructor (or the
-corresponding entry in its ``params`` dictionary).  If a cost function is permanently disabled for a ControlProjection,
-it cannot be re-enabled using :py:meth:`toggle_cost_function <ControlProjection.toggle_cost_function>`.
-
-*Additional Attributes*.  In addition to the intensity and cost attributes described above, a ControlProjection has
-:py:data:`lastAllocation <ControlProjection.lastAllocation>` and
-:py:data:`lastIntensity <ControlProjection.lastIntensity>` attributes that store the values associated with its
-previous execution. Finally, it has an :py:data:`allocation_samples <ControlProjection.allocation_samples>` attribute,
-that is a  list of used by :ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of
-:py:data:`allocation <ControlProjection.allocation>` for the ControlProjection, in order to adaptively adjust the
-parameters that it controls (e.g., :doc:`EVCMechanism`). The default value is an array that ranges from
-0.1 to 1.0 in steps of 0.1.
 
 .. _ControlProjection_Execution:
 
 Execution
 ---------
 
-A ControlProjection uses its ``function`` to compute the :py:data:`intensity <ControlProjection.intensity>` of its
-control signal, and its :ref:`cost functions <ControlProjection_Cost_Functions> use that to compute the its
-:py:data:`cost <ControlProjection.cost>`.  The :py:data:`intensity <ControlProjection.intensity>` is assigned to the
-ControlProjection's ``value`` attribute, which is used by the parmaterState to which it projects to modify the
-corresponding parameter of the owner mechanism's function.  The :py:data:`cost <ControlProjection.cost>` is used by
-the :doc:`EVCMechanism` to determine the ControlProjection's :py:data:`allocation <ControlProjection.allocation>`
-in future executions.
+A ControlProjection uses its ``function`` to assign its value from the one received from its :py:data:`sender`*[]:
+This is used by the parmaterState to which it projects to modify the corresponding parameter of the
+parameterState's owner or its owner's ``function``.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlProjection are not applied until the
@@ -210,29 +139,7 @@ class ControlProjection(Projection_Base):
         or be able to be determined by the context in which the ControlProjection is created or assigned.
 
     function : TransferFunction : default Linear
-        converts the ControlProjection's :py:data:`allocation <ControlProjection.allocation>` into its
-        control signal :py:data:`intensity <ControlProjection.intensity>` (equal to its ``value``).
-
-    intensity_cost_function : Optional[TransferFuntion] : default Exponential
-        calculates a cost based on the control signal :py:data:`intensity <ControlProjection.intensity>`.
-        It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
-
-    adjustment_cost_function : Optiona[TransferFunction] : default Linear
-        calculates a cost based on a change in the control signal :py:data:`intensity <ControlProjection.intensity>`
-        from its last value. It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
-
-    duration_cost_function : Optional[TransferFunction] : default Linear
-        Calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
-        It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
-
-    cost_combination_function : function : default Reduce(operation=SUM)
-        Combines the results of any cost functions that are enabled, and assigns the result to
-        :py:data:`cost <ControlProjection.cost>`.
-
-    allocation_samples : list : default :keyword:`DEFAULT_ALLOCATION_SAMPLES`
-        Set of values used by ControlMechanisms that sample different allocation values in order to adaptively adjust
-        the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in steps
-        of 0.1.
+        converts the value of the ControlProjection's :pyd:data:`sender`  into its ``value``.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
@@ -252,80 +159,15 @@ class ControlProjection(Projection_Base):
     Attributes
     ----------
 
-    COMMENT:
-      ControlSignal_General_Attributes
-    COMMENT
-
     sender : OutputState of ControlProjection
-        mechanism that provides the current :py:data:`allocation <ControlProjection.allocation>` for the
-        ControlProjection.
+        mechanism that provides the current input for the ControlProjection (usuall a :doc:`ControlMechanisms`).
 
     receiver : ParameterState of Mechanism
-        parameterState for the parameter to be modified by ControlProjection.
-
-    allocation : float : default: defaultControlAllocation
-        value used as ``variable`` for ControlProjection's ``function`` to determine its control signal
-        :py:data:`intensity <ControlProjection.intensity>`.
-
-    allocationSamples : list : DEFAULT_SAMPLE_VALUES
-        set of values used by ControlMechanisms that sample different allocation values in order to
-        adaptively adjust the function of mechanisms in their systems.
-
-        .. _ControlSignal_Function_Attributes:
-
-    function : TransferFunction :  default Linear
-        converts :py:data:`allocation <ControlProjection.allocation>` into `control signal
-        :py:data:`intensity <ControlProjection.intensity>` that is provided as output to receiver of projection.
-
-    intensityCostFunction : TransferFunction : default Exponential
-        calculates "intensityCost`` from the curent value of :py:data:`intensity <ControlProjection.intensity>`.
-
-    adjustmentCostFunction : TransferFunction : default Linear
-        calculates :py:data:`adjustmentCost <ControlProjection.adjustmentCost>` based on the change in
-        :py:data:`intensity <ControlProjection.intensity>` from its last value.
-
-    durationCostFunction : IntegratorFunction : default Linear
-        calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
-
-    costCombinationFunction : function : default Reduce(operation=SUM)
-        combines the results of any cost functions that are enabled, and assigns the result to
-        :py:data:`cost <ControlProjection.cost>`.
-
-    COMMENT:
-        ControlSignal_State_Attributes:
-    COMMENT
+        :doc:`parameterState <ParameterState>` for the parameter to be modified by ControlProjection.
 
     value : float
         during initialization, assigned keyword string (either INITIALIZING or DEFERRED_INITIALIZATION);
-        during execution, returns value of :py:data:`intensity <ControlProjection.intensity>`.
-
-    intensity : float
-        output of ``function``, used to determine controlled parameter of task.
-
-    intensityCost : float
-        cost associated with current :py:data:`intensity <ControlProjection.intensity>`.
-
-    adjustmentCost : float
-        cost associated with last change to :py:data:`intensity <ControlProjection.intensity>`.
-
-    durationCost
-        intregral of :py:data:`cost <ControlProjection.cost>`.
-
-    cost : float
-        current value of ControlProjection's :py:data:`cost <ControlProjection.cost>`;
-        combined result of all cost functions that are enabled.
-
-    COMMENT:
-        ControlSignal_History_Attributes:
-    COMMENT
-
-    lastAllocation : float
-        :py:data:`allocation <ControlProjection.allocation>` for last execution of the ControlProjection.
-
-    lastIntensity : float
-        :py:data:`intensity <ControlProjection.intensity>` for last execution of the ControlProjection.
-
-        .. _ControlProjection_Cost_Functions:
+        during execution, returns the ``value`` of the ControlProjection.
 
     name : str : default ControlProjection-<index>
         the name of the ControlProjection.
@@ -404,8 +246,8 @@ class ControlProjection(Projection_Base):
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:
-            - creates projection-dedicated inputState, outputState and ControlSignalChannel in DefaultController
-            - puts them in DefaultController's inputStates, outputStates, and ControlSignalChannels attributes
+            - creates projection-dedicated inputState and outputState in DefaultController
+            - puts them in DefaultController's inputStates and outputStates attributes
             - lengthens variable of DefaultController to accommodate the ControlProjection channel
             - updates value of DefaultController (in resposne to new variable)
         Notes:
