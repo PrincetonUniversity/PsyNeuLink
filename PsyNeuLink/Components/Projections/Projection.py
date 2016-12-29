@@ -602,7 +602,7 @@ class Projection_Base(Projection):
 
         Notes:
         * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlProjection-specific inputState, outputState and ControlSignalChannel to it
+            if so, it assigns a ControlProjection-specific inputState and outputState to it
         [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
             if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 

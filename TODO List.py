@@ -2,6 +2,9 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENT: it`s -> its (unless contraction)
+# DOCUMENT:  ControlSignal/ControlProjection:
+#                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
 # FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
 # TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
 
@@ -1780,7 +1783,7 @@
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlProjection CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
-#                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
+#                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., BEGINS AT INDEX 1)
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
 #             HOW ITEMS OF variable AND owner.value ARE REFERENCED

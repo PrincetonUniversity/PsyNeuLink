@@ -42,10 +42,6 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 from PsyNeuLink.Components.ShellClasses import *
 
 
-# ControlSignalChannel = namedtuple('ControlSignalChannel',
-#                                   'inputState, variableIndex, variableValue, outputState, outputIndex, outputValue')
-
-
 class DefaultControlMechanism(ControlMechanism_Base):
     """Implements the DefaultControlMechanism
 
