@@ -2,9 +2,16 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENT: FINISH DOCUMENTING:
+#             .. _ControlMechanism_Specifying_Control:
+#
+#             Specifying control for a parameter
+#             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # DOCUMENT: it`s -> its (unless contraction)
 # DOCUMENT:  ControlSignal/ControlProjection:
 #                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
+
 # FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
 # TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
 
