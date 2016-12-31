@@ -120,9 +120,10 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
   ``value`` attribute to which it is assigned (in its :py:data:`index <OutputState.index>` attribute).
 
-* ``function``: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.
+* ``function``: converts the outputState's variable to a result that, possibly combined with the result of thej
+  outputState's :py:data:`calculate` function, is assigned to its ``value`` attribute.
 
-* ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its
+* ``value``:  this is assigned the result of the outputState`s ``function``, possibly modified by its
   :py:data:`calculate <OutputState.calculate>` parameter, and used as the input to any projections that it sends.
 
 .. _OutputState_Attributes:
@@ -142,7 +143,8 @@ An outputState also has two additional attributes that determine its operation:
   assigns the item of the mechanism'sm ``value`` unmodified as the ``value`` of the outputState.  However,
   it can be assigned any function that can take as input the  value of the item to which the outputState is assigned.
   Note that the :py:data:`calculate <OutputState.calculate>` function is distinct from the outputState's ``function``
-  parameter (which is reserved for future use).
+  parameter;  it is applied to the result of the :py:data:`function` attribute (which, by default, simply copies the
+  value of the outputState's ``variable`` attribute.
 
 .. _OutputState_Execution:
 
