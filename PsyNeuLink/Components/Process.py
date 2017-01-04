@@ -231,7 +231,7 @@ These calculate changes that will be made to the corresponding projections.
 
 .. note::
    The changes to a projection induced by learning are not applied until the mechanisms that receive those
-   projections are next executed; see Lazy_Evaluation for an explanation of "lazy" updating).
+   projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 Examples
 --------

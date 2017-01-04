@@ -176,8 +176,8 @@ generate its ``variable``.  A receiver can be specified as:
   ..
   .. note::
      a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
-     principle of :ref:"Lazy_Evaluation" which, here, means that objects can create other objects from which they
-     *expect* input, but cannot *impose* the creation of "downstream" objects.
+     principle of :ref:`Lazy Evaluation <LINK>` which, here, means that objects can create other objects from which
+     they *expect* input, but cannot *impose* the creation of "downstream" objects.
 
 COMMENT:
     If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added

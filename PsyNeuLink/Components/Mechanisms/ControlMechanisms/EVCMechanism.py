@@ -15,28 +15,30 @@ Overview
 --------
 
 An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that manages a "portfolio" of
-:doc:`ControlSignals <ControlSignal>` that regulate the performance of the system to which it belongs. It
-implements a form of the EVC Theory described in Shenhav et al. (2013).  The *intensity* of each ControlSignal
-determines the value of a parameter of a  mechanism in the system.  In each round of execution, the EVCMechanism
-evaluates its portfolio of ControlSignals, and chooses one for the next round of the system's exeuction.
+:doc:`ControlSignals <ControlSignal>` that regulate the performance of the system to which it belongs. It implements
+a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav et al. (2013) <LINK>`.  The
+:py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each ControlSignal determines the value of a
+parameter of a  mechanism in the system.  Each :doc:`ControlSignal` is implemented as an
+:doc:`outputState <OutputState>` of the EVCMechanism (listed in the EVCMechanism's :py:data:`controlSignals
+<EVCMechanism.controlSignals>` attribute). The outputState's value is the ControlSignal's :py:data:`intensity
+<ControlSignal.ControlSignal.intensity>`.  Each ControlSignal is associated with a :doc:`ControlProjection` that
+regulates the parameter of a mechanism or a mechanism's function in the system. A particular combination of
+ControlSignal intensities is called an :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`.  When a system is
+executed, it concludes by executing the EVCMechanism, which determines the
+:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` for the next round of execution of the system.  This,
+in turn, determines the controlled parameter values for that round of execution.
 
-Each :doc:`ControlSignal` is implemented as an outputState of the EVCMechanism (listed in the EVCMechanism's
-:py:data:`controlSignals` attribute), and associated with a corresponding  :doc:`ControlProjection` that regulates the
-parameter of a mechanism or a mechanism's function in the system.  The ``value`` of the ControlSignal (and its
-associated ControlProjection) represent the intensity of that ControlSignal. Collectively, the ControlSignals govern
-the system's behavior.  A particular combination of ControlSignal values is called an :py:data:`allocationPolicy`.
-The EVCMechanism evaluates the  system's performance under each allocation policy, selects one based on it
-:ref:`objective function <LINK>`, and then assigns the ControlSignal values designated by that policy to the
-corresponding ControlProjections.  When the system is next executed, those values are used to set the parameters (of
-the mechanisms and/or their functions) they control.
+.. _EVCMechanism_EVC:
 
-The set of :py:data:`allocationPolicies <allocationPolicy>` to be tested are specified in the EVCMechanism's
-:py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute. The EVCMechanism executes the
-system using each :py:data:`allocationPolicy` in the :py:data:`controlSignalSearchSpace`, uses its ``function`` to
-evaluate the system's performance, and calculates the expected value of control (EVC) for that policy. The EVC is a
-cost-benefit analysis for the given policy.  The default method for evaluating the system's performance and
-calculating the EVC for a given policy are described under :ref:`XXXX <LINK>`.
-
+The procedure by which the EVCMechanism selects an allocationPolicy is determined by its
+:py:data:`function <EVCMechanism.function>` attribute, which can be :ref:`customized <LINK>`.  By default,
+it evaluates performance of
+the system under a set of :py:data:`allocationPolicies <EVCMechanism.allocationPolicy>` specified in its
+:py:data:`controlSignalSearchSpace` attribute. It simulates the
+system using each of those allocation policies, evaluates the expected value of control (EVC) for each (a
+cost-benefit analysis that weighs the cost of control against the outcomes of performance), and selects the
+allocationPolicy that generated the maximum EVC.  The default method for evaluating the system's performance and
+calculating the EVC for a given policy are described under :ref:`EVCMechanism_Execution`.
 
 .. _EVCMechanism_Creation:
 
@@ -61,7 +63,7 @@ it is generated automatically when a system is created and an EVCMechanism is sp
     :py:data:`predictionMechanisms <EVCMechanism.predictionMechanisms>` and
     :py:data:`predictionProcesses <EVCMechanism.predictionProcesses>` attributes, respectively.
 
-  * **ControlSignals** -- these are :doc:`outputStates <OutputState> of the EVCMechanism, the value of which is used
+  * **ControlSignals** -- these are :doc:`outputStates <OutputState>' of the EVCMechanism, the value of which is used
     by an associated :doc:`ControlProjection` to regulate the parameter of a mechanism or its function that has been
     specified for control.  A ControlProjection can be assigned to a parameter wherever the parameter is specified
     (see :ref:`Mechanism_ParameterStates`). When an EVCMechanism is created for a system, it is assigned the
@@ -95,135 +97,16 @@ below.
 ControlSignals
 ~~~~~~~~~~~~~~
 
-An EVCMechanism is assigned a control
-
-
-COMMENT:
-    STUFF FROM ControlProjection
-    PUT MOST OF THIS IN ControlSignal;  SUMMARIZE HERE
-
-    Overview
-    --------
-
-    A ControlProjection implements a control signal used to modify the value of a parameter of a mechanism's function.  It
-    takes a value (an *allocation*) from a ControlMechanism (its ``sender``), and uses this to compute the control signal's
-    :py:data:`intensity <ControlProjection.intensity>`, which is assigned as the ControlProjection's value.  The
-    parameterState that receives the ControlProjection uses its value to regulate the value of a parameter of a
-    mechanism's ``function``. A ControlProjection also calculates a :py:data:`cost <ControlProjection.cost>` for the
-    control signal, based on its intensity  and/or its time course, that can be used by a ControlMechanism to adapt the
-    ControlProjection's :py:data:`allocation <ControlProjection.allocation>`.
-
-    .. _ControlProjection_Creation:
-
-    Creating a ControlProjection
-    ----------------------------
-
-    A ControlProjection can be created using any of the standard ways to  :ref:`create a projection <Projection_Creation>`,
-    or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism
-    or its ``function``.  If a ConrolProjection is created using its constructor on its own,
-    the ``receiver`` argument must be specified.  If it is included in a parameter specification, the parameterState for
-    the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If its ``sender`` is not
-    specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism that is part of a
-    system, then the ControlProjection's ``sender`` is assigned to an outputState of the system's
-    :ref:`controller  <System_Execution_Control>`. Otherwise, the ``sender`` is assigned to the outputState of a
-    :any:`DefaultControlMechanism`.
-
-    The four functions used to calculate the :ref:`cost of a control signal <ControlProjection_Cost_Functions>`
-    can be specified  either in arguments to the ControlProjection's constructor, or in a ``params dictionary`` (see
-    :ref:`ControlProjection_Cost_Functions` below). A custom function can be assigned to any cost function, so long as
-    it accepts the appropriate type of value and returns a scalar.  Each of the cost functions can be
-    :ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
-    ControlProjection's :py:data:`cost <ControlProjection.cost>`.  A cost function can also be permanently disabled for
-    its ControlProjection by assigning :keyword:`None` to the argument for that function in its constructor (or the
-    appropriate entry in its ``params`` dictionary). Cost functions that are permanently disabled in this way cannot be
-    re-enabled.
-
-    A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
-    specifies the values of its :py:data:`allocation <ControlProjection.allocation>` that will be sampled by
-    ControlMechanisms that adaptively adjust ControlProjection allocations (e.g., :doc:`EVCMechanism`).  The default is
-    an array of values from 0.1 to 1.0 in steps of 0.1.
-
-    .. _ControlProjection_Structure:
-
-    Structure
-    ---------
-
-    *Intensity*. The ControlProjection's ``function`` uses its :py:data:`allocation <ControlProjection.allocation>` to
-    calculate a control signal :py:data:`intensity <ControlProjection.intensity>`. The default is an identity function
-    ``(Linear(slope=1, intercept=0))``: the ControlProjection sets its control signal
-    :py:data:`intensity <ControlProjection.intensity>` equal to its :py:data:`allocation <ControlProjection.allocation>`.
-    The ``function`` can be assigned another :py:doc:`TransferFunction`, or any other function that takes and returns a
-    scalar value.
-
-    *Costs*. A ControlProjection has four cost functions that determine how the ControlProjection computes the cost of
-    its control signal, all of which can be customized, and the first three of which can be enabled or disabled:
-
-    .. _ControlProjection_Cost_Functions:
-
-    * :keyword:`INTENSTITY_COST_FUNCTION`
-        Calculates a cost based on the control signal :py:data:`intensity <ControlProjection.intensity>`.
-        It can be any :class:`TransferFunction`, or any other function  that takes and returns a scalar value.
-        The default is :class:`Exponential`.
-
-    * :keyword:`ADJUSTMENT_COST_FUNCTION`
-        Calculates a cost based on a change in the control signal :py:data:`intensity <ControlProjection.intensity>`
-        from its last value. It can be any :class:`TransferFunction`, or any other function that takes and returns a
-        scalar value. The default is :py:class:`Function.Linear`.
-
-    * :keyword:`DURATION_COST_FUNCTION`
-        Calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
-        It can be any :class:`IntegratorFunction`, or any other function  that takes a list or array of two values and
-        returns a scalar value. The default is :class:`Integrator`.
-
-    * :keyword:`COST_COMBINATION_FUNCTION`
-        Combines the results of any cost functions that are enabled, and assigns the result as the ControlProjection's
-        :py:data:`cost <ControlProjection.cost>`.  It can be any function that takes an array and returns a scalar value.
-        The default is :py:class:`Reduce`.
-
-    An attribute is assigned for each component of the cost
-    (:py:data:`intensityCost <ControlProjection.intensityCost>`,
-    :py:data:`adjustmentCost <ControlProjection.adjustmentCost>`, and
-    :py:data:`durationCost <ControlProjection.durationCost>`),
-    and the total cost (:py:data:`cost <ControlProjection.cost>`.
-
-    .. _ControlProjection_Toggle_Costs:
-
-    *Toggling Cost Functions*.  Any of the cost functions (except the :keyword:`COST_COMBINATION_FUNCTION`) can be
-    enabled or disabled using the :py:meth:`toggle_cost_function <ControlProjection.toggle_cost_function>` method
-    to turn it :keyword:`ON` or :keyword:`OFF`.  If it is disabled, that component of the cost is not included in the
-    ControlProjection's :py:data:`cost <ControlProjection.cost>` attribute.  A cost function  can also be permanently
-    disabled for the ControlProjection by assigning :keyword:`None` to its argument in the constructor (or the
-    corresponding entry in its ``params`` dictionary).  If a cost function is permanently disabled for a ControlProjection,
-    it cannot be re-enabled using :py:meth:`toggle_cost_function <ControlProjection.toggle_cost_function>`.
-
-    *Additional Attributes*.  In addition to the intensity and cost attributes described above, a ControlProjection has
-    :py:data:`lastAllocation <ControlProjection.lastAllocation>` and
-    :py:data:`lastIntensity <ControlProjection.lastIntensity>` attributes that store the values associated with its
-    previous execution. Finally, it has an :py:data:`allocation_samples <ControlProjection.allocation_samples>` attribute,
-    that is a  list of used by :ref:`ControlMechanisms  <ControlMechanism>` for sampling different values of
-    :py:data:`allocation <ControlProjection.allocation>` for the ControlProjection, in order to adaptively adjust the
-    parameters that it controls (e.g., :doc:`EVCMechanism`). The default value is an array that ranges from
-    0.1 to 1.0 in steps of 0.1.
-
-    .. _ControlProjection_Execution:
-
-    Execution
-    ---------
-
-    A ControlProjection uses its ``function`` to compute the :py:data:`intensity <ControlProjection.intensity>` of its
-    control signal, and its :ref:`cost functions <ControlProjection_Cost_Functions> use that to compute the its
-    :py:data:`cost <ControlProjection.cost>`.  The :py:data:`intensity <ControlProjection.intensity>` is assigned to the
-    ControlProjection's ``value`` attribute, which is used by the parmaterState to which it projects to modify the
-    corresponding parameter of the owner mechanism's function.  The :py:data:`cost <ControlProjection.cost>` is used by
-    the :doc:`EVCMechanism` to determine the ControlProjection's :py:data:`allocation <ControlProjection.allocation>`
-    in future executions.
-
-    .. note::
-       The changes in a parameter in response to the execution of a ControlProjection are not applied until the
-       mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of "lazy"
-       updating).
-
-COMMENT
+An EVCMechanism has one :doc:`ControlSignal` for each parameter that it controls.  Each ControlSignal is associated
+with a :doc:`ControlProjection` that projects to the :doc:`parameterState <ParameterState>` for the parameter to be
+controlled.  The EVCMechanism's ``function`` assigns an :py:data:`allocation` value to each of its ControlSignals
+(in just the way that an ordinary mechanism assigns items of its ``value`` to its outputStates).  Each ControlSignal
+uses its allocation to compute its :py:data:`intensity`, that is then assigned as the value of its ControlProjection.
+The value of the ControlProjection is then used by the parameterState to which it projects to modify the value of the
+parameter for which it is responsible.  A ControlSignal also calculates a :py:data:`cost`, based on its intensity
+and/or its time course, that is used by the EVCMechanism to adapt its allocation in the future.  When the EVCMechanism
+chooses an :py:data:`allocationPolicy` to evaluate, it selects an allocation value from the ControlSignal's
+:py:data:`allocation_samples <ControlSignal.ControlSignal.allocationPolicy>` attribute.
 
 .. _EVCMechanism_Parameters:
 
@@ -293,12 +176,11 @@ Constructing the ControlSignalSearchSpace
 The :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` is constructed from the
 :py:data:`allocationSamples <ControlProjection.ControlProjection.allocationSamples>` attribute of each of the
 EVCMechanism's :py:data:`ControlSignals`.  The ``allocationSamples`` attribute of a ControlSignal is an array of
-values to sample for the parameter controlled by a given ControlProjection.   A control :ref:`allocation policy
-<LINK>` is made up of one value from the
-:py:data:`allocationSamples <ControlSignal.ControlSignal.allocationSamples>` attribute of each of the
-EVCMechanism's ControlSignals.  When an EVCMechanism is created, it constructs all possible control allocation policies
-(i.e., all possible combinations of values for its ControlSignals), which is assigned to its
-:py:data:`controlSignalSearchSpace` attribute.
+values to sample for the parameter controlled by a given ControlProjection.   A control :py:data:`allocatioPolicy` is
+made up of one value from the :py:data:`allocationSamples <ControlSignal.ControlSignal.allocationSamples>` attribute
+of each of the EVCMechanism's :py:data:`controlSignals`.  When an EVCMechanism is created, it constructs all possible
+control allocation policies (i.e., all possible combinations of values for its ControlSignals), which is assigned to
+its :py:data:`controlSignalSearchSpace` attribute.
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -306,6 +188,10 @@ COMMENT:
           attribute.  The first dimension (or axis 0) of the 2d array must be an array of control allocation
           policies (of any length), each of which contains a value for each ControlProjection in the
           EVCMechanism, assigned in the same order they are listed in its ``controlProjections`` attribute.
+COMMENT
+
+COMMENT:
+XXXXX  ??IS THIS STILL NEEDED:  [AT THE LEAST, IT SHOULD EXPLAIN OBJECTIVE FUNCTION]:
 COMMENT
 
 .. _EVCMechanism_Parameterizing_EVC_Calculation:
@@ -329,69 +215,52 @@ exponent and weight of 1 (see :ref:`EVC_Mechanism_Examples`).
 Execution
 ---------
 
-COMMENT:
-XXXX AUGMENT BELOW WITH THE FOLLOWING:
-The default ``function`` for the EVCMechanism assesses performance of the system by conducting an exhaustive sampling
-(*grid search*) of all combinations of the :py:data:`allocation_samples <EVCMechanism.allocation_samples>` specified
-for each ControlSignal.  For each policy, it executes its :py:data:`value_function` which, in turn, carries out the
-following three steps for each :py:data`allocationPolicy` sampled:
+When an EVCMechanism is executed, it updates the value of its :py:data:`predictionMechanisms`, and then calls its
+:py:data:`function`, which determines and implements the :py:data:`allocationPolicy` for the next round of the
+system's execution.  By default, the EVCMechanism identifies and implements the allocationPolicy that maximizes
+the objective function specified for the outputStates it is monitoring (:py:data:`monitoredOuputStates) relative to
+the costs associated with each ControlSignal.  However, this procedure can be modified by specifying a custom
+function for any or all of the functions described below.
 
-**Simulation.**  First, the **system is executed** using the EVCMechanism's :py:data:`run <run_simulation` method,
-with an :py:data:`allocationPolicy` sampled from :py:data:`control_signal_search_space`, and the value of its
-:py:data:`predictedInputs` attribute as the input.
+.. _EVCMechanism_Default_Function:
 
-**Aggregation**:  Next, the **outcome** and **cost** of the allocation policy are assessed.  The  **outcome** is
-assessed by aggregating the value of each outputState monitored by the EVCMechanism (listed in its
-:py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute), using
-:py:data:`outcome_aggregation_function`. The **cost** of the control signals is assessed by aggregating the
-:py:data:`cost <ControlSignal.cost>` of each :doc:`ControlSignal <ControlSignal>` using
-:py:data:`cost_aggregation_function`.
+The default :py:data:`function for an EVCMechanism selects an :py:data:`allocationPolicy` by assessing the
+performance of the system under each of the policies in its :py:data:`controlSignalSearchSpace` and selecting the one
+that yields the maximum EVC.
 
-**Evaluation**: Finally, the **value** of the :py:data:`allocation policy <allocationPolicy>` is calculated using
-:py:data:`combine_outcomes_and_costs_function`, which simply subtracts the aggregated costs from the aggregated
-outcomes.
+The :py:data:`controlSignalSearchSpace` is constructed by creating a set of allocationPolicies that represent all
+permutations of the allocation values to be sampled for each ControlSignal: each allocationPolicy in the set is
+constructed by drawing one value from the :py:data:`allocation_samples <ControlSignal.ControlSignal.allocation_samples>`
+of each ControlSignal, and the set contains all combinations of these values.  For each :py:data:`allocationPolicy`,
+the default :py:data:`function` calls the EVCMechanism's :py:data:`value_function` which, in turn, carries out the
+following steps:
 
-The mechanism's ``function`` returns the :py:data:`allocation policy <allocationPolicy>` that yielded the maximum value.
-This is then implemented, and used by the system on the next round of its execution. The calculation of the EVC can be
-customized as described in :ref:`EVCMechanism_Parameters` and :ref:`EVCMechanism_Parameterizing_EVC_Calculation>` below.
-
-XXXX BY DEFAULT, CARRIES OUT ALL OF THE FOLLOWING (BUT CAN BE CUSTOMIZED):
-COMMENT
-
-When an EVCMechanism is executed, it tests all of the allocation policies in its
-:py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`, evaluates the EVC for each policy,
-picks the policy that maximizes the EVC, and implements that policy for the next execution of the System.
-Details of the procedure for each test are as follows:
-
-* **Select an allocation policy**: pick the next allocation policy in the
-  :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>`,
-  and assign the specified value to each control signal.
+**Implement the allocationPolicy**: Assign the :py:data:`allocation <ControlSignal.ControlSignal.allocation>` value
+specifed for for each ControlSignal.
 ..
-* **Simulate execution of the system**:  use the prediction process for each :keyword:`ORIGIN` mechanism in the
-  system to specify its input (this uses the history of previous trials to generate an average expected input value),
-  and execute the System using those inputs and parameter values (controlled by the EVCMechanism) specified by the
-  selected allocation policy.
+**Simulate performance.**  Execute the system under the allocationPolicy, using the EVCMechanism's :py:data:`run
+<run_simulation` method, and the value of its :py:data:`predictedInputs` attribute as the input to the system (this
+uses the history of previous trials to generate an average expected input value).
 ..
-* **Calculate the EVC for the allocation policy**:
-    * calculate the **value** of the policy using the EVCMechanism's ``outcome_aggregation_function`` to aggregate
-      the value of the outputStates listed in the EVCMechanism's
-      :py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>` attribute;
-    * calculate the **cost** of the policy using the EVCMechanism's ``cost_aggregation_function`` to aggregate the
-      cost associated with each control signal (in the associated ControlProjection's
-      :py:data:`cost <ControlProjection.ControlProjection.cost>` attribute).
-    * calculate the **EVC** using the EVCMechanism's ``function`` to subtract the aggregated cost from the
-      aggregated value for the allocation policy.
+**Calculate the EVC for the allocationPolicy.**  This uses three functions:
+    * calculate the **outcomes** or the allocationPolicy using the :py:data:`outcome_aggregation_function` to aggregate
+      the value of the outputStates the EVCMechanism monitors (listed in its :py:data:`monitoredOutputStates`
+      attribute);
+    * calculate the **cost** of the allocationPolicy using the :py:data:`cost_aggregation_function` to aggregate the
+      :py:data:`cost <ControlSignal.ControlSignal.cost>` of the EVCMechanism's ControlSignals.
+    * calculate the **value** (EVC) of the allocationPolicy using the :py:data:`combine_outcomes_and_costs_function`,
+      which subtracts the aggregated costs from the aggregated outcomes.
+If the :py:data:`save_all_values_and_policies` attribute is :keyword:`True`, the allocation policy is saved in the
+EVCMechanism's :py:data:`EVCpolicies` attribute, and its value is saved in the :py:data:`EVCvalues` attribute.
 ..
-* **Save** the values associated with the policy that generated the maximum EVC in the ControlMechanism's
-    :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` and ``value`` attributes.  If the
-    :py:data:`save_all_values_and_policies <EVCMechanism.save_all_values_and_policies>` attribute is
-    :keyword:`True`, then the values associated with each policy are
-    saved in its :py:data:`EVCvalues <EVCMechanism.EVCvalues>` attribute and the policies in its
-    :py:data:`EVCpolicies <EVCMechanism.EVCpolicies>` attribute.
+The :py:data:`function` returns the allocationPolicy that yielded the maximum EVC. This is then implemented by
+assigning the :py:data:`allocation <ControlSignal.ControlSignal.allocaation>` specified for each ControlSignal by the
+designated :py:data:`allocationPolicy`.  These allocations determine the value of the parameters being controlled in the
+next round of the system's execution.
 
-Once the all control allocation policies in the controlSignalSearchSpace have been evaluated, the policy generating the
-maximum EVC is implemented, by assigning the value it specifies for each ControlProjection.  These are then used by the
-parameterStates to which they project in the next execution of the system.
+This procedure can be modified by assigning custom functions for any or all of the ones described above,
+including the EVCMechanism's :py:data:`function` itself.  The requirements for each are described in the
+function attribute entries.
 
 .. _EVCMechanism_Examples
 
@@ -585,20 +454,20 @@ class EVCMechanism(ControlMechanism_Base):
 
     function : function : _control_signal_grid_search
         specifies the function used to determine the :py:data:`allocationPolicy` for the next execution of the system.
-        The default function (_control_signal_grid_search) conducts an exhaustive (*grid*) search of all combinations of the
-        :py:data:`allocation_samples <ControlSignal.ControlSignal.allocation_sample>` of its
-        :doc:`control signals <ControlSignal>`, running the system (using :py:data:`run_simulation`) with each combination,
-        evaluating the result using the :py:data:`value` function, and returning the allocationPolicy that generated the highest
-        value.  If a custom function is specified, it must take a ``controller`` argument that specifies an EVCMechanism, and
-        must return an array with the same format (number and type of elements) as the
-        EVCMechanism's :py:data:`allocationPolicy` attribute.
+        The default function (_control_signal_grid_search) conducts an exhaustive (*grid*) search of all combinations of
+        the :py:data:`allocation_samples <ControlSignal.ControlSignal.allocation_sample>` of its
+        :doc:`control signals <ControlSignal>`, running the system (using :py:data:`run_simulation`) with each
+        combination, evaluating the result using the :py:data:`value` function, and returning the allocationPolicy
+        that generated the highest value.  If a custom function is specified, it must take a ``controller`` argument
+        that specifies an EVCMechanism, and must return an array with the same format (number and type of elements)
+        as the EVCMechanism's :py:data:`allocationPolicy` attribute.
 
     value_function : function : _value_function
-        specifies the function used by :py:data:`_control_signal_grid_search` to compute the value for a given allocation policy.
-        The default function (_value) uses :py:data:`outcome_aggregation_function` and :py:data:`cost_aggregation_function`
-        to aggregate the outcome (value) of the outputStates listed in :py:data:`monitoredOutputStates` and the cost
-        of the EVCMechanism's :py:data:`control signals <LINK>`, respectively;  it then combines these using
-        :py:data:`combine_outcomes_and_costs_function ` and returns the result.
+        specifies the function used by :py:data:`_control_signal_grid_search` to compute the value for a given
+        allocationPolicy. The default function (_value) uses :py:data:`outcome_aggregation_function` and
+        :py:data:`cost_aggregation_function` to aggregate the outcome (value) of the outputStates listed in
+        :py:data:`monitoredOutputStates` and the cost of the EVCMechanism's :py:data:`controlSignals`, respectively;
+        it then combines these using :py:data:`combine_outcomes_and_costs_function ` and returns the result.
 
     outcome_aggregation_function : CombinationFunction : LinearCombination(offset=0,scale=,operation=PRODUCT)
         specifies the function used to aggregate the value of the outputStates in :py:data:`monitoredOutputStates`.
@@ -732,7 +601,7 @@ class EVCMechanism(ControlMechanism_Base):
         array of EVC values corresponding to the policies in ``EVCPolicies``.
 
     controlSignals : OrderedDict[str, ControlSignal]
-        points to outputStates
+        list of :py:data:`outputStates` for the EVCMechanism.
 
     """
 

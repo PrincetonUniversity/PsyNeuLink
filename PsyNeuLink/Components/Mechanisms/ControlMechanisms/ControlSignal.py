@@ -9,6 +9,7 @@
 # ******************************************  OutputState *****************************************************
 
 """
+# :py:data:`intensity <ControlSignal.intensity>`
 
 Overview
 --------
@@ -18,10 +19,10 @@ parameter of a mechanism or its function that has been :ref:`specified for contr
 its performance using an :doc:`EVCMechanism` as its :ref:`controller <System.System_Base.controller>`.  A ControlSignal
 is associated with a :doc:`ControlProjection` to the :doc:`parameterState <ParameterState>` for the parameter to be
 controlled.  It receives an :py:data:`allocation` value specified by the EVCMechanism's ``function``, and uses that to
-compute an :py:data:`intensity <ControlProjection.intensity>` that is assigned as the value of its ControlProjection.
-The parameterState that receives the ControlProjection uses that value to modify the value of the mechanism's (or
-function's) parameter for which it is responsible.  A ControlSignal also calculates a :py:data:`cost`, based on its
-intensity and/or its time course, that is used by the EVCMechanism to adapt its allocation in the future.
+compute an :py:data:`intensity` that is assigned as the value of its ControlProjection. The parameterState that
+receives the ControlProjection uses that value to modify the value of the mechanism's (or function's) parameter for
+which it is responsible.  A ControlSignal also calculates a :py:data:`cost`, based on its intensity and/or its time
+course, that is used by the EVCMechanism to adapt its allocation in the future.
 
 .. _ControlSignal_Creation:
 
@@ -59,218 +60,76 @@ it has the three following core attributes:
 A ControlSignal also has several additional attributes and functions that determine is operation:
 
 * :py:data:`allocation`: assigned to the ControlSignal by the EVCMechanism to which it belongs, and converted to its
-  :py:data:`intensity` by its ``function``.  It is equivalent to the ControlSignal's ``value`` attribute.
+  :py:data:`intensity` by its ``function``.  It is equivalent to the ControlSignal's ``value`` attribute.  The value
+  corresponds to the current round of execution.  The value in the previous round of execution can be accessed using
+  the ControlSignal's :py:data:`lastAllocation` attribute.
 
 * :py:data:`intensity`: the result of the ControlSignal's ``function`` applied to its :py:data:`allocation`.  By
-    default, the ControlSignal's ``funtion`` is an identity function that sets its :py:data:`intensity` equal to its
-    :py:data:`allocation`.
+  default, the ControlSignal's ``function`` is an identity function that sets its :py:data:`intensity` equal to its
+  :py:data:`allocation`.  The value corresponds to the current round of execution.  The value in the previous round
+  of execution can be accessed using the ControlSignal's :py:data:`lastAllocation` attribute.
 
-* :py:data:`allocation_samples`:  list of the allocation values to be used by the EVCMechanism to which the
-  ControlSignal belongs to evaluate performance and adaptively adjust the parameter it controls. The default value is
-  an array that ranges from 0.1 to 1.0 in steps of 0.1.
+* :py:data:`allocation_samples`:  list of the allocation values for use by the EVCMechanism to which the
+  ControlSignal belongs, when it constructs an :ref:`allocationPolicy <EVCMechanism.EVCMechanism.allocationPolicy>`
+  (a particular combination of allocation values for its ControlSignals) to evaluate.
 
 .. _ControlSignal_Costs:
 
-* *Costs*. A ControlSignal has three cost attributes, the values of which are calculated from its :py:data:`intensity`
-  to determine the total cost.  Each of these is calculated using a corresponding cost function.  Each of these
-  functions can be customized, and the first three can be enabled or disabled:
+* *Costs*. A ControlSignal has three **cost attributes**, the values of which are calculated from its
+  :py:data:`intensity` to determine the total cost.  Each of these is calculated using a corresponding
+  **cost function**.  Each of these functions can be customized, and the first three can be
+  :ref:`enabled or disabled <ControlSignal_Toggle_Costs>`:
 
-    .. _ControlProjection_Cost_Functions:
+    .. _ControlSignal_Cost_Functions:
 
-    * :py:data:`intensityCost`, calculated by the :py:data:`intensity_cost_function` based on the current
+    * :py:data:`intensityCost`, calculated by the :py:data:`intensityCostFunction` based on the current
       :py:data:`intensity` of the ControlSignal.
 
-    * :py:data:`adjustmentCost`, calculated by the :py:data:`adjustment_cost_function` based on a change in the
+    * :py:data:`adjustmentCost`, calculated by the :py:data:`adjustmentCostFunction` based on a change in the
       ControlSignal's :py:data:`intensity` from its last value.
 
-    * :py:data:`duractionCost`, calculated by the :py:data:`duration_cost_function` based on an integral of the
-      the ControlProjections :py:data:`cost`.
+    * :py:data:`durationCost`, calculated by the :py:data:`durationCostFunction` based on an integral of the
+      the ControlSignal's :py:data:`cost`.
 
-    * :py:data:`cost`, calculated y the :py:data:`cost_combination_function` that combines the results of any cost
-      functions that are :ref:`enabled <_ControlProjection_Toggle_Costs>
+    * :py:data:`cost`, calculated by the :py:data:`costCombinationFunction` that combines the results of any cost
+      functions that are enabled (as described in the following section).
 
-    .. _ControlProjection_Toggle_Costs:
+    .. _ControlSignal_Toggle_Costs:
 
-    *Toggling Cost Functions*.  Any of the cost functions (except the :py:data:`cost_combination_function`) can be
-    enabled or disabled using the :py:meth:`toggle_cost_function` method to turn it :keyword:`ON` or :keyword:`OFF`.
-    If it is disabled, that component of the cost is not included in the
-    ControlSignal's :py:data:`cost <ControlProjection.cost>` attribute.  A cost function  can also be permanently
-    disabled for the ControlSignal by assigning it's attribute the value of :keyword:`None`.  If a cost function is
-    permanently disabled for a ControlSignal, it cannot be re-enabled using :py:meth:`toggle_cost_function`.
+    *Enabling and Disabling Cost Functions*.  Any of the cost functions (except the
+    :py:data:`cost_combination_function`) can be enabled or disabled using the :py:meth:`toggle_cost_function` method
+    to turn it :keyword:`ON` or :keyword:`OFF`. If it is disabled, that component of the cost is not included in the
+    ControlSignal's :py:data:`cost` attribute.  A cost function  can also be permanently disabled for the
+    ControlSignal by assigning it's attribute the value of :keyword:`None`.  If a cost function is permanently
+    disabled for a ControlSignal, it cannot be re-enabled using :py:meth:`toggle_cost_function`.
 
-*Additional Attributes*.  In addition to the intensity and cost attributes described above, a ControlProjection has
-:py:data:`lastAllocation <ControlProjection.lastAllocation>` and
-:py:data:`lastIntensity <ControlProjection.lastIntensity>` attributes that store the values associated with its
-previous execution.
+NOTE: ControlSignals do not use the :py:data:`index <OutputState.OutputState.index>`index or
+:py:data:`calculate <OutputState.OutputState.calculate>` attributes of an outputState.
 
 
-
-
-
-* :py:data:`cost`:  the total cost associated with the current :pyd:data:`intensity` of the ControlSignal.  This is
-  calculated using the ControlSignal's :py:data:`cost functions <ControlSignal_Cost_Functions>`, from the constituent
-  costs listed below.
-
-* :py:data:`intensityCost`: cost associated with current :py:data:`intensity`.
-
-* :py:data:`adjustmentCost`: cost associated with last change to :py:data:`intensity`.
-
-* :py:data:`durationCost`: integral of the :py:data:`cost <ControlProjection.cost>`.
-
-
-.. _ControlSignal_History_Attributes:
-
-lastAllocation : float
-    :py:data:`allocation <ControlProjection.allocation>` for last execution of the ControlProjection.
-
-lastIntensity : float
-    :py:data:`intensity <ControlProjection.intensity>` for last execution of the ControlProjection.
-
-    .. _ControlProjection_Cost_Functions:
-
-.. _ControlSignal_Cost_Functions:
-
-The four functions used to calculate the :ref:`cost of a control signal <ControlProjection_Cost_Functions>`
-can be specified  either in arguments to the ControlProjection's constructor, or in a ``params dictionary`` (see
-:ref:`ControlProjection_Cost_Functions` below). A custom function can be assigned to any cost function, so long as
-it accepts the appropriate type of value and returns a scalar.  Each of the cost functions can be
-:ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
-ControlProjection's :py:data:`cost <ControlProjection.cost>`.  A cost function can also be permanently disabled for
-its ControlProjection by assigning :keyword:`None` to the argument for that function in its constructor (or the
-appropriate entry in its ``params`` dictionary). Cost functions that are permanently disabled in this way cannot be
-re-enabled.
-
-A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
-specifies the values of its :py:data:`allocation <ControlProjection.allocation>` that will be sampled by
-ControlMechanisms that adaptively adjust ControlProjection allocations (e.g., :doc:`EVCMechanism`).  The default is
-an array of values from 0.1 to 1.0 in steps of 0.1.
-
-
-NOTE:  ControlSignal does NOT use calculate or index attributes of an ouputState
-
----------------------------------------------------------------------------------
-
-.. _OutputState_Structure:
-
-Structure
----------
-
-
-COMMENT:
-    FROM ControlProjection *********************
-
-
-    .. _ControlProjection_Creation:
-
-    Creating a ControlProjection
-    ----------------------------
-
-    A ControlProjection can be created using any of the standard ways to  :ref:`create a projection <Projection_Creation>`,
-    or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism
-    or its ``function``.  If a ConrolProjection is created using its constructor on its own,
-    the ``receiver`` argument must be specified.  If it is included in a parameter specification, the parameterState for
-    the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If its ``sender`` is not
-    specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism that is part of a
-    system, then the ControlProjection's ``sender`` is assigned to an outputState of the system's
-    :ref:`controller  <System_Execution_Control>`. Otherwise, the ``sender`` is assigned to the outputState of a
-    :any:`DefaultControlMechanism`.
-
-    The four functions used to calculate the :ref:`cost of a control signal <ControlProjection_Cost_Functions>`
-    can be specified  either in arguments to the ControlProjection's constructor, or in a ``params dictionary`` (see
-    :ref:`ControlProjection_Cost_Functions` below). A custom function can be assigned to any cost function, so long as
-    it accepts the appropriate type of value and returns a scalar.  Each of the cost functions can be
-    :ref:`enabled or disabled <ControlProjection_Toggle_Costs>`, to select which make contributions to the
-    ControlProjection's :py:data:`cost <ControlProjection.cost>`.  A cost function can also be permanently disabled for
-    its ControlProjection by assigning :keyword:`None` to the argument for that function in its constructor (or the
-    appropriate entry in its ``params`` dictionary). Cost functions that are permanently disabled in this way cannot be
-    re-enabled.
-
-    A ControlProjection takes an ``allocation_samples`` specification as its input.  This must be an array that
-    specifies the values of its :py:data:`allocation <ControlProjection.allocation>` that will be sampled by
-    ControlMechanisms that adaptively adjust ControlProjection allocations (e.g., :doc:`EVCMechanism`).  The default is
-    an array of values from 0.1 to 1.0 in steps of 0.1.
-
-    .. _ControlProjection_Structure:
-
-    Structure
-    ---------
-
-    .. _ControlProjection_Execution:
-
-    Execution
-    ---------
-
-    A ControlProjection uses its ``function`` to compute the :py:data:`intensity <ControlProjection.intensity>` of its
-    control signal, and its :ref:`cost functions <ControlProjection_Cost_Functions> use that to compute the its
-    :py:data:`cost <ControlProjection.cost>`.  The :py:data:`intensity <ControlProjection.intensity>` is assigned to the
-    ControlProjection's ``value`` attribute, which is used by the parmaterState to which it projects to modify the
-    corresponding parameter of the owner mechanism's function.  The :py:data:`cost <ControlProjection.cost>` is used by
-    the :doc:`EVCMechanism` to determine the ControlProjection's :py:data:`allocation <ControlProjection.allocation>`
-    in future executions.
-
-    .. note::
-       The changes in a parameter in response to the execution of a ControlProjection are not applied until the
-       mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of "lazy"
-       updating).
-
-     *********************************************
-
-COMMENT
-
-
-
-Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
-mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
-:keyword:`TERMINAL` mechanism for that process or system -- see :ref:`Process_Input_And_Ouput`).  A list of projections
-sent by an outputState is maintained in its :py:data:`sendsToProjections <OutputState.sendsToProjections>` attribute.
-
-Like all PsyNeuLink components, it has the three following core attributes:
-
-* ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
-  ``value`` attribute to which it is assigned (in its :py:data:`index <OutputState.index>` attribute).
-
-* ``function``: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.
-
-* ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its
-  :py:data:`calculate <OutputState.calculate>` parameter, and used as the input to any projections that it sends.
-
-.. _OutputState_Attributes:
-
-An outputState also has two additional attributes that determine its operation:
-
-.. _OutputState_Index:
-
-* :py:data:`index <OutputState.index>`: this determines the item of its owner mechanism's ``value`` to which it is
-  assigned.  By default, this is set to 0, which assigns it to the first item.
-
-.. _OutputState_Calculate:
-
-* :py:data:`calculate <OutputState.calculate>`:  this specifies the function used to convert the item to which the
-  outputState is assigned to the outputState's value.  The result is assigned to the outputState's ``value``
-  attribute. The default for :py:data:`calculate <OutputState.calculate>` is the identity function, which simply
-  assigns the item of the mechanism'sm ``value`` unmodified as the ``value`` of the outputState.  However,
-  it can be assigned any function that can take as input the  value of the item to which the outputState is assigned.
-  Note that the :py:data:`calculate <OutputState.calculate>` function is distinct from the outputState's ``function``
-  parameter (which is reserved for future use).
-
-.. _OutputState_Execution:
+.. _ControlSignal_Execution:
 
 Execution
 ---------
 
-An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the mechanism places the results of its execution in its ``value`` attribute, and the value of the
-outputState is then updated by calling its :py:data:`calculate <OutputState.calculate>` function using as its input
-the item of the onwer mechanism's ``value`` to which the outputState is assigned.  The result is assigned to the
-outputState's ``value``, as well as to a corresponding item of the mechanism's
-:py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.  It is also used as the input to any
-projections for which the outputState is the sender.
+A ControlSignal cannot be executed directly.  It is executed whenever the EVCMechanism to which it belongs is
+executed.  When this occures, the EVCMechanism providesthe ControlSignal with an :py:data:`allocation`, that is used by
+its ``function`` to compute its :py:data:`intensity` for that round of execution.  The :py:data:`intensity` is used
+by its associated ControlProjection to set the value of the parameterState to which it projects which, in turn,
+modifies the value of the mechanism or function parameter being controlled.  The :py:data:`intensity is also used by
+the ControlSignal's :ref:`cost functions <ControlSignal_Cost_Functions>` to compute its :py:data:`cost` attribute.
+That is used, along with its :py:data:`allocation_samples` attribute, by the EVCMechanism to evaluate
+:ref:`expected value of control (EVC) <EVCMechanism_EVC>` of the current
+:py:data:`allocationPolicy <EVCMechanism.EVCMechanism.allocationPolicy>`, and (possibly) adjust the ControlSignal's
+:py:data:`allocation` for the next round of execution.
 
-.. _OutputState_Class_Reference:
+.. note::
+   The changes in a parameter in response to the execution of an EVCMechanism are not applied until the mechanism
+   with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
+   "lazy" updating).
 
 Class Reference
 ---------------
-
 
 """
 
@@ -304,17 +163,17 @@ class OutputStateError(Exception):
 
 class ControlSignal(OutputState):
     """
-    OutputState(                               \
-    owner,                                     \
-    value=None,                                \
-    function=LinearCombination(operation=SUM), \
+    OutputState(                                     \
+    owner,                                           \
+    value=None,                                      \
+    function=LinearCombination(operation=SUM),       \
     intensity_cost_function=Exponential,             \
     adjustment_cost_function=Linear,                 \
     duration_cost_function=Integrator,               \
     cost_combination_function=Reduce(operation=SUM), \
     allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
-    params=None,                               \
-    name=None,                                 \
+    params=None,                                     \
+    name=None,                                       \
     prefs=None)
 
     Implements subclass of State that represents the output of a mechanism
@@ -342,7 +201,6 @@ class ControlSignal(OutputState):
         -------------
             All OutputStates are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
-
     COMMENT
 
 
@@ -381,26 +239,18 @@ class ControlSignal(OutputState):
         calculates a cost based on the control signal :py:data:`intensity`.
 
     adjustment_cost_function : Optional[TransferFunction] : default :py:class:`Linear <Function.Linear>`
-        calculates a cost based on a change in the control signal :py:data:`intensity`
-        from its last value. It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
-        It can be any :py:class:`TransferFunction <Function.TransferFunction>`, or any other function that takes and
-        returns a scalar value.
+        calculates a cost based on a change in the control signal :py:data:`intensity` from its last value.
 
     duration_cost_function : Optional[IntegratorFunction] : default :py:class:`Integrator <Function.Integrator>`
-        Calculates an integral of the ControlProjection's :py:data:`cost`. It can be any
-        :py:class:`IntegratorFunction <Function.IntegratorFunction>`, or any other function  that takes a list or
-        array of two values and returns a scalar value. It can be disabled permanently for the ControlSignal by
-        assigning :keyword:`None`.
+        Calculates an integral of the ControlProjection's :py:data:`cost`.
 
     cost_combination_function : function : default :py:class:`Reduce(operation=SUM) <Function.Reduce>`
-        Combines the results of any cost functions that are enabled, and assigns the result to
-        :py:data:`cost`.
-      .  It can be any function that takes an array and returns a scalar value. The default is
-        :py:class:`Reduce <Function.Reduce>`.
+        Combines the results of any cost functions that are enabled, and assigns the result to :py:data:`cost`.
 
     allocation_samples : list : default :keyword:`DEFAULT_ALLOCATION_SAMPLES`
-        Set of values used by ControlMechanisms that sample different allocation values in order to adaptively adjust
-        the function of mechanisms in their systems.  The default value is an array that ranges from 0.1 to 1 in steps
+        List of values used by the ControlMechanism to which the ControlSignal belongs, when it constructs an
+        :ref:`allocationPolicy <EVCMechanism.EVCMechanism.allocationPolicy>` (a particular combination of allocation
+        values for its ControlSignals) to evaluate.  The default value is an array that ranges from 0.1 to 1 in steps
         of 0.1.
 
     params : Optional[Dict[param keyword, param value]]
@@ -430,11 +280,11 @@ class ControlSignal(OutputState):
     variable : number, list or np.ndarray
         assigned an item of the :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` of its owner mechanism.
 
-    index : int
+    index : int : default 0
         the item in the owner mechanism's ``value`` attribute used as input of the
         :py:data:`calculate <OutputState.calculate>` function, to determine the ``value`` of the outputState.
 
-    calculate : function or method : default Linear
+    calculate : function or method : default :py:class:`Linear <Function.Linear>`
         function used to convert the item of owner mechanism's ``value`` specified by the
         :py:data:`index <OutputState.index>` attribute;  it is combined with the result of the outputState's
         ``function`` to determine it's ``value``, and the corresponding item of the owner mechanism's
@@ -484,16 +334,21 @@ class ControlSignal(OutputState):
         returns a scalar value. The default is :py:class:`Exponential <Function.Exponential>`.
         It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
 
-    adjustmentCostFunction : TransferFunction : default Linear
+    adjustmentCostFunction : TransferFunction : default :py:class:`Linear <Function.Linear>`
         calculates :py:data:`adjustmentCost <ControlProjection.adjustmentCost>` based on the change in
-        :py:data:`intensity <ControlProjection.intensity>` from its last value.
+        :py:data:`intensity <ControlProjection.intensity>` from its last value. It can be any
+        :py:class:`TransferFunction <Function.TransferFunction>`, or any other function that takes and
+        returns a scalar value. It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
 
-    durationCostFunction : IntegratorFunction : default Linear
+    durationCostFunction : IntegratorFunction : default :py:class:`Linear <Function.Linear>`
         calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
+        It can be any :py:class:`IntegratorFunction <Function.IntegratorFunction>`, or any other function that takes a
+        list or array of two values and returns a scalar value. It can be disabled permanently for the ControlSignal by
+        assigning :keyword:`None`.
 
-    costCombinationFunction : function : default Reduce(operation=SUM)
-        combines the results of any cost functions that are enabled, and assigns the result to
-        :py:data:`cost <ControlProjection.cost>`.
+    costCombinationFunction : function : default :py:class:`Reduce(operation=SUM) <Function.Reduce>`
+        combines the results of any cost functions that are enabled, and assigns the result to :py:data:`cost>`.
+        It can be any function that takes an array and returns a scalar value.
 
     intensity : float
         output of ``function``, used to determine controlled parameter of task;  same as the ControlSignal's ``value``
