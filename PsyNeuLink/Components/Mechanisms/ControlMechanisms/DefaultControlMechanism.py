@@ -12,8 +12,8 @@
 
 The DefaultControlMechanism is created whenever PsyNeuLink is run.  It is assigned as the ControlMechanism for any
 :doc:`System` that is created for which no ControlMechanism is specified.  The DefaultControlMechanism creates
-an inputState for each ControlProjection it is assigned, and uses :any:`defaultControlAllocation` as the value for
-the control signal.  By default,  :any:`defaultControlAllocation` = 1, so that ControlProjections from the
+an inputState for each ControlProjection it is assigned, and uses :py:data:`defaultControlAllocation` as the value for
+the control signal.  By default,  :py:data:`defaultControlAllocation` = 1, so that ControlProjections from the
 DefaultControlMechanism have no effect on their parameters.  Thus, for the most part, the DefaultControlMechanism
 serves as a place marker for ControlProjections (having on effect on the parameters it "controls"), until the system
 is assigned a more useful ControlMechanism (such as the :doc:`EVCMechanism`).  However, it can be used to uniformly

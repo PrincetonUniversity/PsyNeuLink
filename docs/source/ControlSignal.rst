@@ -3,7 +3,6 @@ ControlSignal
 
 .. toctree::
    :maxdepth: 3
-   :hidden:
 
 .. automodule:: ControlSignal
    :members:

@@ -247,8 +247,9 @@ sent by an outputState is maintained in its <a class="reference internal" href="
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">variable</span></code>:  this must match (both in number and types of elements) the value of the item of its owner mechanism&#8217;s
 <code class="docutils literal"><span class="pre">value</span></code> attribute to which it is assigned (in its <a class="reference internal" href="#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref py py-data docutils literal"><span class="pre">index</span></code></a> attribute).</li>
-<li><code class="docutils literal"><span class="pre">function</span></code>: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.</li>
-<li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the outputState`s <code class="docutils literal"><span class="pre">function</span></code>, possibly modifed by its
+<li><code class="docutils literal"><span class="pre">function</span></code>: converts the outputState&#8217;s variable to a result that, possibly combined with the result of thej
+outputState&#8217;s <code class="xref py py-data docutils literal"><span class="pre">calculate</span></code> function, is assigned to its <code class="docutils literal"><span class="pre">value</span></code> attribute.</li>
+<li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the outputState`s <code class="docutils literal"><span class="pre">function</span></code>, possibly modified by its
 <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> parameter, and used as the input to any projections that it sends.</li>
 </ul>
 <p id="outputstate-attributes">An outputState also has two additional attributes that determine its operation:</p>
@@ -263,7 +264,8 @@ attribute. The default for <a class="reference internal" href="#OutputState.Outp
 assigns the item of the mechanism&#8217;sm <code class="docutils literal"><span class="pre">value</span></code> unmodified as the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.  However,
 it can be assigned any function that can take as input the  value of the item to which the outputState is assigned.
 Note that the <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref py py-data docutils literal"><span class="pre">calculate</span></code></a> function is distinct from the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>
-parameter (which is reserved for future use).</li>
+parameter;  it is applied to the result of the <code class="xref py py-data docutils literal"><span class="pre">function</span></code> attribute (which, by default, simply copies the
+value of the outputState&#8217;s <code class="docutils literal"><span class="pre">variable</span></code> attribute.</li>
 </ul>
 </div>
 <div class="section" id="execution">

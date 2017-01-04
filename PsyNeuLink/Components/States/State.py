@@ -69,9 +69,9 @@ Execution
 A state cannot be executed directly.  It is executed when the component to which it belongs is executed.
 When this occurs, each inputState and parameterState belonging to the object executes any projections it  receives,
 calls its ``function`` to aggregate their values, and then assigns this as that state's ``value`` -- this conforms to a
-"lazy evaluation" protocol (see :ref:`Lazy_Evaluation` for a more detailed discussion).  The ``value`` of an outputState
-is assigned after the ``function`` of the mechanism that owns it has been called
-(see :ref:`Mechanism OutputStates <Mechanism_OutputStates>`).
+"lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more detailed discussion).  The ``value`` of an
+outputState is assigned after the ``function`` of the mechanism that owns it has been called (see
+:ref:`Mechanism OutputStates <Mechanism_OutputStates>`).
 
 .. _State_Class_Reference:
 

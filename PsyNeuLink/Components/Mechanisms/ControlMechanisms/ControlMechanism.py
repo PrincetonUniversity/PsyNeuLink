@@ -126,9 +126,9 @@ to which it projects, to update the parameter of the receiving mechanism.
 
 .. note::
    A :doc:`ParameterState` that receives a :doc:`ControlProjection` does not update its value until its owner
-   mechanism executes (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
-   receiver mechanism has executed.
+   mechanism executes (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even
+   if a ControlMechanism has executed, a parameter that it controls will not assume its new value until the
+   corresponding receiver mechanism has executed.
 
 .. _ControlMechanism_Class_Reference:
 

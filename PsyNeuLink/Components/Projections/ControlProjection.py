@@ -58,7 +58,7 @@ parameterState's owner or its owner's ``function``.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlProjection are not applied until the
-   mechanism that receives the projection are next executed; see Lazy_Evaluation for an explanation of "lazy"
+   mechanism that receives the projection are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy"
    updating).
 
 .. _ControlProjection_Class_Reference:
@@ -125,6 +125,7 @@ class ControlProjection(Projection_Base):
             + paramNames = paramClassDefaults.keys()
             + costFunctionNames = paramClassDefaults[kwControlSignalCostFunctions].keys()
     COMMENT
+
 
     Arguments
     ---------
