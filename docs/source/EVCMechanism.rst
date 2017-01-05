@@ -4,7 +4,6 @@ EVCMechanism
 .. toctree::
    :maxdepth: 1
 
-   EVCMechanism
    ControlSignal
    ControlProjection
 
