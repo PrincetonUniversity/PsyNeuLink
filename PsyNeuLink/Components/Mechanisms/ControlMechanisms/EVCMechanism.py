@@ -27,6 +27,12 @@ values of controlled parameters in the next round of execution.
 .. _EVCMechanism_EVC:
 
 The procedure by which the EVCMechanism selects an allocationPolicy is determined by its
+:py:data:`function <EVCMechanism.function>` attribute, which can be :ref:`customized <EVCMechanism_Parameters>`.
+By default, it evaluates performance of the system under each
+:py:data:`allocationPolicy <EVCMechanism.allocationPolicy> specified in its :py:data:`controlSignalSearchSpace`
+attribute: it simulates the system and evaluates the expected value of control (EVC -- a cost-benefit
+analysis that weighs the cost of control against the outcomes of performance) for each policy, and selects the
+one that generated the maximum EVC.  The default method for evaluating the system's performance and
 :py:data:`function <EVCMechanism.function>, which can be :ref:`customized <LINK>`.  By default,
 it evaluates performance of the system under a set of :py:data:`allocationPolicies <EVCMechanism.allocationPolicy>`
 specified in its :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute. It simulates
@@ -458,14 +464,8 @@ class EVCMechanism(ControlMechanism_Base):
         and :ref:`EVCMechanism_Parameterizing_EVC_Calculation`.
 
     function : function : _control_signal_grid_search
-        specifies the function used to determine the :py:data:`allocationPolicy` for the next execution of the system.
-        The default function (_control_signal_grid_search) conducts an exhaustive (*grid*) search of all combinations of
-        the :py:data:`allocation_samples <ControlSignal.ControlSignal.allocation_sample>` of its
-        :doc:`control signals <ControlSignal>`, running the system (using :py:data:`run_simulation`) with each
-        combination, evaluating the result using the :py:data:`value` function, and returning the allocationPolicy
-        that generated the highest value.  If a custom function is specified, it must take a ``controller`` argument
-        that specifies an EVCMechanism, and must return an array with the same format (number and type of elements)
-        as the EVCMechanism's :py:data:`allocationPolicy` attribute.
+        specifies the function used to determine the :py:data:`allocationPolicy` for the next execution of the system
+        (see :py:data:`function <EVCMechanism.function>` attribute for description of default function).
 
     value_function : function : _value_function
         specifies the function used by :py:data:`_control_signal_grid_search` to compute the value for a given
@@ -543,8 +543,14 @@ class EVCMechanism(ControlMechanism_Base):
         self.inputStates).
 
     function : function : default _control_signal_grid_search
-        used to combine the aggregated value of the monitored outputStates with the aggregated cost of the control
-        signal values for a given control allocation policy, to determine the **EVC** for that policy.
+        determines the :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` to use for the next round of the
+        system's execution. The default function (_control_signal_grid_search) conducts an exhaustive (*grid*) search
+        of all combinations of the :py:data:`allocation_samples <ControlSignal.ControlSignal.allocation_sample>` of its
+        :doc:`control signals <ControlSignal>`, executing the system (using :py:data:`run_simulation`) for each
+        combination, evaluating the result using the :py:data:`value` function, and returning the allocationPolicy
+        that generated the highest value.  If a custom function is specified, it must take a ``controller`` argument
+        that specifies an EVCMechanism, and must return an array with the same format (number and type of elements)
+        as the EVCMechanism's :py:data:`allocationPolicy` attribute.
 
     allocationPolicy : 2d np.array : :py:data:`defaultControlAllocation`
         determines the value assigned as the variable for each control signal and its associated
