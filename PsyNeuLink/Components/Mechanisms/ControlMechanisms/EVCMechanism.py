@@ -16,28 +16,25 @@ Overview
 
 An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that manages a "portfolio" of
 :doc:`ControlSignals <ControlSignal>` that regulate the performance of the system to which it belongs. It implements
-a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav et al. (2013) <LINK>`.  The
-:py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each ControlSignal determines the value of a
-parameter of a  mechanism in the system.  Each :doc:`ControlSignal` is implemented as an
-:doc:`outputState <OutputState>` of the EVCMechanism (listed in the EVCMechanism's :py:data:`controlSignals
-<EVCMechanism.controlSignals>` attribute). The outputState's value is the ControlSignal's :py:data:`intensity
-<ControlSignal.ControlSignal.intensity>`.  Each ControlSignal is associated with a :doc:`ControlProjection` that
-regulates the parameter of a mechanism or a mechanism's function in the system. A particular combination of
-ControlSignal intensities is called an :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`.  When a system is
-executed, it concludes by executing the EVCMechanism, which determines the
-:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` for the next round of execution of the system.  This,
-in turn, determines the controlled parameter values for that round of execution.
+a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav et al. (2013) <LINK>`.  Each
+ControlSignal is associated with a :doc:`ControlProjection`.  The ControlSignal's
+:py:data:`intensity <ControlSignal.ControlSignal.intensity>` determines the value of its ControlProjection, which in
+turn regulates the parameter of a mechanism or its function. A particular combination of ControlSignal intensities is
+called an :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`.  When a system is executed, it concludes by
+executing the EVCMechanism, which determines the :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` -- and
+thereby the values of controlled parameters -- in the next round of execution.
 
 .. _EVCMechanism_EVC:
 
-The procedure by which the EVCMechanism selects an allocationPolicy is determined by its
+The procedure by which the EVCMechanism selects an allocationPolicy when executed is determined by its
 :py:data:`function <EVCMechanism.function>` attribute, which can be :ref:`customized <EVCMechanism_Parameters>`.
 By default, it evaluates performance of the system under each
-:py:data:`allocationPolicy <EVCMechanism.allocationPolicy> specified in its :py:data:`controlSignalSearchSpace`
-attribute: it simulates the system and evaluates the expected value of control (EVC -- a cost-benefit
-analysis that weighs the cost of control against the outcomes of performance) for each policy, and selects the
-one that generated the maximum EVC.  The default method for evaluating the system's performance and
-calculating the EVC for a given policy are described under :ref:`EVCMechanism_Execution`.
+:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` specified in its
+:py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute: it simulates the system and
+evaluates the expected value of control (EVC -- a cost-benefit analysis that weighs the cost of control against the
+outcomes of performance) for each policy, and selects the one that generates the maximum EVC. This is then implemented
+for the next round of execution. The default method for evaluating the system's performance and calculating the EVC
+for a given policy are described under :ref:`EVCMechanism_Execution`.
 
 .. _EVCMechanism_Creation:
 
@@ -46,55 +43,87 @@ Creating an EVCMechanism
 
 An EVCMechanism can be created using the standard Python method of calling its constructor.  However,  more commonly,
 it is generated automatically when a system is created and an EVCMechanism is specified as its
-:ref:`controller <System_Execution_Control>`). When this occurs, PsyNeuLink configures the EVCMechanism as follows:
-
-  * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
-    EVCMechanism, and used to determine the outcome of performance under each control allocation policy. An inputState
-    is added to the EVCMechanism for each outputState specified in its ``monitor_for_control`` parameter, and a
-    :doc:`MappingProjection` is created that projects from that outputState to the EVCMechanism's inputState
-    (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying :keyword:`MONITOR_FOR_CONTROL`).
-  ..
-  * **Prediction Mechanisms** -- these are used to generate the input for each simulated execution of the system
-    run by the EVCMechanism (see :ref:`EVCMechanism_Execution`).  A prediction mechanism is created for each
-    :keyword:`ORIGIN` (input) mechanism in the system; a MappingProjection is created that projects to it from the
-    corresponding :keyword:`ORIGIN` mechanism; and the pair are assigned to their own *prediction process*.  The
-    prediction mechanisms and prediction processes for an EVCMechanism are listed in its
-    :py:data:`predictionMechanisms <EVCMechanism.predictionMechanisms>` and
-    :py:data:`predictionProcesses <EVCMechanism.predictionProcesses>` attributes, respectively.
-
-  * **ControlSignals** -- these are :doc:`outputStates <OutputState>' of the EVCMechanism, the value of which is used
-    by an associated :doc:`ControlProjection` to regulate the parameter of a mechanism or its function that has been
-    specified for control.  A ControlProjection can be assigned to a parameter wherever the parameter is specified
-    (see :ref:`Mechanism_ParameterStates`). When an EVCMechanism is created for a system, it is assigned the
-    ControlProjections for those parameters.  For each, a ControlSignal is added to the EVCMechanism and the
-    ControlProjection is assigned from that ControlSignal to the :doc:`parameterState <ParameterState>` for the
-    parameter to be controlled. ˚
-
+:ref:`controller <System_Execution_Control>`. When this occurs, the EVCMechanism is configured with the components
+described under :ref:`Structure <EVCMechanism_Structure>` below.  In addition, a set of
+:py:data:`predictionMechanisms<EVCMechanism.predictionMechanism>`* and associated
+:py:data:`predictionProcesses<EVCMechanism.predictionProcesses>` are created, that are used to generate the input for
+the sysetem each time the EVCMechanism executes it to evaluate its performance (see :ref:`EVCMechanism_Execution`).
+A prediction mechanism is created for each :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` (input) mechanism in the
+system; a :doc:`MappingProjection` is created that projects to it from the corresponding :py:data:`ORIGIN
+<Keywords.Keywords.ORIGIN>` mechanism; and the pair are assigned to their own *prediction process*.  The prediction
+mechanisms and prediction processes for an EVCMechanism are listed in its
+:py:data:`predictionMechanisms <EVCMechanism.predictionMechanisms>` and
+:py:data:`predictionProcesses <EVCMechanism.predictionProcesses>` attributes, respectively.
 
 .. _EVCMechanism_Structure:
 
 Structure
 ---------
 
-An EVCMechanism is comprised of the standard three components of a PsyNeuLink mechanism:
+An EVCMechanism is comprised of specialized versions of the three standard components of a PsyNeuLink
+mechanism: a set of inputStates that represent information being monitored about the system
+(:py:data:`monitoredOutputStates <EVCMechanism.monitoredOutputStates>`), a :py:data:`function <EVCMechanism.function>`
+(along with a set of auxiliary functions) that determine the
+:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` for the next round of execution of the system, and a set of
+outputStates (:py:data:`controlSignals <EVCMechanism.controlSignals>` with associated :doc:`ControlProjections` used to
+control parameters of mechanisms in the system, and/or their functions that have been :ref:`specified for control
+<Mechanism_Specifying_Parameters`>`.  These are described in detail in the sections that follow.
 
-* a set of **inputStates** that represent the values of the outputStates of the mechanisms in the system to be
-  monitored;
 
-* a ``function`` that uses the values of its inputStates to evaluate the performance of the system (i.e.,
-  calculate its EVC), and generate a set of ControlSignal values (:py:data:`allocationPolicy`) that will govern
-  performance of the system on the next round of execution;
+MONIORED OUTPUTSTATES
+FUNCTIONS
+    * a :py:data:`function <EVCMechanism.function>` that determines an
+      :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` -- that is, the
+      :py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each of its ControlSignals -- in the next round of
+      the system's execution;
 
-* a specialized set of **outputStates** —- called :doc:`ControlSignals` -- each of which is associated with a
-  :doc:`ControlProjection` that controls the value of a parameter of one of the system's mechanisms or its function.
+CONTROL SIGNALS
 
-In addition, an EVCMechanism has several attributes and specialized functions that control its operation, as described
-below.
 
 .. _EVCMechanism_ControlSignal:
 
 ControlSignals
 ~~~~~~~~~~~~~~
+
+
+  * **Monitored OutputStates** -- these are the outputStates of the system's mechanisms that are monitored by the
+    EVCMechanism, and used to evaluate its performance under each
+    :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`. An inputState is added to the EVCMechanism for each
+    outputState specified in its :keyword:`monitor_for_control` parameter, and a :doc:`MappingProjection` is created
+    that projects from the outputState to be monitored to the EVCMechanism's inputState (see
+    :ref:`ControlMechanism_Monitored_OutputStates` for specifying the :keyword:`monitor_for_control` parameter).
+  ..
+  * **ControlSignals** -- these are used to regulate the parameters of mechanisms or their functions that have been
+    specified for control.  A parameter is specified for control by assigning it a ControlProjection (see
+    :ref:`Mechanism_Specifying_Parameters`). When an EVCMechanism is created for the system, it creates a ControlSignal
+    for each parameter that has been assigned a ControlProjection.  Each :doc:`ControlSignal` is implemented as an
+    :doc:`outputState <OutputState>` of the EVCMechanism (listed in the EVCMechanism's :py:data:`controlSignals
+    <EVCMechanism.controlSignals>` attribute).  The outputState's value is the ControlSignal's :py:data:`intensity
+    <ControlSignal.ControlSignal.intensity>`.  The ControlSignal is assigned as the ControlProjection's
+    :py:data:`sender <ControlProjection.ControlProjection.sender>`, its
+    :py:data:`intensity <ControlSignal.ControlSignal.intensity>` as the ControlProjection's value,
+    and the :doc:`ParameterState <ParameterState>` for the parameter being controlled as the ControlProjection's
+    :py:data:`receiver <ControlProjection.ControlProjection.receiver>`.
+  ..
+  * **Prediction Mechanisms** -- these are used to generate the input for the system each time the EVCMechanism
+    simulates its execution (see :ref:`EVCMechanism_Execution`).  A prediction mechanism is created for each
+    :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` (input) mechanism in the system; a :doc:`MappingProjection` is created
+    that projects to it from the corresponding :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism; and the pair are
+    assigned to their own *prediction process*.  The prediction mechanisms and prediction processes for an
+    EVCMechanism are listed in its :py:data:`predictionMechanisms <EVCMechanism.predictionMechanisms>` and
+    :py:data:`predictionProcesses <EVCMechanism.predictionProcesses>` attributes, respectively.
+  ..
+
+
+COMMENT:
+    ADD HERE
+    The :py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each ControlSignal determines the value of a
+    parameter of a  mechanism in the system.
+    Each :doc:`ControlSignal` is implemented as an
+    :doc:`outputState <OutputState>` of the EVCMechanism (listed in the EVCMechanism's :py:data:`controlSignals
+    <EVCMechanism.controlSignals>` attribute). The outputState's value is the ControlSignal's :py:data:`intensity
+    <ControlSignal.ControlSignal.intensity>`.
+COMMENT
 
 An EVCMechanism has one :doc:`ControlSignal` for each parameter that it controls.  Each ControlSignal is associated
 with a :doc:`ControlProjection` that projects to the :doc:`parameterState <ParameterState>` for the parameter to be
