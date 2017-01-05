@@ -12,6 +12,7 @@
 # DOCUMENT:  ControlSignal/ControlProjection:
 #                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
 
+# FIX: MAKE EVCMechanism.controlSignals A LIST RATHER THAN THE DICT OF outputStates
 # FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
 # TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
 

@@ -16,26 +16,21 @@ Overview
 
 An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that manages a "portfolio" of
 :doc:`ControlSignals <ControlSignal>` that regulate the performance of the system to which it belongs. It implements
-a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav et al. (2013) <LINK>`.  The
-:py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each ControlSignal determines the value of a
-parameter of a  mechanism in the system.  Each :doc:`ControlSignal` is implemented as an
-:doc:`outputState <OutputState>` of the EVCMechanism (listed in the EVCMechanism's :py:data:`controlSignals
-<EVCMechanism.controlSignals>` attribute). The outputState's value is the ControlSignal's :py:data:`intensity
-<ControlSignal.ControlSignal.intensity>`.  Each ControlSignal is associated with a :doc:`ControlProjection` that
-regulates the parameter of a mechanism or a mechanism's function in the system. A particular combination of
-ControlSignal intensities is called an :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`.  When a system is
-executed, it concludes by executing the EVCMechanism, which determines the
-:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` for the next round of execution of the system.  This,
-in turn, determines the controlled parameter values for that round of execution.
+a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav et al. (2013) <LINK>`.  Each
+ControlSignal is associated with a :doc:`ControlProjection`.  The ControlSignal's
+:py:data:`intensity <EVCMechanism.intensity>` determines the value of its ControlProjection, which in turn regulates
+the parameter of a mechanism or its function. A particular combination of ControlSignal intensities is called an
+:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`.  When a system is executed, it concludes by executing
+the EVCMechanism, which determines the :py:data:`allocationPolicy <EVCMechanism.allocationPolicy>`, and thereby the
+values of controlled parameters in the next round of execution.
 
 .. _EVCMechanism_EVC:
 
 The procedure by which the EVCMechanism selects an allocationPolicy is determined by its
-:py:data:`function <EVCMechanism.function>` attribute, which can be :ref:`customized <LINK>`.  By default,
-it evaluates performance of
-the system under a set of :py:data:`allocationPolicies <EVCMechanism.allocationPolicy>` specified in its
-:py:data:`controlSignalSearchSpace` attribute. It simulates the
-system using each of those allocation policies, evaluates the expected value of control (EVC) for each (a
+:py:data:`function <EVCMechanism.function>, which can be :ref:`customized <LINK>`.  By default,
+it evaluates performance of the system under a set of :py:data:`allocationPolicies <EVCMechanism.allocationPolicy>`
+specified in its :py:data:`controlSignalSearchSpace <EVCMechanism.controlSignalSearchSpace>` attribute. It simulates
+the system using each allocationPolicy, evaluates the expected value of control (EVC) for each (a
 cost-benefit analysis that weighs the cost of control against the outcomes of performance), and selects the
 allocationPolicy that generated the maximum EVC.  The default method for evaluating the system's performance and
 calculating the EVC for a given policy are described under :ref:`EVCMechanism_Execution`.
@@ -96,6 +91,16 @@ below.
 
 ControlSignals
 ~~~~~~~~~~~~~~
+
+COMMENT:
+    ADD HERE
+    The :py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each ControlSignal determines the value of a
+    parameter of a  mechanism in the system.
+    Each :doc:`ControlSignal` is implemented as an
+    :doc:`outputState <OutputState>` of the EVCMechanism (listed in the EVCMechanism's :py:data:`controlSignals
+    <EVCMechanism.controlSignals>` attribute). The outputState's value is the ControlSignal's :py:data:`intensity
+    <ControlSignal.ControlSignal.intensity>`.
+COMMENT
 
 An EVCMechanism has one :doc:`ControlSignal` for each parameter that it controls.  Each ControlSignal is associated
 with a :doc:`ControlProjection` that projects to the :doc:`parameterState <ParameterState>` for the parameter to be
