@@ -68,7 +68,7 @@ it is generated automatically when a system is created and an EVCMechanism is sp
     (see :ref:`Mechanism_ParameterStates`). When an EVCMechanism is created for a system, it is assigned the
     ControlProjections for those parameters.  For each, a ControlSignal is added to the EVCMechanism and the
     ControlProjection is assigned from that ControlSignal to the :doc:`parameterState <ParameterState>` for the
-    parameter to be controlled.
+    parameter to be controlled. ˚
 
 
 .. _EVCMechanism_Structure:
