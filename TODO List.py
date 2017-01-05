@@ -11,6 +11,7 @@
 # DOCUMENT: it`s -> its (unless contraction)
 # DOCUMENT:  ControlSignal/ControlProjection:
 #                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
+#            :keyword:`ORIGIN` -> :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`
 
 # FIX: MAKE EVCMechanism.controlSignals A LIST RATHER THAN THE DICT OF outputStates
 # FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
