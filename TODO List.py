@@ -149,7 +149,7 @@
 # IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
 # IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 
-# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
+# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARNING ON color_naming_process
 # FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
 # FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
 # FIX:  Order target assignments for system according to order in targetMechanisms rather than process
@@ -306,7 +306,7 @@
 
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
-# TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
+# TEST KEYWORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
 #      Mechanism, MappingProjection and Function params
 #      ADD TO META TEST SCRIPT
 
@@ -406,7 +406,7 @@
 
 # DOCUMENTATION:  singularize first statement in overview of all objects
 #
-# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :any:
+# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :py:class:
 
 # DOCUMENTATION: check that, for DDM in TIME_STEP mode, parameter values not specified in params dict will assume
 #                any value assigned in the function arg; otherwise, default will be used
@@ -1088,6 +1088,37 @@
 #endregion
 
 
+#region DEVELOPMENT
+
+# time_step DDM integration
+#
+# system.graph -> NetworkX, graphViz, or the like.
+#
+# API for "wrappers"
+#
+# IMPLEMENT:  Demos of Functions that plots each Function
+#                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
+#
+# GUI (using QT)
+#
+# FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
+#
+# function format for inputs in Run (e.g., for simulating staircasing):
+#                       needs to be coordinated with validation of num_targets (if it is not a function);
+#                       then document (paralleling targets, and maybe moving much of that to inputs function format)
+#
+# Filter Warnings
+#
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
+#
+#    README.md -> README.rst AND/OR Index.rst:
+
+#endregion
+
+
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
 
@@ -1204,14 +1235,6 @@
 # - add @property for all params, so they can be addressed directly as attributes
 #      setter method should call _assign_defaults
 #
-
-#endregion
-
-#region DEVELOPMENT
-
-# time_step DDM integration
-# learning working in a system
-# system.graph -> NetworkX
 
 #endregion
 
