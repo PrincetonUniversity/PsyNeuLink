@@ -85,26 +85,28 @@ EVCMechanism are listed in its :py:data:`monitoredOutputStates <EVCMechanism.mon
 Function
 ~~~~~~~~
 
-The :py:data:`function <EVCMechanism.function>` of an EVCMechanism determines the
-:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` -- that is, the
-:py:data:`intensity <ControlSignal.ControlSignal.intensity>` of each of its ControlSignals -- that will be used in the
-next round of the system's execution.  Any function can be used that returns an
-:py:data:`allocationPolicy <EVCMechanism.allocationPolicy>` that is appropriate for the EVCMechanism;  that is, one
-that has the same number of (properly formatted) elements as the number of its ControlSignals. The default function
-for an EVCMechanism is an internal method that exhaustively evaluates the performance of the system under all
-allocationPolicies specified to be sampled for its ControlSignals, and chooses the one that generates the
-best performance.  This uses four auxiliary functions, any of which can themsevles be customized, as described below.
+The `function` of an EVCMechanism determines the `allocationPolicy` -- that is, the `intensity` of each of its
+ControlSignals -- that will be used in the next round of the system's execution.  Any function can be used that
+returns an `allocationPolicy` that is appropriate for the EVCMechanism (i.e., the same number of elements as the
+number of its ControlSignals, in the appropriate format). The default function for an EVCMechanism
+is an internal method (`_control_signal_grid_search`) that evaluates the performance of the system under
+a set of specified allocationPolicies specified, and chooses the one that generates the best
+performance (the highest `EVC`). The procedure, including the four auxiliary functions it uses (each of which can be
+customized using parameters of the EVCMechanism) are described below.
 
-.. _EVC_Auxiliary_Functions
+Calculating the EVC
+^^^^^^^^^^^^^^^^^^^
 
-Auxiliary EVC Functions
-^^^^^^^^^^^^^^^^^^^^^^^
+The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) for every
+combination of `allocation` values for its ControlSignals (i.e., every possible `allocationPolicy`.  Each policy
+draws one value from the `allocation_samples` attribute of each ControlSignal to construct an `allocationPolicy`;
+all combinations (policies) are stored in the EVCMechanism's `controlSignalSearchSpace` attribute.  The `function` then
+uses the EVCMechanism's `run_simulation` method to simulate the system under each allocationPolicy in the
+`controlSignalSearchSpace`, calculates the EVC for each policy (using the functions described below), and returns the
+policy with the greatest EVC.
 
-The default EVC function calls its :py:meth:`value_function`, which
-
-This computes the EVC for each control allocation policy using three functions speci.
-3...............................0.
-f2.ied in its
+xxxxx
+This computes the EVC for each control allocation policy using three functions specified in its
 ``function``, ``outcome_aggregation_function`` and ``cost_aggregation_function`` parameters.
 
 ..
