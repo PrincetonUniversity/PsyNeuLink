@@ -12,6 +12,8 @@
 # DOCUMENT:  ControlSignal/ControlProjection:
 #                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
 #            :keyword:`ORIGIN` -> :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`
+# DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
+# DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
 
 # FIX: MAKE EVCMechanism.controlSignals A LIST RATHER THAN THE DICT OF outputStates
 # FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
@@ -190,13 +192,18 @@
 # DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
 #            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
 #                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
-#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
-#            "argument" refers to a specifiable value in a method or function call
+#            "parameter": refers to any specifiable attribute of a PsyNeuLink component
+#            "argument": refers to a specifiable value in a method or function call
+#            "attribute": the generic Python term for an object member
 #            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
 #            componentAttribute:  user accessible attribute for which there is no constructor argument
 #            _component_attribute:  internal attribute
 #            <definite article> :keyword:`<item>`;  <indefinite article> item;
 #            e.g.: the :keyword:`errorSource`;  an errorSource
+# DOCUMENT: In Components, document use of params dictionaries and/or assign_params methods for modifying
+#                the parameters of a component "permanently";  describe relatinoshipo of keywords for parameters
+#                which are simply convenience string constants that are the same as the name of the argument
+#                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
 
 # DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
