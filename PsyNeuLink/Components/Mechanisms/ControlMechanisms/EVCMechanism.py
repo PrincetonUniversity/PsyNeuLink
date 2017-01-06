@@ -102,7 +102,9 @@ Auxiliary EVC Functions
 
 The default EVC function calls its :py:meth:`value_function`, which
 
-This computes the EVC for each control allocation policy using three functions specified in its
+This computes the EVC for each control allocation policy using three functions speci.
+3...............................0.
+f2.ied in its
 ``function``, ``outcome_aggregation_function`` and ``cost_aggregation_function`` parameters.
 
 ..

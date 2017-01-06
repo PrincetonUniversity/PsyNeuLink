@@ -176,7 +176,8 @@
 <li class="toctree-l1"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
 </ul>
 </div>
-<span class="target" id="module-EVCMechanism"></span><div class="section" id="overview">
+<span class="target" id="module-EVCMechanism"></span><p><code class="docutils literal"><span class="pre">intensity</span></code></p>
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An EVCMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that manages a &#8220;portfolio&#8221; of
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> that regulate the performance of the system to which it belongs. It implements
@@ -224,27 +225,30 @@ to each outputState evaluated in the system.  OutputStates to be evaluated are s
 <code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> parameter (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying
 monitored outputStates).  The default for an EVCMechanism is:
 <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES</span></code>,  which uses the
-value of the primary outputState of
-every <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism in the system.  Each outputState can be assigned an
-exponent and a weight to parameterize its contribution to the aggregate value
-(see <a class="reference internal" href="#evcmechanism-parameterizing-evc-calculation"><span class="std std-ref">Parameterizing the EVC Calculation</span></a>).
-The outputStates being monitored by an EVCMechanism are listed in its
-<a class="reference internal" href="#EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref py py-data docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute.</p>
+value of the primary outputState of every <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref py py-data docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism in the system.
+Each outputState can be assigned an exponent and a weight to parameterize its contribution to the evaluation
+(see <a class="reference internal" href="#evcmechanism-parameterizing-evc-calculation"><span class="std std-ref">Parameterizing the EVC Calculation</span></a>). The outputStates of a system being monitored by an
+EVCMechanism are listed in its <a class="reference internal" href="#EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref py py-data docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute.</p>
 </div>
 <div class="section" id="function">
 <h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
-<dl class="docutils">
-<dt>FUNCTIONS</dt>
-<dd><ul class="first last simple">
-<li>a <a class="reference internal" href="#EVCMechanism.EVCMechanism.function" title="EVCMechanism.EVCMechanism.function"><code class="xref py py-data docutils literal"><span class="pre">function</span></code></a> that determines an
+<p>The <a class="reference internal" href="#EVCMechanism.EVCMechanism.function" title="EVCMechanism.EVCMechanism.function"><code class="xref py py-data docutils literal"><span class="pre">function</span></code></a> of an EVCMechanism determines the
 <a class="reference internal" href="#EVCMechanism.EVCMechanism.allocationPolicy" title="EVCMechanism.EVCMechanism.allocationPolicy"><code class="xref py py-data docutils literal"><span class="pre">allocationPolicy</span></code></a> &#8211; that is, the
-<a class="reference internal" href="ControlSignal.html#ControlSignal.ControlSignal.intensity" title="ControlSignal.ControlSignal.intensity"><code class="xref py py-data docutils literal"><span class="pre">intensity</span></code></a> of each of its ControlSignals &#8211; in the next round of
-the system&#8217;s execution;</li>
-</ul>
-</dd>
-</dl>
-<p>An EVCMechanism computes the EVC for each control allocation policy using three functions specified in its
+<a class="reference internal" href="ControlSignal.html#ControlSignal.ControlSignal.intensity" title="ControlSignal.ControlSignal.intensity"><code class="xref py py-data docutils literal"><span class="pre">intensity</span></code></a> of each of its ControlSignals &#8211; that will be used in the
+next round of the system&#8217;s execution.  Any function can be used that returns an
+<a class="reference internal" href="#EVCMechanism.EVCMechanism.allocationPolicy" title="EVCMechanism.EVCMechanism.allocationPolicy"><code class="xref py py-data docutils literal"><span class="pre">allocationPolicy</span></code></a> that is appropriate for the EVCMechanism;  that is, one
+that has the same number of (properly formatted) elements as the number of its ControlSignals. The default function
+for an EVCMechanism is an internal method that exhaustively evaluates the performance of the system under all
+allocationPolicies specified to be sampled for its ControlSignals, and chooses the one that generates the
+best performance.  This uses four auxiliary functions, any of which can themsevles be customized, as described below.</p>
+<div class="section" id="auxiliary-evc-functions">
+<h4>Auxiliary EVC Functions<a class="headerlink" href="#auxiliary-evc-functions" title="Permalink to this headline">¶</a></h4>
+<p>The default EVC function calls its <code class="xref py py-meth docutils literal"><span class="pre">value_function()</span></code>, which</p>
+<p>This computes the EVC for each control allocation policy using three functions speci.
+3...............................0.
+f2.ied in its
 <code class="docutils literal"><span class="pre">function</span></code>, <code class="docutils literal"><span class="pre">outcome_aggregation_function</span></code> and <code class="docutils literal"><span class="pre">cost_aggregation_function</span></code> parameters.</p>
+</div>
 <div class="section" id="constructing-the-controlsignalsearchspace">
 <span id="evcmechanism-controlsignalsearchspace"></span><h4>Constructing the ControlSignalSearchSpace<a class="headerlink" href="#constructing-the-controlsignalsearchspace" title="Permalink to this headline">¶</a></h4>
 <p>The <a class="reference internal" href="#EVCMechanism.EVCMechanism.controlSignalSearchSpace" title="EVCMechanism.EVCMechanism.controlSignalSearchSpace"><code class="xref py py-data docutils literal"><span class="pre">controlSignalSearchSpace</span></code></a> is constructed from the
