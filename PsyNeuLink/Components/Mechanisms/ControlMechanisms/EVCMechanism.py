@@ -510,7 +510,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     value_function : function : _value_function
         specifies the function used by :py:data:`_control_signal_grid_search` to compute the value for a given
-        allocationPolicy. The default function (_value) uses :py:data:`outcome_aggregation_function` and
+        allocationPolicy. The default function (_value_function) uses :py:data:`outcome_aggregation_function` and
         :py:data:`cost_aggregation_function` to aggregate the outcome (value) of the outputStates listed in
         :py:data:`monitoredOutputStates` and the cost of the EVCMechanism's :py:data:`controlSignals`, respectively;
         it then combines these using :py:data:`combine_outcomes_and_costs_function ` and returns the result.
