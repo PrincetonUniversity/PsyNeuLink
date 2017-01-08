@@ -20,19 +20,19 @@ a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav 
 ControlSignal is associated with a :doc:`ControlProjection`.  The ControlSignal's `intensity` determines the value of
 its ControlProjection, which in turn regulates the parameter of a mechanism or its function. A particular combination
 of ControlSignal intensities is called an `allocationPolicy`.  When a system is executed, it concludes by executing
-the EVCMechanism, which determines the `allocationPolicy` -- and thereby the values of controlled parameters -- in
-the next round of execution.
+the EVCMechanism, which determines the `allocationPolicy`, and thereby the values of controlled parameters forthe next
+round of execution.
 
 .. _EVCMechanism_EVC:
 
-The procedure by which the EVCMechanism selects an allocationPolicy when executed is determined by its
-:py:data:`function <EVCMechanism.function>` attribute, which can be :ref:`customized <EVCMechanism_Parameters>`.
-By default, it evaluates performance of the system under each `allocationPolicy` specified in its
-`controlSignalSearchSpace` attribute: it simulates the system and evaluates the expected value of control (EVC -- a
-cost-benefit analysis that weighs the cost of control against the outcomes of performance) for each policy,
-and selects the one that generates the maximum EVC. This is then implemented for the next round of execution. The
-default method for evaluating the system's performance and calculating the EVC
-for a given policy are described under `EVCMechanism_Execution`.
+The procedure by which the EVCMechanism selects an `allocationPolicy` when it is executed is determined by its
+:py:data:`function <EVCMechanism.function>` attribute. By default, this evaluates the performance of the system under
+every possible `allocationPolicy`, and chooses the best one. It does this by simulating the system under each
+`allocationPolicy`, and evaluating the expected value of control (EVC), a cost-benefit analysis that weighs the cost
+of the ControlSignals against the outcomes of performance for the given policy.  It then selects the one that generates
+the maximum EVC, which is implemented for the next round of execution. Each step of this procedure can be modified,
+or it can be replaced entirely, by assigning custom functions to corresponding parameters of the EVCMechanism, as
+described under `EVC_Calculation`.
 
 .. _EVCMechanism_Creation:
 
@@ -49,11 +49,12 @@ to the argument for that parameter in the EVCMechanism's constructor (and descri
 below).
 
 When an EVCMechanism is constructed automatically, inputStates are created and assigned projections from the
-outputStates of the mechanisms it uses to evaluate the system's performance; its own outputStates are used to implement
-controlSignals, and those are assigned ControlProjections that project to the parameterStates associated with
-the parameters of mechanisms and/or functions that have been specified for control.  In addition, a set of prediction
-mechanisms are created, that are used to generate input to the system when the EVC executes it in order to evaluate
-its performance.  These specialized components are described in the section that follows.
+outputStates of the mechanisms it uses to evaluate the system's performance. The EVCMechanism's outputStates are
+used to implement :doc:`ControlSignals <ControlSignal>`, and those are assigned :doc:`ControlProjections
+<ControlProjection>` that project to the parameterStates for the parameters of the mechanisms and/or functions to be
+controlled.  In addition, a set of prediction mechanisms are created, that are used to generate input to the system
+when the EVC executes it in order to evaluate its performance. These specialized components are described in the
+section that follows.
 
 .. _EVCMechanism_Structure:
 
@@ -68,16 +69,17 @@ InputStates
 
 Each inputState of an EVCMechanism represents an outcome of processing — that is, the value of an outputState of a
 mechanism in the system — that the EVCMechanism uses to evaluate the system's performance under an `allocationPolicy`.
-One inputState is assigned to each outputState evaluated in the system.  OutputStates to be evaluated are specified
-using the EVCMechanism's `MONITOR_FOR_CONTROL` parameter, where each can be assigned an exponent and a weight to
-parameterize its contribution  to the evaluation (see `ControlMechanism_Monitored_OutputStates` for specifying
-monitored outputStates; and  `EVC_Mechanism_Examples` for examples).  By default, the value of the EVCMechanism's
-`MONITOR_FOR_CONTROL` parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
-:ref:`primary outputState <OutputState_Primary>`of every `TERMINAL` mechanism in the system; each of which is
-assigned an exponent and weight of 1.  When an EVCMechanism is :ref:`created automatically <EVCMechanism_Creation>`,
-an inputState is created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter, and a
-`MappingProjection` is created that projects to that inputState from the outputState to be monitored.  The
-outputStates of a system being monitored by an EVCMechanism are listed in its `monitoredOutputStates` attribute.
+One inputState is assigned to each outputState evaluated in the system.  OutputStates are specified to be evaluated
+using the EVCMechanism's `MONITOR_FOR_CONTROL <monitor_for_control>` parameter, and each can be assigned an exponent
+and/or a weight to parameterize its contribution  to the evaluation (see `ControlMechanism_Monitored_OutputStates` for
+specifying monitored outputStates; and `below <EVCMechanism_Examples>` for examples).  By default, the value of the
+EVCMechanism's `MONITOR_FOR_CONTROL` parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`,
+which specifies monitoring the :ref:`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the
+system, each of which is assigned an exponent and weight of 1.  When an EVCMechanism is :ref:`created automatically
+<EVCMechanism_Creation>`, an inputState is created for each outputState specified in its `MONITOR_FOR_CONTROL`
+parameter, and a `MappingProjection` is created that projects to that inputState from the outputState to be
+monitored.  The outputStates of a system being monitored by an EVCMechanism are listed in its `monitoredOutputStates`
+attribute.
 
 .. _EVC_Function
 
@@ -86,28 +88,27 @@ Function
 
 The `function` of an EVCMechanism determines the `allocationPolicy` -- that is, the `intensity` of each of its
 ControlSignals -- that will be used in the next round of the system's execution.  Any function can be used that
-returns an `allocationPolicy` that is appropriate for the EVCMechanism (i.e., the same number of elements as the
-number of its ControlSignals, in the appropriate format). The default function for an EVCMechanism
-is an internal method (`_control_signal_grid_search`) that evaluates the performance of the system under
-a set of specified allocationPolicies specified, and chooses the one that generates the best
-performance (the highest `EVC`). The procedure, including the four customizable functions it uses, is described below.
+returns an appropriate value (i.e., that has the same number of elements as the EVCMechanism's `controlSignals`
+attribute, each of which specifies an `allocation` for the corresponding ControlSignal). The default function for an
+EVCMechanism is an internal method (_control_signal_grid_search) that evaluates the performance of the system under
+a set of specified allocationPolicies, and chooses the one that generates the best performance (the greatest EVC).
+The procedure, including the four customizable functions it uses, is described below.
 
-.. _EVC_Calculation
+.. _EVC_Calculation:
 
 EVC Calculation
 ^^^^^^^^^^^^^^^
 
 The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) for every
 combination of `allocation` values specified to be sampled for its ControlSignals (i.e., every possible
-`allocationPolicy`).  Each policy is constructed by drawing one value from the `allocation_samples` attribute of each
-of the EVCMechanism's ControlSignal; an `allocationPolicy` is constructed for every possible combination of values, and
-stored in the EVCMechanism's `controlSignalSearchSpace` attribute.  The default
-:py:data:`function <EVCMechanism.function>` then uses `run_simulation` method to simulate the system under each
-`allocationPolicy` in `controlSignalSearchSpace`, calculates the EVC for each of those policies, and returns the policy
-with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
-`SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for each simulation run
-(in `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the following four
-auxiliary functions (each of which can be customized):
+`allocationPolicy`).  Each policy is constructed by drawing one value from the `allocation_samples <LINK>` attribute of
+each of the EVCMechanism's ControlSignals.  An `allocationPolicy` is constructed for every possible combination of
+values, and stored in the EVCMechanism's `controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation
+<LINK>` method is then used to simulate the system under each `allocationPolicy` in `controlSignalSearchSpace`,
+calculate the EVC for each of those policies, and return the policy with the greatest EVC.  By default, only the
+maximum EVC is saved and returned.  However, by setting the  `SAVE_ALL_VALUES_AND_POLICIES` parameter to true,
+each policy and its EVC can be saved for each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The
+EVC is calculated for each policy using the following four functions (each of which can be customized):
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -123,59 +124,52 @@ COMMENT
   functions described below, which do the actual work of evaluating the performance of the system and the cost of the
   controlSignals under the current `allocationPolicy`, and combining these to calculate the EVC.  This function can
   be replaced with a user-defined function to fully customize the calculation of the EVC, by assigning a function to
-  the `value_function` parameter of the EVCMechanism.  The function must return a tuple with three
-  items:  the calculated EVC (this must be a scalar value), and the outcome and cost from which it was calculated (
-  these can be scalar values or the :keyword:`None`).
+  the `VALUE_FUNCTION <value_function>` parameter of the EVCMechanism.
 ..
 * `OUTCOME_FUNCTION <outcome_function>` - this combines the values of the outputStates in the EVCMechanism's
   `monitoredOutputStates` attribute to generate an aggregated outcome value for the current `allocationPolicy`. The
-  default is the :`LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState
+  default is the `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState
   values.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively, to scale and/or
   exponentiate the contribution of each outputState's value to the aggregated outcome.  For example, one outcome value
-  can be divided by another by assigning a negative exponent to the latter.  The length of the array for
-  the ``weights`` and ``exponents`` arguments must equal the number of outputStates in `monitoredOutputStates`. These
-  specifications will supercede any made for individual outputStates in the ``monitor_for_control`` argument, or
-  `MONITOR_FOR_CONTROL <monitor_for_control>` entry of a params specification dictionary (see
-  `ControlMechanism_Monitored_OutputStates`).  Evaluation of the system's performance can be further customized by
-  specifying a custom function for the `outcome_function` parameter.  The function must take as its first
-  argument a 2d array each element of which is a 1d array containing a single scalar value, and it must return
-  a 1d array with a single scalar value.
+  can be divided by another by assigning a negative exponent to the latter (see `EVCMechanism_Examples`). The length of
+  the array for the ``weights`` and ``exponents`` arguments must equal the number of outputStates in
+  `monitoredOutputStates`. These specifications will supercede any made for individual outputStates in the
+  ``monitor_for_control`` argument, or `MONITOR_FOR_CONTROL <monitor_for_control>` entry of a params specification
+  dictionary (see `ControlMechanism_Monitored_OutputStates`).  Evaluation of the system's performance can be further
+  customized by specifying a custom function for the `OUTCOME_FUNCTION <outcome_function>` parameter.
 ..
 * `COST_FUNCTION <cost_function>` - this combines the costs of the EVCMechanism's ControlSignals to generate an
   aggregated cost value for the current `allocationPolicy`.  The default is the `LinearCombination` function,
   which sums the costs.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively,
   to scale and/or exponentiate the contribution of each ControlSignal's cost to the value to the aggregated cost.
   The length of the array for these arguments must equal the number of ControlSignals in the 'controlSignals`
-  attribute. The evaluation of cost can be further customized by specifying a custom function for the `cost_function`
-  parameter. The function must take as its fist argument a 2d array each element of which is a 1d array containing a
-  single scalar value, and it must return a 1d array with a single scalar value.
+  attribute. The evaluation of cost can be further customized by specifying a custom function for the
+  `COST_FUNCTION <cost_function>` parameter.
 ..
 * :keyword:`COMBINE_OUTCOME_AND_COST_FUNCTION <combine_outcome_and_cost_function>` - this combines the aggregated
   outcome and aggregated cost values for the current `allocationPolicy`, to determine the EVC for that policy.  The
-  default is the `LinearCombination` function, which subtracts the aggregated cost from the aggregated value. The way
-  in which outcomes and costs are combined to determine the EVC can be customized by specifying a custom function for
-  the `combine_outcomes_and_costs` parameter.  The function must take as its first two arguments two 1d arrays,
-  both of which are 1d arrays containing a single scalar value:  the first corresponds to the performance of the
-  system and the second the cost;  it must return a 1d array with a single scalar value.
+  default is the `LinearCombination` function, which subtracts the aggregated cost from the aggregated outcome. The way
+  in which the outcome and cost are combined to determine the EVC can be customized by specifying a custom function for
+  the `COMBINE_OUTCOME_AND_COST_FUNCTION <combine_outcome_and_cost_function` parameter.
 
 .. _EVCMechanism_ControlSignal:
 
 ControlSignals
 ~~~~~~~~~~~~~~
 
-:doc:`ControlSignals <ControlSignal>` are used to regulate the parameters of mechanisms or their functions. An
-EVCMechanism has one ControlSignal for each parameter that it controls. Each ControlSignal is implemented as an
-`OutputState` of the EVCMechanism, the value of which is the ControlSignal's `intensity`.  When an EVCMEchanism is
-:ref:`created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has specified
-for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
-see`Mechanism_Specifying_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
+A `ControlSignal` is used to regulate the parameter of mechanisms or its function. An EVCMechanism has one
+ControlSignal for each parameter that it controls. Each ControlSignal is implemented as an `OutputState` of the
+EVCMechanism, the value of which is the ControlSignal's `intensity`.  When an EVCMechanism is
+:ref:`created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has
+been specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
+see `Mechanism_Specifying_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
 attribute. Each ControlSignal is associated with a `ControlProjection` that projects to the
 :doc:`parameterState <ParameterState>` for the parameter controlled by that ControlSignal. The EVCMechanism's
-:py:data:`function <EVCMechanism.function> assigns an `allocation` value to each of its ControlSignals.  Each
+:py:data:`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals.  Each
 ControlSignal uses its allocation to compute its `intensity`, that is then assigned as the value of its
 ControlProjection. The value of the ControlProjection is then used by the parameterState to which it projects to
 modify the value of the parameter for which it is responsible.  A ControlSignal also calculates a `cost`,
-based on its intensity and/or its time course, that is used by the EVCMechanism to adapt its allocation in the
+based on its intensity and/or its time course, that is used by the EVCMechanism to adapt its `allocation` in the
 future.  When the EVCMechanism chooses an `allocationPolicy` to evaluate, it selects an allocation value  from the
 ControlSignal's `allocation_samples` attribute.
 
@@ -189,9 +183,12 @@ Prediction mechanisms are used to generate the input for the system each time th
 :ref:`simulates its execution <EVCMechanism_Execution>`.  When an EVCMechanism is
 :ref:`created automatically <EVCMechanism_Creation>`, a prediction mechanism is created for each `ORIGIN` (input)
 mechanism in the system; a `MappingProjection` is created that projects to it from the corresponding `ORIGIN` mechanism;
-and the pair are assigned to their own *prediction process*.  The type of mechanism used for the prediction
-mechanisms can be specified using the EVCMechanism's `PREDICTION_MECHANISM_TYPE` parameter, and their parameters can
-be specified in the EVCMechanism's `PREDICTION_MECHANISM_PARAMS>` parameter.  The default type is an
+and the pair are assigned to their own prediction `process <Process>`.  The type of mechanism used for the prediction
+mechanisms can be specified using the EVCMechanism's `PREDICTION_MECHANISM_TYPE <prediction_mechanism_type>` parameter,
+and their
+parameters can
+be specified in the EVCMechanism's `PREDICTION_MECHANISM_PARAMS <prediction_mechanism_params>` parameter.  The default
+type is an
 'IntegratorMechanism`, that generates an exponentially weighted time-average of its input.  The prediction
 mechanisms for an EVCMechanism are listed in its `predictionMechanisms` attribute, and the prediction processes to
 which they belong in its `predictionProcesses` attribute.
@@ -245,7 +242,7 @@ This procedure can be modified by assigning custom functions for any or all of t
 including the EVCMechanism's :py:data:`function <EVCMechanism.function>` itself.  The requirements for each are
 described in the function attribute entries.
 
-.. _EVCMechanism_Examples
+.. _EVCMechanism_Examples:
 
 Examples
 --------
@@ -443,24 +440,33 @@ class EVCMechanism(ControlMechanism_Base):
         `cost_function` to aggregate the outcome (value) of the outputStates listed in
         `monitoredOutputStates` and the cost of the EVCMechanism's `controlSignals`, respectively; it then
         combines these using `combine_outcome_and_cost_function ` and returns a tuple with the calculated
-        value, as well as the aggregated outcome and aggregate cost used to determine it.
+        value, as well as the aggregated outcome and aggregate cost used to determine it.  The `value_function`
+        must return a tuple with three items:  the calculated EVC (this must be a scalar value), and the outcome and
+        cost from which it was calculated (these can be scalar values or :keyword:`None`).
 
     outcome_function : CombinationFunction : LinearCombination(offset=0,scale=,operation=PRODUCT)
         specifies the function used to aggregate the value of the outputStates in `monitoredOutputStates`. The
         ``weight`` and/or the ``exponent`` arguments can be used to parameterize the contribution that each
-        outputState makes to the aggregated value;  the length of each argument must equal the number of outputStates
-        in `monitoredOutputStates`.
+        outputState makes to the aggregated value.  The length of each of these arguments must equal the number of
+        outputStates in `monitoredOutputStates`.  The `outcome_function` must take as its first argument a 2d array,
+        each element of which is a 1d array containing a single scalar value, and it must return a 1d array with a
+        single scalar value.
 
     cost_function : CombinationFunction : LinearCombination(offset=0.0,scale=1.0,operation=SUM)
         specifies the function used to aggregate the cost of the EVCMechanism's control signals.
         The ``weight`` and/or the ``exponent`` arguments can be used to parameterize the contribution that each
         control signal makes to the aggregated value;  the length of each argument must equal the number of
-        ControlProjections in ``controlProjections``.
+        ControlProjections in ``controlProjections``.  The `cost_function` must take as its fist argument a 2d array
+        each element of which is a 1d array containing a single scalar value, and it must return a 1d array with a
+        single scalar value.
 
     combine_outcome_and_cost_function : CombinationFunction : LinearCombination(offset=0.0,scale=1,operation=SUM)
         specifies the function used to combine the outcomes and costs a control an allocation policy to determine its
         value; the ``weight`` and/or the ``exponent`` arguments can be used to parameterize the relative contribution
-        of outcomes and costs and how they are combined to generate the result.
+        of outcomes and costs and how they are combined to generate the result.  The function must take as its
+        first two arguments two 1d arrays, both of which are 1d arrays containing a single scalar value:  the first
+        corresponds to the performance of the system and the second the cost;  it must return a 1d array with a single
+        scalar value.
 
     save_all_values_and_policies : bool : default :keyword:`False`
         when :keyword:`True`, saves all of the control allocation policies tested in ``EVCpolicies`` and their
