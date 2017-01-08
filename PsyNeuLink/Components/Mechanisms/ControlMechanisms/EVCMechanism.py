@@ -200,43 +200,44 @@ Execution
 
 When an EVCMechanism is executed, it updates the value of its `predictionMechanisms`, and then calls its
 :py:data:`function <EVCMechanism.function>`, which determines and implements the `allocationPolicy` for the next round
-of the system's execution.  By default, the EVCMechanism identifies and implements the allocationPolicy that maximizes
-the objective function specified for the outputStates it is monitoring (`monitoredOuputStates) relative to the costs
-associated with each ControlSignal.  However, this procedure can be modified by specifying a custom function for any or
-all of the functions described below.
+of the system's execution.  By default, the EVCMechanism identifies and implements the `allocationPolicy` that maximizes
+the EVC evaluated for the outputStates it is monitoring, as described below.  However, this procedure can be modified by
+specifying a custom function for any or all of the ones described below.
 
 .. _EVCMechanism_Default_Function:
 
 The default :py:data:`function <EVCMechanism.function>` for an EVCMechanism selects an `allocationPolicy` by assessing
 the performance of the system under each of the policies in its `controlSignalSearchSpace` and selecting the
-one that yields the maximum EVC.
+one that yields the maximum EVC. The `controlSignalSearchSpace` is constructed by creating a set of
+allocationPolicies that represent all permutations of the allocation values to be sampled for each ControlSignal.
+Each `allocationPolicy` in the set is constructed by drawing one value from the `allocation_samples` of each
+ControlSignal, and the set contains all combinations of these values.  For each `allocationPolicy`, the default
+:py:data:`function <EVCMechanism.function>` calls the EVCMechanism's `value_function` which, in turn, carries out
+the following steps:
 
-The `controlSignalSearchSpace` is constructed by creating a set of allocationPolicies that represent all permutations
-of the allocation values to be sampled for each ControlSignal: each allocationPolicy in the set is constructed by
-drawing one value from the `allocation_samples` of each ControlSignal, and the set contains all combinations of these
-values.  For each `allocationPolicy`, the default :py:data:`function <EVCMechanism.function>` calls the EVCMechanism's
-`value_function` which, in turn, carries out the following steps:
-
-* **Implement the allocationPolicy**: Assign the `allocation <ControlSignal.ControlSignal.allocation>` value specifed
-  for for each ControlSignal.
+* **Implement the allocationPolicy.** Assign the `allocation <ControlSignal.ControlSignal.allocation>` value specifed
+  for each ControlSignal.
 ..
-* **Simulate performance.**  Execute the system under the allocationPolicy, using the EVCMechanism's `run_simulation`
-  method, and the value of its `predictedInputs` attribute as the input to the system (this uses the history of previous
-  trials to generate an average expected input value).
+* **Simulate performance.**  Execute the system under the current `allocationPolicy` using the EVCMechanism's
+  `run_simulation` method and the value of its `predictedInputs` attribute as the input to the system (this uses
+  the history of previous trials to generate an average expected input value).
 ..
 * **Calculate the EVC for the allocationPolicy.**  This uses three functions:
-    * calculate the **outcomes** or the allocationPolicy using the `outcome_function` to aggregate the
-      value of the outputStates the EVCMechanism monitors (listed in its `monitoredOutputStates` attribute);
-    * calculate the **cost** of the allocationPolicy using the `cost_function` to aggregate the `cost` of
-      the EVCMechanism's ControlSignals.
-    * calculate the **value** (EVC) of the allocationPolicy using the `combine_outcome_and_cost_function`,
-      which subtracts the aggregated costs from the aggregated outcomes.
+
+    * the `outcome_function` calculates the **outcome** for the allocationPolicy by aggregating the value of the
+      outputStates the EVCMechanism monitors (listed in its `monitoredOutputStates` attribute);
+    ..
+    * the `cost_function` calculates the **cost** of the allocationPolicy by aggregating the `cost` of the
+      EVCMechanism's ControlSignals;
+    ..
+    * the `combine_outcome_and_cost_function` calculates the **value** (EVC) of the allocationPolicy by subtracting the
+      aggregated cost from the aggregated outcome.
+
 If the `save_all_values_and_policies` attribute is :keyword:`True`, the allocation policy is saved in the
-EVCMechanism's `EVCpolicies` attribute, and its value is saved in the `EVCvalues` attribute.
-..
-The :py:data:`function <EVCMechanism.function>` returns the allocationPolicy that yielded the maximum EVC. This is then
-implemented by assigning the `allocation` specified for each ControlSignal by the designated `allocationPolicy`.  These
-allocations determine the value of the parameters being controlled in the next round of the system's execution.
+EVCMechanism's `EVCpolicies` attribute, and its value is saved in the `EVCvalues` attribute. The :py:data:`function
+<EVCMechanism.function>` returns the `allocationPolicy` that yielded the maximum EVC. This is then implemented by
+assigning the `allocation` specified for each ControlSignal by the designated `allocationPolicy`.  These allocations
+determine the value of the parameters being controlled in the next round of the system's execution.
 
 This procedure can be modified by assigning custom functions for any or all of the ones described above,
 including the EVCMechanism's :py:data:`function <EVCMechanism.function>` itself.  The requirements for each are
@@ -253,13 +254,12 @@ The following example implements a system with an EVCMechanism (and two processe
                       controller=EVCMechanism,
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
-It uses the system's `monitor_for_control` argument to assign three outputStates to be monitored (belonging
-to mechanisms not show here).  The first one references a mechanism (not shown);  its primary outputState will be
-used by default).  The second and third use keywords that are the names of outputStates (in this case, for a `DDM`).
-The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
-computation will multiply the value of the primary outputState of the Reward mechanism by the value of the
-DDM_DECISION_VARIABLE outputState of the DDM mechanism, and then divide that by the value of the RESPONSE_TIME
-outputState of the DDM mechanism.
+It uses the system's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
+references the Reward mechanism (not shown);  its primary outputState will be used by default.  The second and third
+use keywords that are the names of outputStates of a  `DDM` mechanism (also not shown). The last one (RESPONSE_TIME)
+is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC computation will multiply
+the value of the primary outputState of the Reward mechanism by the value of the DDM_DECISION_VARIABLE outputState
+of the DDM mechanism, and then divide that by the value of the RESPONSE_TIME outputState of the DDM mechanism.
 
 COMMENT:
 ADD: This example specifies the EVCMechanism on its own, and then uses it for a system.
