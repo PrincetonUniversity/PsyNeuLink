@@ -150,7 +150,7 @@ COMMENT
   parameter. The function must take as its fist argument a 2d array each element of which is a 1d array containing a
   single scalar value, and it must return a 1d array with a single scalar value.
 ..
-* :keyword:`COMBINE_OUTCOMES_AND_COSTS_FUNCTION <combine_outcomes_and_costs_function>` - this combines the aggregated
+* :keyword:`COMBINE_OUTCOME_AND_COST_FUNCTION <combine_outcome_and_cost_function>` - this combines the aggregated
   outcome and aggregated cost values for the current `allocationPolicy`, to determine the EVC for that policy.  The
   default is the `LinearCombination` function, which subtracts the aggregated cost from the aggregated value. The way
   in which outcomes and costs are combined to determine the EVC can be customized by specifying a custom function for
@@ -232,7 +232,7 @@ values.  For each `allocationPolicy`, the default :py:data:`function <EVCMechani
       value of the outputStates the EVCMechanism monitors (listed in its `monitoredOutputStates` attribute);
     * calculate the **cost** of the allocationPolicy using the `cost_function` to aggregate the `cost` of
       the EVCMechanism's ControlSignals.
-    * calculate the **value** (EVC) of the allocationPolicy using the `combine_outcomes_and_costs_function`,
+    * calculate the **value** (EVC) of the allocationPolicy using the `combine_outcome_and_cost_function`,
       which subtracts the aggregated costs from the aggregated outcomes.
 If the `save_all_values_and_policies` attribute is :keyword:`True`, the allocation policy is saved in the
 EVCMechanism's `EVCpolicies` attribute, and its value is saved in the `EVCvalues` attribute.
@@ -364,7 +364,7 @@ class EVCMechanism(ControlMechanism_Base):
     value_function=_value_function,                                                         \
     outcome_function=LinearCombination(offset=0,scale=1,operation=PRODUCT),                 \
     cost_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM),                    \
-    combine_outcomes_and_costs_function=LinearCombination(offset=0.0,scale=1,operation=SUM) \
+    combine_outcome_and_cost_function=LinearCombination(offset=0.0,scale=1,operation=SUM) \
     save_all_values_and_policies:bool=:keyword:`False`,                                     \
     params=None,                                                                            \
     name=None,                                                                              \
@@ -442,7 +442,7 @@ class EVCMechanism(ControlMechanism_Base):
         allocationPolicy. The default function (_value_function) uses `outcome_function` and
         `cost_function` to aggregate the outcome (value) of the outputStates listed in
         `monitoredOutputStates` and the cost of the EVCMechanism's `controlSignals`, respectively; it then
-        combines these using `combine_outcomes_and_costs_function ` and returns a tuple with the calculated
+        combines these using `combine_outcome_and_cost_function ` and returns a tuple with the calculated
         value, as well as the aggregated outcome and aggregate cost used to determine it.
 
     outcome_function : CombinationFunction : LinearCombination(offset=0,scale=,operation=PRODUCT)
@@ -457,7 +457,7 @@ class EVCMechanism(ControlMechanism_Base):
         control signal makes to the aggregated value;  the length of each argument must equal the number of
         ControlProjections in ``controlProjections``.
 
-    combine_outcomes_and_costs_function : CombinationFunction : LinearCombination(offset=0.0,scale=1,operation=SUM)
+    combine_outcome_and_cost_function : CombinationFunction : LinearCombination(offset=0.0,scale=1,operation=SUM)
         specifies the function used to combine the outcomes and costs a control an allocation policy to determine its
         value; the ``weight`` and/or the ``exponent`` arguments can be used to parameterize the relative contribution
         of outcomes and costs and how they are combined to generate the result.
@@ -530,7 +530,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     value_function : function : _value_function()
         calculates the EVC, using the `outcome_function`, `cost_function`, and
-        `combine_outcomes_and_costs_function`. Returns a tuple with the calculated EVC value, as well as the
+        `combine_outcome_and_cost_function`. Returns a tuple with the calculated EVC value, as well as the
         aggregated outcome and aggreated cost from which it was calculated.
 
     outcome_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1.0,
@@ -544,7 +544,7 @@ class EVCMechanism(ControlMechanism_Base):
         used to scale the contribution of the cost of each control signal;  it must be an array of scalar values,
         the length of which is equal to the number of the EVCMechanism's outputStates.
 
-    combine_outcomes_and_costs_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1,operation=SUM)
+    combine_outcome_and_cost_function : CombinationFunction : default LinearCombination(offset=0.0,scale=1,operation=SUM)
         used to combine the aggregated outcomes (values of the monitored outputStates) with the aggregated cost
         (of the control signal) for a given control allocation policy. The variable must be an array with two items
         of the same format: the first is the outcomes, and the second is the costs.  Returns an array with the same
@@ -623,7 +623,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                              scale=1.0,
                                                              operation=SUM,
                                                              context=componentType+COST_FUNCTION),
-                 combine_outcomes_and_costs_function=LinearCombination(offset=0.0,
+                 combine_outcome_and_cost_function=LinearCombination(offset=0.0,
                                                                        scale=1,
                                                                        operation=SUM,
                                                                        context=componentType+FUNCTION),
@@ -644,7 +644,7 @@ class EVCMechanism(ControlMechanism_Base):
                                               value_function=value_function,
                                               outcome_function=outcome_function,
                                               cost_function=cost_function,
-                                              combine_outcomes_and_costs_function=combine_outcomes_and_costs_function,
+                                              combine_outcome_and_cost_function=combine_outcome_and_cost_function,
                                               save_all_values_and_policies=save_all_values_and_policies,
                                               params=params)
 
@@ -1313,7 +1313,7 @@ def __control_signal_grid_search(controller=None, **kwargs):
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_aggregation function - aggregates outcomes (using specified weights and exponentiation)
             controller.cost_function  aggregate costs of control signals
-            controller.combine_outcomes_and_costs_function - combines outcoms and costs
+            controller.combine_outcome_and_cost_function - combines outcoms and costs
     COMMENT
 
     Description
@@ -1634,7 +1634,7 @@ def __value_function(controller, outcomes, costs, context):
     aggregated_costs = controller.paramsCurrent[COST_FUNCTION].function(costs)
 
     # Combine aggregate outcomes and costs to determine value
-    value = controller.paramsCurrent[COMBINE_OUTCOMES_AND_COSTS_FUNCTION].function([aggregated_outcomes,
+    value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION].function([aggregated_outcomes,
                                                                                     -aggregated_costs])
 
     return (value, aggregated_outcomes, aggregated_costs)
