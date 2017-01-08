@@ -362,8 +362,8 @@ class EVCMechanism(ControlMechanism_Base):
     monitor_for_control=None,                                                               \
     function=_control_signal_grid_search,                                                   \
     value_function=_value_function,                                                         \
-    outcome_function=LinearCombination(offset=0,scale=1,operation=PRODUCT),     \
-    cost_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM),        \
+    outcome_function=LinearCombination(offset=0,scale=1,operation=PRODUCT),                 \
+    cost_function=LinearCombination(offset=0.0,scale=1.0,operation=SUM),                    \
     combine_outcomes_and_costs_function=LinearCombination(offset=0.0,scale=1,operation=SUM) \
     save_all_values_and_policies:bool=:keyword:`False`,                                     \
     params=None,                                                                            \
