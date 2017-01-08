@@ -114,7 +114,7 @@
 #             controller.outputValue: list of current controlSignal values
 #             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
 #             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
-#             controller.cost_aggregation_function:  aggregate costs of control signals
+#             controller.cost_function:  aggregate costs of control signals
 #             controller.combine_outcomes_and_costs_function: combines outcomes and costs
 
 
@@ -2077,7 +2077,7 @@
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL ControlProjections IN
 # FIX:                   ControlProjection.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
-# FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
+# FIX:  CURRENTLY, COST_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
 #           COULD SWITCH TO SPECIFICATION BY CLASS REFERENCE, BUT THEN WOULD NEED
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)
