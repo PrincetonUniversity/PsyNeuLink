@@ -115,7 +115,7 @@
 #             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
 #             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
 #             controller.cost_function:  aggregate costs of control signals
-#             controller.combine_outcomes_and_costs_function: combines outcomes and costs
+#             controller.combine_outcome_and_cost_function: combines outcomes and costs
 
 
 # PROJECTIONS:
