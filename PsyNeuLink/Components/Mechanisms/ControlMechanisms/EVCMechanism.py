@@ -1121,6 +1121,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         super()._instantiate_attributes_after_function(context=context)
 
+        outcome_function = self.outcome_function
+        cost_function = self.cost_function
+
         # Insure that length of the weights and/or exponents arguments for the outcome_function
         #    matches the number of monitoredOutputStates
         num_monitored_output_states = len(self.monitoredOutputStates)
