@@ -1124,49 +1124,51 @@ class EVCMechanism(ControlMechanism_Base):
         outcome_function = self.outcome_function
         cost_function = self.cost_function
 
-        # Insure that length of the weights and/or exponents arguments for the outcome_function
-        #    matches the number of monitoredOutputStates
-        num_monitored_output_states = len(self.monitoredOutputStates)
-        if self.outcome_function.weights is not None:
-            num_outcome_weights = len(self.outcome_function.weights)
-            if  num_outcome_weights != num_monitored_output_states:
-                raise EVCError("The length of the weights argument {} for the {} of {} "
-                               "must equal the number of its monitoredOutputStates {}".
-                               format(num_outcome_weights,
-                                      OUTCOME_FUNCTION,
-                                      self.name,
-                                      num_monitored_output_states))
-        if self.outcome_function.exponents is not None:
-            num_outcome_exponents = len(self.outcome_function.exponents)
-            if  num_outcome_exponents != num_monitored_output_states:
-                raise EVCError("The length of the exponents argument {} for the {} of {} "
-                               "must equal the number of its control signals {}".
-                               format(num_outcome_exponents,
-                                      OUTCOME_FUNCTION,
-                                      self.name,
-                                      num_monitored_output_states))
+        if isinstance(outcome_function, Function):
+            # Insure that length of the weights and/or exponents arguments for the outcome_function
+            #    matches the number of monitoredOutputStates
+            num_monitored_output_states = len(self.monitoredOutputStates)
+            if outcome_function.weights is not None:
+                num_outcome_weights = len(outcome_function.weights)
+                if  num_outcome_weights != num_monitored_output_states:
+                    raise EVCError("The length of the weights argument {} for the {} of {} "
+                                   "must equal the number of its monitoredOutputStates {}".
+                                   format(num_outcome_weights,
+                                          OUTCOME_FUNCTION,
+                                          self.name,
+                                          num_monitored_output_states))
+            if outcome_function.exponents is not None:
+                num_outcome_exponents = len(outcome_function.exponents)
+                if  num_outcome_exponents != num_monitored_output_states:
+                    raise EVCError("The length of the exponents argument {} for the {} of {} "
+                                   "must equal the number of its control signals {}".
+                                   format(num_outcome_exponents,
+                                          OUTCOME_FUNCTION,
+                                          self.name,
+                                          num_monitored_output_states))
 
-        # Insure that length of the weights and/or exponents arguments for the cost_function
-        #    matches the number of control signals
-        num_control_projections = len(self.controlProjections)
-        if self.cost_function.weights is not None:
-            num_cost_weights = len(self.cost_function.weights)
-            if  num_cost_weights != num_control_projections:
-                raise EVCError("The length of the weights argument {} for the {} of {} "
-                               "must equal the number of its control signals {}".
-                               format(num_cost_weights,
-                                      COST_FUNCTION,
-                                      self.name,
-                                      num_control_projections))
-        if self.cost_function.exponents is not None:
-            num_cost_exponents = len(self.cost_function.exponents)
-            if  num_cost_exponents != num_control_projections:
-                raise EVCError("The length of the exponents argument {} for the {} of {} "
-                               "must equal the number of its control signals {}".
-                               format(num_cost_exponents,
-                                      COST_FUNCTION,
-                                      self.name,
-                                      num_control_projections))
+        if isinstance(cost_function, Function):
+            # Insure that length of the weights and/or exponents arguments for the cost_function
+            #    matches the number of control signals
+            num_control_projections = len(self.controlProjections)
+            if cost_function.weights is not None:
+                num_cost_weights = len(cost_function.weights)
+                if  num_cost_weights != num_control_projections:
+                    raise EVCError("The length of the weights argument {} for the {} of {} "
+                                   "must equal the number of its control signals {}".
+                                   format(num_cost_weights,
+                                          COST_FUNCTION,
+                                          self.name,
+                                          num_control_projections))
+            if cost_function.exponents is not None:
+                num_cost_exponents = len(cost_function.exponents)
+                if  num_cost_exponents != num_control_projections:
+                    raise EVCError("The length of the exponents argument {} for the {} of {} "
+                                   "must equal the number of its control signals {}".
+                                   format(num_cost_exponents,
+                                          COST_FUNCTION,
+                                          self.name,
+                                          num_control_projections))
 
     def _add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
