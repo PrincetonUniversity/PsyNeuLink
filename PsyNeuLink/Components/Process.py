@@ -1988,7 +1988,7 @@ class Process_Base(Process):
         self.variable = self.input
 
         # If target was not provided to execute, use value provided on instantiation
-        if not target is None:
+        if target is not None:
             self.target = target
 
         # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)

@@ -705,9 +705,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                 prefs=prefs,
                                                 context=context)
 
-        if not self.exponents is None:
+        if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
-        if not self.weights is None:
+        if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1,1)
 
 
@@ -785,9 +785,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #                 raise FunctionError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
 #                                format(weights, self.name))
 
-        if not target_set[EXPONENTS] is None:
+        if target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-        if not target_set[WEIGHTS] is None:
+        if target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 
         # if not operation:
@@ -852,7 +852,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
-        if not exponents is None:
+        if exponents is not None:
             if len(exponents) != len(self.variable):
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
@@ -864,7 +864,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 self.variable = self.variable ** exponents
 
         # Apply weights if they were specified
-        if not weights is None:
+        if weights is not None:
             if len(weights) != len(self.variable):
                 raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))

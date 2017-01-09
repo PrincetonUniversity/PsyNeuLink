@@ -464,7 +464,7 @@ def run(object,
     #      IMPLEMENT learning_enabled FOR SYSTEM, WHICH FORCES LEARNING OF PROCESSES WHEN SYSTEM EXECUTES?
     #      OR MAKE LEARNING A PARAM THAT IS PASSED IN execute
     # If learning is specified, buffer current state and set to specified state
-    if not learning is None:
+    if learning is not None:
         try:
             learning_state_buffer = object._learning_enabled
         except AttributeError:
@@ -495,7 +495,7 @@ def run(object,
     # Class-specific validation:
     context = context or RUN + "validating " + object.name
     num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context=context)
-    if not targets is None:
+    if targets is not None:
         _validate_targets(object, targets, num_inputs_sets, context=context)
 
     # INITIALIZATION
@@ -525,7 +525,7 @@ def run(object,
             input_num = execution%len(inputs)
 
             # Assign targets:
-            if not targets is None:
+            if targets is not None:
 
                 if isinstance(targets, function_type):
                     object.target = targets

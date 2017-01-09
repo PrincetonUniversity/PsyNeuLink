@@ -733,7 +733,7 @@ class EVCMechanism(ControlMechanism_Base):
         if controller_specs:
             if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
                 option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
-                if not option_item is None:
+                if option_item is not None:
                     del system_specs[option_item]
 
         # Combine controller and system specs
@@ -1106,7 +1106,7 @@ class EVCMechanism(ControlMechanism_Base):
         # Insure that length of the weights and/or exponents arguments for the outcome_function
         #    matches the number of monitoredOutputStates
         num_monitored_output_states = len(self.monitoredOutputStates)
-        if not self.outcome_function.weights is None:
+        if self.outcome_function.weights is not None:
             num_outcome_weights = len(self.outcome_function.weights)
             if  num_outcome_weights != num_monitored_output_states:
                 raise EVCError("The length of the weights argument {} for the {} of {} "
@@ -1115,7 +1115,7 @@ class EVCMechanism(ControlMechanism_Base):
                                       OUTCOME_FUNCTION,
                                       self.name,
                                       num_monitored_output_states))
-        if not self.outcome_function.exponents is None:
+        if self.outcome_function.exponents is not None:
             num_outcome_exponents = len(self.outcome_function.exponents)
             if  num_outcome_exponents != num_monitored_output_states:
                 raise EVCError("The length of the exponents argument {} for the {} of {} "
@@ -1128,7 +1128,7 @@ class EVCMechanism(ControlMechanism_Base):
         # Insure that length of the weights and/or exponents arguments for the cost_function
         #    matches the number of control signals
         num_control_projections = len(self.controlProjections)
-        if not self.cost_function.weights is None:
+        if self.cost_function.weights is not None:
             num_cost_weights = len(self.cost_function.weights)
             if  num_cost_weights != num_control_projections:
                 raise EVCError("The length of the weights argument {} for the {} of {} "
@@ -1137,7 +1137,7 @@ class EVCMechanism(ControlMechanism_Base):
                                       COST_FUNCTION,
                                       self.name,
                                       num_control_projections))
-        if not self.cost_function.exponents is None:
+        if self.cost_function.exponents is not None:
             num_cost_exponents = len(self.cost_function.exponents)
             if  num_cost_exponents != num_control_projections:
                 raise EVCError("The length of the exponents argument {} for the {} of {} "
