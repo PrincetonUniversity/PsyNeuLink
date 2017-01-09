@@ -1635,6 +1635,7 @@ def __value_function(controller, outcomes, costs, context):
     """aggregate outcomes, costs, combine, and return value
     """
 
+
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
     aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes, context=context)
 
