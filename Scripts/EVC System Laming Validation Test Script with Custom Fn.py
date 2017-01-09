@@ -17,7 +17,7 @@ def test_search_function(controller=None, **kwargs):
     return result
 
 def test_outcome_function(**kwargs):
-    result = np.array([3])
+    result = np.array([0])
     return result
 
 
@@ -74,12 +74,12 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   name='EVC Test System')
 
 # mySystem.controller.function = test_search_function
-mySystem.controller.outcome_function = test_outcome_function
+# mySystem.controller.outcome_function = test_outcome_function
 # mySystem.controller.assign_params({OUTCOME_FUNCTION: test_outcome_function})
 
 # Show characteristics of system:
 mySystem.show()
-# mySystem.controller.show()
+mySystem.controller.show()
 
 # Specify stimuli for run:
 #   two ways to do so:

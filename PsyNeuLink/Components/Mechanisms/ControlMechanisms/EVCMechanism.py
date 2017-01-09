@@ -1121,24 +1121,24 @@ class EVCMechanism(ControlMechanism_Base):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        outcome_function = self.outcome_function
-        cost_function = self.cost_function
+        outcome_Function = self.outcome_function.__self__
+        cost_Function = self.cost_function.__self__
 
-        if isinstance(outcome_function, Function):
+        if isinstance(outcome_Function, Function):
             # Insure that length of the weights and/or exponents arguments for the outcome_function
             #    matches the number of monitoredOutputStates
             num_monitored_output_states = len(self.monitoredOutputStates)
-            if outcome_function.weights is not None:
-                num_outcome_weights = len(outcome_function.weights)
+            if outcome_Function.weights is not None:
+                num_outcome_weights = len(outcome_Function.weights)
                 if  num_outcome_weights != num_monitored_output_states:
                     raise EVCError("The length of the weights argument {} for the {} of {} "
                                    "must equal the number of its monitoredOutputStates {}".
                                    format(num_outcome_weights,
-                                          OUTCOME_FUNCTION,
+                                          outcome_Function,
                                           self.name,
                                           num_monitored_output_states))
-            if outcome_function.exponents is not None:
-                num_outcome_exponents = len(outcome_function.exponents)
+            if outcome_Function.exponents is not None:
+                num_outcome_exponents = len(outcome_Function.exponents)
                 if  num_outcome_exponents != num_monitored_output_states:
                     raise EVCError("The length of the exponents argument {} for the {} of {} "
                                    "must equal the number of its control signals {}".
@@ -1147,12 +1147,12 @@ class EVCMechanism(ControlMechanism_Base):
                                           self.name,
                                           num_monitored_output_states))
 
-        if isinstance(cost_function, Function):
+        if isinstance(cost_Function, Function):
             # Insure that length of the weights and/or exponents arguments for the cost_function
             #    matches the number of control signals
             num_control_projections = len(self.controlProjections)
-            if cost_function.weights is not None:
-                num_cost_weights = len(cost_function.weights)
+            if cost_Function.weights is not None:
+                num_cost_weights = len(cost_Function.weights)
                 if  num_cost_weights != num_control_projections:
                     raise EVCError("The length of the weights argument {} for the {} of {} "
                                    "must equal the number of its control signals {}".
@@ -1160,8 +1160,8 @@ class EVCMechanism(ControlMechanism_Base):
                                           COST_FUNCTION,
                                           self.name,
                                           num_control_projections))
-            if cost_function.exponents is not None:
-                num_cost_exponents = len(cost_function.exponents)
+            if cost_Function.exponents is not None:
+                num_cost_exponents = len(cost_Function.exponents)
                 if  num_cost_exponents != num_control_projections:
                     raise EVCError("The length of the exponents argument {} for the {} of {} "
                                    "must equal the number of its control signals {}".
