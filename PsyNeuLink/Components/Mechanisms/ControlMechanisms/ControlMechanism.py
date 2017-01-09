@@ -72,8 +72,8 @@ The specification of whether an outputState is monitored by a ControlMechanism c
 ..
 * OutputStates to be monitored can be specified in the **ControlMechanism** responsible for the monitoring, or in the
   **system** for which that ControlMechanism is the :ref:`controller <System_Execution_Control>`).  Specification
-  can be in the controlMechanism or system's ``monitor_for_control`` argument, or in the
-  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in its ``params`` argument.  In
+  can be in the ControlMechanism or system's `monitor_for_control` argument, or in the
+  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in its `params` argument.  In
   either case, the value must be a list, each item of which must be one of the following:
 
   * An existing **outputState** or the name of one.
@@ -109,9 +109,14 @@ ControlMechanism's primary ``function`` and/or any others it may use to compute 
 must have the three following items in the order listed:
   * an outputState or mechanism, the name of one, or a specification dictionary for one;
   ..
-  * an exponent (int) - exponentiates the value of the outputState;
+  * a weight (int) - multiplies the value of the outputState.
   ..
-  * a weight (int) - multiplies the value of the outState.
+  * an exponent (int) - exponentiates the value of the outputState;
+
+The set of weights and exponents assigned to each outputState listed in the `monitoredOutputStates` of the
+ControlMechanism is listed in its `monitor_for_control_weights_and_exponents` attribute, in the same order as the
+outputStates are listed in `monitoredOutputStates`.  Each item in the list is a tuple with the weight and exponent
+for a given outputState.
 
 .. _ControlMechanism_Execution:
 
@@ -599,13 +604,21 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = \
-                    np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].exponents[
-                    monitored_state_index])
-                weight = \
-                    np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].weights[monitored_state_index])
+
+                # # MODIFIED 1/9/16 OLD:
+                # exponent = \
+                #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.exponents[
+                #     monitored_state_index])
+                # weight = \
+                #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.weights[monitored_state_index])
+
+                # MODIFIED 1/9/16 NEW:
+                weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
+                exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
+                # MODIFIED 1/9/16 END
+
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_state_mech.name, monitored_state.name, exponent, weight))
+                       format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
         print ("\n\tControlling the following mechanism parameters:".format(self.name))
         # Sort for consistency of output:

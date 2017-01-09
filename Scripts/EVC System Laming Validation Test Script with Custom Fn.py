@@ -12,6 +12,15 @@ from PsyNeuLink.Globals.Run import run, _construct_stimulus_sets
 # random.seed(0)
 # np.random.seed(0)
 
+def test_search_function(controller=None, **kwargs):
+    result = np.array(controller.allocationPolicy).reshape(len(controller.allocationPolicy), -1)
+    return result
+
+def test_outcome_function(**kwargs):
+    result = np.array([0])
+    return result
+
+
 # Preferences:
 DDM_prefs = ComponentPreferenceSet(
                 prefs = {
@@ -63,6 +72,10 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
+
+# mySystem.controller.function = test_search_function
+# mySystem.controller.outcome_function = test_outcome_function
+# mySystem.controller.assign_params({OUTCOME_FUNCTION: test_outcome_function})
 
 # Show characteristics of system:
 mySystem.show()
