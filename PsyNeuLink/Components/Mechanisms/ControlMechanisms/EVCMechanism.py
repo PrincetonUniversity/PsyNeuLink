@@ -293,8 +293,8 @@ if MPI_IMPLEMENTATION:
     from mpi4py import MPI
 
 OBJECT = 0
-EXPONENT = 1
-WEIGHT = 2
+WEIGHT = 1
+EXPONENT = 2
 
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
@@ -532,27 +532,24 @@ class EVCMechanism(ControlMechanism_Base):
 
     outcome_function : function : default LinearCombination(operation=PRODUCT)
         calculates the outcome for a given `allocationPolicy`.  The default combines the values of the outputStates in
-        `monitoredOutputStates` by taking their product, using the `LinearCombination` function.  The `weights`
-        and `exponents` arguments of the function can be used to parameterize the contribution that each outputState
-        makes to the result (see `above <EVCMechanism_Examples>` for an example).  The length of each of these arguments
-        must equal the number of outputStates in `monitoredOutputStates`. The default function can be replaced with any
-        function that returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom
-        outcome_function must accommodate three arguments (passed by name): a :keyword:`variable` argument that is a
-        1d array, each element of which is the value of an outputState in `monitoredOutputStates`; a `weights`
-        argument that is a 1d array specifying coefficient for each value in :keyword:`variable`; and an `exponents`
-        argument that is a 1d array specifying the exponent for each value in :keyword:`variable`.
+        `monitoredOutputStates` by taking their product, using the `LinearCombination` function.  The weights
+        and/or exponents specified for the outputStates (see `ControlMechanism_OutputState_Tuple`, and
+        `above <EVCMechanism_Examples>` for an example) are used as the corresponding parameters of the
+        LinearCombination function. The default function can be replaced with any function that returns a scalar
+        value.  If used with the EVCMechanism's default `value_function`, a custom outcome_function must accommodate
+        a `controller` argument (passed by name) that is the EVCMechanism;  this can be used access to its attributes,
+        including the `monitor_for_control_factors` attribute that lists the weights and exponents assigned to each
+        outputState being monitoring.
 
-    cost_function : function : default LinearCombination(operation=PRODUCT)
+    cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost for a given `allocationPolicy`.  The default combines the costs of the ControlSignals in
-        `controlSignals` by summing them using the `LinearCombination` function.  The `weights` and `exponents`
-        arguments of the function can be used to parameterize the contribution that each makes to the result.  The
-        length of each of these arguments must equal the number of ControlSignals in `controlSignals`. The default
-        function can be replaced with any function that returns a scalar value.  If used with the EVCMechanism's
-        default `value_function`, a custom cost_function must accommodate three arguments (passed by name): a
-        :keyword:`variable` argument that is a 1d array, each element of which is the cost of a ControlSignal in
-        `controlSignals`; a `weights` argument that is a 1d array specifying coefficient for each cost in
-        :keyword:`variable`; and an `exponents` argument that is a 1d array specifying the exponent for each cost in
-        :keyword:`variable`.
+        `controlSignals` by summing them using the `LinearCombination` function. The `weights` and `exponents`
+        arguments of the function can be used to parameterize the contribution that each ControlSignal makes to the
+        result.  The length of each of these arguments must equal the number of ControlSignals in `controlSignals`.
+        The default function can be replaced with any function that returns a scalar value.  If used with the
+        EVCMechanism's default `value_function`, a custom cost_function must accommodate a `controller` argument (
+        passed by name) that is the EVCMechanism;  this can be used access to its attributes, including the
+        `control_signal_factors` attribute that lists the weights and exponents assigned to each ControlSignal.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
         combines the outcome and cost for given `allocationPolicy` to determine its value.  The default uses the
@@ -741,7 +738,7 @@ class EVCMechanism(ControlMechanism_Base):
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Extract references to mechanisms and/or outputStates from any tuples
-        # Note: leave tuples in all_specs for use in generating exponent and weight arrays below
+        # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
         all_specs_extracted_from_tuples = []
         for item in all_specs:
             # Extract references from specification tuples
@@ -943,15 +940,21 @@ class EVCMechanism(ControlMechanism_Base):
                 for item in self.monitoredOutputStates:
                     # If either that outputState or its owner is the object specified in the tuple
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
-                        # Assign the exponent and weight specified in the tuple to that outputState
+                        # Assign the weight and exponent specified in the tuple to that outputState
                         i = self.monitoredOutputStates.index(item)
                         weights[i] = spec[WEIGHT]
                         exponents[i] = spec[EXPONENT]
 
-        self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
-        self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
+        # # MODIFIED 1/9/16 OLD:
+        # # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
+        # self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
+        # self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
 
-        self.monitor_for_control_params = list(zip(weights, exponents))
+        # MODIFIED 1/9/16 NEW:
+        # Assign weights and exponents to monitor_for_control_factors attribute
+        #    (so that it is accessible to custom functions)
+        self.monitor_for_control_factors = list(zip(weights, exponents))
+        # MODIFIED 1/9/16 END
 
 
         # INSTANTIATE INPUT STATES
@@ -972,11 +975,17 @@ class EVCMechanism(ControlMechanism_Base):
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
-                exponent =  np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].weights[
-                                                self.monitoredOutputStates.index(state)])
-                weight = np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].exponents[
-                                             self.monitoredOutputStates.index(state)])
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
+                # # MODIFIED 1/9/17 OLD:
+                # exponent =  np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].weights[
+                #                                 self.monitoredOutputStates.index(state)])
+                # weight = np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].exponents[
+                #                              self.monitoredOutputStates.index(state)])
+                # MODIFIED 1/9/17 NEW:
+                weight = self.monitor_for_control_factors[self.monitoredOutputStates.index(state)][0]
+                exponent = self.monitor_for_control_factors[self.monitoredOutputStates.index(state)][1]
+                # MODIFIED 1/9/17 END
+
+                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         self.inputValue = self.variable.copy() * 0.0
 
@@ -1658,7 +1667,7 @@ def __value_function(controller, outcomes, costs, context):
     """aggregate outcomes, costs, combine, and return value
     """
 
-    # # MODIFIED  OLD:
+    # # MODIFIED 1/9/17 OLD:
     # # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
     # aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes, context=context)
     #
@@ -1668,8 +1677,10 @@ def __value_function(controller, outcomes, costs, context):
     # # Combine aggregate outcomes and costs to determine value
     # value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION].function([aggregated_outcomes,
     #                                                                                 -aggregated_costs])
+    #
+    # return (value, aggregated_outcomes, aggregated_costs)
 
-    # MODIFIED  NEW:
+    # MODIFIED 1/9/17 NEW:
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
     aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION](variable=outcomes, context=context)
 
@@ -1677,9 +1688,34 @@ def __value_function(controller, outcomes, costs, context):
     aggregated_costs = controller.paramsCurrent[COST_FUNCTION](costs)
 
     # Combine aggregate outcomes and costs to determine value
-    value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]([aggregated_outcomes,
-                                                                         -aggregated_costs])
-    # MODIFIED  END
+    value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]([aggregated_outcomes, -aggregated_costs])
 
     return (value, aggregated_outcomes, aggregated_costs)
+
+    # # MODIFIED 1/9/17 NEWER:
+    # outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
+    # cost_function = controller.paramsCurrent[COST_FUNCTION]
+    # combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
+    #
+    # # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
+    # if isinstance(outcome_function.__self__, Function):
+    #     outcome = outcome_function(variable=outcomes, context=context)
+    # else:
+    #     outcome = outcome_function(controller, outcomes)
+    #
+    # # Aggregate costs
+    # if isinstance(cost_function.__self__, Function):
+    #     cost = cost_function(variable=outcomes, context=context)
+    # else:
+    #     cost = cost_function(controller, costs)
+    #
+    # # Combine aggregate outcomes and costs to determine value
+    # if isinstance(combine_function.__self__, Function):
+    #     value = combine_function(variable=[outcome, -cost])
+    # else:
+    #     value = combine_function(controller, [outcome, -cost])
+    #
+    # return (value, outcome, cost)
+
+    # MODIFIED 1/9/17 END
 

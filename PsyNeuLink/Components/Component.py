@@ -816,7 +816,7 @@ class Component(object):
         #   (relabel params as runtime_params for clarity)
         runtime_params = params
 
-        if runtime_params and not runtime_params is None:
+        if runtime_params and runtime_params is not None:
             for param_name in self.user_params:
                 # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
                 #    At present, assignment of ``function`` as runtime param is not supported
