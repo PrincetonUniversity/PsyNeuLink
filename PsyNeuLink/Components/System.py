@@ -875,7 +875,7 @@ class System_Base(System):
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
-        if not input is None and len(input) != len(self.originMechanisms):
+        if input is not None and len(input) != len(self.originMechanisms):
             raise SystemError("Number of items in input ({0}) must equal number of processes ({1}) in {} ".
                               format(len(input), len(self.originMechanisms)),
                               self.name)
@@ -912,7 +912,7 @@ class System_Base(System):
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, input[i])
 
             # Validate input
-            if (not processes_spec[i].input is None and
+            if (processes_spec[i].input is not None and
                     not isinstance(processes_spec[i].input,(numbers.Number, list, np.ndarray))):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
                                   format(i, processes_spec[i].input))
@@ -923,7 +923,7 @@ class System_Base(System):
 
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
-                if not process_input is None:
+                if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process

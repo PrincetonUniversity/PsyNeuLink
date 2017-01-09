@@ -896,7 +896,7 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        if not variable is None:
+        if variable is not None:
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
         if request_set:
@@ -1285,7 +1285,7 @@ class Component(object):
                 if self.prefs.verbosePref:
                     warnings.warn("{0} is specified as None for {1} which suppresses type checking".
                                   format(param_name, self.name))
-                if not target_set is None:
+                if target_set is not None:
                     target_set[param_name] = param_value
                 continue
 
@@ -1418,7 +1418,7 @@ class Component(object):
                                 except TypeError:
                                     pass
 
-                elif not target_set is None:
+                elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
                     from collections import Iterable
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
