@@ -72,7 +72,10 @@ mechanism in the system — that the EVCMechanism uses to evaluate the system's
 One inputState is assigned to each outputState evaluated in the system.  OutputStates are specified to be evaluated
 using the EVCMechanism's `MONITOR_FOR_CONTROL <monitor_for_control>` parameter, and each can be assigned an exponent
 and/or a weight to parameterize its contribution  to the evaluation (see `ControlMechanism_Monitored_OutputStates` for
-specifying monitored outputStates; and `below <EVCMechanism_Examples>` for examples).  By default, the value of the
+specifying monitored outputStates; and `below <EVCMechanism_Examples>` for examples).
+
+
+By default, the value of the
 EVCMechanism's `MONITOR_FOR_CONTROL` parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`,
 which specifies monitoring the :ref:`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the
 system, each of which is assigned an exponent and weight of 1.  When an EVCMechanism is :ref:`created automatically
@@ -86,29 +89,30 @@ attribute.
 Function
 ~~~~~~~~
 
-The `function` of an EVCMechanism determines the `allocationPolicy` -- that is, the `intensity` of each of its
+The `function` of an EVCMechanism returns an `allocationPolicy` -- that is, the `intensity` of each of its
 ControlSignals -- that will be used in the next round of the system's execution.  Any function can be used that
 returns an appropriate value (i.e., that has the same number of elements as the EVCMechanism's `controlSignals`
 attribute, each of which specifies an `allocation` for the corresponding ControlSignal). The default function for an
 EVCMechanism is an internal method (_control_signal_grid_search) that evaluates the performance of the system under
-a set of specified allocationPolicies, and chooses the one that generates the best performance (the greatest EVC).
-The procedure, including the four customizable functions it uses, is described below.
+a range of specified allocationPolicies, and returns the one that generates the best performance (the greatest
+EVC). The procedure, including the four customizable functions it uses, is described below.
 
 .. _EVC_Calculation:
 
 EVC Calculation
 ^^^^^^^^^^^^^^^
 
-The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) for every
-combination of `allocation` values specified to be sampled for its ControlSignals (i.e., every possible
-`allocationPolicy`).  Each policy is constructed by drawing one value from the `allocation_samples <LINK>` attribute of
-each of the EVCMechanism's ControlSignals.  An `allocationPolicy` is constructed for every possible combination of
-values, and stored in the EVCMechanism's `controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation
-<LINK>` method is then used to simulate the system under each `allocationPolicy` in `controlSignalSearchSpace`,
-calculate the EVC for each of those policies, and return the policy with the greatest EVC.  By default, only the
-maximum EVC is saved and returned.  However, by setting the  `SAVE_ALL_VALUES_AND_POLICIES` parameter to true,
-each policy and its EVC can be saved for each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The
-EVC is calculated for each policy using the following four functions (each of which can be customized):
+The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) by a
+conducting a grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is
+determined by the `allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing
+one value from the `allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An
+`allocationPolicy` is constructed for every possible combination of values, and stored in the EVCMechanism's
+`controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation <LINK>` method is then used to simulate
+the system under each  `allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those
+policies, and return the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.
+However, by setting the `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for
+each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the
+following four functions (each of which can be customized):
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -133,21 +137,14 @@ COMMENT
 * `OUTCOME_FUNCTION <outcome_function>` - this combines the values of the outputStates in the EVCMechanism's
   `monitoredOutputStates` attribute to generate an aggregated outcome value for the current `allocationPolicy`. The
   default is the `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState
-  values.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively, to scale and/or
-  exponentiate the contribution of each outputState's value to the aggregated outcome.  For example, one outcome value
-  can be divided by another by assigning a negative exponent to the latter (see `EVCMechanism_Examples`). The length of
-  the array for the ``weights`` and ``exponents`` arguments must equal the number of outputStates in
-  `monitoredOutputStates`. These specifications will supercede any made for individual outputStates in the
-  ``monitor_for_control`` argument, or `MONITOR_FOR_CONTROL <monitor_for_control>` entry of a params specification
-  dictionary (see `ControlMechanism_Monitored_OutputStates`).  Evaluation of the system's performance can be further
-  customized by specifying a custom function for the `OUTCOME_FUNCTION <outcome_function>` parameter.
+  values, using any weights and/or exponents specified for the outputStates to scale and/or exponentiate the
+  contribution that each makes to the aggregated outcome (see `ControlMechanism_OutputState_Tuple`, and
+  `below <EVCMechanism_Examples>` for an example).  Evaluation of the system's performance can be further customized
+  by specifying a custom function for the EVCMechanism's `OUTCOME_FUNCTION <outcome_function>` parameter.
 ..
 * `COST_FUNCTION <cost_function>` - this combines the costs of the EVCMechanism's ControlSignals to generate an
-  aggregated cost value for the current `allocationPolicy`.  The default is the `LinearCombination` function,
-  which sums the costs.  The ``weights`` and ``exponents`` arguments of the function can be used, respectively,
-  to scale and/or exponentiate the contribution of each ControlSignal's cost to the value to the aggregated cost.
-  The length of the array for these arguments must equal the number of ControlSignals in the 'controlSignals`
-  attribute. The evaluation of cost can be further customized by specifying a custom function for the
+  aggregated cost for the current `allocationPolicy`.  The default is the `LinearCombination` function,
+  which sums the costs.  The evaluation of cost can be further customized by specifying a custom function for the
   `COST_FUNCTION <cost_function>` parameter.
 ..
 * :keyword:`COMBINE_OUTCOME_AND_COST_FUNCTION <combine_outcome_and_cost_function>` - this combines the aggregated
@@ -293,8 +290,8 @@ if MPI_IMPLEMENTATION:
     from mpi4py import MPI
 
 OBJECT = 0
-EXPONENT = 1
-WEIGHT = 2
+WEIGHT = 1
+EXPONENT = 2
 
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
@@ -498,17 +495,21 @@ class EVCMechanism(ControlMechanism_Base):
         each item is an outputState of a mechanism in the system that has been assigned a projection to a corresponding
         inputState of the EVCMechanism.
 
-    monitoredValues : 3D np.nparray
-        an array of values of the outputStates in ``monitoredOutputStates`` (equivalent to the values of
-        self.inputStates).
+    monitoredValues : 3D np.array
+        an array of values of the outputStates in ``monitoredOutputStates`` (equivalent to the values
+        of self.inputStates).
+
+    monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
+        a list of tuples, each of which contains the weight and exponent (in that order) for an outputState in
+        `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
     function : function : default _control_signal_grid_search
         determines the `allocationPolicy <EVCMechanism.allocationPolicy>` to use for the next round of the system's
         execution. The default function (`_control_signal_grid_search`) conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its :doc:`control signals <ControlSignal>`, executing the system
         (using `run_simulation`) for each combination, evaluating the result using the `value_function`, and returning
-        the allocationPolicy that generated the highest value.  If a custom function is specified, it must take a
-        ``controller`` argument that specifies an EVCMechanism, and must return an array with the same format
+        the allocationPolicy that generated the highest value.  If a custom function is specified, it must accomoudate
+        a `controller` argument that specifies an EVCMechanism, and must return an array with the same format
         (number and type of elements) as the EVCMechanism's `allocationPolicy` attribute.
 
     allocationPolicy : 2d np.array : `defaultControlAllocation <LINK>`
@@ -519,53 +520,66 @@ class EVCMechanism(ControlMechanism_Base):
 
     value_function : function : default _value_function()
         calculates the value for a given `allocationPolicy`.  The default uses `outcome_function` to determine the
-        outcome of the policy, and `cost_function` to determine its cost, combines these using
-        `combine_outcome_and_cost_function`, and returns the result in a tuple, along with outcome and cost
-        values used to determine it.  The default can be replaced by any function that returns a tuple with three items:
-        the calculated EVC (which must be a scalar value), and the outcome and cost from which it was calculated
-        (these can be scalar values or :keyword:`None`).  If used with EVCMechanism's default
-        de:py:data:`function <EVCMechanism.function>` parameter, a custom value_function must take three arguments
-        (that it will be passed by name): a `controller` argument that is the EVCMechanism for
-        which it is carrying out the calculation; an `outcomes` argument that is a 2d array of values, each item of
-        which is the value of an outputState in `monitoredOutputStates`; and a `costs` argument that is a 2d array of
-        costs, each item of which is the cost of a controlSignal in `controlSignals`.
+        outcome of the policy, `cost_function` to determine its cost, combines these using
+        `combine_outcome_and_cost_function`, and returns the result as the first item of a three-item tuple, the second
+        and third of which are the outcome and cost used to determine the result.  The default function can be
+        replaced by any function that returns a tuple with three items: the calculated EVC (which must be a scalar
+        value), and the outcome and cost from which it was calculated (these can be scalar values or :keyword:`None`).
+        If used with the EVCMechanism's default de:py:data:`function <EVCMechanism.function>`, a custom value_function
+        must accommodate three arguments (passed by name): a `controller` argument that is the EVCMechanism for which it
+        is carrying out the calculation; an `outcomes` argument that is a 2d array of values, each item of which is
+        the value of an outputState in the EVCMechanism's `monitoredOutputStates` attribute; and a `costs` argument
+        that is a 2d array of costs, each item of which is the cost of a controlSignal in the EVCMechanism's
+        `controlSignals` attribute.
 
     outcome_function : function : default LinearCombination(operation=PRODUCT)
         calculates the outcome for a given `allocationPolicy`.  The default combines the values of the outputStates in
-        `monitoredOutputStates` by taking their product, using the `LinearCombination` function.  The `weights`
-        and `exponents` arguments of the function can be used to parameterize the contribution that each outputState
-        makes to the result (see `above <EVCMechanism_Examples>` for an example).  The length of each of these arguments
-        must equal the number of outputStates in `monitoredOutputStates`. The default function can be replaced with any
-        function that returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom
-        outcome_function must take three arguments (that it will be passed by name): a :keyword:`variable` argument
-        that is a 1d array, each element of which is the value of an outputState in `monitoredOutputStates`; a
-        `weights` argument that is a 1d array specifying coefficient for each value in :keyword:`variable`; and an
-        `exponents` argument that is a 1d array specifying the exponent for each value in :keyword:`variable`.
+        `monitoredOutputStates` by taking their product, using the `LinearCombination` function.  The weights
+        and/or exponents specified for the outputStates (see `ControlMechanism_OutputState_Tuple`, and
+        `above <EVCMechanism_Examples>` for an example) are used as the `weights` and `exponents` parameters of the
+        LinearCombination function, respectively. If the default `OUTCOME_FUNCTION` is called by a custom
+        `value_function`, the weights and/or exponents can be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS`
+        entry of a :ref:`parameter dictionary <LINK>` specified for the `params` argument of the `LinearCombination`
+        function. The length of each array must equal the number of (and values be listed in the same order as) the
+        outputStates in the EVCMechanism's `monitoredOutputStates` attribute.  These specifications will supercede
+        any made for individual outputStates in the `monitor_for_control` argument or
+        `MONITOR_FOR_CONTROL <monitor_for_control>` entry of a parameter specification dictionary for the
+        EVCMechanism (see `ControlMechanism_Monitored_OutputStates`).  The default function can also be replaced
+        with any function that returns a scalar value.  If used with the EVCMechanism's default `value_function`,
+        a custom outcome_function must accommodate two arguments (passed by name): a `controller` argument that is
+        the EVCMechanism itself (and can be used access to its attributes, including the
+        `monitor_for_control_weights_and_exponents` attribute that lists the weights and exponents assigned to each
+        outputState being monitored);  and an `outcomes` argument, that is 1d array of scalar values specifying the
+        value for each outputState listed in the `monitoredOutputStates` attribute of the `controller` argument.
 
-    cost_function : function : default LinearCombination(operation=PRODUCT)
+    cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost for a given `allocationPolicy`.  The default combines the costs of the ControlSignals in
-        `controlSignals` by summing them using the `LinearCombination` function.  The `weights` and `exponents`
-        arguments of the function can be used to parameterize the contribution that each makes to the result.  The
-        length of each of these arguments must equal the number of ControlSignals in `controlSignals`. The default
-        function can be replaced with any function that returns a scalar value.  If used with the EVCMechanism's
-        default `value_function`, a custom cost_function must take three arguments (that it will be passed by name): a
-        :keyword:`variable` argument that is a 1d array, each element of which is the cost of a ControlSignal in
-        `controlSignals`; a `weights` argument that is a 1d array specifying coefficient for each cost in
-        :keyword:`variable`; and an `exponents` argument that is a 1d array specifying the exponent for each cost in
-        :keyword:`variable`.
+        `controlSignals` by summing them using the `LinearCombination` function. If the default `COST_FUNCTION` is
+        called by a custom `value_function`, the weights and/or exponents parameters of the function can be used,
+        respectively, to scale and/or exponentiate the contribution of each ControlSignal's cost to the aggregated
+        value.  These must be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS` entry of a
+        :ref:`parameter dictionary <LINK>` specified for the `params` argument of the `LinearCombination` function; the
+        length of each array must equal the number of (and the values listed in the same order as) the
+        ControlSignals in the EVCMechanism's `controlSignals` attribute, and be in the same order. The default
+        function can also be replaced with any function that returns a scalar value.  If used with the
+        EVCMechanism's default `value_function`, a custom cost_function must accommodate two arguments (passed by
+        name): a `controller` argument that is the EVCMechanism itself;  and a `costs` argument, that is 1d array
+        of scalar values specifying the cost for each ControlSignal listed in the `controlSignals` attribute of the
+        `controller` argument.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
         combines the outcome and cost for given `allocationPolicy` to determine its value.  The default uses the
-        `LinearCombination` function to subtract the cost from the outcome, and returns the difference. The `weights`
-        and `exponents` arguments of the function can be used to parameterize the contribution that each makes to the
-        result, each of which must have two elements (one for the outcome and one for the cost). The default function
-        can be replaced with any function that returns a scalar value.  If used with the EVCMechanism's default
-        `value_function`, a custom combine_outcome_and_cost_function must take three arguments (that it will be
-        passed by name): a :keyword:`variable` argument that is a 2d array, the first item of which is 1d array
-        containing the outcome for the current `allocationPolicy`, and the second a 1d array containing its cost;  a
-        `weights` argument that is a 1d array with two elements, one for the outcome and the other for the cost in the
-        :keyword:`variable` argument;  and an `exponents` argument that is a 1d array with two elements, one for the
-        outcome and the other for the cost.
+        `LinearCombination` function to subtract the cost from the outcome, and returns the difference.  If the
+        default `COMBINE_OUTCOME_AND_COST_FUNCTION` is called by a custom `value_function`, the weights and/or
+        exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
+        the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
+        and/or `EXPONENTS` entry of a :ref:`parameter dictionary <LINK>` specified for the function's `params`
+        argument; each array must have two elements, the first for the outcome and second for the cost. The default
+        function can also be replaced with any function that returns a scalar value.  If used with the EVCMechanism's
+        default `value_function`, a custom combine_outcome_and_cost_function must accomoudate two arguments
+        (passed by name): a `controller` argument that is the EVCMechanism itself; an `outcome` argument that is a 1d
+        array with the outcome of the current `allocationPolicy`; and a `cost` argument that is 1d array with the
+        cost of the current `allocationPolicy`.
 
     controlSignalSearchSpace : 2d np.array
         an array that contains arrays of control allocation policies.  Each control allocation policy contains one
@@ -741,7 +755,7 @@ class EVCMechanism(ControlMechanism_Base):
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Extract references to mechanisms and/or outputStates from any tuples
-        # Note: leave tuples in all_specs for use in generating exponent and weight arrays below
+        # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
         all_specs_extracted_from_tuples = []
         for item in all_specs:
             # Extract references from specification tuples
@@ -932,8 +946,8 @@ class EVCMechanism(ControlMechanism_Base):
         #       if it is specified in the constructor for the mechanism
 
         num_monitored_output_states = len(self.monitoredOutputStates)
-        exponents = np.ones((num_monitored_output_states,1))
-        weights = np.ones_like(exponents)
+        weights = np.ones((num_monitored_output_states,1))
+        exponents = np.ones_like(weights)
 
         # Get and assign specification of exponents and weights for mechanisms or outputStates specified in tuples
         for spec in all_specs:
@@ -943,13 +957,19 @@ class EVCMechanism(ControlMechanism_Base):
                 for item in self.monitoredOutputStates:
                     # If either that outputState or its owner is the object specified in the tuple
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
-                        # Assign the exponent and weight specified in the tuple to that outputState
+                        # Assign the weight and exponent specified in the tuple to that outputState
                         i = self.monitoredOutputStates.index(item)
-                        exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
+                        exponents[i] = spec[EXPONENT]
 
-        self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
+        # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
+        # Note: done here (rather than in call to outcome_functoin in __value_function) for efficiency
         self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
+        self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
+
+        # Assign weights and exponents to monitor_for_control_weights_and_exponents attribute
+        #    (so that it is accessible to custom functions)
+        self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
 
 
         # INSTANTIATE INPUT STATES
@@ -970,11 +990,10 @@ class EVCMechanism(ControlMechanism_Base):
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitoredOutputStates:
-                exponent =  np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].weights[
-                                                self.monitoredOutputStates.index(state)])
-                weight = np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].exponents[
-                                             self.monitoredOutputStates.index(state)])
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, exponent, weight))
+                weight = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][0]
+                exponent = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][1]
+
+                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         self.inputValue = self.variable.copy() * 0.0
 
@@ -994,7 +1013,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                 params=None,
                                                 context=context)
 
-        self.controlSignals = self.outputStates
+        self.controlSignals = list(self.outputStates.values())
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
@@ -1096,6 +1115,24 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
 
+    def _instantiate_attributes_before_function(self, context=None):
+        super()._instantiate_attributes_before_function(context=context)
+
+        # If function or any auxiliary function is a Function object (which some are by default),
+        #    assign to Function.function;
+        # This is so that:
+        #  - parameter dictionaries can be passed to the (default) functions when they are called
+        #  - the auxiliary function attributes can accept custom assignments
+        #    that are simple functions (i.e., not instantiated as Function objects)
+        if isinstance(self.function, Function):
+            self.function = self.function.function
+        if isinstance(self.outcome_function, Function):
+            self.outcome_function = self.outcome_function.function
+        if isinstance(self.cost_function, Function):
+            self.cost_function = self.cost_function.function
+        if isinstance(self.combine_outcome_and_cost_function, Function):
+            self.combine_outcome_and_cost_function = self.combine_outcome_and_cost_function.function
+
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
 
@@ -1103,49 +1140,54 @@ class EVCMechanism(ControlMechanism_Base):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        # Insure that length of the weights and/or exponents arguments for the outcome_function
-        #    matches the number of monitoredOutputStates
-        num_monitored_output_states = len(self.monitoredOutputStates)
-        if self.outcome_function.weights is not None:
-            num_outcome_weights = len(self.outcome_function.weights)
-            if  num_outcome_weights != num_monitored_output_states:
-                raise EVCError("The length of the weights argument {} for the {} of {} "
-                               "must equal the number of its monitoredOutputStates {}".
-                               format(num_outcome_weights,
-                                      OUTCOME_FUNCTION,
-                                      self.name,
-                                      num_monitored_output_states))
-        if self.outcome_function.exponents is not None:
-            num_outcome_exponents = len(self.outcome_function.exponents)
-            if  num_outcome_exponents != num_monitored_output_states:
-                raise EVCError("The length of the exponents argument {} for the {} of {} "
-                               "must equal the number of its control signals {}".
-                               format(num_outcome_exponents,
-                                      OUTCOME_FUNCTION,
-                                      self.name,
-                                      num_monitored_output_states))
+        outcome_Function = self.outcome_function
+        cost_Function = self.cost_function
 
-        # Insure that length of the weights and/or exponents arguments for the cost_function
-        #    matches the number of control signals
-        num_control_projections = len(self.controlProjections)
-        if self.cost_function.weights is not None:
-            num_cost_weights = len(self.cost_function.weights)
-            if  num_cost_weights != num_control_projections:
-                raise EVCError("The length of the weights argument {} for the {} of {} "
-                               "must equal the number of its control signals {}".
-                               format(num_cost_weights,
-                                      COST_FUNCTION,
-                                      self.name,
-                                      num_control_projections))
-        if self.cost_function.exponents is not None:
-            num_cost_exponents = len(self.cost_function.exponents)
-            if  num_cost_exponents != num_control_projections:
-                raise EVCError("The length of the exponents argument {} for the {} of {} "
-                               "must equal the number of its control signals {}".
-                               format(num_cost_exponents,
-                                      COST_FUNCTION,
-                                      self.name,
-                                      num_control_projections))
+        if isinstance(outcome_Function, Function):
+            # Insure that length of the weights and/or exponents arguments for the outcome_function
+            #    matches the number of monitoredOutputStates
+            num_monitored_output_states = len(self.monitoredOutputStates)
+            if outcome_Function.weights is not None:
+                num_outcome_weights = len(outcome_Function.weights)
+                if  num_outcome_weights != num_monitored_output_states:
+                    raise EVCError("The length of the weights argument {} for the {} of {} "
+                                   "must equal the number of its monitoredOutputStates {}".
+                                   format(num_outcome_weights,
+                                          outcome_Function,
+                                          self.name,
+                                          num_monitored_output_states))
+            if outcome_Function.exponents is not None:
+                num_outcome_exponents = len(outcome_Function.exponents)
+                if  num_outcome_exponents != num_monitored_output_states:
+                    raise EVCError("The length of the exponents argument {} for the {} of {} "
+                                   "must equal the number of its control signals {}".
+                                   format(num_outcome_exponents,
+                                          OUTCOME_FUNCTION,
+                                          self.name,
+                                          num_monitored_output_states))
+
+        if isinstance(cost_Function, Function):
+            # Insure that length of the weights and/or exponents arguments for the cost_function
+            #    matches the number of control signals
+            num_control_projections = len(self.controlProjections)
+            if cost_Function.weights is not None:
+                num_cost_weights = len(cost_Function.weights)
+                if  num_cost_weights != num_control_projections:
+                    raise EVCError("The length of the weights argument {} for the {} of {} "
+                                   "must equal the number of its control signals {}".
+                                   format(num_cost_weights,
+                                          COST_FUNCTION,
+                                          self.name,
+                                          num_control_projections))
+            if cost_Function.exponents is not None:
+                num_cost_exponents = len(cost_Function.exponents)
+                if  num_cost_exponents != num_control_projections:
+                    raise EVCError("The length of the exponents argument {} for the {} of {} "
+                                   "must equal the number of its control signals {}".
+                                   format(num_cost_exponents,
+                                          COST_FUNCTION,
+                                          self.name,
+                                          num_control_projections))
 
     def _add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
@@ -1248,7 +1290,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
         # Get cost of each controlSignal
-        for control_signal in self.controlSignals.values():
+        for control_signal in self.controlSignals:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
         # Get outcomes for current allocationPolicy
         #    = the values of the monitored output states (self.inputStates)
@@ -1373,9 +1415,10 @@ def __control_signal_grid_search(controller=None, **kwargs):
     except KeyError:
         context = None
 
+    # FIX: MOVE FROM HERE TO "END" TO __execute__??
     if not controller:
         if INITIALIZING in context:
-            # If this is an initialization call, rReturn default allocation value as place marker, since
+            # If this is an initialization call, return default allocation value as place marker, since
             #    controller has not yet been instantiated, so allocationPolicy (actual return value) not yet determined
             return defaultControlAllocation
         else:
@@ -1392,7 +1435,7 @@ def __control_signal_grid_search(controller=None, **kwargs):
     # Get allocationSamples for all ControlSignals
     num_control_signals = len(control_signals)
 
-    for control_signal in controller.controlSignals.values():
+    for control_signal in controller.controlSignals:
         control_signal_sample_lists.append(control_signal.allocationSamples)
 
     # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
@@ -1417,6 +1460,9 @@ def __control_signal_grid_search(controller=None, **kwargs):
     # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
     context = context.replace(EXECUTING, '{0} {1}'.format(controller.name, EVC_SIMULATION))
 
+    #FIX END
+
+    # Print progress bar
     if controller.prefs.reportOutputPref:
         progress_bar_rate_str = ""
         search_space_size = len(controller.controlSignalSearchSpace)
@@ -1580,7 +1626,7 @@ def __control_signal_grid_search(controller=None, **kwargs):
         print ("\nMaximum EVC for {0}: {1}".format(controller.system.name, float(controller.EVCmax)))
         print ("ControlProjection allocation(s) for maximum EVC:")
         for i in range(len(controller.controlSignals)):
-            print("\t{0}: {1}".format(list(controller.controlSignals.values())[i].name,
+            print("\t{0}: {1}".format(controller.controlSignals[i].name,
                                     controller.EVCmaxPolicy[i]))
         print()
 
@@ -1635,16 +1681,31 @@ def __value_function(controller, outcomes, costs, context):
     """aggregate outcomes, costs, combine, and return value
     """
 
+    outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
+    cost_function = controller.paramsCurrent[COST_FUNCTION]
+    combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
+
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes,
-                                                                                          context=context)
+    # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
+    # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
+    if isinstance(outcome_function.__self__, Function):
+        outcome = outcome_function(variable=outcomes,
+                                   # params={WEIGHTS:weights,
+                                   #         EXPONENTS:exponents},
+                                   context=context)
+    else:
+        outcome = outcome_function(controller=controller, outcomes=outcomes)
 
     # Aggregate costs
-    aggregated_costs = controller.paramsCurrent[COST_FUNCTION].function(costs)
+    if isinstance(cost_function.__self__, Function):
+        cost = cost_function(variable=outcomes, context=context)
+    else:
+        cost = cost_function(controller=controller, costs=costs)
 
     # Combine aggregate outcomes and costs to determine value
-    value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION].function([aggregated_outcomes,
-                                                                                    -aggregated_costs])
+    if isinstance(combine_function.__self__, Function):
+        value = combine_function(variable=[outcome, -cost])
+    else:
+        value = combine_function(controller=controller, outcome=outcome, cost=cost)
 
-    return (value, aggregated_outcomes, aggregated_costs)
-
+    return (value, outcome, cost)
