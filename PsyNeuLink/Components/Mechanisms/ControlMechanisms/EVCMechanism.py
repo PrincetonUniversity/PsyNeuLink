@@ -932,8 +932,8 @@ class EVCMechanism(ControlMechanism_Base):
         #       if it is specified in the constructor for the mechanism
 
         num_monitored_output_states = len(self.monitoredOutputStates)
-        exponents = np.ones((num_monitored_output_states,1))
-        weights = np.ones_like(exponents)
+        weights = np.ones((num_monitored_output_states,1))
+        exponents = np.ones_like(weights)
 
         # Get and assign specification of exponents and weights for mechanisms or outputStates specified in tuples
         for spec in all_specs:
@@ -945,11 +945,13 @@ class EVCMechanism(ControlMechanism_Base):
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
                         # Assign the exponent and weight specified in the tuple to that outputState
                         i = self.monitoredOutputStates.index(item)
-                        exponents[i] = spec[EXPONENT]
                         weights[i] = spec[WEIGHT]
+                        exponents[i] = spec[EXPONENT]
 
-        self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
         self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
+        self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
+
+        self.monitor_for_control_params = list(zip(weights, exponents))
 
 
         # INSTANTIATE INPUT STATES
@@ -1095,6 +1097,9 @@ class EVCMechanism(ControlMechanism_Base):
         # Instantiate MappingProjection from monitored_state to new input_state
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
+
+    def _instantiate_attributes_before_function(self, context=None):
+        super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
