@@ -208,14 +208,17 @@ Initialization values are assigned, at the start execution, as input to mechanis
 
 Learning
 ~~~~~~~~
-The system will execute learning for any process that specifies it.  Learning is executed for each process
-after all processing mechanisms in the system have been executed, but before the controller is executed (see below).
-The stimuli (both inputs and targets for learning) can be specified in one of two formats (list or dict),
-that are described in the :doc:`Run` module.  Both formats require that an input be provided for each
+The system will execute learning if it is specified for any process in the system.  The :py:data:`learning
+<System_Base.learning>` attribute indicates whether learning is enabled for the system. Learning is executed for any
+components (individual projections or processes) for which it is specified after all processing mechanisms in the
+system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
+learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
+see :ref:`Run_Inputs` and :ref:`Run_Targets`).  Both formats require that an input be provided for each
 :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
-:py:data:`originMechanisms <System_Base.originMechanisms>` attribute), and that a target be provided for each
-:py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism (listed in its
-:py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).
+:py:data:`originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or
+mechanism format, one target must be provided for each :py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism
+(listed in its :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified
+in a :ref:`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
 .. note::
    A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
@@ -268,7 +271,8 @@ from toposort import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, ProcessTuple
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
+                                                       OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
                                                                                       COMPARATOR_TARGET
@@ -356,7 +360,7 @@ def system(default_input_value=None,
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default inputs for :keyword:`ORIGIN` mechanism of each Process
+    default_input_value : list or ndarray of values : default default input for :keyword:`ORIGIN` mechanism of each Process
         the input to the system if none is provided in a call to the execute() method or run() function.
         Should contain one item corresponding to the input of each :keyword:`ORIGIN` mechanism in the system.
 
@@ -467,10 +471,10 @@ class System_Base(System):
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
-        - _instantiate_graph(inputs, context):  instantiates Processes in self.process and constructs executionList
+        - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
         - _assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
-        - execute(inputs, time_scale, context):  executes Mechanisms in order specified by executionList
+        - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
        SystemRegistry
@@ -481,7 +485,7 @@ class System_Base(System):
         TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
         + input (list): contains Process.input for each process in self.processes
         + output (list): containts Process.ouput for each process in self.processes
-        [TBI: + inputs (list): each item is the Process.input object for the corresponding Process in self.processes]
+        [TBI: + input (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
     COMMENT
 
@@ -492,11 +496,11 @@ class System_Base(System):
         list of processes in the system specified by the process parameter.
 
         .. can be appended with prediction processes by EVCMechanism
-           used with self.inputs to constsruct self.process_tuples
+           used with self.input to constsruct self.process_tuples
 
         .. _processList : ProcessList
             Provides access to (process, input) tuples.
-            Derived from self.inputs and self.processes.
+            Derived from self.input and self.processes.
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     controller : ControlMechanism : default DefaultController
@@ -505,6 +509,13 @@ class System_Base(System):
 
     enable_controller :  bool : default :keyword:`False`
         determines whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
+
+    learning : bool : default False
+        indicates whether learning is being used;  is set to True if learning is specified for any process in the system
+        COMMENT:
+            or for the system itself.
+        COMMENT
+        .
 
     graph : OrderedDict
         contains a graph of all of the mechanisms in the system.
@@ -689,7 +700,7 @@ class System_Base(System):
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.targets = None
-        self.learning = None
+        self.learning = False
 
         register_category(entry=self,
                           base_class=System_Base,
@@ -724,7 +735,7 @@ class System_Base(System):
             # self.controller = self.paramsCurrent[kwController](system=self)
             # MODIFIED 11/6/16 END
 
-        # Check whether controller has inputs, and if not then disable
+        # Check whether controller has input, and if not then disable
         try:
             has_input_states = bool(self.controller.inputStates)
         except:
@@ -803,7 +814,7 @@ class System_Base(System):
 
         These calls must be made before _instantiate_function as the latter may be called during init for validation
         """
-        self._instantiate_processes(inputs=self.variable, context=context)
+        self._instantiate_processes(input=self.variable, context=context)
         self._instantiate_graph(context=context)
 
         # MODIFIED 12/20/16 NEW:
@@ -832,7 +843,7 @@ class System_Base(System):
         else:
             self.value = self.processes[-1].outputState.value
 
-    def _instantiate_processes(self, inputs=None, context=None):
+    def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of system
@@ -840,8 +851,8 @@ class System_Base(System):
         Use self.processes (populated by self.paramsCurrent[kwProcesses] in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
-        If inputs is specified, check that it's length equals the number of processes
-        If inputs is not specified, compose from the input for each Process (value specified or, if None, default)
+        If input is specified, check that it's length equals the number of processes
+        If input is not specified, compose from the input for each Process (value specified or, if None, default)
         Note: specification of input for system takes precedence over specification for processes
 
         # ??STILL THE CASE, OR MOVED TO _instantiate_graph:
@@ -863,15 +874,15 @@ class System_Base(System):
             from PsyNeuLink.Components.Process import Process_Base
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
-        # If inputs to system are specified, number must equal number of processes with origin mechanisms
-        if not inputs is None and len(inputs) != len(self.originMechanisms):
-            raise SystemError("Number of inputs ({0}) must equal number of processes ({1}) in {} ".
-                              format(len(inputs), len(self.originMechanisms)),
+        # If input to system is specified, number of items must equal number of processes with origin mechanisms
+        if input is not None and len(input) != len(self.originMechanisms):
+            raise SystemError("Number of items in input ({0}) must equal number of processes ({1}) in {} ".
+                              format(len(input), len(self.originMechanisms)),
                               self.name)
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
-        # Convert all entries to (process, input) tuples, with None as filler for absent inputs
+        # Convert all entries to (process, input) tuples, with None as filler for absent input
         for i in range(len(processes_spec)):
 
             # Entry is not a tuple
@@ -883,8 +894,8 @@ class System_Base(System):
             if isinstance(processes_spec[i], tuple) and not isinstance(processes_spec[i], ProcessTuple):
                 processes_spec[i] = ProcessTuple(processes_spec[i][0], processes_spec[i][1])
 
-            if inputs is None:
-                # FIX: ASSIGN PROCESS INPUTS TO SYSTEM INPUTS
+            if input is None:
+                # FIX: ASSIGN PROCESS INPUT TO SYSTEM INPUT
                 process = processes_spec[i].process
                 process_input = []
                 for process_input_state in process.processInputStates:
@@ -898,22 +909,22 @@ class System_Base(System):
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
                     # Replace input item in tuple with one from variable
-                    processes_spec[i] = ProcessTuple(processes_spec[i].process, inputs[i])
+                    processes_spec[i] = ProcessTuple(processes_spec[i].process, input[i])
 
             # Validate input
-            if (not processes_spec[i].input is None and
+            if (processes_spec[i].input is not None and
                     not isinstance(processes_spec[i].input,(numbers.Number, list, np.ndarray))):
                 raise SystemError("Second item of entry {0} ({1}) must be an input value".
                                   format(i, processes_spec[i].input))
 
             process = processes_spec[i].process
-            input = processes_spec[i].input
-            self.variable.append(input)
+            process_input = processes_spec[i].input
+            self.variable.append(process_input)
 
-            # If process item is a Process object, assign input as default
+            # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
-                if not input is None:
-                    process._assign_defaults(variable=input, context=context)
+                if process_input is not None:
+                    process._assign_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process
             if not isinstance(process, Process):
@@ -922,9 +933,9 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=input, context=self)
+                    process = Process(default_input_value=process_input, context=self)
                 elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here; include input as ??param, and context=self
+                    # IMPLEMENT:  HANDLE Process specification dict here; include process_input as ??param, and context=self
                     raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
@@ -937,11 +948,13 @@ class System_Base(System):
 
             # Assign the Process a reference to this System
             process.systems.append(self)
+            if process.learning:
+                self.learning = True
 
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
 
-            # FIX: SHOULD BE ABLE TO PASS INPUTS HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
+            # FIX: SHOULD BE ABLE TO PASS PROCESS_INPUT HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
             # FIX: MODIFY _instantiate_pathway TO ACCEPT input AS ARG
             # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
             # process._instantiate_pathway(self.variable[i], context=context)
@@ -972,10 +985,10 @@ class System_Base(System):
                         else:
                             if sender_mech_tuple.phase != existing_mech_tuple.phase:
                                 offending_tuple_field = 'phase'
-                                offending_value = PHASE_SPEC
+                                offending_value = PHASE_ITEM
                             else:
-                                offending_tuple_field = 'input'
-                                offending_value = PARAMS
+                                offending_tuple_field = 'process_input'
+                                offending_value = PARAMS_ITEM
                             raise SystemError("The same mechanism in different processes must have the same parameters:"
                                               "the {} ({}) for {} in {} does not match the value({}) in {}".
                                               format(offending_tuple_field,
@@ -993,11 +1006,7 @@ class System_Base(System):
                 if not sender_mech_tuple in self._all_mech_tuples:
                     self._all_mech_tuples.append(sender_mech_tuple)
 
-            # MODIFIED 10/16/16 OLD:
-            # process.mechanisms = MechanismList(process, tuples_list=process._mech_tuples)
-            # MODIFIED 10/16/16 NEW:
             process._allMechanisms = MechanismList(process, tuples_list=process._mech_tuples)
-            # MODIFIED 10/16/16 END
 
         self.variable = convert_to_np_array(self.variable, 2)
 
@@ -1005,7 +1014,6 @@ class System_Base(System):
         # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
-        # MODIFIED 11/1/16 OLD:
         self.processes = self._processList.processes
 
     def _instantiate_graph(self, context=None):
@@ -1408,7 +1416,7 @@ class System_Base(System):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
         :keyword:`INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
         """
-        # FIX:  INITIALIZE PROCESS INPUTS??
+        # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
         # FIX: ADD OPTION THAT IMPLEMENTS/ENFORCES INITIALIZATION
         # FIX: ADD SOFT_CLAMP AND HARD_CLAMP OPTIONS
@@ -1417,13 +1425,15 @@ class System_Base(System):
             mech.initialize(value)
 
     def execute(self,
-                inputs=None,
+                input=None,
+                clock=CentralClock,
                 time_scale=None,
+                # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
 
-        Assign inputs to :keyword:`ORIGIN` mechanisms
+        Assign items of input to :keyword:`ORIGIN` mechanisms
 
         Execute mechanisms in the order specified in executionList and with phases equal to
         ``CentralClock.time_step % numPhases``.
@@ -1433,7 +1443,7 @@ class System_Base(System):
         Execute controller after all mechanisms have been executed (after each numPhases)
 
         .. Execution:
-            - the inputs arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
+            - the input arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
                 As with a process, ORIGIN mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
             - execute() calls mechanism.execute() for each mechanism in its execute_graph in sequence
@@ -1444,7 +1454,7 @@ class System_Base(System):
 
         Arguments
         ---------
-        inputs : list or ndarray
+        input : list or ndarray
             a list or array of input value arrays, one for each :keyword:`ORIGIN` mechanism in the system.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
@@ -1467,44 +1477,44 @@ class System_Base(System):
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
-        #region ASSIGN INPUTS TO PROCESSES
+        #region ASSIGN INPUT ITEMS TO PROCESSES
         # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
         #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
         num_origin_mechs = len(list(self.originMechanisms))
-        if inputs is None:
+        if input is None:
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
-            inputs = np.zeros_like(self.variable)
+            input = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
-                inputs[i] = self.originMechanisms[i].variableInstanceDefault
+                input[i] = self.originMechanisms[i].variableInstanceDefault
 
         else:
-            num_inputs = np.size(inputs,0)
+            num_inputs = np.size(input,0)
             if num_inputs != num_origin_mechs:
-                # Check if inputs are of different lengths (indicated by dtype == np.dtype('O'))
-                num_inputs = np.size(inputs)
-                if isinstance(inputs, np.ndarray) and inputs.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
+                # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
+                num_inputs = np.size(input)
+                if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
                     pass
                 else:
-                    raise SystemError("Number of inputs ({0}) to {1} does not match "
+                    raise SystemError("Number of items in input ({0}) to {1} does not match "
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
             for i in range(num_inputs):
-                input = inputs[i]
+                input_item = input[i]
                 process = self.processes[i]
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
-                if input is None:
+                if input_item is None:
                     continue
                 else:
                     # Assign input as value of corresponding Process inputState
-                    process._assign_input_values(input=input, context=context)
-        self.inputs = inputs
+                    process._assign_input_values(input=input_item, context=context)
+        self.input = input
         #endregion
 
         if self._report_system_output:
-            self._report_system_initiation()
+            self._report_system_initiation(clock=clock)
 
 
         #region EXECUTE MECHANISMS
@@ -1515,7 +1525,8 @@ class System_Base(System):
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
         # MODIFIED 12/21/16 NEW:
-        self._execute_processing(context=context)
+        self._execute_processing(clock=clock, context=context)
+        # self._execute_processing(clock=clock, time_scale=time_scale, context=context)
         # MODIFIED 12/21/16 END
         #endregion
 
@@ -1530,7 +1541,8 @@ class System_Base(System):
             # Execute each Mechanism in self.executionList, in the order listed during its phase
             # self._execute_learning(context=context)
             # self._execute_learning(context=context.replace("EXECUTING", "LEARNING"))
-            self._execute_learning(context=context + LEARNING)
+            self._execute_learning(clock=clock, context=context + LEARNING)
+            # self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
             # MODIFIED 12/21/16 END
 
         # endregion
@@ -1544,25 +1556,27 @@ class System_Base(System):
         # Only call controller if this is not a controller simulation run (to avoid infinite recursion)
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
-                if self.controller.phaseSpec == (CentralClock.time_step % self.numPhases):
-                    self.controller.execute(time_scale=TimeScale.TRIAL,
+                if self.controller.phaseSpec == (clock.time_step % self.numPhases):
+                    self.controller.execute(clock=clock,
+                                            time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
                                             context=context)
                     if self._report_system_output:
                         print("{0}: {1} executed".format(self.name, self.controller.name))
 
-            except AttributeError:
+            except AttributeError as error_msg:
                 if not 'INIT' in context:
-                    raise SystemError("PROGRAM ERROR: no controller instantiated for {0}".format(self.name))
+                    raise SystemError("{}; no controller instantiated for {}".format(error_msg, self.name))
         #endregion
 
         # Report completion of system execution and value of designated outputs
         if self._report_system_output:
-            self._report_system_completion()
+            self._report_system_completion(clock=clock)
 
         return self.terminalMechanisms.outputStateValues
 
-    def _execute_processing(self, context=None):
+    def _execute_processing(self, clock=CentralClock, context=None):
+    # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
         for i in range(len(self.executionList)):
 
@@ -1583,7 +1597,7 @@ class System_Base(System):
 
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-            if phase_spec == (CentralClock.time_step % self.numPhases):
+            if phase_spec == (clock.time_step % self.numPhases):
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
 
                 processes = list(mechanism.processes.keys())
@@ -1591,7 +1605,9 @@ class System_Base(System):
                 process_names = list(p.name for p in process_keys_sorted)
 
                 mechanism.execute(time_scale=self.timeScale,
+                                 # time_scale=time_scale,
                                  runtime_params=params,
+                                 clock=clock,
                                  context=context +
                                          "| mechanism: " + mechanism.name +
                                          " [in processes: " + str(process_names) + "]")
@@ -1604,27 +1620,20 @@ class System_Base(System):
                         processes = list(mechanism.processes.keys())
                         process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                         for process in process_keys_sorted:
-                            # MODIFIED 12/4/16 NEW:
                             if process.learning and process._learning_enabled:
                                 continue
-                            # MODIFIED 12/4/16 END
                             if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
                                 process._report_process_completion()
 
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+                # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                # # MODIFIED 10/2/16 OLD:
-                # self.variable = self.variable * 0
-                # # MODIFIED 10/2/16 NEW:
-                # self.variable = self.inputs * 0
-                # MODIFIED 10/2/16 NEWER:
-                self.variable = convert_to_np_array(self.inputs, 2) * 0
-                # MODIFIED 10/2/16 END
+                self.variable = convert_to_np_array(self.input, 2) * 0
             i += 1
 
-    def _execute_learning(self, context=None):
+    def _execute_learning(self, clock=CentralClock, context=None):
+    # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
 
         # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
@@ -1649,7 +1658,9 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(time_scale=self.timeScale,
+            component.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
                               context=context_str)
             # # TEST PRINT:
             # print ("EXECUTING MONITORING UPDATES: ", component.name)
@@ -1675,7 +1686,9 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(time_scale=self.timeScale,
+            component.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
                               context=context_str)
 
             # # TEST PRINT:
@@ -1700,14 +1713,14 @@ class System_Base(System):
 
             # if not i:
             #     # Zero input to first mechanism after first run (in case it is repeated in the pathway)
-            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide inputs
+            #     # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
             #     # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
             #     # # MODIFIED 10/2/16 OLD:
             #     # self.variable = self.variable * 0
             #     # # MODIFIED 10/2/16 NEW:
-            #     # self.variable = self.inputs * 0
+            #     # self.variable = self.input * 0
             #     # MODIFIED 10/2/16 NEWER:
-            #     self.variable = convert_to_np_array(self.inputs, 2) * 0
+            #     self.variable = convert_to_np_array(self.input, 2) * 0
             #     # MODIFIED 10/2/16 END
             # i += 1
 
@@ -1724,7 +1737,9 @@ class System_Base(System):
             call_after_trial=None,
             call_before_time_step=None,
             call_after_time_step=None,
-            time_scale=None):
+            clock=CentralClock,
+            time_scale=None,
+            context=None):
         """Run a sequence of executions
 
         Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
@@ -1789,9 +1804,11 @@ class System_Base(System):
                    call_after_trial=call_after_trial,
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
-                   time_scale=time_scale)
+                   time_scale=time_scale,
+                   clock=clock,
+                   context=context)
 
-    def _report_system_initiation(self):
+    def _report_system_initiation(self, clock=CentralClock):
         """Prints iniiation message, time_step, and list of processes in system being executed
         """
 
@@ -1800,18 +1817,18 @@ class System_Base(System):
         else:
             system_string = ' system'
 
-        if CentralClock.time_step == 0:
+        if clock.time_step == 0:
             print("\n\'{}\'{} executing with: **** (time_step {}) ".
-                  format(self.name, system_string, CentralClock.time_step))
+                  format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
 
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".
-                  format(self.name, system_string, CentralClock.time_step))
+                  format(self.name, system_string, clock.time_step))
 
-    def _report_system_completion(self):
+    def _report_system_completion(self, clock=CentralClock):
         """Prints completion message and outputValue of system
         """
 
@@ -1822,9 +1839,9 @@ class System_Base(System):
 
         # Print output value of primary (first) outputState of each terminal Mechanism in System
         # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, CentralClock.time_step))
+        print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
         for mech_tuple in self._terminal_mech_tuples:
-            if mech_tuple.mechanism.phaseSpec == (CentralClock.time_step % self.numPhases):
+            if mech_tuple.mechanism.phaseSpec == (clock.time_step % self.numPhases):
                 print("- output for {0}: {1}".format(mech_tuple.mechanism.name,
                                                  re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 
@@ -1949,7 +1966,8 @@ class System_Base(System):
             for output_state_name in mech_tuple.mechanism.outputStates:
                 print("\t\t\t{0}".format(output_state_name))
 
-        if any(process.learning for process in self.processes):
+        # if any(process.learning for process in self.processes):
+        if self.learning:
             print ("\n\tTarget mechanisms: ".format(self.name))
             for mech_tuple in self.targetMechanisms.mech_tuples:
                 print("\t\t{0} (phase: {1})".format(mech_tuple.mechanism.name, mech_tuple.phase))
@@ -2066,6 +2084,43 @@ class System_Base(System):
             d_iter = iter(dependency_set)
             result.extend(sorted(dependency_set, key=lambda item : next(d_iter).mechanism.name))
         return result
+
+    def _cache_state(self):
+
+        # http://stackoverflow.com/questions/11218477/how-can-i-use-pickle-to-save-a-dict
+        # import pickle
+        #
+        # a = {'hello': 'world'}
+        #
+        # with open('filename.pickle', 'wb') as handle:
+        #     pickle.dump(a, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        #
+        # with open('filename.pickle', 'rb') as handle:
+        #     b = pickle.load(handle)
+        #
+        # print a == b
+
+        # >>> import dill
+        # >>> pik = dill.dumps(d)
+
+        # import pickle
+        # with open('cached_PNL_sys.pickle', 'wb') as handle:
+        #     pickle.dump(self, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        # import dill
+        # self.cached_system = dill.dumps(self, recurse=True)
+
+        # def mechanisms_cache:
+        #     self.input_value = []
+        #     self.value= []
+        #     self.output_value = []
+        #
+        # for mech in self.mechanisms:
+        #     for
+        pass
+
+    def _restore_state(self):
+        pass
 
     @property
     def mechanisms(self):

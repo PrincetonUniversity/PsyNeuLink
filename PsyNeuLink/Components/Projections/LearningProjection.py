@@ -223,7 +223,7 @@ executed, it uses its :py:data:`errorSignal <LearningProjection.errorSignal>` to
 :py:data:`mappingProjection <LearningProjection.mappingProjection>`. Changes to the matrix are calculated so as to
 reduce the errorSignal. The changes are assigned as the ``value`` of the LearningProjection, but are not applied to
 the matrix until the next time the :py:data:`mappingProjection <LearningProjection.mappingProjection>` is executed
-(see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
+(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _LearningProjection_Class_Reference:
 
@@ -1018,7 +1018,8 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
         DOCUMENT:
         LearnningSignal (Projection):

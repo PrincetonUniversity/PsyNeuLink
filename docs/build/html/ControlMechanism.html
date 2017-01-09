@@ -95,6 +95,7 @@
 <li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-controlmechanism">Creating A ControlMechanism</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-control-for-a-parameter">Specifying control for a parameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#monitored-outputstates">Monitored OutputStates</a></li>
 </ul>
 </li>
@@ -166,8 +167,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="DefaultControlMechanism.html">DefaultControlMechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#execution">Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#class-reference">Class Reference</a></li>
 </ul>
@@ -187,9 +191,16 @@ ControlMechanism is a <a class="reference internal" href="System.html#System.Sys
 A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">Creating a System</span></a>),
 and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>). The outputStates to be monitored
 by a ControlMechanism are specified in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> argument, which can take a number of forms
-(see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from that outputState to the inputState of the
-ControlMechanism. How a ControlMechanism creates its ControlProjections depends on the subclass.</p>
+(<span class="xref std std-ref">see below</span>).  When the ControlMechanism is created, it automatically
+creates its own inputState for each of the outputStates it monitors, and assigns a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from that
+outputState to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections depends
+on the subclass.</p>
+<div class="section" id="specifying-control-for-a-parameter">
+<span id="controlmechanism-specifying-control"></span><h3>Specifying control for a parameter<a class="headerlink" href="#specifying-control-for-a-parameter" title="Permalink to this headline">¶</a></h3>
+<p>ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter
+can be specified for control by assigning a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> as part of its value when creating the mechanism
+or function to which the parameter belongs.</p>
+</div>
 <div class="section" id="monitored-outputstates">
 <span id="controlmechanism-monitored-outputstates"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <p>The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
@@ -284,9 +295,9 @@ to which it projects, to update the parameter of the receiving mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner
-mechanism executes (see <span class="xref std std-ref">Lazy_Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).  This means that even if a
-ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
-receiver mechanism has executed.</p>
+mechanism executes (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).  This means that even
+if a ControlMechanism has executed, a parameter that it controls will not assume its new value until the
+corresponding receiver mechanism has executed.</p>
 </div>
 </div>
 <div class="section" id="class-reference">

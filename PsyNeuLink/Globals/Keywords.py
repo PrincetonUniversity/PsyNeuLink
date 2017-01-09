@@ -141,8 +141,9 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 
 #region --------------------------------------------    TIME SCALE    --------------------------------------------------
 
-kwCentralClock = "CentralClock"
+CENTRAL_CLOCK = "CentralClock"
 TIME_SCALE = "time_scale"
+CLOCK = "clock"
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
@@ -169,10 +170,12 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
-PARAMS_ARG = "params"
-NAME = "name"
 PREFS_ARG = "prefs"
-kwContextArg = "context"
+VARIABLE = "variable"
+NAME = "name"
+PARAMS = "params"
+CONTEXT = "context"
+
 kwInitialValues = 'initial_values'
 
 # inputs list/ndarray:
@@ -201,7 +204,7 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Functi
 
 #region ----------------------------------------    COMPONENT SUBCLASSES  ----------------------------------------------
 
-# Function Categories   -----------------
+# Component Categories   -----------------
 
 kwProcessComponentCategory = "Process_Base"
 kwMechanismComponentCategory = "Mechanism_Base"
@@ -209,7 +212,7 @@ kwStateComponentCategory = "State_Base"
 kwProjectionComponentCategory = "Projection_Base"
 kwComponentCategory = "Function_Base"
 
-# Function TYPES  -----------------
+# Component TYPES  -----------------
 
 # Mechanisms:
 kwProcessingMechanism = "ProcessingMechanism"
@@ -228,6 +231,7 @@ LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
+kwUserDefinedFunctionType = "USER DEFINED FUNCTION TYPE"
 kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
 kwTransferFunction = "TRANSFER FUNCTION"
@@ -235,7 +239,7 @@ kwDistributionFunction = "DISTRIBUTION FUNCTION"
 LEARNING_FUNCTION = 'LEARNING FUNCTION'
 
 
-# Function SUBTYPES -----------------
+# Component SUBTYPES -----------------
 
 # ControlMechanisms:
 kwDefaultControlMechanism = "DefaultControlMechanism"
@@ -252,6 +256,7 @@ kwIntegratorMechanism = "IntegratorMechanism"
 
 # Function:
 kwContradiction = "Contradiction"
+kwUserDefinedFunction = "USER DEFINED FUNCTION"
 kwReduce = "Reduce"
 kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
@@ -349,10 +354,13 @@ PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
+CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
-OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
-COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
+OUTCOME_FUNCTION = 'outcome_function'
+COST_FUNCTION = 'cost_function'
+COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
+VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'

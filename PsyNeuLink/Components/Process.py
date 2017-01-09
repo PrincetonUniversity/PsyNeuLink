@@ -231,7 +231,7 @@ These calculate changes that will be made to the corresponding projections.
 
 .. note::
    The changes to a projection induced by learning are not applied until the mechanisms that receive those
-   projections are next executed; see Lazy_Evaluation for an explanation of "lazy" updating).
+   projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 Examples
 --------
@@ -342,10 +342,6 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
 
 defaultInstanceCount = 0 # Number of default instances (used to index name)
 
-# Labels for items in pathway entry tuples
-OBJECT = 0
-PARAMS = 1
-PHASE = 2
 DEFAULT_PHASE_SPEC = 0
 
 # FIX: NOT WORKING WHEN ACCESSED AS DEFAULT:
@@ -917,7 +913,7 @@ class Process_Base(Process):
             super(Process_Base, self)._instantiate_function(context=context)
         # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
         else:
-            self.value = self.pathway[-1][OBJECT].outputState.value
+            self.value = self.pathway[-1][OBJECT_ITEM].outputState.value
 
 # DOCUMENTATION:
 #         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
@@ -976,12 +972,12 @@ class Process_Base(Process):
 
         # Identify origin and terminal mechanisms in the process and
         #    and assign the mechanism's status in the process to its entry in the mechanism's processes dict
-        self.firstMechanism = pathway[0][OBJECT]
+        self.firstMechanism = pathway[0][OBJECT_ITEM]
         self.firstMechanism.processes[self] = ORIGIN
         self._origin_mech_tuples = [pathway[0]]
         self.originMechanisms = MechanismList(self, self._origin_mech_tuples)
 
-        self.lastMechanism = pathway[-1][OBJECT]
+        self.lastMechanism = pathway[-1][OBJECT_ITEM]
         if self.lastMechanism is self.firstMechanism:
             self.lastMechanism.processes[self] = SINGLETON
         else:
@@ -1230,7 +1226,7 @@ class Process_Base(Process):
                 # Item is a Mechanism
                 if isinstance(item, Mechanism):
 
-                    preceding_item = pathway[i-1][OBJECT]
+                    preceding_item = pathway[i-1][OBJECT_ITEM]
 
                     # PRECEDING ITEM IS A PROJECTION
                     if isinstance(preceding_item, Projection):
@@ -1369,11 +1365,11 @@ class Process_Base(Process):
                     #            and _parse_projection_ref() all to Projection_Base.__init__() and call that
                     #           VALIDATION OF PROJECTION OBJECT:
                     #                MAKE SURE IT IS A MappingProjection
-                    #                CHECK THAT SENDER IS pathway[i-1][OBJECT]
-                    #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT]
+                    #                CHECK THAT SENDER IS pathway[i-1][OBJECT_ITEM]
+                    #                CHECK THAT RECEVIER IS pathway[i+1][OBJECT_ITEM]
 
-                    sender_mech=pathway[i-1][OBJECT]
-                    receiver_mech=pathway[i+1][OBJECT]
+                    sender_mech=pathway[i-1][OBJECT_ITEM]
+                    receiver_mech=pathway[i+1][OBJECT_ITEM]
 
                     # projection spec is an instance of a MappingProjection
                     if isinstance(item, MappingProjection):
@@ -1575,7 +1571,7 @@ class Process_Base(Process):
         if self.variable is None:
             self.variable = []
             seen = set()
-            mech_list = list(mech_tuple[OBJECT] for mech_tuple in self._mech_tuples)
+            mech_list = list(mech_tuple[OBJECT_ITEM] for mech_tuple in self._mech_tuples)
             for mech in mech_list:
                 # Skip repeat mechansims (don't add another element to self.variable)
                 if mech in seen:
@@ -1717,7 +1713,7 @@ class Process_Base(Process):
 
         # For each mechanism in the Process, in backwards order through its _mech_tuples
         for item in reversed(self._mech_tuples):
-            mech = item[OBJECT]
+            mech = item[OBJECT_ITEM]
             mech._deferred_init()
 
             # For each inputState of the mechanism
@@ -1747,7 +1743,7 @@ class Process_Base(Process):
 
             # Add designations to newly created MonitoringMechanisms:
             for mech_tuple in self._monitoring_mech_tuples:
-                mech = mech_tuple[OBJECT]
+                mech = mech_tuple[OBJECT_ITEM]
                 # If
                 # - mech is a ComparatorMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and
@@ -1925,7 +1921,9 @@ class Process_Base(Process):
                 input=None,
                 # params=None,
                 target=None,
+                clock=CentralClock,
                 time_scale=None,
+                # time_scale=TimeScale.TRIAL,
                 runtime_params=None,
                 context=None
                 ):
@@ -1990,7 +1988,7 @@ class Process_Base(Process):
         self.variable = self.input
 
         # If target was not provided to execute, use value provided on instantiation
-        if not target is None:
+        if target is not None:
             self.target = target
 
         # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
@@ -2028,7 +2026,9 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.execute(time_scale=self.timeScale,
+            mechanism.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
                               runtime_params=params,
                               context=context)
             if report_output:
@@ -2043,7 +2043,8 @@ class Process_Base(Process):
 
         # Execute learningSignals
         if self._learning_enabled:
-            self._execute_learning(context=context)
+            self._execute_learning(clock=clock, context=context)
+            # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
 
         if report_output:
             self._report_process_completion(separator=True)
@@ -2051,7 +2052,8 @@ class Process_Base(Process):
         # FIX:  SHOULD THIS BE JUST THE VALUE OF THE PRIMARY OUTPUTSTATE, OR OF ALL OF THEM?
         return self.outputState.value
 
-    def _execute_learning(self, context=None):
+    def _execute_learning(self, clock=CentralClock, context=None):
+    # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """ Update each LearningProjection for mechanisms in _mech_tuples of process
 
         # Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards

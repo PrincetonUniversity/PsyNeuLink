@@ -26,9 +26,19 @@ ControlMechanisms can be created by using the standard Python method of calling 
 A ControlMechanism is also created automatically whenever a system is created (see :ref:`System_Creation`),
 and assigned as the controller for that system (see :ref:`_System_Execution_Control`). The outputStates to be monitored
 by a ControlMechanism are specified in its ``monitoredOutputStates`` argument, which can take a number of forms
-(see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a :doc:`MappingProjection` from that outputState to the inputState of the
-ControlMechanism. How a ControlMechanism creates its ControlProjections depends on the subclass.
+(:ref:`see below <_ControlMechanism_Monitored_OutputStates>`).  When the ControlMechanism is created, it automatically
+creates its own inputState for each of the outputStates it monitors, and assigns a :doc:`MappingProjection` from that
+outputState to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections depends
+on the subclass.
+
+.. _ControlMechanism_Specifying_Control:
+
+Specifying control for a parameter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter
+can be specified for control by assigning a :doc:`ControlProjection` as part of its value when creating the mechanism
+or function to which the parameter belongs.
 
 .. _ControlMechanism_Monitored_OutputStates:
 
@@ -116,9 +126,9 @@ to which it projects, to update the parameter of the receiving mechanism.
 
 .. note::
    A :doc:`ParameterState` that receives a :doc:`ControlProjection` does not update its value until its owner
-   mechanism executes (see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
-   receiver mechanism has executed.
+   mechanism executes (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even
+   if a ControlMechanism has executed, a parameter that it controls will not assume its new value until the
+   corresponding receiver mechanism has executed.
 
 .. _ControlMechanism_Class_Reference:
 
@@ -490,10 +500,12 @@ class ControlMechanism_Base(Mechanism_Base):
         for item in to_be_deleted_outputStates:
             del DefaultController.outputStates[item.name]
 
-    def _instantiate_control_projection(self, projection, context=None):
+    def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
         # Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
+
+        Note:  params are expected to be params for controlSignal (outputState of ControlMechanism)
 
         Assume that:
             # - self.value is populated (in _update_value) with an array of allocations from self.allocationPolicy;
@@ -520,15 +532,15 @@ class ControlMechanism_Base(Mechanism_Base):
             output_state_index = len(self.outputStates)
         except AttributeError:
             output_state_index = 0
-        output_state_name = projection.receiver.name + '_ControlProjection' + '_Output'
+        output_state_name = projection.receiver.name + '_ControlSignal'
         output_state_value = self.allocationPolicy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.States.OutputState import OutputState
+        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
-                                            state_type=OutputState,
+                                            state_type=ControlSignal,
                                             state_name=output_state_name,
                                             state_spec=defaultControlAllocation,
-                                            state_params=None,
+                                            state_params=params,
                                             constraint_value=output_state_value,
                                             constraint_value_name='Default control allocation',
                                             # constraint_output_state_index=output_item_output_state_index,
@@ -564,7 +576,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self, variable=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
+    def __execute__(self,
+                    variable=None,
+                    runtime_params=None,
+                    clock=CentralClock,
+                    time_scale=TimeScale.TRIAL,
+                    context=None):
         """Updates ControlProjections based on inputs
 
         Must be overriden by subclass
@@ -583,10 +600,10 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
                 exponent = \
-                    np.ndarray.item(self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].exponents[
+                    np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].exponents[
                     monitored_state_index])
                 weight = \
-                    np.ndarray.item(self.paramsCurrent[OUTCOME_AGGREGATION_FUNCTION].weights[monitored_state_index])
+                    np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].weights[monitored_state_index])
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
