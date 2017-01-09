@@ -114,9 +114,9 @@ must have the three following items in the order listed:
   * an exponent (int) - exponentiates the value of the outputState;
 
 The set of weights and exponents assigned to each outputState listed in the `monitoredOutputStates` of the
-ControlMechanism is listed in its `monitor_for_control_factors` attribute, in the same order as the outputStates
-are listed in `monitoredOutputStates`.  Each item in the list is a tuple with the weight and exponent for a given
-outputState.
+ControlMechanism is listed in its `monitor_for_control_weights_and_exponents` attribute, in the same order as the
+outputStates are listed in `monitoredOutputStates`.  Each item in the list is a tuple with the weight and exponent
+for a given outputState.
 
 .. _ControlMechanism_Execution:
 
@@ -613,8 +613,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.weights[monitored_state_index])
 
                 # MODIFIED 1/9/16 NEW:
-                weight = self.monitor_for_control_factors[monitored_state_index][0]
-                exponent = self.monitor_for_control_factors[monitored_state_index][1]
+                weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
+                exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
                 # MODIFIED 1/9/16 END
 
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
