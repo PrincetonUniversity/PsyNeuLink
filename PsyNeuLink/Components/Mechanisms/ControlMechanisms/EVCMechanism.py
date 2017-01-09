@@ -1100,7 +1100,19 @@ class EVCMechanism(ControlMechanism_Base):
 
     def _instantiate_attributes_before_function(self, context=None):
         super()._instantiate_attributes_before_function(context=context)
-        pass
+
+        # If function or any auxiliary function is a Function object (which it is by default),
+        #    assign to Function.function;
+        # This is so that the auxiliary function attributes can accept custom assignments
+        #    that are simple functions (i.e., not instantiated as Function objects)
+        if isinstance(self.function, Function):
+            self.function = self.function.function
+        if isinstance(self.outcome_function, Function):
+            self.outcome_function = self.outcome_function.function
+        if isinstance(self.cost_function, Function):
+            self.cost_function = self.cost_function.function
+        if isinstance(self.combine_outcome_and_cost_function, Function):
+            self.combine_outcome_and_cost_function = self.combine_outcome_and_cost_function.function
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
@@ -1641,15 +1653,28 @@ def __value_function(controller, outcomes, costs, context):
     """aggregate outcomes, costs, combine, and return value
     """
 
+    # # MODIFIED  OLD:
+    # # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
+    # aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes, context=context)
+    #
+    # # Aggregate costs
+    # aggregated_costs = controller.paramsCurrent[COST_FUNCTION].function(costs)
+    #
+    # # Combine aggregate outcomes and costs to determine value
+    # value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION].function([aggregated_outcomes,
+    #                                                                                 -aggregated_costs])
+
+    # MODIFIED  NEW:
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes, context=context)
+    aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION](variable=outcomes, context=context)
 
     # Aggregate costs
-    aggregated_costs = controller.paramsCurrent[COST_FUNCTION].function(costs)
+    aggregated_costs = controller.paramsCurrent[COST_FUNCTION](costs)
 
     # Combine aggregate outcomes and costs to determine value
-    value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION].function([aggregated_outcomes,
-                                                                                    -aggregated_costs])
+    value = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]([aggregated_outcomes,
+                                                                         -aggregated_costs])
+    # MODIFIED  END
 
     return (value, aggregated_outcomes, aggregated_costs)
 
