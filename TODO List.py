@@ -15,6 +15,8 @@
 # DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
 # DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
 
+# FIX: EVCMechanism: MOVE FROM HERE TO "END" TO __execute__??
+
 # FIX: EVCMechamims:  MAKE CALL TO outcome_function, cost_function, and combine_outcome_and_cost_function
 # FIX:                SPECIFY WEIGHTS AND EXPONENTS ARGUMENTS EXPLICITLY ,TO BE COMPATIBLE WITH CUSTOM FUNCTIONS.
 # FIX:                cost_function SHOULD USE variable ARGUMENT

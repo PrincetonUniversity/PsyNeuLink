@@ -86,29 +86,30 @@ attribute.
 Function
 ~~~~~~~~
 
-The `function` of an EVCMechanism determines the `allocationPolicy` -- that is, the `intensity` of each of its
+The `function` of an EVCMechanism returns an `allocationPolicy` -- that is, the `intensity` of each of its
 ControlSignals -- that will be used in the next round of the system's execution.  Any function can be used that
 returns an appropriate value (i.e., that has the same number of elements as the EVCMechanism's `controlSignals`
 attribute, each of which specifies an `allocation` for the corresponding ControlSignal). The default function for an
 EVCMechanism is an internal method (_control_signal_grid_search) that evaluates the performance of the system under
-a set of specified allocationPolicies, and chooses the one that generates the best performance (the greatest EVC).
-The procedure, including the four customizable functions it uses, is described below.
+a range of specified allocationPolicies, and returns the one that generates the best performance (the greatest
+EVC). The procedure, including the four customizable functions it uses, is described below.
 
 .. _EVC_Calculation:
 
 EVC Calculation
 ^^^^^^^^^^^^^^^
 
-The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) for every
-combination of `allocation` values specified to be sampled for its ControlSignals (i.e., every possible
-`allocationPolicy`).  Each policy is constructed by drawing one value from the `allocation_samples <LINK>` attribute of
-each of the EVCMechanism's ControlSignals.  An `allocationPolicy` is constructed for every possible combination of
-values, and stored in the EVCMechanism's `controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation
-<LINK>` method is then used to simulate the system under each `allocationPolicy` in `controlSignalSearchSpace`,
-calculate the EVC for each of those policies, and return the policy with the greatest EVC.  By default, only the
-maximum EVC is saved and returned.  However, by setting the  `SAVE_ALL_VALUES_AND_POLICIES` parameter to true,
-each policy and its EVC can be saved for each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The
-EVC is calculated for each policy using the following four functions (each of which can be customized):
+The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) by a
+conducting a grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is
+determined by the `allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing
+one value from the `allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An
+`allocationPolicy` is constructed for every possible combination of values, and stored in the EVCMechanism's
+`controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation <LINK>` method is then used to simulate
+the system under each  `allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those
+policies, and return the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.
+However, by setting the `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for
+each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the
+following four functions (each of which can be customized):
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -1379,9 +1380,10 @@ def __control_signal_grid_search(controller=None, **kwargs):
     except KeyError:
         context = None
 
+    # FIX: MOVE FROM HERE TO "END" TO __execute__??
     if not controller:
         if INITIALIZING in context:
-            # If this is an initialization call, rReturn default allocation value as place marker, since
+            # If this is an initialization call, return default allocation value as place marker, since
             #    controller has not yet been instantiated, so allocationPolicy (actual return value) not yet determined
             return defaultControlAllocation
         else:
@@ -1423,6 +1425,9 @@ def __control_signal_grid_search(controller=None, **kwargs):
     # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
     context = context.replace(EXECUTING, '{0} {1}'.format(controller.name, EVC_SIMULATION))
 
+    #FIX END
+
+    # Print progress bar
     if controller.prefs.reportOutputPref:
         progress_bar_rate_str = ""
         search_space_size = len(controller.controlSignalSearchSpace)
