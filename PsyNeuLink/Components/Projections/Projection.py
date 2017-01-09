@@ -176,8 +176,8 @@ generate its ``variable``.  A receiver can be specified as:
   ..
   .. note::
      a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
-     principle of :ref:"Lazy_Evaluation" which, here, means that objects can create other objects from which they
-     *expect* input, but cannot *impose* the creation of "downstream" objects.
+     principle of :ref:`Lazy Evaluation <LINK>` which, here, means that objects can create other objects from which
+     they *expect* input, but cannot *impose* the creation of "downstream" objects.
 
 COMMENT:
     If the ``receiver`` of a projection is specified as a projection or mechanism, the type of state created and added
@@ -602,7 +602,7 @@ class Projection_Base(Projection):
 
         Notes:
         * ControlProjection initially overrides this method to check if sender is DefaultControlMechanism;
-            if so, it assigns a ControlProjection-specific inputState, outputState and ControlSignalChannel to it
+            if so, it assigns a ControlProjection-specific inputState and outputState to it
         [TBI: * LearningProjection overrides this method to check if sender is kwDefaultSender;
             if so, it instantiates a default MonitoringMechanism and a projection to it from receiver's outputState]
 

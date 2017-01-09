@@ -66,7 +66,7 @@ for i in range(10):
     print(response.inputState.receivesFromProjections[1].matrix)
 
 # Execute system:
-mySystem.execute(inputs=[[1,1],[1,1]])
+mySystem.execute(input=[[1,1],[1,1]])
 
 # SHOWIONS:
 # mySystem.show()

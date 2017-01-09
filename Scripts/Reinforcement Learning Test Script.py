@@ -44,7 +44,6 @@ reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.val
 #     #       (this is a result of parameterState "lazy updating" -- only updated when called)
 #     print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
 
-
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
@@ -60,3 +59,12 @@ p.run(num_executions=10,
       call_after_trial=show_weights
       )
 
+# s = system(processes=[p])
+#
+# s.run(num_executions=10,
+#       # inputs=[[[1, 1, 1]]],
+#       inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
+#       targets=reward,
+#       call_before_trial=print_header,
+#       call_after_trial=show_weights
+#       )

@@ -2,27 +2,165 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# **FIX**: FIX RL
+# DOCUMENT: FINISH DOCUMENTING:
+#             .. _ControlMechanism_Specifying_Control:
+#
+#             Specifying control for a parameter
+#             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# IMPLEMENT: function format for inputs in Run
-# DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITONALLY, NEED TO OVERRIDE _instantiate_parameter_states
-#            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
-# IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
-# IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't collide with range)
-# IMPLEMENT:  Make use of learning attribute of System (set it to True if any of its processes use learning)
-# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultController and passing to EVC)
+# DOCUMENT: it`s -> its (unless contraction)
+# DOCUMENT:  ControlSignal/ControlProjection:
+#                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
+#            :keyword:`ORIGIN` -> :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`
+# DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
+# DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
 
-# IMPLEMENT: add target (or targets) as arg in system.execute()
-# FIX: change "inputs" arg to "input" in system.execute()
+# FIX: MAKE EVCMechanism.controlSignals A LIST RATHER THAN THE DICT OF outputStates
+# FIX: EVCMechamims:  MAKE CALL TO outcome_function, cost_function, and combine_outcome_and_cost_function
+# FIX:                SPECIFY WEIGHTS AND EXPONENTS ARGUMENTS EXPLICITLY ,TO BE COMPATIBLE WITH CUSTOM FUNCTIONS.
+# FIX:                cost_function SHOULD USE variable ARGUMENT
+# FIX:                combine_outcome_and_cost_function SHOULD USE variable; CHECK THAT IT CAN TAKE WEIGHTS AND EXP'S
 
-# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
-# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
+# FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
+# TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
 
-# IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
-# IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
+# FIX AND TEST: CHANGE time_scale=None -> time_scale=TimeScale.TRIAL IN ALL THE FOLLOWING PLACES:
+#   SYSTEM:
+#     self._execute_processing(clock=clock, time_scale=time_scale, context=context)
+
+#     def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
+
+#     mechanism.execute(time_scale=self.timeScale,
+
+#     def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+
+#     def execute(self,
+#                 input=None,
+#                 clock=CentralClock,
+#                 time_scale=None,
+#                 # time_scale=TimeScale.TRIAL
+
+#     self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
+
+#     component.execute(clock=clock,
+#                       time_scale=self.timeScale,
+#                       # time_scale=time_scale,
+#                       context=context_str)
+
+#     def run(self,
+#             inputs,
+#             num_executions=None,
+#             reset_clock=True,
+#             initialize=False,
+#             targets=None,
+#             learning=None,
+#             call_before_trial=None,
+#             call_after_trial=None,
+#             call_before_time_step=None,
+#             call_after_time_step=None,
+#             clock=CentralClock,
+#             time_scale=None,
+#         #     time_scale=TimeScale.TRIAL,
+#             context=None):
+#  PROCESS:
+#     def execute(self,
+#                 input=None,
+#                 # params=None,
+#                 target=None,
+#                 clock=CentralClock,
+#                 time_scale=None,
+#                 # time_scale=TimeScale.TRIAL,
+#                 runtime_params=None,
+#                 context=None
+
+#     mechanism.execute(clock=clock,
+#                       time_scale=self.timeScale,
+#                       # time_scale=time_scale,
+
+#     # Execute learningSignals
+
+#     if self._learning_enabled:
+#         self._execute_learning(clock=clock, context=context)
+#         # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
+
+#     def _execute_learning(self, clock=CentralClock, context=None):
+
+#     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+#
+#  PROJECTION:
+#     ControlProjection, LearningProjection, MappingProjection:
+
+#     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
+
+#     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+
+
+# IMPLEMENT: FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
+
+# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
+#                can take variable, params, time_scale, and context as params, along with any of its own
+
+#           FROM EVCMechanism.control_signal_grid_search:
+#             Gets controller as argument (along with any standard params specified in call)
+#             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
+#             Must return an allocation policy compatible with controller.allocationPolicy:
+#                 2d np.array with one 1d array for each allocation value
+#
+#             Following attributes are available:
+#             controller.run: executes a specified number of trials with the simulation inputs
+#             controller.predictedInputs: ndarray of current value of outputState
+#                                          for each predictionMechanism in self.system.predictionMechanisms
+#             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
+#             controller.inputValue: list of current outcome values for monitored_states
+#             controller.controlSignals: list of controlSignal objects
+#             controlSignal.allocationSamples: set of samples specified for that controlSignal
+#             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
+#             controller.allocationPolicy: current allocationPolicy
+#             controller.outputValue: list of current controlSignal values
+#             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
+#             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
+#             controller.cost_function:  aggregate costs of control signals
+#             controller.combine_outcome_and_cost_function: combines outcomes and costs
+
+
+# PROJECTIONS:
+# FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
+#           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
+
+# FIX: EVC simulation may leave system in different state than end of last trial:
+# FIX:      may need to duplicate the system, or buffer state for simulation and restore at end
+
+# EVC:
+# FIX: Component: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+# IMPLEMENT: ``function`` THAT DOES SEARCH (IN EVCMechanism)
+#             RENAME CURRENT ``function`` => ``VALUE_FUNCTION``WITH DEDICATED PARAM FOR IT (AND DOCUMENT)
+# IMPLEMENT:  NEW FUNCTION (VALUE_FUNCTION) THAT CALLS AGGREGATION AND COMBINE FUNCTIONS
+
 
 # DOCUMENT: Learning and Control in System
 # DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
+
+# IMPLEMENT: function format for inputs in Run (e.g., for simulating staircasing):
+#                       needs to be coordinated with validation of num_targets (if it is not a function);
+#                       then document (paralleling targets, and maybe moving much of that to inputs function format)
+# DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITIONALLY, NEED TO OVERRIDE _instantiate_parameter_states
+#            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
+# IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
+#                   DO THIS ONCE EVC MECHANISM IS AUGMENTED, AND MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCMECHANISM
+#                   THAT IS USED IF NO OTHER IS SPECIFED
+# IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)
+# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultController and passing to EVC)
+# IMPLEMENT: add target (or targets) as arg in system.execute()
+# IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
+# IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
+
+# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARNING ON color_naming_process
+# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
+# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
+# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
+
+
 # DOCUMENTATION: replace ``variable`` with
 #                    :py:data:`variable <Module.variable>` or
 #                    :py:data:`variable <Component.variable>`
@@ -39,12 +177,6 @@
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
 #
-# FIX: Reporting of learning in system._execute_learning
-# FIX: targets.[CentralClock.trial][0] system._execute_learning
-# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
-# FIX: RL with new System.learningGraph IMPLEMENTATION
-# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
-# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARING ON color_naming_process
 #
 # TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
 #                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
@@ -65,13 +197,18 @@
 # DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
 #            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
 #                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
-#            "parameter" refers to any specifiable attribute of a PsyNeuLink component
-#            "argument" refers to a specifiable value in a method or function call
+#            "parameter": refers to any specifiable attribute of a PsyNeuLink component
+#            "argument": refers to a specifiable value in a method or function call
+#            "attribute": the generic Python term for an object member
 #            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
 #            componentAttribute:  user accessible attribute for which there is no constructor argument
 #            _component_attribute:  internal attribute
 #            <definite article> :keyword:`<item>`;  <indefinite article> item;
 #            e.g.: the :keyword:`errorSource`;  an errorSource
+# DOCUMENT: In Components, document use of params dictionaries and/or assign_params methods for modifying
+#                the parameters of a component "permanently";  describe relatinoshipo of keywords for parameters
+#                which are simply convenience string constants that are the same as the name of the argument
+#                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
 
 # DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
 #           variable and value are 2d np.arrays that are used as internal datastructures
@@ -174,7 +311,7 @@
 
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
-# TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
+# TEST KEYWORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
 #      Mechanism, MappingProjection and Function params
 #      ADD TO META TEST SCRIPT
 
@@ -232,6 +369,8 @@
 
 # TERMINOLOGY: Stored/contained -> kept/held/maintained
 #              params dict <-> parameter dictionary??
+#              plural for input and target refers to executions, not number of mechanisms
+#              run: inputs;  execute: input
 #
 # DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
 #                       (including override)
@@ -272,7 +411,7 @@
 
 # DOCUMENTATION:  singularize first statement in overview of all objects
 #
-# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :any:
+# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :py:class:
 
 # DOCUMENTATION: check that, for DDM in TIME_STEP mode, parameter values not specified in params dict will assume
 #                any value assigned in the function arg; otherwise, default will be used
@@ -954,6 +1093,37 @@
 #endregion
 
 
+#region DEVELOPMENT
+
+# time_step DDM integration
+#
+# system.graph -> NetworkX, graphViz, or the like.
+#
+# API for "wrappers"
+#
+# IMPLEMENT:  Demos of Functions that plots each Function
+#                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
+#
+# GUI (using QT)
+#
+# FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
+#
+# function format for inputs in Run (e.g., for simulating staircasing):
+#                       needs to be coordinated with validation of num_targets (if it is not a function);
+#                       then document (paralleling targets, and maybe moving much of that to inputs function format)
+#
+# Filter Warnings
+#
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
+#
+# README.md -> README.rst AND/OR Index.rst:
+
+#endregion
+
+
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
 
@@ -1070,14 +1240,6 @@
 # - add @property for all params, so they can be addressed directly as attributes
 #      setter method should call _assign_defaults
 #
-
-#endregion
-
-#region DEVELOPMENT
-
-# time_step DDM integration
-# learning working in a system
-# system.graph -> NetworkX
 
 #endregion
 
@@ -1665,7 +1827,7 @@
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlProjection CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
-#                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
+#                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., BEGINS AT INDEX 1)
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
 #             HOW ITEMS OF variable AND owner.value ARE REFERENCED
@@ -1920,7 +2082,7 @@
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL ControlProjections IN
 # FIX:                   ControlProjection.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
-# FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
+# FIX:  CURRENTLY, COST_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
 #           COULD SWITCH TO SPECIFICATION BY CLASS REFERENCE, BUT THEN WOULD NEED
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)

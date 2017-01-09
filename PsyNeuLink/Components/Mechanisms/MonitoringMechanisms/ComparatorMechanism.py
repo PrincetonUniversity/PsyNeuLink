@@ -426,6 +426,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     def __execute__(self,
                 variable=None,
                 runtime_params=None,
+                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -453,7 +454,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         # Assign sample and target attributes
         #    which also checks (by way of target property) that target is within range of sample
         #    if the sample's source mechanism specifies a range parameter
-        #
+
         self.sample = self.inputStates[COMPARATOR_SAMPLE].value
         self.target = self.inputStates[COMPARATOR_TARGET].value
 

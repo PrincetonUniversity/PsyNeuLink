@@ -299,7 +299,7 @@ the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
 <span id="projection-receiver"></span><h3>Receiver<a class="headerlink" href="#receiver" title="Permalink to this headline">¶</a></h3>
 <p>This must be an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>.  The projection is assigned to the receiver&#8217;s
 <a class="reference internal" href="State.html#State.State_Base.receivesFromProjections" title="State.State_Base.receivesFromProjections"><code class="xref py py-data docutils literal"><span class="pre">receivesFromProjections</span></code></a> list, and the output of the projection&#8217;s`
-<cite>function`</cite> is transmitted to its receiver, where it is combined with the input from any other projections to
+<code class="xref any docutils literal"><span class="pre">function`</span></code> is transmitted to its receiver, where it is combined with the input from any other projections to
 generate its <code class="docutils literal"><span class="pre">variable</span></code>.  A receiver can be specified as:</p>
 <blockquote>
 <div><ul class="simple">
@@ -315,8 +315,8 @@ determined by the type of projection —&nbsp;see subclasses for details).</li>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">a receiver <strong>must</strong> be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
-principle of :ref:&#8221;Lazy_Evaluation&#8221; which, here, means that objects can create other objects from which they
-<em>expect</em> input, but cannot <em>impose</em> the creation of &#8220;downstream&#8221; objects.</p>
+principle of <span class="xref std std-ref">Lazy Evaluation</span> which, here, means that objects can create other objects from which
+they <em>expect</em> input, but cannot <em>impose</em> the creation of &#8220;downstream&#8221; objects.</p>
 </div>
 </div></blockquote>
 </div>
