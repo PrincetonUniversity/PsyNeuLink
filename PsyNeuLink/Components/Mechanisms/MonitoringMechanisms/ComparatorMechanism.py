@@ -325,7 +325,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
                                             "must have the same length ({},{})".
                                             format(self.name, len(variable[0]), len(variable[1])))
 
-
         super()._validate_variable(variable=variable, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -427,6 +426,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     def __execute__(self,
                 variable=None,
                 runtime_params=None,
+                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -451,6 +451,12 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
         self._check_args(variable=variable, params=runtime_params, context=context)
 
+        # Assign sample and target attributes
+        #    which also checks (by way of target property) that target is within range of sample
+        #    if the sample's source mechanism specifies a range parameter
+
+        self.sample = self.inputStates[COMPARATOR_SAMPLE].value
+        self.target = self.inputStates[COMPARATOR_TARGET].value
 
         # EXECUTE COMPARISON FUNCTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if time_scale == TimeScale.TIME_STEP:
@@ -467,33 +473,9 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.function(variable=self.variable, params=runtime_params)
 
-            # # MODIFIED 12/7/16 OLD:
-            # mean = np.mean(comparison_array)
-            # sum = np.sum(comparison_array)
-            # SSE = np.sum(comparison_array * comparison_array)
-            # MSE = SSE/len(comparison_array)
-            #
-            # self.summedErrorSignal = sum
-            #
-            # # Assign output values
-            # self.outputValue[ComparatorOutput.COMPARISON_RESULT.value] = comparison_array
-            # self.outputValue[ComparatorOutput.COMPARISON_MEAN.value] = mean
-            # self.outputValue[ComparatorOutput.COMPARISON_SUM.value] = sum
-            # self.outputValue[ComparatorOutput.COMPARISON_SSE.value] = SSE
-            # self.outputValue[ComparatorOutput.COMPARISON_MSE.value] = MSE
-            #
-            # # if (self.prefs.reportOutputPref and EXECUTING in context):
-            # #     print ("\n{} mechanism:\n- sample: {}\n- target: {} ".format(self.name,
-            # #                                                                  self.variable[0],
-            # #                                                                  self.variable[1]))
-            # #     print ("\nOutput:\n- Error: {}\n- MSE: {}".
-            # #            format(comparison_array, MSE))
-            #
-            # return self.outputValue
-            # MODIFIED 12/7/16 NEW:
             self.summedErrorSignal = sum
+
             return comparison_array
-            # MODIFIED 12/7/16 END
 
         else:
             raise MechanismError("time_scale not specified for ComparatorMechanism")
@@ -508,5 +490,35 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
         # IMPLEMENTATION NOTE:  TBI when time_step is implemented for ComparatorMechanism
+
+    @property
+    def target(self):
+        return self._target
+
+    @target.setter
+    def target(self, value):
+        """Check that target is within range if specified for sample
+
+        Check that target is compatible with the value of all projections to sample
+           from source mechanisms that specify a range parameter;
+        Note:  range must be in the form of a list or 1d np.array;
+            first item: lower bound of target value (inclusive)
+            second item: upper bound of target value (inclusive)
+        """
+        try:
+            for projection in self.inputStates[COMPARATOR_SAMPLE].receivesFromProjections:
+                sample_source = projection.sender.owner
+                try:
+                    sample_range = sample_source.range
+                    if list(sample_range):
+                        for target_item in value:
+                            if not sample_range[0] <= target_item <= sample_range[1]:
+                                raise ComparatorError("Item of target ({}) is out of range for {}: {}) ".
+                                                      format(target_item, sample_source.name, sample_range))
+                except AttributeError:
+                    pass
+        except (AttributeError):
+            pass
+        self._target = value
 
 

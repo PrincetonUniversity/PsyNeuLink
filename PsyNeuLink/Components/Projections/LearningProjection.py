@@ -223,7 +223,7 @@ executed, it uses its :py:data:`errorSignal <LearningProjection.errorSignal>` to
 :py:data:`mappingProjection <LearningProjection.mappingProjection>`. Changes to the matrix are calculated so as to
 reduce the errorSignal. The changes are assigned as the ``value`` of the LearningProjection, but are not applied to
 the matrix until the next time the :py:data:`mappingProjection <LearningProjection.mappingProjection>` is executed
-(see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
+(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _LearningProjection_Class_Reference:
 
@@ -1018,13 +1018,9 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    # # MODIFIED 9/4/16 OLD:
-    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
-    # MODIFIED 9/4/16 NEW:
-    def execute(self, input=None, params=None, time_scale=None, context=None):
-    # MODIFIED 9/4/16 END
+    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
-
         DOCUMENT:
         LearnningSignal (Projection):
             - sender:  output of Monitoring Mechanism
@@ -1051,6 +1047,11 @@ FROM TODO:
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
+
+        # # MODIFIED 12/20/16 NEW:
+        # if self.monitoringMechanism.status is UNCHANGED:
+        #     return np.zeros_like(self.value)
+        # # MODIFIED 12/20/16 END
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from MappingProjection's sender mechanism's outputState
@@ -1081,3 +1082,7 @@ FROM TODO:
     @property
     def errorSignal(self):
         return self.sender.value
+
+    @property
+    def monitoringMechanism(self):
+        return self.sender.owner

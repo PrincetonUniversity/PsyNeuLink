@@ -89,11 +89,10 @@ customizing and executing them:
                    and generates an error signal used for learning.
     
          + Projection: 
-             takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of 
-             another mechanism. There are three primary types:
+             takes the output of a mechanism, and conveys it as input to another mechanism. There are three primary types:
     
              + MappingProjection:
-                takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+                takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
                 and provides it as input to that receiver mechanism.
     
              + ControlProjection:

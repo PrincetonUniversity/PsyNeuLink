@@ -95,7 +95,7 @@ class State(ShellClass):
         raise ShellClassError("Must implement set_value in {0}".format(self.__class__.__name__))
 
     def update(self, params=None, time_scale=None, context=None):
-        raise ShellClassError("{} must implement update_state".format(self.__class__.__name__))
+        raise ShellClassError("{} must implement update".format(self.__class__.__name__))
 
 
 # ******************************************* PROJECTION ***************************************************************

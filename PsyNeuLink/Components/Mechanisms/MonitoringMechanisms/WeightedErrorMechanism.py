@@ -262,6 +262,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
     def __execute__(self,
                 variable=None,
                 runtime_params=None,
+                clock=CentralClock,
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
@@ -297,11 +298,5 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         # Compute summed error for use by callers to decide whether to update
         self.summedErrorSignal = np.sum(self.weightedErrorSignal)
 
-        # # MODIFIED 12/9/16 OLD:
-        # # Assign output values
-        # self.outputValue[WeightedErrorOutput.ERROR_SIGNAL.value] = self.weightedErrorSignal
-        # return self.outputValue
-        # MODIFIED 12/9/16 NEW:
         return self.weightedErrorSignal
-        # MODIFIED 12/9/16 END
 
