@@ -1100,6 +1100,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     def _instantiate_attributes_before_function(self, context=None):
         super()._instantiate_attributes_before_function(context=context)
+        pass
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
