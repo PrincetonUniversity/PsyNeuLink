@@ -507,8 +507,8 @@ class EVCMechanism(ControlMechanism_Base):
         execution. The default function (`_control_signal_grid_search`) conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its :doc:`control signals <ControlSignal>`, executing the system
         (using `run_simulation`) for each combination, evaluating the result using the `value_function`, and returning
-        the allocationPolicy that generated the highest value.  If a custom function is specified, it must take a
-        ``controller`` argument that specifies an EVCMechanism, and must return an array with the same format
+        the allocationPolicy that generated the highest value.  If a custom function is specified, it must accomoudate
+        a `controller` argument that specifies an EVCMechanism, and must return an array with the same format
         (number and type of elements) as the EVCMechanism's `allocationPolicy` attribute.
 
     allocationPolicy : 2d np.array : `defaultControlAllocation <LINK>`
@@ -524,11 +524,11 @@ class EVCMechanism(ControlMechanism_Base):
         values used to determine it.  The default can be replaced by any function that returns a tuple with three items:
         the calculated EVC (which must be a scalar value), and the outcome and cost from which it was calculated
         (these can be scalar values or :keyword:`None`).  If used with EVCMechanism's default
-        de:py:data:`function <EVCMechanism.function>` parameter, a custom value_function must take three arguments
-        (that it will be passed by name): a `controller` argument that is the EVCMechanism for
-        which it is carrying out the calculation; an `outcomes` argument that is a 2d array of values, each item of
-        which is the value of an outputState in `monitoredOutputStates`; and a `costs` argument that is a 2d array of
-        costs, each item of which is the cost of a controlSignal in `controlSignals`.
+        de:py:data:`function <EVCMechanism.function>` parameter, a custom value_function must accommodate three
+        arguments (passed by name): a `controller` argument that is the EVCMechanism for which it is carrying out the
+        calculation; an `outcomes` argument that is a 2d array of values, each item of which is the value of an
+        outputState in `monitoredOutputStates`; and a `costs` argument that is a 2d array of costs, each item of
+        which is the cost of a controlSignal in `controlSignals`.
 
     outcome_function : function : default LinearCombination(operation=PRODUCT)
         calculates the outcome for a given `allocationPolicy`.  The default combines the values of the outputStates in
@@ -537,10 +537,10 @@ class EVCMechanism(ControlMechanism_Base):
         makes to the result (see `above <EVCMechanism_Examples>` for an example).  The length of each of these arguments
         must equal the number of outputStates in `monitoredOutputStates`. The default function can be replaced with any
         function that returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom
-        outcome_function must take three arguments (that it will be passed by name): a :keyword:`variable` argument
-        that is a 1d array, each element of which is the value of an outputState in `monitoredOutputStates`; a
-        `weights` argument that is a 1d array specifying coefficient for each value in :keyword:`variable`; and an
-        `exponents` argument that is a 1d array specifying the exponent for each value in :keyword:`variable`.
+        outcome_function must accommodate three arguments (passed by name): a :keyword:`variable` argument that is a
+        1d array, each element of which is the value of an outputState in `monitoredOutputStates`; a `weights`
+        argument that is a 1d array specifying coefficient for each value in :keyword:`variable`; and an `exponents`
+        argument that is a 1d array specifying the exponent for each value in :keyword:`variable`.
 
     cost_function : function : default LinearCombination(operation=PRODUCT)
         calculates the cost for a given `allocationPolicy`.  The default combines the costs of the ControlSignals in
@@ -548,7 +548,7 @@ class EVCMechanism(ControlMechanism_Base):
         arguments of the function can be used to parameterize the contribution that each makes to the result.  The
         length of each of these arguments must equal the number of ControlSignals in `controlSignals`. The default
         function can be replaced with any function that returns a scalar value.  If used with the EVCMechanism's
-        default `value_function`, a custom cost_function must take three arguments (that it will be passed by name): a
+        default `value_function`, a custom cost_function must accommodate three arguments (passed by name): a
         :keyword:`variable` argument that is a 1d array, each element of which is the cost of a ControlSignal in
         `controlSignals`; a `weights` argument that is a 1d array specifying coefficient for each cost in
         :keyword:`variable`; and an `exponents` argument that is a 1d array specifying the exponent for each cost in
@@ -560,12 +560,12 @@ class EVCMechanism(ControlMechanism_Base):
         and `exponents` arguments of the function can be used to parameterize the contribution that each makes to the
         result, each of which must have two elements (one for the outcome and one for the cost). The default function
         can be replaced with any function that returns a scalar value.  If used with the EVCMechanism's default
-        `value_function`, a custom combine_outcome_and_cost_function must take three arguments (that it will be
-        passed by name): a :keyword:`variable` argument that is a 2d array, the first item of which is 1d array
-        containing the outcome for the current `allocationPolicy`, and the second a 1d array containing its cost;  a
-        `weights` argument that is a 1d array with two elements, one for the outcome and the other for the cost in the
-        :keyword:`variable` argument;  and an `exponents` argument that is a 1d array with two elements, one for the
-        outcome and the other for the cost.
+        `value_function`, a custom combine_outcome_and_cost_function must accomoudate three arguments (passed by name):
+        a :keyword:`variable` argument that is a 2d array, the first item of which is 1d array containing the outcome
+        for the current `allocationPolicy`, and the second a 1d array containing its cost;  a `weights` argument that
+        is a 1d array with two elements, one for the outcome and the other for the cost in the :keyword:`variable`
+        argument;  and an `exponents` argument that is a 1d array with two elements, one for the outcome and the
+        other for the cost.
 
     controlSignalSearchSpace : 2d np.array
         an array that contains arrays of control allocation policies.  Each control allocation policy contains one
@@ -994,7 +994,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                 params=None,
                                                 context=context)
 
-        self.controlSignals = self.outputStates.values()
+        self.controlSignals = list(self.outputStates.values())
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
@@ -1634,7 +1634,6 @@ def _compute_EVC(args):
 def __value_function(controller, outcomes, costs, context):
     """aggregate outcomes, costs, combine, and return value
     """
-
 
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
     aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes, context=context)
