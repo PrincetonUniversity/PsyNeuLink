@@ -599,11 +599,19 @@ class ControlMechanism_Base(Mechanism_Base):
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitoredOutputStates.index(monitored_state)
-                exponent = \
-                    np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].exponents[
-                    monitored_state_index])
-                weight = \
-                    np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].weights[monitored_state_index])
+
+                # # MODIFIED 1/9/16 OLD:
+                # exponent = \
+                #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.exponents[
+                #     monitored_state_index])
+                # weight = \
+                #     np.ndarray.item(self.paramsCurrent[OUTCOME_FUNCTION].__self__.weights[monitored_state_index])
+
+                # MODIFIED 1/9/16 NEW:
+                exponent = self.monitor_for_control_params[monitored_state_index][0]
+                weight = self.monitor_for_control_params[monitored_state_index][1]
+                # MODIFIED 1/9/16 END
+
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, exponent, weight))
 
