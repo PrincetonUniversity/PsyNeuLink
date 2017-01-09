@@ -179,7 +179,7 @@ runs only a single execution of the object);</li>
 <li>uses simpler formats for specifying <a class="reference internal" href="#run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="#run-targets"><span class="std std-ref">targets</span></a>;</li>
 </ul>
 <ul class="simple">
-<li>manages timing factors (such as updating the <a class="reference internal" href="TimeScale.html#TimeScale.CentralClock" title="TimeScale.CentralClock"><code class="xref py py-class docutils literal"><span class="pre">CentralClock</span></code></a> and presenting</li>
+<li>manages timing factors (such as updating the <code class="xref py py-class docutils literal"><span class="pre">CentralClock</span></code> and presenting</li>
 </ul>
 <p>inputs in the correct <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase of execution</span></a> of a system.
 ..
@@ -221,8 +221,7 @@ system is run, the order of execution is determined by the system&#8217;s
 <a class="reference internal" href="System.html#System.System_Base.executionList" title="System.System_Base.executionList"><code class="xref py py-data docutils literal"><span class="pre">executionList</span></code></a> attribute, which is based on the system&#8217;s
 <a class="reference internal" href="System.html#system-graph"><span class="std std-ref">graph</span></a> (a list of the dependencies among all of the mechanisms in the system).  Execution of the
 mechanisms in a system also depends on the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.phaseSpec" title="Mechanism.Mechanism_Base.phaseSpec"><code class="xref py py-data docutils literal"><span class="pre">phaseSpec</span></code></a> of each mechanism:
-this determines <em>when</em> in an execution sequence it should be executed. The py:class:<cite>CentralClock
-&lt;TimeScale.CentralClock&gt;</cite> is used to control timing, so executing a system requires that it be appropriately updated.</p>
+this determines <em>when</em> in an execution sequence it should be executed. The py:class:<code class="xref any docutils literal"><span class="pre">CentralClock</span></code> is used to control timing, so executing a system requires that it be appropriately updated.</p>
 <p>The <code class="docutils literal"><span class="pre">run</span></code> function handles all of the above factors automatically.</p>
 </div>
 <div class="section" id="inputs">
@@ -341,8 +340,7 @@ each value must match that of the variable for the corresponding inputState.</p>
 <p>If a process or system uses learning, then target values for each round of execution must be provided for each
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the process or system being run.  These are specified
 in the <code class="docutils literal"><span class="pre">targets</span></code> argument of the <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> method, which can be in any of three formats.
-The two formats used for inputs (<a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence</span></a> and ref:<cite>mechanism
-&lt;Run_Inputs_Mechanism_Format&gt;</cite>) can also be used for targets.  However, the format of the lists or ndarrays is simpler,
+The two formats used for inputs (<a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence</span></a> and ref:<a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">mechanism</span></a>) can also be used for targets.  However, the format of the lists or ndarrays is simpler,
 since each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism is assigned only a single target value;  so there
 is never the need for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of
 inputs.  Details concerning the use of the <a class="reference internal" href="#run-targets-sequence-format"><span class="std std-ref">sequence</span></a>  and
@@ -355,7 +353,7 @@ number of inputs (and targets), then the list will be cycled until the number of
 If the function format is used, then it wil, be used to generate a target for each round of execution.</p>
 <p>The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
 the function format, must equal the number of <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanisms for the process
-or system being run (see process py:data:<cite>targetMechanism &lt;Process.Process_Base.targetMechanisms&gt;</cite> or system
+or system being run (see process py:data:<a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanism</span></code></a> or system
 <a class="reference internal" href="System.html#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code></a> respectively), and the value of each target must
 match (in number and type of elements) that  of the <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref py py-data docutils literal"><span class="pre">target</span></code></a>
 parameter of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism for which it is intended.  Furthermore, if a
@@ -390,7 +388,7 @@ targets to be constructed programatically, in response to computations made duri
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10c43b390&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10c42dda0&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10c42db00&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10c42dfd0&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10c416d68&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10c4165c0&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10c416470&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10c416d30&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10c416748&gt; = None</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10c416780&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10bce2860&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10bdd1f60&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10bdb3f60&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10bdc8828&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10bdc8c18&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10bdc8f28&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10bdc8588&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10bdc8208&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10bfb63c8&gt; = None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10bdc0550&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <blockquote>
 <div><dl class="docutils">
@@ -474,7 +472,7 @@ If <code class="xref std std-keyword docutils literal"><span class="pre">True</s
 <dt>call_after_trial</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called after each trial in the sequence is executed.</dd>
 <dt>call_before_time_step</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <cite>:keyword:`None</cite></span><dd>called before each time_step is executed.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref any docutils literal"><span class="pre">:keyword:`None</span></code></span><dd>called before each time_step is executed.</dd>
 <dt>call_after_time_step</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called after each time_step is executed.</dd>
 <dt>time_scale</dt>
