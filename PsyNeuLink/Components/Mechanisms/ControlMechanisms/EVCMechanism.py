@@ -994,7 +994,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                 params=None,
                                                 context=context)
 
-        self.controlSignals = self.outputStates
+        self.controlSignals = self.outputStates.values()
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
@@ -1248,7 +1248,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
         # Get cost of each controlSignal
-        for control_signal in self.controlSignals.values():
+        for control_signal in self.controlSignals:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
         # Get outcomes for current allocationPolicy
         #    = the values of the monitored output states (self.inputStates)
@@ -1392,7 +1392,7 @@ def __control_signal_grid_search(controller=None, **kwargs):
     # Get allocationSamples for all ControlSignals
     num_control_signals = len(control_signals)
 
-    for control_signal in controller.controlSignals.values():
+    for control_signal in controller.controlSignals:
         control_signal_sample_lists.append(control_signal.allocationSamples)
 
     # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
@@ -1580,7 +1580,7 @@ def __control_signal_grid_search(controller=None, **kwargs):
         print ("\nMaximum EVC for {0}: {1}".format(controller.system.name, float(controller.EVCmax)))
         print ("ControlProjection allocation(s) for maximum EVC:")
         for i in range(len(controller.controlSignals)):
-            print("\t{0}: {1}".format(list(controller.controlSignals.values())[i].name,
+            print("\t{0}: {1}".format(controller.controlSignals[i].name,
                                     controller.EVCmaxPolicy[i]))
         print()
 
@@ -1636,8 +1636,7 @@ def __value_function(controller, outcomes, costs, context):
     """
 
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes,
-                                                                                          context=context)
+    aggregated_outcomes = controller.paramsCurrent[OUTCOME_FUNCTION].function(variable=outcomes, context=context)
 
     # Aggregate costs
     aggregated_costs = controller.paramsCurrent[COST_FUNCTION].function(costs)
