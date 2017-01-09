@@ -1,6 +1,9 @@
 ControlProjection
 =================
 
+.. toctree::
+   :maxdepth: 3
+
 .. automodule:: ControlProjection
    :members:
-   :exclude-members: ControlSignalValuesTuple, ControlSignalChannel, random, execute
+   :exclude-members: random, execute

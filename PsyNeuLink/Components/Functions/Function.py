@@ -465,6 +465,59 @@ class Contradiction(Function_Base): # Example
 #region ****************************************   FUNCTIONS   *********************************************************
 #endregion
 
+#region **********************************  USER-DEFINED FUNCTION  *****************************************************
+#endregion
+
+class UserDefinedFunction(Function_Base):
+    """Implement user-defined function
+
+    Initialization arguments:
+     - variable
+
+    Linear.function returns scalar result
+    """
+    componentName = kwUserDefinedFunction
+    componentType = kwUserDefinedFunctionType
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+                               kwFunctionOutputTypeConversion: True,
+                               PARAMETER_STATE_PARAMS: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 function,
+                 variable=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+        self.user_defined_function = function
+
+        super().__init__(variable_default=variable,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+        # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
+
+    def function(self,
+                 # variable=None,
+                 # params=None,
+                 # time_scale=TimeScale.TRIAL,
+                 # context=None,
+                 **kwargs):
+        # raise FunctionError("Function must be provided for {}".format(self.componentType))
+        return self.user_defined_function(**kwargs)
+
+
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
 
@@ -532,6 +585,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
     def function(self,
                 variable=None,
                 params=None,
+                time_scale=TimeScale.TRIAL,
                 context=None):
         """Combine a list or array of values
 
@@ -651,9 +705,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                 prefs=prefs,
                                                 context=context)
 
-        if not self.exponents is None:
+        if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
-        if not self.weights is None:
+        if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1,1)
 
 
@@ -731,9 +785,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #                 raise FunctionError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
 #                                format(weights, self.name))
 
-        if not target_set[EXPONENTS] is None:
+        if target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-        if not target_set[WEIGHTS] is None:
+        if target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 
         # if not operation:
@@ -798,7 +852,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
-        if not exponents is None:
+        if exponents is not None:
             if len(exponents) != len(self.variable):
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
@@ -810,7 +864,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 self.variable = self.variable ** exponents
 
         # Apply weights if they were specified
-        if not weights is None:
+        if weights is not None:
             if len(weights) != len(self.variable):
                 raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))

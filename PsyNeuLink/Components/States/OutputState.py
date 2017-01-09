@@ -120,9 +120,10 @@ Like all PsyNeuLink components, it has the three following core attributes:
 * ``variable``:  this must match (both in number and types of elements) the value of the item of its owner mechanism's
   ``value`` attribute to which it is assigned (in its :py:data:`index <OutputState.index>` attribute).
 
-* ``function``: this is implemented for potential future use, but is not actively used by PsyNeuLink at the moment.
+* ``function``: converts the outputState's variable to a result that, possibly combined with the result of thej
+  outputState's :py:data:`calculate` function, is assigned to its ``value`` attribute.
 
-* ``value``:  this is assigned the result of the outputState`s ``function``, possibly modifed by its
+* ``value``:  this is assigned the result of the outputState`s ``function``, possibly modified by its
   :py:data:`calculate <OutputState.calculate>` parameter, and used as the input to any projections that it sends.
 
 .. _OutputState_Attributes:
@@ -142,7 +143,8 @@ An outputState also has two additional attributes that determine its operation:
   assigns the item of the mechanism'sm ``value`` unmodified as the ``value`` of the outputState.  However,
   it can be assigned any function that can take as input the  value of the item to which the outputState is assigned.
   Note that the :py:data:`calculate <OutputState.calculate>` function is distinct from the outputState's ``function``
-  parameter (which is reserved for future use).
+  parameter;  it is applied to the result of the :py:data:`function` attribute (which, by default, simply copies the
+  value of the outputState's ``variable`` attribute.
 
 .. _OutputState_Execution:
 
@@ -414,7 +416,7 @@ class OutputState(State_Base):
                                                   self.reference_value))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate index and anaylze parameters
+        """Validate index and calculate parameters
 
         Validate that index is within the range of the number of items in the owner mechanism's ``value``,
         and that the corresponding item is a valid input to the calculate function
@@ -465,14 +467,15 @@ class OutputState(State_Base):
 
         super().update(params=params, time_scale=time_scale, context=context)
 
-        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
+        # FIX: FOR NOW, self.value IS ALWAYS None (SINCE OUTPUTSTATES DON'T GET PROJECTIONS, AND
+        # FIX:     AND State.update RETURNS None IF THERE ARE NO PROJECTIONS, SO IT ALWAYS USES CALCULATE (BELOW).
+        # FIX:     HOWEVER, NEED TO INTEGRATE self.value WITH calculate:
+        # IMPLEMENT: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE:
+        #            TO COMBINE self.value ASSIGNED IN CALL TO SUPER (FROM PROJECTIONS)
+        #            WITH calculate(self.owner.value[index]) PER BELOW
 
         if not self.value:
-            # # MODIFIED 12/8/16 OLD:
-            # self.value = self.calculate(self.owner.value[self.index])
-            # MODIFIED 12/8/16 NEW:
             self.value = type_match(self.calculate(self.owner.value[self.index]), type(self.owner.value[self.index]))
-            # MODIFIED 12/8/16 END
 
 
 def _instantiate_output_states(owner, context=None):
