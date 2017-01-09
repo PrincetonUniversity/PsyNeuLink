@@ -73,7 +73,9 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
 
-mySystem.controller.outcome_function = test_search_function
+# mySystem.controller.function = test_search_function
+mySystem.controller.outcome_function = test_outcome_function
+# mySystem.controller.assign_params({OUTCOME_FUNCTION: test_outcome_function})
 
 # Show characteristics of system:
 mySystem.show()
