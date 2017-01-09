@@ -236,8 +236,8 @@ monitored even if the mechanism is not a <code class="xref std std-keyword docut
 <ul>
 <li><p class="first">OutputStates to be monitored can be specified in the <strong>ControlMechanism</strong> responsible for the monitoring, or in the
 <strong>system</strong> for which that ControlMechanism is the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>).  Specification
-can be in the controlMechanism or system&#8217;s <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument, or in the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="docutils literal"><span class="pre">params</span></code> argument.  In
+can be in the ControlMechanism or system&#8217;s <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument, or in the
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="xref any docutils literal"><span class="pre">params</span></code> argument.  In
 either case, the value must be a list, each item of which must be one of the following:</p>
 <ul class="simple">
 <li>An existing <strong>outputState</strong> or the name of one.</li>
@@ -277,12 +277,16 @@ must have the three following items in the order listed:</p>
 <li>an outputState or mechanism, the name of one, or a specification dictionary for one;</li>
 </ul>
 <ul class="simple">
-<li>an exponent (int) - exponentiates the value of the outputState;</li>
+<li>a weight (int) - multiplies the value of the outputState.</li>
 </ul>
 <ul class="simple">
-<li>a weight (int) - multiplies the value of the outState.</li>
+<li>an exponent (int) - exponentiates the value of the outputState;</li>
 </ul>
 </div></blockquote>
+<p>The set of weights and exponents assigned to each outputState listed in the <a class="reference internal" href="EVCMechanism.html#EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> of the
+ControlMechanism is listed in its <a class="reference internal" href="EVCMechanism.html#EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents" title="EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitor_for_control_weights_and_exponents</span></code></a> attribute, in the same order as the
+outputStates are listed in <a class="reference internal" href="EVCMechanism.html#EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a>.  Each item in the list is a tuple with the weight and exponent
+for a given outputState.</p>
 </div>
 </div>
 <div class="section" id="execution">
