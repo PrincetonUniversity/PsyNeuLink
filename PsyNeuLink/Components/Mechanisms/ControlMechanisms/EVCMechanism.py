@@ -506,11 +506,39 @@ class EVCMechanism(ControlMechanism_Base):
     function : function : default _control_signal_grid_search
         determines the `allocationPolicy <EVCMechanism.allocationPolicy>` to use for the next round of the system's
         execution. The default function (`_control_signal_grid_search`) conducts an exhaustive (*grid*) search of all
-        combinations of the `allocation_samples` of its :doc:`control signals <ControlSignal>`, executing the system
-        (using `run_simulation`) for each combination, evaluating the result using the `value_function`, and returning
-        the allocationPolicy that generated the highest value.  If a custom function is specified, it must accomoudate
-        a `controller` argument that specifies an EVCMechanism, and must return an array with the same format
-        (number and type of elements) as the EVCMechanism's `allocationPolicy` attribute.
+        combinations of the `allocation_samples` of its `control signals <controlSignals>` (and contained in its
+        `controlSignalSearchSpace` attribute), by executing the  system (using `run_simulation`) for each
+        combination, evaluating the result using `value_function`, and returning the allocationPolicy that generated
+        the highest value.  If a custom function is specified, it must accomoudate a `controller` argument that
+        specifies an EVCMechanism (and provides access to its attributes, including `controlSignalSearchSpace`),
+        and must return an array with the same format (number and type of elements) as the EVCMechanism's
+        `allocationPolicy` attribute.
+
+    COMMENT:
+        NOTES ON API FOR CUSTOM VERSIONS:
+            Gets controller as argument (along with any standard params specified in call)
+            Must include **kwargs to receive standard args (variable, params, time_scale, and context)
+            Must return an allocation policy compatible with controller.allocationPolicy:
+                2d np.array with one array for each allocation value
+
+            Following attributes are available:
+            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
+            controller._assign_simulation_inputs assigns value of predictionMechanisms to inputs of ORIGIN mechanisms
+            controller.run will execute a specified number of trials with the simulation inputs
+            controller.monitored_states is a list of the mechanism outputStates being monitored for outcomes
+            controller.inputValue is a list of current outcome values (values for monitored_states)
+            controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
+            controller.controlSignals is a list of controlSignal objects
+            controller.controlSignalSearchSpace is a list of all allocationPolicies specifed by allocation_samples
+            controlSignal.allocationSamples is the set of samples specified for that controlSignal
+            [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
+            controller.allocationPolicy - holds current allocationPolicy
+            controller.outputValue is a list of current controlSignal values
+            controller.value_function - calls the three following functions (done explicitly, so each can be specified)
+            controller.outcome_function - aggregates outcomes (using specified weights and exponentiation)
+            controller.cost_function - aggregate costs of control signals
+            controller.combine_outcome_and_cost_function - combines outcoms and costs
+    COMMENT
 
     allocationPolicy : 2d np.array : `defaultControlAllocation <LINK>`
         determines the value assigned as the variable for each control signal and its associated
@@ -1213,15 +1241,44 @@ class EVCMechanism(ControlMechanism_Base):
                     context=None):
         """Determine allocationPolicy for next run of system
 
-        Calls self._update_predicted_input() and ``function``
-        Default for ``function`` is _control_signal_grid_search()
-
-        Returns an allocation_policy
+        Update prediction mechanisms
+        Construct controlSignalSearchSpace (from allocation_samples of each item in controlSignals):
+            * get `allocationSamples` for each ControlSignal in `controlSignals`
+            * construct `controlSignalSearchSpace`: a 2D np.array of control allocation policies, each policy of which
+              is a different combination of values, one from the `allocationSamples` of each ControlSignal.
+        Call self.function -- default is _control_signal_grid_search()
+        Return an allocation_policy
 
         """
 
         self._update_predicted_input()
         # self.system._cache_state()
+
+
+        # MODIFIED 1/9/17 NEW:
+        #region CONSTRUCT SEARCH SPACE
+        # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
+        #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
+        #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
+        control_signal_sample_lists = []
+        control_signals = self.controlSignals
+
+        # Get allocationSamples for all ControlSignals
+        num_control_signals = len(control_signals)
+
+        for control_signal in self.controlSignals:
+            control_signal_sample_lists.append(control_signal.allocationSamples)
+
+        # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
+        #                                     (one sample from the allocationSample of each ControlProjection)
+        # Reference for implementation below:
+        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
+        self.controlSignalSearchSpace = \
+            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        # END MOVE
+        #endregion
+        # MODIFIED 1/9/17 END
+
 
         allocation_policy = self.function(controller=self,
                                           variable=variable,
@@ -1278,15 +1335,6 @@ class EVCMechanism(ControlMechanism_Base):
         # Execute simulation run of system for the current allocationPolicy
         sim_clock = Clock('EVC SIMULATION CLOCK')
 
-        # # MODIFIED 12/25/16 OLD [EXECUTES SYSTEM DIRECTLY]:
-        # for i in range(self.system._phaseSpecMax+1):
-        #     sim_clock.time_step = i
-        #     simulation_inputs = self._get_simulation_system_inputs(phase=i)
-        #     self.system.execute(input=simulation_inputs, clock=sim_clock, time_scale=time_scale, context=context)
-        #     # # TEST PRINT:
-        #     # print ("SIMULATION INPUT: ", simulation_inputs)
-
-        # MODIFIED 12/25/16 NEW [USES SYSTEM.RUN]:
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
 
         # Get cost of each controlSignal
@@ -1297,99 +1345,29 @@ class EVCMechanism(ControlMechanism_Base):
         #    stored in self.inputValue = list(self.variable)
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-    # MODIFIED 12/27/16 OLD:
-    # [USED BY __control_signal_grid_search() FOR DIRECT EXECUTION OF system;
-    #  REPLACED BY self.predictedInputs and system.run()]
-    #
-    # def _get_simulation_system_inputs(self, phase):
-    #     """Return array of predictionMechanism values for use as inputs to processes in simulation run of System
-    #
-    #     Returns: 2D np.array
-    #
-    #     """
-    #
-    #     simulation_inputs = np.empty_like(self.system.input, dtype=float)
-    #
-    #     # For each prediction mechanism
-    #     for prediction_mech in self.predictionMechanisms:
-    #
-    #         # Get the index for each process that uses simulated input from the prediction mechanism
-    #         for predicted_process in prediction_mech.use_for_processes:
-    #             # process_index = self.system.processes.index(predicted_process)
-    #             process_index = self.system._processList.processes.index(predicted_process)
-    #             # Assign the prediction mechanism's value as the simulated input for the process
-    #             #    in the phase at which it is used
-    #             if prediction_mech.phaseSpec == phase:
-    #                 simulation_inputs[process_index] = prediction_mech.value
-    #             # For other phases, assign zero as the simulated input to the process
-    #             else:
-    #                 simulation_inputs[process_index] = np.atleast_1d(0)
-    #     return simulation_inputs
-    #
-    # def _assign_simulation_inputs(self):
-    #
-    #     # For each prediction mechanism, assign its value as input to corresponding process for the simulation
-    #     for mech in self.predictionMechanisms:
-    #         # For each outputState of the predictionMechanism, assign its value as the value of the corresponding
-    #         # Process.inputState for the ORIGIN mechanism corresponding to mech
-    #         for output_state in mech.outputStates:
-    #             for input_state_name, input_state in list(mech.inputStates.items()):
-    #                 for projection in input_state.receivesFromProjections:
-    #                     input = mech.outputStates[output_state].value
-    #                     projection.sender.owner.inputState.receivesFromProjections[0].sender.value = input
-    # MODIFIED 12/27/16 END
-
 
 def __control_signal_grid_search(controller=None, **kwargs):
-    """Grid searches combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
-
-    COMMENT:
-        NOTES ON API FOR CUSTOM VERSIONS:
-            Gets controller as argument (along with any standard params specified in call)
-            Must include **kwargs to receive standard args (variable, params, time_scale, and context)
-            Must return an allocation policy compatible with controller.allocationPolicy:
-                2d np.array with one array for each allocation value
-
-            Following attributes are available:
-            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
-            controller._assign_simulation_inputs assigns value of predictionMechanisms to inputs of ORIGIN mechanisms
-            controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the mechanism outputStates being monitored for outcomes
-            controller.inputValue is a list of current outcome values (values for monitored_states)
-            controller.controlSignals is a list of controlSignal objects
-            controlSignal.allocationSamples is the set of samples specified for that controlSignal
-            [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
-            controller.allocationPolicy - holds current allocationPolicy
-            controller.outputValue is a list of current controlSignal values
-            controller.value_function - calls the three following functions (done explicitly, so each can be specified)
-            controller.outcome_aggregation function - aggregates outcomes (using specified weights and exponentiation)
-            controller.cost_function  aggregate costs of control signals
-            controller.combine_outcome_and_cost_function - combines outcoms and costs
-    COMMENT
+    """Grid search combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
 
     Description
     -----------
-        Construct and search space of control signals for maximum EVC and set value of controlSignals accordingly
+        * Called by _control_signal_grid_search (a place-marker function defined at top of module
+            to allow forward-referencing of functions defined at the end of the module).
+        * Call system.execute for each `allocationPolicy` in `controlSignalSearchSpace`.
+        * Store an array of values for outputStates in `monitoredOutputStates` (i.e., the inputStates in `inputStates`)
+            for each `allocationPolicy`.
+        * Call `_compute_EVC` for each allocationPolicy to calculate the EVC, identify the  maximum,
+            and assign to `EVCmax`.
+        * Set `EVCmaxPolicy` to the `allocationPolicy` (outputState.values) corresponding to EVCmax.
+        * Set value for each controlSignal (outputState.value) to the values in `EVCmaxPolicy`.
+        * Return an allocationPolicy.
 
-        * Get ``allocationSamples`` for each ``controlSignal``
-        * Construct ``controlSignalSearchSpace``: a 2D np.array of control allocation policies, each policy of which
-          is a different combination of values, one from the ``allocationSamples`` of each control signal.
-        * Call ``system``.execute for each control allocation policy in ``controlSignalSearchSpace``
-        * Store an array of values for ControlSignals in ``monitoredOutputStates`` (i.e., the inputStates in
-          ``inputStates``) for each control allocation policy.
-        * Call ``execute`` to calculate the EVC for each control allocation policy, identify the maxium, and assign to
-          ``EVCmax``.
-        * Set ``EVCmaxPolicy`` to the control allocation policy (outputState.values) corresponding to EVCmax
-        * Set value for each control signal (outputState.value) to the values in ``EVCmaxPolicy``
-        * Return ``allocationPolicy``
+        Note:
+        * runtime_params is used for self.__execute (that calculates the EVC for each call to system.execute);
+          it is NOT used for system.execute -- that uses the runtime_params provided for the Mechanisms in each
+            Process.configuration
 
-         Note:
-         * runtime_params is used for self.execute (that calculates the EVC for each call to system.execute);
-             it is NOT used for system.execute -- that uses the runtime_params provided for the Mechanisms in each
-             Process.congiruation
-
-        Returns (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
-    FROM EXECUTE END
+        Return (2D np.array): value of outputState for each monitored state (in self.inputStates) for EVCMax
 
     """
 
@@ -1415,7 +1393,6 @@ def __control_signal_grid_search(controller=None, **kwargs):
     except KeyError:
         context = None
 
-    # FIX: MOVE FROM HERE TO "END" TO __execute__??
     if not controller:
         if INITIALIZING in context:
             # If this is an initialization call, return default allocation value as place marker, since
@@ -1425,32 +1402,6 @@ def __control_signal_grid_search(controller=None, **kwargs):
             raise EVCError("controller argument must be specified in call to "
                            "EVCMechanism.__control_signal_grid_search")
 
-    #region CONSTRUCT SEARCH SPACE
-    # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
-    #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
-    #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
-    control_signal_sample_lists = []
-    control_signals = controller.controlSignals
-
-    # Get allocationSamples for all ControlSignals
-    num_control_signals = len(control_signals)
-
-    for control_signal in controller.controlSignals:
-        control_signal_sample_lists.append(control_signal.allocationSamples)
-
-    # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
-    #                                     (one sample from the allocationSample of each ControlProjection)
-    # Reference for implementation below:
-    # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-    controller.controlSignalSearchSpace = \
-        np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-    # END MOVE
-    #endregion
-
-    # MODIFIED 12/27/16 OLD:
-    # controller._assign_simulation_inputs()
-    # MODIFIED 12/27/16 END
-
     #region RUN SIMULATION
 
     controller.EVCmax = None
@@ -1459,8 +1410,6 @@ def __control_signal_grid_search(controller=None, **kwargs):
 
     # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
     context = context.replace(EXECUTING, '{0} {1}'.format(controller.name, EVC_SIMULATION))
-
-    #FIX END
 
     # Print progress bar
     if controller.prefs.reportOutputPref:

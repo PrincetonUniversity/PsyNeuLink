@@ -15,9 +15,10 @@
 # DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
 # DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
 
-# FIX: ADD _instantiate_input_states TO ControlMechanism AND IMPLEMENT ASSIGNMENT OF monitor_for_control_factors THERE
-
+# DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
 # FIX: EVCMechanism: MOVE FROM HERE TO "END" TO __execute__??
+
+# FIX: ADD _instantiate_input_states TO ControlMechanism AND IMPLEMENT ASSIGNMENT OF monitor_for_control_factors THERE
 
 # FIX: EVCMechamims:  MAKE CALL TO outcome_function, cost_function, and combine_outcome_and_cost_function
 # FIX:                SPECIFY WEIGHTS AND EXPONENTS ARGUMENTS EXPLICITLY ,TO BE COMPATIBLE WITH CUSTOM FUNCTIONS.
