@@ -302,7 +302,7 @@ item of its <a class="reference internal" href="Mechanism.html#Mechanism.Mechani
 the value of its <code class="docutils literal"><span class="pre">RESPONSE_TIME</span></code> outputState.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>,
 the value is the mean response time (in seconds) estimated by the analytic solution used in <code class="docutils literal"><span class="pre">function</span></code>.</li>
 </ul>
-<p>The following assignments are made only if :py:data.`timeScale &lt;DDM.timeScale&gt;` is
+<p>The following assignments are made only if <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
 <code class="xref py py-data docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>;  otherwise the value of the corresponding
 attributes is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
 <ul class="simple">
@@ -396,8 +396,8 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <dl class="attribute">
 <dt id="DDM.DDM.function">
 <code class="descname">function</code><a class="headerlink" href="#DDM.DDM.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>IntegratorFunction : default BogaczEtAl</em> &#8211; the function used to compute the outcome of the decision process when <code class="docutils literal"><span class="pre">timeScale</span></code> is
-<code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  If <code class="docutils literal"><span class="pre">times_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, <code class="docutils literal"><span class="pre">function</span></code>
+<dd><p><em>IntegratorFunction : default BogaczEtAl</em> &#8211; the function used to compute the outcome of the decision process when <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
+<code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  If <code class="docutils literal"><span class="pre">time_scale</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>, <code class="docutils literal"><span class="pre">function</span></code>
 is automatically assigned to :class`Integrator`, and used to compute the decision process by
 stepwise integration of the decision variable
 (one step per <code class="xref py py-class docutils literal"><span class="pre">CentralClock.time_step</span></code>).</p>
@@ -424,21 +424,21 @@ The key of each entry is the name of (keyword for) a function parameter, and its
 <li><strong>decision variable</strong> (value of <code class="xref std std-keyword docutils literal"><span class="pre">DDM_DECISION_VARIABLE</span></code> outputState);</li>
 <li><strong>response time</strong> (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">DDM_RESPONSE_TIME</span></code> outputState);</li>
 <li><strong>probability of reaching upper threshold</strong> (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">DDM_PROBABILITY_UPPER_THRESHOLD</span></code>
-outputState); if timeScale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP,</span> <span class="pre">this</span> <span class="pre">is</span> <span class="pre">:keyword:`None</span></code>;</li>
+outputState); if <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP,</span> <span class="pre">this</span> <span class="pre">is</span> <span class="pre">:keyword:`None</span></code>;</li>
 <li><strong>probability of reaching lower threshold</strong> (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">DDM_PROBABILITY_LOWER_THRESHOLD</span></code>
-outputState); if timeScale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP,</span> <span class="pre">this</span> <span class="pre">is</span> <span class="pre">:keyword:`None</span></code>;</li>
+outputState); if <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP,</span> <span class="pre">this</span> <span class="pre">is</span> <span class="pre">:keyword:`None</span></code>;</li>
 <li><strong>mean of correct response times</strong> (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">DDM_RT_CORRECT_MEAN</span></code> outputState);
-only assigned if <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss`</span></code> and timeScale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL,</span>
+only assigned if <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss`</span></code> and <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL,</span>
 <span class="pre">otherwise</span> <span class="pre">it</span> <span class="pre">is</span> <span class="pre">:keyword:`None</span></code>;</li>
 <li><strong>variance of correct response times</strong> (<code class="docutils literal"><span class="pre">value</span></code> of <code class="xref std std-keyword docutils literal"><span class="pre">DDM_RT_CORRECT_VARIANCE</span></code> outputState);
-only assigned if <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss`</span></code> and timeScale is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL,</span>
+only assigned if <code class="docutils literal"><span class="pre">function</span></code> is <code class="xref std std-keyword docutils literal"><span class="pre">NavarroAndFuss`</span></code> and <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL,</span>
 <span class="pre">otherwise</span> <span class="pre">it</span> <span class="pre">is</span> <span class="pre">:keyword:`None</span></code>;</li>
 </ul>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="DDM.DDM.timeScale">
-<code class="descname">timeScale</code><a class="headerlink" href="#DDM.DDM.timeScale" title="Permalink to this definition">¶</a></dt>
+<dt id="DDM.DDM.time_scale">
+<code class="descname">time_scale</code><a class="headerlink" href="#DDM.DDM.time_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>TimeScale : default TimeScale.TRIAL</em> &#8211; determines the TimeScale at which the decision process is executed.</p>
 </dd></dl>
 
