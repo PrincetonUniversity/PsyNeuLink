@@ -923,17 +923,15 @@ class Component(object):
         #                         format(self.__class__.__name__))
 
 
-        # VALIDATE VARIABLE
-
-        # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
-        self._validate_variable(variable, context=context)
-        if variable is None:
-            self.variableInstanceDefault = self.variableClassDefault
-        else:
-            # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
-            self.variableInstanceDefault = self.variable
-
-
+        # VALIDATE VARIABLE (if not called from assign_params)
+        if not COMMAND_LINE in context:
+            # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
+            self._validate_variable(variable, context=context)
+            if variable is None:
+                self.variableInstanceDefault = self.variableClassDefault
+            else:
+                # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
+                self.variableInstanceDefault = self.variable
 
         # If no params were passed, then done
         if request_set is None and  target_set is None and default_set is None:
@@ -946,8 +944,22 @@ class Component(object):
             target_set = self.paramInstanceDefaults
         if target_set is self.paramClassDefaults:
             raise ComponentError("Altering paramClassDefaults not permitted")
+
+        # # MODIFIED 1/9/17 OLD:
+        # if default_set is None:
+        #     default_set = self.paramInstanceDefaults
+        # MODIFIED 1/9/17 NEW:
+        # If called from assign_params, restrict to user_params
+        #   as those are the only ones that should be modifiable
+        #   (and are included paramClassDefaults, which will be tested in validate_params)
         if default_set is None:
-            default_set = self.paramInstanceDefaults
+            if COMMAND_LINE in context:
+                default_set = self.user_params
+        # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
+            else:
+                default_set = self.paramInstanceDefaults
+        # MODIFIED 1/9/17 END
+
 
         # MODIFIED 11/28/16 OLD:
         # self.paramNames = self.paramInstanceDefaults.keys()
@@ -1091,9 +1103,9 @@ class Component(object):
     def assign_params(self, request_set:dict=None):
         """Validates specified params, adds to them paramsInstanceDefaults, and instantiates any if necessary
 
-        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set
-        Update paramInstanceDefaults with validated_set so that any instantiations (next) are done in proper context
-        Instantiate any items in request set that require it (i.e, function or states);
+        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
+        Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
+        Instantiate any items in request set that require it (i.e, function or states).
 
         """
         context=COMMAND_LINE
@@ -1427,10 +1439,14 @@ class Component(object):
                         target_set[param_name] = param_value.copy()
 
             # If param is a function_type, allow any other function_type
+            # MODIFIED 1/9/16 NEW:
+            elif isinstance(param_value, function_type):
+                target_set[param_name] = param_value
+            # MODIFIED 1/9/16 END
 
             # Parameter is not a valid type
             else:
-                raise ComponentError("Value of {0} ({1}) must be of type {2} ".
+                raise ComponentError("Value of {0} param ({1}) must be of type {2} ".
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
