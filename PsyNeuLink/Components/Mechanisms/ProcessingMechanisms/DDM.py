@@ -219,7 +219,7 @@ After each execution of the mechanism:
       the value is the mean response time (in seconds) estimated by the analytic solution used in ``function``.
       COMMENT:
         [TBI:]
-        If ``times_scale`` is :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`, the value is the number
+        If ``time_scale`` is :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`, the value is the number
         of time_steps that have transpired since the start of the current execution in the current
         :ref:`phase <System_Execution_Phase>`.  If execution completes, this is the number of time_steps it took for
         the decision variable to reach the (positive or negative) value of the :py:data:`threshold <DDM.threshold>`
@@ -227,7 +227,7 @@ After each execution of the mechanism:
         then it corresponds to the time_step at which the interruption occurred.
       COMMENT
     ..
-    The following assignments are made only if :py:data.`timeScale <DDM.timeScale>` is
+    The following assignments are made only if `time_scale <DDM.time_scale>` is
     :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`;  otherwise the value of the corresponding
     attributes is :keyword:`None`.
 
@@ -239,7 +239,7 @@ After each execution of the mechanism:
       ``PROBABILITY_LOWER_THRESHOLD`` corresponds to the accuracy of the decision process.
       COMMENT:
       [TBI:]
-          If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
+          If ``time_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
           indicating whether the decision process reached the upper (positive) threshold. If execution was interrupted
           (using :py:meth:`terminate_function <DDM.terminate_function>`, sometimes referred to as the
           :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
@@ -254,7 +254,7 @@ After each execution of the mechanism:
       ``PROBABILITY_LOWER_THRESHOLD`` corresponds to the error rate of the decision process.
       COMMENT:
           [TBI:]
-          If ``times_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
+          If ``time_scale`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
           indicating whether the decision process reached the lower (negative) threshold. If execution was interrupted
           (using :py:method:`terminate_method <DDM.terminate_function>`, sometimes referred to as the
           :ref:`interrogation protocol <LINK>`), then the value corresponds to the current likelihood that the lower
@@ -428,8 +428,8 @@ class DDM(ProcessingMechanism_Base):
         the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
 
     function :  IntegratorFunction : default BogaczEtAl
-        the function used to compute the outcome of the decision process when ``timeScale`` is
-        :keyword:`TimeScale.TRIAL`.  If ``times_scale`` is :keyword:`TimeScale.TIME_STEP`, ``function``
+        the function used to compute the outcome of the decision process when `time_scale` is
+        :keyword:`TimeScale.TRIAL`.  If ``time_scale`` is :keyword:`TimeScale.TIME_STEP`, ``function``
         is automatically assigned to :class`Integrator`, and used to compute the decision process by
         stepwise integration of the decision variable
         (one step per :py:class:`CentralClock.time_step <TimeScale.CentralClock.time_step>`).
@@ -456,20 +456,20 @@ class DDM(ProcessingMechanism_Base):
         * **response time** (``value`` of :keyword:`DDM_RESPONSE_TIME` outputState);
 
         * **probability of reaching upper threshold** (``value`` of :keyword:`DDM_PROBABILITY_UPPER_THRESHOLD`
-          outputState); if timeScale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
+          outputState); if `time_scale` is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
 
         * **probability of reaching lower threshold** (``value`` of :keyword:`DDM_PROBABILITY_LOWER_THRESHOLD`
-          outputState); if timeScale is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
+          outputState); if `time_scale` is :keyword:`TimeScale.TIME_STEP, this is :keyword:`None`;
 
         * **mean of correct response times** (``value`` of :keyword:`DDM_RT_CORRECT_MEAN` outputState);
-          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and timeScale is :keyword:`TimeScale.TRIAL,
+          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and `time_scale` is :keyword:`TimeScale.TRIAL,
           otherwise it is :keyword:`None`;
 
         * **variance of correct response times** (``value`` of :keyword:`DDM_RT_CORRECT_VARIANCE` outputState);
-          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and timeScale is :keyword:`TimeScale.TRIAL,
+          only assigned if ``function`` is :keyword:`NavarroAndFuss`` and `time_scale` is :keyword:`TimeScale.TRIAL,
           otherwise it is :keyword:`None`;
 
-    timeScale : TimeScale : default TimeScale.TRIAL
+    time_scale : TimeScale : default TimeScale.TRIAL
         determines the TimeScale at which the decision process is executed.
 
     name : str : default DDM-<index>
