@@ -75,7 +75,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
 # mySystem.controller.function = test_search_function
 # mySystem.controller.outcome_function = test_outcome_function
-# mySystem.controller.assign_params({OUTCOME_FUNCTION: test_outcome_function})
+mySystem.controller.assign_params({OUTCOME_FUNCTION: test_outcome_function})
 
 # Show characteristics of system:
 mySystem.show()
