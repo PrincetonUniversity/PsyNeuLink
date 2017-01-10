@@ -41,12 +41,12 @@ Creating an EVCMechanism
 
 An EVCMechanism can be created using the standard Python method of calling its constructor.  However,  more commonly,
 it is generated automatically when a system is created and an EVCMechanism is specified as its
-`controller` attribute (see :ref:`Controller <System_Execution_Control>`).
-An EVCMechanism that has been constructed automatically can nevertheless be customized, like any other PsyNeuLink
-component, either by assigning a params dictionary to the controller's ``params`` parameter, or by using its
-`assign_params <LINK>` method.  In both cases, a parameter to be modified is referenced using a keyword corresponding
-to the argument for that parameter in the EVCMechanism's constructor (and described under `EVCMechanism_Structure`
-below).
+`controller` attribute (see :ref:`Controller <System_Execution_Control>`). An EVCMechanism that has been constructed
+automatically can nevertheless be customized,
+COMMENT:
+    by using its `assign_params <LINK>` method (which is generally safer), or
+COMMENT
+by assigning a value to the relevant attribute directly.
 
 When an EVCMechanism is constructed automatically, inputStates are created and assigned projections from the
 outputStates of the mechanisms it uses to evaluate the system's performance. The EVCMechanism's outputStates are
@@ -112,7 +112,12 @@ the system under each  `allocationPolicy` in `controlSignalSearchSpace`, calcula
 policies, and return the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.
 However, by setting the `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for
 each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the
-following four functions (each of which can be customized):
+following four functions, each of which can be customized
+COMMENT:
+ (the heading for each function below is the keyword for
+the function used to reference it in the `assign_params` method)
+COMMENT
+(by assigning a function to the corresponding attribute of the EVCMechanism):
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -128,30 +133,30 @@ COMMENT:
     MENTION HIERARCHY
 COMMENT
 
-* `VALUE_FUNCTION <value_function>` - this is an "orchestrating" function that simply calls the three subordinate
-  functions described below, which do the actual work of evaluating the performance of the system and the cost of the
-  controlSignals under the current `allocationPolicy`, and combining these to calculate the EVC.  This function can
-  be replaced with a user-defined function to fully customize the calculation of the EVC, by assigning a function to
-  the `VALUE_FUNCTION <value_function>` parameter of the EVCMechanism.
+* `value_function` - this is an "orchestrating" function that calls the three subordinate functions described below,
+  which do the actual work of evaluating the performance of the system and the cost of the controlSignals under the
+  current `allocationPolicy`, and combining these to calculate the EVC.  This function can be replaced with a
+  user-defined function to fully customize the calculation of the EVC, by assigning a function to the
+  `value_function` attribute of the EVCMechanism.
 ..
-* `OUTCOME_FUNCTION <outcome_function>` - this combines the values of the outputStates in the EVCMechanism's
-  `monitoredOutputStates` attribute to generate an aggregated outcome value for the current `allocationPolicy`. The
-  default is the `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState
-  values, using any weights and/or exponents specified for the outputStates to scale and/or exponentiate the
-  contribution that each makes to the aggregated outcome (see `ControlMechanism_OutputState_Tuple`, and
+* `outcome_function` - this combines the values of the outputStates in the EVCMechanism's `monitoredOutputStates`
+  attribute to generate an aggregated outcome value for the current `allocationPolicy`. The default is the
+  `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState values,
+  using any weights and/or exponents specified for the outputStates to scale and/or exponentiate the contribution
+  that each makes to the aggregated outcome (see `ControlMechanism_OutputState_Tuple`, and
   `below <EVCMechanism_Examples>` for an example).  Evaluation of the system's performance can be further customized
-  by specifying a custom function for the EVCMechanism's `OUTCOME_FUNCTION <outcome_function>` parameter.
+  by specifying a custom function for the EVCMechanism's `outcome_function` attribute.
 ..
-* `COST_FUNCTION <cost_function>` - this combines the costs of the EVCMechanism's ControlSignals to generate an
+* `cost_function` - this combines the costs of the EVCMechanism's ControlSignals to generate an
   aggregated cost for the current `allocationPolicy`.  The default is the `LinearCombination` function,
   which sums the costs.  The evaluation of cost can be further customized by specifying a custom function for the
-  `COST_FUNCTION <cost_function>` parameter.
+  `cost_function` attribute.
 ..
-* :keyword:`COMBINE_OUTCOME_AND_COST_FUNCTION <combine_outcome_and_cost_function>` - this combines the aggregated
-  outcome and aggregated cost values for the current `allocationPolicy`, to determine the EVC for that policy.  The
-  default is the `LinearCombination` function, which subtracts the aggregated cost from the aggregated outcome. The way
-  in which the outcome and cost are combined to determine the EVC can be customized by specifying a custom function for
-  the `COMBINE_OUTCOME_AND_COST_FUNCTION <combine_outcome_and_cost_function` parameter.
+* `combine_outcome_and_cost_function` - this combines the aggregated outcome and aggregated cost values for the
+  current `allocationPolicy`, to determine the EVC for that policy.  The default is the `LinearCombination`
+  function, which subtracts the aggregated cost from the aggregated outcome. The way in which the outcome and cost
+  are combined to determine the EVC can be customized by specifying a custom function for the
+  `combine_outcome_and_cost_function` attribute.
 
 .. _EVCMechanism_ControlSignal:
 
@@ -1627,27 +1632,35 @@ def __value_function(controller, outcomes, costs, context):
     cost_function = controller.paramsCurrent[COST_FUNCTION]
     combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
+    # IMPLEMENTATION NOTE:  EAFP (try/except) design is inefficient for custom functions since it triggers exception;
+    #                       (see http://stackoverflow.com/questions/1835756/using-try-vs-if-in-python)
+    #                       Alternative is to use if/then, but then must determine whether a given function is a
+    #                       method of a Function without referring to .__self__ (which stand-alone functions don't have)
+
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
     # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
     # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
-    if isinstance(outcome_function.__self__, Function):
+    try:
+        isinstance(outcome_function.__self__, Function)
         outcome = outcome_function(variable=outcomes,
                                    # params={WEIGHTS:weights,
                                    #         EXPONENTS:exponents},
                                    context=context)
-    else:
+    except AttributeError:
         outcome = outcome_function(controller=controller, outcomes=outcomes)
 
     # Aggregate costs
-    if isinstance(cost_function.__self__, Function):
+    try:
+        isinstance(cost_function.__self__, Function)
         cost = cost_function(variable=outcomes, context=context)
-    else:
+    except AttributeError:
         cost = cost_function(controller=controller, costs=costs)
 
     # Combine aggregate outcomes and costs to determine value
-    if isinstance(combine_function.__self__, Function):
+    try:
+        isinstance(combine_function.__self__, Function)
         value = combine_function(variable=[outcome, -cost])
-    else:
+    except AttributeError:
         value = combine_function(controller=controller, outcome=outcome, cost=cost)
 
     return (value, outcome, cost)

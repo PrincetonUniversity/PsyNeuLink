@@ -11,9 +11,14 @@
 # DOCUMENT: it`s -> its (unless contraction)
 # DOCUMENT:  ControlSignal/ControlProjection:
 #                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
-#            :keyword:`ORIGIN` -> :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`
+#            :keyword:`ORIGIN` -> 'ORIGIN'
 # DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
 # DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
+
+# DOCUMENT:  Component:  under assign_params, document that parameter must be reference using a string that is the name
+#                        of the argunent used for the parameter in the component's constructor (or the corresponding
+#                        keyword, which is a capitlizaed version of its name, including any underscore separators )
+#                        GIVE EXAMPLES.
 
 # DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
 
