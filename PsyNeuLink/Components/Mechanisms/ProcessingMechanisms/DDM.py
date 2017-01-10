@@ -124,10 +124,10 @@ The DDM process uses the same set of parameters for all modes of execution.  The
 for the functions used in :keyword:`TRIAL` mode, or in a params dictionary assigned to the ``params`` argument,
 using the keywords in the list below, as in the following example::
 
-    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1,
+    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
                  params={DRIFT_RATE:(0.2, ControlProjection),
-                         STARTING_POINT:-0.5),
-                 time_scale=TimeScale.TIME_STEP}
+                         STARTING_POINT:-0.5},
+                 time_scale=TimeScale.TIME_STEP)
 
 .. note::  Parameters specified in the ``params`` argument (as in the example above) will be used for both
    :keyword:`TRIAL` and :keyword:`TIME_STEP` mode, since parameters specified in the  ``params`` argument of a
@@ -563,6 +563,7 @@ class DDM(ProcessingMechanism_Base):
                                      noise=0.5,
                                      t0=.200),
                  params=None,
+                 time_scale=TimeScale.TRIAL,
                  name=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
@@ -571,6 +572,7 @@ class DDM(ProcessingMechanism_Base):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  time_scale=time_scale,
                                                   params=params)
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
