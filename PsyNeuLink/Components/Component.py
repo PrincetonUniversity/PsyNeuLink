@@ -945,10 +945,10 @@ class Component(object):
         if target_set is self.paramClassDefaults:
             raise ComponentError("Altering paramClassDefaults not permitted")
 
-        # # MODIFIED 1/9/17 OLD:
+        # # MODIFIED 1/10/17 OLD:
         # if default_set is None:
         #     default_set = self.paramInstanceDefaults
-        # MODIFIED 1/9/17 NEW:
+        # MODIFIED 1/10/17 NEW:
         # If called from assign_params, restrict to user_params
         #   as those are the only ones that should be modifiable
         #   (and are included paramClassDefaults, which will be tested in validate_params)
@@ -958,12 +958,8 @@ class Component(object):
         # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
             else:
                 default_set = self.paramInstanceDefaults
-        # MODIFIED 1/9/17 END
+        # MODIFIED 1/10/17 END
 
-
-        # MODIFIED 11/28/16 OLD:
-        # self.paramNames = self.paramInstanceDefaults.keys()
-        # MODIFIED 11/28/16 END
 
         # IMPLEMENT: IF not context, DO RECURSIVE UPDATE OF DEFAULT WITH REQUEST, THEN SKIP NEXT IF (MAKE IT elif)
         #            (update default_set with request_set)
@@ -1149,8 +1145,13 @@ class Component(object):
                                          param_value=validated_set[param_name],
                                          context=context)
 
-        if FUNCTION in validated_set:
+        # # MODIFIED 1/10/17 OLD:
+        # if FUNCTION in validated_set:
+        #     self._instantiate_function(context=COMMAND_LINE)
+        # MODIFIED 1/10/17 NEW:
+        if FUNCTION in validated_set and inspect.isclass(self.function):
             self._instantiate_function(context=COMMAND_LINE)
+        # MODIFIED 1/10/17 END
 
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function()
@@ -1732,7 +1733,12 @@ class Component(object):
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-                self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
+                # # MODIFIED 1/10/17 OLD:
+                # self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
+                # MODIFIED 1/10/17 NEW:
+                udf = UserDefinedFunction(function=function, context=context)
+                self.paramsCurrent[FUNCTION] = udf.function
+                # MODIFIED 1/10/17 END
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode
