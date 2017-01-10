@@ -1255,11 +1255,7 @@ class EVCMechanism(ControlMechanism_Base):
         # self.system._cache_state()
 
 
-        # MODIFIED 1/9/17 NEW:
         #region CONSTRUCT SEARCH SPACE
-        # IMPLEMENTATION NOTE: MOVED FROM _instantiate_function
-        #                      TO BE SURE LATEST VALUES OF allocationSamples ARE USED (IN CASE THEY HAVE CHANGED)
-        #                      SHOULD BE PROFILED, AS MAY BE INEFFICIENT TO EXECUTE THIS FOR EVERY RUN
         control_signal_sample_lists = []
         control_signals = self.controlSignals
 
@@ -1275,10 +1271,7 @@ class EVCMechanism(ControlMechanism_Base):
         # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
         self.controlSignalSearchSpace = \
             np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
-        # END MOVE
         #endregion
-        # MODIFIED 1/9/17 END
-
 
         allocation_policy = self.function(controller=self,
                                           variable=variable,
