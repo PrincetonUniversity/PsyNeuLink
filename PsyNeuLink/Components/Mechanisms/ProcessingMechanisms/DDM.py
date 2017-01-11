@@ -482,7 +482,7 @@ class DDM(ProcessingMechanism_Base):
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         a PreferenceSet for the mechanism.
         Specified in the prefs argument of the call to create the mechanism;
-        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     COMMENT:
