@@ -293,8 +293,8 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.ShellClasses import *
-# from PsyNeuLink.Components.Functions.Function import Function_Base
-from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+from PsyNeuLink.Components.Functions.Function import Function_Base
+# from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
 
 PY_MULTIPROCESSING = False
 
@@ -351,7 +351,7 @@ class ControlSignalCostOptions(IntEnum):
     DEFAULTS           = INTENSITY_COST
 
 
-EVCAuxFunction = "EVC AUXILIARY FUNCTION"
+kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
 kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 
 
@@ -389,35 +389,95 @@ kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 #
 #         # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
 
-class EVCAuxiliaryFunction(UserDefinedFunction):
+# class EVCAuxiliaryFunction(UserDefinedFunction):
+class EVCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
     """
-    componentName = EVCAuxFunction
+    componentName = kwEVCAuxFunction
     componentType = kwEVCAuxFunctionType
 
     @tc.typecheck
-    def __init__(self, function):
-        self.aux_function = function
-        super().__init__()
+    def __init__(self,
+                 variable_default=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
         self.functionOutputType = None
 
-    def function(self,
-                 **kwargs):
-        # raise FunctionError("Function must be provided for {}".format(self.componentType))
-        return self.aux_function(**kwargs)
+class ValueFunction(EVCAuxiliaryFunction):
+    def __init__(self):
+        super().__init__()
+
+    def function(self, **kwargs):
+        """aggregate outcomes, costs, combine, and return value
+        """
+
+        context = kwargs['context']
+
+        if INITIALIZING in context:
+            return [0]
+
+        controller = kwargs[CONTROLLER]
+        outcomes = kwargs['outcomes']
+        costs = kwargs['costs']
+
+        outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
+        cost_function = controller.paramsCurrent[COST_FUNCTION]
+        combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
+
+        # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
+        # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
+        # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
+
+        # MODIFIED 1/10/17
+
+        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+
+        if isinstance(outcome_function, UserDefinedFunction):
+            outcome = outcome_function.function(controller=controller, outcomes=outcomes)
+        else:
+            outcome = outcome_function.function(variable=outcomes,
+                                        # params={WEIGHTS:weights,
+                                        #         EXPONENTS:exponents},
+                                        context=context)
+
+        # Aggregate costs
+        if isinstance(cost_function, UserDefinedFunction):
+            cost = cost_function.function(controller=controller, costs=costs)
+        else:
+            cost = cost_function.function(variable=outcomes, context=context)
+
+        # Combine outcome and cost to determine value
+        if isinstance(combine_function, UserDefinedFunction):
+            value = combine_function.function(controller=controller, outcome=outcome, cost=cost)
+        else:
+            value = combine_function.function(variable=[outcome, -cost])
+
+        return (value, outcome, cost)
+
 
 # These are place-marker definitions to allow forward referencing of functions defined at end of module
-# def _control_signal_grid_search(allocations=None, ctlr=None):
-#     return __control_signal_grid_search(controller=None)
 def _control_signal_grid_search(**kwargs):
     return __control_signal_grid_search(**kwargs)
 CONTROLLER = 'controller'
 
-def __value_function(ctlr, outcome, )
+# def _value_function(controller, outcomes, costs, context):
 
-class value_function(EVCAuxiliaryFunction):
-    def __init__(self, function):
-        super().__init__(function=function)
+# def value_function(**kwargs):
+#     return _value_function(**kwargs)
+
+# def value_function(**kwargs):
+#     return ValueFunction(function=_value_function)
+#
 
 
 class EVCError(Exception):
@@ -434,7 +494,7 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_params=None,                                  \
     monitor_for_control=None,                                          \
     function=_control_signal_grid_search,                              \
-    value_function=value_function,                                     \
+    value_function=ValueFunction(),                                    \
     outcome_function=LinearCombination(operation=PRODUCT),             \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
@@ -750,7 +810,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
                  function=_control_signal_grid_search,
-                 value_function=value_function,
+                 value_function=ValueFunction(),
                  outcome_function=LinearCombination(operation=PRODUCT),
                  cost_function=LinearCombination(operation=SUM,
                                                  context=componentType+COST_FUNCTION),
@@ -1419,6 +1479,18 @@ class EVCMechanism(ControlMechanism_Base):
     #    (which are all Functions), and so that they can be passed a params dict.
 
     @property
+    def value_function(self):
+        return self._value_function
+
+    @value_function.setter
+    def value_function(self, assignment):
+        # from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        if isinstance(assignment, function_type):
+            self._value_function = EVCAuxiliaryFunction(function=assignment)
+        else:
+            self._value_function = assignment
+
+    @property
     def outcome_function(self):
         return self._outcome_function
 
@@ -1705,6 +1777,8 @@ def __control_signal_grid_search(controller=None, **kwargs):
     #endregion
 
 
+# EVC Auxiliary Functions ----------------------------------------------------------------------------------------------
+
 def _compute_EVC(args):
     """compute EVC for a specified allocation policy
 
@@ -1730,7 +1804,10 @@ def _compute_EVC(args):
                         time_scale=time_scale,
                         context=context)
 
-    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION](ctlr, ctlr.inputValue, ctlr.controlSignalCosts, context=context)
+    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(ctlr,
+                                                              ctlr.inputValue,
+                                                              ctlr.controlSignalCosts,
+                                                              context=context)
 
     if PY_MULTIPROCESSING:
         return
@@ -1739,46 +1816,3 @@ def _compute_EVC(args):
         return (EVC_current)
 
 
-def _value_function(Function_Base):
-
-    def __init__(self):
-        super().__init__(self)
-
-
-    def function(controller, outcomes, costs, context):
-        """aggregate outcomes, costs, combine, and return value
-        """
-
-        outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
-        cost_function = controller.paramsCurrent[COST_FUNCTION]
-        combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
-
-        # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-        # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
-        # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
-
-        # MODIFIED 1/10/17
-
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-
-        if isinstance(outcome_function, UserDefinedFunction):
-            outcome = outcome_function.function(controller=controller, outcomes=outcomes)
-        else:
-            outcome = outcome_function.function(variable=outcomes,
-                                        # params={WEIGHTS:weights,
-                                        #         EXPONENTS:exponents},
-                                        context=context)
-
-        # Aggregate costs
-        if isinstance(cost_function, UserDefinedFunction):
-            cost = cost_function.function(controller=controller, costs=costs)
-        else:
-            cost = cost_function.function(variable=outcomes, context=context)
-
-        # Combine outcome and cost to determine value
-        if isinstance(combine_function, UserDefinedFunction):
-            value = combine_function.function(controller=controller, outcome=outcome, cost=cost)
-        else:
-            value = combine_function.function(variable=[outcome, -cost])
-
-        return (value, outcome, cost)
