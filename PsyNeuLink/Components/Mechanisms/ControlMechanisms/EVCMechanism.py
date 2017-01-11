@@ -355,41 +355,6 @@ kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
 kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 
 
-# class EVCAuxiliaryFunction(Function_Base):
-#     """Base class for EVC auxiliary functions
-#     """
-#     componentName = EVCAuxFunction
-#     componentType = kwEVCAuxFunctionType
-#
-#     variableClassDefault = [0]
-#
-#     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-#     paramClassDefaults.update({
-#                                kwFunctionOutputTypeConversion: False,
-#                                PARAMETER_STATE_PARAMS: None
-#     })
-#
-#     @tc.typecheck
-#     def __init__(self,
-#                  variable=None,
-#                  params=None,
-#                  prefs:is_pref_set=None,
-#                  context=componentName+INITIALIZING):
-#
-#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-#         params = self._assign_args_to_param_dicts(params=params)
-#         self.aux_function = function
-#
-#         super().__init__(variable_default=variable,
-#                          params=params,
-#                          prefs=prefs,
-#                          context=context)
-#
-#         self.functionOutputType = None
-#
-#         # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
-
-# class EVCAuxiliaryFunction(UserDefinedFunction):
 class EVCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
     """
@@ -469,15 +434,6 @@ class ValueFunction(EVCAuxiliaryFunction):
 def _control_signal_grid_search(**kwargs):
     return __control_signal_grid_search(**kwargs)
 CONTROLLER = 'controller'
-
-# def _value_function(controller, outcomes, costs, context):
-
-# def value_function(**kwargs):
-#     return _value_function(**kwargs)
-
-# def value_function(**kwargs):
-#     return ValueFunction(function=_value_function)
-#
 
 
 class EVCError(Exception):
