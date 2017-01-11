@@ -15,13 +15,16 @@ Overview
 --------
 
 An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that manages a "portfolio" of
-:doc:`ControlSignals <ControlSignal>` that regulate the performance of the system to which it belongs. It implements
-a form of the Expected Value of Control (EVC) Theory described in :ref:`Shenhav et al. (2013) <LINK>`.  Each
-ControlSignal is associated with a :doc:`ControlProjection`.  The ControlSignal's `intensity` determines the value of
-its ControlProjection, which in turn regulates the parameter of a mechanism or its function. A particular combination
-of ControlSignal intensities is called an `allocationPolicy`.  When a system is executed, it concludes by executing
-the EVCMechanism, which determines the `allocationPolicy`, and thereby the values of controlled parameters forthe next
-round of execution.
+:doc:`ControlSignals <ControlSignal>` that regulate the performance of the system to which it belongs. The
+EVCMechanism is one of the most powerful, but also one of the most complex components in PsyNeuLink.  It is
+designed to implement forms of the Expected Value of Control (EVC) Theory described in
+`Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_.
+
+Each ControlSignal managed by an EVCMechanism is associated with a :doc:`ControlProjection`.  The ControlSignal's
+`intensity` determines the value of its ControlProjection, which in turn regulates the parameter of a mechanism or
+its function. A particular combination of ControlSignal intensities is called an `allocationPolicy`.  When a system
+is executed, it concludes by executing the EVCMechanism, which determines the `allocationPolicy`, and thereby the
+values of controlled parameters for the next round of execution.
 
 .. _EVCMechanism_EVC:
 
@@ -71,15 +74,13 @@ using the EVCMechanism's `MONITOR_FOR_CONTROL <monitor_for_control>` parameter, 
 and/or a weight to parameterize its contribution  to the evaluation (see `ControlMechanism_Monitored_OutputStates` for
 specifying monitored outputStates; and `below <EVCMechanism_Examples>` for examples).
 
-
-By default, the value of the
-EVCMechanism's `MONITOR_FOR_CONTROL` parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`,
-which specifies monitoring the :ref:`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the
-system, each of which is assigned an exponent and weight of 1.  When an EVCMechanism is :ref:`created automatically
-<EVCMechanism_Creation>`, an inputState is created for each outputState specified in its `MONITOR_FOR_CONTROL`
-parameter, and a `MappingProjection` is created that projects to that inputState from the outputState to be
-monitored.  The outputStates of a system being monitored by an EVCMechanism are listed in its `monitoredOutputStates`
-attribute.
+By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL` parameter is
+`MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the :ref:`primary outputState
+<OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an exponent and weight
+of 1.  When an EVCMechanism is :ref:`created automatically <EVCMechanism_Creation>`, an inputState is created for
+each outputState specified in its `MONITOR_FOR_CONTROL` parameter, and a `MappingProjection` is created that
+projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored by
+an EVCMechanism are listed in its `monitoredOutputStates` attribute.
 
 .. _EVC_Function
 
@@ -104,13 +105,13 @@ conducting a grid search over every possible `allocationPolicy`.  The set of `al
 determined by the `allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing
 one value from the `allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An
 `allocationPolicy` is constructed for every possible combination of values, and stored in the EVCMechanism's
-`controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation <LINK>` method is then used to simulate
-the system under each  `allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those
-policies, and return the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.
-However, by setting the `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for
-each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the
-following four functions, each of which can be customized by using the EVCMechanism's `assign_params` method to
-designate custom functions (the safest way), or by assigning them directly to the corresponding attribute
+`controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation` method is then used to simulate the system
+under each  `allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return
+the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
+`SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for each simulation run (in
+`EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the following four functions,
+each of which can be customized by using the EVCMechanism's `assign_params` method to designate custom functions (the
+safest way), or by assigning them directly to the corresponding attribute
 (see `note <_EVCMechanism_Calling_and_Assigning_Functions>` below):
 
 COMMENT:
@@ -155,15 +156,16 @@ COMMENT
 
 .. _EVCMechanism_Calling_and_Assigning_Functions:
 
-.. note:
-   The EVCMechanism function attributes described above are all implemented as PsyNeuLink `Function` objects (so that,
-   among other reasons, they can be parameterized using a params dictionary).  Therefore, to call the function
-   itself, it must be referenced as ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to
-   one of the function attributes can be either a PsyNeuLink `Function`, or a generic python function or method
-   (including a lambda function).  However, if it is one of the latter, it is automatically "wrapped" as a PsyNeuLink
-   `Function` (specifically, it is assigned as the `function <UserDefinedFunction.function>` attribute of a
-   `UserDefinedFunction` object), so that it can be called in the same manner as the default function assignment.
-   Therefore, once assigned, it too must be referenced as ``<EVCMechanism>.<function_attribute>.function``.
+.. note::
+   The EVCMechanism function attributes described above are all implemented as PsyNeuLink `Function <Function>` objects
+   (so that, among other reasons, they can be parameterized using a `params` dictionary).  Therefore, to call the
+   function itself, it must be referenced as ``<EVCMechanism>.<function_attribute>.function``.  A custom function
+   assigned to one of the function attributes can be either a PsyNeuLink `Function <Functions>`, or a generic python
+   function or method (including a lambda function).  However, if it is one of the latter, it is automatically
+   "wrapped" as a PsyNeuLink `Function <Function>` (specifically, it is assigned as the
+   `function <UserDefinedFunction.function>` attribute of a `UserDefinedFunction` object), so that it can be called
+   in the same manner as the default function assignment. Therefore, once assigned, it too must be referenced as
+   ``<EVCMechanism>.<function_attribute>.function``.
 
 .. _EVCMechanism_ControlSignal:
 
@@ -1310,6 +1312,21 @@ class EVCMechanism(ControlMechanism_Base):
                        runtime_params=None,
                        time_scale=TimeScale.TRIAL,
                        context=None):
+        """
+        DOCUMNETATION NEEDED
+
+        Parameters
+        ----------
+        inputs
+        allocation_vector
+        runtime_params
+        time_scale
+        context
+
+        Returns
+        -------
+
+        """
 
         if self.value is None:
             # Initialize value if it is None
