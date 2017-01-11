@@ -293,6 +293,8 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.ShellClasses import *
+# from PsyNeuLink.Components.Functions.Function import Function_Base
+from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
 
 PY_MULTIPROCESSING = False
 
@@ -306,10 +308,6 @@ if MPI_IMPLEMENTATION:
 OBJECT = 0
 WEIGHT = 1
 EXPONENT = 2
-
-EVCAuxFunction = "EVC AUXILIARY FUNCTION"
-kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
-
 
 # # Default control allocation mode values:
 # class DefaultControlAllocationMode(Enum):
@@ -352,12 +350,61 @@ class ControlSignalCostOptions(IntEnum):
     ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
     DEFAULTS           = INTENSITY_COST
 
-class EVCError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
 
-    def __str__(self):
-        return repr(self.error_value)
+EVCAuxFunction = "EVC AUXILIARY FUNCTION"
+kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
+
+
+# class EVCAuxiliaryFunction(Function_Base):
+#     """Base class for EVC auxiliary functions
+#     """
+#     componentName = EVCAuxFunction
+#     componentType = kwEVCAuxFunctionType
+#
+#     variableClassDefault = [0]
+#
+#     paramClassDefaults = Function_Base.paramClassDefaults.copy()
+#     paramClassDefaults.update({
+#                                kwFunctionOutputTypeConversion: False,
+#                                PARAMETER_STATE_PARAMS: None
+#     })
+#
+#     @tc.typecheck
+#     def __init__(self,
+#                  variable=None,
+#                  params=None,
+#                  prefs:is_pref_set=None,
+#                  context=componentName+INITIALIZING):
+#
+#         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+#         params = self._assign_args_to_param_dicts(params=params)
+#         self.aux_function = function
+#
+#         super().__init__(variable_default=variable,
+#                          params=params,
+#                          prefs=prefs,
+#                          context=context)
+#
+#         self.functionOutputType = None
+#
+#         # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
+
+class EVCAuxiliaryFunction(UserDefinedFunction):
+    """Base class for EVC auxiliary functions
+    """
+    componentName = EVCAuxFunction
+    componentType = kwEVCAuxFunctionType
+
+    @tc.typecheck
+    def __init__(self, function):
+        self.aux_function = function
+        super().__init__()
+        self.functionOutputType = None
+
+    def function(self,
+                 **kwargs):
+        # raise FunctionError("Function must be provided for {}".format(self.componentType))
+        return self.aux_function(**kwargs)
 
 # These are place-marker definitions to allow forward referencing of functions defined at end of module
 # def _control_signal_grid_search(allocations=None, ctlr=None):
@@ -366,8 +413,19 @@ def _control_signal_grid_search(**kwargs):
     return __control_signal_grid_search(**kwargs)
 CONTROLLER = 'controller'
 
-def value_function():
-    return _value_function()
+def __value_function(ctlr, outcome, )
+
+class value_function(EVCAuxiliaryFunction):
+    def __init__(self, function):
+        super().__init__(function=function)
+
+
+class EVCError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
 
 
 class EVCMechanism(ControlMechanism_Base):
@@ -1400,52 +1458,6 @@ class EVCMechanism(ControlMechanism_Base):
             self._combine_outcome_and_cost_function = value
 
 
-from PsyNeuLink.Components.Functions.Function import Function_Base
-class EVCAuxiliaryFunction(Function_Base):
-    """Base class for EVC auxiliary functions
-    """
-    componentName = EVCAuxFunction
-    componentType = kwEVCAuxFunctionType
-
-    variableClassDefault = [0]
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: False,
-                               PARAMETER_STATE_PARAMS: None
-    })
-
-    @tc.typecheck
-    def __init__(self,
-                 function,
-                 variable=None,
-                 params=None,
-                 prefs:is_pref_set=None,
-                 context=componentName+INITIALIZING):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
-        self.user_defined_function = function
-
-        super().__init__(variable_default=variable,
-                         params=params,
-                         prefs=prefs,
-                         context=context)
-
-        self.functionOutputType = None
-
-        # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
-
-    def function(self,
-                 # variable=None,
-                 # params=None,
-                 # time_scale=TimeScale.TRIAL,
-                 # context=None,
-                 **kwargs):
-        # raise FunctionError("Function must be provided for {}".format(self.componentType))
-        return self.user_defined_function(**kwargs)
-
-
 def __control_signal_grid_search(controller=None, **kwargs):
     """Grid search combinations of controlSignals in specified allocation ranges to find one that maximizes EVC
 
@@ -1731,6 +1743,7 @@ def _value_function(Function_Base):
 
     def __init__(self):
         super().__init__(self)
+
 
     def function(controller, outcomes, costs, context):
         """aggregate outcomes, costs, combine, and return value
