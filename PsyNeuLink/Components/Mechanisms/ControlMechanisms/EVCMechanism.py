@@ -287,12 +287,11 @@ Class Reference
 ---------------
 
 """
-
+from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Functions.Function import Function_Base
 # from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
 
@@ -353,25 +352,40 @@ class ControlSignalCostOptions(IntEnum):
 
 kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
 kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
-
+kwValueFunction = "EVC VALUE FUNCTION"
 
 class EVCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
     """
-    componentName = kwEVCAuxFunction
     componentType = kwEVCAuxFunctionType
+
+    variableClassDefault = None
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+                               kwFunctionOutputTypeConversion: False,
+                               PARAMETER_STATE_PARAMS: None})
+
+    # MODIFIED 11/29/16 NEW:
+    classPreferences = {
+        kwPreferenceSetName: 'ValueFunctionCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+    # MODIFIED 11/29/16 END
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 function,
+                 variable=None,
                  params=None,
                  prefs:is_pref_set=None,
-                 context=componentName+INITIALIZING):
+                 context=componentType+INITIALIZING):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
+        self.aux_function = function
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable,
                          params=params,
                          prefs=prefs,
                          context=context)
@@ -379,8 +393,13 @@ class EVCAuxiliaryFunction(Function_Base):
         self.functionOutputType = None
 
 class ValueFunction(EVCAuxiliaryFunction):
-    def __init__(self):
-        super().__init__()
+
+    componentName = kwValueFunction
+
+    def __init__(self, function=None):
+        function = function or self.function
+        super().__init__(function=function,
+                         context=self.componentName+INITIALIZING)
 
     def function(self, **kwargs):
         """aggregate outcomes, costs, combine, and return value
@@ -389,7 +408,7 @@ class ValueFunction(EVCAuxiliaryFunction):
         context = kwargs['context']
 
         if INITIALIZING in context:
-            return [0]
+            return (np.array([0]), np.array([0]), np.array([0]))
 
         controller = kwargs[CONTROLLER]
         outcomes = kwargs['outcomes']
@@ -1442,7 +1461,7 @@ class EVCMechanism(ControlMechanism_Base):
     def value_function(self, assignment):
         # from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
         if isinstance(assignment, function_type):
-            self._value_function = EVCAuxiliaryFunction(function=assignment)
+            self._value_function = ValueFunction(function)
         else:
             self._value_function = assignment
 
@@ -1760,10 +1779,11 @@ def _compute_EVC(args):
                         time_scale=time_scale,
                         context=context)
 
-    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(ctlr,
-                                                              ctlr.inputValue,
-                                                              ctlr.controlSignalCosts,
+    EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
+                                                              outcomes=ctlr.inputValue,
+                                                              costs=ctlr.controlSignalCosts,
                                                               context=context)
+
 
     if PY_MULTIPROCESSING:
         return
