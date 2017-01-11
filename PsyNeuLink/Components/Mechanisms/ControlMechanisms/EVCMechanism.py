@@ -353,6 +353,10 @@ class ControlSignalCostOptions(IntEnum):
 kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
 kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 kwValueFunction = "EVC VALUE FUNCTION"
+CONTROLLER = 'controller'
+OUTCOMES = 'outcomes'
+COSTS = 'costs'
+
 
 class EVCAuxiliaryFunction(Function_Base):
     """Base class for EVC auxiliary functions
@@ -411,8 +415,8 @@ class ValueFunction(EVCAuxiliaryFunction):
             return (np.array([0]), np.array([0]), np.array([0]))
 
         controller = kwargs[CONTROLLER]
-        outcomes = kwargs['outcomes']
-        costs = kwargs['costs']
+        outcomes = kwargs[OUTCOMES]
+        costs = kwargs[COSTS]
 
         outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
         cost_function = controller.paramsCurrent[COST_FUNCTION]
@@ -452,7 +456,6 @@ class ValueFunction(EVCAuxiliaryFunction):
 # These are place-marker definitions to allow forward referencing of functions defined at end of module
 def _control_signal_grid_search(**kwargs):
     return __control_signal_grid_search(**kwargs)
-CONTROLLER = 'controller'
 
 
 class EVCError(Exception):
