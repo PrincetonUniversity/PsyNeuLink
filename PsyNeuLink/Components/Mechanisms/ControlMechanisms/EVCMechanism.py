@@ -90,10 +90,10 @@ Function
 The `function` of an EVCMechanism returns an `allocationPolicy` -- that is, the `intensity` of each of its
 ControlSignals -- that will be used in the next round of the system's execution.  Any function can be used that
 returns an appropriate value (i.e., that has the same number of elements as the EVCMechanism's `controlSignals`
-attribute, each of which specifies an `allocation` for the corresponding ControlSignal). The default function for an
-EVCMechanism is an internal method (_control_signal_grid_search) that evaluates the performance of the system under
-a range of specified allocationPolicies, and returns the one that generates the best performance (the greatest
-EVC). The procedure, including the four customizable functions it uses, is described below.
+attribute, each of which specifies an `allocation` for the corresponding ControlSignal). The default function
+`ControlSiginalGridSearch`, which evaluates the performance of the system under a range of specified
+allocationPolicies, and returns the one that generates the best performance (the greatest EVC). The procedure,
+including four customizable evaluation functions it uses, is described below.
 
 .. _EVC_Calculation:
 
@@ -472,8 +472,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         Description
         -----------
-            * Called by _control_signal_grid_search (a place-marker function defined at top of module
-                to allow forward-referencing of functions defined at the end of the module).
+            * Called by ControlSignalGridSearch.
             * Call system.execute for each `allocationPolicy` in `controlSignalSearchSpace`.
             * Store an array of values for outputStates in `monitoredOutputStates` (i.e., the inputStates in `inputStates`)
                 for each `allocationPolicy`.
@@ -495,7 +494,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         context = kwargs[CONTEXT]
 
         if INITIALIZING in context:
-            return (np.array([0]))
+            return defaultControlAllocation
 
         # Get value of, or set default for standard args
         try:
@@ -522,15 +521,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             context = kwargs[CONTEXT]
         except KeyError:
             context = None
-
-        if not controller:
-            if INITIALIZING in context:
-                # If this is an initialization call, return default allocation value as place marker, since
-                #    controller has not yet been instantiated, so allocationPolicy (actual return value) not yet determined
-                return defaultControlAllocation
-            else:
-                raise EVCError("controller argument must be specified in call to "
-                               "EVCMechanism.__control_signal_grid_search")
 
         #region RUN SIMULATION
 
@@ -723,12 +713,6 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         #endregion
 
 
-
-# These are place-marker definitions to allow forward referencing of functions defined at end of module
-def _control_signal_grid_search(**kwargs):
-    return __control_signal_grid_search(**kwargs)
-
-
 class EVCError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -742,8 +726,8 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_type=IntegratorMechanism,                     \
     prediction_mechanism_params=None,                                  \
     monitor_for_control=None,                                          \
-    function=_control_signal_grid_search,                              \
-    value_function=ValueFunction(),                                    \
+    function=ControlSignalGridSearch                                   \
+    value_function=ValueFunction,                                      \
     outcome_function=LinearCombination(operation=PRODUCT),             \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
@@ -815,7 +799,7 @@ class EVCMechanism(ControlMechanism_Base):
         specifies set of outputState values to monitor (see `ControlMechanism_Monitored_OutputStates` for
         specification options).
 
-    function : function : _control_signal_grid_search
+    function : function : ControlSignalGridSearch
         specifies the function used to determine the `allocationPolicy` for the next execution of the system
         (see :py:data:`function <EVCMechanism.function>` attribute for description of default function).
 
@@ -887,9 +871,9 @@ class EVCMechanism(ControlMechanism_Base):
         a list of tuples, each of which contains the weight and exponent (in that order) for an outputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
-    function : function : default _control_signal_grid_search
+    function : function : default ControlSignalGridSearch
         determines the `allocationPolicy <EVCMechanism.allocationPolicy>` to use for the next round of the system's
-        execution. The default function (`_control_signal_grid_search`) conducts an exhaustive (*grid*) search of all
+        execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its `control signals <controlSignals>` (and contained in its
         `controlSignalSearchSpace` attribute), by executing the  system (using `run_simulation`) for each
         combination, evaluating the result using `value_function`, and returning the allocationPolicy that generated
@@ -1615,7 +1599,7 @@ class EVCMechanism(ControlMechanism_Base):
             * get `allocationSamples` for each ControlSignal in `controlSignals`
             * construct `controlSignalSearchSpace`: a 2D np.array of control allocation policies, each policy of which
               is a different combination of values, one from the `allocationSamples` of each ControlSignal.
-        Call self.function -- default is _control_signal_grid_search()
+        Call self.function -- default is ControlSignalGridSearch
         Return an allocation_policy
 
         """
@@ -1764,7 +1748,7 @@ class EVCMechanism(ControlMechanism_Base):
         else:
             self._outcome_function = value
 
-    @property
+    @property
     def cost_function(self):
         return self._cost_function
 
