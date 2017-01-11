@@ -366,9 +366,8 @@ def _control_signal_grid_search(**kwargs):
     return __control_signal_grid_search(**kwargs)
 CONTROLLER = 'controller'
 
-
-def _value_function(ctlr, outcomes, costs, context):
-    return __value_function(ctlr, outcomes, costs, context)
+def value_function():
+    return _value_function()
 
 
 class EVCMechanism(ControlMechanism_Base):
@@ -377,7 +376,7 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_params=None,                                  \
     monitor_for_control=None,                                          \
     function=_control_signal_grid_search,                              \
-    value_function=_value_function,                                    \
+    value_function=value_function,                                     \
     outcome_function=LinearCombination(operation=PRODUCT),             \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
@@ -453,7 +452,7 @@ class EVCMechanism(ControlMechanism_Base):
         specifies the function used to determine the `allocationPolicy` for the next execution of the system
         (see :py:data:`function <EVCMechanism.function>` attribute for description of default function).
 
-    value_function : function : `_value_function <value_function>`
+    value_function : function : `value_function`
         specifies the function used to calculate the value of the current `allocationPolicy`.
 
     outcome_function : function : LinearCombination(operation=PRODUCT)
@@ -564,7 +563,7 @@ class EVCMechanism(ControlMechanism_Base):
         that specifies an allocation for the corresponding control signal, and the number of items must equal the
         number of the EVCMechanism's control signals.
 
-    value_function : function : default _value_function()
+    value_function : function : default value_function()
         calculates the value for a given `allocationPolicy`.  The default uses `outcome_function` to determine the
         outcome of the policy, `cost_function` to determine its cost, combines these using
         `combine_outcome_and_cost_function`, and returns the result as the first item of a three-item tuple, the second
@@ -693,7 +692,7 @@ class EVCMechanism(ControlMechanism_Base):
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
                  function=_control_signal_grid_search,
-                 value_function=_value_function,
+                 value_function=value_function,
                  outcome_function=LinearCombination(operation=PRODUCT),
                  cost_function=LinearCombination(operation=SUM,
                                                  context=componentType+COST_FUNCTION),
@@ -1012,7 +1011,7 @@ class EVCMechanism(ControlMechanism_Base):
                         exponents[i] = spec[EXPONENT]
 
         # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
-        # Note: done here (rather than in call to outcome_functoin in __value_function) for efficiency
+        # Note: done here (rather than in call to outcome_function in value_function) for efficiency
         self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
         self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
 
@@ -1358,7 +1357,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
-    # This is done to insure they can be called by _value_function in the same way as the defaults
+    # This is done to insure they can be called by value_function in the same way as the defaults
     #    (which are all Functions), and so that they can be passed a params dict.
 
     @property
@@ -1445,8 +1444,6 @@ class EVCAuxiliaryFunction(Function_Base):
                  **kwargs):
         # raise FunctionError("Function must be provided for {}".format(self.componentType))
         return self.user_defined_function(**kwargs)
-
-
 
 
 def __control_signal_grid_search(controller=None, **kwargs):
@@ -1695,6 +1692,7 @@ def __control_signal_grid_search(controller=None, **kwargs):
     return controller.allocationPolicy
     #endregion
 
+
 def _compute_EVC(args):
     """compute EVC for a specified allocation policy
 
@@ -1729,43 +1727,45 @@ def _compute_EVC(args):
         return (EVC_current)
 
 
-def value_function(Function_Base):
+def _value_function(Function_Base):
 
+    def __init__(self):
+        super().__init__(self)
 
-def _value_function(controller, outcomes, costs, context):
-    """aggregate outcomes, costs, combine, and return value
-    """
+    def function(controller, outcomes, costs, context):
+        """aggregate outcomes, costs, combine, and return value
+        """
 
-    outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
-    cost_function = controller.paramsCurrent[COST_FUNCTION]
-    combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
+        outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
+        cost_function = controller.paramsCurrent[COST_FUNCTION]
+        combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
-    # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-    # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
-    # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
+        # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
+        # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
+        # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
 
-    # MODIFIED 1/10/17
+        # MODIFIED 1/10/17
 
-    from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
 
-    if isinstance(outcome_function, UserDefinedFunction):
-        outcome = outcome_function.function(controller=controller, outcomes=outcomes)
-    else:
-        outcome = outcome_function.function(variable=outcomes,
-                                    # params={WEIGHTS:weights,
-                                    #         EXPONENTS:exponents},
-                                    context=context)
+        if isinstance(outcome_function, UserDefinedFunction):
+            outcome = outcome_function.function(controller=controller, outcomes=outcomes)
+        else:
+            outcome = outcome_function.function(variable=outcomes,
+                                        # params={WEIGHTS:weights,
+                                        #         EXPONENTS:exponents},
+                                        context=context)
 
-    # Aggregate costs
-    if isinstance(cost_function, UserDefinedFunction):
-        cost = cost_function.function(controller=controller, costs=costs)
-    else:
-        cost = cost_function.function(variable=outcomes, context=context)
+        # Aggregate costs
+        if isinstance(cost_function, UserDefinedFunction):
+            cost = cost_function.function(controller=controller, costs=costs)
+        else:
+            cost = cost_function.function(variable=outcomes, context=context)
 
-    # Combine outcome and cost to determine value
-    if isinstance(combine_function, UserDefinedFunction):
-        value = combine_function.function(controller=controller, outcome=outcome, cost=cost)
-    else:
-        value = combine_function.function(variable=[outcome, -cost])
+        # Combine outcome and cost to determine value
+        if isinstance(combine_function, UserDefinedFunction):
+            value = combine_function.function(controller=controller, outcome=outcome, cost=cost)
+        else:
+            value = combine_function.function(variable=[outcome, -cost])
 
-    return (value, outcome, cost)
+        return (value, outcome, cost)
