@@ -147,12 +147,13 @@ COMMENT
 
    Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
    series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism.  The latter projects to a
-   :doc:`MonitoringMechanism <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in
-   Process B. It also projects to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>`
-   ProcessingMechanisms in both Processes A and B.  Note that while the mechanisms and projections responsible for
-   learning belong to, and are restricted to a single process, those responsible for control belong to the system and
-   can monitor and/or control mechanisms belonging to more than one process.
+   that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
+   the system.  The `TERMINAL` mechanism for both processes projects to a :doc:`MonitoringMechanism
+   <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in Process B. It also projects
+   to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>` ProcessingMechanisms in
+   both Processes A and B.  Note that while the mechanisms and projections responsible for learning and control
+   belong to the system and can monitor and/or control mechanisms belonging to more than one process (as shown for
+   control in this figure).
 
 
 .. _System_Execution:

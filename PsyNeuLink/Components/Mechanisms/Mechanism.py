@@ -163,6 +163,8 @@ States
 
 Every mechanism has three types of states (shown schematically in the figure below):
 
+.. _Mechanism_Figure:
+
 .. figure:: _static/Mechanism_states_fig.*
    :alt: Mechanism States
    :scale: 75 %
