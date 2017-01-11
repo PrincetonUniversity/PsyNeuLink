@@ -5,6 +5,8 @@
 # FIX: NOW APPEARS IN PRINT-OUT:
 #	time_scale: TimeScale.TRIAL
 
+# FIX: WRAP EVCMechanism._value_function AS UDF?
+
 # DOCUMENT: FINISH DOCUMENTING:
 #             .. _ControlMechanism_Specifying_Control:
 #
