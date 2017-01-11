@@ -2,6 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: NOW APPEARS IN PRINT-OUT:
+#	time_scale: TimeScale.TRIAL
+
+# FIX: WRAP EVCMechanism._value_function AS UDF?
+
 # DOCUMENT: FINISH DOCUMENTING:
 #             .. _ControlMechanism_Specifying_Control:
 #
@@ -21,6 +26,12 @@
 #                        GIVE EXAMPLES.
 
 # DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
+
+# FIX: REFACTOR ALL ARGUMENT/ATTRIBUTE RELATIONSHIPS AS FOLLOWS:
+#      ALL USER-ACCESSIBLE ATTRIBUTES, INCLUDING ARGUMENT-RELATED ONES, USE camelCase
+#      ALL ARGUMENT-RELATED ATTRIBUTES ARE IMPLEMENTED AS PROPERTIES:
+#        THE INTERNAL VALUE IS STORED IN _argument_related_attribute
+#        THE PROPERTY IS NAMED argumentRelatedAttribute (TO BE CONSISTENT WITH USER-ACCESSIBLE ATTRIBUTES)
 
 # FIX: ADD _instantiate_input_states TO ControlMechanism AND IMPLEMENT ASSIGNMENT OF monitor_for_control_factors THERE
 

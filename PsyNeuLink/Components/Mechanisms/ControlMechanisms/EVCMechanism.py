@@ -32,7 +32,7 @@ every possible `allocationPolicy`, and chooses the best one. It does this by sim
 of the ControlSignals against the outcomes of performance for the given policy.  It then selects the one that generates
 the maximum EVC, which is implemented for the next round of execution. Each step of this procedure can be modified,
 or it can be replaced entirely, by assigning custom functions to corresponding parameters of the EVCMechanism, as
-described under `EVC_Calculation`.
+described under `EVC_Calculation` below.
 
 .. _EVCMechanism_Creation:
 
@@ -42,11 +42,8 @@ Creating an EVCMechanism
 An EVCMechanism can be created using the standard Python method of calling its constructor.  However,  more commonly,
 it is generated automatically when a system is created and an EVCMechanism is specified as its
 `controller` attribute (see :ref:`Controller <System_Execution_Control>`). An EVCMechanism that has been constructed
-automatically can nevertheless be customized,
-COMMENT:
-    by using its `assign_params <LINK>` method (which is generally safer), or
-COMMENT
-by assigning a value to the relevant attribute directly.
+automatically can nevertheless be customized by assigning values to its attributes (e.g., its functions, as described
+under `EVC_Calculation` below).
 
 When an EVCMechanism is constructed automatically, inputStates are created and assigned projections from the
 outputStates of the mechanisms it uses to evaluate the system's performance. The EVCMechanism's outputStates are
@@ -112,12 +109,8 @@ the system under each  `allocationPolicy` in `controlSignalSearchSpace`, calcula
 policies, and return the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.
 However, by setting the `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for
 each simulation run (in `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the
-following four functions, each of which can be customized
-COMMENT:
- (the heading for each function below is the keyword for
-the function used to reference it in the `assign_params` method)
-COMMENT
-(by assigning a function to the corresponding attribute of the EVCMechanism):
+following four functions, each of which can be customized by using the EVCMechanism's `assign_params` method to
+designate custom functions (the safest way), or by assigning them directly to the corresponding attribute:
 
 COMMENT:
   [TBI:]  The ``controlSignalSearchSpace`` described above is constructed by default.  However, this can be customized
@@ -1148,24 +1141,6 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
 
-    def _instantiate_attributes_before_function(self, context=None):
-        super()._instantiate_attributes_before_function(context=context)
-
-        # If function or any auxiliary function is a Function object (which some are by default),
-        #    assign to Function.function;
-        # This is so that:
-        #  - parameter dictionaries can be passed to the (default) functions when they are called
-        #  - the auxiliary function attributes can accept custom assignments
-        #    that are simple functions (i.e., not instantiated as Function objects)
-        if isinstance(self.function, Function):
-            self.function = self.function.function
-        if isinstance(self.outcome_function, Function):
-            self.outcome_function = self.outcome_function.function
-        if isinstance(self.cost_function, Function):
-            self.cost_function = self.cost_function.function
-        if isinstance(self.combine_outcome_and_cost_function, Function):
-            self.combine_outcome_and_cost_function = self.combine_outcome_and_cost_function.function
-
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
 
@@ -1342,6 +1317,50 @@ class EVCMechanism(ControlMechanism_Base):
         #    = the values of the monitored output states (self.inputStates)
         #    stored in self.inputValue = list(self.variable)
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+
+    # The following implementation of function attributes as properties insures that even if user sets the value of a
+    #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
+    # This is done to insure they can be called by _value_function in the same way as the defaults
+    #    (which are all Functions), and so that they can be passed a params dict.
+
+    @property
+    def outcome_function(self):
+        return self._outcome_function
+
+    @outcome_function.setter
+    def outcome_function(self, value):
+        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        if isinstance(value, function_type):
+            udf = UserDefinedFunction(function=value)
+            self._outcome_funciton = udf
+        else:
+            self._outcome_function = value
+
+    @property
+    def cost_function(self):
+        return self._cost_function
+
+    @cost_function.setter
+    def cost_function(self, value):
+        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        if isinstance(value, function_type):
+            udf = UserDefinedFunction(function=value)
+            self._cost_function = udf
+        else:
+            self._cost_function = value
+
+    @property
+    def combine_outcome_and_cost_function(self):
+        return self._combine_outcome_and_cost_function
+
+    @combine_outcome_and_cost_function.setter
+    def combine_outcome_and_cost_function(self, value):
+        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+        if isinstance(value, function_type):
+            udf = UserDefinedFunction(function=value)
+            self._combine_outcome_and_cost_function = udf
+        else:
+            self._combine_outcome_and_cost_function = value
 
 
 def __control_signal_grid_search(controller=None, **kwargs):
@@ -1632,35 +1651,32 @@ def __value_function(controller, outcomes, costs, context):
     cost_function = controller.paramsCurrent[COST_FUNCTION]
     combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
-    # IMPLEMENTATION NOTE:  EAFP (try/except) design is inefficient for custom functions since it triggers exception;
-    #                       (see http://stackoverflow.com/questions/1835756/using-try-vs-if-in-python)
-    #                       Alternative is to use if/then, but then must determine whether a given function is a
-    #                       method of a Function without referring to .__self__ (which stand-alone functions don't have)
-
     # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
     # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
     # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
-    try:
-        isinstance(outcome_function.__self__, Function)
-        outcome = outcome_function(variable=outcomes,
-                                   # params={WEIGHTS:weights,
-                                   #         EXPONENTS:exponents},
-                                   context=context)
-    except AttributeError:
-        outcome = outcome_function(controller=controller, outcomes=outcomes)
+
+    # MODIFIED 1/10/17
+
+    from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+
+    if isinstance(outcome_function, UserDefinedFunction):
+        outcome = outcome_function.function(controller=controller, outcomes=outcomes)
+    else:
+        outcome = outcome_function.function(variable=outcomes,
+                                    # params={WEIGHTS:weights,
+                                    #         EXPONENTS:exponents},
+                                    context=context)
 
     # Aggregate costs
-    try:
-        isinstance(cost_function.__self__, Function)
-        cost = cost_function(variable=outcomes, context=context)
-    except AttributeError:
-        cost = cost_function(controller=controller, costs=costs)
+    if isinstance(cost_function, UserDefinedFunction):
+        cost = cost_function.function(controller=controller, costs=costs)
+    else:
+        cost = cost_function.function(variable=outcomes, context=context)
 
-    # Combine aggregate outcomes and costs to determine value
-    try:
-        isinstance(combine_function.__self__, Function)
-        value = combine_function(variable=[outcome, -cost])
-    except AttributeError:
-        value = combine_function(controller=controller, outcome=outcome, cost=cost)
+    # Combine outcome and cost to determine value
+    if isinstance(combine_function, UserDefinedFunction):
+        value = combine_function.function(controller=controller, outcome=outcome, cost=cost)
+    else:
+        value = combine_function.function(variable=[outcome, -cost])
 
     return (value, outcome, cost)

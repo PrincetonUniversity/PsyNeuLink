@@ -948,13 +948,25 @@ class Component(object):
         # # MODIFIED 1/10/17 OLD:
         # if default_set is None:
         #     default_set = self.paramInstanceDefaults
-        # MODIFIED 1/10/17 NEW:
+        # # MODIFIED 1/10/17 NEW:
+        # # If called from assign_params, restrict to user_params
+        # #   as those are the only ones that should be modifiable
+        # #   (and are included paramClassDefaults, which will be tested in validate_params)
+        # if default_set is None:
+        #     if COMMAND_LINE in context:
+        #         default_set = self.user_params
+        # # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
+        #     else:
+        #         default_set = self.paramInstanceDefaults
+        # MODIFIED 1/10/17 NEWER:
         # If called from assign_params, restrict to user_params
         #   as those are the only ones that should be modifiable
         #   (and are included paramClassDefaults, which will be tested in validate_params)
         if default_set is None:
             if COMMAND_LINE in context:
-                default_set = self.user_params
+                default_set = {}
+                for param_name in request_set:
+                    default_set[param_name] = self.paramInstanceDefaults[param_name]
         # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
             else:
                 default_set = self.paramInstanceDefaults
@@ -1112,7 +1124,6 @@ class Component(object):
             return
 
         import copy
-        request_set_param_names = list(request_set.keys())
         validated_set = {}
 
         self._assign_defaults(request_set=request_set,
@@ -1125,21 +1136,26 @@ class Component(object):
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
+        # FIX: SAME FOR FUNCTIONS THAT NEED TO BE "WRAPPED"
         # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_STATES
         # FIX: FOR PARAMETER_STATES:
         #        CALL THE FOLLOWING FOR EACH PARAM:
         # FIX: NEED TO CALL
 
-        if INPUT_STATES in request_set_param_names:
+        validated_set_param_names = list(validated_set.keys())
+
+        if INPUT_STATES in validated_set_param_names:
             self._instantiate_attributes_before_function()
+
+        # # Give owner a chance to process function params (e.g., wrap in UserDefineFunction, as per EVCMechanism)
+        # elif any(isinstance(param_value, function_type) for param_value in validated_set.values()):
+        #     self._instantiate_attributes_before_function()
 
         # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
         # AS IT IS NOW, _instantiate_parameter_states ignores existing parameterStates
         #               but this may cause it to ignore FUNCTION_PARAMS when FUNCTION has changed
-        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
-        # for param in request_set_param_names:
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_state
-        for param_name in request_set_param_names:
+        for param_name in validated_set_param_names:
             _instantiate_parameter_state(owner=self,
                                          param_name=param_name,
                                          param_value=validated_set[param_name],
@@ -1149,6 +1165,7 @@ class Component(object):
         # if FUNCTION in validated_set:
         #     self._instantiate_function(context=COMMAND_LINE)
         # MODIFIED 1/10/17 NEW:
+        # If the objects function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
             self._instantiate_function(context=COMMAND_LINE)
         # MODIFIED 1/10/17 END
@@ -1729,15 +1746,15 @@ class Component(object):
                                   format(self.paramsCurrent[FUNCTION].__self__.componentName,
                                          object_name))
 
-            # FUNCTION is a generic (presumably user-defined) function, so "wrap" it in UserDefinedFunction:
+            # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
                 # # MODIFIED 1/10/17 OLD:
-                # self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
-                # MODIFIED 1/10/17 NEW:
-                udf = UserDefinedFunction(function=function, context=context)
-                self.paramsCurrent[FUNCTION] = udf.function
+                self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
+                # # MODIFIED 1/10/17 NEW:
+                # udf = UserDefinedFunction(function=function, context=context)
+                # self.paramsCurrent[FUNCTION] = udf.function
                 # MODIFIED 1/10/17 END
 
             # If FUNCTION is NOT a Function class reference:

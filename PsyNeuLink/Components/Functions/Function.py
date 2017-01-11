@@ -290,6 +290,10 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     @functionOutputType.setter
     def functionOutputType(self, value):
 
+        if not value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
+            self._functionOutputType = value
+            return
+
         # Attempt to set outputType but conversion not enabled
         if value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
             raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
@@ -483,7 +487,7 @@ class UserDefinedFunction(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: True,
+                               kwFunctionOutputTypeConversion: False,
                                PARAMETER_STATE_PARAMS: None
     })
 

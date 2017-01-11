@@ -324,8 +324,12 @@ class ControlMechanism_Base(Mechanism_Base):
                 if not isinstance(request_set[SYSTEM], System):
                     raise KeyError
             except KeyError:
-                raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
-                                                  format(self.name))
+                # Validation called by assign_params() for user-specified param set, so SYSTEM need not be included
+                if COMMAND_LINE in context:
+                    pass
+                else:
+                    raise ControlMechanismError("A system must be specified in the SYSTEM param to instantiate {0}".
+                                                format(self.name))
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
