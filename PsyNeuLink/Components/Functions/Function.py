@@ -704,10 +704,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                  operation=operation,
                                                  params=params)
 
-        super(LinearCombination, self).__init__(variable_default=variable_default,
-                                                params=params,
-                                                prefs=prefs,
-                                                context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
         if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
