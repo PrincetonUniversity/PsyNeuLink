@@ -21,7 +21,7 @@ designed to implement forms of the Expected Value of Control (EVC) Theory descri
 `Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful background concerning
 the purpose and structure of the EVCMechanism.
 
-The EVCMechanism has one ControlSignal for each parameter of the mechanism or function that it controls.  Each
+An EVCMechanism has one ControlSignal for each parameter of the mechanism or function that it controls.  Each
 ControlSignal is associated with a :doc:`ControlProjection`.  The ControlProjection regulates the value of
 the parameter it controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`. A
 particular combination of ControlSignal intensities is called an `allocationPolicy`. When a system is executed,
