@@ -361,10 +361,10 @@ class Contradiction(Function_Base): # Example
         # NOTES:
         #    * paramsCurrent can be changed by including params in call to function
         #    * paramInstanceDefaults can be changed by calling assign_default
-        super(Contradiction, self).__init__(variable_default=variable_default,
-                                            params=params,
-                                            prefs=prefs,
-                                            context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
     def function(self,
                 variable=None,
@@ -463,7 +463,7 @@ class Contradiction(Function_Base): # Example
         if message:
             raise FunctionError(message)
 
-        super(Contradiction, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
 
 
 #region ****************************************   FUNCTIONS   *********************************************************
@@ -939,7 +939,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                                                  intercept=intercept,
                                                  params=params)
 
-        super(Linear, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                      params=params,
                                      prefs=prefs,
                                      context=context)
@@ -1060,7 +1060,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                                                  scale=scale,
                                                  params=params)
 
-        super(Exponential, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                           params=params,
                                           prefs=prefs,
                                           context=context)
@@ -1395,7 +1395,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return none:
         """
 
-        super(LinearMatrix, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
@@ -1734,7 +1734,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  weighting=weighting,
                                                  params=params)
 
-        super(Integrator, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                          params=params,
                                          prefs=prefs,
                                          context=context)
