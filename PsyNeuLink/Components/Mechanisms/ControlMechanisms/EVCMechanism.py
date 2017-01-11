@@ -18,14 +18,15 @@ An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that manages a "
 :doc:`ControlSignals <ControlSignal>`, which regulate the performance of the system to which they belong. The
 EVCMechanism is one of the most powerful, but also one of the most complex components in PsyNeuLink.  It is
 designed to implement forms of the Expected Value of Control (EVC) Theory described in
-`Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_.
+`Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful background concerning
+the purpose and structure of the EVCMechanism.
 
-Each ControlSignal managed by an EVCMechanism is associated with a :doc:`ControlProjection`.  The ControlProjection
-regulates the parameter of a mechanism or its function, with the magnitude of that regulation determined by the
-ControlSignal's `intensity`. . A particular combination of ControlSignal intensities is called an `allocationPolicy`.
-When a system is executed, it concludes by executing the EVCMechanism, which determines the `allocationPolicy`
-(i.e., the ControlSignal intensities, and thereby the values of the parameters being controlled) in the next round of
-execution.
+The EVCMechanism has one ControlSignal for each parameter of the mechanism or function that it controls.  Each
+ControlSignal is associated with a :doc:`ControlProjection`.  The ControlProjection regulates the value of
+the parameter it controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`. A
+particular combination of ControlSignal intensities is called an `allocationPolicy`. When a system is executed,
+it concludes by executing the EVCMechanism, which determines the `allocationPolicy` (i.e., the ControlSignal
+intensities, and thereby the values of the parameters being controlled) in the next round of execution.
 
 .. _EVCMechanism_EVC:
 
