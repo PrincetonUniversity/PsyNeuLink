@@ -889,7 +889,7 @@ class Mechanism_Base(Mechanism):
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
 
-        Go through target_set params (populated by Function._validate_params) and validate values for:
+        Go through target_set params (populated by Component._validate_params) and validate values for:
             + TIME_SCALE:  <TimeScale>
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
@@ -931,7 +931,10 @@ class Mechanism_Base(Mechanism):
         try:
             param_value = params[TIME_SCALE]
         except KeyError:
-            self.timeScale = timeScaleSystemDefault
+            if COMMAND_LINE in context:
+                pass
+            else:
+                self.timeScale = timeScaleSystemDefault
         else:
             if isinstance(param_value, TimeScale):
                 self.timeScale = params[TIME_SCALE]
@@ -951,10 +954,13 @@ class Mechanism_Base(Mechanism):
             param_value = params[INPUT_STATES]
 
         except KeyError:
-            # INPUT_STATES not specified:
-            # - set to None, so that it is set to default (self.variable) in instantiate_inputState
-            # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
-            params[INPUT_STATES] = None
+            if COMMAND_LINE in context:
+                pass
+            else:
+                # INPUT_STATES not specified:
+                # - set to None, so that it is set to default (self.variable) in instantiate_inputState
+                # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
+                params[INPUT_STATES] = None
 
         else:
             # INPUT_STATES is specified, so validate:
@@ -997,7 +1003,9 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if self.prefs.verbosePref:
+            if COMMAND_LINE in context:
+                pass
+            elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
         else:
             if not (isinstance(function_param_specs, dict)):
@@ -1038,13 +1046,16 @@ class Mechanism_Base(Mechanism):
             param_value = params[OUTPUT_STATES]
 
         except KeyError:
-            # OUTPUT_STATES not specified:
-            # - set to None, so that it is set to default (self.value) in instantiate_outputState
-            # Notes:
-            # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
-            # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
-            #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
-            params[OUTPUT_STATES] = None
+            if COMMAND_LINE in context:
+                pass
+            else:
+                # OUTPUT_STATES not specified:
+                # - set to None, so that it is set to default (self.value) in instantiate_outputState
+                # Notes:
+                # * if in VERBOSE mode, warning will be issued in instantiate_outputState, where default value is known
+                # * number of outputStates is validated against length of owner mechanism's execute method output (EMO)
+                #     in instantiate_outputState, where an outputState is assigned to each item (value) of the EMO
+                params[OUTPUT_STATES] = None
 
         else:
             # OUTPUT_STATES is specified, so validate:
