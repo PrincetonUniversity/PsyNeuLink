@@ -204,12 +204,12 @@ is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learn
 of the LearningProjection's :py:data:`mappingProjection <LearningProjection.mappingProjection>`,  required to reduce the
 error for its :py:data:`errorSource <LearningProjection.errorSource>`.  The result is assigned to the
 LearningProjection's :py:data:`weightChangeMatrix <LearningProjection.weightChangeMatrix>` attribute. The default
-``function`` is :py:class:`Function.BackPropagation` (also known as the Generalized Delta Rule; see `Rumelhart et al.,
-1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_). However, it can be assigned to other
-functions that implement different learning algorithms, as long as it is compatible with the ``function`` of
-the LearningProjection's errorSource (how the error signal is computed depends on the nature of the function that
-generated the error); failure to match the ``function`` of the LearningProjection with the ``function`` of the
-errorSource  will generate an error.
+``function`` is :py:class:`Function.BackPropagation` (also known as the Generalized Delta Rule;
+see `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_). However, it can be
+assigned to other functions that implement different learning algorithms, as long as it is compatible with the
+``function`` of the LearningProjection's errorSource (how the error signal is computed depends on the nature of the
+function that generated the error); failure to match the ``function`` of the LearningProjection with the ``function``
+of the errorSource  will generate an error.
 
 .. _LearningProjection_Execution:
 

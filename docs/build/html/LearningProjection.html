@@ -282,12 +282,12 @@ on its own with learning enabled (since it will have no
 of the LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.mappingProjection" title="LearningProjection.LearningProjection.mappingProjection"><code class="xref py py-data docutils literal"><span class="pre">mappingProjection</span></code></a>,  required to reduce the
 error for its <a class="reference internal" href="#LearningProjection.LearningProjection.errorSource" title="LearningProjection.LearningProjection.errorSource"><code class="xref py py-data docutils literal"><span class="pre">errorSource</span></code></a>.  The result is assigned to the
 LearningProjection&#8217;s <a class="reference internal" href="#LearningProjection.LearningProjection.weightChangeMatrix" title="LearningProjection.LearningProjection.weightChangeMatrix"><code class="xref py py-data docutils literal"><span class="pre">weightChangeMatrix</span></code></a> attribute. The default
-<code class="docutils literal"><span class="pre">function</span></code> is <a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref py py-class docutils literal"><span class="pre">Function.BackPropagation</span></code></a> (also known as the Generalized Delta Rule; see <a class="reference external" href="http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html">Rumelhart et al.,
-1986</a>). However, it can be assigned to other
-functions that implement different learning algorithms, as long as it is compatible with the <code class="docutils literal"><span class="pre">function</span></code> of
-the LearningProjection&#8217;s errorSource (how the error signal is computed depends on the nature of the function that
-generated the error); failure to match the <code class="docutils literal"><span class="pre">function</span></code> of the LearningProjection with the <code class="docutils literal"><span class="pre">function</span></code> of the
-errorSource  will generate an error.</p>
+<code class="docutils literal"><span class="pre">function</span></code> is <a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref py py-class docutils literal"><span class="pre">Function.BackPropagation</span></code></a> (also known as the Generalized Delta Rule;
+see <a class="reference external" href="http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html">Rumelhart et al., 1986</a>). However, it can be
+assigned to other functions that implement different learning algorithms, as long as it is compatible with the
+<code class="docutils literal"><span class="pre">function</span></code> of the LearningProjection&#8217;s errorSource (how the error signal is computed depends on the nature of the
+function that generated the error); failure to match the <code class="docutils literal"><span class="pre">function</span></code> of the LearningProjection with the <code class="docutils literal"><span class="pre">function</span></code>
+of the errorSource  will generate an error.</p>
 </div>
 <div class="section" id="execution">
 <span id="learningprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
