@@ -15,7 +15,7 @@ Overview
 --------
 
 An EVCMechanism is a :doc:`ControlMechanism <ControlMechanism>` that manages a "portfolio" of
-:doc:`ControlSignals <ControlSignal>`, which regulate the performance of the system to which it belongs. The
+:doc:`ControlSignals <ControlSignal>`, which regulate the performance of the system to which they belong. The
 EVCMechanism is one of the most powerful, but also one of the most complex components in PsyNeuLink.  It is
 designed to implement forms of the Expected Value of Control (EVC) Theory described in
 `Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_.
@@ -173,38 +173,39 @@ COMMENT
 ControlSignals
 ~~~~~~~~~~~~~~
 
-A `ControlSignal` is used to regulate the parameter of mechanisms or its function. An EVCMechanism has one
-ControlSignal for each parameter that it controls. Each ControlSignal is implemented as an `OutputState` of the
-EVCMechanism, the value of which is the ControlSignal's `intensity`.  When an EVCMechanism is
-:ref:`created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has
-been specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
+A `ControlSignal` is used to regulate the parameter of a mechanism or its function. An EVCMechanism has one
+ControlSignal for each parameter that it controls.  One `outputState <OutputState>` of the EVCMechanism is dedicated to
+each of its ControlSignals, and the value of that outputState is the ControlSignal's `intensity`.  When an EVCMechanism
+is :ref:`created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has been
+specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
 see `Mechanism_Specifying_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
 attribute. Each ControlSignal is associated with a `ControlProjection` that projects to the
 :doc:`parameterState <ParameterState>` for the parameter controlled by that ControlSignal. The EVCMechanism's
-:py:data:`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals.  Each
-ControlSignal uses its allocation to compute its `intensity`, that is then assigned as the value of its
-ControlProjection. The value of the ControlProjection is then used by the parameterState to which it projects to
-modify the value of the parameter for which it is responsible.  A ControlSignal also calculates a `cost`,
-based on its intensity and/or its time course, that is used by the EVCMechanism to adapt its `allocation` in the
-future.  When the EVCMechanism chooses an `allocationPolicy` to evaluate, it selects an allocation value  from the
+:py:data:`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals. The
+`allocation` for a given ControlSignal determines that ControlSignal's `intensity`, which is then assigned as the
+value of the ControlSignal's ControlProjection.  The value of the ControlProjection is then used by the parameterState
+to which it projects to modify the value of the parameter for which it is responsible.  A ControlSignal also
+calculates a `cost`, based on its intensity and/or its time course. This cost is included in the evaluation that the
+EVCMechanism carries out for a given `allocationPolicy`, and that it uses to adapt the ControlSignal's `allocation` in
+the future.  When the EVCMechanism chooses an `allocationPolicy` to evaluate, it selects an allocation value from the
 ControlSignal's `allocation_samples` attribute.
-
 
 Prediction Mechanisms
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. _EVCMechanism_Prediction_Mechanisms:
 
-Prediction mechanisms are used to generate the input for the system each time the EVCMechanism
-:ref:`simulates its execution <EVCMechanism_Execution>`.  When an EVCMechanism is
-:ref:`created automatically <EVCMechanism_Creation>`, a prediction mechanism is created for each `ORIGIN` (input)
-mechanism in the system; a `MappingProjection` is created that projects to it from the corresponding `ORIGIN` mechanism;
-and the pair are assigned to their own prediction `process <Process>`.  The type of mechanism used for the prediction
-mechanisms can be specified using the EVCMechanism's `PREDICTION_MECHANISM_TYPE <prediction_mechanism_type>` parameter,
-and their
-parameters can
-be specified in the EVCMechanism's `PREDICTION_MECHANISM_PARAMS <prediction_mechanism_params>` parameter.  The default
-type is an
+Each time the EVCMechanism is executed, it :ref:`simulates the execution <EVCMechanism_Execution>` of the system
+in order to evaluate the system's performance.  To do so, it must provide an input to the system.  It uses its
+prediction mechanisms to do this.  Each prediction mechanism provides an estimate of the input to an `ORIGIN`
+mechanism in the system, based on a running average of inputs to that mechanism in previous rounds of execution.
+The EVCMechanism uses these estimates to provide input to the system each time it simulates it to evaluate its
+performance.  When an EVCMechanism is :ref:`created automatically <EVCMechanism_Creation>`, a prediction mechanism is
+created for each `ORIGIN` (input) mechanism in the system.  A `MappingProjection` is created that projects to the
+prediction mechanism from the corresponding `ORIGIN` mechanism, and the pair are assigned to their own prediction
+`process <Process>`.  The type of mechanism used for the prediction mechanisms can be specified using the EVCMechanism's
+`PREDICTION_MECHANISM_TYPE <prediction_mechanism_type>` parameter, and their parameters can be specified using the
+EVCMechanism's `PREDICTION_MECHANISM_PARAMS <prediction_mechanism_params>` parameter.  The default type is an
 'IntegratorMechanism`, that generates an exponentially weighted time-average of its input.  The prediction
 mechanisms for an EVCMechanism are listed in its `predictionMechanisms` attribute, and the prediction processes to
 which they belong in its `predictionProcesses` attribute.
@@ -218,7 +219,7 @@ When an EVCMechanism is executed, it updates the value of its `predictionMechani
 :py:data:`function <EVCMechanism.function>`, which determines and implements the `allocationPolicy` for the next round
 of the system's execution.  By default, the EVCMechanism identifies and implements the `allocationPolicy` that maximizes
 the EVC evaluated for the outputStates it is monitoring, as described below.  However, this procedure can be modified by
-specifying a custom function for any or all of the ones described below.
+specifying a custom function for any or all of the functions described below.
 
 .. _EVCMechanism_Default_Function:
 
