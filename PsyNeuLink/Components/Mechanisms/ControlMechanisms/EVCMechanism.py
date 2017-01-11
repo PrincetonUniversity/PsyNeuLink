@@ -1764,7 +1764,7 @@ class EVCMechanism(ControlMechanism_Base):
         else:
             self._outcome_function = value
 
-    @property
+    @property
     def cost_function(self):
         return self._cost_function
 
