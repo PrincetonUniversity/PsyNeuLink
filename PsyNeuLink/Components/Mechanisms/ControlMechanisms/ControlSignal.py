@@ -497,7 +497,7 @@ class ControlSignal(OutputState):
 
         Checks if:
         - cost functions are all appropriate
-        - xallocation_samples is a list with 2 numbers
+        - allocation_samples is a list with 2 numbers
         - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
