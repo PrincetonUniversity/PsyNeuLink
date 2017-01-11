@@ -876,9 +876,8 @@ class System_Base(System):
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
         if input is not None and len(input) != len(self.originMechanisms):
-            raise SystemError("Number of items in input ({0}) must equal number of processes ({1}) in {} ".
-                              format(len(input), len(self.originMechanisms)),
-                              self.name)
+            raise SystemError("Number of items in input ({}) must equal number of processes ({}) in {} ".
+                              format(len(input), len(self.originMechanisms),self.name))
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
