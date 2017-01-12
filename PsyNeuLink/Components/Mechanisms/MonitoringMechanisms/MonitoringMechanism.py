@@ -14,7 +14,7 @@ Overview
 
 A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a :doc:`process <Process>` or
 :doc:`system <System>`, which is evaluated by its ``function``.  This can generate an error signal (e.g.,
-for learning[LINK]) or some other value (e.g., conflict).
+for use in :doc:`learning <LearningProjection>`) or some other value (e.g., a conflict signal).
 
 .. _MonitoringMechanism_Creation:
 
@@ -51,8 +51,8 @@ from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import 
 ComparatorMechanism = 'ComparatorMechanism'
 
 # ComparatorMechanism parameter keywords:
-SAMPLE = "comparatorSampleSource"
-TARGET = "comparatorTargetSource"
+COMPARATOR_SAMPLE = "comparatorSampleSource"
+COMPARATOR_TARGET = "comparatorTargetSource"
 COMPARISON_OPERATION = "comparison_operation"
 
 # ComparatorMechanism outputs (used to create and name outputStates):
@@ -80,7 +80,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
     # Instance Attributes:
     #     monitoredStateChanged
     # Instance Methods:
-    #     _update_monitored_state_changed_attribute(current_monitored_state)
+    #     _update_status(current_monitored_state)
 
     """
     MonitoringMechanism( \
@@ -100,7 +100,6 @@ class MonitoringMechanism_Base(Mechanism_Base):
         Description:
             This is a TYPE and subclasses are SUBTYPES.
             The primary purpose is to implement TYPE level preferences for all monitoring mechanisms.
-            All subclasses must call update_monitored_state_flag
     COMMENT
 
     Attributes
@@ -142,9 +141,6 @@ class MonitoringMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        self.monitoredStateChanged = False
-        self._last_monitored_state = None
-
         super().__init__(variable=variable,
                          params=params,
                          name=name,
@@ -152,22 +148,15 @@ class MonitoringMechanism_Base(Mechanism_Base):
                          context=context)
 
 
-    def _update_monitored_state_changed_attribute(self, current_monitored_state):
-        """Test whether monitored state has changed and set monitoredStateChanged attribute accordingly
-
-        Args:
-            current_monitored_state:
-
-        Returns:
-            value of self.monitoredStateChanged
-
-        """
-
-        # if current_monitored_state != self._last_monitored_state:
-        if not np.array_equal(current_monitored_state,self._last_monitored_state):
-            self.monitoredStateChanged = True
-            self._last_monitored_state = current_monitored_state
-        else:
-            self.monitoredStateChanged = False
-        return self.monitoredStateChanged
-
+    # def _update_status(self, current_value):
+    #     """Test whether self.value has changed and set status accordingly
+    #     """
+    #
+    #     # if current_monitored_state != self._last_monitored_state:
+    #     if not np.array_equal(current_value,self._old_value):
+    #         self.status = CHANGED
+    #         self._old_value = current_value
+    #     else:
+    #         self.status = UNCHANGED
+    #     return self.status
+    #

@@ -198,17 +198,18 @@ specified in the <code class="docutils literal"><span class="pre">function</span
 <p>An IntegratorMechanism has a single inputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is used as the <code class="docutils literal"><span class="pre">variable</span></code> for its
 <code class="docutils literal"><span class="pre">function</span></code>.   The <code class="docutils literal"><span class="pre">default_input_value</span></code> argument specifies the format of the <code class="docutils literal"><span class="pre">value</span></code> (i.e., whether it is a
 single scalar or an array), as well as the value to use if none is provided when mechanism is executed.  The default
-<code class="docutils literal"><span class="pre">function</span></code> is Integrator, with <code class="docutils literal"><span class="pre">weighting=:keyword`ADAPTIVE`</span></code>  and <code class="docutils literal"><span class="pre">rate=0.5</span></code>.  However a custom function
-can also be specified,  so long as it  takes a numeric value or  list or np.ndarray of numeric values as its input, and
-returns a value of the same type and format.  The default function &#8211; <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> &#8211; has two parameters
-(<code class="docutils literal"><span class="pre">weighting</span></code> and <code class="docutils literal"><span class="pre">rate</span></code>) that determine the type and,  well, yes, the <em>rate</em> of integration.  The mechanism has a
-single outputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is assigned the result of the call to the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<code class="docutils literal"><span class="pre">function</span></code> is Integrator, with <code class="docutils literal"><span class="pre">weighting</span></code> = <code class="xref std std-keyword docutils literal"><span class="pre">ADAPTIVE</span></code>  and <code class="docutils literal"><span class="pre">rate</span></code> =0.5.  However a custom function
+can also be specified,  so long as it  takes a numeric value or list or np.ndarray of numeric values as its input, and
+returns a value of the same type and format.  The default function &#8211; <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref py py-class docutils literal"><span class="pre">Function.Integrator</span></code></a> &#8211; has two
+parameters (<code class="docutils literal"><span class="pre">weighting</span></code> and <code class="docutils literal"><span class="pre">rate</span></code>) that determine the type and,  well, yes, the <em>rate</em> of integration.  The
+mechanism has a single outputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is assigned the result of the call to the mechanism&#8217;s
+<code class="docutils literal"><span class="pre">function</span></code>.</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the <code class="docutils literal"><span class="pre">value</span></code> of its (primary) outputState.  For the default function (<a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a>), if the
-value specified for <code class="docutils literal"><span class="pre">default_input_value</span></code> is a list or array, each element of the array will be independently
+result to the <code class="docutils literal"><span class="pre">value</span></code> of its (primary) outputState.  For the default function (<a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref py py-class docutils literal"><span class="pre">Function.Integrator</span></code></a>),
+if the value specified for <code class="docutils literal"><span class="pre">default_input_value</span></code> is a list or array, each element of the array will be independently
 integrated.  If its <code class="docutils literal"><span class="pre">rate</span></code> parameter is a single value, that rate will be used for integrating each element.  If
 the <code class="docutils literal"><span class="pre">rate</span></code> parameter is a list or array, then each element will be used as the rate for the corresponding element
 of the input (in this case, <code class="docutils literal"><span class="pre">rate</span></code> must be the same length as the value specified for <code class="docutils literal"><span class="pre">default_input_value</span></code>).</p>
@@ -224,7 +225,8 @@ of the input (in this case, <code class="docutils literal"><span class="pre">rat
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_input_value</strong> (<em>number, list or np.ndarray</em>) &#8211; the input to the mechanism to use if none is provided in a call to its <code class="docutils literal"><span class="pre">execute</span></code> or <code class="docutils literal"><span class="pre">run</span></code> methods;
+<li><strong>default_input_value</strong> (<em>number, list or np.ndarray</em>) &#8211; the input to the mechanism to use if none is provided in a call to its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> methods;
 also serves as a template to specify the length of <code class="docutils literal"><span class="pre">variable</span></code> for <code class="docutils literal"><span class="pre">function</span></code>, and the primary  outputState
 of the mechanism.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies function used to transform input;  can be <code class="xref py py-class docutils literal"><span class="pre">Linear</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Logistic</span></code>, <code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code>,
@@ -235,10 +237,10 @@ This must be set to <code class="xref std std-keyword docutils literal"><span cl
 and/or a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a params dict).</li>
 <li><strong>name</strong> (<em>str : default IntegratorMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</li>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for mechanism.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</li>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
 </tr>
@@ -261,7 +263,7 @@ If it is not specified, a default is assigned using <code class="docutils litera
 <code class="descname">name</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default IntegratorMechanism-&lt;index&gt;</em> &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by MechanismRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).[LINK]</p>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -269,7 +271,7 @@ If not is specified, a default is assigned by MechanismRegistry
 <code class="descname">prefs</code><a class="headerlink" href="#IntegratorMechanism.IntegratorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em> &#8211; the PreferenceSet for mechanism.
 If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see Description under PreferenceSet for details) [LINK].</p>
+(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
 </dd></dl>

@@ -7,20 +7,29 @@
 #
 #
 from enum import Enum
+from PsyNeuLink.Globals.Keywords import CENTRAL_CLOCK
 
 # Time scale modes
 class TimeScale(Enum):
-        TIME_STEP = 0
-        TRIAL = 1
-        BOUNDS = 2 # Used for type checking where TimeScale value is passed
+    """Values used to specify ``time_scale`` argument for mechanisms, processes, and systems.
+    """
+    TIME_STEP = 0
+    TRIAL = 1
+    BOUNDS = 2 # Used for type checking where TimeScale value is passed
 
-# Central clock
-class CentralClock:
 
-    time_step = 0
-    trial = 0
-    block = 0
-    task = 0
+class Clock:
+    """Clock object used by all systems, processes, mechanisms, and projections
+    """
+    def __init__(self, name):
+        self.name = name
+        self.time_step = 0
+        self.trial = 0
+        self.block = 0
+        self.task = 0
+
+CentralClock = Clock(name=CENTRAL_CLOCK)
+
 
 class CurrentTime:
     def __init__(self):

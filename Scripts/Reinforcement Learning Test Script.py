@@ -3,6 +3,10 @@ import numpy as np
 from PsyNeuLink import *
 from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 
+import random
+random.seed(0)
+np.random.seed(0)
+
 input_layer = TransferMechanism(default_input_value=[0,0,0],
                        name='Input Layer')
 
@@ -29,13 +33,38 @@ action_selection.outputState.value = [0, 0, 1]
 reward = lambda : [reward_values[int(np.nonzero(action_selection.outputState.value)[0])]]
 
 # Run process with RL
-for i in range(10):
+# for i in range(10):
+#
+#     # # Execute process, including weight adjustment based on last reward
+#     result = p.execute(input=[1, 1, 1], target=reward)
+#
+#     print ('result: ', result)
+#
+#     # Note: this shows weights updated on prior trial, not current one
+#     #       (this is a result of parameterState "lazy updating" -- only updated when called)
+#     print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
 
-    # # Execute process, including weight adjustment based on last reward
-    result = p.execute(input=[1, 1, 1], target=reward)
+def print_header():
+    print("\n\n**** TRIAL: ", CentralClock.trial)
 
-    print ('result: ', result)
-
-    # Note: this shows weights updated on prior trial, not current one
-    #       (this is a result of parameterState "lazy updating" -- only updated when called)
+def show_weights():
     print ('\nreward prediction weights: \n', action_selection.inputState.receivesFromProjections[0].matrix)
+    print ('action selected: ', action_selection.outputState.value)
+
+p.run(num_executions=10,
+      # inputs=[[[1, 1, 1]]],
+      inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
+      targets=reward,
+      call_before_trial=print_header,
+      call_after_trial=show_weights
+      )
+
+# s = system(processes=[p])
+#
+# s.run(num_executions=10,
+#       # inputs=[[[1, 1, 1]]],
+#       inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],
+#       targets=reward,
+#       call_before_trial=print_header,
+#       call_after_trial=show_weights
+#       )

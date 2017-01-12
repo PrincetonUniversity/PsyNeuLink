@@ -6,8 +6,11 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Run import run, _construct_inputs
+from PsyNeuLink.Globals.Run import run, _construct_stimulus_sets
 
+# import random
+# random.seed(0)
+# np.random.seed(0)
 
 # Preferences:
 DDM_prefs = ComponentPreferenceSet(
@@ -25,8 +28,14 @@ Input = TransferMechanism(name='Input',
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
-Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear)),
-                                   threshold=(1.0, ControlProjection(function=Linear)),
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
+                                                                      control_signal={
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                      )),
+                                   threshold=(1.0, ControlProjection(function=Linear,
+                                                                      control_signal={
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                     )),
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
@@ -69,6 +78,7 @@ inputList = [0.5, 0.123]
 rewardList = [20, 20]
 # stim_list_dict = {Input:[0.5, 0.123],
 #               Reward:[20, 20]}
+
 stim_list_dict = {Input:[[0.5], [0.123]],
               Reward:[[20], [20]]}
 

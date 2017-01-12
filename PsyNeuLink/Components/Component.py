@@ -567,14 +567,50 @@ class Component(object):
 
             # param corresponding to arg is NOT in paramClassDefaults, so add it
             except:
-                # If arg is function and it's default is not a class, set it to one
+                # If arg is FUNCTION and it's default is an instance (i.e., not a class)
                 if arg_name is FUNCTION and not inspect.isclass(default(arg)):
-                    # Note: this is for compatibility with current implementation of _instantiate_function()
-                    # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
-                    self.paramClassDefaults[arg] = default(arg).__class__
 
-                    # Get params from instantiated function
-                    self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+                    # FIX: REFACTOR Component._instantiate_function TO USE COPY OF INSTANTIATED function
+
+                    # # MODIFIED 12/24/16 OLD:
+                    # # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # self.paramClassDefaults[arg] = default(arg).__class__
+                    # self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+
+                    # # MODIFIED 12/24/16 NEW:
+                    # # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # self.paramClassDefaults[arg] = default(arg).__class__
+                    # # Get params from instantiated function
+                    # try:
+                    #     self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+                    # except AttributeError:
+                    #     # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+                    #     # if self.verbosePref:
+                    #     #     warnings.warn("{} is not a PsyNeuLink Function;  "
+                    #     #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                    #     pass
+
+                    # MODIFIED 12/24/16 NEWER:
+                    function = default(arg)
+                    from PsyNeuLink.Components.Functions.Function import Function
+                    from inspect import isfunction
+
+                    # It is a PsyNeuLink Function
+                    if isinstance(function, Function):
+                        # Set it to the class (for compatibility with current implementation of _instantiate_function()
+                        # and put its params in FUNCTION_PARAMS
+                        self.paramClassDefaults[arg] = default(arg).__class__
+                        self.paramClassDefaults[FUNCTION_PARAMS] = default(arg).user_params.copy()
+
+                    # It is a generic function
+                    elif isfunction(function):
+                        # Assign to paramClassDefaults as is (i.e., don't convert to class), since class is generic
+                        # (_instantiate_function also tests for this and leaves it as is)
+                        self.paramClassDefaults[arg] = function
+                    else:
+                        raise ComponentError("Unrecognized object ({}) specified as function for {}".
+                                             format(function, self.name))
+                    # MODIFIED 12/24/16 END
 
                 # Get defaults values for args listed in FUNCTION_PARAMS
                 # Note:  is not an arg, but rather used to package args that belong to a non-instantiated function
@@ -613,11 +649,9 @@ class Component(object):
                     params[FUNCTION] = function
                     continue
 
-                # function arg is not a class (presumably an object), so convert it to one
-                # Note: this is for compatibility with current implementation of _instantiate_function()
+                # function arg is not a class (presumably an object)
                 # FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function
                 else:
-                    params[FUNCTION] = function.__class__
                     # Get params from instantiated function
                     # FIX: DOES THIS OVER-WRITE FUNCTION_PARAMS??
                     #      SHOULD IF THEY WERE DERIVED FROM PARAM_CLASS_DEFAULTS;
@@ -629,7 +663,50 @@ class Component(object):
                     # FIX: AND, EVEN IF IT DOES, WHAT ABOUT ORDER EFFECTS:
                     # FIX:    CAN IT BE TRUSTED THAT function WILL BE PROCESSED BEFORE FUNCTION_PARAMS,
                     # FIX:     SO THAT FUNCTION_PARAMS WILL ALWAYS COME AFTER AND OVER-RWITE FUNCTION.USER_PARAMS
-                    params[FUNCTION_PARAMS] = function.user_params.copy()
+
+                    # # MODIFIED 12/24/16 OLD:
+                    # # Convert it to a class
+                    # # Note: this is for compatibility with current implementation of _instantiate_function()
+                    # params[FUNCTION] = function.__class__
+                    # params[FUNCTION_PARAMS] = function.user_params.copy()
+
+                    # # MODIFIED 12/24/16 NEW:
+                    # params[FUNCTION] = function.__class__
+                    # try:
+                    #     params[FUNCTION_PARAMS] = function.user_params.copy()
+                    # except (AttributeError, ValueError):
+                    #     # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+                    #     # if self.verbosePref:
+                    #     #     warnings.warn("{} is not a PsyNeuLink Function;  "
+                    #     #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                    #     pass
+
+                    # MODIFIED 12/24/16 NEWER:
+                    from PsyNeuLink.Components.Functions.Function import Function
+                    from inspect import isfunction
+
+                    # It is a PsyNeuLink Function
+                    if isinstance(function, Function):
+                        # Set it to the class (for compatibility with current implementation of _instantiate_function()
+                        # and put its params in FUNCTION_PARAMS
+                        params[FUNCTION] = function.__class__
+                        params[FUNCTION_PARAMS] = function.user_params.copy()
+
+                    # It is a generic function
+                    elif isfunction(function):
+                        # Assign as is (i.e., don't convert to class), since class is generic
+                        # (_instantiate_function also tests for this and leaves it as is)
+                        params[FUNCTION] = function
+                        # FIX: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+                        # if self.verbosePref:
+                        #     warnings.warn("{} is not a PsyNeuLink Function, "
+                        #                   "therefore runtime_params cannot be used".format(default(arg).__name__))
+                    else:
+                        raise ComponentError("Unrecognized object ({}) specified as function for {}".
+                                             format(fct, self.name))
+
+                    # MODIFIED 12/24/16 END
+
                     ignore_FUNCTION_PARAMS = True
 
             elif arg_name is FUNCTION_PARAMS:
@@ -739,7 +816,7 @@ class Component(object):
         #   (relabel params as runtime_params for clarity)
         runtime_params = params
 
-        if runtime_params and not runtime_params is None:
+        if runtime_params and runtime_params is not None:
             for param_name in self.user_params:
                 # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
                 #    At present, assignment of ``function`` as runtime param is not supported
@@ -819,7 +896,7 @@ class Component(object):
         """
 
         # Make sure all args are legal
-        if not variable is None:
+        if variable is not None:
             if isinstance(variable,dict):
                 raise ComponentError("Dictionary passed as variable; probably trying to use param set as 1st argument")
         if request_set:
@@ -846,17 +923,15 @@ class Component(object):
         #                         format(self.__class__.__name__))
 
 
-        # VALIDATE VARIABLE
-
-        # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
-        self._validate_variable(variable, context=context)
-        if variable is None:
-            self.variableInstanceDefault = self.variableClassDefault
-        else:
-            # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
-            self.variableInstanceDefault = self.variable
-
-
+        # VALIDATE VARIABLE (if not called from assign_params)
+        if not COMMAND_LINE in context:
+            # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
+            self._validate_variable(variable, context=context)
+            if variable is None:
+                self.variableInstanceDefault = self.variableClassDefault
+            else:
+                # MODIFIED 6/9/16 (CONVERT TO np.ndarray)
+                self.variableInstanceDefault = self.variable
 
         # If no params were passed, then done
         if request_set is None and  target_set is None and default_set is None:
@@ -869,12 +944,34 @@ class Component(object):
             target_set = self.paramInstanceDefaults
         if target_set is self.paramClassDefaults:
             raise ComponentError("Altering paramClassDefaults not permitted")
-        if default_set is None:
-            default_set = self.paramInstanceDefaults
 
-        # MODIFIED 11/28/16 OLD:
-        # self.paramNames = self.paramInstanceDefaults.keys()
-        # MODIFIED 11/28/16 END
+        # # MODIFIED 1/10/17 OLD:
+        # if default_set is None:
+        #     default_set = self.paramInstanceDefaults
+        # # MODIFIED 1/10/17 NEW:
+        # # If called from assign_params, restrict to user_params
+        # #   as those are the only ones that should be modifiable
+        # #   (and are included paramClassDefaults, which will be tested in validate_params)
+        # if default_set is None:
+        #     if COMMAND_LINE in context:
+        #         default_set = self.user_params
+        # # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
+        #     else:
+        #         default_set = self.paramInstanceDefaults
+        # MODIFIED 1/10/17 NEWER:
+        # If called from assign_params, restrict to user_params
+        #   as those are the only ones that should be modifiable
+        #   (and are included paramClassDefaults, which will be tested in validate_params)
+        if default_set is None:
+            if COMMAND_LINE in context:
+                default_set = {}
+                for param_name in request_set:
+                    default_set[param_name] = self.paramInstanceDefaults[param_name]
+        # Otherwise, use paramInstanceDefaults (i.e., full set of implemented params)
+            else:
+                default_set = self.paramInstanceDefaults
+        # MODIFIED 1/10/17 END
+
 
         # IMPLEMENT: IF not context, DO RECURSIVE UPDATE OF DEFAULT WITH REQUEST, THEN SKIP NEXT IF (MAKE IT elif)
         #            (update default_set with request_set)
@@ -1014,9 +1111,9 @@ class Component(object):
     def assign_params(self, request_set:dict=None):
         """Validates specified params, adds to them paramsInstanceDefaults, and instantiates any if necessary
 
-        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set
-        Update paramInstanceDefaults with validated_set so that any instantiations (next) are done in proper context
-        Instantiate any items in request set that require it (i.e, function or states);
+        Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
+        Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
+        Instantiate any items in request set that require it (i.e, function or states).
 
         """
         context=COMMAND_LINE
@@ -1027,7 +1124,6 @@ class Component(object):
             return
 
         import copy
-        request_set_param_names = list(request_set.keys())
         validated_set = {}
 
         self._assign_defaults(request_set=request_set,
@@ -1040,28 +1136,39 @@ class Component(object):
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
+        # FIX: SAME FOR FUNCTIONS THAT NEED TO BE "WRAPPED"
         # FIX: FIGURE OUT HOW TO DEAL WITH INPUT_STATES
         # FIX: FOR PARAMETER_STATES:
         #        CALL THE FOLLOWING FOR EACH PARAM:
         # FIX: NEED TO CALL
 
-        if INPUT_STATES in request_set_param_names:
+        validated_set_param_names = list(validated_set.keys())
+
+        if INPUT_STATES in validated_set_param_names:
             self._instantiate_attributes_before_function()
+
+        # # Give owner a chance to process function params (e.g., wrap in UserDefineFunction, as per EVCMechanism)
+        # elif any(isinstance(param_value, function_type) for param_value in validated_set.values()):
+        #     self._instantiate_attributes_before_function()
 
         # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
         # AS IT IS NOW, _instantiate_parameter_states ignores existing parameterStates
         #               but this may cause it to ignore FUNCTION_PARAMS when FUNCTION has changed
-        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
-        # for param in request_set_param_names:
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_state
-        for param_name in request_set_param_names:
+        for param_name in validated_set_param_names:
             _instantiate_parameter_state(owner=self,
                                          param_name=param_name,
                                          param_value=validated_set[param_name],
                                          context=context)
 
-        if FUNCTION in validated_set:
+        # # MODIFIED 1/10/17 OLD:
+        # if FUNCTION in validated_set:
+        #     self._instantiate_function(context=COMMAND_LINE)
+        # MODIFIED 1/10/17 NEW:
+        # If the objects function is being assigned, and it is a class, instantiate it as a Function object
+        if FUNCTION in validated_set and inspect.isclass(self.function):
             self._instantiate_function(context=COMMAND_LINE)
+        # MODIFIED 1/10/17 END
 
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function()
@@ -1208,7 +1315,7 @@ class Component(object):
                 if self.prefs.verbosePref:
                     warnings.warn("{0} is specified as None for {1} which suppresses type checking".
                                   format(param_name, self.name))
-                if not target_set is None:
+                if target_set is not None:
                     target_set[param_name] = param_value
                 continue
 
@@ -1341,7 +1448,7 @@ class Component(object):
                                 except TypeError:
                                     pass
 
-                elif not target_set is None:
+                elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
                     from collections import Iterable
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
@@ -1350,10 +1457,14 @@ class Component(object):
                         target_set[param_name] = param_value.copy()
 
             # If param is a function_type, allow any other function_type
+            # MODIFIED 1/9/16 NEW:
+            elif isinstance(param_value, function_type):
+                target_set[param_name] = param_value
+            # MODIFIED 1/9/16 END
 
             # Parameter is not a valid type
             else:
-                raise ComponentError("Value of {0} ({1}) must be of type {2} ".
+                raise ComponentError("Value of {0} param ({1}) must be of type {2} ".
                                     format(param_name, param_value,
                                            type(self.paramClassDefaults[param_name]).__name__))
 
@@ -1634,6 +1745,17 @@ class Component(object):
                     warnings.warn("{0} assigned as function for {1}".
                                   format(self.paramsCurrent[FUNCTION].__self__.componentName,
                                          object_name))
+
+            # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
+            #   Note: calling UserDefinedFunction.function will call FUNCTION
+            elif inspect.isfunction(function):
+                from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
+                # # MODIFIED 1/10/17 OLD:
+                self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function
+                # # MODIFIED 1/10/17 NEW:
+                # udf = UserDefinedFunction(function=function, context=context)
+                # self.paramsCurrent[FUNCTION] = udf.function
+                # MODIFIED 1/10/17 END
 
             # If FUNCTION is NOT a Function class reference:
             # - issue warning if in VERBOSE mode

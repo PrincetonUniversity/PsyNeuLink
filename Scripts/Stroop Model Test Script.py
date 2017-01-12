@@ -26,7 +26,7 @@ color_naming_process = process(
     # pathway=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
     pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
     learning=LEARNING_PROJECTION,
-    target=[2,2],
+    target=[1,2],
     name='Color Naming',
     prefs=process_prefs
 )
@@ -36,7 +36,7 @@ word_reading_process = process(
     pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
     name='Word Reading',
     learning=LEARNING_PROJECTION,
-    target=[3,3],
+    target=[3,4],
     prefs=process_prefs
 )
 
@@ -66,7 +66,7 @@ for i in range(10):
     print(response.inputState.receivesFromProjections[1].matrix)
 
 # Execute system:
-mySystem.execute(inputs=[[1,1],[1,1]])
+mySystem.execute(input=[[1,1],[1,1]])
 
 # SHOWIONS:
 # mySystem.show()

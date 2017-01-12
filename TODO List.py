@@ -2,6 +2,238 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: NOW APPEARS IN PRINT-OUT:
+#	time_scale: TimeScale.TRIAL
+
+# FIX: WRAP EVCMechanism._value_function AS UDF?
+
+# DOCUMENT: FINISH DOCUMENTING:
+#             .. _ControlMechanism_Specifying_Control:
+#
+#             Specifying control for a parameter
+#             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# DOCUMENT: it`s -> its (unless contraction)
+# DOCUMENT:  ControlSignal/ControlProjection:
+#                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
+#            :keyword:`ORIGIN` -> 'ORIGIN'
+# DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
+# DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
+
+# DOCUMENT:  Component:  under assign_params, document that parameter must be reference using a string that is the name
+#                        of the argunent used for the parameter in the component's constructor (or the corresponding
+#                        keyword, which is a capitlizaed version of its name, including any underscore separators )
+#                        GIVE EXAMPLES.
+
+# DOCUMENT: EVCMechanism NOTES ON API FOR CUSTOM VERSIONS:
+
+# FIX: REFACTOR ALL ARGUMENT/ATTRIBUTE RELATIONSHIPS AS FOLLOWS:
+#      ALL USER-ACCESSIBLE ATTRIBUTES, INCLUDING ARGUMENT-RELATED ONES, USE camelCase
+#      ALL ARGUMENT-RELATED ATTRIBUTES ARE IMPLEMENTED AS PROPERTIES:
+#        THE INTERNAL VALUE IS STORED IN _argument_related_attribute
+#        THE PROPERTY IS NAMED argumentRelatedAttribute (TO BE CONSISTENT WITH USER-ACCESSIBLE ATTRIBUTES)
+
+# FIX: ADD _instantiate_input_states TO ControlMechanism AND IMPLEMENT ASSIGNMENT OF monitor_for_control_factors THERE
+
+# FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
+# TEST: DIVERGENT SYSTEM FOR LEARNING AND EVC
+
+# FIX AND TEST: CHANGE time_scale=None -> time_scale=TimeScale.TRIAL IN ALL THE FOLLOWING PLACES:
+#   SYSTEM:
+#     self._execute_processing(clock=clock, time_scale=time_scale, context=context)
+
+#     def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
+
+#     mechanism.execute(time_scale=self.timeScale,
+
+#     def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+
+#     def execute(self,
+#                 input=None,
+#                 clock=CentralClock,
+#                 time_scale=None,
+#                 # time_scale=TimeScale.TRIAL
+
+#     self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
+
+#     component.execute(clock=clock,
+#                       time_scale=self.timeScale,
+#                       # time_scale=time_scale,
+#                       context=context_str)
+
+#     def run(self,
+#             inputs,
+#             num_executions=None,
+#             reset_clock=True,
+#             initialize=False,
+#             targets=None,
+#             learning=None,
+#             call_before_trial=None,
+#             call_after_trial=None,
+#             call_before_time_step=None,
+#             call_after_time_step=None,
+#             clock=CentralClock,
+#             time_scale=None,
+#         #     time_scale=TimeScale.TRIAL,
+#             context=None):
+#  PROCESS:
+#     def execute(self,
+#                 input=None,
+#                 # params=None,
+#                 target=None,
+#                 clock=CentralClock,
+#                 time_scale=None,
+#                 # time_scale=TimeScale.TRIAL,
+#                 runtime_params=None,
+#                 context=None
+
+#     mechanism.execute(clock=clock,
+#                       time_scale=self.timeScale,
+#                       # time_scale=time_scale,
+
+#     # Execute learningSignals
+
+#     if self._learning_enabled:
+#         self._execute_learning(clock=clock, context=context)
+#         # self._execute_learning(clock=clock, time_scale=time_scale, context=context)
+
+#     def _execute_learning(self, clock=CentralClock, context=None):
+
+#     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+#
+#  PROJECTION:
+#     ControlProjection, LearningProjection, MappingProjection:
+
+#     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
+
+#     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+
+
+# IMPLEMENT: FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
+
+# DOCUMENT:  UserDefinedFunction API:  wraps custom function, that can then be called using its function method;
+#                can take variable, params, time_scale, and context as params, along with any of its own
+
+#           FROM EVCMechanism.control_signal_grid_search:
+#             Gets controller as argument (along with any standard params specified in call)
+#             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
+#             Must return an allocation policy compatible with controller.allocationPolicy:
+#                 2d np.array with one 1d array for each allocation value
+#
+#             Following attributes are available:
+#             controller.run: executes a specified number of trials with the simulation inputs
+#             controller.predictedInputs: ndarray of current value of outputState
+#                                          for each predictionMechanism in self.system.predictionMechanisms
+#             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
+#             controller.inputValue: list of current outcome values for monitored_states
+#             controller.controlSignals: list of controlSignal objects
+#             controlSignal.allocationSamples: set of samples specified for that controlSignal
+#             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
+#             controller.allocationPolicy: current allocationPolicy
+#             controller.outputValue: list of current controlSignal values
+#             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
+#             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
+#             controller.cost_function:  aggregate costs of control signals
+#             controller.combine_outcome_and_cost_function: combines outcomes and costs
+
+
+# PROJECTIONS:
+# FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
+#           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
+
+# FIX: EVC simulation may leave system in different state than end of last trial:
+# FIX:      may need to duplicate the system, or buffer state for simulation and restore at end
+
+# EVC:
+# FIX: Component: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
+# IMPLEMENT: ``function`` THAT DOES SEARCH (IN EVCMechanism)
+#             RENAME CURRENT ``function`` => ``VALUE_FUNCTION``WITH DEDICATED PARAM FOR IT (AND DOCUMENT)
+# IMPLEMENT:  NEW FUNCTION (VALUE_FUNCTION) THAT CALLS AGGREGATION AND COMBINE FUNCTIONS
+
+
+# DOCUMENT: Learning and Control in System
+# DOCUMENTATION: go through DDM;  update refs, and add attributes for params (drift rate, starting_point, etc.)
+
+# IMPLEMENT: function format for inputs in Run (e.g., for simulating staircasing):
+#                       needs to be coordinated with validation of num_targets (if it is not a function);
+#                       then document (paralleling targets, and maybe moving much of that to inputs function format)
+# DOCUMENT: TO IMPOSE A DEFAULT PARAMETER CONDITIONALLY, NEED TO OVERRIDE _instantiate_parameter_states
+#            (EXAMPLE:  TransferMechanism:  impose default range if function is Logistic)
+# IMPLEMENT: Implement way of specifying default allocation policy for ControlProjections in system
+#                   DO THIS ONCE EVC MECHANISM IS AUGMENTED, AND MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCMECHANISM
+#                   THAT IS USED IF NO OTHER IS SPECIFED
+# IMPLEMENT: Add scale to TransferFunction (but make sure it doesn't conflictf with or cause trouble for range)
+# IMPLEMENT: Deferred init for ControlProjections (instead of creating DefaultController and passing to EVC)
+# IMPLEMENT: add target (or targets) as arg in system.execute()
+# IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
+# IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
+
+# FIX: "INTERNAL LEARNING":  "Strop Model Learning Test Script (modified)" WITHOUT LEARNING ON color_naming_process
+# FIX: WHAT HAPPENS IF NO TARGETS ARE PROVIDED TO RUN OR EXECUTE BUT LEARNING IS ENABLED?
+# FIX: In Process._execute_learning: ONLY UPDATE PROJECTIONS FROM MECHANISMS IN THE CURRENT PROCESS
+# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX: TEST SPECIFYING word_reading_process BEFORE color_naming_process
+
+
+# DOCUMENTATION: replace ``variable`` with
+#                    :py:data:`variable <Module.variable>` or
+#                    :py:data:`variable <Component.variable>`
+#                same for ``function`` and ``value``
+
+# FIX: ADD ERROR MESSAGE IF MECHANISM REFERENCED IN KEY OF TARGET DICT (FOR run()) IS AN INTERNAL MECHANISM VS. MISSING
+# DOCUMENTATION: LINK FIST APPEARANCE OF :keyword:'ORIGIN` and :keyword:'TERMINAL` TO Keywords.Keywords IN A SECTION
+#                AND THEN JUST CAPITALIZE ALL REMAINING MENTIONS
+
+# SYSTEM LEARNING ***************************************************************************************************
+#       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
+#       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
+#       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
+#       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
+#       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
+#
+#
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
+# DOCUMENTATION: Update LearningProjection_TERMINAL_vs_TARGET_fig
+# DOCUMENT: LearningProjection.monitoringMechanism attribute
+# DOCUMENT: Targets are checked against range of source mechanism (by Comaprator)
+#           Full set of targets and inputs are generated by run??
+# *******************************************************************************************************************
+#
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
+# DOCUMENTATION: params dictionary -> ``params`` dictionary
+#                parameter dictionary -> ``params`` dictionary
+#               System -> Agent?
+#               Mechanism -> Process? [Representation? Transformation?]
+#               phase -> event
+#               MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
+
+# DOCUMENT: In Components, document use of params dictionaries and/or assign_params methods for modifying
+#                the parameters of a component "permanently";  describe relatinoshipo of keywords for parameters
+#                which are simply convenience string constants that are the same as the name of the argument
+#                for the parameter in the component's constructor. (see :ref:`EVCMechanism_Creation` for text)
+
+# DOCUMENT: inputValue and outputValue are lists for convenience of user access, whereas
+#           variable and value are 2d np.arrays that are used as internal datastructures
+#
+# FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
+
+# IMPLEMENT: learning argument and attribute for System (that assigns learning to all of its processes and,
+#            and raises and exception if they can't handle it
+
+# IMPLEMENT: OutputStates:
+    # COMMENT:
+    #     OutputStates can also be added by using the :py:func:`assign_output_state <OutputState.assign_output_state>`.
+    # COMMENT
+
+# IMPLEMENT: System.monitoredOutputStates:
+#              @property, that gets list of all outputStates monitored by the system's controller
+#              object should include their names, objects, and the inputState used to monitor it
 
 # IMPLEMENT / DOCUMENT:  MODIFY ``function`` ATTRIBUTE SO THAT, IF IT IS NOT A SUBCLASS OF Function
 #                        (E.G., IT IS A LAMBDA FUNCTION), THEN FUNCTION_PARAMS IS DISABLED.
@@ -13,7 +245,6 @@
 # DOCUMENT:  Explain better the relationship of an inputStates variable to its value, and of thes to the
 #            to the potential for multiple items of a mechanism's variable (with an example:  ComparatorMechanism)
 
-# DOCUMENT:  "params dictionary" vs. "parameter dictionary"
 
 # DOCUMENT:  FIGURES FOR:
 #                   inputState: inputValue vs. variable
@@ -25,10 +256,6 @@
 #                DISTINCTION BETWEEN ``value``, WHICH IS THE RESULT OF THE MECHANISM'S EXECUTION,
 #                                AND ``outputValue``, WHICH IS A SUMMARY OF THE ``value`` OF EACH OF ITS outputStates
 #
-
-# DOCUMENT:  "item" used to refer to element in any array at any level higher than the highest dimension (axis)
-#             which is referred to as an element (i.e, an entry at the highest dimension / axis)
-
 # DOCUMENTATION: add show to Systsem and Process
 #
 
@@ -53,8 +280,6 @@
 #    Features:  graph support, logging, hierarchical preferences
 #
 #    System:  Control and Learning under Structure
-#    Process/Learning:  business about not needing a target if TERMINAL_MECHANISM belongs to another process
-#                       that has a ComparatorMechanism (and for which a target is specified)
 #    OutputStates: INDEX argument, customizability, balance between customized outputStates and dedicated mechanisms
 
 # FIX *************
@@ -66,10 +291,6 @@
 #                    rename reference_value??
 
 # FIX: SYSTEM LEARNING:
-#      1) Process:  if learning is specified, defer testing for target until runtime (to allow a process to terminate
-#                     on the hidden layer of another process)
-#      2) System:  parse learning mechanism assignments to be sure that comparators are replaced with weighterorrs
-#                     where pathways converge.
 
 # DOCUMENT: Component:  :keyword:`NotImplemented` can be assigned to a parameter in the definition of paramClassDefaults
 #                          to allow it to pass _validate_params without having to make an assignment (i.e., to
@@ -98,7 +319,7 @@
 
 # IMPLEMENT: Extend Multilayer Learning Test script to use multiple forms of parameter specification
 #
-# TEST KEYORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
+# TEST KEYWORD AND NAME SPECIFICATION OF projections alone and w/in tuples of
 #      Mechanism, MappingProjection and Function params
 #      ADD TO META TEST SCRIPT
 
@@ -154,8 +375,6 @@
     # DOCUMENTATION: direct call to run or execute for mechanism executes its function in isolation
     #                 (i.e., does not do any state updating), so can't use run_time params
 
-# TERMINOLOGY: Stored/contained -> kept/held/maintained
-#              params dict <-> parameter dictionary??
 #
 # DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
 #                       (including override)
@@ -196,7 +415,7 @@
 
 # DOCUMENTATION:  singularize first statement in overview of all objects
 #
-# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :any:
+# DOCUMENTATION:  SEARCH FOR :class: AND REPLACE WITH :py:class:
 
 # DOCUMENTATION: check that, for DDM in TIME_STEP mode, parameter values not specified in params dict will assume
 #                any value assigned in the function arg; otherwise, default will be used
@@ -328,7 +547,7 @@
             #         - tuple: (value, projectionType)
             #         - value: list of numbers (no projections will be assigned)
 
-# IMPLEMENT: __execute__ -> _execute
+# IMPLEMENT: _execute -> _execute
 
 # IMPLEMENT: parameterizable noise value for TransferMechanism (i.e., specify function)
 
@@ -491,13 +710,6 @@
 
 # IMPLEMENT: is_<componentType> typespec annotation (for Function Function, Mechanism, State and Projection)
 
-# FIX: EVC DOESN'T PRODUCE SAME RESULTS IN REFACTORED PROCESS (WITH TARGET ADDED)
-#               IS PROBABILITY_UPPER_THRESHOLD THE CORRECT PARAM IN EVC System Laming Validation Test Script??
-# PROBLEM: IN Process, WAS ADDING +1 TO _phaseSpecMax for monitoringMechanisms (for learning)
-#                      AND SO CONTROLLER WAS GETTING ASSINGED THAT VALUE, AND NOT GETTING RUN
-#          SHOULD MONITORING MECHANISMS BE ASSIGNED THEIR OWN PHASE OR, LIKE EVC, JUST USE THE EXISTING MAX
-#                     (SINCE THEY WILL BE RUN LAST ANYHOW, DUE TO THEIR PROJECTIONS)
-
 # TEST: LEARNING IN SYSTEM (WITH STROOP MODEL)
 # IMPLEMENT: ?REINSTATE VALIDATION OF PROCESS AND SYSTEM (BUT DISABLE REPORTING AND RE-INITIALIZE WEIGHTS IF LEARNING)
 
@@ -627,7 +839,8 @@
 #                0) Linear layer as penultimate layer (one for which output weights will be modified);
 #                       (note: slope gets parameterState that is controlled by learning_rate of LearningProjection)
 #                1) Use Softmax as final output layer
-#                2) ComparatorMechanism:  constrain len(Sample) = len(Target) = 1 (rather than len(terminalMechanism.outputState)
+#                2) ComparatorMechanism:  constrain len(COMPARATOR_SAMPLE) = len(COMPARATOR_TARGET) = 1
+#                          (rather than len(terminalMechanism.outputState)
 #                3) FullConnectivity MappingProjection from terminalMechanism->ComparatorMechanism
 #                4) LearningProjection.learningRate sets slope of Linear layer
 #                ----------------
@@ -660,8 +873,6 @@
 #            (replace existing function in ParameterStates)
 # IMPLEMENT: Factor _instantiate_pathway so that parsing/instantiation of mechanism/projection specs
 #            can also be called after _deferred_init
-# IMPLEMENT: Syntax for assigning input to target of MonitoringMechanism in a Process
-#                (currently it is an additoinal input field in execute (relative to instantiation)
 # IMPLEMENT .keyword() FOR ALL FUNCTIONS (as per LinearMatrix);  DO SAME FOR Enum PARAMS??
 # IMPLEMENT: Move info in README to wiki page in GitHub
 # IMPLEMENT: _instantiate_pathway:  ALLOW PROCESS INPUTS TO BE ASSIGNED:
@@ -751,13 +962,10 @@
 #    however, when used as functionParam to directly instantiate an function, has not been parsed
 #    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
 
-# 7/26/16:
-# TEST specification of kwCompartorSample and TARGET
-
 # 7/25/16:
 #
 # FIX handling of inputStates (SAMPLE and TARGET) in ComparatorMechanism:
-#              requirecParamClassDefaults
+#              requiredParamClassDefaults
 #              _instantiate_attributes_before_function
 # FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
 #
@@ -889,6 +1097,37 @@
 #endregion
 
 
+#region DEVELOPMENT
+
+# time_step DDM integration
+#
+# system.graph -> NetworkX, graphViz, or the like.
+#
+# API for "wrappers"
+#
+# IMPLEMENT:  Demos of Functions that plots each Function
+#                                (use new "demoRange" attribute that specifies range of inputs for Function for demo)
+#
+# GUI (using QT)
+#
+# FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
+#
+# function format for inputs in Run (e.g., for simulating staircasing):
+#                       needs to be coordinated with validation of num_targets (if it is not a function);
+#                       then document (paralleling targets, and maybe moving much of that to inputs function format)
+#
+# Filter Warnings
+#
+# TEST run(inputs) dict format FOR SITUATION IN WHICH TWO PROCESSES HAVE THE SAME INPUT,
+#                                                     OR ONE PROCESS BRANCHES OUT FROM ANOTHER
+#                  ISSUE IS WHETHER THE RIGHT NUMBER OF INPUTS ARE ASSIGNED, AND WHETHER SYSTEM KNOWS NOT TO
+#                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
+#
+# README.md -> README.rst AND/OR Index.rst:
+
+#endregion
+
+
 #
 #region PY QUESTIONS: --------------------------------------------------------------------------------------------------
 
@@ -918,10 +1157,10 @@
 
 # - QUESTION: Better way to do this (check for a number or 0D np value and convert to 1D?):
 #             if isinstance(target, numbers.Number) or (isinstance(target, ndarray) and target.ndim == 0):
-#                 target = [target]
+#                 target = [COMPARATOR_TARGET]
 #             # If input is a simple list of numbers (corresponding to 0D), wrap in an outer list (i.e., make 1D)
 #             if all(isinstance(i, numbers.Number) for i in target):
-#                 target = [target]
+#                 target = [COMPARATOR_TARGET]
 # - QUESTION: OK to have mutable objects in arguments to init?? (e.g., System)
 # - QUESTION:
 #   How to avoid implementing DefaultController (for ControlSignals) and DefaultTrainingMechanism (for LearningSignals)
@@ -1005,14 +1244,6 @@
 # - add @property for all params, so they can be addressed directly as attributes
 #      setter method should call _assign_defaults
 #
-
-#endregion
-
-#region DEVELOPMENT
-
-# time_step DDM integration
-# learning working in a system
-# system.graph -> NetworkX
 
 #endregion
 
@@ -1323,7 +1554,7 @@
 
 # Dereference variable values
 #   Example (line 295 in DDM):
-#      default_input_value : value, list or np.ndarray : Transfer_DEFAULT_BIAS [LINK] -> SHOULD RESOLVE TO VALUE
+#      default_input_value : value, list or np.ndarray : :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 # Any better way to format defaults in argument and attributes?  Is "default" a keyword for default or just a convention
 # How to underline?
 # Why does adding ": default _______ " to parameter specification suppress italicization??
@@ -1368,21 +1599,6 @@
 #                              population effects at the social level
 #                           biophysics
 #                           large-social interaction
-
-# DOCUMENT: TERMINOLOGY:
-#           kwKeyWord -> programmatic (internal use) keywords
-#           KEY_WORD -> user-accessible (scripting use) keywords
-#           System -> Agent?
-#           Mechanism -> Process? [Representation? Transformation?]
-#           phase -> event
-#           value:  can be a single number (scalar), non-numeric value, or an array (vector) of either.  Used to refer
-#                   to what is received by, represented, or output by a mechanism or state
-#           MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
-#           Mapping -> MappingProjection
-#           ControlSignal -> ControlProjection
-#           LearningSignal -> LearningProjection
-#           MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
-#           arguments "specify";  attributes "determine"
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
@@ -1469,13 +1685,13 @@
 #                it takes care of any "house-keeping" before and after it calls .function (if it exsits)
 #                .execute should always return an array, the first item of which is the return value of .function
 #                (note: System and Process don't implement a separate .function; it points to .execute)
-#                Subclasses of mechanism implement __execute__ that is called by Mechanism
-#                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
-#                    - if a subclass does not implement __execute__, calling it will call .function directly
+#                Subclasses of mechanism implement _execute that is called by Mechanism
+#                    - this is so Mechanism base class can do housekeeping before and after subclass._execute)
+#                    - if a subclass does not implement _execute, calling it will call .function directly
 #                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
-#                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        only subclass._execute is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
 #                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
-#                        full subclass.__execute__ and Mechanism.execute method are run
+#                        full subclass._execute and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
 #                - generally it is a Function Function
@@ -1600,7 +1816,7 @@
 # DOCUMENT: INSTANTIATION OF EACH DEFAULT ControlProjection CREATES A NEW outputState FOR DefaultController
 #                                AND A NEW inputState TO GO WITH IT
 #                                UPDATES VARIABLE OF owner TO BE CORRECT LENGTH (FOR #IN/OUT STATES)
-#                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., ControlSignalChannels BEGIN AT INDEX 1)
+#                                NOTE THAT VARIABLE ALWAYS HAS EXTRA ITEM (I.E., BEGINS AT INDEX 1)
 # DOCUMENT: IN INSTANTIATION SEQUENCE:
 #              HOW MULTIPLE INPUT AND OUTPUT STATES ARE HANDLED
 #             HOW ITEMS OF variable AND owner.value ARE REFERENCED
@@ -1855,7 +2071,7 @@
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL ControlProjections IN
 # FIX:                   ControlProjection.paramClassDefaults[PROJECTION_SENDER]
 # FIX:   SHOULD THIS BE REPLACED BY EVC?
-# FIX:  CURRENTLY, COST_AGGREGATION_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
+# FIX:  CURRENTLY, COST_FUNCTION and COST_APPLICATION_FUNCTION ARE SPECIFIED AS INSTANTIATED FUNCTIONS
 #           (IN CONTRAST TO function  WHICH IS SPECIFIED AS A CLASS REFERENCE)
 #           COULD SWITCH TO SPECIFICATION BY CLASS REFERENCE, BUT THEN WOULD NEED
 #             CostAggregationFunctionParams and CostApplicationFunctionParams (AKIN TO functionParams)

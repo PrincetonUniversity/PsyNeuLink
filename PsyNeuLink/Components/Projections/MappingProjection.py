@@ -15,9 +15,9 @@ Overview
 --------
 
 MappingProjections transmit value from an outputState of one ProcessingMechanism (its ``sender``) to the inputState of
-another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, which uses the projection's ``matrix``
-parameter to transform an array received from its ``sender``, transforms it, and transmits the result to its
-``receiver``.
+another (its ``receiver``).  Its default ``function`` is :class:`LinearMatrix`, which uses the projection's
+:py:data:`matrix <MappingProjection.matrix>` attribute to transform an array received from its ``sender``, transforms
+it, and transmits the result to its ``receiver``.
 
 .. _Mapping_Creation:
 
@@ -34,20 +34,23 @@ COMMENT
 A MappingProjection can be created in any of the ways that can be used to create a
 :ref:`projection <_Projection_Creation>) or by specifying it in the:ref:`pathway <_Process_Projections>`
 of a process. MappingProjections are also generated automatically by PsyNeuLink in a number of circumstances,
-using a ``matrix`` appropriate to the circumstance  (matrix types are described in :ref:`Mapping_Structure):
+using a matrix appropriate to the circumstance (matrix types are described in :ref:`Mapping_Structure below):
 
-* in a **process**, between adjacent mechanisms in the ``pathway`` for which none has been assigned;
-  the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate matrix by context.
+* in a **process**, between adjacent mechanisms in the :py:data:`pathway <Process.Process_Base.pathway>` for which no
+  projection been assigned; the matrix will use :keyword:`AUTO_ASSIGN_MATRIX`, which determines the appropriate
+  matrix by context.
 ..
-* by a **ControlMechanism**, from outputStates listed in its ``monitoredOutputStates`` attribute to assigned
-  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creation`);  a
-  :keyword:`IDENTITY_MATRIX` will be used.
+* by a **ControlMechanism**, from outputStates listed in its
+  :py:data:`monitoredOutputStates <ControlMechanism.ControlMechanism_Base.monitoredOutputStates>` attribute to assigned
+  inputStates in the ControlMechanism (see :ref:`ControlMechanism_Creation`); a :keyword:`IDENTITY_MATRIX` will be used.
 
 * by a **LearningProjection**, from a mechanism that is the source of an error signal, to a :doc:`MonitoringMechanism`
-  that is used to evaluate that error and generate a learning signal from it (see [LINK]);  the matrix used
-  depends on the ``function`` parameter of the :doc:`LearningProjection`.[LINK]
+  that is used to evaluate that error and generate a learning signal from it
+  (see :ref:`LearningProjection_Automatic_Creation);  the matrix used depends on the ``function`` parameter of the
+  :doc:`LearningProjection`.
 
-When a MappingProjection is created, its ``matrix`` and ``param_modulation_operation`` attributes can be specified,
+When a MappingProjection is created, its :py:data:`matrix <MappingProjection.matrix>` and
+:py:data:`param_modulation_operation <MappingProjection.param_modulation_operation>` attributes can be specified,
 or they can be assigned by default (see below).
 
 .. _Mapping_Structure:
@@ -67,7 +70,7 @@ In addition to its ``function``, MappingProjections use the following two the pr
 
 .. _Mapping_Matrix:
 
-``matrix``
+:py:data:`matrix <MappingProjection.matrix>`
 
   Used by the MappingProjection's ``function`` to execute a matrix transformation of its input.
   It can be specified using any of the following formats:
@@ -95,14 +98,15 @@ In addition to its ``function``, MappingProjections use the following two the pr
   * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
     assigns an :keyword:`IDENTITY_MATRIX`.
   ..
-  :class:`random_matrix`.  This is a convenience function that provides more flexibility than
+  :py:class:`random_matrix`.  This is a convenience function that provides more flexibility than
   :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
   with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
-  .. _Mapping_Tuple_Specification:
-  *Tuple*.  This is used to specify a projection to the parameterState of a ``matrix`` along with the ``matrix`` itself.
-  The tuple must have two items:  the first can be any of the specifications described above;  the second must be a
-  :ref:`projection specification <Projection_In_Context_Specification>`.
+  .. _MappingProjection_Tuple_Specification:
+  *Tuple*.  This is used to specify a projection to the parameterState for the
+  :py:data:`matrix <MappingProjection.matrx>` along with the matrix itself. The tuple must have two items:
+  the first can be any of the specifications described above;  the second must be a :ref:`projection specification
+  <Projection_In_Context_Specification>`.
   COMMENT:
       XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
                 BUT ALSO A CONTROL_PROJECTION OR A MAPPING_PROJECTION
@@ -111,25 +115,26 @@ In addition to its ``function``, MappingProjections use the following two the pr
 
 .. _Mapping_Parameter_Modulation_Operation:
 
-``parameter_modulation_operation``
+:py:data:`parameter_modulation_operation <MappingProjection.parameter_modulation_operation>`
 
-  Used to determine how the value of any projections to the :doc:`parameterState` for the ``matrix`` parameter
-  influence it.  For example, this is used for a :doc:`LearningProjection` to apply weight changes to ``matrix``
-  during learning.  ``parameter_modulation_operation`` must be assigned a value of :class:`ModulationOperation`
-  and the operation is always applied in an element-wise (Hadamard[LINK]) manner. The default operation is ``ADD``.
+  Used to determine how the value of any projections to the :doc:`parameterState` for the
+  :py:data:`matrix <MappingProjection.matrx>` parameter influence it.  For example, this is used for a
+  :doc:`LearningProjection` to apply weight changes to :py:data:`matrix <MappingProjection.matrx>` during learning.
+  ``parameter_modulation_operation`` must be assigned a value of :py:class:`ModulationOperation`
+  and the operation is always applied in an element-wise (Hadamard) manner. The default operation is ``ADD``.
 
 .. _Projection_Execution:
 
 Execution
 ---------
 
-A MappingProjection uses its ``function`` and ``matrix`` parameters to transform the value of its ``sender``,
-and assign this as the variable for its ``receiver``.  When it is executed, updating the ``matrix`` parameterState will
-cause the value of any projections (e.g., a LearningProjection) it receives to be applied to the matrix. This will bring
-into effect any changes that occurred during the previous execution (e.g., due to learning).  Because of :ref:`Lazy
-Evaluation`[LINK], those changes will only be effective after the current execution (in other words, inspecting
-``matrix`` will not show the effects of projections to its parameterState until the MappingProjection has been
-executed).
+A MappingProjection uses its ``function`` and :py:data:`matrix <MappingProjection.matrx> parameters to
+transform the value of its ``sender``, and assign this as the variable for its ``receiver``.  When it is executed,
+updating the matrix parameterState will cause the value of any projections (e.g., a LearningProjection) it
+receives to be applied to the matrix. This will bring into effect any changes that occurred during the previous
+execution (e.g., due to learning).  Because of :ref:`Lazy Evaluation <LINK>`, those changes will only be effective
+after the current execution (in other words, inspecting :py:data:`matrix <MappingProjection.matrix>` will not show
+the effects of projections to its parameterState until the MappingProjection has been executed).
 
 .. _Projection_Class_Reference:
 
@@ -215,23 +220,23 @@ class MappingProjection(Projection_Base):
         the matrix used by ``function`` (default: LinearCombination) to transform the value of the ``sender``.
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
-        the operation used to combine the value of any projections to the matrix's parameterState with the ``matrix``.
-        Most commonly used with LearningProjections.
+        the operation used to combine the value of any projections to the matrix's parameterState with the
+        :py:data:`matrix <MappingProjection.matrx>`.  Most commonly used with LearningProjections.
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
+        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
         By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
 
     name : str : default MappingProjection-<index>
         a string used for the name of the MappingProjection.
         If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the PreferenceSet for the MappingProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -246,13 +251,13 @@ class MappingProjection(Projection_Base):
         the name of the MappingProjection.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the PreferenceSet for projection.
         Specified in the prefs argument of the call to create the projection;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -391,12 +396,13 @@ class MappingProjection(Projection_Base):
 
                 self.matrix = get_matrix(self._matrix_spec, mapping_input_len, receiver_len, context=context)
 
-                # Since matrix shape has changed, output of self.function may have chnaged, so update self.value
+                # Since matrix shape has changed, output of self.function may have changed, so update self.value
                 self._update_value()
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
         """
@@ -411,8 +417,15 @@ class MappingProjection(Projection_Base):
 
         """
 
-        # Check whether weights changed
-        if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
+        # FIX: NEED TO EXECUTE PROJECTIONS TO PARAMS HERE (PER update_parameter_state FOR A MECHANISM)
+
+        # # MODIFIED 12/21/16 OLD:
+        # # Check whether weights changed
+        # if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
+        # MODIFIED 12/21/16 NEW:
+        # Check whether errorSignal has changed
+        if self.monitoringMechanism and self.monitoringMechanism.status == CHANGED:
+        # MODIFIED 12/21/16 END
 
             # Assume that if monitoringMechanism attribute is assigned,
             #    both a LearningProjection and parameterState[MATRIX] to receive it have been instantiated
@@ -421,7 +434,7 @@ class MappingProjection(Projection_Base):
             # Assign current MATRIX to parameter state's baseValue, so that it is updated in call to execute()
             matrix_parameter_state.baseValue = self.matrix
 
-            # Pass params for parameterState's funtion specified by instantiation in LearningProjection
+            # Pass params for parameterState's function specified by instantiation in LearningProjection
             weight_change_params = matrix_parameter_state.paramsCurrent
 
             # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix baseValue

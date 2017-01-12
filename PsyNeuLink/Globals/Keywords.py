@@ -12,6 +12,82 @@
 # ******************************************    CONSTANTS    ***********************************************************
 # **********************************************************************************************************************
 
+class Keywords:
+    """
+    Attributes
+    ----------
+
+    ORIGIN
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
+        and that receives the input to the process or system when it is :ref:`executed or run <Run>`.  A process may
+        have only one :keyword:`ORIGIN` mechanism, but a system may have many.  Note that the :keyword:`ORIGIN`
+        mechanism of a process is not necessarily an :keyword:`ORIGIN` of the system to which it belongs, as it may
+        receive projections from other processes in the system. The :keyword:`ORIGIN` mechanisms of a process or
+        system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
+        method.  For additional details about :keyword:`ORIGIN` mechanisms in processes, see
+        :ref:`Process Mechanisms <Process_Mechanisms>` and
+        :ref:`Process Input and Output <Process_Input_And_Ouput>`; and for systems see
+        :ref:`System Mechanisms <System_Mechanisms>` and
+        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    INTERNAL
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+
+    CYCLE
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is *not* an :py:data:`ORIGIN <Keywords.ORIGIN>`
+        mechanism, and receives a projection that closes a recurrent loop in a process and/or system.  If it is an
+        :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism, then it is designated as an
+        :py:data:`INITIALIZE_CYCLE  <Keywords.INITIALIZE_CYCLE>` mechanism.
+
+    INITIALIZE_CYCLE
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the ``sender`` of a projection that closes a loop in
+        a process or system, and that is not an :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism.  An
+        :ref:`initial value  <Run_InitialValues>` can be assigned to such mechanisms, that will be used to initialize
+        the process or system when it is first run.  For additional information, see :ref:`Run <Run_Initial_Values>`,
+        :ref:`System Mechanisms <System_Mechanisms>` and
+        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    TERMINAL
+        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
+        that provides the output to the process or system when it is :ref:`executed or run <Run>`.  A process may
+        have only one :keyword:`TERMINAL` mechanism, but a system may have many.  Note that the :keyword:`TERMINAL`
+        mechanism of a process is not necessarily a :keyword:`TERMINAL` mechanism of the system to which it belongs,
+        as it may send projections to other processes in the system.  The :keyword:`TERMINAL` mechanisms of a process
+        or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details about :keyword:`TERMINAL` mechanisms in processes, see
+        :ref:`Process_Mechanisms` and :ref:`Process_Input_And_Ouput`; and for systems see :ref:`System_Mechanisms`.
+
+    SINGLETON
+        A :doc:`ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
+        of an :py:data:`ORIGIN <Keywords.ORIGIN>` and/or a :py:data:`TERMINAL <Keywords.TERMINAL>` mechanism.
+
+    MONITORING
+        A :doc:`MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a TARGET; that is, it
+        is associated with an :py:data:`INTERNAL <Keywords.INTERNAL>` rather than a :py:data:`TERMINAL
+        <Keywords.TERMINAL>` ProcessingMechanism in the process and/or system to which it belongs. For
+        :py:class:`backpropagation <Function.BackPropagation>` learning, it is a :doc:WeightedErrorMechanism.
+        See :ref:`MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
+
+    TARGET
+        A :doc:`ComparatorMechanism <ComparatorMechanism>` of a process and/or system configured for learning that
+        receives a target value from its ``execute`` or ``run`` method.  It must be associated with the
+        :py:data:`TERMINAL <Keyword.TERMINAL>` mechanism of the process or system. The :keyword:`TARGET` mechanisms of
+        a process or system are listed in its :keyword:`targetMechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details, see :ref:`TARGET mechanisms <LearningProjection_Targets>`
+        and specifying :ref:`target values <Run_Targets>`.
+
+
+    """
+    def __init__(self):
+        self.ORIGIN = ORIGIN
+        self.INTERNAL = INTERNAL
+        self.CYCLE = CYCLE
+        self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
+        self.TERMINAL = TERMINAL
+        self.SINGLETON = SINGLETON
+        self.MONITORING = MONITORING
+        self.TARGET = TARGET
+
 # parameter_keywords = set()
 
 ON = True
@@ -21,7 +97,7 @@ AUTO = True
 
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
-INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
+INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass _execute method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
 
@@ -43,6 +119,9 @@ kwValidate = 'Validate'
 VALIDATE = kwValidate
 COMMAND_LINE = "COMMAND_LINE"
 kwParams = 'params'
+CHANGED = 'CHANGED'
+UNCHANGED = 'UNCHANGED'
+
 
 #endregion
 
@@ -62,8 +141,9 @@ kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
 
 #region --------------------------------------------    TIME SCALE    --------------------------------------------------
 
-kwCentralClock = "CentralClock"
+CENTRAL_CLOCK = "CentralClock"
 TIME_SCALE = "time_scale"
+CLOCK = "clock"
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
@@ -90,10 +170,12 @@ kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
 
 # General:
-PARAMS_ARG = "params"
-NAME = "name"
 PREFS_ARG = "prefs"
-kwContextArg = "context"
+VARIABLE = "variable"
+NAME = "name"
+PARAMS = "params"
+CONTEXT = "context"
+
 kwInitialValues = 'initial_values'
 
 # inputs list/ndarray:
@@ -122,15 +204,15 @@ kwFunctionOutputTypeConversion = "FunctionOutputTypeConversion" # Used in Functi
 
 #region ----------------------------------------    COMPONENT SUBCLASSES  ----------------------------------------------
 
-# Function Categories   -----------------
+# Component Categories   -----------------
 
-kwProcessFunctionCategory = "Process_Base"
-kwMechanismFunctionCategory = "Mechanism_Base"
-kwStateFunctionCategory = "State_Base"
-kwProjectionFunctionCategory = "Projection_Base"
+kwProcessComponentCategory = "Process_Base"
+kwMechanismComponentCategory = "Mechanism_Base"
+kwStateComponentCategory = "State_Base"
+kwProjectionComponentCategory = "Projection_Base"
 kwComponentCategory = "Function_Base"
 
-# Function TYPES  -----------------
+# Component TYPES  -----------------
 
 # Mechanisms:
 kwProcessingMechanism = "ProcessingMechanism"
@@ -149,6 +231,7 @@ LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
 kwExampleFunction = "EXAMPLE FUNCTION"
+kwUserDefinedFunctionType = "USER DEFINED FUNCTION TYPE"
 kwCombinationFunction = "COMBINATION FUNCTION"
 kwIntegratorFunction = "INTEGRATOR FUNCTION"
 kwTransferFunction = "TRANSFER FUNCTION"
@@ -156,7 +239,7 @@ kwDistributionFunction = "DISTRIBUTION FUNCTION"
 LEARNING_FUNCTION = 'LEARNING FUNCTION'
 
 
-# Function SUBTYPES -----------------
+# Component SUBTYPES -----------------
 
 # ControlMechanisms:
 kwDefaultControlMechanism = "DefaultControlMechanism"
@@ -173,6 +256,7 @@ kwIntegratorMechanism = "IntegratorMechanism"
 
 # Function:
 kwContradiction = "Contradiction"
+kwUserDefinedFunction = "USER DEFINED FUNCTION"
 kwReduce = "Reduce"
 kwLinearCombination = "LinearCombination"
 kwLinear = "Linear"
@@ -202,8 +286,8 @@ RUN = 'Run'
 
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
+PROCESS = "PROCESS"
 kwProcesses = "processes"
-kwProcess = "PROCESS"
 kwProcessInit = 'Process.__init__'
 PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
@@ -218,10 +302,11 @@ kpMechanismExecutedLogEntry = "Mechanism Executed"
 
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
+MECHANISM = 'MECHANISM'
 kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
-kwDefaultProcessingMechanism = "DefaultProcessingMechanism"
+DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
 kwDefaultMonitoringMechanism = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
@@ -235,6 +320,8 @@ CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
+MONITORING = 'MONITORING'
+TARGET = 'TARGET'
 
 kwStateValue = "State value"   # Used in State specification dict
                                                  #  to specify State value
@@ -267,10 +354,13 @@ PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
 PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
+CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
 kwValueAggregationFunction = 'ValueAggregationFunction'
-OUTCOME_AGGREGATION_FUNCTION = 'outcome_aggregation_function'
-COST_AGGREGATION_FUNCTION = 'cost_aggregation_function'
+OUTCOME_FUNCTION = 'outcome_function'
+COST_FUNCTION = 'cost_function'
+COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
+VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
 kwSystemDefaultController = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'

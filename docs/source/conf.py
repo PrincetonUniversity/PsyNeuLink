@@ -366,3 +366,5 @@ def setup(app):
 # Ordering of members:
 
 autodoc_member_order = 'bysource'
+
+default_role = 'any'
