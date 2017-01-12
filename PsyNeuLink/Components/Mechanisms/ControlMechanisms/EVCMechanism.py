@@ -319,9 +319,18 @@ EXPONENT = 2
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
+class ControlSignalCostOptions(IntEnum):
+    NONE               = 0
+    INTENSITY_COST     = 1 << 1
+    ADJUSTMENT_COST    = 1 << 2
+    DURATION_COST      = 1 << 3
+    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
+    DEFAULTS           = INTENSITY_COST
+
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
 
 # ControlProjection Function Names
+
 CONTROL_SIGNAL_COST_OPTIONS = 'controlSignalCostOptions'
 
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
@@ -342,16 +351,6 @@ kpIntensityCost = "Control Signal Intensity Cost"
 kpAdjustmentCost = "Control Signal Adjustment Cost"
 kpDurationCost = "Control Signal DurationCost"
 kpCost = "Control Signal Cost"
-
-
-class ControlSignalCostOptions(IntEnum):
-    NONE               = 0
-    INTENSITY_COST     = 1 << 1
-    ADJUSTMENT_COST    = 1 << 2
-    DURATION_COST      = 1 << 3
-    ALL                = INTENSITY_COST | ADJUSTMENT_COST | DURATION_COST
-    DEFAULTS           = INTENSITY_COST
-
 
 kwEVCAuxFunction = "EVC AUXILIARY FUNCTION"
 kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"

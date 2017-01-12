@@ -17,23 +17,6 @@ Description: Princeton University licenses this file to You under the Apache Lic
 # PsyNeuLink
 
 ## ARCHITECTURE OVERVIEW
-### Theoretical Architecture / Processing Hierarchy
-#### Purpose:
-    Provide a language/framework/toolkit for implementing models/theories of mind/brain function
-    Do so, by expressing an information processing system (*everything* is a function) that:
-     - is computationally general
-     - adheres as closely as possible to the insights and design principles that have been learned in CS
-         (e.g., function-based, object-oriented, etc.)
-     - expresses (the smallest number of) "commitments" that reflect fundamental (universal) principles
-         how the brain/mind is organized/functions, without committing to any particular model or theory
-     - expresses these commitments in a form that is powerful, easy to use, and familiar to behavioral scientits
-     - allows models of this to be implemented in as flexible a way as possible,
-         in terms of architecture and functional forms, but also in the
-         mix of commitments made in different parts of the system to:
-         - time-scale of function
-         - granularity of representation/function
-     - thus, encourages users to "think" about processing in a "mind/brain-like" way,
-         and yet impose no constraints on what they implement or ask their model to do
 
 #### System
 
@@ -231,84 +214,6 @@ Description: Princeton University licenses this file to You under the Apache Lic
      - Would like Mechanism, Projection (and possible State) classes to be extensible:
          developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
-## FORMATTING STANDARDS
-
-# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
-#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
-#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
-#            "parameter": refers to any specifiable attribute of a PsyNeuLink component
-#            "argument": refers to a specifiable value in a method or function call
-#            "attribute": the generic Python term for an object member
-#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
-#            componentAttribute:  user accessible attribute for which there is no constructor argument
-#            _component_attribute:  internal attribute
-#            <definite article> :keyword:`<item>`;  <indefinite article> item;
-#            e.g.: the :keyword:`errorSource`;  an errorSource
-# TERMINOLOGY: Stored/contained -> kept/held/maintained
-#              params dict <-> parameter dictionary??
-#              plural for input and target refers to executions, not number of mechanisms
-#              run: inputs;  execute: input
-# DOCUMENT: TERMINOLOGY:
-#           kwKeyWord -> programmatic (internal use) keywords
-#           KEY_WORD -> user-accessible (scripting use) keywords
-#           System -> Agent?
-#           Mechanism -> Process? [Representation? Transformation?]
-#           phase -> event
-#           value:  can be a single number (scalar), non-numeric value, or an array (vector) of either.  Used to refer
-#                   to what is received by, represented, or output by a mechanism or state
-#           MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
-#           Mapping -> MappingProjection
-#           ControlSignal -> ControlProjection
-#           LearningSignal -> LearningProjection
-#           MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
-#           arguments "specify";  attributes "determine"
-
-
-
-     Naming Conventions:
-         - class names use camelCase with an initial capitilization: ClassName
-         - publicly relevant attributes use camelCase:  self.someThing
-         - local variables and method args use underscores:  some_thing
-         - function names use underscores (enforced by PEP8): some_method
-         - keywords are capitlized and underscored: KEY_WORD
-
-     Itemization:
-        attributes are itemized without a marker
-        - arguments are itemized with dashes
-        + parameters (in dicts) are itemized with pluses
-        - methods are itemized with bullets
-        * notes are itemized with asterisks
-
-     Module organization:
-        Imports
-        Keywords
-        Constants & Structures
-        PrefenceSet
-        Registry
-        Log
-        Error
-        Variables
-        Factory method
-        Class definition
-
-     Documentation:
-         Description
-         [Subclasses]
-         Instantiation
-         Initialization arguments:
-             - variable (<type>): <description>
-             - params (<type>): <description>
-                 + kw<RemainderOfParamName> (type): <description>
-             - name (<type>): <description>
-             - prefs (<type>): <description>
-             - context (<type>): <description>
-         <Class>Registry:
-         Naming
-         Execution
-         Class attributes (implemented at clas level)
-         Class methods (implemented at class level)
-         Instance attributes (implemented in __init__():
-         Instance methods (implemented under class)
 
 ## DESIGN PATTERNS / PRINCIPLES
 
