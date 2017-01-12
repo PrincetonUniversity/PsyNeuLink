@@ -887,8 +887,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-***#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
-# #endregion
+#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
+#endregion
 
 class TransferFunction(Function_Base):
     componentType = kwTransferFunction

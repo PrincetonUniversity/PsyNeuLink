@@ -163,6 +163,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
 
      MODULES:
 
+     [NEEDS UPDATING:]
+
                  CLASS:                                               MODULE:
 
      Component(Object)............................................[PsyNeuLink.Components.Component]
@@ -175,50 +177,51 @@ Description: Princeton University licenses this file to You under the Apache Lic
 
          Mechanism(Component).....................................[PsyNeuLink.Components.ShellClasses]
              Mechanism_Base(Mechanism)...........................[PsyNeuLink.Components.Mechanisms.Mechanism]
-                 ProcessingMechanism
-                     Mechanism
-                     DefaultProcessingMechanism_Base(Mechanism_Base).....[PsyNeuLink.Components.Mechanisms.Mechanism]
-                     DDM(Mechanism_Base).................................[PsyNeuLink.Components.Mechanisms.DDM]
-                     DefaultControlMechanism(Mechanism_Base).............[PsyNeuLink.Components.Mechanisms.Mechanism]
-                 ControlMechanism
-                     ControlMechanism
-                     DefaultControlMechanism
-                     EVCMechanism
+             ProcessingMechanisms
+                 ProcessingMechanism_Base(Mechanism_Base)...[PsyNeuLink.Components.Mechanisms.ProcessingMechanism]
+                 DefaultProcessingMechanism(Mechanism_Base).[PsyNeuLink.Components.Mechanisms.DefaultProcessingMechanism]
+                 DDM(ProcessingMechanism)...................[PsyNeuLink.Components.Mechanisms.DDM]
+                 TransferMechanism(ProcessingMechanism).............[PsyNeuLink.Components.Mechanisms.Mechanism]
+                 IntegratorMechanism(ProcessingMechanism).............[PsyNeuLink.Components.Mechanisms.Mechanism]
+             ControlMechanisms
+                 ControlMechanism(
+                 DefaultControlMechanism
+                 EVCMechanism
+             MonitoringMechanisms
                  MonitoringMechanism
-                     MonitoringMechanism
-                     DefaultMonitoringMechanism
-                     ComparatorMechanism
-                     WeightedErrorMechanism
+                 DefaultMonitoringMechanism
+                 ComparatorMechanism
+                 WeightedErrorMechanism
          State(Component)................................[PsyNeuLink.Components.ShellClasses]
-             State_Base(State).................[PsyNeuLink.Components.States.State]
-                 InputState(State_Base)........[PsyNeuLink.Components.States.InputState]
-                 OutputState(State_Base).......[PsyNeuLink.Components.States.OutputState]
-                 ParameterState(State_Base)....[PsyNeuLink.Components.States.ParameterState]
+             State_Base(State).............[PsyNeuLink.Components.States.State]
+             InputState(State_Base)........[PsyNeuLink.Components.States.InputState]
+             ParameterState(State_Base)....[PsyNeuLink.Components.States.ParameterState]
+             OutputState(State_Base).......[PsyNeuLink.Components.States.OutputState]
 
          Projection(Component)...................................[PsyNeuLink.Components.ShellClasses]
              Projection_Base(Projection).........................[PsyNeuLink.Components.Projections.Projection]
-                 MappingProjection(Projection_Base)..............[PsyNeuLink.Components.Projections.MappingProjection]
-                 ControlProjection(Projection_Base)..............[PsyNeuLink.Components.Projections.ControlProjection]
-                 LearningProjection(Projection_Base).............[PsyNeuLink.Components.Projections.LearningProjection]
+             MappingProjection(Projection_Base)..............[PsyNeuLink.Components.Projections.MappingProjection]
+             ControlProjection(Projection_Base)..............[PsyNeuLink.Components.Projections.ControlProjection]
+             LearningProjection(Projection_Base).............[PsyNeuLink.Components.Projections.LearningProjection]
 
          Function(Component).......................................[PsyNeuLink.Components.ShellClasses]
              Function_Base(Function)...............................[PsyNeuLink.Components.Functions.Function]
-                 UserDefinedfunction
-                 Contradiction(Function_Base).....................[PsyNeuLink.Components.Functions.Function]
-                 Reduce
-                 LinearCombination(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
-                 Linear(Function_Base)............................[PsyNeuLink.Components.Functions.Function]
-                 Exponential(Function_Base).......................[PsyNeuLink.Components.Functions.Function]
-                 Logistic
-                 SoftMax
-                 LinearMatrix(Function_Base)......................[PsyNeuLink.Components.Functions.Function]
-                 Integrator(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
-                 BogaczEtAl
-                 NavarroAndFuss
-                 Reinforcement
-                 BackPropagation
-                 ControlSignalGridSearch
-                 ValueFunction
+             UserDefinedfunction
+             Contradiction(Function_Base).....................[PsyNeuLink.Components.Functions.Function]
+             Reduce
+             LinearCombination(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+             Linear(Function_Base)............................[PsyNeuLink.Components.Functions.Function]
+             Exponential(Function_Base).......................[PsyNeuLink.Components.Functions.Function]
+             Logistic
+             SoftMax
+             LinearMatrix(Function_Base)......................[PsyNeuLink.Components.Functions.Function]
+             Integrator(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+             BogaczEtAl
+             NavarroAndFuss
+             Reinforcement
+             BackPropagation
+             ControlSignalGridSearch
+             ValueFunction
 
      Requirements:
 
