@@ -283,7 +283,7 @@ is processed by the mechanism&#8217;s outputstate(s), which is then assigned to 
 <span id="mechanism-states"></span><h3>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h3>
 <p>Every mechanism has three types of states (shown schematically in the figure below):</p>
 <div class="figure align-center" id="id3">
-<a class="reference internal image-reference" href="_images/Mechanism_states_fig.png"><img alt="Mechanism States" src="_images/Mechanism_states_fig.png" style="width: 2424.75px; height: 1637.25px;" /></a>
+<span id="mechanism-figure"></span><a class="reference internal image-reference" href="_images/Mechanism_states_fig.png"><img alt="Mechanism States" src="_images/Mechanism_states_fig.png" style="width: 2424.75px; height: 1637.25px;" /></a>
 <p class="caption"><span class="caption-text">Schematic of a mechanism showing its three types of states (input, parameter and output).</span></p>
 </div>
 <div class="section" id="inputstates">
@@ -613,7 +613,7 @@ if it is not specified, a default is assigned using <code class="docutils litera
 <dt id="Mechanism.Mechanism_Base.execute">
 <code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>runtime_params=None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Carry out a single execution of the mechanism.</p>
-<p>Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value</p>
+<p>Update inputState(s) and param(s), call subclass _execute, update outputState(s), and assign self.value</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
