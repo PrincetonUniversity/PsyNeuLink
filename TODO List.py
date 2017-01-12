@@ -547,7 +547,7 @@
             #         - tuple: (value, projectionType)
             #         - value: list of numbers (no projections will be assigned)
 
-# IMPLEMENT: __execute__ -> _execute
+# IMPLEMENT: _execute -> _execute
 
 # IMPLEMENT: parameterizable noise value for TransferMechanism (i.e., specify function)
 
@@ -1685,13 +1685,13 @@
 #                it takes care of any "house-keeping" before and after it calls .function (if it exsits)
 #                .execute should always return an array, the first item of which is the return value of .function
 #                (note: System and Process don't implement a separate .function; it points to .execute)
-#                Subclasses of mechanism implement __execute__ that is called by Mechanism
-#                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
-#                    - if a subclass does not implement __execute__, calling it will call .function directly
+#                Subclasses of mechanism implement _execute that is called by Mechanism
+#                    - this is so Mechanism base class can do housekeeping before and after subclass._execute)
+#                    - if a subclass does not implement _execute, calling it will call .function directly
 #                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
-#                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        only subclass._execute is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
 #                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
-#                        full subclass.__execute__ and Mechanism.execute method are run
+#                        full subclass._execute and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
 #                - generally it is a Function Function

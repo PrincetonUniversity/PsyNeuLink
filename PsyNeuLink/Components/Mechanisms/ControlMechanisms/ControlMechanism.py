@@ -585,7 +585,7 @@ class ControlMechanism_Base(Mechanism_Base):
 
         return state
 
-    def __execute__(self,
+    def _execute(self,
                     variable=None,
                     runtime_params=None,
                     clock=CentralClock,

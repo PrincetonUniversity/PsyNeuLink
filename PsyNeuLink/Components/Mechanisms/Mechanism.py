@@ -495,7 +495,7 @@ class Mechanism_Base(Mechanism):
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: inputState SPECIFICATION (IN _instantiate_state)??
             - an execute method:
                 coordinates updating of inputStates, parameterStates (and params), execution of the function method
-                implemented by the subclass, (by calling its __execute__ method), and updating of the outputStates
+                implemented by the subclass, (by calling its _execute method), and updating of the outputStates
             - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the mechanism subclass being instantiated
             - one or more outputStates:
@@ -689,7 +689,7 @@ class Mechanism_Base(Mechanism):
 
 
     #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
-    # By default, init only the __execute__ method of Mechanism subclass objects when their execute method is called;
+    # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute process, since some components may not yet be instantiated
     #    (such as outputStates)
     initMethod = INIT__EXECUTE__METHOD_ONLY
@@ -1226,7 +1226,7 @@ class Mechanism_Base(Mechanism):
     def execute(self, input=None, runtime_params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """Carry out a single execution of the mechanism.
 
-        Update inputState(s) and param(s), call subclass __execute__, update outputState(s), and assign self.value
+        Update inputState(s) and param(s), call subclass _execute, update outputState(s), and assign self.value
 
         COMMENT:
             Execution sequence:
@@ -1339,10 +1339,10 @@ class Mechanism_Base(Mechanism):
             if kwProcessInit in context or kwSystemInit in context:
                 # Run full execute method for init of Process and System
                 pass
-            # Only call mechanism's __execute__ method for init
+            # Only call mechanism's _execute method for init
             # # MODIFIED 12/8/16 OLD:
             # elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-            #     return self.__execute__(variable=self.variable,
+            #     return self._execute(variable=self.variable,
             #                          params=runtime_params,
             #                          time_scale=time_scale,
             #                          context=context)
@@ -1354,7 +1354,7 @@ class Mechanism_Base(Mechanism):
             #                          context=context)
             # MODIFIED 12/8/16 NEW:
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self.__execute__(variable=self.variable,
+                return_value =  self._execute(variable=self.variable,
                                                  runtime_params=runtime_params,
                                                  clock=clock,
                                                  time_scale=time_scale,
@@ -1414,9 +1414,9 @@ class Mechanism_Base(Mechanism):
 
         # MODIFIED 11/27/16 NEW:
         # FIX ASSIGN PARAMETERSTATE PARAMETER VALUES TO PARAMS HERE AND PASS TO __EXECUTE__()
-        # # If any runtime_params were assigned, assign values to params used to call mechanism's __execute__ method
+        # # If any runtime_params were assigned, assign values to params used to call mechanism's _execute method
         # if runtime_params:
-        # Assign current paramameterState values to params used to call mechanism's __execute__ method
+        # Assign current paramameterState values to params used to call mechanism's _execute method
         # FIX: UPDATE THIS TO USE user_params ONCE THOSE HAVE ALL BEEN ASSIGNED parameterStates IN
         # _instantiate_parameter_states
         # FIX: MOVED TO _update_parameter_states BUT NOW ScratchPad doesn't work
@@ -1428,11 +1428,11 @@ class Mechanism_Base(Mechanism):
         #         runtime_params[param] = self.paramsCurrent[FUNCTION_PARAMS][param]
         # MODIFIED 11/27/16 END
 
-        #region CALL SUBCLASS __execute__ method AND ASSIGN RESULT TO self.value
+        #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 # DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
-        self.value = self.__execute__(variable=self.inputValue,
+        self.value = self._execute(variable=self.inputValue,
                                       runtime_params=runtime_params,
                                       clock=clock,
                                       time_scale=time_scale,
@@ -1621,7 +1621,7 @@ class Mechanism_Base(Mechanism):
         self.value[0] = value
         self._update_output_states()
 
-    def __execute__(self,
+    def _execute(self,
                     variable=None,
                     runtime_params=None,
                     clock=CentralClock,

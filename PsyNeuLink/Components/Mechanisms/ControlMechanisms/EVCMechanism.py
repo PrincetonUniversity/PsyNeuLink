@@ -1588,7 +1588,7 @@ class EVCMechanism(ControlMechanism_Base):
         self._validate_monitored_state_spec(states_spec, context=context)
         self._instantiate_monitored_output_states(states_spec, context=context)
 
-    def __execute__(self,
+    def _execute(self,
                     variable=None,
                     runtime_params=None,
                     clock=CentralClock,
