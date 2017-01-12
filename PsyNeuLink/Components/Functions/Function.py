@@ -887,8 +887,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-#region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
-#endregion
+***#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
+# #endregion
 
 class TransferFunction(Function_Base):
     componentType = kwTransferFunction
@@ -2105,7 +2105,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
-
+#endregion
 # TBI
 
 #region **************************************   LEARNING FUNCTIONS ****************************************************
@@ -2323,8 +2323,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         return weight_change_matrix
 
-# *****************************************   OBJECTIVE FUNCTIONS ******************************************************
-
+#region *****************************************   OBJECTIVE FUNCTIONS ************************************************
+#endregion
 # TBI
 
-#  *****************************************   REGISTER FUNCTIONS   ****************************************************
+#region  *****************************************   REGISTER FUNCTIONS ************************************************
