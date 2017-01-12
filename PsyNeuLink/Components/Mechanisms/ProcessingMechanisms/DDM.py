@@ -640,7 +640,7 @@ class DDM(ProcessingMechanism_Base):
     #         del self.outputStates[DDM_RT_CORRECT_MEAN]
     #         del self.outputStates[DDM_RT_CORRECT_VARIANCE]
 
-    def __execute__(self,
+    def _execute(self,
                 variable=None,
                 runtime_params=None,
                 clock=CentralClock,
