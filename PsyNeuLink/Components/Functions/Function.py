@@ -887,7 +887,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-***#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
+#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 # #endregion
 
 class TransferFunction(Function_Base):
