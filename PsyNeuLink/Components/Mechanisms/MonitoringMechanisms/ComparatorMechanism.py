@@ -423,7 +423,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
 
-    def __execute__(self,
+    def _execute(self,
                 variable=None,
                 runtime_params=None,
                 clock=CentralClock,
