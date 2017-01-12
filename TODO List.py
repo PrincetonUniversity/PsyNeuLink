@@ -208,17 +208,11 @@
 #                  CREATE AN INPUT FOR THE BRANCHING PROCESS (SEE RUN line 688 and SYSTEM line 1388
 # DOCUMENTATION: params dictionary -> ``params`` dictionary
 #                parameter dictionary -> ``params`` dictionary
-# DOCUMENT: TERMINOLOGY / FORMAT CONVENTIONS
-#            "item" used to refer to element in any array at any level higher than the highest dimension (axis)
-#                   which is referred to as an element (i.e, an entry at the highest dimension / axis)
-#            "parameter": refers to any specifiable attribute of a PsyNeuLink component
-#            "argument": refers to a specifiable value in a method or function call
-#            "attribute": the generic Python term for an object member
-#            component_attribute:  an attribute for which there is a constructor argument (matches name of argument)
-#            componentAttribute:  user accessible attribute for which there is no constructor argument
-#            _component_attribute:  internal attribute
-#            <definite article> :keyword:`<item>`;  <indefinite article> item;
-#            e.g.: the :keyword:`errorSource`;  an errorSource
+#               System -> Agent?
+#               Mechanism -> Process? [Representation? Transformation?]
+#               phase -> event
+#               MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
+
 # DOCUMENT: In Components, document use of params dictionaries and/or assign_params methods for modifying
 #                the parameters of a component "permanently";  describe relatinoshipo of keywords for parameters
 #                which are simply convenience string constants that are the same as the name of the argument
@@ -381,10 +375,6 @@
     # DOCUMENTATION: direct call to run or execute for mechanism executes its function in isolation
     #                 (i.e., does not do any state updating), so can't use run_time params
 
-# TERMINOLOGY: Stored/contained -> kept/held/maintained
-#              params dict <-> parameter dictionary??
-#              plural for input and target refers to executions, not number of mechanisms
-#              run: inputs;  execute: input
 #
 # DOCUMENTATION:  runtime_param specification can use tuple, which specifies modulation operation for runtime param
 #                       (including override)
@@ -557,7 +547,7 @@
             #         - tuple: (value, projectionType)
             #         - value: list of numbers (no projections will be assigned)
 
-# IMPLEMENT: __execute__ -> _execute
+# IMPLEMENT: _execute -> _execute
 
 # IMPLEMENT: parameterizable noise value for TransferMechanism (i.e., specify function)
 
@@ -1609,21 +1599,6 @@
 #                              population effects at the social level
 #                           biophysics
 #                           large-social interaction
-
-# DOCUMENT: TERMINOLOGY:
-#           kwKeyWord -> programmatic (internal use) keywords
-#           KEY_WORD -> user-accessible (scripting use) keywords
-#           System -> Agent?
-#           Mechanism -> Process? [Representation? Transformation?]
-#           phase -> event
-#           value:  can be a single number (scalar), non-numeric value, or an array (vector) of either.  Used to refer
-#                   to what is received by, represented, or output by a mechanism or state
-#           MappingProjection matrix -> weightMatrix;  make corresponding changes in learningSignal
-#           Mapping -> MappingProjection
-#           ControlSignal -> ControlProjection
-#           LearningSignal -> LearningProjection
-#           MONITOR_FOR_CONTROL -> MONITOR_FOR_CONTROL (to parallel MONITOR_FOR_LEARNING)
-#           arguments "specify";  attributes "determine"
 #
 #  CLEAN UP THE FOLLOWING
 # - Combine "Parameters" section with "Initialization arguments" section in:
@@ -1710,13 +1685,13 @@
 #                it takes care of any "house-keeping" before and after it calls .function (if it exsits)
 #                .execute should always return an array, the first item of which is the return value of .function
 #                (note: System and Process don't implement a separate .function; it points to .execute)
-#                Subclasses of mechanism implement __execute__ that is called by Mechanism
-#                    - this is so Mechanism base class can do housekeeping before and after subclass.__execute__)
-#                    - if a subclass does not implement __execute__, calling it will call .function directly
+#                Subclasses of mechanism implement _execute that is called by Mechanism
+#                    - this is so Mechanism base class can do housekeeping before and after subclass._execute)
+#                    - if a subclass does not implement _execute, calling it will call .function directly
 #                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
-#                        only subclass.__execute__ is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        only subclass._execute is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
 #                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
-#                        full subclass.__execute__ and Mechanism.execute method are run
+#                        full subclass._execute and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
 #                - generally it is a Function Function

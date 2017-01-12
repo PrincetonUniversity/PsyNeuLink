@@ -134,11 +134,11 @@ Class Reference
 """
 
 # import Components
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import *
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Components.States.State import _instantiate_state_list
-from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import *
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.State import *
+
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
