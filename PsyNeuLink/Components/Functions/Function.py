@@ -290,6 +290,10 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     @functionOutputType.setter
     def functionOutputType(self, value):
 
+        if not value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
+            self._functionOutputType = value
+            return
+
         # Attempt to set outputType but conversion not enabled
         if value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
             raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
@@ -357,10 +361,10 @@ class Contradiction(Function_Base): # Example
         # NOTES:
         #    * paramsCurrent can be changed by including params in call to function
         #    * paramInstanceDefaults can be changed by calling assign_default
-        super(Contradiction, self).__init__(variable_default=variable_default,
-                                            params=params,
-                                            prefs=prefs,
-                                            context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
     def function(self,
                 variable=None,
@@ -459,11 +463,64 @@ class Contradiction(Function_Base): # Example
         if message:
             raise FunctionError(message)
 
-        super(Contradiction, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
 
 
 #region ****************************************   FUNCTIONS   *********************************************************
 #endregion
+
+#region **********************************  USER-DEFINED FUNCTION  *****************************************************
+#endregion
+
+class UserDefinedFunction(Function_Base):
+    """Implement user-defined function
+
+    Initialization arguments:
+     - variable
+
+    Linear.function returns scalar result
+    """
+    componentName = kwUserDefinedFunction
+    componentType = kwUserDefinedFunctionType
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+                               kwFunctionOutputTypeConversion: False,
+                               PARAMETER_STATE_PARAMS: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 function,
+                 variable=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(params=params)
+        self.user_defined_function = function
+
+        super().__init__(variable_default=variable,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+        # IMPLEMENT: PARSE ARGUMENTS FOR user_defined_function AND ASSIGN TO user_params
+
+    def function(self,
+                 # variable=None,
+                 # params=None,
+                 # time_scale=TimeScale.TRIAL,
+                 # context=None,
+                 **kwargs):
+        # raise FunctionError("Function must be provided for {}".format(self.componentType))
+        return self.user_defined_function(**kwargs)
+
 
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
@@ -532,6 +589,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
     def function(self,
                 variable=None,
                 params=None,
+                time_scale=TimeScale.TRIAL,
                 context=None):
         """Combine a list or array of values
 
@@ -646,14 +704,14 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                  operation=operation,
                                                  params=params)
 
-        super(LinearCombination, self).__init__(variable_default=variable_default,
-                                                params=params,
-                                                prefs=prefs,
-                                                context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
-        if not self.exponents is None:
+        if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
-        if not self.weights is None:
+        if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1,1)
 
 
@@ -731,9 +789,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #                 raise FunctionError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
 #                                format(weights, self.name))
 
-        if not target_set[EXPONENTS] is None:
+        if target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-        if not target_set[WEIGHTS] is None:
+        if target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
 
         # if not operation:
@@ -798,7 +856,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
-        if not exponents is None:
+        if exponents is not None:
             if len(exponents) != len(self.variable):
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
@@ -810,7 +868,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 self.variable = self.variable ** exponents
 
         # Apply weights if they were specified
-        if not weights is None:
+        if weights is not None:
             if len(weights) != len(self.variable):
                 raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
                                    format(len(weights), len(self.variable.shape)))
@@ -829,7 +887,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-#region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
+#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 #endregion
 
 class TransferFunction(Function_Base):
@@ -881,7 +939,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                                                  intercept=intercept,
                                                  params=params)
 
-        super(Linear, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                      params=params,
                                      prefs=prefs,
                                      context=context)
@@ -1002,7 +1060,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                                                  scale=scale,
                                                  params=params)
 
-        super(Exponential, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                           params=params,
                                           prefs=prefs,
                                           context=context)
@@ -1337,7 +1395,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return none:
         """
 
-        super(LinearMatrix, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
@@ -1676,7 +1734,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  weighting=weighting,
                                                  params=params)
 
-        super(Integrator, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                          params=params,
                                          prefs=prefs,
                                          context=context)
@@ -1810,7 +1868,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
         generates mean response time (RT) and mean error rate (ER) as described in:
             Bogacz, R., Brown, E., Moehlis, J., Holmes, P., & Cohen, J. D. (2006). The physics of optimal
             decision making: a formal analysis of models of performance in two-alternative forced-choice
-            tasks.  Psychological review, 113(4), 700.
+            tasks.  Psychological review, 113(4), 700. (`PubMed entry <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_)
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)
@@ -1952,6 +2010,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         generates distributions of response time (RT) and error rate (ER) as described in:
             Navarro, D. J., and Fuss, I. G. "Fast and accurate calculations for first-passage times in
             Wiener diffusion models." Journal of Mathematical Psychology 53.4 (2009): 222-230.
+            (`ScienceDirect entry <http://www.sciencedirect.com/science/article/pii/S0022249609000200>`_)
 
     Initialization arguments:
         variable (float): set to self.value (== self.inputValue)
@@ -2046,7 +2105,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
-
+#endregion
 # TBI
 
 #region **************************************   LEARNING FUNCTIONS ****************************************************
@@ -2264,8 +2323,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         return weight_change_matrix
 
-# *****************************************   OBJECTIVE FUNCTIONS ******************************************************
-
+#region *****************************************   OBJECTIVE FUNCTIONS ************************************************
+#endregion
 # TBI
 
-#  *****************************************   REGISTER FUNCTIONS   ****************************************************
+#region  *****************************************   REGISTER FUNCTIONS ************************************************

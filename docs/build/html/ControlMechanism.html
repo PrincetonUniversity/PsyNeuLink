@@ -95,6 +95,7 @@
 <li class="toctree-l3"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#creating-a-controlmechanism">Creating A ControlMechanism</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#specifying-control-for-a-parameter">Specifying control for a parameter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#monitored-outputstates">Monitored OutputStates</a></li>
 </ul>
 </li>
@@ -166,8 +167,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="DefaultControlMechanism.html">DefaultControlMechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#execution">Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="EVCMechanism.html#class-reference">Class Reference</a></li>
 </ul>
@@ -179,7 +183,7 @@
 <p>ControlMechanisms monitor the outputState(s) of one or more ProcessingMechanisms in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> to assess the
 outcome of processing by those mechanisms, and use this to regulate the value of
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to other ProcessingMechanisms in the system for which the
-ControlMechanism is a <code class="docutils literal"><span class="pre">controller</span></code>.</p>
+ControlMechanism is a <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
@@ -187,9 +191,16 @@ ControlMechanism is a <code class="docutils literal"><span class="pre">controlle
 A ControlMechanism is also created automatically whenever a system is created (see <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">Creating a System</span></a>),
 and assigned as the controller for that system (see <span class="xref std std-ref">_System_Execution_Control</span>). The outputStates to be monitored
 by a ControlMechanism are specified in its <code class="docutils literal"><span class="pre">monitoredOutputStates</span></code> argument, which can take a number of forms
-(see below).  When the ControlMechanism is created, it automatically creates its own inputState for each of the
-outputStates it monitors, and assigns a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from that outputState to the inputState of the
-ControlMechanism. How a ControlMechanism creates its ControlProjections depends on the subclass.</p>
+(<span class="xref std std-ref">see below</span>).  When the ControlMechanism is created, it automatically
+creates its own inputState for each of the outputStates it monitors, and assigns a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from that
+outputState to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections depends
+on the subclass.</p>
+<div class="section" id="specifying-control-for-a-parameter">
+<span id="controlmechanism-specifying-control"></span><h3>Specifying control for a parameter<a class="headerlink" href="#specifying-control-for-a-parameter" title="Permalink to this headline">¶</a></h3>
+<p>ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter
+can be specified for control by assigning a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> as part of its value when creating the mechanism
+or function to which the parameter belongs.</p>
+</div>
 <div class="section" id="monitored-outputstates">
 <span id="controlmechanism-monitored-outputstates"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <p>The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
@@ -225,8 +236,8 @@ monitored even if the mechanism is not a <code class="xref std std-keyword docut
 <ul>
 <li><p class="first">OutputStates to be monitored can be specified in the <strong>ControlMechanism</strong> responsible for the monitoring, or in the
 <strong>system</strong> for which that ControlMechanism is the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>).  Specification
-can be in the controlMechanism or system&#8217;s <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument, or in the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="docutils literal"><span class="pre">params</span></code> argument.  In
+can be in the ControlMechanism or system&#8217;s <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument, or in the
+<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in its <code class="xref any docutils literal"><span class="pre">params</span></code> argument.  In
 either case, the value must be a list, each item of which must be one of the following:</p>
 <ul class="simple">
 <li>An existing <strong>outputState</strong> or the name of one.</li>
@@ -244,9 +255,9 @@ overridden in a params dictionary specification for the mechanism (see above).</
 (except those that override it with their own <code class="docutils literal"><span class="pre">monitor_for_control</span></code> specification). If the value of
 <code class="xref py py-class docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> appears alone in the list, it is treated as follows:<ul>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>: only the primary (first) outputState of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism(s)
-in the system for which the ControlMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</li>
+in the system for which the ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>.</li>
 <li><code class="xref std std-keyword docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code>:  all of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism(s)
-in the system for which the ControlMechanism is the <code class="docutils literal"><span class="pre">controller</span></code>.</li>
+in the system for which the ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>..</li>
 </ul>
 </li>
 </ul>
@@ -266,12 +277,16 @@ must have the three following items in the order listed:</p>
 <li>an outputState or mechanism, the name of one, or a specification dictionary for one;</li>
 </ul>
 <ul class="simple">
-<li>an exponent (int) - exponentiates the value of the outputState;</li>
+<li>a weight (int) - multiplies the value of the outputState.</li>
 </ul>
 <ul class="simple">
-<li>a weight (int) - multiplies the value of the outState.</li>
+<li>an exponent (int) - exponentiates the value of the outputState;</li>
 </ul>
 </div></blockquote>
+<p>The set of weights and exponents assigned to each outputState listed in the <a class="reference internal" href="EVCMechanism.html#EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> of the
+ControlMechanism is listed in its <a class="reference internal" href="EVCMechanism.html#EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents" title="EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitor_for_control_weights_and_exponents</span></code></a> attribute, in the same order as the
+outputStates are listed in <a class="reference internal" href="EVCMechanism.html#EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a>.  Each item in the list is a tuple with the weight and exponent
+for a given outputState.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -284,9 +299,9 @@ to which it projects, to update the parameter of the receiving mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner
-mechanism executes (see <span class="xref std std-ref">Lazy_Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).  This means that even if a
-ControlMechanism has executed, a parameter that it controls will not assume its new value until the corresponding
-receiver mechanism has executed.</p>
+mechanism executes (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).  This means that even
+if a ControlMechanism has executed, a parameter that it controls will not assume its new value until the
+corresponding receiver mechanism has executed.</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -304,19 +319,22 @@ They should be instantiated using the constructor for a <a class="reference inte
 <dt id="ControlMechanism.ControlMechanism_Base.controlProjections">
 <code class="descname">controlProjections</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlProjections" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[ControlProjection]</em> &#8211; list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> managed by the ControlMechanism.
-There is one for each ouputState in the <code class="docutils literal"><span class="pre">outputStates</span></code> dictionary.</p>
+There is one for each ouputState in the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref py py-data docutils literal"><span class="pre">outputStates</span></code></a>
+dictionary.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ControlMechanism.ControlMechanism_Base.controlProjectionCosts">
 <code class="descname">controlProjectionCosts</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.controlProjectionCosts" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the <code class="docutils literal"><span class="pre">controlProjections</span></code> attribute.</p>
+<dd><p><em>2d np.array</em> &#8211; array of costs associated with each of the control signals in the
+<code class="xref py py-data docutils literal"><span class="pre">controlProjections</span></code> attribute.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ControlMechanism.ControlMechanism_Base.allocationPolicy">
 <code class="descname">allocationPolicy</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.allocationPolicy" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; array of values assigned to each control signal in the <code class="docutils literal"><span class="pre">controlProjections</span></code> attribute.
+<dd><p><em>2d np.array</em> &#8211; array of values assigned to each control signal in the
+<code class="xref py py-data docutils literal"><span class="pre">controlProjections</span></code> attribute.
 This is the same as the ControlMechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.</p>
 </dd></dl>
 

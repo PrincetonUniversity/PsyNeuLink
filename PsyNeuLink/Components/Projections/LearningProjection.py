@@ -15,10 +15,10 @@ Overview
 --------
 
 A LearningProjection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
-and uses this to compute a ``weightChangeMatrix`` that is assigned as its value.  This is used to modify the
-:ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection`.  A LearningProjection can be assigned
-different functions[LINK] to implement different learning algorithms, which are associated with corresponding types
-of MonitoringMechanisms.
+and uses this to compute a :py:data:`weightChangeMatrix <LearningProjection.weightChangeMatrix>` that is assigned as
+its value.  This is used to modify the :ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection`.  A
+LearningProjection can be assigned different :ref:`functions <LearningProjection_Function> to implement different
+learning algorithms, which are associated with corresponding types of :doc:`MonitoringMechanisms <MonitoringMechanism>`.
 
 .. _LearningProjection_Creation:
 
@@ -30,18 +30,16 @@ A LearningProjection can be created in any of the ways that can be used to
 :ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <_Process_Projections>`
 of a process.  Its ``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver``
 must be the parameterState of a MappingProjection.  When a LearningProjection is created, its full initialization is
-deferred [LINK] until its ``sender`` and ``receiver`` have been fully specified.  This means that it is possible to
-create a LearningProjection using its constructor without specifying either its ``sender`` or its ``receiver``.
+:ref:`deferred <Component_Deferred_Init>` until its ``sender`` and ``receiver`` have been fully specified.  This means
+that it is possible to create a LearningProjection using its constructor without specifying either its ``sender`` or
+its ``receiver``.
 
-COMMENT:
-   CURRENT
-COMMENT
 It is not necessary to assign a ``sender``;  if none is specified when it is initialized, a MonitoringMechanism of
 the appropriate type will be created (see :ref:`Structure <LearningProjection_Structure>` below).  However,
-a LearningProjection's ``receiver`` must be specified.  One that is done, for the LearningProjection to be operational,
-initializaton must be completed by calling its ``deferred_init`` method.  This is not necessary if the LearningProjection
-is specified as part of a system, process, or a projection in the pathway of a process -- in those cases,
-initialization is completed automatically.
+a LearningProjection's ``receiver`` must be specified.  Once that is done, for the LearningProjection to be operational,
+initializaton must be completed by calling its ``deferred_init`` method.  This is not necessary if the
+LearningProjection is specified as part of a system, process, or a projection in the pathway of a process --
+in those cases, deferred initialization is completed automatically.
 
 COMMENT:
    REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
@@ -54,79 +52,178 @@ COMMENT
 
 .. _LearningProjection_Automatic_Creation:
 
-**Automatic creation**.  When learning is specified for a :ref:`system <System_Execution_Learning>`,
-a :ref:`process <Process_Learning>`, or in a :ref:`tuple that specifies a projection <>`,   PsyNeuLink automatically
-generates the LearningSignals, MonitoringMechanisms, and corresponding projections required for learning to occur.
-More specifically, LearningSignals are automatically created for the relevant MappingProjection(s) (for a system or
-process, this excludes input projections to their :keyword:`ORIGIN` mechansims and output projections to their
-:keyword:`TERMINAL` mechanisms). Each LearningProjection is assigned the relevant ``errorSource`` -- that is,
-the ProcessingMechanism that receives the LearningProjection's mappingProjection (the one to which it projects and
-modifies).  If the ``errorSource`` projects to a MonitoringMechanism, then that is assigned as the LearningProjection's
-``sender``.  If the ``errorSource`` does not projection to a MonitoringMechanism, then one is created for it,
-and a MappingProjection is created that projects to it from the ``errorSource``.  The type of MonitoringMechanism
-created depends on where the ProcessingMechanism sits in the processing stream.  If it is a standalone mechanism,
-or the :keyword:`TERMINAL` mechanism of a process or system, then a :doc:`ComparatorMechanism` mechanism is created
-(which compares the output of the ``errorSource`` with a target to generate the ``errorSignal``).  If the
-``errorSource`` projects to any other mechanisms, then a ``WeightedErrorMechanism`` mechanism is created (which,
-in calculating the ``errorSignal``, takes account of the effect that the ``errorSource`` has on the output of the
-ProcessingMechanism(s) to which it projects).
+Automatic creation
+~~~~~~~~~~~~~~~~~~
 
+When learning is :ref:`specified for a process <Process_Learning>`, or in a
+:ref:`tuple that specifies a projection <MappingProjection_Tuple_Specification>`, PsyNeuLink automatically generates a
+LearningProjection and the associated components required for learning to occur (shown in the
+:ref:`figure <LearningProjection_Simple_Learning_Figure>` and described under
+:ref:`Structure <LearningProjection_Structure>` below).  These are generated for each MappingProjection that will
+be modified by learning;  for a process, this includes the MappingProjections between each of the mechanisms in the
+process.
+
+COMMENT:
+    When learning is :ref:`specified for a process <Process_Learning>`, or in a
+    :ref:`tuple that specifies a projection <LINK>`,   PsyNeuLink automatically generates the LearningProjection,
+    MonitoringMechanisms, and corresponding projections required for learning to occur (shown in the
+    :ref:`figure below <LearningProjection_Simple_Learning_Figure>`). More specifically, a LearningProjection
+    is automatically created and  assigned to each MappingProjection for which it is specified (i.e., that it will modify).
+    For a process, LearningProjections are created for the MappingProjection between each of the mechanisms in the
+    process.
+
+The receiver for each of those MappingProjections is assigned as the
+:py:data:`errorSource <LearningProjection.errorSource>` for the LearningProjection.  Each errorSource must project to a
+:doc:`MonitoringMechanism`, which is assigned as the the LearningSignal's sender, and provides it with an
+:py:data:`errorSignal <LearningProjection.errorSignal>`. If the errorSource assigned to a LearningSignal already
+has a projection to a MonitoringMechanism, then that mechanism is simply assigned as the LearningProjection's
+sender; if the errorSource does not project to any MonitoringMechanism, then one is created for it at the same time
+that the LearningSignal is created.
+
+The type of MonitoringMechanism created depends on the type of learning. For :ref:`Reinforcement Learning <LINK>`,
+a :doc:`ComparatorMechanism` is created, and given a MappingProjection from the errorSource. For
+:ref:`backpropagation <LINK>`, the type of  MonitoringMechanism created also depends on the errorSource itself.  If
+the errorSource provides the output that will be compared with the target stimulus then, as for Reinforcement
+Learning, a ComparatorMechanism is created.  This is the case if the errorSource is a standalone
+mechanism (one not in a process or system), the :keyword:`TERMINAL` mechanism of a standalone process (i.e., one not
+in a system), or the :keyword:`TERMINAL` mechanism of a system.  However, if the errorSource lies deeper in a process
+or system -- that is, if it is an :keyword:`ORIGIN` or :keyword:`INTERNAL` mechanism -- then a
+:doc:`WeightedErrorMechanism` mechanism is created.  This gets its error information from the MonitoringMechanism
+for the errorSource "above" it in the process or system (i.e., the one to which it projects, and that is one closer to
+the target).  Therefore, a MappingProjection is created that projects to it from that next errorSource.
+COMMENT
+
+.. _LearningProjection_Simple_Learning_Figure:
+
+    **Components of Learning**
+
+    .. figure:: _static/LearningProjection_Simple_Learning_fig.png
+       :alt: Schematic of mechanisms and projections involved in learning
+       :scale: 50%
+
+       Learning mechanisms (darker background) and associated projections created for a set of mechanisms specified for
+       learning (lighter backgrounds).  Each mechanism is labeled by its type (uppler line, in bold) and its designated
+       status in the process and/or system to which it belongs (lower line, caps).  Italicized labels beside each
+       mechanism indicate the attributes of the LearningProjection with which they are associated.
 
 .. _LearningProjection_Structure:
 
 Structure
 ---------
 
-The components involved in learning are shown in :ref:`this figure <Process_Learning_Figure>`, and described below.
+The following components are required for learning
+(see :ref:`figure above <LearningProjection_Simple_Learning_Figure>`):
 
-**MappingProjection**.  Learning Signals project to the parameterState for a ``matrix`` parameter of a MappingProjection
-projection, stored in the LearningProjection's ``mappingProjection`` attribute.  It modifies the ``matrix``  based on
-the output of the ProcessingMechanism to which the ``mappingProjection`` projects.
+**MappingProjection**: owner of the :py:data:`matrix <MappingProjection.MappingProjection.matrix>` to be modified by
+learning, and of the corresponding parameterState to which the LearningProjection projects. It is referenced in the
+LearningProjection's :py:data:`mappingProjection <LearningProjection.mappingProjection>` attribute.
 
-**Error source**.  This is the ProcessingMechanism to which the ``mappingProjection`` projects, and on which the
-*error signal*  is based.  It projects to a MonitoringMechanism that calculates the error signal.  By default,
-the primary outputState of the ``errorSource`` projects to the MonitoringMechanism, and its value is used to
-calculate the ``errorSignal``.  However, a different outputState can be specified by including an entry with
-:keyword:`MONITOR_FOR_LEARNING` as its key in a params dictionary for the ``errorSource``, and assigning a list
-with the specified outputState(s) as its value.
+**Error source**: ProcessingMechanism to which the :py:data:`mappingProjection <LearningProjection.mappingProjection>`
+that is being learned projects;  it is the mechanism responsible for the component of the error that the associated
+LearningProjection tries to correct.  It is referenced by the LearningProjection's :py:data:`errorSource
+<LearningProjection.errorSource>` attribute.  Each errorSource must project to a :doc:`MonitoringMechanism
+<MonitoringMechanism>` (see below). By default, the :ref:`primary outputState <OutputState_Primary>` of the
+errorSource projects to the MonitoringMechanism. However, a different outputState can be specified by including an
+entry with :keyword:`MONITOR_FOR_LEARNING` as its key in a ``params`` dictionary for the errorSource, and assigning
+it a list with the desired outputState(s) as its value. When a LearningProjection is
+:ref:`created automatically <LearningProjection_Automatic_Creation>`, if its errorSource already has a projection to a
+MonitoringMechanism, then that one is used; if its errorSource does not project to any MonitoringMechanism,
+then one of an appropriate type is created (see below) and assigned a MappingProjection from the errorSource.
 
-**Error Signal**.  This is computed by a MonitoringMechanism to which the error_source projects.  It compares the
-output of the errorSource with a target value, and uses the disparity to compute the error signal.  The
-MonitoringMechanism projects to the LearningProjection, serving at its ``sender``, and the error signal is used by the
-LearningProjection as the ``variable`` for its ``function`` (it is also stored in the ``errorSignal`` attribute).
+.. _LearningProjection_MonitoringMechanism:
 
-**Function**.  This computes the changes to the ``matrix`` parameter of the LearningProjection's ``mappingProjection``
-required to reduce the ``errorSignal`` for its ``errorSource``.  The default is :class:`BackPropagation` (also known
-as the Generalized Delta Rule;  see Rumelhart et al., 1986[LINK]).  However, it can be assigned to other functions
-that implement different learning algorithms.  Assignment of the LearningProjection's ``function`` must be appropriate for
-the ``function`` of its ``errorSource`` (how the learning signal is computed depends on the nature of the function
-that generated the error);  failure to match the ``function`` of the LearningProjection with the ``function`` of the
-ProcessingMechanism that is its ``errorSource`` will generate an error.
+**MonitoringMechanism**: calculates the :py:data:`errorSignal <LearningProjection.errorSignal>` used by the
+LearningProjection to reduce the errorSource's contribution to the error; serves as the LearningProjection's ``sender``.
+The type of the MonitoringMechanism required, and how it calculates its errorSignal, depend on the type of learning
+specified. For :ref:`Reinforcement Learning <LINK>`, a :doc:`ComparatorMechanism` is used.  This receives a
+MappingProjection directly from the errorSource, and receives a **target** stimulus from the process or system to
+which the errorSource belongs.  It calculates the errorSignal by comparing the output of the errorSource with a
+target stimulus provided as input to the process or system when it is :ref:`run <Run_Targets>`.  For
+:ref:`backpropagation <LINK>`, the type of MonitoringMechanism depends on the errorSource. If the errorSource
+receives a target directly, then a ComparatorMechanism is used.  This is the case if the errorSource is a standalone
+mechanism (one not in a process or system), the :keyword:`TERMINAL` mechanism of a standalone process (i.e., one not
+in a system), or the :keyword:`TERMINAL` mechanism of a system.  However, if the errorSource lies deeper in any process
+to which it  belongs (i.e., it is an :keyword:`ORIGIN` or :keyword:`INTERNAL` mechanism), and therefore does not
+receive a target directly, then a :doc:`WeightedErrorMechanism` mechanism is used.  This receives a MappingProjection
+carrying its error information from the MonitoringMechanism for the errorSource "above" it (i.e., the one to which it
+projects, and that is one closer to the target), rather than from a target stimulu. It calculates its errorSignal by
+taking account of the contribution that its errorSource makes to the errorSignal of the next mechanism in the process
+or system.
 
-**Target(s)**.  This specifies the value with which the output of an ``errorSource`` is compared, to calculate the
-``errorSignal``.  It is required by the :doc:`run <Run>` method of a process or sysetm when learning is specified.
-provides to the :keyword:`TARGET` inputState of a :doc:`ComparatorMechanism` mechanism.
+**LearningProjection**:  this calculates the changes to the
+:py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter of the MappingProjection to which it
+projects (its ``receiver``), so as to reduce the error generated by its
+:py:data:`errorSource <LearningProjection.errorSource>`. It uses the
+:py:data:`errorSignal <LearningProjection.errorSignal>` received from the
+:doc:`MonitoringMechanism <MonitoringMechanism>` that is its ``sender`` (and is associated with its errorSource).
+The changes to the weights it provides to its ``receiver`` are stored in its
+:py:data:`weightChangeMatrix <LearningProjection.weightChangeMatrix>` attribute.
 
-**Monitoring Mechanism**.  The errorSignal itself is computed by a MonitoringMechanism (the LearningProjection's
-``sender``).  The type of MonitoringMechanism, and how it computes its errorSignal, depends on the ``errorSource``.
-If it is a :keyword:`TERMINAL` mechanism of a process or system, the MonitoringMechanism is a :doc:`ComparatorMechanism`
-mechanism,  that compares the output of the ``errorSource`` (which projects to the ComparatorMechanism's :keyword:`SAMPLE`
-inputState) with a target value that is provided as input to the process or system when it is :ref:`run
-<Run_Targets>` (and projects to the ComparatorMechanism's :keyword:`TARGET` inputState). If the ``errorSource`` is not the
-final mechanism of a process or system, then the MonitoringMechanism is a :doc:`WeightedErrorMechanism` mechanism,
-which uses the output of the ProcessingMechanism(s) to which the errorSource projects to calculate the ``errorSignal``.
+.. _LearningProjection_Targets:
+
+**TARGET mechanisms**: When a process or system is created for which learning is specified, it identifies the learning
+mechanism(s) that will receive its :ref:`targets <Run_Targets>` (specified in the call to its ``execute`` or ``run``
+method), and designates these as :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms.
+These are listed in the process or system's :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute.
+All other learning mechanisms are designated as :py:data:`MONITORING <Keywords.Keywords.TARGET>`.
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms must be ComparatorMechanisms;
+if backpropagation is used for learning, they must also be associated with (i.e., receive a projection from) a
+:py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism.  It is important to note that, for this purpose,
+the status of a mechanism in a system takes precedence over its status in any of the processes to which it belongs.
+This means that, although all of the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanisms of a system are
+associated with :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms, this *not* necessarily true
+for the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism of a process.  This is because a mechanism may be
+the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism of a process, but not of the system to which it belongs
+(see :ref:`figure below <_LearningProjection_Target_vs_Terminal_Figure>` for an example).  In such cases, the mechanism
+is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learning, and is designated as a
+:py:data:`MONITORING <Keywords.Keywords.MONITORING>` mechanism and *not* a
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism.
+
+.. _LearningProjection_Target_vs_Terminal_Figure:
+
+    **TERMINAL** and **TARGET** Mechanisms in Learning
+
+    .. figure:: _static/LearningProjection_TERMINAL_vs_TARGET_fig.png
+       :alt: Schematic of mechanisms and projections involved in learning
+       :scale: 50 %
+
+       Mechanism 3 is the :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism for Process A,
+       However, it is also an :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>` mechanism of Process B.
+       Therefore, Mechanism 3 is designated as an :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>` mechanism for the
+       system, and Mechanism 4 is its :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>` mechanism.
+       As a consequence, if backpropagation is used for learning, then Mechanism 4 is assigned a ComparatorMechanism
+       and designated as a :py:data:`TARGET <Keywords.Keywords.TARGET>`, while Mechanism 3 is
+       assigned a WeightedErrorMechanism and designated as a :py:data:`MONITORING <Keywords.Keywords.MONITORING>`
+       mechanism.  This also means that, as long as Process A is specified as part of that system, it cannot be executed
+       on its own with learning enabled (since it will have no
+       :py:data:`TARGET <Keywords.Keywords.TARGET>`)
+
+.. _LearningProjection_Function:
+
+**Function**:  calculates the changes to the :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter
+of the LearningProjection's :py:data:`mappingProjection <LearningProjection.mappingProjection>`,  required to reduce the
+error for its :py:data:`errorSource <LearningProjection.errorSource>`.  The result is assigned to the
+LearningProjection's :py:data:`weightChangeMatrix <LearningProjection.weightChangeMatrix>` attribute. The default
+``function`` is :py:class:`Function.BackPropagation` (also known as the Generalized Delta Rule;
+see `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_). However, it can be
+assigned to other functions that implement different learning algorithms, as long as it is compatible with the
+``function`` of the LearningProjection's errorSource (how the error signal is computed depends on the nature of the
+function that generated the error); failure to match the ``function`` of the LearningProjection with the ``function``
+of the errorSource  will generate an error.
 
 .. _LearningProjection_Execution:
 
 Execution
 ---------
 
-LearningSignals are executed after all of the mechanisms in a process or system have executed, including the
-MonitoringMechanisms that provide the ``errorSignal`` to each LearningProjection.  When the LearningProjection is executed,
-it uses its ``errorSignal`` to calculate changes to the ``matrix`` of its ``mappingProjection``. Changes to the
-``matrix`` are  calculated so as to reduce the ``errorSignal``. The changes are assigned as the ``value`` of the
-LearningProjection, but are not applied to the ``matrix`` unit the next time the ``mappingProjection`` is executed
-(see :ref:`Lazy_Evaluation` for an explanation of "lazy" updating).
+LearningProjections are executed after all of the mechanisms in a process or system have executed, including the
+MonitoringMechanisms that provide the errorSignal to each LearningProjection.  When the LearningProjection is
+executed, it uses its :py:data:`errorSignal <LearningProjection.errorSignal>` to calculate changes to the
+:py:data:`matrix <MapptingProjection.MappingProjection.matrix>` of its
+:py:data:`mappingProjection <LearningProjection.mappingProjection>`. Changes to the matrix are calculated so as to
+reduce the errorSignal. The changes are assigned as the ``value`` of the LearningProjection, but are not applied to
+the matrix until the next time the :py:data:`mappingProjection <LearningProjection.mappingProjection>` is executed
+(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _LearningProjection_Class_Reference:
 
@@ -136,9 +233,11 @@ Class Reference
 """
 
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, SAMPLE
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
+                                                                                      COMPARATOR_SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, NEXT_LEVEL_PROJECTION
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
+                                                                                         NEXT_LEVEL_PROJECTION
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
@@ -222,72 +321,77 @@ class LearningProjection(Projection_Base):
     Arguments
     ---------
     sender : Optional[MonitoringMechanism or OutputState of one]
-        the source of the ``errorSignal`` for the LearningProjection. If it is not specified, one will be
+        the source of the :py:data:`mappingProjection <LearningProjection.mappingProjection>` for the
+        LearningProjection. If it is not specified, one will be
         :ref:`automatically created <LearningProjection_Automatic_Creation>` that is appropriate for
-        the LearningProjection's ``errorSource``.
+        the LearningProjection's :py:data:`errorSource <LearningProjection.errorSource>`.
 
     receiver : Optional[MappingProjection or ParameterState for ``matrix`` parameter of one]
-        a MappingProjection, the ``matrix`` of which is modified by the LearningProjection.
+        a MappingProjection, the :py:data:`matrix <MappingProjection.MappingProjection.matrix>` of which is modified by
+        the LearningProjection.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that specifies the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).[LINK]
-        By default, it contains an entry for the projection's default ``function`` and parameter assignments.
+        a dictionary that specifies the parameters for the projection, its function, and/or a custom function and its
+        parameters (see :doc:`Component` for specification of a params dict). By default, it contains an entry for
+        the projection's default ``function`` and parameter assignments.
 
     name : str : default LearningProjection-<index>
         a string used for the name of the LearningProjection.
         If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the PreferenceSet for the LearningProjection.
         If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     Attributes
     ----------
 
     sender : OutputState of MonitoringMechanism
-        source of errorSignal.
+        source of :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
 
     receiver : ParameterState of MappingProjection
-        parameterState for the ``matrix`` parameter of ``mappingProjection`` (the one to be modified by learning).
+        parameterState for the :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter of
+        :py:data:`mappingProjection <LearningProjection.mappingProjection>` (the one to be modified by learning).
 
     mappingProjection : MappingProjection
         the MappingProjection to which the LearningProjection projects;  more specifically, the owner of the
         parameterState that is the LearningProjection's ``receiver``.
 
     mappingWeightMatrix : 2d np.array
-        ``matrix`` parameter for the function of ``mappingProjection``.
+        :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter for the
+        :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
 
     errorSource : ProcessingMechanism
-        mechanism to which ``mappingProjection`` projects.
+        mechanism to which :py:data:`mappingProjection <LearningProjection.mappingProjection>` projects.
 
     errorSignal : 1d np.array
         value used as the ``variable`` for the LearningProjection's ``function`` to determine changes to
-        ``mappingWeightMatrix``.
+        :py:data:`mappingWeightMatrix <LearningProjection.mappingWeightMatrix>`.
 
     variable : 1d np.array
-        same as ``errorSignal``.
+        same as :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
 
     weightChangeMatrix : 2d np.array
-        matrix of changes to be made to the ``mappingWeightMatrix`` (rows correspond to sender, columns to receiver).
+        matrix of changes to be made to the :py:data:`mappingWeightMatrix <LearningProjection.mappingWeightMatrix>`
+        (rows correspond to sender, columns to receiver).
 
     value : 2d np.array
-        same as ``weightChangeMatrix``
+        same as :py:data:`weightChangeMatrix <LearningProjection.weightChangeMatrix>`.
 
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry` for conventions used in naming, including for default and duplicate names).[LINK]
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the PreferenceSet for projection.
         Specified in the prefs argument of the call to create the projection;
         if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see Description under PreferenceSet for details) [LINK].
+        (see :py:class:`PreferenceSet <LINK>` for details).
 
 
     """
@@ -800,7 +904,7 @@ FROM TODO:
                     elif self.function.componentName is kwRL:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = MappingProjection(sender=monitored_state,
-                                                         receiver=monitoring_mechanism.inputStates[SAMPLE],
+                                                         receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
                                                          name=self.errorSource.name +
                                                               ' to '+
                                                               monitoring_mechanism.name+' ' +
@@ -914,13 +1018,9 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    # # MODIFIED 9/4/16 OLD:
-    # def execute(self, input=NotImplemented, params=NotImplemented, time_scale=None, context=None):
-    # MODIFIED 9/4/16 NEW:
-    def execute(self, input=None, params=None, time_scale=None, context=None):
-    # MODIFIED 9/4/16 END
+    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
-
         DOCUMENT:
         LearnningSignal (Projection):
             - sender:  output of Monitoring Mechanism
@@ -947,6 +1047,11 @@ FROM TODO:
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
+
+        # # MODIFIED 12/20/16 NEW:
+        # if self.monitoringMechanism.status is UNCHANGED:
+        #     return np.zeros_like(self.value)
+        # # MODIFIED 12/20/16 END
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from MappingProjection's sender mechanism's outputState
@@ -977,3 +1082,7 @@ FROM TODO:
     @property
     def errorSignal(self):
         return self.sender.value
+
+    @property
+    def monitoringMechanism(self):
+        return self.sender.owner

@@ -15,62 +15,70 @@ Overview
 
 The ``run`` function is used for executing a mechanism, process or system.  It can be called directly, however,
 it is typically invoked by calling the ``run`` method of the object to be run.  It  executes an object by calling the
-object's ``execute`` method.  While an object's execute method can be called directy, using ``run`` is much easier
-because it:
+object's ``execute`` method.  While an object's execute method can be called directy, using its ``run`` method is much
+easier because it:
 
     * allows multiple rounds of execution to be run in sequence; the ``execute`` method of an object
       runs only a single execution of the object);
-
-    * uses simpler formats for specifying inputs (see below);
-
-    * manages timing factors (such as updating the ``CentralClock`` and presenting inputs at the correct time
-      for execution (see below).
-
-    * automatically aggregates results across executions and stores these in the results attribute of the object.
+    ..
+    * uses simpler formats for specifying :ref:`inputs <Run_Inputs>` and :ref:`targets <Run_Targets>`;
+    ..
+    * manages timing factors (such as updating the :py:class:`CentralClock <TimeScale.CentralClock>` and presenting
+    inputs in the correct :ref:`phase of execution <System_Execution_Phase>` of a system.
+    ..
+    * automatically aggregates results across executions and stores them in the results attribute of the object.
 
 COMMENT:
 Note:: The ``run`` function uses the ``construct_input`` function to convert the input into the format required by
 ``execute`` methods.
 COMMENT
 
-There are a few concepts to understand that will help in using the ``run`` function.  These are discussed below.
+Understanding a few basic concepts about how the ``run`` function operates will make it easier to use the ``execute``
+and ``run`` methods of PsyNeuLink objects.  These are discussed below.
+
+
+Scope of Execution
+~~~~~~~~~~~~~~~~~~
+
+When the ``run`` method of an object is called, it executes that object and all others within its scope of execution.
+For a :doc:`mechanism <Mechanism>`, the scope of execution is simply that mechanism.  For a :doc:`process <Process>`,
+the scope of execution is all of the mechanisms specified in its :py:data:`pathway <Process.Process_Base.pathway>`
+parameter.  For a :doc:`system <System>`, the scope of execution is all of the mechanisms in the processes specified
+in the system's :py:data:`processes <System.System_Base.processes>` parameter.
 
 .. _Run_Timing:
 
 Timing
 ~~~~~~
 
-When ``run`` is called, it executes objects within the scope of execution.  For a mechanism [LINK], the scope of 
-execution is simply that mechanism.  For a process [LINK], the scope of execution is all of the mechanisms specified 
-in its ``pathway`` [LINK] parameter.  For a system [LINK], the scope of execution is all of the mechanisms in the 
-processes specified in the system's ``processes`` parameter.
+PsyNeuLink supports two time scales for executing objects: :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>` and
+:py:data:`TRIAL <TimeScale.TimeScale.TRIAL>`.  Every mechanism defines how it is executed at one or both of these time
+scales, and its current mode of execution is determined by its :py:data:`timeScale
+<Mechanism.Mechanism_Base.timeScale>` parameter.
 
-PsyNeuLink supports two time scales for executing objects:``time_step`` and ``trial``.  Every mechanism in
-PsyNeuLink defines its execution at one or both of these time scales, and its current mode of execution can be set
-using its ``TimeScale`` [LINK] parameter.
+* :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>`:  this mode of execution is a mechanism's closest approximation
+  to continuous, or "real time" processing.  Execution of a time_step is defined as a single execution of all objects
+  in the scope of execution at their time_step time scale.  Mechanisms called upon to execute a time_step that do
+  not support that time scale of execution have the option of generating an exception, being ignored, or providing
+  their trial mode response, either on the first time_step, every time_step, or the last time_step in the sequence
+  being run (see :ref:`Timing <LINK> for further details).
 
-* **time_step**:  this mode of execution is a mechanism's closest approximation to continuous, or "real time"
-  processing.  Execution of a time_step is defined as a single execution of all objects in the scope of
-  execution for at their time_step time scale.  Mechanisms called upon to execute a time_step that do not support
-  that time scale of execution have the option of generating an exception, being ignored, or providing their trial
-  mode response, either on the first time_step, every time_step, or the last time_step in the sequence being run
-  (see Timing [LINK] for further details).
+* :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>`: this mode of execution is the "ballistic" execution of a
+  mechanism to a state that would have been achieved with time_step execution to a specified criterion.  The
+  criterion can be specified in terms of the number of time_steps, or a condition to be met by the mechanism's
+  output.  It is up to the mechanism how it implements its trial mode of execution (i.e., whether this is done by
+  internal numerical iteration or an analytic calculation). Execution of a trial is defined as the execution of a
+  trial of all of the objects in the scope of execution.
 
-* **trial**: this mode of execution is defined as the "ballistic" execution of a mechanism to a state that would
-  have been achieved with time_step execution to a specified criterion.  The criterion can be specified in terms of
-  the number of time_steps, or a condition to be met by the mechanism's output.  It is up to the mechanism how it
-  implements its trial mode of execution (i.e., whether this is done by internal numerical iteration or an analytic
-  calculation). A trial of execution is defined as the execution of a trial of all of the objects in the scope of
-  execution.
-
-The TimeScale argument to ``run`` determines the time scale for each round of execution: a time_step or a trial.
-When a process is run, each  mechanism is executed in the order that it appears in the ``pathway`` parameter of the
-process, once per round of execution.  When a system is run, the order of execution is determined by the system's `
-`executionList``, which is based on a graph analysis of the system's processes that determines the dependencies
-among its mechanisms (both within and  between processes). Execution of the mechanisms in a system also depends on
-the ``phaseSpec`` of each mechanism: this determines *when* in an execution sequence it should be run.  The
-``CentralClock``[LINK] is used to control timing, so executing a system requires that the ``CentralClock``
-be appropriately updated.
+The ``time_scale argument`` of an ``execute`` or ``run`` method determines the time scale for each round of
+execution: a time_step or a trial.  When a process is run, each mechanism is executed in the order that it appears
+in the :py:data:`pathway <Process.Process_Base.pathway>` parameter of the process, once per round of execution.  When a
+system is run, the order of execution is determined by the system's
+:py:data:`executionList <System.System_Base.executionList>` attribute, which is based on the system's
+:ref:`graph <System_Graph>` (a list of the dependencies among all of the mechanisms in the system).  Execution of the
+mechanisms in a system also depends on the :py:data:`phaseSpec <Mechanism.Mechanism_Base.phaseSpec>` of each mechanism:
+this determines *when* in an execution sequence it should be executed. The py:class:`CentralClock
+<TimeScale.CentralClock>` is used to control timing, so executing a system requires that it be appropriately updated.
 
 The ``run`` function handles all of the above factors automatically.
 
@@ -82,10 +90,10 @@ Inputs
 
 COMMENT:
     OUT-TAKES
-    The inputs for a single execution must contain a value for each inputState [LINK] of each :keyword:`ORIGIN`
-    mechanism [LINK] in the process or system, using the same format used for the format of the input for the execute
-    method of a process or system.  This can be specified as a nested set of lists, or an ndarray.  The exact structure
-    is determined by a number of factors, as described below.
+    The inputs for a single execution must contain a value for each :doc:`inputState <InputState> of each
+    :py:data:`ORIGIN` <Keywords.Keywords.ORIGIN>` mechanism in the process or system, using the same format
+    used for the format of the input for the execute method of a process or system.  This can be specified as a
+    nested set of lists, or an ndarray.  The exact structure is determined by a number of factors, as described below.
     the number of :keyword:`ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
     number of inputStates for each :keyword:`ORIGIN` mechanism, and whether the input to those inputStates is
     single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
@@ -106,30 +114,38 @@ COMMENT:
     an inputstae as a list or array (axis of an ndarray).
 COMMENT
 
-The primary purpose of the ``run`` function is to present the inputs for each round of execution to the inputStates of
-the relevant mechanisms.  The ``inputs`` argument is used to specify those input values.  For a mechanism, this is the
-input values for each of the mechanism's inputStates.  For a process or system, it assigns the inputs to the
-inputState(s) of the :keyword:`ORIGIN` mechanism(s) [LINK].  Input values can be specified either as a nested list or
-an ndarray. There are four factors that determine the levels of nesting for a list, or the dimensionality
-(number of axes) for an ndarray:
+The ``run`` function presents the inputs for each round of execution to the inputStates of the relevant mechanisms .
+These are specified in the ``inputs`` argument of the ``exeucte`` or ``run`` method.  For a mechanism, they comprise
+the input value for each of the mechanism's inputStates.  For a process or system, they comprise the input values for
+the inputState(s) of the :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism(s).  Input values can be specified in
+one of two ways: :ref:`sequence format <Run_Inputs_Sequence_Format>` and :ref:`mechanism format <Run_Dict_format>`.
+Sequence format is more complex, but does not require the specification of mechanisms by name, and thus may be more
+suitable for use with automated means of generating inputs.  Mechanism format requires that inputs be assigned to
+mechanisms by name, but is easier to use (as the order in which the mechanisms are specified does not matter).  Both
+require that inputs be specified as nested lists or ndarrays, that define the number of executions, mechanisms,
+inputStates and elements of each input value.  These factors determine the levels of nesting required for a list (or
+the dimensionality -- number of axes -- for an ndarray) and are described below, followed by a description of the two
+formats.
 
 * **Number of rounds of execution**.  If the ``inputs`` argument contains the input for more than one round of
   execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
   is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
-  used for the next relevant factor in the list below.
-
-* **Number of mechanisms.** If run is used for a system, and it  has more than one :keyword:`ORIGIN` mechanism, then
-  the next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms,
-  with each item containing the inputs for a given :keyword:`ORIGIN` mechanism within a round.  This factor is not
-  relevant when run is used for a single mechanism, a process (which only ever has one :keyword:`ORIGIN` mechanism),
-  or a system that has only one :keyword:`ORIGIN` mechanism.
-
-* **Number of inputStates.** In general, mechanisms have a single ("primary") inputState [LINK];  however, some types
-  of mechanisms can have more than one (e.g., ComparatorMechanisms [LINK] have two: one for their ``sample_input`` and
-  the other for their ``target_input``).  If any :keyword:`ORIGIN` mechanism in a process or system has more than one
-  inputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the set of
-  inputStates for each mechanism.
-
+  used for the next relevant factor in the list below.  If the number of inputs specified is less than the number of
+  executions, then the input list is cycled until the full number of executions is completed.
+..
+* **Number of mechanisms.** If run is used for a system, and it has more than one :keyword:`ORIGIN` mechanism, then the
+  next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms, with
+  each item containing the inputs for a given :keyword:`ORIGIN` mechanism within a round.  This factor is not releveant
+  when run is used for a single mechanism, a process (which only ever has one :keyword:`ORIGIN` mechanism), or a system
+  that has only one :keyword:`ORIGIN` mechanism.  It is also not relevant for the Mechanism format, since that separates
+  the inputs for each mechanism into separate entries of a dictionary (:ref:`see below <Run_Mechanism_Format>`).
+..
+* **Number of inputStates.** In general, mechanisms have a single ("primary") :ref:`inputState <Mechanism_InputStates>;
+  however, some types of mechanisms can have more than one (e.g., :doc:`ComparatorMechanisms` have two: one for
+  their ``sample_input`` and the other for their ``target_input``).  If any :keyword:`ORIGIN` mechanism in a process or
+  system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
+  is used for the set of inputStates for each mechanism.
+..
 * **Number of elements for the value of an inputState.** The input to an inputState can be a single element (e.g.,
   a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an inputState is only a
   single element, it should nevertheless always be specified as a list or a 1d np.array (it is internally converted to
@@ -140,16 +156,20 @@ an ndarray. There are four factors that determine the levels of nesting for a li
   dimensionality (number of axes) of ndarrays of an inputs argument.
 
 With these factors in mind, inputs can be specified in the simplest form possible (least number of nestings for a list,
-or lowest dimension of an ndarray).  Inputs can be specified using one of two formats:  *execution* format or
-*mechanism* format.
+or lowest dimension of an ndarray).  Inputs can be specified using one of two formats:
 
-**Sequence format** *(List[values] or ndarray):*
+.. _Run_Inputs_Sequence_Format:
 
-    This uses a nested list or ndarray to fully specify the input for each round of execution in a sequence.
-    The following provides a description of the sequeunce format for all of the combinations of the factors listed 
-    above. The figure shows examples.
+**Sequence format** *(List[values] or ndarray):*  This uses a nested list or ndarray to fully specify the input for
+each round of execution in a sequence.  It is more complex than the mechanism format, and for systems requires that the
+inputs for each mechanism be specified in the same order in which those mechahisms appear in the system's
+:py:data:`originMechanisms <System.System_Base.originMechanisms>` attribute.  This is generally the same order in which
+they are declared, and can be displayed using the system's :py:meth:`show <System.System_Base.show>` method).
+Although this is format is more demanding, it may be more suitable for automated input generation, since it does not
+require that mechanisms be referenced explicitly (though it is allowed). The following provides a description of the
+sequence format for all of the combinations of the factors listed above.  The figure shows examples.
 
-    *Lists:* if there is more than one round, then the outermost level of the list is used for the sequence of 
+    *Lists:* if there is more than one round, then the outermost level of the list is used for the sequence of
     executions.  If there is only one :keyword:`ORIGIN` mechanism and it has only one inputState (the most common 
     case), then is a single sublist is used for the input of each round.  If the :keyword:`ORIGIN` mechanism has more 
     than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a 
@@ -177,15 +197,20 @@ or lowest dimension of an ndarray).  Inputs can be specified using one of two fo
 
        Example input specifications in sequence format
 
-**Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
-    This provides a simpler format for specifying inputs.  It uses a dictionary, each entry of which is the sequence of
-    inputs for a given :keyword:`ORIGIN` mechanism.  The key for each entry is the :keyword:`ORIGIN` mechanism, and the
-    value contains either a list or ndarray specifying the sequence of inputs for that mechanism, one for each round
-    of execution.  If a list is used, and the mechanism has more than one inputState, then a sublist is used in each 
-    item of the list to specify the inputs for each of the mechanism's inputStates for that round.  If an ndarray is 
-    used, axis 0 is used for the sequence of rounds. If the mechanism has a single inputState, then axis 1 is used for 
-    the input for each round.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates, 
-    and axis 2 is used for the input to each inputState for each round.
+.. _Run_Inputs_Mechanism_Format:
+
+**Mechanism format** *(Dict[mechanism, List[values] or ndarray]):* This provides a simpler format for specifying
+inputs than the sequence format, and does not require that inputs for each mechanism be specified in a particular
+order.  However, it requires that each mechanism that receives inputs be referenced explicitly (instead of by order),
+which may be less suitable for automated forms of input generation.  It uses a dictionary, each entry of which is the
+sequence of inputs for an :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism;  there must be one such entry for
+each of the ORIGIN mechanisms of the process or system being run.  The key for each entry is the ORIGIN mechanism,
+and the value contains either a list or ndarray specifying the sequence of inputs for that mechanism, one for each
+rond of execution.  If a list is used, and the mechanism has more than one inputState, then a sublist is used in each
+item of the list to specify the inputs for each of the mechanism's inputStates for that round.  If an ndarray is
+used, axis 0 is used for the sequence of rounds. If the mechanism has a single inputState, then axis 1 is used for
+the input for each round.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates,
+and axis 2 is used for the input to each inputState for each round.
 
     .. figure:: _static/Mechanism_format_input_specs_fig.*
        :alt: Mechanism format input specification
@@ -198,25 +223,80 @@ or lowest dimension of an ndarray).  Inputs can be specified using one of two fo
 Initial Values
 ~~~~~~~~~~~~~~
 
-Any mechanism that is the source (sender) of a projection that closes a processing loop in a process or system, and
-that is not an :keyword:`ORIGIN` mechanism, is designated as :keyword:`INITIALIZE_CYCLE`. [LINK]  An initial value
-can be assigned to such mechanisms, that will be used to initialize the process or system when it is first run.  These
-values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry must be a
-mechanism designated as :keyword:`INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as its
-initial value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
-must equal the number of inputStates of the mechanism, and the size of each value must match that of the variable
-for the corresponding inputState.
+Any mechanism that is the ``sender`` of a projection that closes a loop in a process or system, and that is not an
+:keyword:`ORIGIN` mechanism, is designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`.
+An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
+first run.  These values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry
+must be a mechanism designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`, and its value an
+input for the mechanism to be used as its initial value.  The size of the input (length of the outermost level if it
+is a list, or axis 0 if it is an np.ndarray), must equal the number of inputStates of the mechanism, and the size of
+each value must match that of the variable for the corresponding inputState.
 
 .. _Run_Targets:
 
 Targets
 ~~~~~~~
 
-If a process or system uses learning, then target values must be provided (in the ``targets`` argument of ``run``).
-Like inputs, targets can be specified as a list or ndarray.  The size of the targets argument (length of the outermost
-level if a nested list, or axis 0 if an ndarray) must equal that of the inputs argument, and the size of each target
-must match that of the corresponding item of the target inputState for the monitoringMechanism of the process or system.
+If a process or system uses learning, then target values for each round of execution must be provided for each
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism in the process or system being run.  These are specified
+in the ``targets`` argument of the ``execute`` or ``run`` method, which can be in any of three formats.
+The two formats used for inputs (:ref:`sequence <Run_Inputs_Sequence_Format>` and ref:`mechanism
+<Run_Inputs_Mechanism_Format>`) can also be used for targets.  However, the format of the lists or ndarrays is simpler,
+since each :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism is assigned only a single target value;  so there
+is never the need for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of
+inputs.  Details concerning the use of the :ref:`sequence <Run_Targets_Sequence_Format>`  and
+:ref:`mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
+as a :ref:`function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of
+processing).
 
+If either the sequence or mechanism format is used, then the number of targets specified for each mechanism must
+equal the number specified for the inputs;  as with inputs, if the number of executions specified is greater than the
+number of inputs (and targets), then the list will be cycled until the number of executions specified is completed.
+If the function format is used, then it wil, be used to generate a target for each round of execution.
+
+The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
+the function format, must equal the number of :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms for the process
+or system being run (see process py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` or system
+:py:data:`targetMechanism <System.System_Base.targetMechanisms>` respectively), and the value of each target must
+match (in number and type of elements) that  of the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
+parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended.  Furthermore, if a
+range is specified for the output of the :keyword:`TERMINAL` mechanism with which the target is compared (that is,
+the mechanism that provides the ComparatorMechanism's :py:data:`sample <ComparatorMechanism.ComparatorMechanism.sample>`
+parameter, then the target must be within that range (for example, if the :keyword:`TERMINAL` mechanism is a
+:doc:`TransferMechanism` that uses a :py:class:`Logistic function <Function.Logistic>`, it's
+:py:data:`range <TransferMechanism.TransferMechanism.range>` is [0,1], so the target must be within that range).
+
+.. _Run_Targets_Sequence_Format:
+
+**Sequence format** *(List[values] or ndarray):*
+There are at most only three levels of nesting (or dimensions) required for targets: one for executions,
+one for mechanisms, and one for the elements of each input.  For a system with more than one TARGET mechanism,
+the targets must be specified in the same order as they appear in the system's
+:py:data:`targetMechanisms <System.System_Base.targetMechanisms>` attribute.  This should be the same order in which
+they are declared, and can be displayed using the system's :py:meth:`show <System.System_Base.show>` method). All
+other requirements are the same as those described for the sequence format for :ref:`inputs <Run_Sequence>`.
+
+.. _Run_Targets_Mechanism_Format:
+
+**Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
+There must be one entry in the dictionary for each of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms
+in the process or system being run, though the entries can be specified in any order.  For this reason, this format
+may be easier (and safer) to use. The value of each entry is a list or ndarray of the target values for that mechanism,
+one for each round of execution. There are at most only two levels of nesting (or dimensions) required for each
+entry: one for the execution, and the other for the elements of each input.  In all other respects,, the format is
+the same as described for the mechanism format for :ref:`inputs <Run_Mechanism>`.
+
+.. _Run_Targets_Function_Format:
+
+**Function format**[Function]:*
+The function must return an array with a number of items equal to the number of
+:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms for the process  or system being run, each of which must
+match (in nummber and type of elements) the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
+parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended. This format allows
+targets to be constructed programatically, in response to computations made during the run.
+COMMENT:
+    ADD EXAMPLE HERE
+COMMENT
 
 COMMENT:
    Module Contents
@@ -238,8 +318,10 @@ from collections import Iterable
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.System import System
-from PsyNeuLink.Components.Process import Process
+from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_SAMPLE, \
+                                                                                      COMPARATOR_TARGET
 
 class RunError(Exception):
      def __init__(object, error_value):
@@ -248,48 +330,47 @@ class RunError(Exception):
      def __str__(object):
          return repr(object.error_value)
 
-MECHANISM = "mechanism"
-PROCESS = "process"
-SYSTEM = 'system'
-
 @tc.typecheck
 def run(object,
-        # inputs:tc.any(list, dict, np.ndarray),
-        inputs,
+        # inputs,
+        inputs:tc.any(list, dict, np.ndarray),
         num_executions:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
-        targets:tc.optional(tc.any(list, np.ndarray))=None,
+        targets:tc.optional(tc.any(list, dict, np.ndarray, function_type))=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(function_type)=None,
         call_after_trial:tc.optional(function_type)=None,
         call_before_time_step:tc.optional(function_type)=None,
         call_after_time_step:tc.optional(function_type)=None,
-        time_scale:tc.optional(tc.enum)=None):
+        clock=CentralClock,
+        time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
+        context=None):
+
+    # DOCUMENT: FOR TARGETS IN LIST FORMAT FOR A SYSTEM, MUST BE ORDERED SAME AS targetMechanisms LIST;
+    #           THEY SHOULD BE IN THE ORDER THEY WERE DECLARED; CAN SEE THIS BY USING show() METHOD (WRITE NEW ONE?)
+    #           GET STRAIGHT MEANING OF "COMPARATOR_TARGET":  IS IT THE COMPARATOR OR THE MECHANISM BEING TRAINED?
     """Run a sequence of executions for a process or system
 
-    First, validate inputs.  Then, for each round of execution:
-
-    * call call_before_trial if specified;
-
-    * for each time_step in the trial:
-
-        * call call_before_time_step if specified;
-
-        * call ``object.execute`` with inputs, and append result to ``object.results``;
-
-        * call call_after_time_step if specified;
-
-    * call call_after_trial if specified.
-
+    First, validate inputs (and targets, if learning is enabled).  Then, for each round of execution:
+        * call call_before_trial if specified;
+        * for each time_step in the trial:
+            * call call_before_time_step if specified;
+            * call ``object.execute`` with inputs, and append result to ``object.results``;
+            * call call_after_time_step if specified;
+        * call call_after_trial if specified.
     Return ``object.results``.
 
     The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-
         * the inner-most dimension must equal the length of object.variable (i.e., the input to the object);
-
         * for mechanism format, the length of the value of all entries must be equal (== number of executions);
+        * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
+            Note: num_input_sets need not equal num_executions (the number of executions to actually run)
+                  if num_executions > num_input_sets:
+                      executions will cycle through input_sets, with the final one being only a partial cycle
+                  if num_executions < num_input_sets:
+                      the executions will only partially sample the input sets
 
     The targets argument must be the same length as the inputs argument.
 
@@ -297,7 +378,7 @@ def run(object,
         * if num_executions is :keyword:`None`, a number of executions is run equal to the length of the input
           (i.e., size of axis 0)
 
-    Arguments
+   Arguments
     ---------
 
     inputs : List[input] or ndarray(input) : default default_input_value for a single execution
@@ -311,7 +392,7 @@ def run(object,
         calls the ``initialize`` method of the system prior to a sequence of executions.
 
     initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default :keyword:`None`
-        the initial values for mechanisms designated as :keyword:`INITIALIZE_CYCLE` [LINK].
+        the initial values for mechanisms designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALZE_CYCLE>`.
 
     targets : List[input] or np.ndarray(input) : default :keyword:`None`
         the target values for monitoring mechanisms for each execution (used for learning).
@@ -345,7 +426,9 @@ def run(object,
         or of the outputStates of the :keyword:`TERMINAL` mechanisms for the process or system run
     """
 
-    inputs = _construct_inputs(object, inputs, targets)
+    inputs = _construct_stimulus_sets(object, inputs)
+    if targets:
+        targets = _construct_stimulus_sets(object, targets, is_target=True)
 
     object_type = get_object_type(object)
 
@@ -367,7 +450,7 @@ def run(object,
         # Otherwise, assume multiple executions...
         # MORE HERE
 
-        object.target = targets
+    object.targets = targets
 
     time_scale = time_scale or TimeScale.TRIAL
 
@@ -381,7 +464,7 @@ def run(object,
     #      IMPLEMENT learning_enabled FOR SYSTEM, WHICH FORCES LEARNING OF PROCESSES WHEN SYSTEM EXECUTES?
     #      OR MAKE LEARNING A PARAM THAT IS PASSED IN execute
     # If learning is specified, buffer current state and set to specified state
-    if not learning is None:
+    if learning is not None:
         try:
             learning_state_buffer = object._learning_enabled
         except AttributeError:
@@ -410,20 +493,25 @@ def run(object,
         raise RunError("The length of at least one input in the series is not the same as the rest")
 
     # Class-specific validation:
-    __validate_inputs(object=object, inputs=inputs, targets=targets, context="Run " + object.name)
+    context = context or RUN + "validating " + object.name
+    num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context=context)
+    if targets is not None:
+        _validate_targets(object, targets, num_inputs_sets, context=context)
 
+    # INITIALIZATION
     if reset_clock:
-        CentralClock.trial = 0
-        CentralClock.time_step = 0
-
+        clock.trial = 0
+        clock.time_step = 0
     if initialize:
         object.initialize()
 
+    # SET UP TIMING
     if object_type == MECHANISM:
         time_steps = 1
     else:
         time_steps = object.numPhases
 
+    # EXECUTE
     for execution in range(num_executions):
 
         if call_before_trial:
@@ -436,15 +524,32 @@ def run(object,
 
             input_num = execution%len(inputs)
 
-            if object_type == PROCESS and targets:
-                object.target = targets[input_num]
+            # Assign targets:
+            if targets is not None:
 
-            result = object.execute(inputs[input_num][time_step],time_scale=time_scale)
+                if isinstance(targets, function_type):
+                    object.target = targets
+
+                elif object_type == PROCESS:
+                    object.target = targets[input_num]
+
+                elif object_type == SYSTEM:
+                    # This assumes that target order is aligned with order of targets in targetMechanisms list;
+                    # it is tested for dict format in _construct_stimulus_sets, but can't be insured for list format.
+                    for i, target in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
+                        # Assign current target to value attribute of ProcessInputState of each process
+                        # to which the targetMechanism belongs (i.e., that project to it's COMPARATOR_TARGET inputState)
+                        for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+                            process_target_projection.sender.value = targets[input_num][i]
+
+            if RUN in context and not EVC_SIMULATION in context:
+                context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+            result = object.execute(inputs[input_num][time_step],clock=clock, time_scale=time_scale, context=context)
 
             if call_after_time_step:
                 call_after_time_step()
 
-            CentralClock.time_step += 1
+            clock.time_step += 1
 
         # object.results.append(result)
         if isinstance(result, Iterable):
@@ -456,7 +561,7 @@ def run(object,
         if call_after_trial:
             call_after_trial()
 
-        CentralClock.trial += 1
+        clock.trial += 1
 
     # Restore learning state
     try:
@@ -469,7 +574,7 @@ def run(object,
     return object.results
 
 @tc.typecheck
-def _construct_inputs(object, inputs, targets=None):
+def _construct_stimulus_sets(object, stimuli, is_target=False):
     """Return an nparray of stimuli suitable for use as inputs arg for system.run()
 
     If inputs is a list:
@@ -493,7 +598,7 @@ def _construct_inputs(object, inputs, targets=None):
                if phase (from mech tuple) is modulus of time step:
                    draw from each list; else pad with zero
     DIMENSIONS:
-       axis 0: num_executions
+       axis 0: num_input_sets
        axis 1: object._phaseSpecMax
        axis 2: len(object.originMechanisms)
        axis 3: len(mech.inputStates)
@@ -507,173 +612,261 @@ def _construct_inputs(object, inputs, targets=None):
 
     object_type = get_object_type(object)
 
-    # EXECUTION LIST
+    # Stimuli in sequence format
+    if isinstance(stimuli, (list, np.ndarray)):
+        stim_list = _construct_from_stimulus_list(object, stimuli, is_target=is_target)
 
-    if isinstance(inputs, (list, np.ndarray)):
+    # Stimuli in mechanism format
+    elif isinstance(stimuli, dict):
+        stim_list = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
 
-        # Check for header
-        headers = None
-        if isinstance(inputs[0],Iterable) and any(isinstance(header, Mechanism) for header in inputs[0]):
-            headers = inputs[0]
-            del inputs[0]
-            for mech in object.originMechanisms:
-                if not mech in headers:
-                    raise SystemError("Header is missing for origin mechanism {} in stimulus list".
-                                      format(mech.name, object.name))
-            for mech in headers:
-                if not mech in object.originMechanisms.mechanisms:
-                    raise SystemError("{} in header for stimulus list is not an origin mechanism in {}".
-                                      format(mech.name, object.name))
-
-        inputs_array = np.array(inputs)
-        if inputs_array.dtype in {np.dtype('int64'),np.dtype('float64')}:
-            max_dim = 2
-        elif inputs_array.dtype is np.dtype('O'):
-            max_dim = 1
-        else:
-            raise SystemError("Unknown data type for inputs in {}".format(object.name))
-        while inputs_array.ndim > max_dim:
-            # inputs_array = np.hstack(inputs_array)
-            inputs_array = np.concatenate(inputs_array)
-        inputs = inputs_array.tolist()
-
-        num_executions = __validate_inputs(object=object,
-                                     inputs=inputs,
-                                     targets=targets,
-                                     num_phases=1,
-                                     context='contruct_inputs for ' + object.name)
-
-        # If inputs are for a process, no need to deal with phase so just return
-        if object_type in {MECHANISM, PROCESS}:
-            return inputs
-
-        mechs = list(object.originMechanisms)
-        num_mechs = len(object.originMechanisms)
-        inputs_flattened = np.hstack(inputs)
-        # inputs_flattened = np.concatenate(inputs)
-        input_elem = 0    # Used for indexing w/o headers
-        execution_offset = 0  # Used for indexing w/ headers
-        stim_list = []
-
-        for execution in range(num_executions):
-            execution_len = 0  # Used for indexing w/ headers
-            stimuli_in_execution = []
-            for phase in range(object.numPhases):
-                stimuli_in_phase = []
-                for mech_num in range(num_mechs):
-                    mech, runtime_params, phase_spec = list(object.originMechanisms.mech_tuples)[mech_num]
-                    mech_len = np.size(mechs[mech_num].variable)
-                    # Assign stimulus of appropriate size for mech and fill with 0's
-                    stimulus = np.zeros(mech_len)
-                    # Assign input elements to stimulus if phase is correct one for mech
-                    if phase == phase_spec:
-                        for stim_elem in range(mech_len):
-                            # stimulus[stim_elem] = inputs_flattened[input_elem]
-                            if headers:
-                                input_index = headers.index(mech) + execution_offset
-                            else:
-                                input_index = input_elem
-                            stimulus[stim_elem] = inputs_flattened[input_index]
-                            input_elem += 1
-                            execution_len += 1
-                    # Otherwise, assign vector of 0's with proper length
-                    stimuli_in_phase.append(stimulus)
-                stimuli_in_execution.append(stimuli_in_phase)
-            stim_list.append(stimuli_in_execution)
-            execution_offset += execution_len
-
-    # DICT OF STIMULUS LISTS
-
-    elif isinstance(inputs, dict):
-
-        # Validate that there is a one-to-one mapping of entries to origin mechanisms in the system
-        for mech in object.originMechanisms:
-            if not mech in inputs:
-                raise SystemError("Stimulus list is missing for origin mechanism {}".format(mech.name, object.name))
-        for mech in inputs.keys():
-            if not mech in object.originMechanisms.mechanisms:
-                raise SystemError("{} is not an origin mechanism in {}".format(mech.name, object.name))
-
-        # Convert all items to 2D arrays:
-        # - to match standard format of mech.variable
-        # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
-        #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
-
-        # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
-        for mech, stim_list in inputs.items():
-
-            # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
-            if not isinstance(stim_list[0], Iterable):
-                # If mech.variable is also of length 1
-                if np.size(mech.variable) == 1:
-                    # Wrap each entry in a list
-                    for i in range(len(stim_list)):
-                        inputs[mech][i] = [stim_list[i]]
-                # Length of mech.variable is > 1, so check if length of list matches it
-                elif len(stim_list) == np.size(mech.variable):
-                    # Assume that the list consists of a single stimulus, so wrap it in list
-                    inputs[mech] = [stim_list]
-                else:
-                    raise SystemError("Inputs for {} of {} are not properly formatted ({})".
-                                      format(append_type_to_name(mech),object.name))
-
-            for stim in inputs[mech]:
-                # # MODIFIED 10/28/16 OLD:
-                # if not iscompatible(stim, mech.variable):
-                # MODIFIED 10/28/16 NEW:
-                if not iscompatible(np.atleast_2d(stim), mech.variable):
-                # MODIFIED 10/28/16 END
-                    raise SystemError("Incompatible input ({}) for {} ({})".
-                                      format(stim, append_type_to_name(mech), mech.variable))
-
-        stim_lists = list(inputs.values())
-        num_executions = len(stim_lists[0])
-
-        # Check that all lists have the same number of stimuli
-        if not all(len(np.array(stim_list)) == num_executions for stim_list in stim_lists):
-            raise SystemError("The length of all the stimulus lists must be the same")
-
-        stim_list = []
-
-        # If inputs are for a process, construct stimulus list from dict without worrying about phases
-        if object_type in {MECHANISM, PROCESS}:
-            for i in range(num_executions):
-                stims_in_execution = []
-                for mech in inputs:
-                    stims_in_execution.append(inputs[mech][i])
-                stim_list.append(stims_in_execution)
-
-        # Otherwise, for system, construct stimulus from dict with phases
-        else:
-            for execution in range(num_executions):
-                stimuli_in_execution = []
-                for phase in range(object.numPhases):
-                    stimuli_in_phase = []
-                    for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
-                        for process, status in mech.processes.items():
-                            if process._isControllerProcess:
-                                continue
-                            if mech.systems[object] in {ORIGIN, SINGLETON}:
-                                if phase == phase_spec:
-                                    stimulus = np.array(inputs[mech][execution])
-                                    if not isinstance(stimulus, Iterable):
-                                        stimulus = np.array([stimulus])
-                                else:
-                                    if not isinstance(inputs[mech][execution], Iterable):
-                                        stimulus = np.zeros(1)
-                                    else:
-                                        stimulus = np.zeros(len(inputs[mech][execution]))
-                            stimuli_in_phase.append(stimulus)
-                    stimuli_in_execution.append(stimuli_in_phase)
-                stim_list.append(stimuli_in_execution)
+    elif is_target and isinstance(stimuli, function_type):
+        return stimuli
 
     else:
-        raise SystemError("inputs arg for {}._construct_inputs() must be a dict or list".format(object.name))
+        if is_target:
+            stim_type = 'targets'
+        else:
+            stim_type = 'inputs'
+        raise SystemError("{} arg for {}._construct_stimulus_sets() must be a dict or list".
+                          format(stim_type, object.name))
 
     stim_list_array = np.array(stim_list)
     return stim_list_array
 
-def __validate_inputs(object, inputs=None, targets=None, num_phases=None, context=None):
+def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
+
+    object_type = get_object_type(object)
+
+    # Check for header
+    headers = None
+    if isinstance(stimuli[0],Iterable) and any(isinstance(header, Mechanism) for header in stimuli[0]):
+        headers = stimuli[0]
+        del stimuli[0]
+        for mech in object.originMechanisms:
+            if not mech in headers:
+                raise SystemError("Header is missing for origin mechanism {} in stimulus list".
+                                  format(mech.name, object.name))
+        for mech in headers:
+            if not mech in object.originMechanisms.mechanisms:
+                raise SystemError("{} in header for stimulus list is not an origin mechanism in {}".
+                                  format(mech.name, object.name))
+
+    inputs_array = np.array(stimuli)
+    if inputs_array.dtype in {np.dtype('int64'),np.dtype('float64')}:
+        max_dim = 2
+    elif inputs_array.dtype is np.dtype('O'):
+        max_dim = 1
+    else:
+        raise SystemError("Unknown data type for inputs in {}".format(object.name))
+    while inputs_array.ndim > max_dim:
+        # inputs_array = np.hstack(inputs_array)
+        inputs_array = np.concatenate(inputs_array)
+    inputs = inputs_array.tolist()
+
+    context = context or RUN + ' constructing stimuli for ' + object.name
+    num_input_sets = _validate_inputs(object=object,
+                                      inputs=inputs,
+                                      num_phases=1,
+                                      context=context)
+
+    # If inputs are for a mechanism or process, no need to deal with phase so just return
+    if object_type in {MECHANISM, PROCESS} or is_target:
+        return inputs
+
+    mechs = list(object.originMechanisms)
+    num_mechs = len(object.originMechanisms)
+    inputs_flattened = np.hstack(inputs)
+    # inputs_flattened = np.concatenate(inputs)
+    input_elem = 0    # Used for indexing w/o headers
+    execution_offset = 0  # Used for indexing w/ headers
+    stim_list = []
+
+    for execution in range(num_input_sets):
+        execution_len = 0  # Used for indexing w/ headers
+        stimuli_in_execution = []
+        for phase in range(object.numPhases):
+            stimuli_in_phase = []
+            for mech_num in range(num_mechs):
+                mech, runtime_params, phase_spec = list(object.originMechanisms.mech_tuples)[mech_num]
+                mech_len = np.size(mechs[mech_num].variable)
+                # Assign stimulus of appropriate size for mech and fill with 0's
+                stimulus = np.zeros(mech_len)
+                # Assign input elements to stimulus if phase is correct one for mech
+                if phase == phase_spec:
+                    for stim_elem in range(mech_len):
+                        # stimulus[stim_elem] = inputs_flattened[input_elem]
+                        if headers:
+                            input_index = headers.index(mech) + execution_offset
+                        else:
+                            input_index = input_elem
+                        stimulus[stim_elem] = inputs_flattened[input_index]
+                        input_elem += 1
+                        execution_len += 1
+                # Otherwise, assign vector of 0's with proper length
+                stimuli_in_phase.append(stimulus)
+            stimuli_in_execution.append(stimuli_in_phase)
+        stim_list.append(stimuli_in_execution)
+        execution_offset += execution_len
+    return stim_list
+
+def _construct_from_stimulus_dict(object, stimuli, is_target):
+
+    object_type = get_object_type(object)
+
+    # Stimuli are inputs:
+    #    validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
+    if not is_target:
+        for mech in object.originMechanisms:
+            if not mech in stimuli:
+                raise SystemError("Stimulus list is missing for origin mechanism {}".format(mech.name, object.name))
+        for mech in stimuli.keys():
+            if not mech in object.originMechanisms.mechanisms:
+                raise SystemError("{} is not an origin mechanism in {}".format(mech.name, object.name))
+
+    # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
+    #       and is handled where stimuli for a system are assigned to phases below
+
+    # Stimuli are targets:
+    #    - validate that there is a one-to-one mapping of target entries to target mechanisms in the process or system;
+    #    - insure that order of target stimuli in dict parallels order of target mechanisms in targetMechanisms list
+    else:
+        # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
+        # FIX: TRY USING compare METHOD OF DICT OR LIST?
+        # Check that every target in the process or system receives a projection from a mechanism named in the dict
+        # from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import SAMPLE
+        for target in object.targetMechanisms:
+            # If any projection to a target does not have a sender in the stimulus dict, raise an exception
+            if not any(mech is projection.sender.owner for
+                       projection in target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections
+                       for mech in stimuli.keys()):
+                    raise SystemError("Entry for {} is missing from specification of targets for run of {}".
+                                      format(target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections[0].sender.owner.name,
+                                             object.name))
+
+        # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
+
+        # Check that each target referenced in the dict (key)
+        #     is the name of a mechanism that projects to a target (comparator) in the system
+        terminal_to_target_mapping = {}
+        for mech in stimuli.keys():
+            # If any mechanism in the stimulus dict does not have a projection to the target, raise an exception
+            if not any(target is projection.receiver.owner for
+                       projection in mech.outputState.sendsToProjections
+                       for target in object.targetMechanisms):
+                raise RunError("{} is not a target mechanism in {}".format(mech.name, object.name))
+            # Get target mech (comparator) for each entry in stimuli dict:
+            terminal_to_target_mapping[mech] = mech.outputState.sendsToProjections[0]
+
+        # Insure that target lists in dict are accessed in the same order as the
+        #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
+        from collections import OrderedDict
+        ordered_targets = OrderedDict()
+        for target in object.targetMechanisms:
+            # Get the process to which the TARGET mechanism belongs:
+            try:
+                process = next(projection.sender.owner for
+                               projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections if
+                               isinstance(projection.sender, ProcessInputState))
+            except StopIteration:
+                raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
+                               "supposed to be in targetMechanisms for {}".
+                               format(target.name, object.name))
+            # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
+            terminal_mech = process.terminalMechanisms[0]
+            try:
+                ordered_targets[terminal_mech] = stimuli[terminal_mech]
+            except KeyError:
+                raise RunError("{} (of {} process) not found target specification for run of {}".
+                               format(terminal_mech, object.name))
+        stimuli = ordered_targets
+
+    # Convert all items to 2D arrays:
+    # - to match standard format of mech.variable
+    # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
+    #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
+
+    # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
+    for mech, stim_list in stimuli.items():
+
+        # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
+        if not isinstance(stim_list[0], Iterable):
+            # If mech.variable is also of length 1
+            if np.size(mech.variable) == 1:
+                # Wrap each entry in a list
+                for i in range(len(stim_list)):
+                    stimuli[mech][i] = [stim_list[i]]
+            # Length of mech.variable is > 1, so check if length of list matches it
+            elif len(stim_list) == np.size(mech.variable):
+                # Assume that the list consists of a single stimulus, so wrap it in list
+                stimuli[mech] = [stim_list]
+            else:
+                raise SystemError("Stimuli for {} of {} are not properly formatted ({})".
+                                  format(append_type_to_name(mech),object.name))
+
+        for stim in stimuli[mech]:
+            if not iscompatible(np.atleast_2d(stim), mech.variable):
+                raise SystemError("Incompatible stimuli ({}) for {} ({})".
+                                  format(stim, append_type_to_name(mech), mech.variable))
+
+    stim_lists = list(stimuli.values())
+    num_input_sets = len(stim_lists[0])
+
+    # Check that all lists have the same number of stimuli
+    if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
+        raise SystemError("The length of all the stimulus lists must be the same")
+
+    stim_list = []
+
+    # If stimuli are for a process or are targets, construct stimulus list from dict without worrying about phases
+    if object_type in {MECHANISM, PROCESS} or is_target:
+        for i in range(num_input_sets):
+            stims_in_execution = []
+            for mech in stimuli:
+                stims_in_execution.append(stimuli[mech][i])
+            stim_list.append(stims_in_execution)
+
+    # Otherwise, for inputs to a system, construct stimulus from dict with phases
+    elif object_type is SYSTEM:
+        for execution in range(num_input_sets):
+            stimuli_in_execution = []
+            for phase in range(object.numPhases):
+                stimuli_in_phase = []
+
+                # MODIFIED 12/19/16 OLD:
+                # for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
+                # MODIFIED 12/19/16 NEW:
+                # Only assign inputs to processes for which there were originMechanisms specified
+                #    (i.e., *not* processes constructed during initialization, such as EVC prediction mechanisms)
+                #    and assign them in the order they appear in object.processes
+                for i in range(len(object.originMechanisms)):
+                    mech, runtime_params, phase_spec = object.processes[i]._mech_tuples[0]
+                # MODIFIED 12/19/16 END
+
+                    for process, status in mech.processes.items():
+                        if process._isControllerProcess:
+                            continue
+                        if mech.systems[object] in {ORIGIN, SINGLETON}:
+                            if phase == phase_spec:
+                                stimulus = np.array(stimuli[mech][execution])
+                                if not isinstance(stimulus, Iterable):
+                                    stimulus = np.array([stimulus])
+                            else:
+                                if not isinstance(stimuli[mech][execution], Iterable):
+                                    stimulus = np.zeros(1)
+                                else:
+                                    stimulus = np.zeros(len(stimuli[mech][execution]))
+                        stimuli_in_phase.append(stimulus)
+                stimuli_in_execution.append(stimuli_in_phase)
+            stim_list.append(stimuli_in_execution)
+
+    else:
+        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
+                       format(object_type))
+
+    return stim_list
+
+def _validate_inputs(object, inputs=None, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
@@ -683,7 +876,7 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
             axis 1: inputs for each time step of a trial (len == _phaseSpecMax of system (no. of time_steps per trial)
             axis 2: inputs to the system, one for each process (len == number of processes in system)
 
-    returns number of executions implicit in inputs
+    returns number of input_sets (one per execution)
     """
 
     object_type = get_object_type(object)
@@ -700,35 +893,15 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
 
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+            # Get a sample length (use first, since it is convenient and all are the same)
             mech_len = len(object.firstMechanism.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
                 raise SystemError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))
 
-        # If learning is enabled, validate target
-        if targets and object._learning_enabled:
-            num_inputs = np.size(inputs, inputs.ndim-3)
-            target_array = np.atleast_2d(targets)
-            target_len = np.size(target_array[0])
-            num_targets = np.size(target_array, 0)
+        num_input_sets = np.size(inputs, inputs.ndim-3)
 
-            if target_len != np.size(object.comparatorMechanism.target):
-                if num_targets > 1:
-                    plural = 's'
-                else:
-                    plural = ''
-                raise RunError("Length ({}) of target{} specified for run of {}"
-                                   " does not match expected target length of {}".
-                                   format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
-
-            if any(np.size(target) != target_len for target in target_array):
-                raise RunError("Not all of the targets specified for {} are of the same length".
-                                   format(append_type_to_name(object)))
-
-            if num_targets != num_inputs:
-                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
-                                   format(num_targets, num_inputs, append_type_to_name(object)))
+        return num_input_sets
 
     elif object_type is SYSTEM:
 
@@ -761,14 +934,13 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                                          object.name,
                                          len(object.originMechanisms)))
 
-
         # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         # Calcluate total number of executions
         num_mechs = len(object.originMechanisms)
         mechs = list(object.originMechanisms)
-        num_executions = 0
+        num_input_sets = 0
         executions_remain = True
         input_num = 0
         inputs_array = np.array(inputs)
@@ -803,24 +975,159 @@ def __validate_inputs(object, inputs=None, targets=None, num_phases=None, contex
                                                                      inputs[inner_input_num],
                                                                      mech_len,
                                                                      append_type_to_name(mechs[inner_input_num],'mechanism'),
-                                                                     num_executions))
+                                                                     num_input_sets))
                                         inner_input_num += 1
                                         mech_len = np.size(mechs[inner_input_num].variable)
                                 elif np.size(inner_input) != mech_len * num_phases:
                                     raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
                                                       "of input for {} in execution {}".
                                                       format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
-                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_executions))
+                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_input_sets))
                                 else:
                                     inner_input_num += 1
                             input_num += 1
                             break
                     input_num += 1
-                num_executions += 1
+                num_input_sets += 1
             except IndexError:
                 executions_remain = False
 
-        return num_executions
+        return num_input_sets
+
+    else:
+        raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
+                       format(object.__class__.__name__))
+
+def _validate_targets(object, targets, num_input_sets, context=None):
+    """
+    num_targets = number of target stimuli per execution
+    num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
+    """
+
+    object_type = get_object_type(object)
+    num_target_sets = None
+
+    if isinstance(targets, function_type):
+        # Check that function returns a number of items equal to the number of target mechanisms
+        generated_targets = targets()
+        num_targets = len(generated_targets)
+        num_target_mechs = len(object.targetMechanisms)
+        if num_targets != num_target_mechs:
+            raise RunError("function for target argument of run returns {} items "
+                           "but {} has {} targets".
+                           format(num_targets, object.name, num_target_mechs))
+
+        # Check that each target generated is compatible with the targetMechanism for which it is intended
+        for target, targetMechanism in zip(generated_targets, object.targetMechanisms):
+            target_len = np.size(target)
+            if target_len != np.size(targetMechanism.target):
+                if num_target_sets > 1:
+                    plural = 's'
+                else:
+                    plural = ''
+                raise RunError("Length ({}) of target{} specified for run of {}"
+                                   " does not match expected target length of {}".
+                                   format(target_len, plural, append_type_to_name(object),
+                                          np.size(object.comparatorMechanism.target)))
+        return
+
+    if object_type is PROCESS:
+
+        # If learning is enabled, validate target
+        if object._learning_enabled:
+            target_array = np.atleast_2d(targets)
+            target_len = np.size(target_array[0])
+            num_target_sets = np.size(target_array, 0)
+
+            if target_len != np.size(object.comparatorMechanism.target):
+                if num_target_sets > 1:
+                    plural = 's'
+                else:
+                    plural = ''
+                raise RunError("Length ({}) of target{} specified for run of {}"
+                                   " does not match expected target length of {}".
+                                   format(target_len, plural, append_type_to_name(object),
+                                          np.size(object.comparatorMechanism.target)))
+
+            if any(np.size(target) != target_len for target in target_array):
+                raise RunError("Not all of the targets specified for {} are of the same length".
+                                   format(append_type_to_name(object)))
+
+            if num_target_sets != num_input_sets:
+                raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
+                                   format(num_target_sets, num_input_sets, append_type_to_name(object)))
+
+    elif object_type is SYSTEM:
+
+        # FIX: VALIDATE THE LEARNING IS ENABLED
+        # FIX: CONSOLIDATE WITH TESTS FOR PROCESS ABOVE?
+
+        # If the system has any process with learning enabled
+        if any(process._learning_enabled for process in object.processes):
+
+            HOMOGENOUS_TARGETS = 1
+            HETEROGENOUS_TARGETS = 0
+
+            if targets.dtype in {np.dtype('int64'),np.dtype('float64')}:
+                process_structure = HOMOGENOUS_TARGETS
+            elif targets.dtype is np.dtype('O'):
+                process_structure = HETEROGENOUS_TARGETS
+            else:
+                raise SystemError("Unknown data type for inputs in {}".format(object.name))
+
+            # Processed targets for a system should be 1 dim less than inputs (since don't include phase)
+            # If inputs to processes of system are heterogeneous, inputs.ndim should be 2:
+            # If inputs to processes of system are homogeneous, inputs.ndim should be 3:
+            expected_dim = 2 + process_structure
+
+            if targets.ndim != expected_dim:
+                raise SystemError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
+                                  format(object.name, expected_dim))
+
+            # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
+            num_target_sets = np.size(targets,PROCESSES_DIM-1)
+            # Check that number of target values in each execution equals the number of target mechanisms in the system
+            if num_target_sets != len(object.targetMechanisms):
+                raise SystemError("The number of target values for each execution ({}) in the call to {}.run() "
+                                  "does not match the number of processes in the system ({})".
+                                  format(
+                                         # np.size(targets,PROCESSES_DIM),
+                                         num_target_sets,
+                                         object.name,
+                                         len(object.originMechanisms)))
+
+            # MODIFIED 12/23/16 NEW:
+            # Validate that each target is compatible with its corresponding targetMechanism
+            # FIX: CONSOLIDATE WITH TESTS FOR PROCESS AND FOR function_type ABOVE
+            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.targetMechanisms
+            target_array = np.atleast_2d(targets)
+
+            for target, targetMechanism in zip(targets, object.targetMechanisms):
+                target_len = np.size(target)
+                if target_len != np.size(targetMechanism.target):
+                    if num_target_sets > 1:
+                        plural = 's'
+                    else:
+                        plural = ''
+                    raise RunError("Length ({}) of target{} specified for run of {}"
+                                       " does not match expected target length of {}".
+                                       format(target_len, plural, append_type_to_name(object),
+                                              np.size(object.comparatorMechanism.target)))
+
+                if any(np.size(target) != target_len for target in target_array):
+                    raise RunError("Not all of the targets specified for {} are of the same length".
+                                       format(append_type_to_name(object)))
+
+                if num_target_sets != num_input_sets:
+                    raise RunError("Number of targets ({}) does not match number of inputs ({}) specified in run of {}".
+                                       format(num_target_sets, num_input_sets, append_type_to_name(object)))
+            # MODIFIED 12/23/16 END
+
+    else:
+        raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_targets in Run module for ".
+                       format(object.__class__.__name__))
+
+    return num_target_sets
 
 def get_object_type(object):
     if isinstance(object, Mechanism):

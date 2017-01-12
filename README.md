@@ -37,6 +37,8 @@ To install the package, navigate to the cloned directory in a terminal, switch t
 
 There is a tutorial available to introduce the basic syntax and usage of PsyNeuLink. To access it, make sure you fulfill the requirements mentioned above, then run the terminal command "jupyter notebook" from the root PsyNeuLink directory. Once the directory opens in your browser, click on "PsyNeuLink Tutorial.ipynb"
 
+If you have trouble installing PsyNeuLink, or run into other problems, please contact psyneulinkhelp@princeton.edu. 
+
 ## Purpose
 
 To provide an environment for implementing models of mind/brain function that is modular, customizable and extensible.  
@@ -87,11 +89,10 @@ customizing and executing them:
                    and generates an error signal used for learning.
     
          + Projection: 
-             takes the output of a mechanism, possibly transforms it, and uses it to determine the operation of 
-             another mechanism. There are three primary types:
+             takes the output of a mechanism, and conveys it as input to another mechanism. There are three primary types:
     
              + MappingProjection:
-                takes the output of a mechanism, transform it as necessary to be usable by a receiver mechanism,
+                takes the output of a sender mechanism, transform it as necessary to be usable by a receiver mechanism,
                 and provides it as input to that receiver mechanism.
     
              + ControlProjection:
