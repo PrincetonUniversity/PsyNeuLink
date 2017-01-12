@@ -1,3 +1,4 @@
+
 # PsyNeuLink Sytle Conventions
 
 ### NAMING:
@@ -27,7 +28,7 @@
 #### Elements and items of lists and arrays:
 - "value": any specified token (numeric or string);
     generally references to the entity received, represented or output by a state or projection,
-    but can also refer to the specification of an attribute
+    but can also refer to the specification of an attribute∞∞
 - "element": refers to the finest grade constituent (highest dimension / axis)
 - "item" refers to any constituent at any level higher than the highest dimension / axis
 - Example:  [[a, b, c] [d, e, f]]
