@@ -290,12 +290,8 @@ Class Reference
 ---------------
 
 """
-from PsyNeuLink.Components.ShellClasses import *
-# from PsyNeuLink.Components.Functions.Function import Function_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 
 OBJECT = 0
