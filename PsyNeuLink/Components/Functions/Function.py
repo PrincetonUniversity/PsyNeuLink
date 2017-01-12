@@ -2102,8 +2102,6 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         return results
 
 
-
-
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
 #endregion
 # TBI
@@ -2325,6 +2323,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
 #region *****************************************   OBJECTIVE FUNCTIONS ************************************************
 #endregion
-# TBI
+
 
 #region  *****************************************   REGISTER FUNCTIONS ************************************************
