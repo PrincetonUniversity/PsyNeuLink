@@ -33,7 +33,7 @@ An outputState can be created by calling its constructor, but in general this is
 usually creates the outputState(s) it needs automatically when it is created.  For example, if the mechanism is
 being created within the :ref:`pathway of a process <Process_Pathway>`, an outputState will be created and assigned
 as the ``sender`` of a MappingProjection to the next mechanism in the pathway, or to the process's
-:ref:`Process_Input_And_Ouput` if it is the :keyword:`TERMINAL` mechanism of that process.
+:ref:`Process_Input_And_Ouput` if it is the `TERMINAL` mechanism of that process.
 
 An outputState must be owned by a mechanism. Therefore, if the outputState is created directly,
 the mechanism to which it belongs must be specified in the ``owner`` argument of its constructor; if the outputState
@@ -112,7 +112,7 @@ Structure
 
 Every outputState is owned by a :doc:`mechanism <Mechanism>`. It can send one or more MappingProjections to other
 mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
-:keyword:`TERMINAL` mechanism for that process or system -- see :ref:`Process_Input_And_Ouput`).  A list of projections
+`TERMINAL` mechanism for that process or system -- see :ref:`Process_Input_And_Ouput`).  A list of projections
 sent by an outputState is maintained in its :py:data:`sendsToProjections <OutputState.sendsToProjections>` attribute.
 
 Like all PsyNeuLink components, it has the three following core attributes:

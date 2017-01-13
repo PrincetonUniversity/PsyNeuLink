@@ -2,21 +2,47 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# FIX: NOW APPEARS IN PRINT-OUT:
-#	time_scale: TimeScale.TRIAL
-
-# FIX: WRAP EVCMechanism._value_function AS UDF?
+# DOCUMENTATION COMPLETION/CLEAN-UP:
+#   Function
+#   System
+#   Process
+#   Mechanism
+#   ProcessingMechanism
+#   DefaultProcessingMechanism
+# √ DDM
+#   IntegratorMechanism
+#   TransferMechanism
+#   MonitoringMechanism
+#   DefaultMontioringMechanism
+#   ComparatorMechanism
+#   WeightedErrorMechanism
+# √ ControlMechanism
+#   DefaultControlMechanism
+# √ EVCMechanism
+#   ControlSignal
+#   Projection
+#   MappingProjection
+#   ControlProjection
+#   LearningProjection
+#   State
+#   InputState
+#   ParameterState
+#   OutputState
+#   Run
+#   Preferences
+#   Log
+#   TimeScale
+#   Registry
 
 # DOCUMENT: FINISH DOCUMENTING:
 #             .. _ControlMechanism_Specifying_Control:
 #
 #             Specifying control for a parameter
 #             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 # DOCUMENT: it`s -> its (unless contraction)
 # DOCUMENT:  ControlSignal/ControlProjection:
 #                      not just mechanism or its function, but also a mapping projection;  reword referent as ``owner``
-#            :keyword:`ORIGIN` -> 'ORIGIN'
+#            `ORIGIN` -> 'ORIGIN'
 # DOCUMENT: MONITOR_FOR_CONTROL -> EVALUATE_FOR_CONTROL
 # DOCUMENT:  MonitoredOutputStates -> EvaluatedOutputStates
 
@@ -295,7 +321,7 @@
 # DOCUMENT: Component:  :keyword:`NotImplemented` can be assigned to a parameter in the definition of paramClassDefaults
 #                          to allow it to pass _validate_params without having to make an assignment (i.e., to
 #                          suppress type checking.
-#                       :keyword:`None` is used to suppress its use by higher level assignments
+#                       `None` is used to suppress its use by higher level assignments
 
 # IMPLEMENT: add keyword LEARNING as allowable spec for process and system for learning argument
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
@@ -1488,7 +1514,7 @@
 # =========================
 
 # None:
-#    :keyword:`None`
+#    `None`
 
 # Keywords:
 #   :keyword:`<KEYWORD>`

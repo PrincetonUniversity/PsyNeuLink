@@ -99,7 +99,7 @@ structure and/or the role they play in a system:
 
     :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>`: final point of execution, and provides an output of the system;
 
-    :py:data:`SINGLETON <Keywords.Keywords.SINGLETON>`: both an :keyword:`ORIGIN` and a :keyword:`TERMINAL` mechanism;
+    :py:data:`SINGLETON <Keywords.Keywords.SINGLETON>`: both an `ORIGIN` and a `TERMINAL` mechanism;
 
     :py:data:`CYCLE <Keywords.Keywords.CYCLE>`: receives a projection that closes a recurrent loop;
 
@@ -109,7 +109,7 @@ structure and/or the role they play in a system:
     :py:data:`MONITORING <Keywords.Keywords.MONITORING>`: monitors value of another mechanism for use in learning;
 
     :py:data:`TARGET <Keywords.Keywords.TARGET>`: ComparatorMechanism that monitors a
-    :keyword:`TERMINAL` mechanism of a process
+    `TERMINAL` mechanism of a process
 
     :py:data:`CONTROL <Keywords.Keywords.CONTROL>`: monitors the value of another mechanism used to control
     parameters values;
@@ -117,10 +117,10 @@ structure and/or the role they play in a system:
     :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>`: processing mechanism that does not fall into any of the
     categories above.
 
-    .. note:: Any :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system must be, respectively,
-       the :keyword:`ORIGIN` or :keyword:`TERMINAL` of any process(es) to which they belong.  However, it is not
-       necessarily the case that the :keyword:`ORIGIN` and/or :keyword:`TERMINAL` mechanism of a process is also the
-       :keyword:`ORIGIN` and/or :keyword:`TERMINAL` of a system to which the process belongs
+    .. note:: Any `ORIGIN` and `TERMINAL` mechanisms of a system must be, respectively,
+       the `ORIGIN` or `TERMINAL` of any process(es) to which they belong.  However, it is not
+       necessarily the case that the `ORIGIN` and/or `TERMINAL` mechanism of a process is also the
+       `ORIGIN` and/or `TERMINAL` of a system to which the process belongs
        (see the Chain example below).
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
@@ -193,7 +193,7 @@ Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
 The input to a system is specified in the ``input`` argument of either its :py:meth:`execute <System_Base.execute>` or
 :py:meth:`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of
-values, each of which is an appropriate input for the corresponding :keyword:`ORIGIN` mechanism (listed in
+values, each of which is an appropriate input for the corresponding `ORIGIN` mechanism (listed in
 :py:data:`originMechanisms <System_Base.originMechanisms>`). If the :py:meth:`execute <System_Base.execute>` method
 is used, input for only a single trial is provided, and only a single trial is executed.  The
 :py:meth:`run <System_Base.run>` method can be used for a sequence of executions (time_steps or trials),
@@ -345,7 +345,7 @@ def system(default_input_value=None,
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=:keyword:`None`,  \
+    monitor_for_control=`None`,  \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -361,9 +361,9 @@ def system(default_input_value=None,
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default input for :keyword:`ORIGIN` mechanism of each Process
+    default_input_value : list or ndarray of values : default default input for `ORIGIN` mechanism of each Process
         the input to the system if none is provided in a call to the execute() method or run() function.
-        Should contain one item corresponding to the input of each :keyword:`ORIGIN` mechanism in the system.
+        Should contain one item corresponding to the input of each `ORIGIN` mechanism in the system.
 
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
@@ -388,7 +388,7 @@ def system(default_input_value=None,
         specifies whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
 
     monitor_for_control : list of OutputState objects or specifications : default None
-        specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
+        specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its controller
         (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` argument).
 
     params : dict : default None
@@ -438,7 +438,7 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=:keyword:`None`,      \
+    monitor_for_control=`None`,      \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -572,7 +572,7 @@ class System_Base(System):
             Tuples for all MonitoringMechanisms in the system (used for learning).
 
         .. _target_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all ComparatorMechanisms  in the system that are a :keyword:`TERMINAL` for at least on process
+            Tuples for all ComparatorMechanisms  in the system that are a `TERMINAL` for at least on process
             to which it belongs and that process has learning enabled --  the criteria for being a target used in
             learning.
 
@@ -583,14 +583,14 @@ class System_Base(System):
             Tuple for the controller in the system.
 
     originMechanisms : MechanismList
-        contains all :keyword:`ORIGIN` mechanisms in the system (i.e., that don't receive projections from any other
+        contains all `ORIGIN` mechanisms in the system (i.e., that don't receive projections from any other
         mechanisms.
 
         .. based on _origin_mech_tuples
-           system.input contains the input to each :keyword:`ORIGIN` mechanism
+           system.input contains the input to each `ORIGIN` mechanism
 
     terminalMechanisms : MechanismList
-        contains all :keyword:`TERMINAL` mechanisms in the system (i.e., that don't project to any other mechanisms).
+        contains all `TERMINAL` mechanisms in the system (i.e., that don't project to any other mechanisms).
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of each TERMINAL mechanism
@@ -1433,7 +1433,7 @@ class System_Base(System):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
 
-        Assign items of input to :keyword:`ORIGIN` mechanisms
+        Assign items of input to `ORIGIN` mechanisms
 
         Execute mechanisms in the order specified in executionList and with phases equal to
         ``CentralClock.time_step % numPhases``.
@@ -1455,7 +1455,7 @@ class System_Base(System):
         Arguments
         ---------
         input : list or ndarray
-            a list or array of input value arrays, one for each :keyword:`ORIGIN` mechanism in the system.
+            a list or array of input value arrays, one for each `ORIGIN` mechanism in the system.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
                specifies a default TimeScale for the system]
@@ -1759,26 +1759,26 @@ class System_Base(System):
             if :keyword:`True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the system before a
             sequence of executions.
 
-        targets : List[input] or np.ndarray(input) : default :keyword:`None`
+        targets : List[input] or np.ndarray(input) : default `None`
             the target values for the MonitoringMechanisms of the system for each execution (used for learning).
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
-        learning : bool :  default :keyword:`None`
+        learning : bool :  default `None`
             enables or disables learning during execution.
             If it is not specified, the current state is left intact.
             If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= :keyword:`None`
+        call_before_trial : Function : default= `None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= :keyword:`None`
+        call_after_trial : Function : default= `None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= :keyword:`None`
+        call_before_time_step : Function : default= `None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= :keyword:`None`
+        call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
@@ -1788,7 +1788,7 @@ class System_Base(System):
         -------
 
         <system>.results : List[outputState.value]
-            list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the system returned for
+            list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
             each execution.
 
         """
@@ -1890,7 +1890,7 @@ class System_Base(System):
         DICT_OUTPUT = ()
 
     def show(self, options=None):
-        """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN`, :keyword:`TERMINAL` mechanisms,
+        """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` mechanisms,
         :py:data:`TARGET <Keywords.Keywords.TARGET>` mechahinsms, ``outputs`` and their labels for the system.
 
         Arguments
@@ -1997,7 +1997,7 @@ class System_Base(System):
             :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
 
             :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
-            :keyword:`TERMINAL` mechs
+            `TERMINAL` mechs
 
             :keyword:`NUM_PHASES_PER_TRIAL`:number of phases required to execute all mechanisms in the system
 

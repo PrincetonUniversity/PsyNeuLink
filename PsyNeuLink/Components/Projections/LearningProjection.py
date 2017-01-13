@@ -85,9 +85,9 @@ a :doc:`ComparatorMechanism` is created, and given a MappingProjection from the 
 :ref:`backpropagation <LINK>`, the type of  MonitoringMechanism created also depends on the errorSource itself.  If
 the errorSource provides the output that will be compared with the target stimulus then, as for Reinforcement
 Learning, a ComparatorMechanism is created.  This is the case if the errorSource is a standalone
-mechanism (one not in a process or system), the :keyword:`TERMINAL` mechanism of a standalone process (i.e., one not
-in a system), or the :keyword:`TERMINAL` mechanism of a system.  However, if the errorSource lies deeper in a process
-or system -- that is, if it is an :keyword:`ORIGIN` or :keyword:`INTERNAL` mechanism -- then a
+mechanism (one not in a process or system), the `TERMINAL` mechanism of a standalone process (i.e., one not
+in a system), or the `TERMINAL` mechanism of a system.  However, if the errorSource lies deeper in a process
+or system -- that is, if it is an `ORIGIN` or :keyword:`INTERNAL` mechanism -- then a
 :doc:`WeightedErrorMechanism` mechanism is created.  This gets its error information from the MonitoringMechanism
 for the errorSource "above" it in the process or system (i.e., the one to which it projects, and that is one closer to
 the target).  Therefore, a MappingProjection is created that projects to it from that next errorSource.
@@ -141,9 +141,9 @@ which the errorSource belongs.  It calculates the errorSignal by comparing the o
 target stimulus provided as input to the process or system when it is :ref:`run <Run_Targets>`.  For
 :ref:`backpropagation <LINK>`, the type of MonitoringMechanism depends on the errorSource. If the errorSource
 receives a target directly, then a ComparatorMechanism is used.  This is the case if the errorSource is a standalone
-mechanism (one not in a process or system), the :keyword:`TERMINAL` mechanism of a standalone process (i.e., one not
-in a system), or the :keyword:`TERMINAL` mechanism of a system.  However, if the errorSource lies deeper in any process
-to which it  belongs (i.e., it is an :keyword:`ORIGIN` or :keyword:`INTERNAL` mechanism), and therefore does not
+mechanism (one not in a process or system), the `TERMINAL` mechanism of a standalone process (i.e., one not
+in a system), or the `TERMINAL` mechanism of a system.  However, if the errorSource lies deeper in any process
+to which it  belongs (i.e., it is an `ORIGIN` or :keyword:`INTERNAL` mechanism), and therefore does not
 receive a target directly, then a :doc:`WeightedErrorMechanism` mechanism is used.  This receives a MappingProjection
 carrying its error information from the MonitoringMechanism for the errorSource "above" it (i.e., the one to which it
 projects, and that is one closer to the target), rather than from a target stimulu. It calculates its errorSignal by

@@ -190,7 +190,7 @@ using the following template: ???XXXX
 COMMENT
 
 Each inputState of a mechanism can receive one or more projections from other mechanisms.  If the mechanism is an
-:keyword:`ORIGIN` mechanism of a process, it also receives a projection from the
+`ORIGIN` mechanism of a process, it also receives a projection from the
 :ref:`ProcessInputState <Process_Input_And_Ouput>` for that process. Each inputState's ``function`` aggregates the
 values received from its projections (usually by summing them), and assigns the result to its ``value`` attribute.
 
@@ -263,13 +263,16 @@ mechanism subclass, as well as those specific to a particular subclass (document
       The value of each entry can be one of the following (see :ref:`ParameterState_Specifying_Parameters` for details):
 
       * the value of the parameter itself;
-      * a parameter state, the value of which specifies the parameter's value (see :ref:`ParameterState_Creation`);
-      * a :ref:`ControlProjection or LearningProjection specification <Projection_In_Context_Specification>`,
-        that assigns the parameter its default value, and a projection to it's parameterState of the specified type;
+      |
+      * a `ParameterState`, the value of which specifies the parameter's value (see `ParameterState_Creation`);
+      |
+      * a ControlProjection or LearningProjection specification (see `Projection_Creation`),
+        that assigns the parameter its default value, and a projection to it's ParameterState of the specified type;
+      |
       * a tuple with exactly two items: the parameter value and a projection type specifying either a
-        :doc:`ControlProjection` or a :doc:`LearningProjection`
-        (a :any:`ParamValueProjection` namedtuple can be used for clarity).
-      ..
+        `ControlProjection` or a `LearningProjection` (a `ParamValueProjection` namedtuple can be used for
+        clarity).
+      |
       .. note::
          Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
          (i.e., used to create the mechanism); any values specified in the :keyword:`FUNCTION__PARAMS` entry
@@ -320,11 +323,11 @@ are listed in the mechanism's :py:data:`processes <>` and py:data:`systems` attr
 
 (see Process
 :ref:`Process_Mechanisms` and System :ref:`System_Mechanisms` for designation labels and their meanings).
-Any mechanism designated as :keyword:`ORIGIN` receives a projection to its primary inputState from the process(es)
+Any mechanism designated as `ORIGIN` receives a projection to its primary inputState from the process(es)
 to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
-mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the :keyword:`ORIGIN`
+mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the `ORIGIN`
 of a process but not of a system to which that process belongs (see the note under System :ref:`System_Mechanisms` for
-further explanation).  The output value of any mechanism designated as :keyword:`TERMINAL` is assigned to the output
+further explanation).  The output value of any mechanism designated as `TERMINAL` is assigned to the output
 of any process or system to which it belongs.
 
 
@@ -404,7 +407,7 @@ def mechanism(mech_spec=None, params=None, context=None):
 
     mech_spec : Optional[Mechanism subclass, str, or dict]
         specification for the mechanism to create.
-        If it is :keyword:`None`, returns the default mechanism ([LINK for default]);
+        If it is `None`, returns the default mechanism ([LINK for default]);
         if it is the name of a Mechanism subclass, a default instance of that subclass is returned;
         if it is the name of a Mechanism subclass registered in the :py:class:`MechanismRegistry`
         an instance of a default mechanism for that class is returned,
@@ -593,7 +596,7 @@ class Mechanism_Base(Mechanism):
     value : 2d np.array : default None
         output of the mechanism's function;
         Note: this is not necessarily equal to the :py:data:`outputValue <Mechanism_Base.outputValue>` attribute;
-        it is :keyword:`None` until the mechanism has been executed at least once.
+        it is `None` until the mechanism has been executed at least once.
 
         .. _value_template : 2d np.array : default None
                set equal to the value attribute when the mechanism is first initialized;
@@ -1496,10 +1499,10 @@ class Mechanism_Base(Mechanism):
             the inputs used for each in a sequence of executions of the mechanism (see :ref:`Run_Inputs` in
             :doc:`Run` for detailed description of formatting requirements and options).
 
-        call_before_execution : Function : default= :keyword:`None`
+        call_before_execution : Function : default= `None`
             called before each execution of the mechanism.
 
-        call_after_execution : Function : default= :keyword:`None`
+        call_after_execution : Function : default= `None`
             called after each execution of the mechanism.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
