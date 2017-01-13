@@ -26,9 +26,9 @@ A ComparatorMechanism can be created either directly, by calling its constructor
 is specified in the ``comparison_operation`` argument, which can be the keyword :keyword:`SUBTRACTION` or
 :keyword:`DIVISION`.  It can also be created by
 :ref:`in context specification of a LearningProjection <Projection_Creation>` for a projection to the
-:keyword:`TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also
+`TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also
 created automatically when a process or system is created for which learning is specified; each is assigned a
-projection from the outputState of a :keyword:`TERMINAL` mechanism that receives a MappingProjection being learned,
+projection from the outputState of a `TERMINAL` mechanism that receives a MappingProjection being learned,
 and a LearningProjection to that MappingProjection  (see :ref:`learning in a process <Process_Learning>`,
 and :ref:`automatic creation of LearningSignals  <LearningProjection_Automatic_Creation> for details).
 
@@ -39,7 +39,7 @@ Structure
 ---------
 
 A ComparatorMechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a MappingProjection from
-the primary outputState of a :keyword:`TERMINAL` mechanism in a process;  the :keyword:`COMPARATOR_TARGET` inputState
+the primary outputState of a `TERMINAL` mechanism in a process;  the :keyword:`COMPARATOR_TARGET` inputState
 is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
 It has five outputStates, described under Execution below.
 

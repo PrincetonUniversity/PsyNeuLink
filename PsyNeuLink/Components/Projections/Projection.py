@@ -152,7 +152,7 @@ of projection is specified in its ``paramClassDefaults[PROJECTION_SENDER]`` clas
     :py:data:`controller <System.System_Base.controller>` is used.  Otherwise, the :doc:`DefaultControlMechanism`
     is used.  In either case, an outputState is added to the ControlMechanism and assigned as the ``sender``.
   ..
-  * :doc:`LearningProjection`: if it is to a MappingProjection that projects to the :keyword:`TERMINAL`
+  * :doc:`LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL`
     mechanism of a process, then a :doc:`ComparatorMechanism` is created, and its primary outputState is assigned as
     the ``sender``.  Otherwise, a :doc:`WeightedErrorMechanism` is created and its primary outputState is assigned as
     the ``sender``.
