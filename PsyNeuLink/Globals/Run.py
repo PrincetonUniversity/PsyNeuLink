@@ -117,7 +117,7 @@ COMMENT
 The ``run`` function presents the inputs for each round of execution to the inputStates of the relevant mechanisms .
 These are specified in the ``inputs`` argument of the ``exeucte`` or ``run`` method.  For a mechanism, they comprise
 the input value for each of the mechanism's inputStates.  For a process or system, they comprise the input values for
-the inputState(s) of the :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism(s).  Input values can be specified in
+the inputState(s) of the `ORIGIN` mechanism(s).  Input values can be specified in
 one of two ways: :ref:`sequence format <Run_Inputs_Sequence_Format>` and :ref:`mechanism format <Run_Dict_format>`.
 Sequence format is more complex, but does not require the specification of mechanisms by name, and thus may be more
 suitable for use with automated means of generating inputs.  Mechanism format requires that inputs be assigned to
@@ -203,7 +203,7 @@ sequence format for all of the combinations of the factors listed above.  The fi
 inputs than the sequence format, and does not require that inputs for each mechanism be specified in a particular
 order.  However, it requires that each mechanism that receives inputs be referenced explicitly (instead of by order),
 which may be less suitable for automated forms of input generation.  It uses a dictionary, each entry of which is the
-sequence of inputs for an :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism;  there must be one such entry for
+sequence of inputs for an `ORIGIN` mechanism;  there must be one such entry for
 each of the ORIGIN mechanisms of the process or system being run.  The key for each entry is the ORIGIN mechanism,
 and the value contains either a list or ndarray specifying the sequence of inputs for that mechanism, one for each
 rond of execution.  If a list is used, and the mechanism has more than one inputState, then a sublist is used in each
@@ -224,10 +224,10 @@ Initial Values
 ~~~~~~~~~~~~~~
 
 Any mechanism that is the ``sender`` of a projection that closes a loop in a process or system, and that is not an
-`ORIGIN` mechanism, is designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`.
+`ORIGIN` mechanism, is designated as `INITIALIZE_CYCLE`.
 An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
 first run.  These values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry
-must be a mechanism designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`, and its value an
+must be a mechanism designated as `INITIALIZE_CYCLE`, and its value an
 input for the mechanism to be used as its initial value.  The size of the input (length of the outermost level if it
 is a list, or axis 0 if it is an np.ndarray), must equal the number of inputStates of the mechanism, and the size of
 each value must match that of the variable for the corresponding inputState.
@@ -238,11 +238,11 @@ Targets
 ~~~~~~~
 
 If a process or system uses learning, then target values for each round of execution must be provided for each
-:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism in the process or system being run.  These are specified
+`TARGET` mechanism in the process or system being run.  These are specified
 in the ``targets`` argument of the ``execute`` or ``run`` method, which can be in any of three formats.
 The two formats used for inputs (:ref:`sequence <Run_Inputs_Sequence_Format>` and ref:`mechanism
 <Run_Inputs_Mechanism_Format>`) can also be used for targets.  However, the format of the lists or ndarrays is simpler,
-since each :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism is assigned only a single target value;  so there
+since each `TARGET` mechanism is assigned only a single target value;  so there
 is never the need for the extra level of nesting (or dimension of ndarray) used for inputStates in the specification of
 inputs.  Details concerning the use of the :ref:`sequence <Run_Targets_Sequence_Format>`  and
 :ref:`mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
@@ -255,11 +255,11 @@ number of inputs (and targets), then the list will be cycled until the number of
 If the function format is used, then it wil, be used to generate a target for each round of execution.
 
 The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
-the function format, must equal the number of :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms for the process
+the function format, must equal the number of `TARGET` mechanisms for the process
 or system being run (see process py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` or system
 :py:data:`targetMechanism <System.System_Base.targetMechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
-parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended.  Furthermore, if a
+parameter of the `TARGET` mechanism for which it is intended.  Furthermore, if a
 range is specified for the output of the `TERMINAL` mechanism with which the target is compared (that is,
 the mechanism that provides the ComparatorMechanism's :py:data:`sample <ComparatorMechanism.ComparatorMechanism.sample>`
 parameter, then the target must be within that range (for example, if the `TERMINAL` mechanism is a
@@ -279,7 +279,7 @@ other requirements are the same as those described for the sequence format for :
 .. _Run_Targets_Mechanism_Format:
 
 **Mechanism format** *(Dict[mechanism, List[values] or ndarray]):*
-There must be one entry in the dictionary for each of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms
+There must be one entry in the dictionary for each of the `TARGET` mechanisms
 in the process or system being run, though the entries can be specified in any order.  For this reason, this format
 may be easier (and safer) to use. The value of each entry is a list or ndarray of the target values for that mechanism,
 one for each round of execution. There are at most only two levels of nesting (or dimensions) required for each
@@ -290,9 +290,9 @@ the same as described for the mechanism format for :ref:`inputs <Run_Mechanism>`
 
 **Function format**[Function]:*
 The function must return an array with a number of items equal to the number of
-:py:data:`TARGET <Keywords.Keywords.TARGET>` mechanisms for the process  or system being run, each of which must
+`TARGET` mechanisms for the process  or system being run, each of which must
 match (in nummber and type of elements) the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
-parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended. This format allows
+parameter of the `TARGET` mechanism for which it is intended. This format allows
 targets to be constructed programatically, in response to computations made during the run.
 COMMENT:
     ADD EXAMPLE HERE

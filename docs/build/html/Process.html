@@ -534,8 +534,8 @@ format of the <code class="docutils literal"><span class="pre">variable</span></
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal"><span class="pre">input</span></code> attribute of a process preserves its value throughout the execution of the process.
-It&#8217;s value is assigned to the <a class="reference internal" href="DDM.html#DDM.DDM.variable" title="DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
-of execution.  After that, by default, its <a class="reference internal" href="DDM.html#DDM.DDM.variable" title="DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
+It&#8217;s value is assigned to the <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.variable" title="IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
+of execution.  After that, by default, its <a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.variable" title="IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism is executed again in the same round of execution (e.g., if it is part of
 a recurrent loop) it does not continue to receive the Process&#8217; input.  However, this behavior can be
 modified with the <code class="docutils literal"><span class="pre">clamp_input</span></code> attribute of the process.</p>
@@ -620,8 +620,8 @@ methods that are also used for systems.)</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.targetMechanisms">
 <code class="descname">targetMechanisms</code><a class="headerlink" href="#Process.Process_Base.targetMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism of the process.
-(Note:  a process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism; the use of a list
+<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism of the process.
+(Note:  a process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism; the use of a list
 is for compatibility with methods that are also used for systems.)</p>
 </dd></dl>
 
