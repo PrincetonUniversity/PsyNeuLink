@@ -288,7 +288,7 @@ the same as described for the mechanism format for :ref:`inputs <Run_Mechanism>`
 
 .. _Run_Targets_Function_Format:
 
-**Function format**[Function]:*
+**Function format** *[Function]:*
 The function must return an array with a number of items equal to the number of
 `TARGET` mechanisms for the process  or system being run, each of which must
 match (in nummber and type of elements) the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`

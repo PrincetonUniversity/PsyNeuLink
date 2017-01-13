@@ -109,8 +109,7 @@ and/or the role they play in a system:
     .. note:: Any `ORIGIN` and `TERMINAL` mechanisms of a system must be, respectively,
        the `ORIGIN` or `TERMINAL` of any process(es) to which they belong.  However, it is not
        necessarily the case that the `ORIGIN` and/or `TERMINAL` mechanism of a process is also the
-       `ORIGIN` and/or `TERMINAL` of a system to which the process belongs
-       (see the Chain example below).
+       `ORIGIN` and/or `TERMINAL` of a system to which the process belongs (see the Chain example below).
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
@@ -137,12 +136,11 @@ COMMENT
    Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
    series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
    that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-   the system.  The `TERMINAL` mechanism for both processes projects to a :doc:`MonitoringMechanism
-   <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in Process B. It also projects
-   to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>` ProcessingMechanisms in
-   both Processes A and B.  Note that while the mechanisms and projections responsible for learning and control
-   belong to the system and can monitor and/or control mechanisms belonging to more than one process (as shown for
-   control in this figure).
+   the system.  The `TERMINAL` mechanism for both processes projects to a `MonitoringMechanism` that is used to drive
+   `learning <LearningProjection>` in Process B. It also projects to a :doc:`ControlMechanism <ControlMechanism>`
+   that `controls <ControlProjection>` ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
+   projections responsible for learning and control belong to the system and can monitor and/or control mechanisms
+   belonging to more than one process (as shown for control in this figure).
 
 
 .. _System_Execution:
@@ -150,9 +148,9 @@ COMMENT
 Execution
 ---------
 
-A system can be executed by calling either its :py:meth:`execute <System_Base.execute>` or
-:py:meth:`run <System_Base.run>` methods. :py:meth:`execute <System_Base.execute>` executes each mechanism in the
-system once, whereas :py:meth:`run <System_Base.run>` allows a series of executions to be carried out.
+A system can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
+`execute <System_Base.execute>` executes each mechanism in the system once, whereas `run <System_Base.execute>`
+allows a series of executions to be carried out.
 
 .. _System_Execution_Order:
 
@@ -161,54 +159,53 @@ Order
 Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
 processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
 system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
-represented by the :py:data:`executionGraph <System_Base.executionGraph>`, which is a subset of the system's graph that
-has been "pruned" to be acyclic (i.e., devoid of recurrent loops).  While the
-:py:data:`executionGraph <System_Base.executionGraph>` is acyclic, all recurrent projections in the system remain
-intact during execution and can be initialized at the start of execution (see below).
+determined by the system's `executionGraph` attribute, which is a subset of the system's `graph` that has been
+"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
+projections in the system remain intact during execution and can be
+`initialized <System_Execution_Input_And_Initialization>` at the start of execution.
 
 .. _System_Execution_Phase:
 
 Phase
 ~~~~~
-Execution occurs in passes through a system called phases.  Each phase corresponds to a single time_step.
-When executing a system in trial mode, a trial is defined as the number of phases (time_steps) required to execute
-a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to that phase
-are executed.   Mechanisms are assigned a phase where they are listed in the pathway of a process (see Process).
-When a mechanism is executed, it receives input from any other mechanisms that project to it within the system.
+Execution occurs in passes through a system called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
+When executing a system in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
+execute a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to
+that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a
+`process <Process>`. When a mechanism is executed, it receives input from any other mechanisms that project to it
+within the system.
 
 .. _System_Execution_Input_And_Initialization:
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a system is specified in the ``input`` argument of either its :py:meth:`execute <System_Base.execute>` or
-:py:meth:`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of
-values, each of which is an appropriate input for the corresponding `ORIGIN` mechanism (listed in
-:py:data:`originMechanisms <System_Base.originMechanisms>`). If the :py:meth:`execute <System_Base.execute>` method
-is used, input for only a single trial is provided, and only a single trial is executed.  The
-:py:meth:`run <System_Base.run>` method can be used for a sequence of executions (time_steps or trials),
-by providing it with a list or ndarray of inputs, one for each round of execution.  In both cases, two other types of
-input can be provided:  a list or ndarray of initialization values, and a list or ndarray of target values.
-Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops
-(designated as :keyword:`INITIALIZE_CYCLE`, and listed in
-:py:data:`recurrentInitMechanisms <System_Base.recurrentInitMechanisms>`), and target values are assigned to the
-:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of :doc:`ComparatorMechanisms`
-(see learning below;  also, see :doc:`Run` for additional details of formatting input specifications).
+The input to a system is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
+each of which is an appropriate input for the corresponding `ORIGIN` mechanism (listed in
+`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
+input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
+can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
+one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
+initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
+execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
+`recurrentInitMechanisms`), and target values are assigned to the
+`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of `ComparatorMechanisms <ComparatorMechanism>`
+(see learning below;  also, see `Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
 
 Learning
 ~~~~~~~~
-The system will execute learning if it is specified for any process in the system.  The :py:data:`learning
-<System_Base.learning>` attribute indicates whether learning is enabled for the system. Learning is executed for any
+The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
+indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
 learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
-see :ref:`Run_Inputs` and :ref:`Run_Targets`).  Both formats require that an input be provided for each
-`ORIGIN` mechanism of the system (listed in its
-:py:data:`originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or
-mechanism format, one target must be provided for each :py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism
-(listed in its :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified
-in a :ref:`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
+see `Run_Inputs` and `Run_Targets`).  Both formats require that an input be provided for each `ORIGIN` mechanism of
+the system (listed in its `originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified
+in sequence or mechanism format, one target must be provided for each `TARGET` mechanism (listed in its
+`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
+`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
 .. note::
    A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
@@ -219,12 +216,9 @@ in a :ref:`function format <Run_Targets_Function_Format>`, which generates a tar
 
 Control
 ~~~~~~~
-Every system is associated with a single :py:data:`controller <System_Base.controller>`.  The controller monitors
-the outputState(s) of one or more mechanisms in the system
-COMMENT:
-    (listed in :py:data:`monitoredOutputStates <System_Base.monitoredOutputStates>`),
-COMMENT
-and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
+Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
+mechanisms in the system (listed in its `monitoredOutputStates` attribute), and uses that information to set the
+value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
 monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
 executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
