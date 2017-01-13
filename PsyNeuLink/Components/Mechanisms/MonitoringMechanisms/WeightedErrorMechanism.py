@@ -259,7 +259,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
 
-    def __execute__(self,
+    def _execute(self,
                 variable=None,
                 runtime_params=None,
                 clock=CentralClock,

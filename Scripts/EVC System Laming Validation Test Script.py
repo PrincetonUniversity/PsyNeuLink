@@ -1,20 +1,15 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Run import run, _construct_stimulus_sets
 
 # import random
 # random.seed(0)
 # np.random.seed(0)
-
-def test_search_function(controller=None, **kwargs):
-    result = np.array(controller.allocationPolicy).reshape(len(controller.allocationPolicy), -1)
-    return result
 
 # Preferences:
 DDM_prefs = ComponentPreferenceSet(
@@ -67,8 +62,6 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
-
-# mySystem.controller.function = test_search_function
 
 # Show characteristics of system:
 mySystem.show()

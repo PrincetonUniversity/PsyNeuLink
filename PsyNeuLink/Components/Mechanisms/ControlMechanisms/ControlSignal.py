@@ -134,11 +134,11 @@ Class Reference
 """
 
 # import Components
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import *
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Components.States.State import _instantiate_state_list
-from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import *
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.State import *
+
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -497,7 +497,7 @@ class ControlSignal(OutputState):
 
         Checks if:
         - cost functions are all appropriate
-        - xallocation_samples is a list with 2 numbers
+        - allocation_samples is a list with 2 numbers
         - all cost functions are references to valid ControlProjection costFunctions (listed in self.costFunctions)
         - IntensityFunction is identity function, in which case ignoreIntensityFunction flag is set (for efficiency)
 
