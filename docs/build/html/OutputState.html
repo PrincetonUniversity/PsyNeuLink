@@ -177,7 +177,7 @@ projections from an outputState is kept in its <a class="reference internal" hre
 usually creates the outputState(s) it needs automatically when it is created.  For example, if the mechanism is
 being created within the <a class="reference internal" href="Process.html#process-pathway"><span class="std std-ref">pathway of a process</span></a>, an outputState will be created and assigned
 as the <code class="docutils literal"><span class="pre">sender</span></code> of a MappingProjection to the next mechanism in the pathway, or to the process&#8217;s
-<a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a> if it is the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of that process.</p>
+<a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a> if it is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of that process.</p>
 <p>An outputState must be owned by a mechanism. Therefore, if the outputState is created directly,
 the mechanism to which it belongs must be specified in the <code class="docutils literal"><span class="pre">owner</span></code> argument of its constructor; if the outputState
 is specified in the <code class="xref std std-keyword docutils literal"><span class="pre">OUTPUT_STATES</span></code> entry of the parameter dictionary for a mechanism, then the owner is
@@ -241,7 +241,7 @@ with the item to which the outputState is assigned.</p>
 <span id="outputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every outputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>. It can send one or more MappingProjections to other
 mechanisms;  it can also  be treated as the output of a process or system to which its owner belongs (if it is the
-<code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism for that process or system &#8211; see <a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a>).  A list of projections
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for that process or system &#8211; see <a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">Process input and output</span></a>).  A list of projections
 sent by an outputState is maintained in its <a class="reference internal" href="#OutputState.OutputState.sendsToProjections" title="OutputState.OutputState.sendsToProjections"><code class="xref py py-data docutils literal"><span class="pre">sendsToProjections</span></code></a> attribute.</p>
 <p>Like all PsyNeuLink components, it has the three following core attributes:</p>
 <ul class="simple">
