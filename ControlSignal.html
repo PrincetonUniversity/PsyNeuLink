@@ -95,6 +95,11 @@
 <li class="toctree-l3 current"><a class="reference internal" href="EVCMechanism.html">EVCMechanism</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">ControlSignal</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#creating-an-evcmechanism">Creating an EVCMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="EVCMechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="ControlMechanism.html#overview">Overview</a></li>
@@ -239,7 +244,7 @@ functions that are enabled (as described in the following section).</li>
 <code class="xref py py-data docutils literal"><span class="pre">cost_combination_function</span></code>) can be enabled or disabled using the <code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function()</span></code> method
 to turn it <code class="xref std std-keyword docutils literal"><span class="pre">ON</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">OFF</span></code>. If it is disabled, that component of the cost is not included in the
 ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">cost</span></code> attribute.  A cost function  can also be permanently disabled for the
-ControlSignal by assigning it&#8217;s attribute the value of <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.  If a cost function is permanently
+ControlSignal by assigning it&#8217;s attribute the value of <code class="xref any docutils literal"><span class="pre">None</span></code>.  If a cost function is permanently
 disabled for a ControlSignal, it cannot be re-enabled using <code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function()</span></code>.</p>
 </div></blockquote>
 </li>
@@ -255,7 +260,7 @@ by its associated ControlProjection to set the value of the parameterState to wh
 modifies the value of the mechanism or function parameter being controlled.  The <code class="xref py py-data docutils literal"><span class="pre">intensity</span> <span class="pre">is</span> <span class="pre">also</span> <span class="pre">used</span> <span class="pre">by</span>
 <span class="pre">the</span> <span class="pre">ControlSignal's</span> <span class="pre">:ref:`cost</span> <span class="pre">functions</span></code> to compute its <code class="xref py py-data docutils literal"><span class="pre">cost</span></code> attribute.
 That is used, along with its <code class="xref py py-data docutils literal"><span class="pre">allocation_samples</span></code> attribute, by the EVCMechanism to evaluate
-<span class="xref std std-ref">expected value of control (EVC)</span> of the current
+<a class="reference internal" href="EVCMechanism.html#evcmechanism-evc"><span class="std std-ref">expected value of control (EVC)</span></a> of the current
 <code class="xref py py-data docutils literal"><span class="pre">allocationPolicy</span></code>, and (possibly) adjust the ControlSignal&#8217;s
 <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> for the next round of execution.</p>
 <div class="admonition note">
@@ -401,7 +406,7 @@ adaptively adjust the function of mechanisms in their systems.</p>
 <dd><p>TransferFunction : default default <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code></a> &#8211; calculates &#8220;intensityCost`` from the curent value of <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>.
 It can be any <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function  that takes and
 returns a scalar value. The default is <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code></a>.
-It can be disabled permanently for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
+It can be disabled permanently for the ControlProjection by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -410,7 +415,7 @@ It can be disabled permanently for the ControlProjection by assigning <code clas
 <dd><p>TransferFunction : default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a> &#8211; calculates <code class="xref py py-data docutils literal"><span class="pre">adjustmentCost</span></code> based on the change in
 <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> from its last value. It can be any
 <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and
-returns a scalar value. It can be disabled permanently for the ControlProjection by assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
+returns a scalar value. It can be disabled permanently for the ControlProjection by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -419,7 +424,7 @@ returns a scalar value. It can be disabled permanently for the ControlProjection
 <dd><p>IntegratorFunction : default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a> &#8211; calculates an integral of the ControlProjection&#8217;s <code class="xref py py-data docutils literal"><span class="pre">cost</span></code>.
 It can be any <code class="xref py py-class docutils literal"><span class="pre">IntegratorFunction</span></code>, or any other function that takes a
 list or array of two values and returns a scalar value. It can be disabled permanently for the ControlSignal by
-assigning <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
+assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">

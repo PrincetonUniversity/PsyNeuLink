@@ -209,13 +209,13 @@ PsyNeuLink assigns a default projection. Specifying the components of a pathway 
 <div class="section" id="mechanisms">
 <span id="process-mechanisms"></span><h3>Mechanisms<a class="headerlink" href="#mechanisms" title="Permalink to this headline">¶</a></h3>
 <p>The mechanisms of a process must be listed in its <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> explicitly, in the order
-to be executed.  The first mechanism in the process is designated as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>, and receives as its
-input any input provided to the process. The last mechanism is designated at the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code>, and its output
+to be executed.  The first mechanism in the process is designated as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>, and receives as its
+input any input provided to the process. The last mechanism is designated at the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>, and its output
 is assigned as the output of the process.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of a process are not necessarily the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
-and/or <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms of the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">system</span></a> to which it belongs.  The
+<p class="last">The <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a process are not necessarily the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>
+and/or <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">system</span></a> to which it belongs.  The
 designations of a mechanism&#8217;s status in the process(es) to which it belongs are listed in its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref py py-data docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
 </div>
 <p id="process-mechanism-specification">Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
@@ -265,7 +265,7 @@ the methods above), a MappingProjection is automatically created from the mechan
 pathway.  If the format of the preceding mechanism&#8217;s output matches that of the next mechanism, then
 <code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> is used for the projection;  if the formats do not match, or learning has been specified
 either for the projection or the process, then <code class="xref std std-keyword docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code> is used. If the mechanism is
-the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism (i.e., first in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a>), a
+the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (i.e., first in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a>), a
 <a class="reference internal" href="#process-input-and-ouput"><span class="std std-ref">ProcessInputState</span></a> will be used as the sender (see below),
 and <code class="xref std std-keyword docutils literal"><span class="pre">IDENTITY_MATRIX</span></code> is used for the projection.</p>
 </dd>
@@ -278,36 +278,36 @@ and <code class="xref std std-keyword docutils literal"><span class="pre">IDENTI
 <p>The input to a process is a list or 2D np.array provided as an arg in its <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a>
 or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> methods, and assigned to its <a class="reference internal" href="#Process.Process_Base.input" title="Process.Process_Base.input"><code class="xref py py-data docutils literal"><span class="pre">input</span></code></a> attribute.
 When a process is created, a set of ProcessInputStates and MappingProjections are automatically generated to
-transmit the process&#8217; input to its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, as follows:</p>
+transmit the process&#8217; input to its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, as follows:</p>
 <ul>
 <li><dl class="first docutils">
-<dt>if the number of items in the input is the same as the number of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> inputStates:</dt>
-<dd><p class="first last">a MappingProjection is created for each value of the input to an inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism;</p>
+<dt>if the number of items in the input is the same as the number of <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> inputStates:</dt>
+<dd><p class="first last">a MappingProjection is created for each value of the input to an inputState of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism;</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>if the input has only one item but the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism has more than one inputState:</dt>
-<dd><p class="first last">a single ProcessInputState is created with projections to each of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism inputStates;</p>
+<dt>if the input has only one item but the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism has more than one inputState:</dt>
+<dd><p class="first last">a single ProcessInputState is created with projections to each of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism inputStates;</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>if the input has more than one item but the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism has only one inputState:</dt>
-<dd><p class="first last">a ProcessInputState is created for each input item, and all project to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s
+<dt>if the input has more than one item but the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism has only one inputState:</dt>
+<dd><p class="first last">a ProcessInputState is created for each input item, and all project to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism&#8217;s
 inputState;</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>otherwise, if both the input and the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism have more than one inputState, but the numbers</dt>
+<dt>otherwise, if both the input and the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism have more than one inputState, but the numbers</dt>
 <dd><p class="first last">are not equal: an error message is generated indicating that the there is an ambiguous mapping from the Process&#8217;
-input value to <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s inputStates.</p>
+input value to <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism&#8217;s inputStates.</p>
 </dd>
 </dl>
 </li>
 </ul>
-<p>The output of a process is a 2D np.array containing the values of its <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s outputStates</p>
+<p>The output of a process is a 2D np.array containing the values of its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism&#8217;s outputStates</p>
 </div>
 <div class="section" id="learning">
 <span id="process-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
@@ -319,10 +319,10 @@ in a process, or for the entire process. It is specified for a particular mechan
 to that mechanism.  It is specified for the entire process by assigning to its <code class="docutils literal"><span class="pre">learning</span></code> argument either a
 LearningProjection specification, or the keyword <code class="xref std std-keyword docutils literal"><span class="pre">LEARNING</span></code>. Specifying learning for a process will
 implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
-the process&#8217; inputState to its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and projections from the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism to
+the process&#8217; inputState to its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and projections from the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism to
 the process&#8217; outputState). When learning is specified for the process, all projections in the process will be trained
-so that input to the process (i.e., its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism) will generate the specified target value as its
-output (i.e., the output of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism). In either case, all mechanisms that receive
+so that input to the process (i.e., its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism) will generate the specified target value as its
+output (i.e., the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism). In either case, all mechanisms that receive
 projections for which learning has been specified must be compatible with learning (see <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>).</p>
 <p>When learning is specified, the following objects are automatically created (see figure below):
 * <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a>, used to evaluate the output of a mechanism against a target value;
@@ -349,14 +349,14 @@ learned must be compatible with learning.</p>
 <span id="process-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A process can be executed as part of a system (see System) or on its own.  On its own, it can be executed by calling
 either its <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref py py-data docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref py py-data docutils literal"><span class="pre">run</span></code></a> methods.  When a process is
-executed, its input is conveyed to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism (first mechanism in the pathway).  By default,
+executed, its input is conveyed to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (first mechanism in the pathway).  By default,
 the the input value is presented only once.  If the mechanism is executed again in the same round of execution
 (e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
 However, the input can be &#8220;clamped&#8221; on using the clamp_input argument of execute() or run().  After the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism is executed, each subsequent mechanism in the pathway is executed in sequence (irrespective
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism is executed, each subsequent mechanism in the pathway is executed in sequence (irrespective
 of any phase specification).  If a mechanism is specified in the pathway in a (mechanisms,
 runtime_params, phase) tuple, then the runtime parameters are applied and the mechanism is executed using
-them (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for parameter specification).  Finally the output of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism
+them (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for parameter specification).  Finally the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism
 (last one in the pathway) is assigned as the output of the process.  If learning has been specified for the process
 or any of the projections among the mechanisms in its pathway, then the relevant learning mechanims are executed.
 These calculate changes that will be made to the corresponding projections.</p>
@@ -427,7 +427,7 @@ with backpropagation:</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>process_spec</strong> (<em>Optional[str or Dict[param keyword, param value]]</em>) &#8211; specification for the process to create.
-If it is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single DefaultMechanism [LINK for default];
+If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single DefaultMechanism [LINK for default];
 if it is a string, uses it as the name for the process;
 if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
 parameter (these values will be used to instantiate the process, and will override any values assigned
@@ -435,26 +435,26 @@ to the arguments in the call to <a class="reference internal" href="#Process.pro
 Note: if a name is not specified, the nth instance created will be named by using the process&#8217;
 <code class="xref py py-data docutils literal"><span class="pre">componentType</span></code> attribute as the base and adding an indexed suffix:
 componentType-n.</li>
-<li><strong>default_input_value</strong> (List[values] or ndarray :  default default input value of <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism) &#8211; the input to the process to use if none is provided in a call to the
+<li><strong>default_input_value</strong> (List[values] or ndarray :  default default input value of <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism) &#8211; the input to the process to use if none is provided in a call to the
 <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref py py-data docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref py py-data docutils literal"><span class="pre">run</span></code></a> method.
-This must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism&#8217;s input.</li>
+This must be the same length as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism&#8217;s input.</li>
 <li><strong>pathway</strong> (List[mechanism spec[, projection spec], mechanism spec...] : default List[<code class="docutils literal"><span class="pre">DefaultMechanism</span></code>]) &#8211; the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
 must a  <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>.  The specification for each can be an instance, a class name (creates a
 default instance), or a <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">specification dictionary</span></a>.  Each projection must be a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. The specification for each can be the class name (creates a default instance),
 an instance, or a <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">specification dictionary</span></a>.</li>
-<li><strong>initial_values</strong> (Optional[Dict[mechanism, param value]] : default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; a dictionary of values used to initialize the specified mechanisms. The key for each entry is a mechanism
+<li><strong>initial_values</strong> (Optional[Dict[mechanism, param value]] : default <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; a dictionary of values used to initialize the specified mechanisms. The key for each entry is a mechanism
 object, and the value is a number, list or np.array that must be compatible with the format of
 the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute. Mechanisms not specified will be initialized with their
 <code class="docutils literal"><span class="pre">default_input_value</span></code>.</li>
-<li><strong>clamp_input</strong> (<em>Optional[keyword]</em>) &#8211; <p>specifies whether the input to the process continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism after
+<li><strong>clamp_input</strong> (<em>Optional[keyword]</em>) &#8211; <p>specifies whether the input to the process continues to be applied to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism after
 its initial execution.  The following keywords can be used:</p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
+<p><code class="xref any docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism
 in a round of executions.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">SOFT_CLAMP</span></code>: combines the process&#8217; input with input from any other projections to the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism every time it is executed in a round of executions.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of executions.</p>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism every time it is executed in a round of executions.</p>
 </li>
 <li><strong>default_projection_matrix</strong> (keyword, list or ndarray : default <code class="docutils literal"><span class="pre">DEFAULT_PROJECTION_MATRIX</span></code>,) &#8211; the type of matrix used for default projections
 (see <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> parameter
@@ -462,8 +462,8 @@ for <a class="reference internal" href="MappingProjection.html"><span class="doc
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <span class="xref std std-ref">learning</span> for all
 eligible projections in the process.</li>
 <li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">COMPARATOR_TARGET</span></code> inputState of a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> to which a
-<code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of a process or system projects (used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).
-It must be the same length as the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism&#8217;s output.</li>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process or system projects (used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).
+It must be the same length as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism&#8217;s output.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]</em>) &#8211; a dictionary that can include any of the parameters above. Use the parameter&#8217;s name as the keyword for its
 entry;
 values in the dictionary will override argument values.</li>
@@ -502,15 +502,15 @@ mechanism should be executed when the process to which it belongs is
 <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">executed by a system</span></a>. For projection tuples, the LearningProjection
 specification can be a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> object, the class (which specifies a default instance) or
 the constructor for a LearningProjection (including parameters).  The second and third items of mechanism
-tuples, and the second item of projection tuples are optional and therefore may be <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>. The
-third item of projection tuples is currenlty not used and is always <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>.</p>
+tuples, and the second item of projection tuples are optional and therefore may be <code class="xref any docutils literal"><span class="pre">None</span></code>. The
+third item of projection tuples is currenlty not used and is always <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This is constructed from the <code class="xref std std-keyword docutils literal"><span class="pre">PATHWAY</span></code> argument, the entries of which do not necessarily
 have to have all items in a tuple, or even be in tuple form.  All entries of the <code class="xref std std-keyword docutils literal"><span class="pre">PATHWAY</span></code>
 argument are converted to tuples when assigned to the <code class="docutils literal"><span class="pre">pathway</span></code> attribute.  Entries that are
 not tuples must be a mechanism or projection.  For tuple entries, the first item must be a
-mechanism or projection;  the second is optional, and <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code> is entered for missing values;
+mechanism or projection;  the second is optional, and <code class="xref any docutils literal"><span class="pre">None</span></code> is entered for missing values;
 the third is optional for mechanism tuples (0 is the default) and ignored for projection tuples.</p>
 </div>
 </dd></dl>
@@ -518,9 +518,9 @@ the third is optional for mechanism tuples (0 is the default) and ignored for pr
 <dl class="attribute">
 <dt id="Process.Process_Base.processInputStates">
 <code class="descname">processInputStates</code><a class="headerlink" href="#Process.Process_Base.processInputStates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[ProcessInputState]]</em> &#8211; used to represent the input to the process, and transmit this to the inputState(s) of its <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code>
+<dd><p><em>Optional[List[ProcessInputState]]</em> &#8211; used to represent the input to the process, and transmit this to the inputState(s) of its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>
 mechanism.  Each processInputState sends a MappingProjection to one or more inputStates of the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</p>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -530,13 +530,13 @@ mechanism.  Each processInputState sends a MappingProjection to one or more inpu
 to the process` <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a>  or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> method. It&#8217;s
 value is assigned to <code class="docutils literal"><span class="pre">variable</span></code>, each item of which is assigned as the <code class="docutils literal"><span class="pre">value</span></code> of the corresponding
 ProcessInputState in <a class="reference internal" href="#Process.Process_Base.processInputStates" title="Process.Process_Base.processInputStates"><code class="xref py py-data docutils literal"><span class="pre">processInputStates</span></code></a>. Each item must match the
-format of the <code class="docutils literal"><span class="pre">variable</span></code> for the corresponding inputState of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.</p>
+format of the <code class="docutils literal"><span class="pre">variable</span></code> for the corresponding inputState of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal"><span class="pre">input</span></code> attribute of a process preserves its value throughout the execution of the process.
-It&#8217;s value is assigned to the <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism at the start
-of execution.  After that, by default, its <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism is executed again in the same round of execution (e.g., if it is part of
+It&#8217;s value is assigned to the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
+of execution.  After that, by default, its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism is executed again in the same round of execution (e.g., if it is part of
 a recurrent loop) it does not continue to receive the Process&#8217; input.  However, this behavior can be
 modified with the <code class="docutils literal"><span class="pre">clamp_input</span></code> attribute of the process.</p>
 </div>
@@ -551,14 +551,14 @@ modified with the <code class="docutils literal"><span class="pre">clamp_input</
 <dl class="attribute">
 <dt id="Process.Process_Base.clamp_input">
 <code class="descname">clamp_input</code><a class="headerlink" href="#Process.Process_Base.clamp_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[keyword]</em> &#8211; determines whether the process&#8217; input continues to be applied to the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
+<dd><p><em>Optional[keyword]</em> &#8211; determines whether the process&#8217; input continues to be applied to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism
 after its initial execution.</p>
-<p><code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism
+<p><code class="xref any docutils literal"><span class="pre">None</span></code>: Process input is used only for the first execution of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism
 in a round of execution.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">SOFT_CLAMP</span></code>: combines the process&#8217; input with input from any other projections to the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed within a round of execution.</p>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism every time it is executed within a round of execution.</p>
 <p><code class="xref std std-keyword docutils literal"><span class="pre">HARD_CLAMP</span></code>: applies the process&#8217; input in place of any other sources of input to the
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism every time it is executed in a round of execution.</p>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism every time it is executed in a round of execution.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -573,14 +573,14 @@ the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</sp
 <dl class="attribute">
 <dt id="Process.Process_Base.value">
 <code class="descname">value</code><a class="headerlink" href="#Process.Process_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d. np.array</em> &#8211; the value of the <span class="xref std std-ref">primary outputState &lt;OutputState_Primary&gt; of the :keyword:`TERMINAL</span> mechanism of the
+<dd><p><em>2d. np.array</em> &#8211; the value of the <span class="xref std std-ref">primary outputState &lt;OutputState_Primary&gt; of the `TERMINAL</span> mechanism of the
 process.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.outputState">
 <code class="descname">outputState</code><a class="headerlink" href="#Process.Process_Base.outputState" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>State</em> &#8211;   the <span class="xref std std-ref">primary outputState &lt;OutputState_Primary&gt; of the :keyword:`TERMINAL</span> mechanism in the process.</p>
+<dd><p><em>State</em> &#8211;   the <span class="xref std std-ref">primary outputState &lt;OutputState_Primary&gt; of the `TERMINAL</span> mechanism in the process.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -598,16 +598,16 @@ process.</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.originMechanisms">
 <code class="descname">originMechanisms</code><a class="headerlink" href="#Process.Process_Base.originMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list with the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism of the process.
-(Note:  a process can have only one <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism; the use of a list is for compatibility with
+<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of the process.
+(Note:  a process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism; the use of a list is for compatibility with
 methods that are also used for systems.)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Process.Process_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#Process.Process_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list with the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the process.
-(Note:  a process can have only one <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism; the use of a list is for compatibility with
+<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the process.
+(Note:  a process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism; the use of a list is for compatibility with
 methods that are also used for systems.)</p>
 </dd></dl>
 
@@ -620,8 +620,8 @@ methods that are also used for systems.)</p>
 <dl class="attribute">
 <dt id="Process.Process_Base.targetMechanisms">
 <code class="descname">targetMechanisms</code><a class="headerlink" href="#Process.Process_Base.targetMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism of the process.
-(Note:  a process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism; the use of a list
+<dd><p><em>MechanismList</em> &#8211; a list with the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism of the process.
+(Note:  a process can have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism; the use of a list
 is for compatibility with methods that are also used for systems.)</p>
 </dd></dl>
 
@@ -737,20 +737,20 @@ requirements and options).</li>
 <li><strong>reset_clock</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>) &#8211; reset <code class="xref py py-class docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
 <li><strong>initialize</strong> (bool default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; calls the <a class="reference internal" href="#Process.Process_Base.initialize" title="Process.Process_Base.initialize"><code class="xref py py-meth docutils literal"><span class="pre">initialize</span></code></a> method of the process before a sequence of
 executions.</li>
-<li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; target values for monitoring mechanisms for each execution (used for learning).  The length (of the
+<li><strong>targets</strong> (List[input] or np.ndarray(input) : default <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; target values for monitoring mechanisms for each execution (used for learning).  The length (of the
 outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.</li>
-<li><strong>learning</strong> (bool :  default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; enables or disables learning during execution.
+<li><strong>learning</strong> (bool :  default <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; enables or disables learning during execution.
 If it is not specified, current state is left intact.
 If <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, learning is forced on; if <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>, learning is forced off.</li>
-<li><strong>call_before_trial</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called before each trial in the sequence is executed.</li>
-<li><strong>call_after_trial</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called after each trial in the sequence is executed.</li>
-<li><strong>call_before_time_step</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called before each time_step of each trial is executed.</li>
-<li><strong>call_after_time_step</strong> (Function : default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>) &#8211; called after each time_step of each trial is executed.</li>
+<li><strong>call_before_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called before each trial in the sequence is executed.</li>
+<li><strong>call_after_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called after each trial in the sequence is executed.</li>
+<li><strong>call_before_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called before each time_step of each trial is executed.</li>
+<li><strong>call_after_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called after each time_step of each trial is executed.</li>
 <li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; specifies whether mechanisms are executed for a single time step or a trial.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;process&gt;.results</strong> &#8211; list of the value of the outputState for each <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism of the system returned for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;process&gt;.results</strong> &#8211; list of the value of the outputState for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system returned for
 each execution.</p>
 </td>
 </tr>
@@ -764,7 +764,7 @@ each execution.</p>
 <dl class="method">
 <dt id="Process.Process_Base.show">
 <code class="descname">show</code><span class="sig-paren">(</span><em>options=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.Process_Base.show" title="Permalink to this definition">¶</a></dt>
-<dd><p>Print <code class="docutils literal"><span class="pre">executionList</span></code>, <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms,
+<dd><p>Print <code class="docutils literal"><span class="pre">executionList</span></code>, <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms,
 <code class="docutils literal"><span class="pre">outputs</span></code> and their labels for the system.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
