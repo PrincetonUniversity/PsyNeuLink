@@ -7,6 +7,20 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 
+
+# import random
+# random.seed(0)
+# np.random.seed(0)
+
+def test_search_function(controller=None, **kwargs):
+    result = np.array(controller.allocationPolicy).reshape(len(controller.allocationPolicy), -1)
+    return result
+
+def test_outcome_function(**kwargs):
+    result = np.array([0])
+    return result
+
+
 # Preferences:
 DDM_prefs = ComponentPreferenceSet(
                 prefs = {
@@ -18,16 +32,19 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
-                          # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
-                          # prefs=DDM_prefs
-                          # prefs={VERBOSE_PREF: False,
-                          #        REPORT_OPUTPUT_PREF: True}
+                 # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
 Reward = TransferMechanism(name='Reward',
                  # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
                   )
-Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear, allocation_samples=[0.1, .5])),
-                                   threshold=(1.0, ControlProjection(function=Linear, allocation_samples=[0.1, .5])),
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=Linear,
+                                                                      control_signal={
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                      )),
+                                   threshold=(1.0, ControlProjection(function=Linear,
+                                                                      control_signal={
+                                                                          ALLOCATION_SAMPLES:np.arange(0.1, 1.01, 0.3)}
+                                                                     )),
                                    noise=(0.5),
                                    starting_point=(0),
                                    t0=0.45),
@@ -56,6 +73,10 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
 
+# mySystem.controller.function = test_search_function
+# mySystem.controller.outcome_function = test_outcome_function
+mySystem.controller.assign_params({OUTCOME_FUNCTION: test_outcome_function})
+
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
@@ -70,6 +91,7 @@ inputList = [0.5, 0.123]
 rewardList = [20, 20]
 # stim_list_dict = {Input:[0.5, 0.123],
 #               Reward:[20, 20]}
+
 stim_list_dict = {Input:[[0.5], [0.123]],
               Reward:[[20], [20]]}
 
@@ -84,16 +106,17 @@ def show_trial_header():
     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
 
 def show_results():
-
+    import re
     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    print ('\tDrift rate control signal (from EVC): {}'.format(Decision.parameterStates[DRIFT_RATE].value))
-    print ('\tThreshold control signal (from EVC): {}'.format(Decision.parameterStates[THRESHOLD].value))
-    import re
+    print ('\tDrift rate control signal (from EVC): {}'.
+           # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
+           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
+    print ('\tThreshold control signal (from EVC): {}'.
+           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value)))))
     for result in results:
-        result_0 = re.sub('[\[,\],\n]','',str(result[0]))
-        result_1 = re.sub('[\[,\],\n]','',str(float(result[1])))
-        print("\t{}: {}".format(result_0, result_1))
+        print("\t{}: {}".format(result[0],
+                                re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
 
 # Run system:
 

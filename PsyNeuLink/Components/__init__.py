@@ -16,7 +16,6 @@
 #            'LEARNING_PROJECTION']
 
 import inspect
-import warnings
 
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Registry import register_category
@@ -38,7 +37,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 
 
 # DDM ------------------------------------------------------------------------------------------------------------------

@@ -290,6 +290,10 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     @functionOutputType.setter
     def functionOutputType(self, value):
 
+        if not value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
+            self._functionOutputType = value
+            return
+
         # Attempt to set outputType but conversion not enabled
         if value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
             raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
@@ -357,10 +361,10 @@ class Contradiction(Function_Base): # Example
         # NOTES:
         #    * paramsCurrent can be changed by including params in call to function
         #    * paramInstanceDefaults can be changed by calling assign_default
-        super(Contradiction, self).__init__(variable_default=variable_default,
-                                            params=params,
-                                            prefs=prefs,
-                                            context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
     def function(self,
                 variable=None,
@@ -459,7 +463,7 @@ class Contradiction(Function_Base): # Example
         if message:
             raise FunctionError(message)
 
-        super(Contradiction, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
 
 
 #region ****************************************   FUNCTIONS   *********************************************************
@@ -483,7 +487,7 @@ class UserDefinedFunction(Function_Base):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: True,
+                               kwFunctionOutputTypeConversion: False,
                                PARAMETER_STATE_PARAMS: None
     })
 
@@ -700,10 +704,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                  operation=operation,
                                                  params=params)
 
-        super(LinearCombination, self).__init__(variable_default=variable_default,
-                                                params=params,
-                                                prefs=prefs,
-                                                context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
         if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
@@ -883,7 +887,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-#region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
+#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 #endregion
 
 class TransferFunction(Function_Base):
@@ -935,7 +939,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                                                  intercept=intercept,
                                                  params=params)
 
-        super(Linear, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                      params=params,
                                      prefs=prefs,
                                      context=context)
@@ -1056,7 +1060,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                                                  scale=scale,
                                                  params=params)
 
-        super(Exponential, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                           params=params,
                                           prefs=prefs,
                                           context=context)
@@ -1391,7 +1395,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return none:
         """
 
-        super(LinearMatrix, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
@@ -1730,7 +1734,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  weighting=weighting,
                                                  params=params)
 
-        super(Integrator, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                          params=params,
                                          prefs=prefs,
                                          context=context)
@@ -2098,10 +2102,8 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
         return results
 
 
-
-
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
-
+#endregion
 # TBI
 
 #region **************************************   LEARNING FUNCTIONS ****************************************************
@@ -2319,8 +2321,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         return weight_change_matrix
 
-# *****************************************   OBJECTIVE FUNCTIONS ******************************************************
+#region *****************************************   OBJECTIVE FUNCTIONS ************************************************
+#endregion
 
-# TBI
 
-#  *****************************************   REGISTER FUNCTIONS   ****************************************************
+#region  *****************************************   REGISTER FUNCTIONS ************************************************
