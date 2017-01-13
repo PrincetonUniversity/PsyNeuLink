@@ -34,6 +34,9 @@
 #   TimeScale
 #   Registry
 
+# FIX:  ADD monitoredOutputStates ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
+#             TO IT RATHER THAN EVCMechanism (AS THEY CURRENTLY DO).
+
 # DOCUMENT: FINISH DOCUMENTING:
 #             .. _ControlMechanism_Specifying_Control:
 #

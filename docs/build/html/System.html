@@ -236,26 +236,22 @@ during the execution of the affected mechanisms (see <a class="reference interna
 <p>The mechanisms in a system are assigned designations based on the position they occupy in the <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>
 and/or the role they play in a system:</p>
 <blockquote>
-<div><p><a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>: receives input to the system, and begins execution;</p>
-<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>: final point of execution, and provides an output of the system;</p>
+<div><p><a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a>: receives input to the system, and does not receive projections from any other ProcessingMechanisms;</p>
+<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>: provides output from the system, and does not send projections to any other ProcessingMechanisms;</p>
 <p><a class="reference internal" href="Keywords.html#Keywords.Keywords.SINGLETON" title="Keywords.Keywords.SINGLETON"><code class="xref any py py-attr docutils literal"><span class="pre">SINGLETON</span></code></a>: both an <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism;</p>
-<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.CYCLE" title="Keywords.Keywords.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>: receives a projection that closes a recurrent loop;</p>
 <p><a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>: sends a projection that closes a recurrent loop;
 can be assigned an initial value;</p>
-<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.MONITORING" title="Keywords.Keywords.MONITORING"><code class="xref any py py-attr docutils literal"><span class="pre">MONITORING</span></code></a>: monitors value of another mechanism for use in learning;</p>
-<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>: ComparatorMechanism that monitors a
-<a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process</p>
-<p><code class="xref py py-data docutils literal"><span class="pre">CONTROL</span></code>: monitors the value of another mechanism used to control
-parameters values;</p>
-<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref py py-data docutils literal"><span class="pre">INTERNAL</span></code></a>: processing mechanism that does not fall into any of the
-categories above.</p>
+<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.CYCLE" title="Keywords.Keywords.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>: receives a projection that closes a recurrent loop;</p>
+<p><code class="xref any docutils literal"><span class="pre">CONTROL</span></code>: monitors the value of another mechanism for use in controlling parameter values;</p>
+<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.MONITORING" title="Keywords.Keywords.MONITORING"><code class="xref any py py-attr docutils literal"><span class="pre">MONITORING</span></code></a>: monitors the value of another mechanism for use in learning;</p>
+<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>: ComparatorMechanism that monitors a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process</p>
+<p><a class="reference internal" href="Keywords.html#Keywords.Keywords.INTERNAL" title="Keywords.Keywords.INTERNAL"><code class="xref any py py-attr docutils literal"><span class="pre">INTERNAL</span></code></a>: ProcessingMechanism that does not fall into any of the categories above.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Any <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a system must be, respectively,
 the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> or <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of any process(es) to which they belong.  However, it is not
 necessarily the case that the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process is also the
-<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of a system to which the process belongs
-(see the Chain example below).</p>
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> and/or <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of a system to which the process belongs (see the Chain example below).</p>
 </div>
 </div></blockquote>
 <p id="system-full-fig"><strong>Components of a System</strong></p>
@@ -264,65 +260,65 @@ necessarily the case that the <a class="reference internal" href="Keywords.html#
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="#"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
 that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for both processes projects to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanism</span></a> that is used to drive <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in Process B. It also projects
-to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that <a class="reference internal" href="ControlProjection.html"><span class="doc">controls</span></a> ProcessingMechanisms in
-both Processes A and B.  Note that while the mechanisms and projections responsible for learning and control
-belong to the system and can monitor and/or control mechanisms belonging to more than one process (as shown for
-control in this figure).</span></p>
+the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism for both processes projects to a <a class="reference internal" href="MonitoringMechanism.html"><span class="doc">MonitoringMechanisms</span></a> that is used to drive
+<a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> in Process B. It also projects to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
+that <a class="reference internal" href="ControlProjection.html"><span class="doc">controls</span></a> ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
+projections responsible for learning and control belong to the system and can monitor and/or control mechanisms
+belonging to more than one process (as shown for control in this figure).</span></p>
 </div>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="system-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A system can be executed by calling either its <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or
-<a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> methods. <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> executes each mechanism in the
-system once, whereas <a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> allows a series of executions to be carried out.</p>
+<p>A system can be executed by calling either its <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods.
+<a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> executes each mechanism in the system once, whereas <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>
+allows a series of executions to be carried out.</p>
 <div class="section" id="order">
 <span id="system-execution-order"></span><h3>Order<a class="headerlink" href="#order" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
 processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
 system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
-represented by the <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a>, which is a subset of the system&#8217;s graph that
-has been &#8220;pruned&#8221; to be acyclic (i.e., devoid of recurrent loops).  While the
-<a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a> is acyclic, all recurrent projections in the system remain
-intact during execution and can be initialized at the start of execution (see below).</p>
+determined by the system&#8217;s <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref any py py-attr docutils literal"><span class="pre">executionGraph</span></code></a> attribute, which is a subset of the system&#8217;s <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a> that has been
+&#8220;pruned&#8221; to be acyclic (i.e., devoid of recurrent loops).  While the <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref any py py-attr docutils literal"><span class="pre">executionGraph</span></code></a> is acyclic, all recurrent
+projections in the system remain intact during execution and can be
+<a class="reference internal" href="#system-execution-input-and-initialization"><span class="std std-ref">initialized</span></a> at the start of execution.</p>
 </div>
 <div class="section" id="phase">
 <span id="system-execution-phase"></span><h3>Phase<a class="headerlink" href="#phase" title="Permalink to this headline">¶</a></h3>
-<p>Execution occurs in passes through a system called phases.  Each phase corresponds to a single time_step.
-When executing a system in trial mode, a trial is defined as the number of phases (time_steps) required to execute
-a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to that phase
-are executed.   Mechanisms are assigned a phase where they are listed in the pathway of a process (see Process).
-When a mechanism is executed, it receives input from any other mechanisms that project to it within the system.</p>
+<p>Execution occurs in passes through a system called <em>phases</em>.  Each phase corresponds to a single <code class="xref any docutils literal"><span class="pre">time_step</span></code>.
+When executing a system in <code class="xref any docutils literal"><span class="pre">trial</span></code> mode, a trial is defined as the number of phases (time_steps) required to
+execute a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to
+that phase are executed.   Mechanisms are assigned a phase where they are listed in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a
+<a class="reference internal" href="Process.html"><span class="doc">process</span></a>. When a mechanism is executed, it receives input from any other mechanisms that project to it
+within the system.</p>
 </div>
 <div class="section" id="input-and-initialization">
 <span id="system-execution-input-and-initialization"></span><h3>Input and Initialization<a class="headerlink" href="#input-and-initialization" title="Permalink to this headline">¶</a></h3>
-<p>The input to a system is specified in the <code class="docutils literal"><span class="pre">input</span></code> argument of either its <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> or
-<a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> method. In both cases, the input for a single trial must be a list or ndarray of
-values, each of which is an appropriate input for the corresponding <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (listed in
-<a class="reference internal" href="#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref py py-data docutils literal"><span class="pre">originMechanisms</span></code></a>). If the <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> method
-is used, input for only a single trial is provided, and only a single trial is executed.  The
-<a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref py py-meth docutils literal"><span class="pre">run</span></code></a> method can be used for a sequence of executions (time_steps or trials),
-by providing it with a list or ndarray of inputs, one for each round of execution.  In both cases, two other types of
-input can be provided:  a list or ndarray of initialization values, and a list or ndarray of target values.
-Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops
-(designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>, and listed in
-<a class="reference internal" href="#System.System_Base.recurrentInitMechanisms" title="System.System_Base.recurrentInitMechanisms"><code class="xref py py-data docutils literal"><span class="pre">recurrentInitMechanisms</span></code></a>), and target values are assigned to the
-<a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref py py-data docutils literal"><span class="pre">target</span></code></a> attribute of <span class="xref doc">ComparatorMechanisms</span>
+<p>The input to a system is specified in the <code class="xref std std-keyword docutils literal"><span class="pre">input</span></code> argument of either its <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method. In both cases, the input for a single trial must be a list or ndarray of values,
+each of which is an appropriate input for the corresponding <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (listed in
+<a class="reference internal" href="#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">originMechanisms</span></code></a>). If the <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method is used,
+input for only a single trial is provided, and only a single trial is executed.  The <a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method
+can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
+one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
+initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
+execution, as input to mechanisms that close recurrent loops (designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>, and listed in
+<a class="reference internal" href="#System.System_Base.recurrentInitMechanisms" title="System.System_Base.recurrentInitMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">recurrentInitMechanisms</span></code></a>), and target values are assigned to the
+<a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> attribute of <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanisms</span></a>
 (see learning below;  also, see <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> for additional details of formatting input specifications).</p>
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref py py-data docutils literal"><span class="pre">learning</span></code></a> attribute indicates whether learning is enabled for the system. Learning is executed for any
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
 learning) can be specified in either of two formats, sequence or mechanism, that are described in the <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> module;
-see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">Targets</span></a>).  Both formats require that an input be provided for each
-<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of the system (listed in its
-<a class="reference internal" href="#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref py py-data docutils literal"><span class="pre">originMechanisms</span></code></a> attribute).  If the targets are specified in sequence or
-mechanism format, one target must be provided for each <code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code> &lt;Keywords.Keywords.TARGET&gt;` mechanism
-(listed in its <a class="reference internal" href="#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute).  Targets can also be specified
-in a <a class="reference internal" href="Run.html#run-targets-function-format"><span class="std std-ref">function format</span></a>, which generates a target for each execution of the mechanism.</p>
+see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">Targets</span></a>).  Both formats require that an input be provided for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of
+the system (listed in its <a class="reference internal" href="#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">originMechanisms</span></code></a> attribute).  If the targets are specified
+in sequence or mechanism format, one target must be provided for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism (listed in its
+<a class="reference internal" href="#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute).  Targets can also be specified in a
+<a class="reference internal" href="Run.html#run-targets-function-format"><span class="std std-ref">function format</span></a>, which generates a target for each execution of the mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code></a> of a process is not necessarily a
@@ -332,9 +328,10 @@ in a <a class="reference internal" href="Run.html#run-targets-function-format"><
 </div>
 <div class="section" id="control">
 <span id="system-execution-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
-<p>Every system is associated with a single <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>.  The controller monitors
-the outputState(s) of one or more mechanisms in the system
-and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
+<p>Every system is associated with a single <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The controller monitors the outputState(s) of one or more
+mechanisms in the system (listed in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute), and uses that information to set the
+value of
+parameters for those or other mechanisms in the system, or their functions
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for a description of how to specify which outputStates are
 monitored, and <a class="reference internal" href="ControlProjection.html#controlprojection-creation"><span class="std std-ref">Creating a ControlProjection</span></a> for specifying parameters to be controlled). The controller is
 executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
