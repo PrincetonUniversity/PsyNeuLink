@@ -94,8 +94,8 @@ COMMENT:
     :py:data:`ORIGIN` <Keywords.Keywords.ORIGIN>` mechanism in the process or system, using the same format
     used for the format of the input for the execute method of a process or system.  This can be specified as a
     nested set of lists, or an ndarray.  The exact structure is determined by a number of factors, as described below.
-    the number of :keyword:`ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
-    number of inputStates for each :keyword:`ORIGIN` mechanism, and whether the input to those inputStates is
+    the number of `ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
+    number of inputStates for each `ORIGIN` mechanism, and whether the input to those inputStates is
     single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
     further determined by whether only a single execution or multiple executions is specified.  Rather than specifying a
     single format structure that must be used for all purposes (which would necessarily be the most complex one),
@@ -104,7 +104,7 @@ COMMENT:
     either nested lists or ndarrays can be used, in which the innermost level (highest axis of an ndarray) is used to
     specify the input values for a given inputState (if any are multi-element), the next nested level (second highest
     axis) is used to specify the different inputStates of a given mechanism (if any have more than one), the level
-    (axis) after that is used to specify the different :keyword:`ORIGIN` mechanisms (if there is more than one), and
+    (axis) after that is used to specify the different `ORIGIN` mechanisms (if there is more than one), and
     finally the outermost level (lowest axis) is used to specify different trials (if there is more than one to be run).
 
     PsyNeuLink affords flexibility of input format that PsyNeuLink allows, the structure of the input can vary
@@ -133,16 +133,16 @@ formats.
   used for the next relevant factor in the list below.  If the number of inputs specified is less than the number of
   executions, then the input list is cycled until the full number of executions is completed.
 ..
-* **Number of mechanisms.** If run is used for a system, and it has more than one :keyword:`ORIGIN` mechanism, then the
-  next level of nesting of a list, or next higher axis of an ndarray, is used for the :keyword:`ORIGIN` mechanisms, with
-  each item containing the inputs for a given :keyword:`ORIGIN` mechanism within a round.  This factor is not releveant
-  when run is used for a single mechanism, a process (which only ever has one :keyword:`ORIGIN` mechanism), or a system
-  that has only one :keyword:`ORIGIN` mechanism.  It is also not relevant for the Mechanism format, since that separates
+* **Number of mechanisms.** If run is used for a system, and it has more than one `ORIGIN` mechanism, then the
+  next level of nesting of a list, or next higher axis of an ndarray, is used for the `ORIGIN` mechanisms, with
+  each item containing the inputs for a given `ORIGIN` mechanism within a round.  This factor is not releveant
+  when run is used for a single mechanism, a process (which only ever has one `ORIGIN` mechanism), or a system
+  that has only one `ORIGIN` mechanism.  It is also not relevant for the Mechanism format, since that separates
   the inputs for each mechanism into separate entries of a dictionary (:ref:`see below <Run_Mechanism_Format>`).
 ..
 * **Number of inputStates.** In general, mechanisms have a single ("primary") :ref:`inputState <Mechanism_InputStates>;
   however, some types of mechanisms can have more than one (e.g., :doc:`ComparatorMechanisms` have two: one for
-  their ``sample_input`` and the other for their ``target_input``).  If any :keyword:`ORIGIN` mechanism in a process or
+  their ``sample_input`` and the other for their ``target_input``).  If any `ORIGIN` mechanism in a process or
   system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
   is used for the set of inputStates for each mechanism.
 ..
@@ -170,8 +170,8 @@ require that mechanisms be referenced explicitly (though it is allowed). The fol
 sequence format for all of the combinations of the factors listed above.  The figure shows examples.
 
     *Lists:* if there is more than one round, then the outermost level of the list is used for the sequence of
-    executions.  If there is only one :keyword:`ORIGIN` mechanism and it has only one inputState (the most common 
-    case), then is a single sublist is used for the input of each round.  If the :keyword:`ORIGIN` mechanism has more 
+    executions.  If there is only one `ORIGIN` mechanism and it has only one inputState (the most common
+    case), then is a single sublist is used for the input of each round.  If the `ORIGIN` mechanism has more
     than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a 
     sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than 
     one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
@@ -181,12 +181,12 @@ sequence format for all of the combinations of the factors listed above.  The fi
 
     *ndarray:*  axis 0 is used for the first factor (round, mechanism, inputState or input) for which there is only one
     item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there is
-    more than one round, only one :keyword:`ORIGIN` mechanism, and that has only one inputState (the most common case),
+    more than one round, only one `ORIGIN` mechanism, and that has only one inputState (the most common case),
     then axis 0 is used for round, and axis 1 for inputs per round.  In the extreme, if there are multiple rounds,
-    more than one :keyword:`ORIGIN` mechanism, and more than on inputState for any of the :keyword:`ORIGIN` mechanisms,
+    more than one `ORIGIN` mechanism, and more than on inputState for any of the `ORIGIN` mechanisms,
     then axis 0 is used for rounds, axis 1 for mechanisms within rouund, axis 2 for inputStates of each mechanim, and
     axis 3 for the input to each inputState of a mechanism.  Note that if *any* mechanism being run (directly, or as
-    one of the :keyword:`ORIGIN` mechanisms of a process or system) has more than one inputState, then an axis must be
+    one of the `ORIGIN` mechanisms of a process or system) has more than one inputState, then an axis must be
     committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
     (i.e., even for those mechanisms that have a single inputState).
 
@@ -224,7 +224,7 @@ Initial Values
 ~~~~~~~~~~~~~~
 
 Any mechanism that is the ``sender`` of a projection that closes a loop in a process or system, and that is not an
-:keyword:`ORIGIN` mechanism, is designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`.
+`ORIGIN` mechanism, is designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`.
 An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
 first run.  These values are specified in the ``initial_values`` argument of ``run``, as a dict.  The key for each entry
 must be a mechanism designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`, and its value an
@@ -260,9 +260,9 @@ or system being run (see process py:data:`targetMechanism <Process.Process_Base.
 :py:data:`targetMechanism <System.System_Base.targetMechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the :py:data:`target <ComparatorMechanism.ComparatorMechanism.target>`
 parameter of the :py:data:`TARGET <Keywords.Keywords.TARGET>` mechanism for which it is intended.  Furthermore, if a
-range is specified for the output of the :keyword:`TERMINAL` mechanism with which the target is compared (that is,
+range is specified for the output of the `TERMINAL` mechanism with which the target is compared (that is,
 the mechanism that provides the ComparatorMechanism's :py:data:`sample <ComparatorMechanism.ComparatorMechanism.sample>`
-parameter, then the target must be within that range (for example, if the :keyword:`TERMINAL` mechanism is a
+parameter, then the target must be within that range (for example, if the `TERMINAL` mechanism is a
 :doc:`TransferMechanism` that uses a :py:class:`Logistic function <Function.Logistic>`, it's
 :py:data:`range <TransferMechanism.TransferMechanism.range>` is [0,1], so the target must be within that range).
 
@@ -375,7 +375,7 @@ def run(object,
     The targets argument must be the same length as the inputs argument.
 
     .. note::
-        * if num_executions is :keyword:`None`, a number of executions is run equal to the length of the input
+        * if num_executions is `None`, a number of executions is run equal to the length of the input
           (i.e., size of axis 0)
 
    Arguments
@@ -391,28 +391,28 @@ def run(object,
     initialize : bool default :keyword:`False`
         calls the ``initialize`` method of the system prior to a sequence of executions.
 
-    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default :keyword:`None`
+    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default `None`
         the initial values for mechanisms designated as :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALZE_CYCLE>`.
 
-    targets : List[input] or np.ndarray(input) : default :keyword:`None`
+    targets : List[input] or np.ndarray(input) : default `None`
         the target values for monitoring mechanisms for each execution (used for learning).
         The length must be equal to inputs.
 
-    learning : bool :  default :keyword:`None`
+    learning : bool :  default `None`
         enables or disables learning during execution.
         If it is not specified, current state is left intact.
         If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
-    call_before_trial : Function : default= :keyword:`None`
+    call_before_trial : Function : default= `None`
         called before each trial in the sequence is executed.
 
-    call_after_trial : Function : default= :keyword:`None`
+    call_after_trial : Function : default= `None`
         called after each trial in the sequence is executed.
 
-    call_before_time_step : Function : default= `:keyword:`None`
+    call_before_time_step : Function : default= ``None`
         called before each time_step is executed.
 
-    call_after_time_step : Function : default= :keyword:`None`
+    call_after_time_step : Function : default= `None`
         called after each time_step is executed.
 
     time_scale : TimeScale :  default TimeScale.TRIAL
@@ -423,7 +423,7 @@ def run(object,
 
     <object>.results : List[outputState.value]
         list of the values, for each execution, of the outputStates for a mechanism run directly,
-        or of the outputStates of the :keyword:`TERMINAL` mechanisms for the process or system run
+        or of the outputStates of the `TERMINAL` mechanisms for the process or system run
     """
 
     inputs = _construct_stimulus_sets(object, inputs)

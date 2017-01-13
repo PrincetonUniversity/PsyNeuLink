@@ -15,7 +15,7 @@ Overview
 
 An inputState of a mechanism receives the input from projections from other mechanisms in a process or system,
 and/or the input for a process or system itself (if the mechanism to which the inputState belongs is the
-:keyword:`ORIGIN` mechanism of that process or system --
+`ORIGIN` mechanism of that process or system --
 see :ref:`role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`).
 A list of projections received by an inputState is kept in its
 :py:data:`receivesFromProjections <InputState.receivesFromProjections>` attribute. It's ``function`` combines the

@@ -246,17 +246,17 @@ used for the next relevant factor in the list below.  If the number of inputs sp
 executions, then the input list is cycled until the full number of executions is completed.</li>
 </ul>
 <ul class="simple">
-<li><strong>Number of mechanisms.</strong> If run is used for a system, and it has more than one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, then the
-next level of nesting of a list, or next higher axis of an ndarray, is used for the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms, with
-each item containing the inputs for a given <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism within a round.  This factor is not releveant
-when run is used for a single mechanism, a process (which only ever has one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism), or a system
-that has only one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism.  It is also not relevant for the Mechanism format, since that separates
+<li><strong>Number of mechanisms.</strong> If run is used for a system, and it has more than one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, then the
+next level of nesting of a list, or next higher axis of an ndarray, is used for the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms, with
+each item containing the inputs for a given <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism within a round.  This factor is not releveant
+when run is used for a single mechanism, a process (which only ever has one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism), or a system
+that has only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism.  It is also not relevant for the Mechanism format, since that separates
 the inputs for each mechanism into separate entries of a dictionary (<span class="xref std std-ref">see below</span>).</li>
 </ul>
 <ul class="simple">
 <li><strong>Number of inputStates.</strong> In general, mechanisms have a single (&#8220;primary&#8221;) <span class="xref std std-ref">inputState &lt;Mechanism_InputStates&gt;;
 however, some types of mechanisms can have more than one (e.g., :doc:`ComparatorMechanisms</span> have two: one for
-their <code class="docutils literal"><span class="pre">sample_input</span></code> and the other for their <code class="docutils literal"><span class="pre">target_input</span></code>).  If any <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism in a process or
+their <code class="docutils literal"><span class="pre">sample_input</span></code> and the other for their <code class="docutils literal"><span class="pre">target_input</span></code>).  If any <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism in a process or
 system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
 is used for the set of inputStates for each mechanism.</li>
 </ul>
@@ -282,8 +282,8 @@ require that mechanisms be referenced explicitly (though it is allowed). The fol
 sequence format for all of the combinations of the factors listed above.  The figure shows examples.</p>
 <blockquote>
 <div><p><em>Lists:</em> if there is more than one round, then the outermost level of the list is used for the sequence of
-executions.  If there is only one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism and it has only one inputState (the most common
-case), then is a single sublist is used for the input of each round.  If the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism has more
+executions.  If there is only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism and it has only one inputState (the most common
+case), then is a single sublist is used for the input of each round.  If the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism has more
 than one inputState, then the entry for each round is a sublist of the inputStates, each entry of which is a
 sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than
 one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
@@ -292,15 +292,15 @@ then a sublist is used for each mechanism for each round, within which a sublist
 inputState of the corresponding mechanism, and inside that a sublist is used for the input for each inputState.</p>
 <p><em>ndarray:</em>  axis 0 is used for the first factor (round, mechanism, inputState or input) for which there is only one
 item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there is
-more than one round, only one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and that has only one inputState (the most common case),
+more than one round, only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and that has only one inputState (the most common case),
 then axis 0 is used for round, and axis 1 for inputs per round.  In the extreme, if there are multiple rounds,
-more than one <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, and more than on inputState for any of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms,
+more than one <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and more than on inputState for any of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms,
 then axis 0 is used for rounds, axis 1 for mechanisms within rouund, axis 2 for inputStates of each mechanim, and
 axis 3 for the input to each inputState of a mechanism.  Note that if <em>any</em> mechanism being run (directly, or as
-one of the <code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanisms of a process or system) has more than one inputState, then an axis must be
+one of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms of a process or system) has more than one inputState, then an axis must be
 committed to inputStates, and the input to every inputState of every mechanism must be specified in that axis
 (i.e., even for those mechanisms that have a single inputState).</p>
-<div class="figure align-center" id="id5">
+<div class="figure align-center" id="id7">
 <a class="reference internal image-reference" href="_images/Sequence_format_input_specs_fig.png"><img alt="Example input specifications in sequence format" src="_images/Sequence_format_input_specs_fig.png" style="width: 1553.25px; height: 1622.25px;" /></a>
 <p class="caption"><span class="caption-text">Example input specifications in sequence format</span></p>
 </div>
@@ -318,7 +318,7 @@ used, axis 0 is used for the sequence of rounds. If the mechanism has a single i
 the input for each round.  If the mechanism has multiple inputStates, then axis 1 is used for the inputStates,
 and axis 2 is used for the input to each inputState for each round.</p>
 <blockquote>
-<div><div class="figure align-center" id="id6">
+<div><div class="figure align-center" id="id8">
 <img alt="Mechanism format input specification" src="_images/Mechanism_format_input_specs_fig.png" />
 <p class="caption"><span class="caption-text">Mechanism format input specification</span></p>
 </div>
@@ -327,7 +327,7 @@ and axis 2 is used for the input to each inputState for each round.</p>
 <div class="section" id="initial-values">
 <span id="run-initial-values"></span><h3>Initial Values<a class="headerlink" href="#initial-values" title="Permalink to this headline">¶</a></h3>
 <p>Any mechanism that is the <code class="docutils literal"><span class="pre">sender</span></code> of a projection that closes a loop in a process or system, and that is not an
-<code class="xref std std-keyword docutils literal"><span class="pre">ORIGIN</span></code> mechanism, is designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>.
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, is designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>.
 An initial value can be assigned to such mechanisms, that will be used to initialize the process or system when it is
 first run.  These values are specified in the <code class="docutils literal"><span class="pre">initial_values</span></code> argument of <code class="docutils literal"><span class="pre">run</span></code>, as a dict.  The key for each entry
 must be a mechanism designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>, and its value an
@@ -357,9 +357,9 @@ or system being run (see process py:data:<a class="reference internal" href="Pro
 <a class="reference internal" href="System.html#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code></a> respectively), and the value of each target must
 match (in number and type of elements) that  of the <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref py py-data docutils literal"><span class="pre">target</span></code></a>
 parameter of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref py py-data docutils literal"><span class="pre">TARGET</span></code></a> mechanism for which it is intended.  Furthermore, if a
-range is specified for the output of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism with which the target is compared (that is,
+range is specified for the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism with which the target is compared (that is,
 the mechanism that provides the ComparatorMechanism&#8217;s <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.sample" title="ComparatorMechanism.ComparatorMechanism.sample"><code class="xref py py-data docutils literal"><span class="pre">sample</span></code></a>
-parameter, then the target must be within that range (for example, if the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanism is a
+parameter, then the target must be within that range (for example, if the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism is a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref py py-class docutils literal"><span class="pre">Logistic</span> <span class="pre">function</span></code></a>, it&#8217;s
 <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.range" title="TransferMechanism.TransferMechanism.range"><code class="xref py py-data docutils literal"><span class="pre">range</span></code></a> is [0,1], so the target must be within that range).</p>
 <p id="run-targets-sequence-format"><strong>Sequence format</strong> <em>(List[values] or ndarray):</em>
@@ -388,7 +388,7 @@ targets to be constructed programatically, in response to computations made duri
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10d814a90&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10d814908&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10d814b38&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10d814710&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10d8146d8&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10d81dda0&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10d81d710&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10d81d2e8&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10d81d358&gt; = None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10dbbacf8&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10d8e5a20&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10d8e55f8&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10d8eda90&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10d8fa400&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10d757940&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10d751cf8&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10d751d68&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10d751da0&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10d751c50&gt; = None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10d732f98&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <blockquote>
 <div><dl class="docutils">
@@ -443,7 +443,7 @@ targets to be constructed programatically, in response to computations made duri
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <ul class="last simple">
-<li>if num_executions is <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code>, a number of executions is run equal to the length of the input
+<li>if num_executions is <code class="xref any docutils literal"><span class="pre">None</span></code>, a number of executions is run equal to the length of the input
 (i.e., size of axis 0)</li>
 </ul>
 </div>
@@ -459,29 +459,29 @@ requirements and options).</dd>
 <dt>initialize</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">bool default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code></span><dd>calls the <code class="docutils literal"><span class="pre">initialize</span></code> method of the system prior to a sequence of executions.</dd>
 <dt>initial_values</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Dict[Mechanism, List[input] or np.ndarray(input)]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>the initial values for mechanisms designated as <code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Dict[Mechanism, List[input] or np.ndarray(input)]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref any docutils literal"><span class="pre">None</span></code></span><dd>the initial values for mechanisms designated as <code class="xref py py-data docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>.</dd>
 <dt>targets</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">List[input] or np.ndarray(input)</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>the target values for monitoring mechanisms for each execution (used for learning).
+ <span class="classifier-delimiter">:</span> <span class="classifier">List[input] or np.ndarray(input)</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref any docutils literal"><span class="pre">None</span></code></span><dd>the target values for monitoring mechanisms for each execution (used for learning).
 The length must be equal to inputs.</dd>
 <dt>learning</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>enables or disables learning during execution.
+ <span class="classifier-delimiter">:</span> <span class="classifier">bool</span> <span class="classifier-delimiter">:</span> <span class="classifier">default <code class="xref any docutils literal"><span class="pre">None</span></code></span><dd>enables or disables learning during execution.
 If it is not specified, current state is left intact.
 If <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, learning is forced on; if <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>, learning is forced off.</dd>
 <dt>call_before_trial</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called before each trial in the sequence is executed.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref any docutils literal"><span class="pre">None</span></code></span><dd>called before each trial in the sequence is executed.</dd>
 <dt>call_after_trial</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called after each trial in the sequence is executed.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref any docutils literal"><span class="pre">None</span></code></span><dd>called after each trial in the sequence is executed.</dd>
 <dt>call_before_time_step</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref any docutils literal"><span class="pre">:keyword:`None</span></code></span><dd>called before each time_step is executed.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <a href="#id5"><span class="problematic" id="id6">``</span></a>None`</span><dd>called before each time_step is executed.</dd>
 <dt>call_after_time_step</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref std std-keyword docutils literal"><span class="pre">None</span></code></span><dd>called after each time_step is executed.</dd>
+ <span class="classifier-delimiter">:</span> <span class="classifier">Function</span> <span class="classifier-delimiter">:</span> <span class="classifier">default= <code class="xref any docutils literal"><span class="pre">None</span></code></span><dd>called after each time_step is executed.</dd>
 <dt>time_scale</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">TimeScale</span> <span class="classifier-delimiter">:</span> <span class="classifier">default TimeScale.TRIAL</span><dd>specifies whether mechanisms are executed for a single time step or a trial</dd>
 </dl>
 <dl class="last docutils">
 <dt>&lt;object&gt;.results</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">List[outputState.value]</span><dd>list of the values, for each execution, of the outputStates for a mechanism run directly,
-or of the outputStates of the <code class="xref std std-keyword docutils literal"><span class="pre">TERMINAL</span></code> mechanisms for the process or system run</dd>
+or of the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms for the process or system run</dd>
 </dl>
 </dd>
 </dl>
