@@ -12,18 +12,18 @@
 """
 ..
     Sections:
-      * :ref:`System_Overview`
-      * :ref:`System_Creation`
-      * :ref:`System_Structure`
-         * :ref:`System_Graph`
-         * :ref:`System_Mechanisms`
-      * :ref:`System_Execution`
-         * :ref:`System_Execution_Order`
-         * :ref:`System_Execution_Phase`
-         * :ref:`System_Execution_Input_And_Initialization`
-         * :ref:`System_Execution_Learning`
-         * :ref:`System_Execution_Control`
-      * :ref:`System_Class_Reference`
+      * `System_Overview`
+      * `System_Creation`
+      * `System_Structure`
+         * `System_Graph`
+         * `System_Mechanisms`
+      * `System_Execution`
+         * `System_Execution_Order`
+         * `System_Execution_Phase`
+         * `System_Execution_Input_And_Initialization`
+         * `System_Execution_Learning`
+         * `System_Execution_Control`
+      * `System_Class_Reference`
 
 
 .. _System_Overview:
@@ -31,20 +31,21 @@
 Overview
 --------
 
-A system is a collection of processes that are executed together.  Executing a system executes all of the mechanisms
-in its processes in a structured order.  Projections between mechanisms in different processes within the system
-are permitted, as are recurrent projections, but projections from mechanisms in other systems are ignored
-(PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
+A system is a collection of `processes <Process>` that are executed together.  Executing a system executes all of the
+`mechanisms <Mechanism>` in its processes in a structured order.  `Projections <Projection>` between mechanisms in
+different processes within the system are permitted, as are recurrent projections, but projections from mechanisms
+in other systems are ignored (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
 
-* :doc:`ProcessingMechanism`
-    These receive input from one or more projections, transform the input in some way, and assign the result
-    as their output.
+* `ProcessingMechanism`
+    These receive input from one or more projections, transform the input in some way,
+    and assign the result as their output.
 
-* :doc:`MonitoringMechanism`
-    These monitor the output of other mechanisms for use in modifying the parameteres of projections (learning)
+* `ControlMechanism`
+    These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
+    functions.
 
-* :doc:`ControlMechanism`
-    These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms
+* `MonitoringMechanism`
+    These monitor the output of other mechanisms for use in modifying the parameters of projections (learning)
 
 .. _System_Creation:
 
@@ -52,11 +53,10 @@ Creating a System
 -----------------
 
 Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
-single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
-Whenever a system is created, a :doc:`ControlMechanism` is created for it and assigned as its controller.  The
-controller can be specified using the :py:data:`controller <System_Base.controller>` parameter, by referencing an
-existing ControlMechanism, or simply specifying its class;   if one is none specified,
-a :doc:`DefaultControlMechanism` is created.
+single process containing a single :ref:`default mechanism <LINK>` will be returned. Whenever a system is created,
+a `ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller`.  The controller can be
+specified by assigning an existing ControlMechanism to the  :keyword:`controller`  argument of the system's constructor,
+or specifying a class of ControlMechanism;  if none is specified, a `DefaultControlMechanism` is created.
 
 .. _System_Structure:
 
@@ -69,53 +69,42 @@ Graph
 ~~~~~
 
 When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
-mechanisms (nodes).  The graph is stored in the system's :py:data:`graph <System_Base.graph>` attribute,
-as a dict of dependencies,  that can be passed to graph theoretical tools for analysis.  A system can contain
-recurrent paths, such as feedback  loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses
-the graph of a system to determine the order in which its mechanisms are executed.  In order to execute such systems
-in an orderly manner, the graph must be acyclic.  So, for execution, PsyNeuLink constructs an
-:py:data:`executionGraph <System_Base.executionGraph>` from the system's :py:data:`graph <System_Base.graph>`.
-If the  system is acyclic, these are the same.  However, if the graph is cyclic, then the
-:py:data:`executionGraph <System_Base.executionGraph>` is a subset of the :py:data:`graph <System_Base.graph>`
-in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
+mechanisms (nodes).  The graph is assigned to the system's `graph` attribute.  This is a dictionary of dependencies,
+that can be passed to graph theoretical tools for analysis.  A system can have recurrent processing pathways, such as
+feedback loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a
+system to determine the order in which its mechanisms are executed.  In order to do so in an orderly manner, however,
+the graph must be acyclic.  So, for execution, PsyNeuLink constructs an `executionGraph` from the system's `graph`.
+If the  system is acyclic, these are the same.  If the system is cyclic, then the `executionGraph` is a subset of the
+`graph` in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
 this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
-during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed discussion).
-
+during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
 
-The mechanisms in a system are assigned the following designations based on the position they occupy in the graph
-structure and/or the role they play in a system:
+The mechanisms in a system are assigned designations based on the position they occupy in the `graph`
+and/or the role they play in a system:
 
-    COMMENT:
-        DOCUMENTATION: MAKE EACH :keyword:`<KEYWORD>` AN ATTRIBUTE OF A CLASS OF KEYWORDS WHERE THEY ARE DESCRIBED.
-        keywords
-    COMMENT
+    `ORIGIN`: receives input to the system, and does not receive projections from any other ProcessingMechanisms;
 
-    :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`: receives input to the system, and begins execution;
+    `TERMINAL`: provides output from the system, and does not send projections to any other ProcessingMechanisms;
 
-    :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>`: final point of execution, and provides an output of the system;
+    `SINGLETON`: both an `ORIGIN` and a `TERMINAL` mechanism;
 
-    :py:data:`SINGLETON <Keywords.Keywords.SINGLETON>`: both an `ORIGIN` and a `TERMINAL` mechanism;
-
-    :py:data:`CYCLE <Keywords.Keywords.CYCLE>`: receives a projection that closes a recurrent loop;
-
-    :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`: sends a projection that closes a recurrent loop;
+    `INITIALIZE_CYCLE`: sends a projection that closes a recurrent loop;
     can be assigned an initial value;
 
-    :py:data:`MONITORING <Keywords.Keywords.MONITORING>`: monitors value of another mechanism for use in learning;
+    `CYCLE`: receives a projection that closes a recurrent loop;
 
-    :py:data:`TARGET <Keywords.Keywords.TARGET>`: ComparatorMechanism that monitors a
-    `TERMINAL` mechanism of a process
+    `CONTROL`: monitors the value of another mechanism for use in controlling parameter values;
 
-    :py:data:`CONTROL <Keywords.Keywords.CONTROL>`: monitors the value of another mechanism used to control
-    parameters values;
+    `MONITORING`: monitors the value of another mechanism for use in learning;
 
-    :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>`: processing mechanism that does not fall into any of the
-    categories above.
+    `TARGET`: ComparatorMechanism that monitors a `TERMINAL` mechanism of a process
+
+    `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
     .. note:: Any `ORIGIN` and `TERMINAL` mechanisms of a system must be, respectively,
        the `ORIGIN` or `TERMINAL` of any process(es) to which they belong.  However, it is not
@@ -215,7 +204,7 @@ components (individual projections or processes) for which it is specified after
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
 learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
 see :ref:`Run_Inputs` and :ref:`Run_Targets`).  Both formats require that an input be provided for each
-:py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
+`ORIGIN` mechanism of the system (listed in its
 :py:data:`originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or
 mechanism format, one target must be provided for each :py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism
 (listed in its :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified
@@ -1891,7 +1880,7 @@ class System_Base(System):
 
     def show(self, options=None):
         """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` mechanisms,
-        :py:data:`TARGET <Keywords.Keywords.TARGET>` mechahinsms, ``outputs`` and their labels for the system.
+        `TARGET` mechahinsms, ``outputs`` and their labels for the system.
 
         Arguments
         ---------
@@ -2003,7 +1992,7 @@ class System_Base(System):
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :py:data:`TARGET <Keywords.Keywords.TARGET>`:list of TARGET mechanisms
+            `TARGET`:list of TARGET mechanisms
 
             :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 
