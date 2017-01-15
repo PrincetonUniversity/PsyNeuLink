@@ -267,9 +267,13 @@
 
 # DOCUMENT: update System docstring for MechanismList and mech_tuple attributes (following format of Process)
 
+# DOCUMENT parsing of (paramValue, projection_spec) tuples:
 
-# FIX: MAKE SURE THAT ANY ControlProjections ASSIGNED TO A CONTROLLER ARE FOR A MECHANISM IN THE SAME SYSTEM
-#           AS ANY PRE-EXISTING ONES;  SAME FOR INPUTSTATE CREATION
+# DOCUMENT:
+# ORDER OF INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
+# ORDER OF INSTANTIATION OF LEARNING PROJECTION COMPONENTS:
+# _deferred_init FOR LEARNING PROJECTIONS, MAPPING_PROJECTIONS W/O RECEIEVERS, ETC.
+
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -508,205 +512,7 @@
 # IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
 # IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
 # IMPLEMENT: See *** items in System
-# IMPLEMENT/CONFIRM HANDLNG OF outputs AND outputState(s).value:
-#                     simplify _outputStateValueMapping by implementing a method
-#                     that takes list of output indices and self.outputStates
-
-# 8/23/16:
-
-# INSTANTATION OF ARGS AS OBJECTS
-# PROBLEM: By allowing specification of an arg to be an object,
-#              but using it as a template (to recreate another instance that will actually be used)
-#              preclude being able to specify a particular object.
-#          This is not a problem for Function Components, for which specific instances are not needed
-#              (although is inefficient: have to instantiate each twice -- particularly salient for Matlab-based ones)
-#              but what about other object types (e.g., projections), that might be explicitly instantiated for
-#              use in one or more places, or created in one place and used in another (e.g., projections for a Process);
-#              such items should/would be usable as templates but not actual objects
-#          ??SOLUTIONS:
-#              - add attribute that determines whether the object should be used an instance or a template?
-#                ?? which should be the default behavior?
-#              - determine use by context:  items created inline for args = templates;  assigned items = instances??
-
-# FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function (rather than class ref)
-#      AND Function.add_args_to_param_classes:
-#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN _instantiate_function
-# FIX:
-#     Specification of projections arg for Process level:  projection object?  matrix??
-#     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
-#     Flattening of matrix param of function arg for MappingProjection
 #
-# FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
-#       USE EVC System Test Script and delete CONTROL_PROJECTION for drift_rate param in DDM.__init__()
-# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
-# FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningProjection:
-# FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
-# FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
-# FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
-# FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningProjection
-# FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
-# FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
-# FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
-# FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
-# FIX: ?? SHOULD THIS USE _assign_defaults:
-# FIX: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module Function
-# FIX: IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
-# FIX: Assignment of processInputStates when mechanism belongs to more than one process
-#       EVC should be assigned its own phase, and then assign its input to the process inputstates,
-#            with the phase assigned to the EVC phase
-
-# 8/8/16:
-# DOCUMENT: Update ReadMe
-# DOCUMENT:
-# ORDER INSTANTIATION OF PARAMETER STATES AND EXECUTE METHODS
-# ORDER INSTANTIATION OF LEARNING PROJECTION COMPONENTS:
-# _deferred_init FOR LEARNING PROJECTIONS, MAPPING_PROJECTIONS W/O RECEIEVERS, ETC.
-# PROBLEM:
-#    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
-#        this reqiures access to LearningProjection's receiver, and thus that _instantiate_receiver be called first;
-#    - that means instantiating receiver before the execute method of the MappingProjection has been instantiated
-#        which, in turn, means that the weight matrix has not been instantiated
-#    - that is a problem for _instantiate_sender, as there is no way to validate that
-#        the length of the error_signal from the LearningProjection.sender is compatible with the dim of the weight matrix
-
-# PROBLEM with parsing of (paramValue, projection_spec) tuples:
-#    currently, used for mechanisms, and get parsed by _instantiate_state when instantiating their parameter states;
-#        paramValue is assigned to value of state, and that is used for function of the *mechanism*
-#    however, when used as functionParam to directly instantiate an function, has not been parsed
-#    could try to parse in Function._instantiate_function, but then where will projection_spec be kept?
-
-# 7/25/16:
-#
-# FIX handling of inputStates (SAMPLE and TARGET) in ComparatorMechanism:
-#              requiredParamClassDefaults
-#              _instantiate_attributes_before_function
-# FIX: DISABLE MechanismsParameterState execute Method ASSIGNMENT IF PARAM IS AN OPERATION;  JUST RETURN THE OP
-#
-# 7/24/16:
-#
-# FIX:  TEST FOR FUNCTION CATEGORY == TransferMechanism
-# TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
-
-# FIX:
-        # FIX: USE LIST:
-        #     output = [None] * len(self.paramsCurrent[OUTPUT_STATES])
-        # FIX: USE NP ARRAY
-        #     output = np.array([[None]]*len(self.paramsCurrent[OUTPUT_STATES]))
-
-# 7/14/16:
-#
-# FIX: MAKE MONITOR_FOR_CONTROL A REQUIRED PARAM FOR System CLASS
-#      ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
-# FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITOR_FOR_CONTROL IN SYSTEM.params[]
-# FIX: CALL _instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
-# FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITOR_FOR_CONTROL default: System,Mechanism or ConrolMechanism?
-#
-# 7/13/16:
-#
-# FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
-
-# 7/10/16:
-#
-
-# 7/9/16
-#
-# FIX: ERROR in "Sigmoid" script:
-# Components.Projections.Projection.ProjectionError:
-#  'Length (1) of outputState for Process-1_ProcessInputState must equal length (2) of variable for MappingProjection'
-#       PROBLEM: MappingProjection._instantiate_function() compares length of sender.value, which for DDM is 3 outputStates
-#                                                     with length of receiver, which for DDM is just a single inputState
-#
-#
-# 7/4/16:
-#
-# Fix Finish fixing LinearCombination:
-#      (checking length of 1D constituents of 2D variable);
-#      confirm that for 2D, it combines
-#      consider doing it the other way, and called by projections
-# Fix: ??Enforce 2D for parameters values:
-# Fix:  DOCUMENT:
-#       - If its a 1D vector, then just scale and offset, but don't reduce?
-#       - So, the effect of reduce would only occur for 2D array of single element arrays
-# Fix sigmoid range param problem (as above:  by enforcing 2D)
-#
-#
-# CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#####
-
-# --------------------------------------------
-# FIX: FINISH UP executeOutoutMethodDefault -> self.value:
-# 4) # # MODIFIED 6/14/16: QQQ - WHY DOESN'T THIS WORK HERE??
-# --------------------------------------------
-
-# CONVERSION TO NUMPY:
-# FIX: CONSTRAINT CHECKING SHOULD BE DONE AS BEFORE, BUT ONLY ON .value 1D array
-# --------------
-# FIX (FUNCTIONS / LinearMatrix): IS THIS STILL NEEDED??  SHOULDN'T IT BE 1D ARRAY??
-# FIX (FUNCTIONS / LinearMatrix): MOVE KEYWORD DEFINITIONS OUT OF CLASS (CONFUSING) AND REPLACE self.kwXXX with kwXXX
-# -------------
-# FIX (PROJECTION): FIX MESS CONCERNING VARIABLE AND SENDER ASSIGNMENTS:
-#         SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
-#                     MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
-#                      (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
-# --------------
-# FIX: (OutputState 5/26/16
-        # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
-# -------------
-# FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
-# FIX: (CATEGORY CLASES): IMPLEMENT .metaValue (LIST OF 1D ARRAYS), AND USE FOR ControlProjection AND DDM EXTRA OUTPUTS
-# FIX: IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
-#                                                                         - REPRESENT OUTPUT FORMAT OF function
-#                                                                         - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
-#                                                                         - LOG .value AND .metavalues
-
-# END CLEANUP @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-
-# TEST: [0, 0, 0] SHOULD GENERATE ONE LIST InputState BUT [[0], [0], [0]] SHOULD GENERATE THREE
-# TEST: TRY Process with variableClassDefault = 0 and [0]
-
-# FIX: 6.10.16
-#     X Utilities.convert_to_np_array
-#     * self.variable assignments in Mechanism (2D), States and Projection (1D)
-#     * Mechanism needs to override _validate_variable to parse and assign multi-value variable to 2D ARRAY:
-#         COORDINATE MULTI-VALUE VARIABLE (ONE FOR EACH INPUT STATE) WITH variable SPECIFIED IN kwInputState PARAM:
-#         COMPARE LENGTH OF MECHANISM'S VARIABLE (I.E., #OF ARRAYS IN LIST) WITH kwInputstate:
-#                        LENGTH OF EITHER LIST OF NAMES OR SPECIFICATION DICT (I.E., # ENTRIES)
-#                        DO THIS IN _instantiate_state IF PARAM_STATE_IDENTIFIER IS InputState
-#                        OR HAVE InputState OVERRIDE THE METHOD
-#     * in Mechanism, somehow, convert output of execute method to 2D array (akin to variable) one for each outputstate
-#     * constraint_value in Mechanism.instantiate_state_lists (2D)
-#     * entries (for logs) in State.value setter (1D) and ControlProjection.update (1D)
-#     * Add Function.metaValue as alternative to multple outputState:
-#               - should parallel .value in overridable setter/getter structure
-#               - should log specified values
-#     * INSTANTIATE MECHANISM STATE SHOULD PARSE self.variable (WHICH IS FORCED TO BE A 2D ARRAY) INTO SINGLE 1D ARRAYS
-
-# ************************************************************************************************
-#
-#
-#      IMPLEMENT: execute method FOR DefaultControlMechanism (EVC!!)
-#
-#  TEST: DefaultController's ability to change DDM params
-# IMPLEMENT: Learning projection (projection that has another projection as receiver)
-#
-# FROM EVC MEETING 5/31/16:
-# FIX: CLARIFY SPECIFICATION OF PARAM DICTS
-# FIX:  Syntax for assigning kwExeuteMethodParam for ParameterState at time of mechanism instantiation
-#               PROBLEM 1:  for paramClassDefaults, must specify ParamValueProjection tuple,
-#                           but not in Pathway, don't need to do that (can just use tuple notation)
-#               SOLUTION:   get rid of ParamValueProjection tuple?
-#
-#               PROBLEM 2:  params (e.g., DriftRate) are specified as:
-#                               FUNCTION_PARAMS in paramClassDefaults and Mechanism declartion
-#                               PARAMETER_STATE_PARAMS in Process Pathway list
-# CONFIRM:  Syntax to specify ModulationOperation for ParameterState at time of mechanism instantiation
-# FIX: ConrolSignal.set_intensity SHOULD CHANGE paramInstanceDefaults
-# CONFIRM:  ControlProjection.intensity GETS COMBINED WITH allocadtion_source USING ModulationOperation
-# QUESTION: WHAT DOES SETTING ControlProjection.set_intensity() DO NOW??
-# IMPLEMENT: ADD PARAM TO DDM (AKIN TO kwDDM_AnayticSolution) THAT SPECIFIES PRIMARY INPUTSTATE
-#                              (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #endregion
 
 
@@ -1002,6 +808,8 @@
 #
 # - FIX: GET RID OFF '-1' SUFFIX FOR CUSTOM NAMES (ONLY ADD SUFFIX FOR TWO OR MORE OF SAME NAME, OR FOR DEFAULT NAMES)
 # - FIX: MAKE ORDER CONSISTENT OF params AND time_scale ARGS OF update() and execute()
+#
+# TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 #
 # TEST warnings.warn
 #
@@ -1669,7 +1477,7 @@
 #region COMPONENT:
 # -----------------------------------------------------------------------------------------------------------
 #
-# FIX: VARIABLE VS. VALUE BUSINESS:
+# FIX!!: VARIABLE VS. VALUE BUSINESS:
 #     QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
 #     QUESTION: is self.value re-initialized prior to every system execution? process execution?
 #     FIX: Mechanism.inputValue and outputValue should both be lists (not np.arrays)
@@ -1691,7 +1499,16 @@
 #     FIX: IMPLEMENT .output FOR Process:  == ndarray of all outputState.variables
 #                         # FIX: THESE NEED TO BE PROPERLY MAPPED
 #                         return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
-#
+#     FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
+#     IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
+#                                                                             - REPRESENT OUTPUT FORMAT OF function
+#                                                                             - ENFORCE 1D DIMENSIONALITY OF ELEMENTS
+#                                                                             - LOG .value AND .metavalues
+#     FIX: USE LIST:
+#         output = [None] * len(self.paramsCurrent[OUTPUT_STATES])
+#     FIX: USE NP ARRAY
+#         output = np.array([[None]]*len(self.paramsCurrent[OUTPUT_STATES]))
+
 # FIX:  ALLOW `name` TO BE A PARAM IN A PARAMS DICT (WHICH OVERRIDES name ARGUMENT OF CONSTRUCTOR)
 #
 # FIX: MAKE ALL OBJECT PARAMS @PRPOERTY SO THEY ARE READ-ONLY (I.E., ACCESSSIBLE ONLY VIA ASSIGN_PARAMS)
@@ -1699,6 +1516,28 @@
 #
 # FIX:  IN _validate_params, ARE FUNCTION_PARAMS CHECKED AGAINST FUNCTION?  SHOULD BE.
 # FIX:           MODIFY THIS TO USE user_params (STILL TREATING function_param_specs AS BELOW)
+#
+# INSTANTATION OF ARGS AS OBJECTS
+# PROBLEM: By allowing specification of an arg to be an object,
+#              but using it as a template (to recreate another instance that will actually be used)
+#              preclude being able to specify a particular object.
+#          This is not a problem for Function Components, for which specific instances are not needed
+#              (although is inefficient: have to instantiate each twice -- particularly salient for Matlab-based ones)
+#              but what about other object types (e.g., projections), that might be explicitly instantiated for
+#              use in one or more places, or created in one place and used in another (e.g., projections for a Process);
+#              such items should/would be usable as templates but not actual objects
+#          ??SOLUTIONS:
+#              - add attribute that determines whether the object should be used an instance or a template?
+#                ?? which should be the default behavior?
+#              - determine use by context:  items created inline for args = templates;  assigned items = instances??
+
+# FIX: REFACTOR Function._instantiate_function TO USE INSTANTIATED function (rather than class ref)
+#      AND Function.add_args_to_param_classes:
+#      RATHER THAN EXTRCTING PARAMS, CONVERTING IT INTO A CLASS AND THEN RE-INSTANTIATING IN _instantiate_function
+# FIX:
+#     Specification of projections arg for Process level:  projection object?  matrix??
+#     kwFullConnectivity not working on outputLayer in Multilayer Learning Test Script
+#     Flattening of matrix param of function arg for MappingProjection
 #
 # FIX / IMPLEMENT:  change .function to a property, that refers to ivar ._function;
 #                  make any internal direct assignments to ._function
@@ -1953,6 +1792,8 @@
 # FIX:          and in implement initialization of them in execution
 #           OPTIONS:  ZEROS, NO INPUT FOR FIRST PASS, OR EXPLICITLY?
 #
+# CONFIRM: Assignment of processInputStates when mechanism belongs to more than one process
+#
 # IMPLEMENT: Process: phases in execution
 # IMPLEMENT: ProcessTuples (per MechanismTuples)
 #
@@ -2005,9 +1846,20 @@
 
 #region MECHANISM: -----------------------------------------------------------------------------------------------------------
 #
-# FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
-# IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
-#                   (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
+# FIX MonitorOutputStates ISSUES:
+#     FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
+#     IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
+#                       (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
+#     FIX: MAKE MONITOR_FOR_CONTROL A REQUIRED PARAM FOR System CLASS
+#          ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
+#     FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITOR_FOR_CONTROL IN SYSTEM.params[]
+#     FIX: CALL _instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
+#     FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITOR_FOR_CONTROL default: System,Mechanism or ConrolMechanism?
+#     IMPLEMENT: EVCMechanism.MonitoredOutputStates (list of each Mechanism.outputState being monitored)
+#
+# FIX!!: CONSOLIDATE _instantiate_parameter_states IN Mechanism AND Projection AND MOVE TO ParameterState Module
+# FIX:     Function IN Projection:  (_instantiate_attributes_before_function() and _instantiate_parameter_states())
+# FIX:     ?? SHOULD THIS USE _assign_defaults ??
 #
 # CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
 #          #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
@@ -2105,8 +1957,22 @@
 #      THIS SHOULD OBVIATE NEED FOR DefaultControlMechanism
 #      THEN TEST EVC System Laming Validation Test with weights assigned to EVC
 #
-# FIX:  ADD monitoredOutputStates ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
-#             TO IT RATHER THAN EVCMechanism (AS THEY CURRENTLY DO).
+# FIX monitor_for_control ISSUES (cf monitoredOutputStates ISSUES UNDER MECHANISM (ABOVE))
+#     FIX:  ADD monitoredOutputStates ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
+#                 TO IT RATHER THAN EVCMechanism (AS THEY CURRENTLY DO).
+#     - IMPLEMENT: MONITOR_FOR_CONTROL_OPTION for individual Mechanisms (in ControlMechanism):
+#            TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITOR_FOR_CONTROL specification
+#                                    and/or MONITOR_FOR_CONTROL in Mechanism.params[]
+#                                             (that is checked when ControlMechanism is implemented
+#            DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
+#                          it is applied to just that mechanism
+#     DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
+#                                   EVCMechanism.MonitoredOutputStates (the terminal states themselves)
+#
+# FIX/DOCUMENT:  WHY SYSTEM: None FOR EVCMechanism AND DefaultControlMechanism [TRY REMOVING FROM BOTH]
+#
+# FIX: GENERATE MORE MEANINGFUL ERROR WHEN THERE ARE NO OUTPUTSTATES TO MONITOR FOR EVC
+#       USE EVC System Test Script and delete CONTROL_PROJECTION for drift_rate param in DDM.__init__()
 #
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
 # IMPLEMENT: Implement way of specifying default allocation policy for ControlSignals in system
@@ -2166,22 +2032,12 @@
 # ? IMPLEMENT .add_projection(Mechanism or State) method that adds controlSignal projection
 #                   validate that Mechanism / State.owner is in self.system
 #                   ? use Mechanism.add_projection method
-# - IMPLEMENT: MONITOR_FOR_CONTROL_OPTION for individual Mechanisms (in ControlMechanism):
-#        TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITOR_FOR_CONTROL specification
-#                                and/or MONITOR_FOR_CONTROL in Mechanism.params[]
-#                                         (that is checked when ControlMechanism is implemented
-#        DOCUMENT: if it appears in a tuple with a Mechanism, or in the Mechamism's params list,
-#                      it is applied to just that mechanism
-#
+
 # IMPLEMENT: call ControlMechanism should call ControlProjection._instantiate_sender()
 #                to instantaite new outputStates and Projections in _take_over_as_default_controller()
 #
 # IMPLEMENT: kwPredictionInputTarget option to specify which mechanism the EVC should use to receive, as input,
 #                the output of a specified prediction mechanims:  tuple(PredictionMechanism, TargetInputMechanism)
-#
-# IMPLEMENT: EVCMechanism.MonitoredOutputStates (list of each Mechanism.outputState being monitored)
-# DOCUMENT: DIFFERENCES BETWEEN EVCMechanism.inputStates (that receive projections from monitored States) and
-#                               EVCMechanism.MonitoredOutputStates (the terminal states themselves)
 #
 # FIX: CURRENTLY DefaultController IS ASSIGNED AS DEFAULT SENDER FOR ALL ControlProjections IN
 # FIX:                   ControlProjection.paramClassDefaults[PROJECTION_SENDER]
@@ -2457,13 +2313,30 @@
 # IMPLEMENT: *** IF LEARNING IS SPECIFIED FOR PROCESS, REMOVE THE NEED TO SPECIFY TARGET:
 #                  AUTOMATICALLY ASSIGN IT TO BE SAME FORMAT AS OUTPUT OF TERMINAL MECHANISM:
 #                IN Process: WARN BUT SET TARGET TO self.terminal.outputState
-
+# FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
+# FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningProjection:
+# FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
+# FIX:             VALIDATE input, outout AND error IN _instantiate_sender and instantiate_reciever
+# FIX:             SET CONVERSION FLAG, AND THEN PASS CONVERSION FLAG TO INSTANTIATION OF bp UTLITY FUNCTION
+# FIX:       OR DO TYPE CHECKING AND TRANSLATION IN LearningProjection
+# FIX:            IMPLEMENT self.input, self.output, and self.error AND ASSIGN IN instantiate sender & receiver
+# FIX:            IN _instantiate_sender AND _instantiate_receiver, CHECK FOR TYPE AND, IF FLOAT,
+# FIX:            POINT self.input TO @property self.convertInput, AND SIMILARLY FOR output AND error
+#
 # SYSTEM LEARNING ***************************************************************************************************
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
 #       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
 #       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?
+#
+# PROBLEM: [FIXED PER BELOW]
+#    - _instantiate_sender must know error_source, to know whether or not to instantiate a monitoring mechanism;
+#        this reqiures access to LearningProjection's receiver, and thus that _instantiate_receiver be called first;
+#    - that means instantiating receiver before the execute method of the MappingProjection has been instantiated
+#        which, in turn, means that the weight matrix has not been instantiated
+#    - that is a problem for _instantiate_sender, as there is no way to validate that
+#        the length of the error_signal from the LearningProjection.sender is compatible with the dim of the weight matrix
 #
 # IMPLEMENT: NEW DESIGN:
 #
@@ -2612,6 +2485,16 @@
 # IMPLEMENT: simple Combine() or Reduce() function that either sums or multiples all elements in a 1D array
 # IMPLEMENT:  REPLACE INDIVIDUAL FUNCTIONS WITH ABILITY TO PASS REFERENCE TO NP FUNCTIONS (OR CREATE ONE THAT ALLOWS THIS)
 #
+# LinearCombination:
+#     Fix Finish fixing LinearCombination:
+#          (checking length of 1D constituents of 2D variable);
+#          confirm that for 2D, it combines
+#          consider doing it the other way, and called by projections
+#     Fix: ??Enforce 2D for parameters values:
+#     Fix:  DOCUMENT:
+#           - If its a 1D vector, then just scale and offset, but don't reduce?
+#           - So, the effect of reduce would only occur for 2D array of single element arrays
+#
 #endregion
 
 #region RUN: ----------------------------------------------------------------------------------------------------
@@ -2701,9 +2584,10 @@
 
 #region DDM_MECH: ------------------------------------------------------------------------------------------------------
 #
-# IMPLEMENT DDM: noise function for TIME_STEP mode (to use non-Gaussian distributions), or implemente JumpDM
+# IMPLEMENT!! DDM: noise function for TIME_STEP mode (to use non-Gaussian distributions), or implemente JumpDM
+# IMPLEMENT!!: ADD PARAM TO DDM THAT SPECIFIES PRIMARY INPUTSTATE (i.e., DRIFT_RATE, BIAS, THRSHOLD)
 #
-# FIX: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
+# FIX!!: CHECK WHETHER DDM STILL HANDLES runtime_params DIFFERENTLY
 #
 # FIX: DDM -> DDMMechanism
 #
@@ -2736,3 +2620,7 @@
 # FIX:     - add equation for rate argument
 #
 # #endregion
+
+#region ComparatorMechanism -----------------------------------------------------------------------------------
+# FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
+#endregion
