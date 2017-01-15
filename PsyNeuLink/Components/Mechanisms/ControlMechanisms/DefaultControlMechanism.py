@@ -105,7 +105,17 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                                          prefs=prefs,
                                                          context=self)
 
+    def _validate_projection(self, projection, context=None):
+        """Override super method
 
+        DefaultControlMechanism may not have a system assigned, in which case super's method will crash,
+        since it checks whether projection is to a mechanism with the same system as self
+
+        IMPLEMENTATION NOTE:
+        This can be reomved if/when ControlMechanism uses deferred initialization for ControlProjection
+
+        """
+        pass
 
     def _execute(self,
                     variable=None,
@@ -139,7 +149,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
         self.allocationPolicy = self.inputValue
-
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
