@@ -62,10 +62,10 @@ Description: Princeton University licenses this file to You under the Apache Lic
 ## SOFTWARE ARCHITECTURE
 
  PsyNeuLink package dependencies:
-
+    numpy
+    typecheck-decorator
     toposort.py - graph analysis
     mpi4py.py  - Parallelization using MPI
-    typecheck-decorator
     wfpt.py - Wald first passage times for DDM
 
  Python Object Classes (and Initialization Arguments):

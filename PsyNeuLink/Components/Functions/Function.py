@@ -76,6 +76,8 @@ class FunctionOutputType(IntEnum):
     NP_2D_ARRAY = 2
 
 
+# Typechecking *********************************************************************************************************
+
 # TYPE_CHECK for Function Instance or Class
 def is_Function(x):
     if not x:
@@ -97,9 +99,22 @@ def is_function_type(x):
     else:
         return False
 
+
 # *******************************   get_param_value_for_keyword ********************************************************
 
 def get_param_value_for_keyword(owner, keyword):
+    """Return the value for a keyword used by a subclass of Function
+
+    Parameters
+    ----------
+    owner : Component
+    keyword : str
+
+    Returns
+    -------
+    value
+
+    """
     try:
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except FunctionError as e:
@@ -122,25 +137,6 @@ def get_param_value_for_function(owner, function):
         if owner.prefs.verbosePref:
             print ("Function ({}) can't be evaluated for {}".format(function, owner.name))
         return None
-
-def optional_parameter_spec(param):
-    if not param:
-        return True
-    return parameter_spec(param)
-
-def parameter_spec(param):
-    # if is_numeric(param):
-    if (isinstance(param, (numbers.Number,
-                           np.ndarray,
-                           list,
-                           tuple,
-                           function_type,
-                           ParamValueProjection,
-                           Projection)) or
-        (inspect.isclass(param) and issubclass(param, Projection)) or
-        param in parameter_keywords):
-        return True
-    return False
 
 
 class Function_Base(Function):

@@ -362,6 +362,15 @@ class ControlMechanism_Base(Mechanism_Base):
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
+    def _validate_projection(self, projection, context=None):
+        """Insure that projection is to mechanism within the same system as self
+        """
+
+        receiver_mech = projection.receiver.owner
+        if not receiver_mech in self.system.mechanisms:
+            raise ControlMechanismError("Attempt to assign ControlProjection {} to a mechanism ({}) that is not in {}".
+                                              format(projection.name, receiver_mech.name, self.system.name))
+
     def _instantiate_attributes_before_function(self, context=None):
         """Instantiate self.system attribute
 
@@ -526,6 +535,8 @@ class ControlMechanism_Base(Mechanism_Base):
 
         Returns state: (OutputState)
         """
+
+        self._validate_projection(projection)
 
         from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
         if not isinstance(projection, ControlProjection):
