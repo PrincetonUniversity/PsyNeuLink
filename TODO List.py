@@ -478,11 +478,6 @@
 #                 one in which the reward goes to infinity (how do to that?)
 #                 one in which probability of softmax is learned - but isn’t that what is happening here?
 #
-# IMPLEMENT: Change the name of Function to Operation (or Function once that = Component) and restructure into Types
-# IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
-#            - do pass after _deferred_init to add MonitoringMechanism(s) to mechanisms_list
-#              (or do so in _deferred_init pass)
-#            - ??add flag that enables/disables learning? (for use by system/EVC)??
 # IMPLEMENT: set _deferred_init flag on a mechanism if any component has a delayed init
 #                and use in Process to filter which ones need to be called (both for efficiency and debugging)
 # IMPLEMENT: Modify name of specification for outputStates to be monitored for ControlSignals: monitorForControl
@@ -498,20 +493,6 @@
 #      i.e., one that simply passes its input through to the output unchanged
 #      e.g., for passing matrix unmodified to output (in case of paramater state for a matrix)
 #      currently use LinearCombination with identityMatrix, but for a matrix this reduces it to a vector
-# IMPLEMENT: Add Integrator as Type of Function and move Integrator class from TransferMechanism to Integrator Type
-# IMPLEMENT: ComparatorMechanism Processing Mechanism TYPE, ComparatorMechanism SUBTYPE
-# IMPLEMENT: PreferenceLevel SUBTYPE
-#            For Function Components:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
-# IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
-#
-# IMPLEMENT: Process factory method:
-#                 add name arg (name=)
-#                 test params (in particular, kwConfig)
-#                 test dict specification
-# IMPLEMENT: Quote names of objects in report output
-# IMPLEMENT: make paramsCurrent a @property, and force validation on assignment if validationPrefs is set
-# IMPLEMENT: system.mechanismsList as MechanismList (so that names can be accessed)
-# IMPLEMENT: See *** items in System
 #
 #endregion
 
@@ -820,8 +801,11 @@
 #              can define file to which log will go
 #
 # - IMPLEMENT: master registry of all Function objects
+# - IMPLEMENT TYPE REGISTRIES (IN ADDITION TO CATEGORY REGISTRIES)
 #
 # - IMPLEMENT switch in __init__.py to suppress processing for scratch pad, etc.
+#
+# IMPLEMENT: Quote names of objects in report output
 #
 # - IMPLEMENT Testing:
 #     use instantiation sequence (in Utilities) to create test for each step
@@ -1283,8 +1267,10 @@
 #endregion
 
 #region PREFERENCES: ---------------------------------------------------------------------------------------------------------
-
+#
 # IMPLEMENT: make it so that specifying only setting for pref automatically assigns level to INSTANCE for that object
+# IMPLEMENT: PreferenceLevel SUBTYPE
+#            For Function Components:  ADD PreferenceLevel.SUBTYPE with comments re: defaults, etc.
 #
 # FIX:  SHOULD TEST FOR prefsList ABOVE AND GENERATE IF IT IS NOT THERE, THEN REMOVE TWO SETS OF CODE BELOW THAT DO IT
 #
@@ -1555,6 +1541,8 @@
 #      ALL ARGUMENT-RELATED ATTRIBUTES ARE IMPLEMENTED AS PROPERTIES (FOR ASSIGNMENT VALIDATION, LOGGING, ETC.):
 #        THE INTERNAL VALUE IS STORED IN _argument_related_attribute
 #
+# IMPLEMENT: make paramsCurrent a @property (DONE?) and force validation on assignment if validationPrefs is set
+#
 #  _validate_function:
 #
 # FIX / IMPLEMENT: Make sure that if function is reassigned (.e.g, using _assign_defaults),
@@ -1794,6 +1782,15 @@
 #
 # IMPLEMENT: Process: phases in execution
 # IMPLEMENT: ProcessTuples (per MechanismTuples)
+# IMPLEMENT: Process SHOULD RECOGNIZE AND CALL MonitoringMechanism(s):
+#            - do pass after _deferred_init to add MonitoringMechanism(s) to mechanisms_list
+#              (or do so in _deferred_init pass)
+#            - ??add flag that enables/disables learning? (for use by system/EVC)??
+#
+# IMPLEMENT: In Process factory method:
+#                 add name arg (name=)
+#                 test params (in particular, kwConfig)
+#                 test dict specification
 #
 # QUESTION:  Should process.execute use phases or not?
 # ANSWER: yes, for realtime mode;  so, it should check phase
@@ -2621,4 +2618,5 @@
 
 #region ComparatorMechanism -----------------------------------------------------------------------------------
 # FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
+# IMPLEMENT: ComparatorMechanism Processing Mechanism TYPE, ComparatorMechanism SUBTYPE
 #endregion
