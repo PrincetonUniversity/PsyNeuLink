@@ -209,18 +209,18 @@ class MappingProjection(Projection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        the source of the projection's input.  If a mechanism is specified, its primary outputState will be used.
-        If it is not specified, it will be assigned in the context in which the projection is used.
+        specifies the source of the projection's input.  If a mechanism is specified, its primary outputState will be
+        used. If it is not specified, it will be assigned in the context in which the projection is used.
 
     receiver: Optional[InputState or Mechanism]
-        the destination of the projection's output.  If a mechanism is specified, its primary inputState will be used.
-        If it is not specified, it will be assigned in the context in which the projection is used.
+        specifies the destination of the projection's output.  If a mechanism is specified, its primary inputState
+        will be used. If it is not specified, it will be assigned in the context in which the projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default :keyword:`DEFAULT_MATRIX`
         the matrix used by ``function`` (default: LinearCombination) to transform the value of the ``sender``.
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
-        the operation used to combine the value of any projections to the matrix's parameterState with the
+        specifies the operation used to combine the value of any projections to the matrix's parameterState with the
         :py:data:`matrix <MappingProjection.matrx>`.  Most commonly used with LearningProjections.
 
     params : Optional[Dict[param keyword, param value]]
@@ -240,6 +240,16 @@ class MappingProjection(Projection_Base):
 
     Attributes
     ----------
+
+    sender : OutputState
+        identifies the source of the projection's input.
+
+    receiver: InputState
+        identifies the destination of the projection.
+
+    param_modulation_operation : ModulationOperation
+        determines the operation used to combine the value of any projections to the matrix's parameterState with the
+        `matrix`.
 
     monitoringMechanism : MonitoringMechanism
         source of error signal for matrix weight changes when :doc:`learning <LearningProjection>` is used.

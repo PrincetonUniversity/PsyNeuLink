@@ -31,22 +31,26 @@
 Overview
 --------
 
-A process is a sequence of mechanisms connected by projections.  A process can be created by calling process(),
-or by specifying it in the processes attribute of a system. Executing a process executes all of its mechanisms
-in the order in which they are listed in its pathway:  a list of mechanisms and (optional)
-projection specifications.  Projections can be specified among any mechanisms in a process, including
-to themselves.  Mechanisms in a process can also project to mechanisms in other processes, but these will only
-have an effect if all of the processes involved are members of a single system (see System).  Projections
-between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
-also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
+A process is a sequence of mechanisms linked by projections. Executing a process executes all of its mechanisms
+in the order in which they are listed in its `pathway` attribute:  a list of `mechanisms <Mechanism> and (optional)
+`projection <Projection>` specifications.  Projections can be specified among any mechanisms in a process, including
+to themselves.  However, a process cannot involve any "branching" (that is, one-to-many or many-to-one projections);
+that must be done using a `System`. Mechanisms in a process can also project to mechanisms in other processes,
+but these will only have an effect if all of the processes involved are members of the same `system <System>`.
+Projections between mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to them.
+Learning can also be specified for the entire process, in which case all of the projections among mechanisms in the
+process will be trained. Processes can be constructed and executed on their own.  More commonly, however, they are used
+to construct a `System`.
 
 .. _Process_Creation:
 
 Creating a Process
 ------------------
 
-Processes are created by calling the :py:func:`process` function.  If no arguments are provided, a process with a
-single :ref:`default mechanism <LINK>` will be created.
+A process is created by calling the :py:func:`process` function. The mechanisms to be included are specified in a list
+in the `pathway` argument, in the order in which they should be executed by the process.  The mechanism entries can be
+separated by `projections <Projection>` used to connect them.  If no arguments are provided to the `pathway` argument,
+a process with a single :ref:`default mechanism <LINK>` is created.
 
 .. _Process_Structure:
 
@@ -58,86 +62,87 @@ Structure
 Pathway
 ~~~~~~~
 
-A process is defined primarily by its :py:data:`pathway <Process_Base.pathway>` attribute, which is a list of
-mechanisms and projections.  The list defines an array of mechanisms that will executed in sequence.  Each mechanism
-in the pathway must project at least to the next one in the pathway, though it can project to others,
-and also receive recurrent (feedback) projections from them.  However, pathways cannot be used to construct
-branching patterns;  that requires the use of a :doc:`System`.  the mechanisms in a process pathway are generally
-:doc:`ProcessingMechanisms`, which receive an input, transform it in some way, and make the transformed value
-available as their output.  The projections between mechanisms in a process must be
-:doc:`MappingProjections <MappingProjection>`.  These transmit the output of a mechanism (the projection's ``sender``)
-to the input of another mechanism (the projection's ``receiver``).  Specification of a
-:py:data:`pathway <Process_Base.pathway>` requires, at the least, a list of mechanisms.  These can be specified
-directly, or in a tuple that also contains a set of runtime parameters and/or a phase specification.  Projections
-between a pair of mechanisms can be specified by interposing them in the list between the pair.  When no projection
-appears between two adjacent mechanisms in the pathway, and there is no otherwise specified projection between them,
-PsyNeuLink assigns a default projection. Specifying the components of a pathway is described in more detail below.
+A process is defined primarily by its `pathway` attribute, which is a list of `mechanisms <Mechanism>` and
+`projections <Projection>`.  The list defines an array of mechanisms that will executed in the order specified. Each
+mechanism in the pathway must project at least to the next one in the pathway, though it can project to others and
+also receive recurrent (feedback) projections from them.  However, pathways cannot be used to construct branching
+patterns;  that requires the use of a  `System`.  The mechanisms specified in the `pathway` for a process are generally
+`ProcessingMechanisms <ProcessingMechanism>`.  The projections between mechanisms in a process must be
+`MappingProjections <MappingProjection>`.  These transmit the output of a mechanism (the projection's
+`sender <MappingProjection.MappingProjection.sender>`) to the input of another mechanism (the projection's
+`receiver <MappingProjection.MappingProjection.receiver>`). Specification of a `pathway` requires, at the least, a list
+of mechanisms.  These can be specified directly, or in a **tuple** that also contains a set of
+`runtime parameters <Mechanism_Runtime_Parameters>` and/or a `phase <System_Execution_Phase>` specification (see
+`below <Process_Mechanism_Specification>`). Projections between a pair of mechanisms can be specified by
+interposing
+them in the list between the pair.  When no projection appears between two adjacent mechanisms in the pathway, and
+there is no otherwise specified projection between them, PsyNeuLink assigns a default projection. Specifying the
+components of a pathway is described in detail below.
 
 .. _Process_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
 
-The mechanisms of a process must be listed in its :py:data:`pathway <Process_Base.pathway>` explicitly, in the order
-to be executed.  The first mechanism in the process is designated as the `ORIGIN`, and receives as its
-input any input provided to the process. The last mechanism is designated at the `TERMINAL`, and its output
-is assigned as the output of the process.
+The mechanisms of a process must be listed in the `pathway` argument of the :py:func:`process` function explicitly,
+in the order to be executed.  The first mechanism in the process is designated as the `ORIGIN`, and receives as its
+input any input provided to the process' `execute <Process.execute>` or `run <Process.run>` methods. The last mechanism
+listed in the `pathway` is designated as the `TERMINAL` mechanism, and its output is assigned as the output of the
+process when it is executed.
 
 .. note::
-   The `ORIGIN` and `TERMINAL` mechanisms of a process are not necessarily the `ORIGIN`
-   and/or `TERMINAL` mechanisms of the :ref:`system <System_Mechanisms>` to which it belongs.  The
-   designations of a mechanism's status in the process(es) to which it belongs are listed in its :py:data:`processes
-   <Mechanism.Mechanism_Base.processes>` attribute.
+   The `ORIGIN` and `TERMINAL` mechanisms of a process are not necessarily the `ORIGIN` and/or `TERMINAL` mechanisms
+   of the `system <System_Mechanisms>` to which it belongs.  The designations of a mechanism's status in the process(es)
+   to which it belongs are listed in its `processes <Mechanism.Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
 
-Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
-use any supported format for specifying a mechanism (see :ref:`Mechanism_Creation`).  Alternatively,
-mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
-specification.  The **runtime parameters** will be used for that mechanism whenever the process (or a system to which
-it belongs) is executed, but otherwise they do not remain associated with the mechanism
-(see :ref:`Mechanism_Runtime_Parameters`).  The **phase** specification determines the time_step at which the mechanism
-is executed when it is executed as part of a system (see :ref:`System phase <System_Phase>` for an explanation of
-phases). Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
-assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
-(Note: irrespective of the format in which a mechanism is specified in a pathway, it's entry is converted internally
-to a :py:class:`MechanismTuple <Mechanism.MechanismTuple>`, information about which is stored in a
-:py:class:`MechanismList <Mechanism.MechanismList>` and can be accessed in the process' :py:data:`mechanisms
-<Process_Base.mechanisms>` attribute.)
+Mechanisms can be specified in the :keyword:`pathway` argument of :py:func:`process` in one of two ways:  directly or
+in a **tuple**.  Direct  specification can use any supported format for `specifying a mechanism <Mechanism_Creation>`.
+Alternatively, mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or
+a phase specification.  The `runtime parameters <Mechanism_Runtime_Parameters>` will be used for that mechanism when the
+process (or a system to which it belongs) is executed, but otherwise they do not remain associated with the mechanism
+The `phase <System_Execution_Phase>` specification determines time within a trial when mechanism is executed as part of
+a system. Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will
+be assigned). The same mechanism can appear more than once in a `pathway` (as one means of generating a recurrent
+processing loop).
+
+.. note::
+   Irrespective of the format in which a mechanism is specified in a `pathway`, it's entry is
+   converted internally to a :py:class:`MechanismTuple <Mechanism.MechanismTuple>`, information about which is stored
+   in a `MechanismList <Mechanism.MechanismList>` and can be accessed in the process' `mechanisms` attribute.
 
 .. _Process_Projections:
 
 Projections
 ~~~~~~~~~~~
 
-Projections between mechanisms in the :py:data:`pathway <Process_Base.pathway>` of a process are specified in one of
-three ways:
+Projections between mechanisms in the `pathway` of a process are specified in one of three ways:
 
 * Inline specification
-    Projection specifications can be interposed between any two mechanisms in the pathway list.  This creates a
+    Projection specifications can be interposed between any two mechanisms in the `pathway` list.  This creates a
     projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
-    be an instance of a :doc:`MappingProjection`, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
-    for a type of MappingProjection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
-    :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
-    (see :ref:`Projection <Projection_Creation>` for details of how to specify projections).
+    be an instance of a `MappingProjection`, the class name :keyword:`MappingProjection`, a `keyword <Matrix_Keywords>`
+    for a type of MappingProjection (`IDENTITY_MATRIX`, `FULL_CONNECTIVITY_MATRIX`, `RANDOM_CONNECTIVITY_MATRIX`),
+    or a dictionary with `specifications for the projection <Projection_Creation>`.
 
 * Stand-alone projection
-    When a projection is created on its own, it can be assigned a sender and receiver mechanism (see Projection).
-    If both are in the process, then it will be used when creating that process.  Stand-alone specification
-    of a projection between two mechanisms in a process takes precedence over default or inline specification;
-    that is, the stand-alone projection will be used in place of any that is specified in the pathway.
-    Stand-alone specification is required to implement projections between mechanisms that are not adjacent in the
-    pathway list.
+    When a projection is created on its own, it can be assigned `sender <MappingProjection.MappingProjection.sender>`
+    and `receiver <MappingProjection.MappingProjection.receiver>` mechanisms. If both are in the process, then that
+    projection will be used when creating the process.  Stand-alone specification of a projection between two
+    mechanisms in a process takes precedence over default or inline specification; that is, the stand-alone
+    projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
+    to implement projections between mechanisms that are not adjacent to one another in the `pathway` list.
 
 * Default assignment
     For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
-    the methods above), a MappingProjection is automatically created from the mechanism that precedes it in the
+    the methods above), a `MappingProjection` is automatically created from the mechanism that precedes it in the
     pathway.  If the format of the preceding mechanism's output matches that of the next mechanism, then
-    :keyword:`IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or learning has been specified
-    either for the projection or the process, then :keyword:`FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is
-    the `ORIGIN` mechanism (i.e., first in the :py:data:`pathway <Process_Base.pathway>`), a
-    :ref:`ProcessInputState <Process_Input_And_Ouput>` will be used as the sender (see below),
-    and :keyword:`IDENTITY_MATRIX` is used for the projection.
+    `IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or
+    `learning has been specified <Process_Learning>` either for the projection or the process,
+    then a `FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is the `ORIGIN` mechanism (i.e., first in the
+    `pathway`), a `ProcessInputState <Process_Input_And_Ouput>` will be used as the sender,
+    and an `IDENTITY_MATRIX` is used for the projection.
 
 
 .. _Process_Input_And_Ouput:
