@@ -224,7 +224,7 @@ process when it is executed.</p>
 of the <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">system</span></a> to which it belongs.  The designations of a mechanism&#8217;s status in the process(es)
 to which it belongs are listed in its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
 </div>
-<p id="process-mechanism-specification">Mechanisms can be specified in the <code class="xref std std-keyword docutils literal"><span class="pre">pathway</span></code> argument of <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a> in one of two ways:  directly or
+<p id="process-mechanism-specification">Mechanisms can be specified in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> argument of <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a> in one of two ways:  directly or
 in a <strong>tuple</strong>.  Direct  specification can use any supported format for <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">specifying a mechanism</span></a>.
 Alternatively, mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or
 a phase specification.  The <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> will be used for that mechanism when the
@@ -237,7 +237,7 @@ processing loop).</p>
 <p class="first admonition-title">Note</p>
 <p class="last">Irrespective of the format in which a mechanism is specified in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, it&#8217;s entry is
 converted internally to a <code class="xref py py-class docutils literal"><span class="pre">MechanismTuple</span></code>, information about which is stored
-in a <code class="xref any docutils literal"><span class="pre">MechanismList</span></code> and can be accessed in the process&#8217; <a class="reference internal" href="#Process.Process_Base.mechanisms" title="Process.Process_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
+in a <code class="xref any docutils literal"><span class="pre">MechanismList</span></code> and can be accessed in the process&#8217; <a class="reference internal" href="System.html#System.System_Base.mechanisms" title="System.System_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
 </div>
 </div>
 <div class="section" id="projections">
@@ -248,16 +248,16 @@ in a <code class="xref any docutils literal"><span class="pre">MechanismList</sp
 <dt>Inline specification</dt>
 <dd><p class="first last">Projection specifications can be interposed between any two mechanisms in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> list.  This creates a
 projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
-be an instance of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the class name <code class="xref std std-keyword docutils literal"><span class="pre">MappingProjection</span></code>, a <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">keyword</span></a>
-for a type of MappingProjection (<code class="xref any docutils literal"><span class="pre">IDENTITY_MATRIX</span></code>, <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code>, <code class="xref any docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>),
-or a dictionary with <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">specifications for the projection</span></a>.</p>
+be an instance of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the class name <code class="xref std std-keyword docutils literal"><span class="pre">MappingProjection</span></code>, a
+<a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">matrix keyword</span></a> for a type of MappingProjection (<code class="xref any docutils literal"><span class="pre">IDENTITY_MATRIX</span></code>, <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code>,
+or <code class="xref any docutils literal"><span class="pre">RANDOM_CONNECTIVITY_MATRIX</span></code>), or a dictionary with <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">specifications for the projection</span></a>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>Stand-alone projection</dt>
-<dd><p class="first last">When a projection is created on its own, it can be assigned a <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
-and <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> mechanism. If both are in the process, then that
+<dd><p class="first last">When a projection is created on its own, it can be assigned <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
+and <a class="reference internal" href="MappingProjection.html#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> mechanisms. If both are in the process, then that
 projection will be used when creating the process.  Stand-alone specification of a projection between two
 mechanisms in a process takes precedence over default or inline specification; that is, the stand-alone
 projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
@@ -541,8 +541,8 @@ format of the <code class="docutils literal"><span class="pre">variable</span></
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal"><span class="pre">input</span></code> attribute of a process preserves its value throughout the execution of the process.
-It&#8217;s value is assigned to the <a class="reference internal" href="DDM.html#DDM.DDM.variable" title="DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
-of execution.  After that, by default, its <a class="reference internal" href="DDM.html#DDM.DDM.variable" title="DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
+It&#8217;s value is assigned to the <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
+of execution.  After that, by default, its <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism is executed again in the same round of execution (e.g., if it is part of
 a recurrent loop) it does not continue to receive the Process&#8217; input.  However, this behavior can be
 modified with the <code class="docutils literal"><span class="pre">clamp_input</span></code> attribute of the process.</p>

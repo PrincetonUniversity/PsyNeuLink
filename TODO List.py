@@ -459,15 +459,15 @@
 #           (since those are process-specific) but not other projections
 #
 # QUESTION: RL:
-#           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
-#               - how to provide reward for outcome of first trial, if it is selected probabilistically
-#               - must process trial, get reward from environment, then execute learning
-#               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#           Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
-#               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
-#               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
-#               - system should be take functions that specify values to use as inputs based on outputs
-#                   as per SOLUTION to Option 1 using lambda functions
+#       Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
+#           - how to provide reward for outcome of first trial, if it is selected probabilistically
+#           - must process trial, get reward from environment, then execute learning
+#           SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
+#       Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
+#           - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
+#           SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
+#           - system should be take functions that specify values to use as inputs based on outputs
+#               as per SOLUTION to Option 1 using lambda functions
 
 # QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
 #                                                                  or signify (e.g., class = template)
@@ -501,9 +501,10 @@
 #       automatic component of the drift for each stimulus (== weight matrix)
 #    *  d(parameter_value)/d(control signal intensity) for each control signal ==
 #                                                          differential of the parameterModulationFunction
-#       NOTE:  THIS IS DISTINCT FROM THE ControlProjection.function
-#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlProjection Intensity
-#              BUT IS ISOMORPHIC IF ControlProjection.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
+#       NOTE:
+#          THIS IS DISTINCT FROM THE ControlProjection.function
+#                                           (== intensity_function) WHICH MAPS ALLCATION -> ControlProjection Intensity
+#          BUT IS ISOMORPHIC IF ControlProjection.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
 #       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
 #                       OR ControlProjection Intensity -> parameter_value (i.e., parameterModulation function)??
 #        SEBASTIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function

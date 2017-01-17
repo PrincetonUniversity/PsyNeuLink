@@ -86,20 +86,25 @@ In addition to its ``function``, MappingProjections use the following two the pr
   *Matrix keyword*.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
   of the following keywords can be use:
 
-  * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
-    values are the same.
-  * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
-    and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
-  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of
-    the sender's value, and a number of columns equal to the length of the receiver's value, all the elements of
-    which are filled with random values uniformly distributed between 0 and 1.
-  * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
-    is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
-  * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
-    assigns an :keyword:`IDENTITY_MATRIX`.
+      * `IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
+        values are the same.
+      ..
+      * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's
+        value, and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
+      ..
+      * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of
+        the sender's value, and a number of columns equal to the length of the receiver's value, all the elements of
+        which are filled with random values uniformly distributed between 0 and 1.
+      ..
+      * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
+        is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
+      ..
+      * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
+        assigns an :keyword:`IDENTITY_MATRIX`.
   ..
-  :py:class:`random_matrix`.  This is a convenience function that provides more flexibility than
-  :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
+  *Random matrix function* (`random_matrix <Utilities.rand_matrix>`).  This is a convenience function that provides
+  more flexibility
+  than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
   with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
   .. _MappingProjection_Tuple_Specification:
