@@ -345,45 +345,45 @@ def system(default_input_value=None,
     ---------
 
     default_input_value : list or ndarray of values : default default input for `ORIGIN` mechanism of each Process
-        the input to the system if none is provided in a call to the execute() method or run() function.
-        Should contain one item corresponding to the input of each `ORIGIN` mechanism in the system.
-
+        the input to the system if none is provided in a call to the `execute <System_Base.exeucte> or
+        `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` mechanism
+        in the system.
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
         COMMENT
 
-    processes : list of process specifications : default list(''DefaultProcess'')
+    processes : list of process specifications : default list('DefaultProcess')
         a list of the processes to include in the system.
-        Process specifications can be an instance, the class name (creates a default Process, or a specification
-        dictionary (see Processes for details).
+        Each process specification can be an instance, the class name (creates a default Process), or a specification
+        dictionary (see `Process` for details).
 
     initial_values : dict of mechanism:value entries
         a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
-        :keyword:`INITIALIZE_CYCLE`). The key for each entry is a mechanism object, and the value is a number,
+        `INITIALIZE_CYCLE`). The key for each entry is a mechanism object, and the value is a number,
         list or 1d np.array that must be compatible with the format of the first item of the mechanism's value
         (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
-        specifies the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        monitor_for_control, and specify the value of ControlProjections in the system.
+        specifies the `ControlMechanism` used to monitor the value of the outputState(s) for mechanisms specified in
+        `monitor_for_control`, and that specify the value of `ControlProjections` in the system.
 
     enable_controller :  bool : default :keyword:`False`
-        specifies whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
+        specifies whether the `controller` is executed during system execution.
 
     monitor_for_control : list of OutputState objects or specifications : default None
-        specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its controller
-        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` argument).
+        specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its `controller`
+        (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
 
     params : dict : default None
-        a dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
-        values in the dictionary will override argument values
+        a dictionary that can include any of the parameters above; the parameter's name should be used as the key
+        for its entry.  Values in the dictionary will override argument values
 
     name : str : default System-<index>
         a string used for the name of the system
-        (see Registry module for conventions used in naming, including for default and duplicate names)
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the PreferenceSet for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -430,7 +430,7 @@ class System_Base(System):
 
     .. note::
        Systems should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :class:`system` factory method (see it for description of parameters).
+       They should be instantiated using the :func:`system` factory method (see it for description of parameters).
 
     COMMENT:
         Description
@@ -477,7 +477,7 @@ class System_Base(System):
     ----------
 
     processes : list of Process objects
-        list of processes in the system specified by the process parameter.
+        list of processes in the system specified by the `process` parameter.
 
         .. can be appended with prediction processes by EVCMechanism
            used with self.input to constsruct self.process_tuples
@@ -492,7 +492,7 @@ class System_Base(System):
         ``monitor_for_control`` argument, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
-        determines whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
+        determines whether the `controller` is executed during system execution.
 
     learning : bool : default False
         indicates whether learning is being used;  is set to True if learning is specified for any process in the system
@@ -509,7 +509,7 @@ class System_Base(System):
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
-        contains an acyclic subset of the system's graph, hierarchically organized by a toposort.
+        contains an acyclic subset of the system's `graph`, hierarchically organized by a toposort.
         Used to specify the order in which mechanisms are executed.
 
     execution_sets : list of sets
@@ -519,8 +519,7 @@ class System_Base(System):
 
     executionList : list of Mechanism objects
         contains a list of mechanisms in the order in which they are executed.
-        The list is a random sample of the permissible orders constrained by the
-        :py:data:`executionGraph <System_Base.executionGraph>`
+        The list is a random sample of the permissible orders constrained by the `executionGraph`.
 
     mechanisms : list of Mechanism objects
         contains a list of all mechanisms in the system.
@@ -529,7 +528,7 @@ class System_Base(System):
 
     mechanismsDict : Dict[Mechanism:Process]
         contains a dictionary of all mechanisms in the system, listing the processes to which they belong.
-        The key of each entry is a Mechanism object, and the value of each entry is a list of processes.
+        The key of each entry is a `Mechanism` object, and the value of each entry is a list of `processes <Process>`.
 
         .. Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
               xxx_mech_tuples are lists of tuples defined in the Process pathways;
@@ -573,30 +572,40 @@ class System_Base(System):
            system.input contains the input to each `ORIGIN` mechanism
 
     terminalMechanisms : MechanismList
-        contains all `TERMINAL` mechanisms in the system (i.e., that don't project to any other mechanisms).
+        contains all `TERMINAL` mechanisms in the system (i.e., that don't project to any other ProcessingMechanisms).
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of each TERMINAL mechanism
 
     recurrentInitMechanisms : MechanismList
-        contains mechanisms with recurrent projections that are candidates for \
-        :ref:`initialization <System_Execution_Input_And_Initialization>`.
+        contains mechanisms with recurrent projections that are candidates for
+        `initialization <System_Execution_Input_And_Initialization>`.
 
     monitoringMechanisms : MechanismList)
-        contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
+        contains all `MONITORING` mechanisms in the system (used for learning).
+        COMMENET:
+            based on _monitoring_mech_tuples)
+        COMMENT
 
     targetMechanisms : MechanismList)
-        contains all TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
+        contains all `TARGET` mechanisms in the system (used for learning.
+        COMMENT:
+            based on _target_mech_tuples)
+        COMMENT
 
     COMMENT:
        IS THIS CORRECT:
     COMMENT
 
     controlMechanisms : MechanismList
-        contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
+        contains `controller` of the system
+        COMMENT:
+            ??and any other `ControlMechanisms <ControlMechanism>` in the system
+            (based on _control_mech_tuples).
+        COMMENT
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.
+        contains an array of 2D arrays, each of which is the `outputValue `of a `TERMINAL` mechanism in the system.
 
         .. _phaseSpecMax : int
             Maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
@@ -608,12 +617,12 @@ class System_Base(System):
         .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
-        values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`).
-        Must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system contained in
-        :py:data:`recurrentInitMechanisms <System_Base.recurrentInitMechanisms>.
+        values used to initialize mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
+        Must be the same length as the list of `INITIALIZE_CYCLE` mechanisms in the system contained in
+        `recurrentInitMechanisms`.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
-        determines the default TimeScale value used by mechanisms in the system.
+        determines the default `TimeScale` value used by mechanisms in the system.
 
     results : List[outputState.value]
         list of return values (outputState.value) from the sequence of executions.
@@ -629,7 +638,7 @@ class System_Base(System):
         the PreferenceSet for system.
         Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
         assigned using ``classPreferences`` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :ref:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -1397,7 +1406,7 @@ class System_Base(System):
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        :keyword:`INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
+        `INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE

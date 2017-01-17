@@ -7,7 +7,28 @@
 #
 #
 # ******************************************  ShellClasses *************************************************************
-#
+
+"""Define globally-visible classes for Base classes and typechecking functions for parameters of PsyNeuLink Components
+
+Shell Classes
+-------------
+
+Used to allow classes to refer to one another without creating import loops,
+including (but not restricted to) the following dependencies:
+- `Projection` subclasses must see (particular) `State` subclasses in order to assign `kwProjectionSender`
+- `State` subclasses must see (particular) `Projection` subclasses in order to assign `PROJECTION_TYPE`
+- `Process` must see `Mechanism` subclasses to assign `PsyNeuLink.Components.DefaultMechanism`
+
+TBI:
+  `Mechanism`, `Projection` (and possibly `State`) classes should be extensible:
+  developers should be able to create, register and refer to subclasses (plug-ins), without modifying core code
+
+Typechecking
+------------
+* `parameter_spec`
+* `optional_parameter_spec`
+
+"""
 
 from PsyNeuLink.Components.Component import *
 
@@ -119,3 +140,44 @@ class Function(ShellClass):
 
     def execute(self, variable, params, context):
         raise ShellClassError("Must implement function in {0}".format(self))
+
+
+def optional_parameter_spec(param):
+    """Test whether param is a legal PsyNeuLink parameter specification or `None`
+
+    Calls parameter_spec if param is not `None`
+    Used with typecheck
+
+    Returns
+    -------
+    `True` if it is a legal parameter or `None`.
+    `False` if it is neither.
+
+
+    """
+    if not param:
+        return True
+    return parameter_spec(param)
+
+def parameter_spec(param):
+    """Test whether param is a legal PsyNeuLink parameter specification
+
+    Used with typecheck
+
+    Returns
+    -------
+    `True` if it is a legal parameter.
+    `False` if it is not.
+    """
+    # if is_numeric(param):
+    if (isinstance(param, (numbers.Number,
+                           np.ndarray,
+                           list,
+                           tuple,
+                           function_type,
+                           ParamValueProjection,
+                           Projection)) or
+        (inspect.isclass(param) and issubclass(param, Projection)) or
+        param in parameter_keywords):
+        return True
+    return False
