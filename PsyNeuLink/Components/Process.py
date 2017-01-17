@@ -97,7 +97,7 @@ process when it is executed.
 
 .. _Process_Mechanism_Specification:
 
-Mechanisms can be specified in the :keyword:`pathway` argument of :py:func:`process` in one of two ways:  directly or
+Mechanisms can be specified in the `pathway` argument of :py:func:`process` in one of two ways:  directly or
 in a **tuple**.  Direct  specification can use any supported format for `specifying a mechanism <Mechanism_Creation>`.
 Alternatively, mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or
 a phase specification.  The `runtime parameters <Mechanism_Runtime_Parameters>` will be used for that mechanism when the
@@ -122,9 +122,9 @@ Projections between mechanisms in the `pathway` of a process are specified in on
 * Inline specification
     Projection specifications can be interposed between any two mechanisms in the `pathway` list.  This creates a
     projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
-    be an instance of a `MappingProjection`, the class name :keyword:`MappingProjection`, a `keyword <Matrix_Keywords>`
-    for a type of MappingProjection (`IDENTITY_MATRIX`, `FULL_CONNECTIVITY_MATRIX`, `RANDOM_CONNECTIVITY_MATRIX`),
-    or a dictionary with `specifications for the projection <Projection_Creation>`.
+    be an instance of a `MappingProjection`, the class name :keyword:`MappingProjection`, a
+    `matrix keyword <Matrix_Keywords>` for a type of MappingProjection (`IDENTITY_MATRIX`, `FULL_CONNECTIVITY_MATRIX`,
+    or `RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with `specifications for the projection <Projection_Creation>`.
 
 * Stand-alone projection
     When a projection is created on its own, it can be assigned `sender <MappingProjection.MappingProjection.sender>`
@@ -2199,7 +2199,9 @@ class Process_Base(Process):
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         variable = [list(i) for i in self.variable]
-        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str([[float("{:0.3}".format(float(i))) for i in value] for value in variable]))))
+        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',
+                                                 str([[float("{:0.3}".format(float(i)))
+                                                       for i in value] for value in variable]))))
 
     def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
