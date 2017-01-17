@@ -59,6 +59,13 @@ Structure
 ---------
 
 COMMENT:
+    .. _MappingProjection_Sender:
+    .. _MappingProjection_Receiver:
+    XXXX NEED TO ADD DESCRIPTION OF SENDER AND RECEIVER -- SPECIFIED AS MECHANISM OR STATE.
+
+COMMENT
+
+COMMENT:
     XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningProjection CAN BE SPECIFIED HERE:
             IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
             SEE BELOW:  If there is a params[FUNCTION_PARAMS][MATRIX][1]
@@ -102,10 +109,9 @@ In addition to its ``function``, MappingProjections use the following two the pr
       * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
         assigns an :keyword:`IDENTITY_MATRIX`.
   ..
-  *Random matrix function* (`random_matrix <Utilities.rand_matrix>`).  This is a convenience function that provides
-  more flexibility
-  than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
-  with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
+  *Random matrix function* (:py:func:`random_matrix <Utilities.random_matrix>`).  This is a convenience function that
+  provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender and
+  receiver, with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
   .. _MappingProjection_Tuple_Specification:
   *Tuple*.  This is used to specify a projection to the parameterState for the
