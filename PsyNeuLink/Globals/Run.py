@@ -252,7 +252,7 @@ processing).
 If either the sequence or mechanism format is used, then the number of targets specified for each mechanism must
 equal the number specified for the inputs;  as with inputs, if the number of executions specified is greater than the
 number of inputs (and targets), then the list will be cycled until the number of executions specified is completed.
-If the function format is used, then it wil, be used to generate a target for each round of execution.
+If the function format is used, then it will be used to generate a target for each round of execution.
 
 The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
 the function format, must equal the number of `TARGET` mechanisms for the process
