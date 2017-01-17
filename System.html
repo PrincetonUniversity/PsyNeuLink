@@ -255,7 +255,7 @@ necessarily the case that the <a class="reference internal" href="Keywords.html#
 </div>
 </div></blockquote>
 <p id="system-full-fig"><strong>Components of a System</strong></p>
-<div class="figure" id="id3">
+<div class="figure" id="id1">
 <a class="reference internal image-reference" href="_images/System_full_fig.png"><img alt="Overview of major PsyNeuLink components" src="_images/System_full_fig.png" style="width: 8775.0px; height: 7625.25px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">processes</span></a> are shown, both belonging to the same <a class="reference internal" href="#"><span class="doc">system</span></a>.  Each process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
@@ -309,7 +309,7 @@ execution, as input to mechanisms that close recurrent loops (designated as <a c
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -317,12 +317,12 @@ learning) can be specified in either of two formats, sequence or mechanism, that
 see <a class="reference internal" href="Run.html#run-inputs"><span class="std std-ref">Inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">Targets</span></a>).  Both formats require that an input be provided for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of
 the system (listed in its <a class="reference internal" href="#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">originMechanisms</span></code></a> attribute).  If the targets are specified
 in sequence or mechanism format, one target must be provided for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism (listed in its
-<a class="reference internal" href="#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute).  Targets can also be specified in a
+<code class="xref any docutils literal"><span class="pre">targetMechanisms</span></code> attribute).  Targets can also be specified in a
 <a class="reference internal" href="Run.html#run-targets-function-format"><span class="std std-ref">function format</span></a>, which generates a target for each execution of the mechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code></a> of a process is not necessarily a
-<a class="reference internal" href="#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code></a> of the system to which it belongs
+<code class="xref py py-data docutils literal"><span class="pre">targetMechanism</span></code> of the system to which it belongs
 (see <span class="xref std std-ref">LearningProjection_Targets</span>).</p>
 </div>
 </div>
@@ -352,25 +352,26 @@ if a params dictionary is included, it is passed to the instantiated system.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>default_input_value</strong> (list or ndarray of values : default default input for <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of each Process) &#8211; the input to the system if none is provided in a call to the execute() method or run() function.
-Should contain one item corresponding to the input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism in the system.</li>
-<li><strong>processes</strong> (<em>list of process specifications : default list(''DefaultProcess'')</em>) &#8211; a list of the processes to include in the system.
-Process specifications can be an instance, the class name (creates a default Process, or a specification
-dictionary (see Processes for details).</li>
+<li><strong>default_input_value</strong> (list or ndarray of values : default default input for <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of each Process) &#8211; the input to the system if none is provided in a call to the <code class="xref any docutils literal"><span class="pre">execute</span> <span class="pre">&lt;System_Base.exeucte&gt;</span> <span class="pre">or</span>
+<span class="pre">`run</span> <span class="pre">&lt;System_Base.run&gt;</span> <span class="pre">methods.</span> <span class="pre">Should</span> <span class="pre">contain</span> <span class="pre">one</span> <span class="pre">item</span> <span class="pre">corresponding</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">input</span> <span class="pre">of</span> <span class="pre">each</span> <span class="pre">`ORIGIN</span></code> mechanism
+in the system.</li>
+<li><strong>processes</strong> (<em>list of process specifications : default list('DefaultProcess')</em>) &#8211; a list of the processes to include in the system.
+Each process specification can be an instance, the class name (creates a default Process), or a specification
+dictionary (see <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> for details).</li>
 <li><strong>initial_values</strong> (<em>dict of mechanism:value entries</em>) &#8211; a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
-<code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>). The key for each entry is a mechanism object, and the value is a number,
+<a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>). The key for each entry is a mechanism object, and the value is a number,
 list or 1d np.array that must be compatible with the format of the first item of the mechanism&#8217;s value
 (i.e., mechanism.value[0]).</li>
-<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; specifies the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-monitor_for_control, and specify the value of ControlProjections in the system.</li>
-<li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</li>
-<li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system to be monitored by its controller
-(see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying the <code class="docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
-<li><strong>params</strong> (<em>dict : default None</em>) &#8211; a dictionary that can include any of the parameters above; use the parameter&#8217;s name as the keyword for its entry
-values in the dictionary will override argument values</li>
+<li><strong>controller</strong> (<em>ControlMechanism : default DefaultController</em>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> used to monitor the value of the outputState(s) for mechanisms specified in
+<code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code>, and that specify the value of <code class="xref any docutils literal"><span class="pre">ControlProjections</span></code> in the system.</li>
+<li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</li>
+<li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system to be monitored by its <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
+(see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for specifying the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
+<li><strong>params</strong> (<em>dict : default None</em>) &#8211; a dictionary that can include any of the parameters above; the parameter&#8217;s name should be used as the key
+for its entry.  Values in the dictionary will override argument values</li>
 <li><strong>name</strong> (<em>str : default System-&lt;index&gt;</em>) &#8211; a string used for the name of the system
-(see Registry module for conventions used in naming, including for default and duplicate names)</li>
-<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : System.classPreferences</em>) &#8211; the PreferenceSet for system (see ComponentPreferenceSet module for specification of PreferenceSet)</li>
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names)</li>
+<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : System.classPreferences</em>) &#8211; the PreferenceSet for system (see <span class="xref doc">ComponentPreferenceSet</span> for specification of PreferenceSet)</li>
 </ul>
 </td>
 </tr>
@@ -391,12 +392,12 @@ values in the dictionary will override argument values</li>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Systems should NEVER be instantiated by a direct call to the base class.
-They should be instantiated using the <a class="reference internal" href="#System.system" title="System.system"><code class="xref py py-class docutils literal"><span class="pre">system</span></code></a> factory method (see it for description of parameters).</p>
+They should be instantiated using the <a class="reference internal" href="#System.system" title="System.system"><code class="xref py py-func docutils literal"><span class="pre">system()</span></code></a> factory method (see it for description of parameters).</p>
 </div>
 <dl class="attribute">
 <dt id="System.System_Base.processes">
 <code class="descname">processes</code><a class="headerlink" href="#System.System_Base.processes" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of Process objects</em> &#8211; list of processes in the system specified by the process parameter.</p>
+<dd><p><em>list of Process objects</em> &#8211; list of processes in the system specified by the <a class="reference internal" href="Process.html#Process.process" title="Process.process"><code class="xref any py py-func docutils literal"><span class="pre">process</span></code></a> parameter.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -409,7 +410,7 @@ They should be instantiated using the <a class="reference internal" href="#Syste
 <dl class="attribute">
 <dt id="System.System_Base.enable_controller">
 <code class="descname">enable_controller</code><a class="headerlink" href="#System.System_Base.enable_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code> &#8211; determines whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</p>
+<dd><p>bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code> &#8211; determines whether the <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed during system execution.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -432,7 +433,7 @@ If a key (receiver) has no dependents, its value is an empty set.</p>
 <dl class="attribute">
 <dt id="System.System_Base.executionGraph">
 <code class="descname">executionGraph</code><a class="headerlink" href="#System.System_Base.executionGraph" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OrderedDict</em> &#8211; contains an acyclic subset of the system&#8217;s graph, hierarchically organized by a toposort.
+<dd><p><em>OrderedDict</em> &#8211; contains an acyclic subset of the system&#8217;s <a class="reference internal" href="#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>, hierarchically organized by a toposort.
 Used to specify the order in which mechanisms are executed.</p>
 </dd></dl>
 
@@ -448,8 +449,7 @@ The sets are ordered in the sequence with which they should be executed.</p>
 <dt id="System.System_Base.executionList">
 <code class="descname">executionList</code><a class="headerlink" href="#System.System_Base.executionList" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>list of Mechanism objects</em> &#8211; contains a list of mechanisms in the order in which they are executed.
-The list is a random sample of the permissible orders constrained by the
-<a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a></p>
+The list is a random sample of the permissible orders constrained by the <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref any py py-attr docutils literal"><span class="pre">executionGraph</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -462,7 +462,7 @@ The list is a random sample of the permissible orders constrained by the
 <dt id="System.System_Base.mechanismsDict">
 <code class="descname">mechanismsDict</code><a class="headerlink" href="#System.System_Base.mechanismsDict" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[Mechanism:Process]</em> &#8211; contains a dictionary of all mechanisms in the system, listing the processes to which they belong.
-The key of each entry is a Mechanism object, and the value of each entry is a list of processes.</p>
+The key of each entry is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> object, and the value of each entry is a list of <a class="reference internal" href="Process.html"><span class="doc">processes</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -475,85 +475,34 @@ mechanisms.</p>
 <dl class="attribute">
 <dt id="System.System_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#System.System_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains all <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system (i.e., that don&#8217;t project to any other mechanisms).</p>
+<dd><p><em>MechanismList</em> &#8211; contains all <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in the system (i.e., that don&#8217;t project to any other ProcessingMechanisms).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.recurrentInitMechanisms">
 <code class="descname">recurrentInitMechanisms</code><a class="headerlink" href="#System.System_Base.recurrentInitMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains mechanisms with recurrent projections that are candidates for         <a class="reference internal" href="#system-execution-input-and-initialization"><span class="std std-ref">initialization</span></a>.</p>
+<dd><p><em>MechanismList</em> &#8211; contains mechanisms with recurrent projections that are candidates for
+<a class="reference internal" href="#system-execution-input-and-initialization"><span class="std std-ref">initialization</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.monitoringMechanisms">
 <code class="descname">monitoringMechanisms</code><a class="headerlink" href="#System.System_Base.monitoringMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList)</em> &#8211; contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).</p>
+<dd><p><em>MechanismList)</em> &#8211; contains all <a class="reference internal" href="Keywords.html#Keywords.Keywords.MONITORING" title="Keywords.Keywords.MONITORING"><code class="xref any py py-attr docutils literal"><span class="pre">MONITORING</span></code></a> mechanisms in the system (used for learning).
+COMMENET:</p>
+<blockquote>
+<div>based on _monitoring_mech_tuples)
+based on _target_mech_tuples)</div></blockquote>
+<p>IS THIS CORRECT:</p>
+<blockquote>
+<div>??and any other <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> in the system
+(based on _control_mech_tuples).</div></blockquote>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="System.System_Base.targetMechanisms">
-<code class="descname">targetMechanisms</code><a class="headerlink" href="#System.System_Base.targetMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList)</em> &#8211; contains all TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.controlMechanisms">
-<code class="descname">controlMechanisms</code><a class="headerlink" href="#System.System_Base.controlMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.value">
-<code class="descname">value</code><a class="headerlink" href="#System.System_Base.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>3D ndarray</em> &#8211; contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.numPhases">
-<code class="descname">numPhases</code><a class="headerlink" href="#System.System_Base.numPhases" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; number of phases for system (read-only).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.initial_values">
-<code class="descname">initial_values</code><a class="headerlink" href="#System.System_Base.initial_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list or ndarray of values :  default array of zero arrays</em> &#8211; values used to initialize mechanisms that close recurrent loops (designated as <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>).
-Must be the same length as the list of <code class="xref std std-keyword docutils literal"><span class="pre">INITIAL_CYCLE</span></code> mechanisms in the system contained in
-:py:data:<a href="#id1"><span class="problematic" id="id2">`</span></a>recurrentInitMechanisms &lt;System_Base.recurrentInitMechanisms&gt;.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.timeScale">
-<code class="descname">timeScale</code><a class="headerlink" href="#System.System_Base.timeScale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale  : default TimeScale.TRIAL</em> &#8211; determines the default TimeScale value used by mechanisms in the system.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.results">
-<code class="descname">results</code><a class="headerlink" href="#System.System_Base.results" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[outputState.value]</em> &#8211; list of return values (outputState.value) from the sequence of executions.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="System.System_Base.name">
-<code class="descname">name</code><a class="headerlink" href="#System.System_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default System-&lt;index&gt;</em> &#8211; the name of the system;
-Specified in the name argument of the call to create the system;
-if not is specified, a default is assigned by SystemRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="docutils">
-<dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">System.classPreferences</span><dd>the PreferenceSet for system.
-Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
-assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</dd>
-</dl>
 <dl class="method">
 <dt id="System.System_Base.initialize">
 <code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign <a class="reference internal" href="#System.System_Base.initialize" title="System.System_Base.initialize"><code class="xref py py-data docutils literal"><span class="pre">initial_values</span></code></a> to mechanisms designated as         <code class="xref std std-keyword docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> and contained in recurrentInitMechanisms.</p>
+<dd><p>Assign <a class="reference internal" href="#System.System_Base.initialize" title="System.System_Base.initialize"><code class="xref py py-data docutils literal"><span class="pre">initial_values</span></code></a> to mechanisms designated as         <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> and contained in recurrentInitMechanisms.</p>
 </dd></dl>
 
 <dl class="method">
@@ -725,8 +674,8 @@ each execution.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descclassname">System_Base.</code><code class="descname">numPhases</code></dt>
+<dt id="System.System_Base.numPhases">
+<code class="descclassname">System_Base.</code><code class="descname">numPhases</code><a class="headerlink" href="#System.System_Base.numPhases" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of phases required to execute all ProcessingMechanisms in the system</p>
 <p>Equals maximum phase value of ProcessingMechanisms in the system + 1</p>
 <table class="docutils field-list" frame="void" rules="none">
