@@ -103,7 +103,7 @@ The specification of a parameter can take any of the following forms:
    This may change in the future.
 
 The **default value** assigned to a parameterState is the default value of the argument for the parameter in the
-constructor for the owner.  If the value of a parameter is specified as :keyword:`None`, :keyword:`NotImplemented`,
+constructor for the owner.  If the value of a parameter is specified as `None`, :keyword:`NotImplemented`,
 or any other non-numeric value that is not one of those listed above, then no parameter state is created and the
 parameter cannot be modified by a ControlProjection
 COMMENT:
@@ -833,3 +833,4 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner.parameterStates[param_name] = state
+

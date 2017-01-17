@@ -414,7 +414,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
         the mechanism class used for prediction mechanism(s).
-        Each instance is named using the name of the :keyword:`ORIGIN` mechanism + PREDICTION_MECHANISM
+        Each instance is named using the name of the `ORIGIN` mechanism + PREDICTION_MECHANISM
         and assigned an outputState named based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
@@ -471,10 +471,10 @@ class EVCMechanism(ControlMechanism_Base):
         the system for which EVCMechanism is the ``controller``.
 
     predictionMechanisms : List[ProcessingMechanism]
-        a list of predictionMechanisms added to the system, one for each of its :keyword:`ORIGIN` mechanisms
+        a list of predictionMechanisms added to the system, one for each of its `ORIGIN` mechanisms
 
     predictionProcesses : List[Process]
-        a list of prediction processes added to the system, each comprise of one of its :keyword:`ORIGIN` mechanisms
+        a list of prediction processes added to the system, each comprise of one of its `ORIGIN` mechanisms
         and the associated ``predictionMechanism``.
 
     prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
@@ -482,7 +482,7 @@ class EVCMechanism(ControlMechanism_Base):
         Note: each instance will be named based on origin mechanism + PREDICTION_MECHANISM,
               and assigned an outputState named based on the same
 
-    prediction_mechanism_params : Dict[param key, param value] : default :keyword:`None`
+    prediction_mechanism_params : Dict[param key, param value] : default `None`
         a parameter dictionary passed to ``prediction_mechanism_type`` on instantiation.
         The same dictionary will be passed to all instances of ``prediction_mechanism_type`` created.
 
@@ -547,7 +547,7 @@ class EVCMechanism(ControlMechanism_Base):
         `combine_outcome_and_cost_function`, and returns the result as the first item of a three-item tuple, the second
         and third of which are the outcome and cost used to determine the result.  The default function can be
         replaced by any function that returns a tuple with three items: the calculated EVC (which must be a scalar
-        value), and the outcome and cost from which it was calculated (these can be scalar values or :keyword:`None`).
+        value), and the outcome and cost from which it was calculated (these can be scalar values or `None`).
         If used with the EVCMechanism's default :py:data:`function <EVCMechanism.function>`, a custom value_function
         must accommodate three arguments (passed by name): a `controller` argument that is the EVCMechanism for which it
         is carrying out the calculation; an `outcomes` argument that is a 2d array of values, each item of which is

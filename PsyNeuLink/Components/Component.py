@@ -153,7 +153,6 @@ class ComponentError(Exception):
      def __str__(self):
          return repr(self.error_value)
 
-
 # *****************************************   COMPONENT CLASS  ********************************************************
 
 
