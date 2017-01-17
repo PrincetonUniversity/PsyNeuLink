@@ -93,6 +93,11 @@ In addition to its ``function``, MappingProjections use the following two the pr
   *Matrix keyword*.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
   of the following keywords can be use:
 
+  Attributes
+  ----------
+      IDENTITY_MATRIX
+          test
+
       * `IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
         values are the same.
       ..

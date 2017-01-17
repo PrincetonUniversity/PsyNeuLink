@@ -228,7 +228,7 @@ Execution
 A process can be executed as part of a `system <System>` or on its own.  On its own, it can be executed by calling
 either its `execute <Process_Base.execute>` or `run <Process_Base.run>` methods.  When a process is
 executed, its `input` is conveyed to the `ORIGIN` mechanism (first mechanism in the pathway).  By default,
-the the input value is presented only once.  If the `ORIGN` mechanism is executed again in the same round of execution
+the the input value is presented only once.  If the `ORIGIN` mechanism is executed again in the same round of execution
 (e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
 However, the input can be "clamped" on using the `clamp_input` argument of `execute <Process_Base.execute>` or
 `run <Process_Base.run>`.  After the `ORIGIN` mechanism is executed, each subsequent mechanism in the `pathway` is
@@ -247,7 +247,7 @@ Examples
 --------
 
 *Specification of mechanisms in a pathway:*  The first mechanism is specified as a reference to an instance,
-the second as a default instance of a mechanism type,  and the third in MechanismTuple format (specifying a reference
+the second as a default instance of a mechanism type, and the third in MechanismTuple format (specifying a reference
 to a mechanism that should receive some_params at runtime; note: the phase is omitted and so will be assigned the
 default value of 0)::
 
@@ -262,9 +262,9 @@ result, a `MappingProjection` is automatically instantiated between each of the 
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
 
-*Inline projection specification using an existing projection:*  In this `pathway`, projection_A is specified as the
-projection between the first and second mechanisms; a default projection will be created between mechanism_2 and
-mechanism_3::
+*Inline projection specification using an existing projection:*  In this `pathway`, ``projection_A`` is specified as
+the projection between the first and second mechanisms; a default projection will be created between ``mechanism_2``
+and ``mechanism_3``::
 
     projection_A = MappingProjection()
     my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
@@ -274,9 +274,9 @@ is assigned as the projection between the first and second mechanisms::
 
     my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 
-*Stand-alone projection specification:*  In this `pathway`, projection_A is explicilty specified as a projection
-between mechansim_1 and mechanism_2, and so will be used as the projection between them in my_process; a default
-projection will be created between mechanism_2 and mechanism_3::
+*Stand-alone projection specification:*  In this `pathway`, ``projection_A`` is explicilty specified as a projection
+between ``mechanism_1`` and ``mechanism_2``, and so will be used as the projection between them in ``my_process``;
+a default projection will be created between ``mechanism_2`` and ``mechanism_3``::
 
     projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
