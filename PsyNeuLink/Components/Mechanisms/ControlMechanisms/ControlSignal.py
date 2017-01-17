@@ -100,7 +100,7 @@ A ControlSignal also has several additional attributes and functions that determ
     :py:data:`cost_combination_function`) can be enabled or disabled using the :py:meth:`toggle_cost_function` method
     to turn it :keyword:`ON` or :keyword:`OFF`. If it is disabled, that component of the cost is not included in the
     ControlSignal's :py:data:`cost` attribute.  A cost function  can also be permanently disabled for the
-    ControlSignal by assigning it's attribute the value of :keyword:`None`.  If a cost function is permanently
+    ControlSignal by assigning it's attribute the value of `None`.  If a cost function is permanently
     disabled for a ControlSignal, it cannot be re-enabled using :py:meth:`toggle_cost_function`.
 
 NOTE: ControlSignals do not use the :py:data:`index <OutputState.OutputState.index>`index or
@@ -332,19 +332,19 @@ class ControlSignal(OutputState):
         calculates "intensityCost`` from the curent value of :py:data:`intensity <ControlProjection.intensity>`.
         It can be any :py:class:`TransferFunction <Function.TransferFunction>`, or any other function  that takes and
         returns a scalar value. The default is :py:class:`Exponential <Function.Exponential>`.
-        It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
+        It can be disabled permanently for the ControlProjection by assigning `None`.
 
     adjustmentCostFunction : TransferFunction : default :py:class:`Linear <Function.Linear>`
         calculates :py:data:`adjustmentCost <ControlProjection.adjustmentCost>` based on the change in
         :py:data:`intensity <ControlProjection.intensity>` from its last value. It can be any
         :py:class:`TransferFunction <Function.TransferFunction>`, or any other function that takes and
-        returns a scalar value. It can be disabled permanently for the ControlProjection by assigning :keyword:`None`.
+        returns a scalar value. It can be disabled permanently for the ControlProjection by assigning `None`.
 
     durationCostFunction : IntegratorFunction : default :py:class:`Linear <Function.Linear>`
         calculates an integral of the ControlProjection's :py:data:`cost <ControlProjection.cost>`.
         It can be any :py:class:`IntegratorFunction <Function.IntegratorFunction>`, or any other function that takes a
         list or array of two values and returns a scalar value. It can be disabled permanently for the ControlSignal by
-        assigning :keyword:`None`.
+        assigning `None`.
 
     costCombinationFunction : function : default :py:class:`Reduce(operation=SUM) <Function.Reduce>`
         combines the results of any cost functions that are enabled, and assigns the result to :py:data:`cost>`.

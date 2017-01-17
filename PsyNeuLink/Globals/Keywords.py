@@ -20,11 +20,11 @@ class Keywords:
     ORIGIN
         A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
         and that receives the input to the process or system when it is :ref:`executed or run <Run>`.  A process may
-        have only one :keyword:`ORIGIN` mechanism, but a system may have many.  Note that the :keyword:`ORIGIN`
-        mechanism of a process is not necessarily an :keyword:`ORIGIN` of the system to which it belongs, as it may
-        receive projections from other processes in the system. The :keyword:`ORIGIN` mechanisms of a process or
+        have only one `ORIGIN` mechanism, but a system may have many.  Note that the `ORIGIN`
+        mechanism of a process is not necessarily an `ORIGIN` of the system to which it belongs, as it may
+        receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
         system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
-        method.  For additional details about :keyword:`ORIGIN` mechanisms in processes, see
+        method.  For additional details about `ORIGIN` mechanisms in processes, see
         :ref:`Process Mechanisms <Process_Mechanisms>` and
         :ref:`Process Input and Output <Process_Input_And_Ouput>`; and for systems see
         :ref:`System Mechanisms <System_Mechanisms>` and
@@ -50,11 +50,11 @@ class Keywords:
     TERMINAL
         A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
         that provides the output to the process or system when it is :ref:`executed or run <Run>`.  A process may
-        have only one :keyword:`TERMINAL` mechanism, but a system may have many.  Note that the :keyword:`TERMINAL`
-        mechanism of a process is not necessarily a :keyword:`TERMINAL` mechanism of the system to which it belongs,
-        as it may send projections to other processes in the system.  The :keyword:`TERMINAL` mechanisms of a process
+        have only one `TERMINAL` mechanism, but a system may have many.  Note that the `TERMINAL`
+        mechanism of a process is not necessarily a `TERMINAL` mechanism of the system to which it belongs,
+        as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
         or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details about :keyword:`TERMINAL` mechanisms in processes, see
+        :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
         :ref:`Process_Mechanisms` and :ref:`Process_Input_And_Ouput`; and for systems see :ref:`System_Mechanisms`.
 
     SINGLETON
