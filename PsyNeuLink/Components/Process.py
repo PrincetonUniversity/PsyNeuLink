@@ -127,8 +127,8 @@ Projections between mechanisms in the `pathway` of a process are specified in on
     or `RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with `specifications for the projection <Projection_Creation>`.
 
 * Stand-alone projection
-    When a projection is created on its own, it can be assigned `sender <MappingProjection.MappingProjection.sender>`
-    and `receiver <MappingProjection.MappingProjection.receiver>` mechanisms. If both are in the process, then that
+    When a projection is created on its own, it can be assigned :ref:`sender <MappingProjection_Sender>`
+    and :ref:`receiver <MappingProjection_Receiver>` mechanisms. If both are in the process, then that
     projection will be used when creating the process.  Stand-alone specification of a projection between two
     mechanisms in a process takes precedence over default or inline specification; that is, the stand-alone
     projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
@@ -137,7 +137,7 @@ Projections between mechanisms in the `pathway` of a process are specified in on
 * Default assignment
     For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
     the methods above), a `MappingProjection` is automatically created from the mechanism that precedes it in the
-    pathway.  If the format of the preceding mechanism's output matches that of the next mechanism, then
+    `pathway`.  If the format of the preceding mechanism's output matches that of the next mechanism, then
     `IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or
     `learning has been specified <Process_Learning>` either for the projection or the process,
     then a `FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is the `ORIGIN` mechanism (i.e., first in the
@@ -150,50 +150,48 @@ Projections between mechanisms in the `pathway` of a process are specified in on
 Process input and output
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The input to a process is a list or 2D np.array provided as an arg in its :py:meth:`execute <Process_Base.execute>`
+The input to a process is a list or 2d np.array provided as an argument in its :py:meth:`execute <Process_Base.execute>`
 or :py:meth:`run <Process_Base.run>` methods, and assigned to its :py:data:`input <Process_Base.input>` attribute.
-When a process is created, a set of ProcessInputStates and MappingProjections are automatically generated to
-transmit the process' input to its `ORIGIN` mechanism, as follows:
+When a process is created, a set of `ProcessInputStates <processInputStates>` and `MappingProjections
+<MappingProjection>` are automatically generated to transmit the process' input to its `ORIGIN` mechanism, as follows:
 
-* if the number of items in the input is the same as the number of `ORIGIN` inputStates:
+* if the number of items in the `input` is the same as the number of `ORIGIN` inputStates:
     a MappingProjection is created for each value of the input to an inputState of the `ORIGIN` mechanism;
 
-* if the input has only one item but the `ORIGIN` mechanism has more than one inputState:
+* if the `input` has only one item but the `ORIGIN` mechanism has more than one inputState:
     a single ProcessInputState is created with projections to each of the `ORIGIN` mechanism inputStates;
 
-* if the input has more than one item but the `ORIGIN` mechanism has only one inputState:
-    a ProcessInputState is created for each input item, and all project to the `ORIGIN` mechanism's
-    inputState;
+* if the `input` has more than one item but the `ORIGIN` mechanism has only one inputState:
+    a ProcessInputState is created for each input item, and all project to the `ORIGIN` mechanism's inputState;
 
-* otherwise, if both the input and the `ORIGIN` mechanism have more than one inputState, but the numbers
-    are not equal: an error message is generated indicating that the there is an ambiguous mapping from the Process'
+* otherwise, if both the `input` and `ORIGIN` mechanism have more than one inputState, but the numbers are not equal:
+    an error message is generated indicating that the there is an ambiguous mapping from the Process'
     input value to `ORIGIN` mechanism's inputStates.
 
-The output of a process is a 2D np.array containing the values of its `TERMINAL` mechanism's outputStates
+The output of a process is a 2d np.array containing the values of its `TERMINAL` mechanism's outputStates.
 
 .. _Process_Learning:
 
 Learning
 ~~~~~~~~
 
-Learning modifies projections between mechanisms in a process's :py:data:`pathway <Process_Base.pathway>`,
-so that a given input produces a specified output ("target").  Learning occurs when mechanism(s) or process(es)
-for which it has been specified are executed. Learning can be configured for the projection to a particular mechanism
-in a process, or for the entire process. It is specified for a particular mechanism by including a
-:ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
-to that mechanism.  It is specified for the entire process by assigning to its ``learning`` argument either a
-LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
-implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
+Learning modifies projections between mechanisms in a process's `pathway`, so that a given input produces a desired
+output ("target").  Learning occurs when projection or process for which it has been specified is executed. Learning
+can be specified for a particular projection in a process, or for the entire process. It is specified for a
+particular projection by including a `LearningProjection specification <LearningProjection_Creation>` in the
+specification for the projection.  It is specified for the entire process by assigning to its `learning` argument either
+a `LearningProjection` specification, or the keyword `LEARNING`. Specifying learning for a process will implement it for
+all eligible projections in the process (i.e., all `MappingProjections <MappingProjection>`, excluding projections from
 the process' inputState to its `ORIGIN` mechanism, and projections from the `TERMINAL` mechanism to
 the process' outputState). When learning is specified for the process, all projections in the process will be trained
 so that input to the process (i.e., its `ORIGIN` mechanism) will generate the specified target value as its
 output (i.e., the output of the `TERMINAL` mechanism). In either case, all mechanisms that receive
-projections for which learning has been specified must be compatible with learning (see :doc:`LearningProjection`).
+projections for which learning has been specified must be `compatible with learning <LearningProjection>`).
 
-When learning is specified, the following objects are automatically created (see figure below):
-* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value;
-* :doc:`MappingProjection` from the mechanism being monitored to the MonitoringMechanism;
-* :doc:`LearningProjection` from the MonitoringMechanism to the projection being learned
+When learning is specified for a process, the following objects are automatically created (see figure below):
+* `MonitoringMechanism` used to evaluate the output of a mechanism against a target value;
+* `MappingProjection` from the mechanism being monitored to the MonitoringMechanism;
+* `LearningProjection` from the MonitoringMechanism to the projection being learned
   (i.e., the one that projects to the mechanism being monitored).
 
 Different learning algorithms can be specified (e.g.,
