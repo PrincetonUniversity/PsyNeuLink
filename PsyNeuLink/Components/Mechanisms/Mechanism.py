@@ -110,43 +110,59 @@ Structure
 Function
 ~~~~~~~~
 
-The core of every mechanism is its function, which transforms its input and generates its output.  The function is
-specified by the mechanism's `function <Mechanism_Base.function>` attribute.  Each type of mechanism has at least one
-(primary) function, and possibly additional ones.  These are generally from the `Function` class provided by PsyNeuLink.
-A function can be specified by the name of its class, or using its constructor (including arguments that
-specify its parameters).  For example, for a TransferMechanism, if the Logistic function is selected, then its gain
-and bias parameters can also be specified as shown below::
+The core of every mechanism is its function, which transforms its input to generate its output.  The function is
+specified by the mechanism's `function <Mechanism_Base.function>` attribute.  Every type of mechanism has at least one
+(primary) function, and some have additional (auxiliary) ones (for example, the `EVCMechanism <EVC_Function>`).
+Mechanism functions are generally from the PsyNeuLink `Function` class.  Most mechanisms allow their function to be
+specified, using the `function` argument of the mechanism's contructor.  The function can be specified using the name of
+`Function` class, or its constructor (including arguments that specify its parameters).  For example, the
+:keyword:`function` of a `TransferMechanism` can be specified to be the `Logistic` function as follows::
 
     my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
 
+Notice that the parameters of the :keyword:`function` (in this case, `gain` and `bias`) can be specified by including
+them in its constructor.  Some mechanisms support only a single function.  In that case, the :keyword:`function`
+argument is not available in the mechanism's constructor, but it does include arguments for the function's
+parameters.  For example, the :keyword:`function` of a `ComparatorMechanism` is always the `LinearCombination` function,
+so its constructor does not have a :keyword:`function` argument.  However, it does have a `comparison_operation`
+argument, that is used to set the LinearCombination function's `operation` parameter.
 
-• Custom / user-defined / lambda functions can be assigned
-• Note about mechanism args vs. function args:  if only one type of function, or all use the same params,
-then they are available as args in the mechanism constructor;  otherwise, in the function constructor
-(the latter is always available and always takes precedence)
-• Function params available through mech.function_object.<parameter name>
+For mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
+parameters can also be specified as entries in a :ref:`parameter dictionary <LINK>` used for the `params` argument of
+the mechanism's constructor;  in such cases, values specified in the parameter dictionary will override any specified
+within the constructor for the function itself (see `DDM_Parameters` for an example).  The parameters of a
+mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.function>` attribute) are assigned to a
+dictionary in the mechanism's `function_params <Mechanism_Base.function_params>` attribute, and can be accessed using
+the parameter's name as the key for its entry in the dictionary.
+
+Any function (primary or auxiliary) used by a mechanism can be customized by assigning a user-defined function (e.g.,
+a lambda function), so long as it takes arguments and returns values that are compatible with those of the
+mechanism's default for that function. A user-defined function can be assigned using the mechanism's `assign_params`
+method (the safest means) or by assigning it directly to the corresponding attribute of the mechanism (for its
+primary funtion, its `function <Mechanism_Base.function>` attribute).
 
 COMMENT:
-    NOT CURRENTLY IMPLEMENTED
-While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
-functions can be any Python function, including an inline (lambda) function, so long as it generates a result
-with a type that is consistent with the type expected by the mechanism (see :doc:`Function`;  also see
-:ref:'Mechanism_Specifying_Parameters` below).
+    When a custom function is specified,
+    the function itself is assigned to the mechanism's designated attribute.  At the same time, PsyNeuLink automatically
+    creates a `UserDefinedFunction` object, and assigns the custom function to its
+    `function <UserDefinedFunction.function>` attribute.
 COMMENT
 
-The input to a mechanism's ``function`` comes from the mechanism's ``variable`` attribute, which is a 2d array that
-has one item for each of the mechanism's inputStates.  The result of the ``function`` is placed in the mechanism's
-``value`` attribute, which is also a 2d array that may have one or more items.  This is used by the mechanism's
-outputStates to generate their ``value`` attributes, each of which is assigned as an item in the mechanism's
-:py:data:`outputValue <Mechanism_Base.outputValue>` attribute.
+The input to a mechanism's `function <Mechanism_Base.function>` is provided by the mechanism's
+`variable <Mechanism_Base.variable>` attribute.  This is a 2d array with one item for each of the mechanism's
+`inputStates <Mechanism_InputStates>.  The result of the :keyword:`function` is placed in the mechanism's
+`value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
+mechanism's :keyword:`value` is used by its `outputStates <Mechanism_OutputStates>` to generate their :keyword:`value`
+attributes, each of which is assigned as an item of the list in the mechanism's
+`outputValue <Mechanism_Base.outputValue>` attribute.
 
 .. note::
-   The input to a mechanism is not necessarily the same as the input to its ``function`` (i.e., its ``variable``
-   attribute): the mechanism's input is processed by its inputState(s) before being submitted to its function
-   (see :ref:`InputStates <Mechanism_InputStates>`).  Similarly, the result of a mechanism's function (i.e.,
-   its ``value`` attribute)  is not necessarily the same as the mechanism's output:  the result of the ``function``
-   is processed by the mechanism's outputstate(s), which is then assigned to the mechanism's :py:data:`outputValue
-   <Mechanism_Base.outputValue>` attribute (see :ref:`OutputStates <Mechanism_OutputStates>`)
+   The input to a mechanism is not necessarily the same as the input to its `function <Mechanism_Base.function>`.
+   The input to a mechanism is first processed by its inputState(s), and then assigned to the mechanism's
+   `variable <Mechanism_Base>` attribute, which is used as the input to its `function <Mechanism_Base.function>`.
+   Similarly, the result of a mechanism's function is not necessarily the same as the mechanism's output.  The result
+   of the `function <Mechanism_Base.function>` is assigned to the mechanism's  `value <Mechanism_Base.value>` attribute,
+   which is then used by its outputStates to assign items to its `outputValue <Mechanism_Base.outputValue>` attribute.
 
 .. _Mechanism_States:
 
@@ -170,27 +186,29 @@ InputStates
 ^^^^^^^^^^^
 
 These receive and represent the input to a mechanism. A mechanism usually has only one (**primary**) inputState, kept
-in  its :py:data:`inputStates, <Mechanism_Base.inputStates>` attribute.  However some mechanisms have more than one.
-For example, a :doc:`ComparatorMechanism` has one inputState for its ``sample`` and another for its ``target`` input.
+in  its `inputStates, <Mechanism_Base.inputStates>` attribute.  However some mechanisms have more than one inputState.
+For example, a `ComparatorMechanism` has one inputState for its `sample` and another for its `target` input.
 If a mechanism has more than one inputState, they are kept in an OrderedDict in the mechanism's
-:py:data:`inputStates <Mechanism_Base.inputStates>` attribute (note the plural).
+`inputStates <Mechanism_Base.inputStates>` attribute (note the plural).
 
 COMMENT:
 [TBI:]
 If the inputState are created automatically, or are not assigned a name when specified, then each is named
-using the following template: ???XXXX
+using the following template: [TBI]
 COMMENT
 
 Each inputState of a mechanism can receive one or more projections from other mechanisms.  If the mechanism is an
-`ORIGIN` mechanism of a process, it also receives a projection from the
-:ref:`ProcessInputState <Process_Input_And_Ouput>` for that process. Each inputState's ``function`` aggregates the
-values received from its projections (usually by summing them), and assigns the result to its ``value`` attribute.
+`ORIGIN` mechanism of a process, it also receives a projection from the `ProcessInputState <Process_Input_And_Ouput>`
+for that process. Each inputState's :keyword:`function <InputState.InputState.function>` aggregates the values received
+from its projections (usually by summing them), and assigns the result to the inputState's :keyword:`value` attribute.
 
 .. _Mechanism_Variable:
 
-The value of each inputState for the mechanism is assigned as the value of an item of the mechanism's ``variable``
-attribute (a 2d np.array), as well as in a corresponding item of its :py:data:`inputValue <Mechanism_Base.inputValue>`
-attribute (a list).  The ``variable`` provides the input to the mechanism's ``function``.
+The value of each inputState for the mechanism is assigned as the value of an item of the mechanism's
+`variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as in a corresponding item of its
+`inputValue <Mechanism_Base.inputValue>` attribute (a list).  The :keyword:`variable` provides the input to the
+mechanism's `function <Mechanism_Base.function>`, while its :kewyord:`inputValue` provides a more convenient way
+of accessing its individual items.
 
 COMMENT:
 Therefore, the number of inputStates for the mechanism must match the number of tems specified for the mechanism's
