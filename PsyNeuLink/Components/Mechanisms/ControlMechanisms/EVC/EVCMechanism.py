@@ -102,14 +102,14 @@ is described below.
 EVC Calculation
 ^^^^^^^^^^^^^^^
 
-The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) by a
-conducting a grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is
-determined by the `allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing
-one value from the `allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An
-`allocationPolicy` is constructed for every possible combination of values, and stored in the EVCMechanism's
-`controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation` method is then used to simulate the system
-under each  `allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return
-the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
+The default EVC `function <EVCMechanism.function>` calculates the expected value of control (EVC) by a conducting a
+grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is determined by the
+`allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing one value from the
+`allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An `allocationPolicy` is
+constructed for every possible combination of values, and stored in the EVCMechanism's `controlSignalSearchSpace`
+attribute.  The EVCMechanism's `run_simulation` method is then used to simulate the system under each
+`allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return the policy
+with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
 `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for each simulation run (in
 `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the following four functions,
 each of which can be customized by using the EVCMechanism's `assign_params` method to designate custom functions (the
