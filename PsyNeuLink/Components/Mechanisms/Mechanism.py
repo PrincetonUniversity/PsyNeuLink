@@ -128,13 +128,12 @@ so its constructor does not have a :keyword:`function` argument.  However, it do
 argument, that is used to set the LinearCombination function's `operation` parameter.
 
 For mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
-parameters can also be specified as entries in a :ref:`parameter dictionary <Mechanism_Specifying_Parameters>` used for
-the `params` argument of the mechanism's constructor;  in such cases, values specified in the parameter dictionary
-will override any specified within the constructor for the function itself (see `DDM_Parameters` for an example).
-The parameters of a
-mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.function>` attribute) are assigned to a
-dictionary in the mechanism's `function_params <Mechanism_Base.function_params>` attribute, and can be accessed using
-the parameter's name as the key for its entry in the dictionary.
+parameters can also be specified as entries in a :ref:`parameter dictionary <ParameterState_Specifying_Parameters>`
+used for the `params` argument of the mechanism's constructor;  in such cases, values specified in the parameter
+dictionary will override any specified within the constructor for the function itself (see `DDM_Parameters` for an
+example). The parameters of a mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.function>`
+attribute) are assigned to a dictionary in the mechanism's `function_params <Mechanism_Base.function_params>`
+attribute, and can be accessed using the parameter's name as the key for its entry in the dictionary.
 
 .. _Mechanism_Custom_Function:
 
@@ -264,25 +263,19 @@ results of its `function <Mechanism_Base.function`>.
 Specifying Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a mechanism is created, its parameters can be specified using arguments in its constructor, and the parameters
-of its `function <Mechanism_Base.function>` can be specified using arguments in the function's constructor.  Parameter
-of the mechanism and/or its `function <Mechanism_Base.function>` can also be assigned values in a specification
-dictionary assigned to the mechanism's `params` argument.  The entries of that dictionary can contain any of the
-following (where appropriate for a given mechanism subclass), as well as any parameters specific to a particular
-subclass (see subclass documentation):
+Most mechanisms implement a standard set of parameters, that can be specified in a parameter dictionary assigned
+to `params` argument in the mechanism's constructor, or with the mechanism's `assign_params` method, using the following
+keywords:
 
-    * :keyword:`INPUT_STATES` : Dict[str, InputState] -
-      used to specify specialized inputStates required by a mechanism subclass
+    * `INPUT_STATES` - specifies specialized inputStates required by a mechanism subclass
       (see :ref:`inputState specification <InputState_Creation>` for details of specification).
     ..
-    * :keyword:`FUNCTION` : function or method :  default function implemented by subclass -
-      specifies the `function <Mechanism_Base.function>` for the mechanism;  can be one of several
-      functions pre-specified by the subclass or a `custom function <Mechanism_Custom_Function>`.
+    * `FUNCTION` - specifies the `function <Mechanism_Base.function>` for the mechanism;  can be one of several
+      functions pre-specified by the subclass or a user-defined `custom function <Mechanism_Custom_Function>`.
     ..
-    * :keyword:`FUNCTION_PARAMS` : Dict[str, value] -
-      dictionary of parameters for the mechanism's function.
-      The key of each entry must be the name of the  parameter.
-      The value of each entry can be one of the following (see :ref:`ParameterState_Specifying_Parameters` for details):
+    * `FUNCTION_PARAMS` - a specification dictionary of parameters for the mechanism's :keyword:`function`;
+      the key for each entry must be the name of one of the function's parameters;  its value can be any of the
+      following (see :ref:`ParameterState_Specifying_Parameters` for details):
 
       * the value of the parameter itself;
       |
@@ -296,21 +289,19 @@ subclass (see subclass documentation):
         clarity).
       |
       .. note::
-         Many subclasses include the function parameters as arguments in the call to the mechanism subclass,
-         (i.e., used to create the mechanism); any values specified in the :keyword:`FUNCTION__PARAMS` entry
-         of the mechanism's params dict take precedence over values specified in such arguments.
+         Some Mechanism subclasses include the function parameters as arguments in mechanism's constructor,
+         any values specified in the `FUNCTION__PARAMS` entry of a parameter specification dictionary for the
+         mechanism take precedence over values assigned to parameter-specific arguments in its (or its function's)
+         constructor.
 
-    * :keyword:`OUTPUT_STATES` : Dict[str, OutputState] -
-      used to specify specialized outputStates required by a mechanism subclass
+    * `OUTPUT_STATES` - specifies specialized outputStates required by a mechanism subclass
       (see :ref:`OutputStates_Creation` for details of specification).
     ..
-    * :keyword:`MONITOR_FOR_CONTROL` : List[OutputState] -
-      used to specify mechanisms or specific outputStates to be monitored by a `ControlMechanism`
-      (see :ref:`specifying monitored outputStates <ControlMechanism_Monitored_OutputStates>`
-      for details of specification).
+    * `MONITOR_FOR_CONTROL` - specifies which of the mechanism's outputStates is monitored by the `controller`
+      for the system to which the mechanism belongs (see :ref:`specifying monitored outputStates
+      <ControlMechanism_Monitored_OutputStates>` for details of specification).
     ..
-    * :keyword:`MONITOR_FOR_LEARNING` : List[OutputState] -
-      used to specify outputStates to be used by a `MonitoringMechanism` for learning
+    * `MONITOR_FOR_LEARNING` - specifies which of the mechanism's outputStates is used for learning
       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
 COMMENT:
@@ -340,8 +331,9 @@ COMMENT
 Role in Processes and Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms that are part of a process and/or system are assigned designations that indicate the role they play.  These
-are listed in the mechanism's :py:data:`processes <>` and py:data:`systems` attributes, respectively
+Mechanisms that are part of a `process <Process>` and/or `system  <System>` are assigned `designations
+<Keywords.Keywords> that indicate the role they play.  These are listed in the mechanism's `processes` `systems`
+attributes, respectively.
 
 (see Process
 :ref:`Process_Mechanisms` and System :ref:`System_Mechanisms` for designation labels and their meanings).
@@ -442,8 +434,8 @@ def mechanism(mech_spec=None, params=None, context=None):
         a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
         It is passed to the relevant subclass to instantiate the mechanism. Entries can be any parameters described
-        in :ref:`Mechanism_Specifying_Parameters` that are relevant to the mechanism's subclass, and/or any defined
-        by a :doc:`Mechanism` subclass itself.
+        in `Mechanism_Specifying_Parameters` that are relevant to the mechanism's subclass, and/or defined
+        specifically by that particular `Mechanism` subclass.
 
     COMMENT:
         context : str
