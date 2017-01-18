@@ -120,8 +120,12 @@ and bias parameters can also be specified as shown below::
     my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
 
 
-, or by a user-defined function (e.g., lambda function).  In the following example,
-Note about mechanism args vs. function args
+• Custom / user-defined / lambda functions can be assigned
+• Note about mechanism args vs. function args:  if only one type of function, or all use the same params,
+then they are available as args in the mechanism constructor;  otherwise, in the function constructor
+(the latter is always available and always takes precedence)
+• Function params available through mech.function_object.<parameter name>
+
 COMMENT:
     NOT CURRENTLY IMPLEMENTED
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
