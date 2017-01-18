@@ -321,7 +321,7 @@ input value to <a class="reference internal" href="Keywords.html#Keywords.Keywor
 <code class="xref any docutils literal"><span class="pre">receiver</span></code>.  Learning occurs when a projection or process for which learning has been
 specified is executed.  Learning can be specified for a particular projection in a process, or for the entire
 process. It is specified for a particular projection by including a <a class="reference internal" href="LearningProjection.html#learningprojection-creation"><span class="std std-ref">LearningProjection specification</span></a> in the specification for the projection.  It is specified for the entire process by
-assigning either a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> specification, or the keyword <code class="xref any docutils literal"><span class="pre">LEARNING</span></code> to the <a class="reference internal" href="System.html#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> argument of the
+assigning either a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> specification, or the keyword <code class="xref any docutils literal"><span class="pre">LEARNING</span></code> to the <a class="reference internal" href="#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> argument of the
 process` constructor.  Specifying learning for a process will implement it for all eligible projections in the
 process (i.e., all <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, excluding projections from
 the process&#8217; inputState to its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and projections from the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism to
@@ -426,23 +426,21 @@ function, which is compatible with BackPropagation:</p>
 <dl class="function">
 <dt id="Process.process">
 <code class="descclassname">Process.</code><code class="descname">process</code><span class="sig-paren">(</span><em>process_spec=None</em>, <em>default_input_value=None</em>, <em>pathway=None</em>, <em>initial_values=None</em>, <em>clamp_input=None</em>, <em>default_projection_matrix=None</em>, <em>learning=None</em>, <em>target=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Process.process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Factory method for Process: returns instance of Process.</p>
-<p>If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].</p>
-<p>See <a class="reference internal" href="#Process.Process_Base" title="Process.Process_Base"><code class="xref any py py-class docutils literal"><span class="pre">Process_Base</span></code></a> for class description.</p>
+<dd><p>Factory method for Process: returns an instance of Process.  If called with no arguments, returns an instance of
+Process with a single ref:<code class="xref any docutils literal"><span class="pre">DefaultMechanism</span></code>.  See <a class="reference internal" href="#"><span class="doc">Process</span></a> for class description.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>process_spec</strong> (<em>Optional[str or Dict[param keyword, param value]]</em>) &#8211; specification for the process to create.
-If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single DefaultMechanism [LINK for default];
+If it is <code class="xref any docutils literal"><span class="pre">None</span></code>, returns an instance of Process with a single <span class="xref std std-ref">DefaultMechanism</span>;
 if it is a string, uses it as the name for the process;
 if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
-parameter (these values will be used to instantiate the process, and will override any values assigned
+parameter (these will be used to instantiate the process, and will override any values assigned
 to the arguments in the call to <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a>).
 Note: if a name is not specified, the nth instance created will be named by using the process&#8217;
-<code class="xref py py-data docutils literal"><span class="pre">componentType</span></code> attribute as the base and adding an indexed suffix:
-componentType-n.</li>
+<a class="reference internal" href="#Process.Process_Base.componentType" title="Process.Process_Base.componentType"><code class="xref any py py-attr docutils literal"><span class="pre">componentType</span></code></a> attribute as the base and adding an indexed suffix: componentType-n.</li>
 <li><strong>default_input_value</strong> (List[values] or ndarray :  default default input value of <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism) &#8211; the input to the process to use if none is provided in a call to the
 <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref py py-data docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref py py-data docutils literal"><span class="pre">run</span></code></a> method.
 This must be the same length as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism&#8217;s input.</li>
@@ -501,6 +499,12 @@ values in the dictionary will override argument values.</li>
 They should be instantiated using the <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-class docutils literal"><span class="pre">process</span></code></a> factory method (see it for description of parameters).</p>
 </div>
 <dl class="attribute">
+<dt id="Process.Process_Base.componentType">
+<code class="descname">componentType</code><a class="headerlink" href="#Process.Process_Base.componentType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>&#8220;Process&#8221;</em></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Process.Process_Base.pathway">
 <code class="descname">pathway</code><a class="headerlink" href="#Process.Process_Base.pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[(mechanism, dict, int), (projection, LearningProjection spec, None), (mechanism, dict, int)...]</em> &#8211; specifies the list of mechanisms that are executed when the process executes.
@@ -542,8 +546,8 @@ format of the <code class="docutils literal"><span class="pre">variable</span></
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <code class="docutils literal"><span class="pre">input</span></code> attribute of a process preserves its value throughout the execution of the process.
-It&#8217;s value is assigned to the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.variable" title="TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
-of execution.  After that, by default, its <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.variable" title="TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
+It&#8217;s value is assigned to the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism at the start
+of execution.  After that, by default, its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute is zeroed. This is so that if the
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism is executed again in the same round of execution (e.g., if it is part of
 a recurrent loop) it does not continue to receive the Process&#8217; input.  However, this behavior can be
 modified with the <code class="docutils literal"><span class="pre">clamp_input</span></code> attribute of the process.</p>

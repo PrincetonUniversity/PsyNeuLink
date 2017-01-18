@@ -32,7 +32,7 @@ Creating a TransferMechanism
 -----------------------------
 
 A TransferMechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
-function and specifying "TransferMechanism" as its ``mech_spec`` argument.  Its function is specified in the
+function and specifying `TRANSFER_MECHANISM` as its `mech_spec` argument.  Its function is specified in the
 ``function`` argument, which can be simply the name of the class (first example below), or a call to its constructor
 which can include arguments specifying the function's parameters (second example)::
 
@@ -287,7 +287,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     """
 
-    componentType = "TransferMechanism"
+    componentType = TRANSFER_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -373,9 +373,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             transfer_function_name = transfer_function.__name__
 
         # Validate FUNCTION
-        if not transfer_function_class.componentType is kwTransferFunction:
+        if not transfer_function_class.componentType is TRANFER_FUNCTION_TYPE:
             raise TransferError("Function {} specified as FUNCTION param of {} must be a {}".
-                                format(transfer_function_name, self.name, kwTransferFunction))
+                                format(transfer_function_name, self.name, TRANFER_FUNCTION_TYPE))
 
         # Validate INITIAL_VALUE
         initial_value = target_set[INITIAL_VALUE]

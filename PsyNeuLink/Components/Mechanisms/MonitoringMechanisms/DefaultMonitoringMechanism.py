@@ -104,7 +104,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     """
 
-    componentType = "ComparatorMechanism"
+    componentType = COMPARATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -222,7 +222,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             # Validate FUNCTION
             # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
-            if not (comparison_function is kwLinearCombination):
+            if not (comparison_function is LINEAR_COMBINATION_FUNCTION):
                 raise ComparatorError("Unrecognized function {} specified for FUNCTION".
                                             format(comparison_function))
 

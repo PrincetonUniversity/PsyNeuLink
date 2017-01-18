@@ -164,7 +164,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     """
 
-    componentType = "SigmoidLayer"
+    componentType = INTEGRATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # These will override those specified in TypeDefaultPreferences

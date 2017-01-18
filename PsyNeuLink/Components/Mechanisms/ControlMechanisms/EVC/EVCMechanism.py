@@ -641,7 +641,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     """
 
-    componentType = "EVCMechanism"
+    componentType = EVC_MECHANISM
     initMethod = INIT_FUNCTION_METHOD_ONLY
 
 

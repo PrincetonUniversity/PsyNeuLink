@@ -1797,7 +1797,7 @@
 # - implement:
 #     Regarding ProcessDefaultMechanism (currently defined as Mechanism_Base.defaultMechanism)
 #        # IMPLEMENTATION NOTE: move this to a preference (in Process??)
-#        defaultMechanism = kwDDM
+#        defaultMechanism = DDM_MECHANISM
 #
 #endregion
 

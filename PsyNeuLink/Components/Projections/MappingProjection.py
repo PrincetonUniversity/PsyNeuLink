@@ -91,12 +91,7 @@ In addition to its ``function``, MappingProjections use the following two the pr
   .. _Matrix_Keywords:
 
   *Matrix keyword*.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
-  of the following keywords can be use:
-
-  Attributes
-  ----------
-      IDENTITY_MATRIX
-          test
+  of the following keywords can be used:
 
       * `IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
         values are the same.
@@ -256,6 +251,8 @@ class MappingProjection(Projection_Base):
 
     Attributes
     ----------
+
+    componentType : MAPPING_PROJECTION
 
     sender : OutputState
         identifies the source of the projection's input.

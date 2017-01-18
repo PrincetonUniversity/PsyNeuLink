@@ -388,11 +388,8 @@ def process(process_spec=None,
     name=None,                                              \
     prefs=None)
 
-    Factory method for Process: returns instance of Process.
-
-    If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].
-
-    See :any:`Process_Base` for class description.
+    Factory method for Process: returns an instance of Process.  If called with no arguments, returns an instance of
+    Process with a single ref:`DefaultMechanism <LINK>`.  See `Process` for class description.
 
     COMMENT:
        REPLACE DefaultMechanism BELOW USING Inline markup
@@ -403,14 +400,13 @@ def process(process_spec=None,
 
     process_spec : Optional[str or Dict[param keyword, param value]]
         specification for the process to create.
-        If it is `None`, returns an instance of Process with a single DefaultMechanism [LINK for default];
+        If it is `None`, returns an instance of Process with a single :ref:`DefaultMechanism <LINK>`;
         if it is a string, uses it as the name for the process;
         if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
-        parameter (these values will be used to instantiate the process, and will override any values assigned
+        parameter (these will be used to instantiate the process, and will override any values assigned
         to the arguments in the call to :py:func:`process`).
         Note: if a name is not specified, the nth instance created will be named by using the process'
-        :py:data:`componentType <Process_Base.componentType>` attribute as the base and adding an indexed suffix:
-        componentType-n.
+        `componentType` attribute as the base and adding an indexed suffix: componentType-n.
 
     default_input_value : List[values] or ndarray :  default default input value of `ORIGIN` mechanism
         the input to the process to use if none is provided in a call to the
@@ -595,6 +591,8 @@ class Process_Base(Process):
 
     Attributes
     ----------
+
+    componentType : "Process"
 
     pathway : List[(mechanism, dict, int), (projection, LearningProjection spec, None), (mechanism, dict, int)...]
         specifies the list of mechanisms that are executed when the process executes.
@@ -843,7 +841,7 @@ class Process_Base(Process):
 
         if not context:
             # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + kwProcessInit
+            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
 
         super(Process_Base, self).__init__(variable_default=default_input_value,
                                            param_defaults=params,

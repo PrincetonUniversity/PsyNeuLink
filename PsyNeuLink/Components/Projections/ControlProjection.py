@@ -160,6 +160,8 @@ class ControlProjection(Projection_Base):
     Attributes
     ----------
 
+    componentType : CONTROL_PROJECTION
+
     sender : OutputState of ControlProjection
         mechanism that provides the current input for the ControlProjection (usuall a :doc:`ControlMechanisms`).
 
