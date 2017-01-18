@@ -233,8 +233,8 @@ modify the function's parameter value in response to the outcome(s) of processin
 
 OutputStates
 ^^^^^^^^^^^^
-These represent the output(s) of a mechanism. A mechanism can have several outputStates, and each can serve as a
-sender for projections, to transmit  its value to other  mechanisms and/or the output of a process or system.
+These represent the output(s) of a mechanism. A mechanism can have several outputStates, and each can send projections
+that transmit its value to other mechanisms, and/or the output of the process or system to which the mechanism belongs.
 Similar to inputStates, the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState``
 attribute, while all of its outputStates (including the primary one) are stored in an OrderedDict in its
 :py:data:`outputStates <Mechanism_Base.outputStates>` attribute (note the plural);  the key for each entry is the name
