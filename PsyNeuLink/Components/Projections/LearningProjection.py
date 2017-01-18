@@ -349,6 +349,8 @@ class LearningProjection(Projection_Base):
     Attributes
     ----------
 
+    componentType : LEARNING_PROJECTION
+
     sender : OutputState of MonitoringMechanism
         source of :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
 
@@ -595,7 +597,7 @@ class LearningProjection(Projection_Base):
                 raise LearningProjectionError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
                                           format(self.receiver,
                                                  self.name,
-                                                 kwLinearCombination,
+                                                 LINEAR_COMBINATION_FUNCTION,
                                                  self.mappingProjection.function.__self__.__class__.__name__))
 
             # # MODIFIED 10/29/16 NEW:
@@ -611,7 +613,7 @@ class LearningProjection(Projection_Base):
             #     raise LearningProjectionError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
             #                               format(self.receiver,
             #                                      self.name,
-            #                                      kwLinear,
+            #                                      LINEAR_FUNCTION,
             #                                      self.mappingProjection.function.__self__.__class__.__name__))
             # # MODIFIED 10/29/16 END
 
@@ -879,10 +881,10 @@ FROM TODO:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
                 #         (compares errorSource output with external training signal)
                 else:
-                    if self.function.componentName is kwBackProp:
+                    if self.function.componentName is BACKPROPAGATION_FUNCTION:
                         output_signal = np.zeros_like(self.errorSource.outputState.value)
                     # Force smaple and target of Comparartor to be scalars for RL
-                    elif self.function.componentName is kwRL:
+                    elif self.function.componentName is RL_FUNCTION:
                         output_signal = np.array([0])
                     else:
                         raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
@@ -898,10 +900,10 @@ FROM TODO:
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         monitored_state = self.errorSource
-                    if self.function.componentName is kwBackProp:
+                    if self.function.componentName is BACKPROPAGATION_FUNCTION:
                         matrix = IDENTITY_MATRIX
                     # Force sample and target of ComparatorMechanism to be scalars for RL
-                    elif self.function.componentName is kwRL:
+                    elif self.function.componentName is RL_FUNCTION:
                         matrix = FULL_CONNECTIVITY_MATRIX
                     self.monitoring_projection = MappingProjection(sender=monitored_state,
                                                          receiver=monitoring_mechanism.inputStates[COMPARATOR_SAMPLE],
@@ -934,14 +936,14 @@ FROM TODO:
         """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
         """
 
-        if self.function.componentName is kwRL:
+        if self.function.componentName is RL_FUNCTION:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
             #     (since error signal is a scalar for RL)
             if len(error_signal) != 1:
                 raise LearningProjectionError("Length of error signal ({}) received by {} from {}"
                                           " must be 1 since {} uses {} as its learning function".
-                                          format(len(error_signal), self.name, self.sender.owner.name, self.name, kwRL))
-        if self.function.componentName is kwBackProp:
+                                          format(len(error_signal), self.name, self.sender.owner.name, self.name, RL_FUNCTION))
+        if self.function.componentName is BACKPROPAGATION_FUNCTION:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
             #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
             if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:

@@ -539,7 +539,7 @@ class Mechanism_Base(Mechanism):
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
                     specifies order in which types of States are executed;  used by self.execute]
             + paramNames (dict)
-            + defaultMechanism (str): Currently kwDDM (class reference resolved in __init__.py)
+            + defaultMechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
 
         Class methods
         -------------
@@ -698,7 +698,7 @@ class Mechanism_Base(Mechanism):
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
     # IMPLEMENTATION NOTE: move this to a preference
-    defaultMechanism = kwDDM
+    defaultMechanism = DDM_MECHANISM
 
 
     variableClassDefault = [0.0]
@@ -1339,7 +1339,7 @@ class Mechanism_Base(Mechanism):
 
         # Limit init to scope specified by context
         if INITIALIZING in context:
-            if kwProcessInit in context or kwSystemInit in context:
+            if PROCESS_INIT in context or SYSTEM_INIT in context:
                 # Run full execute method for init of Process and System
                 pass
             # Only call mechanism's _execute method for init

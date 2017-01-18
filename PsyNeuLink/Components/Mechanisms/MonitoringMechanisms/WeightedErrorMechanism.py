@@ -203,7 +203,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     """
 
-    componentType = "WeightedErrorMechanism"
+    componentType = WEIGHTED_ERROR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
