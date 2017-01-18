@@ -331,15 +331,17 @@ COMMENT
 Role in Processes and Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms that are part of one or more `processes <Process>` or `systems <System>` are assigned designations that
-indicate the role they play in those `processes <Process_Mechanisms>` and `systems <System_Mechanisms>`.
-These are listed in the mechanism's processes` and `systems` attributes, respectively.  Any mechanism designated as
-`ORIGIN` receives a projection to its primary inputState from the process(es) to which it belongs.  Accordingly,
-when the process (or system of which the process is a part) is executed, those mechainsms receive the input provided
-to the process (or system).  Note that a mechanism can be the `ORIGIN` of a process but not of a system to which that
-process belongs (see the note under System :ref:`System_Mechanisms` for further explanation).  The output value of
-any mechanism designated as `TERMINAL` is assigned to the output of any process or system to which it belongs.
-Similarly,
+Mechanisms that are part of one or more processes are assigned designations that indicate the
+`role <Process_Mechanisms>` they play in those processes, and similarly for `role <System_Mechanisms>` they play in
+any systems to which they belong. These designations are listed in the mechanism's `processes` and `systems`
+attributes, respectively.  Any mechanism designated as `ORIGIN` receives a projection to its primary inputState from
+the process(es) to which it belongs.  Accordingly, when the process (or system of which the process is a part) is
+executed, those mechainsms receive the input provided to the process (or system).  The `outputValue
+<Mechanism_Base.outputValue>` of any mechanism designated as the `TERMINAL` mechanism for a process is assigned as
+the `output` of that process, and similarly for systems to which it belongs.
+
+.. note:: A mechanism can be the `ORIGIN` or `TERMINAL` of a process but not of a system to which that
+          process belongs;  see :ref:`Chain Example <LINK>` for further explanation.
 
 
 .. _Mechanism_Execution:
@@ -347,20 +349,17 @@ Similarly,
 Execution
 ---------
 
-A mechanism can be executed using its :py:data:`execute <Mechanism_Base.execute>` and
-:py:data:`run <Mechanism_Base.run>` methods.  This can be useful in testing a mechanism and/or debugging.  However,
-more typically, mechanisms are executed as part of a process or system (see Process :ref:`Process_Execution` and
-System :ref:`System_Execution` for more details).  For either of these, the mechanism must be included in the
-:py:data:`pathway <Process.Process_Base.pathway>` of a process.  There, it can be specified on its own, or as the
-first item of a tuple that also has an optional set of runtime parameters (see below), and/or a phase specification
-for use when executed in a system (see System :ref:`System_Phase` for an explanation of phases; and see Process
-:ref:`Process_Mechanisms` for additional details about specifying a mechanism in a process
-py:data:`pathway <Process.Process_Base.pathway>`).
+A mechanism can be executed using its `execute <Mechanism_Base.execute>` or`run <Mechanism_Base.run>` methods.  This
+can be useful in testing a mechanism and/or debugging.  However, more typically, mechanisms are executed as part of a
+`process <Process_Execution>` or `system <System_Execution>`.  For either of these, the mechanism must be included in
+the `pathway` of a process.  There, it can be specified on its own, or as the first item of a tuple that also has an
+optional set of `runtime parameters <Mechanism_Runtime_Parameters>`, and/or a `phase specification <System_Phase>` for
+use when  executed in a system (see `Process_Mechanisms` for additional details about specifying a mechanism in a
+process `pathway`).
 
 .. note::
-   Mechanisms cannot be specified directly in a system.  They must be specified in the
-   py:data:`pathway <Process.Process_Base.pathway>` of a process,
-   and then that process must be included in the ``processes`` argument for the system.
+   Mechanisms cannot be specified directly in a system.  They must be specified in the `pathway` of a process,
+   and then that process must be included in the `processes <`System.System_Base.processes>` attribute for the system.
 
 .. _Mechanism_Runtime_Parameters:
 

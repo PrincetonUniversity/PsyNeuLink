@@ -34,6 +34,8 @@
 #   TimeScale
 #   Registry
 #
+# DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS
+#
 # DOCUMENT: FINISH DOCUMENTING:
 #             .. _ControlMechanism_Specifying_Control:
 #
