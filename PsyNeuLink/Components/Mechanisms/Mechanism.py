@@ -30,36 +30,22 @@
 Overview
 --------
 
-Mechanisms are a core object type in PsyNeuLink.  A mechanism takes an input, transforms it in some way, and provides
-it as an output that can be used for some purpose  There are three types of mechanisms that serve different purposes:
+A mechanism takes an input, transforms it in some way, and makes the result available as its output.  There are three
+types of mechanisms in PsyNeuLink:
 
-    * **ProcessingMechanisms** aggregrate the input they receive from other mechanisms in a process or system,
-      and/or the input to a process or system, transform it in some way, and provide the result either as input for
-      other mechanisms and/or the output of a
-      process or system.
+    * A `ProcessingMechanisms` aggregrates the input it receives from other mechanisms, and/or the input to the
+      the `process <Process>` or `system <System>` to which it belongs, transforms it in some way, and provides the
+      result as input to other mechanisms in the process or system, or as the output for the process or system
+      itself.
     ..
-    * **MonitoringMechanisms** monitor the output of one or more other mechanisms, receive training (target) values,
-      and compare these to generate error signals used for learning (see :doc:`Learning`).
+    * A `MonitoringMechanism` monitors the output of one or more other mechanisms, receives training (target) values,
+      and compares these to generate error signals used for `learning <Process_Learning>`).
     ..
-    * **ControlMechanisms** evaluate the output of one or more other mechanisms, and use this to modify the
-      parameters of those or other mechanisms.
+    * A `ControlMechanism` evaluates the output of one or more other mechanisms in the system to which it belongs,
+      and uses this to modify the parameters of those or other mechanisms in the system.
 
-..
-    * :doc:`ProcessingMechanism`
-        aggregrate the input they receive from other mechanisms in a process or system, and/or the input to a process or
-        system, transform it in some way, and provide the result either as input for other mechanisms and/or the
-        output of a process or system.
-
-    * :doc:`MonitoringMechanism`
-        monitor the output of one or more other mechanisms, receive training (target) values, and compare these to
-        generate error signals used for learning (see :doc:`Learning`).
-
-    * :doc:`ControlMechanism`
-        evaluate the output of one or more other mechanisms, and use this to modify the parameters of those or other
-        mechanisms.
-
-A mechanism is made up of two fundamental components: the function it uses to transform its input; and the states it
-uses to represent its input, function parameters, and output
+A mechanism is made up of four fundamental components: the function it uses to transform its input; and the states it
+uses to represent its input, processing parameters, and output.
 
 .. _Mechanism_Creation:
 
@@ -67,49 +53,48 @@ Creating a Mechanism
 --------------------
 
 Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
-constructor for the desired type of mechanism.  In addition, PsyNeuLink provides a
-:py:func:`mechanism <Mechanism.mechanism>` function that can be used to instantiate a specified type of mechanism or
-a default mechanism. Mechanisms can also be specified "in context," for example in the
-:py:data:`pathway <Process.Process_Base.pathway>` attribute of a process.  This can be done in either of the ways
-mentioned above, or one of the following ways:
+constructor for the desired type of mechanism.  Alternatively, the :py:func:`mechanism` function can be used to
+instantiate a specified type of mechanism or a default mechanism. Mechanisms can also be specified "in context,"
+for example in the `pathway` attribute of a process; the mechanism can be specified in either of the ways mentioned
+above, or using one of the following:
 
-  * name of an **existing mechanism**;
+  * the name of an **existing mechanism**;
   ..
-  * name of a **mechanism type** (subclass);
+  * the name of a **mechanism type** (subclass);
   ..
-  * **specification dictionary** -- this can contain an entry specifying the type of mechanism,
-    and/or entries specifiying the value of parameters used to instantiate it.
+  * a **specification dictionary** -- this can contain an entry specifying the type of mechanism,
+    and/or entries specifying the value of parameters used to instantiate it.
     These should take the following form:
 
-      * :keyword:`MECHANISM_TYPE`: <name of a mechanism type>
+      * `MECHANISM_TYPE`: <name of a mechanism type>
 
-          if this entry is absent, a :ref:`default mechanism <LINK> will be created.
+          if this entry is absent, a `default mechanism <LINK>` will be created.
 
       * <name of argument>:<value>
 
           this can contain any of the standard parameters for instantiating a mechanism
-          (see :ref:`Mechanism_Specifying_Parameters`) or ones specific to a particular type of mechanism
-          (see documentation for subclass).  Note that parameter values in the specification dict
-          will be used to instantiate the mechanism.  These can be overridden during execution
-          by specifying :ref:`Mechanism_Runtime_Parameters`, either when calling the
-          :py:meth:`execute <Mechanism_Base.execute>` method for the mechanism, or where it is specified in the
-          :py:data:`pathway <Process.Process_Base.pathway>` attribute of a :doc:`Process`.
+          (see `Mechanism_Specifying_Parameters`) or ones specific to a particular type of mechanism
+          (see documentation for the subclass).  The key must be the name of the argument used to specify
+          the parameter in the mechanism's constructor, and the value a legal value for that parameter.
+          The parameter values specified will be used to instantiate the mechanism.  These can be overridden
+          during execution by specifying `Mechanism_Runtime_Parameters`, either when calling the mechanism's
+          `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
+          specified in the `pathway` attribute of a `Process`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more mechanisms under some circumstances.
-    For example, :class:`MonitoringMechanisms` (and associated :class:`LearningProjection`) will be created
-    automtically when :ref:`Process_Learning` is specified for a process.
+    For example, `MonitoringMechanisms <MonitorMechanism>` (and associated `LearningProjections <LearningProjection>`)
+    are created automatically when `learing <Process_Learning>` is specified for a process.
 
-Every mechanism has one or more :doc:`inputStates <InputState>`, :doc:`parameterStates <ParameterState>`, and
-:doc:`outputStates <OutputStates>`, that allow it to receive and send projections, and to execute its ``function``
-(see :ref:`Mechanism_Function`) --  these are summarized below under :ref:`Mechanism_States`.  When a mechanism is
-created, it automatically creates the parameterStates it needs to represent its parameters, including those of its
-``function``.  It also creates any inputStates and outputStates required for the projections it has been assigned.
-However, inputStates and outputStates, and corresponding projections, can also be specified in the mechanism's
-parameter dictionary, using entries with the keys :keyword:`INPUT_STATES` and :keyword:`OUTPUT_STATES``, respectively.
-The value of each entry can be the name of the state's class (to create a default), an existing state,
-a specification dictionary for one, a value (used as the state's ``variable``) or a list containing of any of these
-to create multiple states (see :ref:`InputStates <InputState_Creation>` and :ref:`OutputStates <OutputStates_Creation>`
-for details).
+Every mechanism has one or more `inputStates <InputState>`, `parameterStates <ParameterState>`, and
+`outputStates <OutputState>` (summarized `below <Mechanism_States>`) that allow it to receive and send projections,
+and to execute its `function <Mechanism_Function>`).  When a mechanism is created, it automatically creates the
+parameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
+It also creates any inputStates and outputStates required for the projections it has been assigned. InputStates and
+outputStates, and corresponding projections, can also be specified in the mechanism's params dictionary, using entries
+with the keys `INPUT_STATES` and `OUTPUT_STATES`, respectively. The value of each entry can be the name of the state's
+class (to create a default), an existing state, a specification dictionary for one, a value (used as the state's
+``variable``) or a list containing of any of these to create multiple states (see `InputStates <InputState_Creation>`
+and `OutputStates <OutputStates_Creation>` for details).
 
 COMMENT:
     PUT EXAMPLE HERE
@@ -126,14 +111,17 @@ Function
 ~~~~~~~~
 
 The core of every mechanism is its function, which transforms its input and generates its output.  The function is
-specified by the mechanism's ``function`` parameter.  Each type of mechanism specifies one or more functions to use,
-and generally these are from the :doc:`Function` class provided by PsyNeuLink.  Components are specified
-in the same form that an object is instantiated in Python (by calling its constructor), and thus can be used to
-specify its parameters.  For example, for a TransferMechanism, if the Logistic function is selected, then its gain
-and bias parameters can also be specified as shown in the following example::
+specified by the mechanism's `function <Mechanism_Base.function>` attribute.  Each type of mechanism has at least one
+(primary) function, and possibly additional ones.  These are generally from the `Function` class provided by PsyNeuLink.
+A function can be specified by the name of its class, or using its constructor (including arguments that
+specify its parameters).  For example, for a TransferMechanism, if the Logistic function is selected, then its gain
+and bias parameters can also be specified as shown below::
 
     my_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4))
 
+
+, or by a user-defined function (e.g., lambda function).  In the following example,
+Note about mechanism args vs. function args
 COMMENT:
     NOT CURRENTLY IMPLEMENTED
 While every mechanism type offers a standard set of functions, a custom function can also be specified.  Custom
