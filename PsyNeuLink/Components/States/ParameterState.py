@@ -528,7 +528,7 @@ class ParameterState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    componentType = kwParameterState
+    componentType = PARAMETER_STATE
     paramsType = PARAMETER_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE

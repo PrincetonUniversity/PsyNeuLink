@@ -10,7 +10,7 @@
 #
 # __all__ = ['INPUT_STATES',
 #            'OUTPUT_STATES',
-#            'kwParameterState',
+#            'PARAMETER_STATE',
 #            'MAPPING_PROJECTION',
 #            'CONTROL_PROJECTION',
 #            'LEARNING_PROJECTION']
@@ -98,7 +98,7 @@ DefaultMonitoringMechanism = ComparatorMechanism(name=kwDefaultMonitoringMechani
 # - can be overridden in System by CONTROL_MECHANISM
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlProjection intensities
 # Note: this is an instantiated object
-DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
+DefaultController = DefaultControlMechanism(name=SYSTEM_DEFAULT_CONTROLLER)
 
 # Specifies subclass of ControlMechanism used as the default class of control mechanism to instantiate and assign,
 #    in place of DefaultController, when instantiating a System for which an existing control mech is specified
@@ -162,7 +162,7 @@ register_category(entry=InputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# kwInputState = InputState.__name__
+# INPUT_STATE = InputState.__name__
 
 # OutputState
 from PsyNeuLink.Components.States.OutputState import OutputState
@@ -178,7 +178,7 @@ register_category(entry=ParameterState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# kwParameterState = ParameterState.__name__
+# PARAMETER_STATE = ParameterState.__name__
 
 # MODIFIED 9/11/16 END
 

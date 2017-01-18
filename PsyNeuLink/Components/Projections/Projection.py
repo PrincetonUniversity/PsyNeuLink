@@ -808,7 +808,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
     receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
     state must be a specification of an InputState or ParameterState
     Specification of InputState can be any of the following:
-            - kwInputState - assigns projection_spec to (primary) inputState
+            - INPUT_STATE - assigns projection_spec to (primary) inputState
             - InputState object
             - index for Mechanism.inputStates OrderedDict
             - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
@@ -841,8 +841,8 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         state._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 
-    # Generic kwInputState is specified, so use (primary) inputState
-    elif state is kwInputState:
+    # Generic INPUT_STATE is specified, so use (primary) inputState
+    elif state is INPUT_STATE:
         receiver.inputState._instantiate_projections_to_state(projections=projection_spec, context=context)
         return
 

@@ -56,6 +56,8 @@ PsyNeuLink supports two time scales for executing objects: :py:data:`TIME_STEP <
 scales, and its current mode of execution is determined by its :py:data:`timeScale
 <Mechanism.Mechanism_Base.timeScale>` parameter.
 
+.. _Run_TIME_STEP:
+
 * :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>`:  this mode of execution is a mechanism's closest approximation
   to continuous, or "real time" processing.  Execution of a time_step is defined as a single execution of all objects
   in the scope of execution at their time_step time scale.  Mechanisms called upon to execute a time_step that do
@@ -63,7 +65,9 @@ scales, and its current mode of execution is determined by its :py:data:`timeSca
   their trial mode response, either on the first time_step, every time_step, or the last time_step in the sequence
   being run (see :ref:`Timing <LINK> for further details).
 
-* :py:data:`TIME_STEP <TimeScale.TimeScale.TIME_STEP>`: this mode of execution is the "ballistic" execution of a
+.. _Run_TRIAL:
+
+* :py:data:`TRIAL <TimeScale.TimeScale.TIME_TRIAL>`: this mode of execution is the "ballistic" execution of a
   mechanism to a state that would have been achieved with time_step execution to a specified criterion.  The
   criterion can be specified in terms of the number of time_steps, or a condition to be met by the mechanism's
   output.  It is up to the mechanism how it implements its trial mode of execution (i.e., whether this is done by

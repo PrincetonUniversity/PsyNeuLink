@@ -206,7 +206,7 @@ class MappingProjection(Projection_Base):
                                    FUNCTION_PARAMS: {
                                        # LinearMatrix.kwReceiver: receiver.value,
                                        LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
-                                   PROJECTION_SENDER: kwInputState, # Assigned to class ref in __init__ module
+                                   PROJECTION_SENDER: INPUT_STATE, # Assigned to class ref in __init__ module
                                    PROJECTION_SENDER_VALUE: [1],
                                    })
             + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()

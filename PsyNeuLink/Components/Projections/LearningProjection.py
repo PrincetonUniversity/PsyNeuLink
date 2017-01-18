@@ -649,7 +649,7 @@ class LearningProjection(Projection_Base):
                                                                        state_list=[(MATRIX,
                                                                                     weight_change_params)],
                                                                        state_type=ParameterState,
-                                                                       state_param_identifier=kwParameterState,
+                                                                       state_param_identifier=PARAMETER_STATE,
                                                                        constraint_value=self.mappingWeightMatrix,
                                                                        constraint_value_name=LEARNING_PROJECTION,
                                                                        context=context)
@@ -661,7 +661,7 @@ class LearningProjection(Projection_Base):
                 self.receiver.parameterStates[MATRIX] = _instantiate_state(owner=self.receiver,
                                                                             state_type=ParameterState,
                                                                             state_name=MATRIX,
-                                                                            state_spec=kwParameterState,
+                                                                            state_spec=PARAMETER_STATE,
                                                                             state_params=weight_change_params,
                                                                             constraint_value=self.mappingWeightMatrix,
                                                                             constraint_value_name=LEARNING_PROJECTION,
