@@ -128,9 +128,10 @@ so its constructor does not have a :keyword:`function` argument.  However, it do
 argument, that is used to set the LinearCombination function's `operation` parameter.
 
 For mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
-parameters can also be specified as entries in a :ref:`parameter dictionary <LINK>` used for the `params` argument of
-the mechanism's constructor;  in such cases, values specified in the parameter dictionary will override any specified
-within the constructor for the function itself (see `DDM_Parameters` for an example).  The parameters of a
+parameters can also be specified as entries in a :ref:`parameter dictionary <Mechanism_Specifying_Parameters>` used for
+the `params` argument of the mechanism's constructor;  in such cases, values specified in the parameter dictionary
+will override any specified within the constructor for the function itself (see `DDM_Parameters` for an example).
+The parameters of a
 mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.function>` attribute) are assigned to a
 dictionary in the mechanism's `function_params <Mechanism_Base.function_params>` attribute, and can be accessed using
 the parameter's name as the key for its entry in the dictionary.
@@ -185,10 +186,10 @@ Every mechanism has three types of states (shown schematically in the figure bel
 InputStates
 ^^^^^^^^^^^
 
-These receive and represent the input to a mechanism. A mechanism usually has only one (**primary**) inputState, kept
-in  its `inputStates, <Mechanism_Base.inputStates>` attribute.  However some mechanisms have more than one inputState.
-For example, a `ComparatorMechanism` has one inputState for its `sample` and another for its `target` input.
-If a mechanism has more than one inputState, they are kept in an OrderedDict in the mechanism's
+These receive and represent the input to a mechanism. A mechanism usually has only one (**primary**) `inputState
+<InputState>, identified in its `inputState, <Mechanism_Base.inputState>` attribute.  However some mechanisms have
+more  than one inputState. For example, a `ComparatorMechanism` has one inputState for its `sample` and another for its
+`target` input. If a mechanism has more than one inputState, they are identified in an OrderedDict in the mechanism's
 `inputStates <Mechanism_Base.inputStates>` attribute (note the plural).
 
 COMMENT:
@@ -222,41 +223,47 @@ COMMENT
 ParameterStates
 ^^^^^^^^^^^^^^^
 
-These represent the parameters of a mechanism's function, and are used to control the parameters of its ``function``.
-PsyNeuLink assigns one parameterState for each parameter of the mechanism's ``function`` (which correspond to the
-arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
-from the :doc:`ControlProjections <ControlProjection>` of a :doc:`ControlMechanism<ControlMechanism>`, that is used to
-modify the function's parameter value in response to the outcome(s) of processing.  See
-:ref:`ParameterState_Specifying_Parameters` for details of specifying the parameter values of a mechanism's ``function``.
+These represent the parameters that control the operation of a mechanism, including the parameters of its
+:keyword:`function`.  One `parameterState <ParameterState>` is assigned to each of the parameters of the mechanism
+and/or its :keyword:`function` (these correspond to the arguments in their constructors).  Like other states,
+parameterStates can receive projections. Typically these are from the `ControlProjections <ControlProjection>`
+of a `ControlMechanism` that is used to modify parameter values in response to the outcome(s) of
+processing.  A parameter value (and the value of its associated parameterState) can be specified when a mechanism or
+its function is first created  using the corresponding argument in the object's constructor.  Parameter values can
+also be assigned later, using the mechanism's `assign_param` method (the safest means) or by direct assignment to the
+corresponding attribute (see `ParameterState_Specifying_Parameters`).
 
 .. _Mechanism_OutputStates:
 
 OutputStates
 ^^^^^^^^^^^^
-These represent the output(s) of a mechanism. A mechanism can have several outputStates, and each can serve as a
-sender for projections, to transmit  its value to other  mechanisms and/or the output of a process or system.
-Similar to inputStates, the ** *primary* (first or only) outputState** is assigned to the mechanism's ``outputState``
-attribute, while all of its outputStates (including the primary one) are stored in an OrderedDict in its
-:py:data:`outputStates <Mechanism_Base.outputStates>` attribute (note the plural);  the key for each entry is the name
-of an outputState, and the value is the outputState itself.  Every mechanism has at least one ("primary")
-outputState, the ``value`` of which is assigned an unmodified copy of the first item of the owner mechanism's
-``value`` (usually the direct output of the mechanism's ``function``).  Other outputStates may be used for other
-purposes.  For example, some Processing mechanisms (such as the :doc:`TransferMechanism`) use outputStates to
-represent values derived from its primary output (e.g., its mean and variance).  :doc:`ControlMechanisms` assign one
-outputState for each of their :doc:`ControlProjections  <ControlProjection>`.  The item of the mechanism's ``value``
-to which an outputState is assigned can be specified using its ``INDEX`` parameter, and the function used to convert
-that item into the outputState's ``value`` can be customized using its ``CALCULATE`` parameter (see
-:ref:`OutputStates_Creation`). The ``value`` attributes of all of a mechanism's outputStates  are assigned to the
-mechanism's :py:data:`outputValue <Mechanism_Base.outputValue>` attribute (a list), in the same order in which they
-appear in the :py:data:`outputStates <Mechanism_Base.outputStates>`  attribute.  Note that this is distinct from the
-mechanism's ``value`` attribute, which contains the full and unmodified results of its execution.
+These represent the output(s) of a mechanism. A mechanism can have several `outputStates <OutputState>`, and each can
+serve as a sender for projections, to transmit its value to other  mechanisms and/or the output of a process or system.
+Similar to inputStates, the ** *primary* (first or only) outputState is assigned to the mechanism's
+`outputState <Mechanism_Base.outputState>` attribute, while all of its outputStates (including the primary one) are
+identified in an OrderedDict in its `outputStates <Mechanism_Base.outputStates>` attribute (note the plural);
+the key for each entry is the name of an outputState, and the value is the outputState itself.  Every mechanism has
+at least one ("primary") outputState, the :keyword:`value` of which is assigned the first item of
+the mechanism's `value <Mechanism_Base.value>` attribute (usually the direct output of the mechanism's
+`function <Mechanism_Base.function>`).  Other outputStates may be used for other purposes.  For example,
+some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to represent
+values derived from their primary output (e.g., the mean and variance).  `ControlMechanisms <ControlMechanism>`
+assign one outputState for each of their `ControlProjections  <ControlProjection>`.  The item of the mechanism's
+`value <Mechanism_Base>value` attriute to which an outputState is assigned can be specified using its `index`
+parameter, and the function used to convert that item into the outputState's :keyword:`value` can be customized using
+its `calculate` parameter (see `OutputStates_Creation`). The :keyword:`value` attributes of all of a mechanism's
+outputStates  are assigned to the mechanism's `outputValue <Mechanism_Base.outputValue>` attribute (a list), in the
+same order in which they appear in its`outputStates <Mechanism_Base.outputStates>`  attribute.  Note that
+this is distinct from the mechanism's `value <Mechanism_Base.value>` attribute, which contains the full and unmodified
+results of its `function <Mechanism_Base.function`>.
 
 .. _Mechanism_Specifying_Parameters:
 
 Specifying Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a mechanism is created, its parameters can be specified either as arguments (where supported) or as entries
+When a mechanism is created, its parameters can be specified using arguments in its constructor,
+either as arguments (where supported) or as entries
 in a specification dictionary.  The entries can contain any of the following, where appropriate to a given
 mechanism subclass, as well as those specific to a particular subclass (documented in each subclass):
 

@@ -259,7 +259,7 @@ and <a class="reference internal" href="OutputState.html#outputstates-creation">
 specified by the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> attribute.  Every type of mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, the <code class="xref any docutils literal"><span class="pre">EVCMechanism</span></code>).
 Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class.  Most mechanisms allow their function to be
-specified, using the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.function" title="TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
+specified, using the <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument of the mechanism&#8217;s contructor.  The function can be specified using the name of
 <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class, or its constructor (including arguments that specify its parameters).  For example, the
 <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> can be specified to be the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
@@ -303,55 +303,59 @@ which is then used by its outputStates to assign items to its <a class="referenc
 <div class="section" id="states">
 <span id="mechanism-states"></span><h3>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h3>
 <p>Every mechanism has three types of states (shown schematically in the figure below):</p>
-<div class="figure align-center" id="id1">
+<div class="figure align-center" id="id3">
 <span id="mechanism-figure"></span><a class="reference internal image-reference" href="_images/Mechanism_states_fig.png"><img alt="Mechanism States" src="_images/Mechanism_states_fig.png" style="width: 2424.75px; height: 1637.25px;" /></a>
 <p class="caption"><span class="caption-text">Schematic of a mechanism showing its three types of states (input, parameter and output).</span></p>
 </div>
 <div class="section" id="inputstates">
 <span id="mechanism-inputstates"></span><h4>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h4>
-<p>These receive and represent the input to a mechanism. A mechanism usually has only one (<strong>primary</strong>) inputState, kept
-in  its <a class="reference internal" href="#Mechanism.Mechanism_Base.inputStates" title="Mechanism.Mechanism_Base.inputStates"><code class="xref any py py-attr docutils literal"><span class="pre">inputStates,</span></code></a> attribute.  However some mechanisms have more than one inputState.
-For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one inputState for its <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.sample" title="ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and another for its <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> input.
-If a mechanism has more than one inputState, they are kept in an OrderedDict in the mechanism&#8217;s
+<p>These receive and represent the input to a mechanism. A mechanism usually has only one (<strong>primary</strong>) <code class="xref any docutils literal"><span class="pre">inputState</span></code> attribute.  However some mechanisms have
+more  than one inputState. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one inputState for its <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.sample" title="ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and another for its
+<a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> input. If a mechanism has more than one inputState, they are identified in an OrderedDict in the mechanism&#8217;s
 <a class="reference internal" href="#Mechanism.Mechanism_Base.inputStates" title="Mechanism.Mechanism_Base.inputStates"><code class="xref any py py-attr docutils literal"><span class="pre">inputStates</span></code></a> attribute (note the plural).</p>
 <p>Each inputState of a mechanism can receive one or more projections from other mechanisms.  If the mechanism is an
 <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of a process, it also receives a projection from the <a class="reference internal" href="Process.html#process-input-and-ouput"><span class="std std-ref">ProcessInputState</span></a>
 for that process. Each inputState&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> aggregates the values received
-from its projections (
-usually by
-summing them), and assigns the result to the inputState&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> attribute.</p>
-<p id="mechanism-variable">The value of each inputState for the mechanism is assigned as the value of an item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">variable</span></code>
-attribute (a 2d np.array), as well as in a corresponding item of its <a class="reference internal" href="#Mechanism.Mechanism_Base.inputValue" title="Mechanism.Mechanism_Base.inputValue"><code class="xref py py-data docutils literal"><span class="pre">inputValue</span></code></a>
-attribute (a list).  The <code class="docutils literal"><span class="pre">variable</span></code> provides the input to the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+from its projections (usually by summing them), and assigns the result to the inputState&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> attribute.</p>
+<p id="mechanism-variable">The value of each inputState for the mechanism is assigned as the value of an item of the mechanism&#8217;s
+<a class="reference internal" href="#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute (a 2d np.array), as well as in a corresponding item of its
+<a class="reference internal" href="#Mechanism.Mechanism_Base.inputValue" title="Mechanism.Mechanism_Base.inputValue"><code class="xref any py py-attr docutils literal"><span class="pre">inputValue</span></code></a> attribute (a list).  The <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> provides the input to the
+mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>, while its <a href="#id1"><span class="problematic" id="id2">:kewyord:`inputValue`</span></a> provides a more convenient way
+of accessing its individual items.</p>
 </div>
 <div class="section" id="parameterstates">
 <span id="mechanism-parameterstates"></span><h4>ParameterStates<a class="headerlink" href="#parameterstates" title="Permalink to this headline">¶</a></h4>
-<p>These represent the parameters of a mechanism&#8217;s function, and are used to control the parameters of its <code class="docutils literal"><span class="pre">function</span></code>.
-PsyNeuLink assigns one parameterState for each parameter of the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code> (which correspond to the
-arguments in its constructor method). Like other states, parameterStates can receive projections. Typically these are
-from the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, that is used to
-modify the function&#8217;s parameter value in response to the outcome(s) of processing.  See
-<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Parameters</span></a> for details of specifying the parameter values of a mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<p>These represent the parameters that control the operation of a mechanism, including the parameters of its
+<code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.  One <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> is assigned to each of the parameters of the mechanism
+and/or its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (these correspond to the arguments in their constructors).  Like other states,
+parameterStates can receive projections. Typically these are from the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>
+of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> that is used to modify parameter values in response to the outcome(s) of
+processing.  A parameter value (and the value of its associated parameterState) can be specified when a mechanism or
+its function is first created  using the corresponding argument in the object&#8217;s constructor.  Parameter values can
+also be assigned later, using the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">assign_param</span></code> method (the safest means) or by direct assignment to the
+corresponding attribute (see <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Parameters</span></a>).</p>
 </div>
 <div class="section" id="outputstates">
 <span id="mechanism-outputstates"></span><h4>OutputStates<a class="headerlink" href="#outputstates" title="Permalink to this headline">¶</a></h4>
-<p>These represent the output(s) of a mechanism. A mechanism can have several outputStates, and each can serve as a
-sender for projections, to transmit  its value to other  mechanisms and/or the output of a process or system.
-Similar to inputStates, the ** <em>primary</em> (first or only) outputState** is assigned to the mechanism&#8217;s <code class="docutils literal"><span class="pre">outputState</span></code>
-attribute, while all of its outputStates (including the primary one) are stored in an OrderedDict in its
-<a class="reference internal" href="#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref py py-data docutils literal"><span class="pre">outputStates</span></code></a> attribute (note the plural);  the key for each entry is the name
-of an outputState, and the value is the outputState itself.  Every mechanism has at least one (&#8220;primary&#8221;)
-outputState, the <code class="docutils literal"><span class="pre">value</span></code> of which is assigned an unmodified copy of the first item of the owner mechanism&#8217;s
-<code class="docutils literal"><span class="pre">value</span></code> (usually the direct output of the mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>).  Other outputStates may be used for other
-purposes.  For example, some Processing mechanisms (such as the <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>) use outputStates to
-represent values derived from its primary output (e.g., its mean and variance).  <span class="xref doc">ControlMechanisms</span> assign one
-outputState for each of their <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.  The item of the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>
-to which an outputState is assigned can be specified using its <code class="docutils literal"><span class="pre">INDEX</span></code> parameter, and the function used to convert
-that item into the outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> can be customized using its <code class="docutils literal"><span class="pre">CALCULATE</span></code> parameter (see
-<a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">Creating an OutputState</span></a>). The <code class="docutils literal"><span class="pre">value</span></code> attributes of all of a mechanism&#8217;s outputStates  are assigned to the
-mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> attribute (a list), in the same order in which they
-appear in the <a class="reference internal" href="#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref py py-data docutils literal"><span class="pre">outputStates</span></code></a>  attribute.  Note that this is distinct from the
-mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute, which contains the full and unmodified results of its execution.</p>
+<p>These represent the output(s) of a mechanism. A mechanism can have several <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a>, and each can
+serve as a sender for projections, to transmit its value to other  mechanisms and/or the output of a process or system.
+Similar to inputStates, the ** <em>primary</em> (first or only) outputState is assigned to the mechanism&#8217;s
+<a class="reference internal" href="#Mechanism.Mechanism_Base.outputState" title="Mechanism.Mechanism_Base.outputState"><code class="xref any py py-attr docutils literal"><span class="pre">outputState</span></code></a> attribute, while all of its outputStates (including the primary one) are
+identified in an OrderedDict in its <a class="reference internal" href="#Mechanism.Mechanism_Base.outputStates" title="Mechanism.Mechanism_Base.outputStates"><code class="xref any py py-attr docutils literal"><span class="pre">outputStates</span></code></a> attribute (note the plural);
+the key for each entry is the name of an outputState, and the value is the outputState itself.  Every mechanism has
+at least one (&#8220;primary&#8221;) outputState, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is assigned the first item of
+the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute (usually the direct output of the mechanism&#8217;s
+<code class="xref any docutils literal"><span class="pre">function</span></code>).  Other outputStates may be used for other purposes.  For example,
+some <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> (such as <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>) use outputStates to represent
+values derived from their primary output (e.g., the mean and variance).  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>
+assign one outputState for each of their <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.  The item of the mechanism&#8217;s
+<code class="xref any docutils literal"><span class="pre">value</span> <span class="pre">&lt;Mechanism_Base&gt;value</span></code> attriute to which an outputState is assigned can be specified using its <a class="reference internal" href="index.html"><span class="doc">PsyNeuLink Documentation</span></a>
+parameter, and the function used to convert that item into the outputState&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> can be customized using
+its <a class="reference internal" href="ControlSignal.html#ControlSignal.ControlSignal.calculate" title="ControlSignal.ControlSignal.calculate"><code class="xref any py py-attr docutils literal"><span class="pre">calculate</span></code></a> parameter (see <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">Creating an OutputState</span></a>). The <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> attributes of all of a mechanism&#8217;s
+outputStates  are assigned to the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute (a list), in the
+same order in which they appear in its`outputStates &lt;Mechanism_Base.outputStates&gt;`  attribute.  Note that
+this is distinct from the mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, which contains the full and unmodified
+results of its <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Mechanism_Base.function</span></code>&gt;.</p>
 </div>
 </div>
 <div class="section" id="specifying-mechanism-parameters">
