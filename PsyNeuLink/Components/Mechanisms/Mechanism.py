@@ -136,6 +136,8 @@ mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.fun
 dictionary in the mechanism's `function_params <Mechanism_Base.function_params>` attribute, and can be accessed using
 the parameter's name as the key for its entry in the dictionary.
 
+.. _Mechanism_Custom_Function:
+
 Any function (primary or auxiliary) used by a mechanism can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 mechanism's default for that function. A user-defined function can be assigned using the mechanism's `assign_params`
@@ -238,22 +240,22 @@ corresponding attribute (see `ParameterState_Specifying_Parameters`).
 OutputStates
 ^^^^^^^^^^^^
 These represent the output(s) of a mechanism. A mechanism can have several `outputStates <OutputState>`, and each can
-serve as a sender for projections, to transmit its value to other  mechanisms and/or the output of a process or system.
-Similar to inputStates, the ** *primary* (first or only) outputState is assigned to the mechanism's
+send projections that transmit its value to other mechanisms and/or the output of the process or system to which the
+mechanism belongs. Similar to inputStates, the ** *primary* (first or only) outputState is assigned to the mechanism's
 `outputState <Mechanism_Base.outputState>` attribute, while all of its outputStates (including the primary one) are
-identified in an OrderedDict in its `outputStates <Mechanism_Base.outputStates>` attribute (note the plural);
-the key for each entry is the name of an outputState, and the value is the outputState itself.  Every mechanism has
-at least one ("primary") outputState, the :keyword:`value` of which is assigned the first item of
-the mechanism's `value <Mechanism_Base.value>` attribute (usually the direct output of the mechanism's
+identified in an OrderedDict in its `outputStates <Mechanism_Base.outputStates>` attribute (note the plural).  The
+key for each entry in the :keyword:`outputStates` dict is the name of an outputState, and the value is the outputState
+itself.  Every mechanism has at least one ("primary") outputState, the :keyword:`value` of which is assigned the
+first item of the mechanism's `value <Mechanism_Base.value>` attribute (usually the direct output of the mechanism's
 `function <Mechanism_Base.function>`).  Other outputStates may be used for other purposes.  For example,
 some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to represent
-values derived from their primary output (e.g., the mean and variance).  `ControlMechanisms <ControlMechanism>`
-assign one outputState for each of their `ControlProjections  <ControlProjection>`.  The item of the mechanism's
-`value <Mechanism_Base>value` attriute to which an outputState is assigned can be specified using its `index`
-parameter, and the function used to convert that item into the outputState's :keyword:`value` can be customized using
-its `calculate` parameter (see `OutputStates_Creation`). The :keyword:`value` attributes of all of a mechanism's
+values derived from the value of their primary outputState (e.g., the mean and variance).  `ControlMechanisms
+<ControlMechanism>` assign one outputState for each of their `ControlProjections  <ControlProjection>`.  An outputState
+can be assigned to a particular item of the mechanism's `value <Mechanism_Base>value` attribute using the outputState's
+`index` parameter, and its `calculate` parameter can be used to modify that item before assigning it as the
+outputState's :keyword:`value` (see `OutputStates_Creation`). The :keyword:`value` attributes of all of a mechanism's
 outputStates  are assigned to the mechanism's `outputValue <Mechanism_Base.outputValue>` attribute (a list), in the
-same order in which they appear in its`outputStates <Mechanism_Base.outputStates>`  attribute.  Note that
+same order in which they appear in mechanism's `outputStates <Mechanism_Base.outputStates>`  attribute.  Note that
 this is distinct from the mechanism's `value <Mechanism_Base.value>` attribute, which contains the full and unmodified
 results of its `function <Mechanism_Base.function`>.
 
@@ -262,17 +264,20 @@ results of its `function <Mechanism_Base.function`>.
 Specifying Mechanism Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a mechanism is created, its parameters can be specified using arguments in its constructor,
-either as arguments (where supported) or as entries
-in a specification dictionary.  The entries can contain any of the following, where appropriate to a given
-mechanism subclass, as well as those specific to a particular subclass (documented in each subclass):
+When a mechanism is created, its parameters can be specified using arguments in its constructor, and the parameters
+of its `function <Mechanism_Base.function>` can be specified using arguments in the function's constructor.  Parameter
+of the mechanism and/or its `function <Mechanism_Base.function>` can also be assigned values in a specification
+dictionary assigned to the mechanism's `params` argument.  The entries of that dictionary can contain any of the
+following (where appropriate for a given mechanism subclass), as well as any parameters specific to a particular
+subclass (see subclass documentation):
 
     * :keyword:`INPUT_STATES` : Dict[str, InputState] -
       used to specify specialized inputStates required by a mechanism subclass
       (see :ref:`inputState specification <InputState_Creation>` for details of specification).
     ..
-    * :keyword:`FUNCTION` : function or method :  default method implemented by subclass -
-      specifies the function for the mechanism;  can be one implemented by the subclass or a custom function.
+    * :keyword:`FUNCTION` : function or method :  default function implemented by subclass -
+      specifies the `function <Mechanism_Base.function>` for the mechanism;  can be one of several
+      functions pre-specified by the subclass or a `custom function <Mechanism_Custom_Function>`.
     ..
     * :keyword:`FUNCTION_PARAMS` : Dict[str, value] -
       dictionary of parameters for the mechanism's function.
@@ -300,12 +305,12 @@ mechanism subclass, as well as those specific to a particular subclass (document
       (see :ref:`OutputStates_Creation` for details of specification).
     ..
     * :keyword:`MONITOR_FOR_CONTROL` : List[OutputState] -
-      used to specify mechanisms or specific outputStates to be monitored by a ControlMechanism
+      used to specify mechanisms or specific outputStates to be monitored by a `ControlMechanism`
       (see :ref:`specifying monitored outputStates <ControlMechanism_Monitored_OutputStates>`
       for details of specification).
     ..
     * :keyword:`MONITOR_FOR_LEARNING` : List[OutputState] -
-      used to specify outputStates to be used by a MonitoringMechanism for learning
+      used to specify outputStates to be used by a `MonitoringMechanism` for learning
       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
 
 COMMENT:
