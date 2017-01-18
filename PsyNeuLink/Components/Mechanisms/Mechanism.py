@@ -331,18 +331,15 @@ COMMENT
 Role in Processes and Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms that are part of a `process <Process>` and/or `system  <System>` are assigned `designations
-<Keywords.Keywords> that indicate the role they play.  These are listed in the mechanism's `processes` `systems`
-attributes, respectively.
-
-(see Process
-:ref:`Process_Mechanisms` and System :ref:`System_Mechanisms` for designation labels and their meanings).
-Any mechanism designated as `ORIGIN` receives a projection to its primary inputState from the process(es)
-to which it belongs.  Accordingly, when the process (or system of which the process is a part) is executed, those
-mechainsms receive the input provided to the process (or system).  Note that a mechanism can be the `ORIGIN`
-of a process but not of a system to which that process belongs (see the note under System :ref:`System_Mechanisms` for
-further explanation).  The output value of any mechanism designated as `TERMINAL` is assigned to the output
-of any process or system to which it belongs.
+Mechanisms that are part of one or more `processes <Process>` or `systems <System>` are assigned designations that
+indicate the role they play in those `processes <Process_Mechanisms>` and `systems <System_Mechanisms>`.
+These are listed in the mechanism's processes` and `systems` attributes, respectively.  Any mechanism designated as
+`ORIGIN` receives a projection to its primary inputState from the process(es) to which it belongs.  Accordingly,
+when the process (or system of which the process is a part) is executed, those mechainsms receive the input provided
+to the process (or system).  Note that a mechanism can be the `ORIGIN` of a process but not of a system to which that
+process belongs (see the note under System :ref:`System_Mechanisms` for further explanation).  The output value of
+any mechanism designated as `TERMINAL` is assigned to the output of any process or system to which it belongs.
+Similarly,
 
 
 .. _Mechanism_Execution:
