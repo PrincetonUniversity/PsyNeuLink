@@ -390,7 +390,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
-        #     this should override the default sender kwSystemDefaultController in ControlProjection._instantiate_sender
+        #     this should override the default sender SYSTEM_DEFAULT_CONTROLLER in ControlProjection._instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)

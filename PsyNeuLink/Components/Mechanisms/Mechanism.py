@@ -740,7 +740,7 @@ class Mechanism_Base(Mechanism):
         NOTES:
         * Since Mechanism is a subclass of Function, it calls super.__init__
             to validate variable_default and param_defaults, and assign params to paramInstanceDefaults;
-            it uses kwInputState as the variable_default
+            it uses INPUT_STATE as the variable_default
         * registers mechanism with MechanismRegistry
 
         """

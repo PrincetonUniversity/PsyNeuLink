@@ -33,7 +33,7 @@ and a LearningProjection to that MappingProjection  (see :ref:`learning in a pro
 and :ref:`automatic creation of LearningSignals  <LearningProjection_Automatic_Creation> for details).
 
 
-.. _Comparator_Structure
+.. _Comparator_Structure:
 
 Structure
 ---------

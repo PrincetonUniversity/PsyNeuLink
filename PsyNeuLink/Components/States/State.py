@@ -1333,11 +1333,11 @@ def _instantiate_state_list(owner,
                          (state_spec, params_dict) tuple(s), or None
                          if None, instantiate a default using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
-        - kwInputState
+        - INPUT_STATE
         - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
-        - kwInputState: self.variable
+        - INPUT_STATE: self.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)

@@ -208,7 +208,7 @@ class InputState(State_Base):
 
         Class attributes
         ----------------
-            + componentType (str) = kwInputState
+            + componentType (str) = INPUT_STATE
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination, Operation.SUM)
                 + FUNCTION_PARAMS (dict)
@@ -223,7 +223,7 @@ class InputState(State_Base):
 
         StateRegistry
         -------------
-            All kwInputState are registered in StateRegistry, which maintains an entry for the subclass,
+            All INPUT_STATE are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
     COMMENT
@@ -303,7 +303,7 @@ class InputState(State_Base):
 
     #region CLASS ATTRIBUTES
 
-    componentType = kwInputState
+    componentType = INPUT_STATE
     paramsType = INPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE

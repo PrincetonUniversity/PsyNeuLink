@@ -229,9 +229,9 @@ MONITORING_MECHANISM = "MonitoringMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 
 # States:
-kwInputState = "InputState"
+INPUT_STATE = "InputState"
 OUTPUT_STATE = "OutputState"
-kwParameterState = "ParameterState"
+PARAMETER_STATE = "ParameterState"
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -365,13 +365,12 @@ PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
-kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
 COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
 VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
-kwSystemDefaultController = "DefaultController"
+SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 

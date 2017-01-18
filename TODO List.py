@@ -5,7 +5,7 @@
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
 # √ System
-#   Process
+# √ Process
 #   Mechanism
 #   ProcessingMechanism
 #   DefaultProcessingMechanism
@@ -13,7 +13,7 @@
 #   IntegratorMechanism
 #   TransferMechanism
 #   MonitoringMechanism
-#   DefaultMontioringMechanism
+#   DefaultMonitoringMechanism
 #   ComparatorMechanism
 #   WeightedErrorMechanism
 # √ ControlMechanism
@@ -280,6 +280,8 @@
     #      FOR OPTIONAL INPUT, AND ADD ARGUMENT TO SYSTEM FOR ASSIGNING INPUT AT EXECUTE TIME
 #endregion
 
+# DOCUMENT:  Add links throughout for time_step and trial
+
 #region DEVELOPMENT
 # time_step DDM integration
 #
@@ -528,7 +530,7 @@
 #   MATRIX -> kwWeightMatrix;  matrix -> weightMatrix in MappingProjection
 #   item -> element for any array/vector/matrix contexts
 #   function (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
-#   kwParameterState -> PARAMETER_STATES
+#   PARAMETER_STATE -> PARAMETER_STATES
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   functionParams -> ParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
@@ -1145,7 +1147,7 @@
 
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / kwSystemDefaultController(str)
+# - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / SYSTEM_DEFAULT_CONTROLLER(str)
 #
 # - SystemDefaultInputState and SystemDefaultOutputState:
 # - SystemDefaultSender = ProcessDefaultInput
@@ -1252,6 +1254,8 @@
 
 #region COMPONENT:
 # -----------------------------------------------------------------------------------------------------------
+#
+# FIX!!: Get straight ComponentName vs. ComponentType (e.g.,. EVCMechanism, ComparatorMechanism)
 #
 # FIX!!: VARIABLE VS. VALUE BUSINESS:
 #     QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
@@ -1412,7 +1416,7 @@
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
-#                - FUNCTION_PARAMS: {kwParameterState: None}}:  suppresses ParameterStates
+#                - FUNCTION_PARAMS: {PARAMETER_STATE: None}}:  suppresses ParameterStates
 #                - handled in Mechanism._instantiate_parameter_states()
 #                - add DOCUMENTATION in Components and/or Mechanisms or ParameterStates;
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
@@ -1758,7 +1762,7 @@
 #
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
-# - Implement: Add StateSpec tuple specificaton in list for  kwInputState and OutputStates
+# - Implement: Add StateSpec tuple specificaton in list for  INPUT_STATE and OutputStates
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust _validate_params and instantiate_output_state accordingly
