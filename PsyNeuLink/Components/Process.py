@@ -31,22 +31,26 @@
 Overview
 --------
 
-A process is a sequence of mechanisms connected by projections.  A process can be created by calling process(),
-or by specifying it in the processes attribute of a system. Executing a process executes all of its mechanisms
-in the order in which they are listed in its pathway:  a list of mechanisms and (optional)
-projection specifications.  Projections can be specified among any mechanisms in a process, including
-to themselves.  Mechanisms in a process can also project to mechanisms in other processes, but these will only
-have an effect if all of the processes involved are members of a single system (see System).  Projections
-between mechanisms can also be trained, by assigning learning signals to those projections.  Learning can
-also be specified for the entire process, in which case the projections between all of its mechanisms are trained.
+A process is a sequence of mechanisms linked by projections. Executing a process executes all of its mechanisms
+in the order in which they are listed in its `pathway` attribute:  a list of `mechanisms <Mechanism> and (optional)
+`projection <Projection>` specifications.  Projections can be specified among any mechanisms in a process, including
+to themselves.  However, a process cannot involve any "branching" (that is, one-to-many or many-to-one projections);
+that must be done using a `System`. Mechanisms in a process can also project to mechanisms in other processes,
+but these will only have an effect if all of the processes involved are members of the same `system <System>`.
+Projections between mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to them.
+Learning can also be specified for the entire process, in which case all of the projections among mechanisms in the
+process will be trained. Processes can be constructed and executed on their own.  More commonly, however, they are used
+to construct a `System`.
 
 .. _Process_Creation:
 
 Creating a Process
 ------------------
 
-Processes are created by calling the :py:func:`process` function.  If no arguments are provided, a process with a
-single :ref:`default mechanism <LINK>` will be created.
+A process is created by calling the :py:func:`process` function. The mechanisms to be included are specified in a list
+in the `pathway` argument, in the order in which they should be executed by the process.  The mechanism entries can be
+separated by `projections <Projection>` used to connect them.  If no arguments are provided to the `pathway` argument,
+a process with a single :ref:`default mechanism <LINK>` is created.
 
 .. _Process_Structure:
 
@@ -58,86 +62,90 @@ Structure
 Pathway
 ~~~~~~~
 
-A process is defined primarily by its :py:data:`pathway <Process_Base.pathway>` attribute, which is a list of
-mechanisms and projections.  The list defines an array of mechanisms that will executed in sequence.  Each mechanism
-in the pathway must project at least to the next one in the pathway, though it can project to others,
-and also receive recurrent (feedback) projections from them.  However, pathways cannot be used to construct
-branching patterns;  that requires the use of a :doc:`System`.  the mechanisms in a process pathway are generally
-:doc:`ProcessingMechanisms`, which receive an input, transform it in some way, and make the transformed value
-available as their output.  The projections between mechanisms in a process must be
-:doc:`MappingProjections <MappingProjection>`.  These transmit the output of a mechanism (the projection's ``sender``)
-to the input of another mechanism (the projection's ``receiver``).  Specification of a
-:py:data:`pathway <Process_Base.pathway>` requires, at the least, a list of mechanisms.  These can be specified
-directly, or in a tuple that also contains a set of runtime parameters and/or a phase specification.  Projections
-between a pair of mechanisms can be specified by interposing them in the list between the pair.  When no projection
-appears between two adjacent mechanisms in the pathway, and there is no otherwise specified projection between them,
-PsyNeuLink assigns a default projection. Specifying the components of a pathway is described in more detail below.
+A process is defined primarily by its `pathway` attribute, which is a list of `mechanisms <Mechanism>` and
+`projections <Projection>`.  The list defines an array of mechanisms that will executed in the order specified. Each
+mechanism in the pathway must project at least to the next one in the pathway, though it can project to others and
+also receive recurrent (feedback) projections from them.  However, pathways cannot be used to construct branching
+patterns;  that requires the use of a  `System`.  The mechanisms specified in the `pathway` for a process are generally
+`ProcessingMechanisms <ProcessingMechanism>`.  The projections between mechanisms in a process must be
+`MappingProjections <MappingProjection>`.  These transmit the output of a mechanism (the projection's
+`sender <MappingProjection.MappingProjection.sender>`) to the input of another mechanism (the projection's
+`receiver <MappingProjection.MappingProjection.receiver>`). Specification of a `pathway` requires, at the least, a list
+of mechanisms.  These can be specified directly, or in a **tuple** that also contains a set of
+`runtime parameters <Mechanism_Runtime_Parameters>` and/or a `phase <System_Execution_Phase>` specification (see
+`below <Process_Mechanism_Specification>`). Projections between a pair of mechanisms can be specified by
+interposing
+them in the list between the pair.  When no projection appears between two adjacent mechanisms in the pathway, and
+there is no otherwise specified projection between them, PsyNeuLink assigns a default projection. Specifying the
+components of a pathway is described in detail below.
 
 .. _Process_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
 
-The mechanisms of a process must be listed in its :py:data:`pathway <Process_Base.pathway>` explicitly, in the order
-to be executed.  The first mechanism in the process is designated as the `ORIGIN`, and receives as its
-input any input provided to the process. The last mechanism is designated at the `TERMINAL`, and its output
-is assigned as the output of the process.
+The mechanisms of a process must be listed in the `pathway` argument of the :py:func:`process` function explicitly,
+in the order to be executed.  The first mechanism in the process is designated as the `ORIGIN`, and receives as its
+input any input provided to the process' `execute <Process_Base.execute>` or `run <Process_Base.run>` methods. The last
+mechanism listed in the `pathway` is designated as the `TERMINAL` mechanism, and its output is assigned as the output
+of the process when it is executed.
 
 .. note::
-   The `ORIGIN` and `TERMINAL` mechanisms of a process are not necessarily the `ORIGIN`
-   and/or `TERMINAL` mechanisms of the :ref:`system <System_Mechanisms>` to which it belongs.  The
-   designations of a mechanism's status in the process(es) to which it belongs are listed in its :py:data:`processes
-   <Mechanism.Mechanism_Base.processes>` attribute.
+   The `ORIGIN` and `TERMINAL` mechanisms of a process are not necessarily the `ORIGIN` and/or `TERMINAL` mechanisms
+   of the `system <System_Mechanisms>` to which it belongs.  The designations of a mechanism's status in the process(es)
+   to which it belongs are listed in its `processes <Mechanism.Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
 
-Mechanisms are specified in one of two ways:  directly or in a tuple.  Direct specification can
-use any supported format for specifying a mechanism (see :ref:`Mechanism_Creation`).  Alternatively,
-mechanisms can be specified as the first item of a tuple, along with a set of runtime parameters and/or a phase
-specification.  The **runtime parameters** will be used for that mechanism whenever the process (or a system to which
-it belongs) is executed, but otherwise they do not remain associated with the mechanism
-(see :ref:`Mechanism_Runtime_Parameters`).  The **phase** specification determines the time_step at which the mechanism
-is executed when it is executed as part of a system (see :ref:`System phase <System_Phase>` for an explanation of
-phases). Either the runtime params or the phase can be omitted (if the phase is omitted, the default value of 0 will be
-assigned). The same mechanism can appear more than once in a pathway list, to generate recurrent processing loops.
-(Note: irrespective of the format in which a mechanism is specified in a pathway, it's entry is converted internally
-to a :py:class:`MechanismTuple <Mechanism.MechanismTuple>`, information about which is stored in a
-:py:class:`MechanismList <Mechanism.MechanismList>` and can be accessed in the process' :py:data:`mechanisms
-<Process_Base.mechanisms>` attribute.)
+Mechanisms can be specified in the `pathway` argument of :py:func:`process` in one of two ways:  directly or
+in a *MechanismTuple*.  Direct  specification can use any supported format for `specifying a mechanism
+<Mechanism_Creation>`. Alternatively, mechanisms can be specified using a MechanismTuple, the first item of which
+is the mechanism, and the second and third (optional) items are a set of
+`runtime parameters <Mechanism_Runtime_Parameters>` and a `phase <System_Execution_Phase>` specification. Runtime
+parameters are used for that mechanism when the process (or a system to which it belongs) is executed; otherwise
+they do not remain associated with the mechanism.  The phase is used when the mechanism is executed as part of a
+system, to specify when within the trial the mechanism should be executed.  Either the runtime parameters or the phase
+can be omitted from a MechanismTuple (if the phase is omitted, the default value of 0 will be assigned).
+
+.. note::
+   Irrespective of the format in which a mechanism is specified in a `pathway`, it's entry is
+   converted internally to a MechanismTuple, and listed in the process' `mechanisms` attribute.
+
+The same mechanism can appear more than once in a `pathway`, as one means of generating a recurrent processing loop
+(another is to specify this in the projections -- see below).
+
 
 .. _Process_Projections:
 
 Projections
 ~~~~~~~~~~~
 
-Projections between mechanisms in the :py:data:`pathway <Process_Base.pathway>` of a process are specified in one of
-three ways:
+Projections between mechanisms in the `pathway` of a process are specified in one of three ways:
 
 * Inline specification
-    Projection specifications can be interposed between any two mechanisms in the pathway list.  This creates a
+    Projection specifications can be interposed between any two mechanisms in the `pathway` list.  This creates a
     projection from the preceding mechanism in the list to the one that follows it.  The projection specification can
-    be an instance of a :doc:`MappingProjection`, the class name MappingProjection, a :ref:`keyword <Matrix_Keywords>`
-    for a type of MappingProjection (:keyword:`IDENTITY_MATRIX`, :keyword:`FULL_CONNECTIVITY_MATRIX`,
-    :keyword:`RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with specifications for the projection
-    (see :ref:`Projection <Projection_Creation>` for details of how to specify projections).
+    be an instance of a `MappingProjection`, the class name :keyword:`MappingProjection`, a
+    `matrix keyword <Matrix_Keywords>` for a type of MappingProjection (`IDENTITY_MATRIX`, `FULL_CONNECTIVITY_MATRIX`,
+    or `RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with `specifications for the projection <Projection_Creation>`.
 
 * Stand-alone projection
-    When a projection is created on its own, it can be assigned a sender and receiver mechanism (see Projection).
-    If both are in the process, then it will be used when creating that process.  Stand-alone specification
-    of a projection between two mechanisms in a process takes precedence over default or inline specification;
-    that is, the stand-alone projection will be used in place of any that is specified in the pathway.
-    Stand-alone specification is required to implement projections between mechanisms that are not adjacent in the
-    pathway list.
+    When a projection is created on its own, it can be assigned :ref:`sender <MappingProjection_Sender>`
+    and :ref:`receiver <MappingProjection_Receiver>` mechanisms. If both are in the process, then that
+    projection will be used when creating the process.  Stand-alone specification of a projection between two
+    mechanisms in a process takes precedence over default or inline specification; that is, the stand-alone
+    projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
+    to implement projections between mechanisms that are not adjacent to one another in the `pathway` list.
 
 * Default assignment
     For any mechanism that does not receive a projection from another mechanism in the process (specified using one of
-    the methods above), a MappingProjection is automatically created from the mechanism that precedes it in the
-    pathway.  If the format of the preceding mechanism's output matches that of the next mechanism, then
-    :keyword:`IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or learning has been specified
-    either for the projection or the process, then :keyword:`FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is
-    the `ORIGIN` mechanism (i.e., first in the :py:data:`pathway <Process_Base.pathway>`), a
-    :ref:`ProcessInputState <Process_Input_And_Ouput>` will be used as the sender (see below),
-    and :keyword:`IDENTITY_MATRIX` is used for the projection.
+    the methods above), a `MappingProjection` is automatically created from the mechanism that precedes it in the
+    `pathway`.  If the format of the preceding mechanism's output matches that of the next mechanism, then
+    `IDENTITY_MATRIX` is used for the projection;  if the formats do not match, or
+    `learning has been specified <Process_Learning>` either for the projection or the process,
+    then a `FULL_CONNECTIVITY_MATRIX` is used. If the mechanism is the `ORIGIN` mechanism (i.e., first in the
+    `pathway`), a `ProcessInputState <Process_Input_And_Ouput>` will be used as the sender,
+    and an `IDENTITY_MATRIX` is used for the projection.
 
 
 .. _Process_Input_And_Ouput:
@@ -145,61 +153,62 @@ three ways:
 Process input and output
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The input to a process is a list or 2D np.array provided as an arg in its :py:meth:`execute <Process_Base.execute>`
-or :py:meth:`run <Process_Base.run>` methods, and assigned to its :py:data:`input <Process_Base.input>` attribute.
-When a process is created, a set of ProcessInputStates and MappingProjections are automatically generated to
-transmit the process' input to its `ORIGIN` mechanism, as follows:
+The input to a process is a list or 2d np.array provided as an argument in its `execute <Process_Base.execute>`
+or `run <Process_Base.run>` methods, and assigned to its :py:data:`input <Process_Base.input>` attribute.
+When a process is created, a set of `ProcessInputStates <processInputStates>` and `MappingProjections
+<MappingProjection>` are automatically generated to transmit the process' input to its `ORIGIN` mechanism, as follows:
 
-* if the number of items in the input is the same as the number of `ORIGIN` inputStates:
+* if the number of items in the `input` is the same as the number of `ORIGIN` inputStates:
     a MappingProjection is created for each value of the input to an inputState of the `ORIGIN` mechanism;
 
-* if the input has only one item but the `ORIGIN` mechanism has more than one inputState:
+* if the `input` has only one item but the `ORIGIN` mechanism has more than one inputState:
     a single ProcessInputState is created with projections to each of the `ORIGIN` mechanism inputStates;
 
-* if the input has more than one item but the `ORIGIN` mechanism has only one inputState:
-    a ProcessInputState is created for each input item, and all project to the `ORIGIN` mechanism's
-    inputState;
+* if the `input` has more than one item but the `ORIGIN` mechanism has only one inputState:
+    a ProcessInputState is created for each input item, and all project to the `ORIGIN` mechanism's inputState;
 
-* otherwise, if both the input and the `ORIGIN` mechanism have more than one inputState, but the numbers
-    are not equal: an error message is generated indicating that the there is an ambiguous mapping from the Process'
+* otherwise, if both the `input` and `ORIGIN` mechanism have more than one inputState, but the numbers are not equal:
+    an error message is generated indicating that the there is an ambiguous mapping from the Process'
     input value to `ORIGIN` mechanism's inputStates.
 
-The output of a process is a 2D np.array containing the values of its `TERMINAL` mechanism's outputStates
+The output of a process is a 2d np.array containing the values of its `TERMINAL` mechanism's outputStates.
 
 .. _Process_Learning:
 
 Learning
 ~~~~~~~~
 
-Learning modifies projections between mechanisms in a process's :py:data:`pathway <Process_Base.pathway>`,
-so that a given input produces a specified output ("target").  Learning occurs when mechanism(s) or process(es)
-for which it has been specified are executed. Learning can be configured for the projection to a particular mechanism
-in a process, or for the entire process. It is specified for a particular mechanism by including a
-:ref:`LearningProjection specification` <<LearningProjection_Creation>` in the specification for the projection
-to that mechanism.  It is specified for the entire process by assigning to its ``learning`` argument either a
-LearningProjection specification, or the keyword :keyword:`LEARNING`. Specifying learning for a process will
-implement it for all eligible projections in the process (i.e., all MappingProjections, excluding projections from
+Learning modifies projections between mechanisms in a process's `pathway`, so that the input to each projection`s
+`sender <MappingProjection_Sender>` produces the desired ("target") output from its
+`receiver <MappingProjection_Receiver>`.  Learning occurs when a projection or process for which learning has been
+specified is executed.  Learning can be specified for a particular projection in a process, or for the entire
+process. It is specified for a particular projection by including a `LearningProjection specification
+<LearningProjection_Creation>` in the specification for the projection.  It is specified for the entire process by
+assigning either a `LearningProjection` specification, or the keyword `LEARNING` to the `learning` argument of the
+process` constructor.  Specifying learning for a process will implement it for all eligible projections in the
+process (i.e., all `MappingProjections <MappingProjection>`, excluding projections from
 the process' inputState to its `ORIGIN` mechanism, and projections from the `TERMINAL` mechanism to
 the process' outputState). When learning is specified for the process, all projections in the process will be trained
 so that input to the process (i.e., its `ORIGIN` mechanism) will generate the specified target value as its
-output (i.e., the output of the `TERMINAL` mechanism). In either case, all mechanisms that receive
-projections for which learning has been specified must be compatible with learning (see :doc:`LearningProjection`).
+output (i.e., the output of the `TERMINAL` mechanism). In either case, all mechanisms that receive projections for
+which learning has been specified must be `compatible with learning <LearningProjection>`).
 
-When learning is specified, the following objects are automatically created (see figure below):
-* :doc:`MonitoringMechanism`, used to evaluate the output of a mechanism against a target value;
-* :doc:`MappingProjection` from the mechanism being monitored to the MonitoringMechanism;
-* :doc:`LearningProjection` from the MonitoringMechanism to the projection being learned
-  (i.e., the one that projects to the mechanism being monitored).
+When learning is specified , the following objects are automatically created for each projection involved (see figure
+below):
+    * a `MonitoringMechanism` used to evaluate the output of the projection's `receiver <MappingProjection_Receiver>`
+      against a target value;
+    ..
+    * a `MappingProjection` from the projection's `receiver <MappingProjection_Receiver>` to the MonitoringMechanism;
+    ..
+    * a `LearningProjection` from the MonitoringMechanism to the projection being learned.
 
-Different learning algorithms can be specified (e.g.,
-:py:class:`Reinforcement <Function.Reinforcement>`, :py:class:`Backpropagation <Function.BackPropagation>`),
-that will implement the appropriate type of, and specifications for the MonitoringMechanisms and LearningSignals
-required for the specified type of learning. However, as noted above, all mechanisms that receive projections being
-learned must be compatible with learning.
+Different learning algorithms can be specified (e.g., `Reinforcement` or `BackPropagation`), that implement the
+MonitoringMechanisms and LearningSignals required for the specified type of learning. However,  as noted above,
+all mechanisms that receive projections being learned must be compatible with learning.
 
-When a process -- or any of its mechanisms -- is specified for learning, then a set of
-:ref:`target values <Run_Targets>` must be provided (along with the inputs) as an argument in its
-:py:meth:`execute <Process_Base.execute>` or :py:meth:`run <Process_Base.run>` method.
+When a process or any of its projections is specified for learning, a set of `target values <Run_Targets>`
+must be provided (along with the `inputs <input>`) as an argument to the process' `execute <Process_Base.execute>` or
+`run <Process_Base.run>` method.
 
 .. _Process_Learning_Figure:
 
@@ -208,26 +217,27 @@ When a process -- or any of its mechanisms -- is specified for learning, then a 
 .. figure:: _static/PNL_learning_fig.png
    :alt: Schematic of learning mechanisms and LearningProjections in a process
 
-   Learning in a connectionist network with two layers
+   Learning using the `BackPropagation` learning algorithm in a three-layered network, using a `TransferMechanism` for
+   each layer.
 
 .. _Process_Execution:
 
 Execution
 ---------
 
-A process can be executed as part of a system (see System) or on its own.  On its own, it can be executed by calling
-either its :py:data:`execute <Process_Base.execute>` or :py:data:`run <Process_Base.run>` methods.  When a process is
-executed, its input is conveyed to the `ORIGIN` mechanism (first mechanism in the pathway).  By default,
-the the input value is presented only once.  If the mechanism is executed again in the same round of execution
+A process can be executed as part of a `system <System>` or on its own.  On its own, it can be executed by calling
+either its `execute <Process_Base.execute>` or `run <Process_Base.run>` methods.  When a process is
+executed, its `input` is conveyed to the `ORIGIN` mechanism (first mechanism in the pathway).  By default,
+the the input value is presented only once.  If the `ORIGIN` mechanism is executed again in the same round of execution
 (e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
-However, the input can be "clamped" on using the clamp_input argument of execute() or run().  After the
-`ORIGIN` mechanism is executed, each subsequent mechanism in the pathway is executed in sequence (irrespective
-of any phase specification).  If a mechanism is specified in the pathway in a (mechanisms,
-runtime_params, phase) tuple, then the runtime parameters are applied and the mechanism is executed using
-them (see :doc:`Mechanism` for parameter specification).  Finally the output of the `TERMINAL` mechanism
-(last one in the pathway) is assigned as the output of the process.  If learning has been specified for the process
-or any of the projections among the mechanisms in its pathway, then the relevant learning mechanims are executed.
-These calculate changes that will be made to the corresponding projections.
+However, the input can be "clamped" on using the `clamp_input` argument of `execute <Process_Base.execute>` or
+`run <Process_Base.run>`.  After the `ORIGIN` mechanism is executed, each subsequent mechanism in the `pathway` is
+executed in sequence (irrespective of any `phase` specification).  If a mechanism is specified in the pathway in a
+`MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the mechanism is
+executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` mechanism
+(last one in the pathway) is assigned as the output of the process.  If `learning <Process_Learning>` has been
+specified for the process or any of the projections in its `pathway`, then the relevant learning mechanisms are
+executed. These calculate changes that will be made to the corresponding projections.
 
 .. note::
    The changes to a projection induced by learning are not applied until the mechanisms that receive those
@@ -236,54 +246,44 @@ These calculate changes that will be made to the corresponding projections.
 Examples
 --------
 
-*Specification of mechanisms in a pathway:*
-
-The first mechanism is specified as a reference to an instance, the second as a default instance of a mechanism type,
-and the third in tuple format (specifying a reference to a mechanism that should receive some_params at runtime;
-note: the phase is omitted and so will be assigned the default value of 0)::
+*Specification of mechanisms in a pathway:*  The first mechanism is specified as a reference to an instance,
+the second as a default instance of a mechanism type, and the third in MechanismTuple format (specifying a reference
+to a mechanism that should receive some_params at runtime; note: the phase is omitted and so will be assigned the
+default value of 0)::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
     some_params = {PARAMETER_STATE_PARAMS:{FUNCTION_PARAMS:{THRESHOLD:2,NOISE:0.1}}}
     my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
 
-*Default projection specification:*
-
-The pathway for this process uses default projection specification::
+*Default projection specification:*  The `pathway` for this process uses default projection specifications; as a
+result, a `MappingProjection` is automatically instantiated between each of the mechanisms listed::
 
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
-A MappingProjection is automatically instantiated between each of the mechanisms
 
-*Inline projection specification using an existing projection:*
-
-In this pathway, projection_A is specified as the projection between the first and second mechanisms; a
-default projection will be created between mechanism_2 and mechanism_3::
+*Inline projection specification using an existing projection:*  In this `pathway`, ``projection_A`` is specified as
+the projection between the first and second mechanisms; a default projection will be created between ``mechanism_2``
+and ``mechanism_3``::
 
     projection_A = MappingProjection()
     my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
-*Inline projection specification using a keyword:*
-
-In this pathway, a random connectivity mattrix is assigned as the projection between the first and second
-mechanisms::
+*Inline projection specification using a keyword:*  In this `pathway`, a `RANDOM_CONNECTIVITY_MATRIX <Matrix_Keywords>`
+is assigned as the projection between the first and second mechanisms::
 
     my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 
-*Stand-alone projection specification:*
-
-In this pathway, projection_A is explicilty specified as a projection between mechansim_1 and mechanism_2,
-and so will be used as the projection between them in my_process; a default projection will be created between
-mechanism_2 and mechanism_3::
+*Stand-alone projection specification:*  In this `pathway`, ``projection_A`` is explicilty specified as a projection
+between ``mechanism_1`` and ``mechanism_2``, and so will be used as the projection between them in ``my_process``;
+a default projection will be created between ``mechanism_2`` and ``mechanism_3``::
 
     projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
-*Process that implements learning:*
-
-This pathway implements a series of mechanisms with projections between them all of which will be learned
-using backpropagation (the default learning algorithm).  Note that it uses the logistic function, which is compatible
-with backpropagation::
+*Process that implements learning:*  This `pathway` implements a series of mechanisms with projections between them,
+all of which will be learned using `BackPropagation` (the default learning algorithm).  Note that it uses the `Logistic`
+function, which is compatible with BackPropagation::
 
     mechanism_1 = TransferMechanism(function=Logistic)
     mechanism_2 = TransferMechanism(function=Logistic)
@@ -388,11 +388,8 @@ def process(process_spec=None,
     name=None,                                              \
     prefs=None)
 
-    Factory method for Process: returns instance of Process.
-
-    If called with no arguments, returns an instance of Process with a single DefaultMechanism [LINK for default].
-
-    See :any:`Process_Base` for class description.
+    Factory method for Process: returns an instance of Process.  If called with no arguments, returns an instance of
+    Process with a single ref:`DefaultMechanism <LINK>`.  See `Process` for class description.
 
     COMMENT:
        REPLACE DefaultMechanism BELOW USING Inline markup
@@ -403,71 +400,66 @@ def process(process_spec=None,
 
     process_spec : Optional[str or Dict[param keyword, param value]]
         specification for the process to create.
-        If it is `None`, returns an instance of Process with a single DefaultMechanism [LINK for default];
+        If it is `None`, returns an instance of Process with a single :ref:`DefaultMechanism <LINK>`;
         if it is a string, uses it as the name for the process;
         if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
-        parameter (these values will be used to instantiate the process, and will override any values assigned
-        to the arguments in the call to :py:func:`process`).
-        Note: if a name is not specified, the nth instance created will be named by using the process'
-        :py:data:`componentType <Process_Base.componentType>` attribute as the base and adding an indexed suffix:
-        componentType-n.
+        parameter (these will be used to instantiate the process, and will override any values assigned
+        to the arguments in the call to :py:func:`process`). If a name is not specified, the nth instance created
+        will be named by using the process' `componentType <Process_Base.componentType>` attribute as the base and
+        adding an indexed suffix: componentType-n.
 
-    default_input_value : List[values] or ndarray :  default default input value of `ORIGIN` mechanism
-        the input to the process to use if none is provided in a call to the
-        :py:data:`execute <Process_Base.execute>` or :py:data:`run <Process_Base.run>` method.
-        This must be the same length as the `ORIGIN` mechanism's input.
+    default_input_value : List[values] or ndarray :  default default input value of ORIGIN mechanism
+        the input to the process used if none is provided in a call to the `execute <Process_Base.execute>` or `run
+        <Process_Base.run>` method. This must be the same length as the `ORIGIN` mechanism's input.
 
-    pathway : List[mechanism spec[, projection spec], mechanism spec...] : default List[``DefaultMechanism``]
+    pathway : List[mechanism spec[, projection spec], mechanism spec...] : default List[DefaultMechanism]
         the set of mechanisms and projections between them to execute when the process is executed.  Each mechanism
-        must a  :doc:`ProcessingMechanism`.  The specification for each can be an instance, a class name (creates a
-        default instance), or a :ref:`specification dictionary <Mechanism_Creation>`.  Each projection must be a
-        :doc:`MappingProjection`. The specification for each can be the class name (creates a default instance),
-        an instance, or a :ref:`specification dictionary <Projection_Creation>`.
+        must a `ProcessingMechanism <ProcessingMechanism>`.  The specification for each can be an instance,
+        a class name (creates a default instance), or a `specification dictionary <Mechanism_Creation>`.  Each
+        projection must be a `MappingProjection`. The specification for each can be the class name (creates a
+        default instance), an instance, or a `specification dictionary <Projection_Creation>`.
 
-    initial_values : Optional[Dict[mechanism, param value]] : default `None`
-        a dictionary of values used to initialize the specified mechanisms. The key for each entry is a mechanism
-        object, and the value is a number, list or np.array that must be compatible with the format of
-        the mechanism's ``value`` attribute. Mechanisms not specified will be initialized with their
-        ``default_input_value``.
+    initial_values : Optional[Dict[mechanism, param value]] : default None
+        a dictionary of values used to initialize the specified mechanisms. The key for each entry must be a mechanism
+        object, and the value must be a number, list or np.array that must be compatible with the format of
+        the mechanism's `value <Mechanism.Mechanism_Base.value>` attribute. Mechanisms not specified will be initialized
+        with their `default_input_value <Mechanism.Mechanism_Base.default_input_value>`.
 
-    clamp_input : Optional[keyword]
+    clamp_input : Optional[keyword] : default None
         specifies whether the input to the process continues to be applied to the `ORIGIN` mechanism after
         its initial execution.  The following keywords can be used:
+        ..
+            * `None`: Process input is used only for the first execution of the `ORIGIN` mechanism
+              in a round of executions.
 
-        `None`: Process input is used only for the first execution of the `ORIGIN` mechanism
-        in a round of executions.
+            * :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
+              `ORIGIN` mechanism every time it is executed in a round of executions.
 
-        :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
-        `ORIGIN` mechanism every time it is executed in a round of executions.
+            * :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
+              `ORIGIN` mechanism every time it is executed in a round of executions.
 
-        :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
-        `ORIGIN` mechanism every time it is executed in a round of executions.
-
-    default_projection_matrix : keyword, list or ndarray : default ``DEFAULT_PROJECTION_MATRIX``,
-        the type of matrix used for default projections
-        (see :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter
-        for :doc:`MappingProjection`).
+    default_projection_matrix : keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,
+        the type of matrix used for default projections (see `matrix` parameter for `MappingProjection`).
 
     learning : Optional[LearningProjection spec]
         implements :ref:`learning <LearningProjection_CreationLearningSignal>` for all
         eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
-        the value assigned to the :keyword:`COMPARATOR_TARGET` inputState of a :doc:`MonitoringMechanism` to which a
-        `TERMINAL` mechanism of a process or system projects (used for :ref:`learning <Process_Learning>`).
-        It must be the same length as the `TERMINAL` mechanism's output.
+        the value assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
+        `ComparatorMechanism` to which the `TERMINAL` mechanism of the process projects (used for `learning
+        <Process_Learning>`). It must be the same length as the `TERMINAL` mechanism's output.
 
     params : Optional[Dict[param keyword, param value]
-        a dictionary that can include any of the parameters above. Use the parameter's name as the keyword for its
-        entry;
-        values in the dictionary will override argument values.
+        a dictionary that can include any of the parameters above;  the parameter's name is used as the keyword for its
+        entry; values in the dictionary will override corresponding argument values.
 
     name : str : default Process-<index>
         a string used for the name of the process
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        the PreferenceSet for process (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the `PreferenceSet` for process (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default ''None''
@@ -596,24 +588,27 @@ class Process_Base(Process):
     Attributes
     ----------
 
-    pathway : List[(mechanism, dict, int), (projection, LearningProjection spec, None), (mechanism, dict, int)...]
-        specifies the list of mechanisms that are executed when the process executes.
+    componentType : "Process"
+
+    pathway : List[(Mechanism, dict, int), (projection, LearningProjection spec, None), (Mechanism, dict, int)...]
+        specifies the list of mechanisms that are executed (in the order specified) when the process executes.
         Entries are alternating tuples specifying mechanisms and projections.  For mechanism tuples, the dict specifies
-        a set of runtime parameters to use for execution of the mechanism, and the int specifies the phase in which the
-        mechanism should be executed when the process to which it belongs is
-        :ref:`executed by a system <System_Execution_Phase>`. For projection tuples, the LearningProjection
-        specification can be a :doc:`LearningProjection` object, the class (which specifies a default instance) or
-        the constructor for a LearningProjection (including parameters).  The second and third items of mechanism
-        tuples, and the second item of projection tuples are optional and therefore may be `None`. The
-        third item of projection tuples is currenlty not used and is always `None`.
+        a set of `runtime parameters <Mechanism_Runtime_Parameters>` to use for execution of the mechanism,
+        and the int specifies the `phase <System_Execution_Phase>` in which the mechanism should be executed when the
+        process to which it belongs is executed by a system. For projection tuples, the LearningProjection
+        specification can be a `LearningProjection` object, the class or the `LEARNING_PROJECTION` keyword (which
+        specifies a default instance) or the constructor for a LearningProjection (including parameters).  The second
+        and third items of mechanism tuples, and the second item of projection tuples are optional and therefore may
+        be `None`. The third item of projection tuples is currently not used and is always `None`.
 
         .. note::
-             This is constructed from the :keyword:`PATHWAY` argument, the entries of which do not necessarily
-             have to have all items in a tuple, or even be in tuple form.  All entries of the :keyword:`PATHWAY`
-             argument are converted to tuples when assigned to the ``pathway`` attribute.  Entries that are
-             not tuples must be a mechanism or projection.  For tuple entries, the first item must be a
-             mechanism or projection;  the second is optional, and `None` is entered for missing values;
-             the third is optional for mechanism tuples (0 is the default) and ignored for projection tuples.
+             The value of this attribute is constructed from the `pathway` argument of the :py:func:`process`
+             function, the entries of which do not necessarily have to have all items in a tuple, or even be in tuple
+             form.  All entries of the `pathway` argument are converted to tuples when assigned to the `pathway`
+             attribute.  Entries that are not tuples must be a mechanism or projection.  For tuple entries,
+             the first item must be a mechanism or projection;  the second is optional, and `None` is entered for
+             missing values; the third item is optional for mechanism tuples (0 is the default) and is currently
+             ignored for projection tuples (and assigned `None`, as it is not currently in use).
 
     processInputStates : Optional[List[ProcessInputState]]
         used to represent the input to the process, and transmit this to the inputState(s) of its `ORIGIN`
@@ -621,47 +616,47 @@ class Process_Base(Process):
         `ORIGIN` mechanism.
 
     input :  Optional[List[value] or ndarray]
-        input to the process on each round of execution;  it is assigned the value of the ``input`` argument in a call
-        to the process` :py:meth:`execute <Process_Base.execute>`  or :py:meth:`run <Process_Base.run>` method. It's
-        value is assigned to ``variable``, each item of which is assigned as the ``value`` of the corresponding
-        ProcessInputState in :py:data:`processInputStates <Process_Base.processInputStates>`. Each item must match the
-        format of the ``variable`` for the corresponding inputState of the `ORIGIN` mechanism.
+        input to the process on each round of execution;  it is assigned the value of the :keyword:`input` argument
+        in a call to the process` `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
+        assigned as the value of the corresponding ProcessInputStates in `processInputStates`, and must match the
+        format of the `variable <Mechanism.Mechanism_Base.variable>` for the process' `ORIGIN` mechanism.
 
-        .. note:: The ``input`` attribute of a process preserves its value throughout the execution of the process.
-                  It's value is assigned to the `variable` attribute of the `ORIGIN` mechanism at the start
-                  of execution.  After that, by default, its `variable` attribute is zeroed. This is so that if the
-                  `ORIGIN` mechanism is executed again in the same round of execution (e.g., if it is part of
-                  a recurrent loop) it does not continue to receive the Process' input.  However, this behavior can be
-                  modified with the ``clamp_input`` attribute of the process.
+        .. note:: The :keyword:`input` attribute of a process preserves its value throughout the execution of the
+                  process. It's value is assigned to the `variable <Mechanism.Mechanism_Base.variable>` attribute of
+                  the `ORIGIN` mechanism at the start of execution.  After that, by default, that mechanism's
+                  :keyword:`variable` attribute is zeroed. This is so that if the `ORIGIN` mechanism is executed
+                  again in the same round of execution (e.g., if it is part of a recurrent loop) it does not continue
+                  to receive the initial input to the Process.  However, this behavior can be modified with the process'
+                  `clamp_input` attribute.
 
     inputValue :  2d np.array : default ``variableInstanceDefault``
-        same as the ``variable`` attribute of the process; contains the values of its ``ProcessInputStates``.
+        same as the :keyword:`variable` attribute of the process; contains the values of the ProcessInputStates in its
+        `processInputStates` attribute.
 
     clamp_input : Optional[keyword]
-        determines whether the process' input continues to be applied to the `ORIGIN` mechanism
-        after its initial execution.
+        determines whether the process' input continues to be applied to the `ORIGIN` mechanism if it is executed again
+        within the same round of execution.  It can tae the following values:
 
-        `None`: Process input is used only for the first execution of the `ORIGIN` mechanism
-        in a round of execution.
+        * `None`: applies the process' `input` to the `ORIGIN` mechanism only once (the first time it is executed)
+          in a given round of the process' execution.
 
-        :keyword:`SOFT_CLAMP`: combines the process' input with input from any other projections to the
-        `ORIGIN` mechanism every time it is executed within a round of execution.
+        * `SOFT_CLAMP`: combines the process' `input` with input from any other projections to the
+          `ORIGIN` mechanism every time the latter is executed within a round of the process' execution.
 
-        :keyword:`HARD_CLAMP`: applies the process' input in place of any other sources of input to the
-        `ORIGIN` mechanism every time it is executed in a round of execution.
+        * `HARD_CLAMP`: applies the process' `input` to the `ORIGIN` mechanism in place of any other sources of input
+          every time it is executed.
 
     initial_values : Optional[Dict[mechanism, param value]]
         a dictionary of values used to initialize the specified mechanisms. The key for each entry is a mechanism
         object, and the value is a number, list or np.array that must be compatible with the format of
-        the mechanism's ``value`` attribute. Mechanisms not specified will be initialized with their
-        ``default_input_value``.
+        the mechanism's `value <Mechanism.Mechanism_Base.value>` attribute. Mechanisms not specified will be
+        initialized with their `default_input_value <Mechanism.Mechanism_Base.default_input_value>`.
 
     value: 2d. np.array
-        the value of the :ref:`primary outputState <OutputState_Primary> of the `TERMINAL` mechanism of the
-        process.
+        the value of the `primary outputState <OutputState_Primary>` of the `TERMINAL` mechanism of the process.
 
     outputState : State
-        the :ref:`primary outputState <OutputState_Primary> of the `TERMINAL` mechanism in the process.
+        the `primary outputState <OutputState_Primary>` of the `TERMINAL` mechanism in the process.
 
       .. _mech_tuples : List[MechanismTuple]
              :class:`MechanismTuple` for all mechanisms in the process, listed in the order specified in pathway.
@@ -685,7 +680,7 @@ class Process_Base(Process):
              (Note:  the use of a list is for compatibility with the MechanismList object)
 
       .. _monitoring_mech_tuples : List[MechanismTuple]
-             :py:class:`MechanismTuples <Mechanism.MechanismTuples>` for all :doc:`MonitoringMechanisms` in the
+             `MechanismTuples <Mechanism.MechanismTuples>` for all `MonitoringMechanism <MonitoringMechanisms>` in the
              process (used for learning).
 
       .. mechanisms : List[Mechanism]
@@ -702,19 +697,23 @@ class Process_Base(Process):
 
     originMechanisms : MechanismList
         a list with the `ORIGIN` mechanism of the process.
-        (Note:  a process can have only one `TERMINAL` mechanism; the use of a list is for compatibility with
-        methods that are also used for systems.)
 
-        .. based on _origin_mech_tuples
-           process.input contains the input to `ORIGIN` mechanism.
+        .. note:: A process can have only one `ORIGIN` mechanism; the use of a list is for compatibility with
+                  methods that are also used for systems.
+
+        COMMENT:
+            based on _origin_mech_tuples;  process.input contains the input to `ORIGIN` mechanism.
+        COMMENT
 
     terminalMechanisms : MechanismList
         a list with the `TERMINAL` mechanism of the process.
-        (Note:  a process can have only one `TERMINAL` mechanism; the use of a list is for compatibility with
-        methods that are also used for systems.)
 
-        .. based on _terminal_mech_tuples
-           system.ouput contains the output of `TERMINAL` mechanism.
+        .. note:: A process can have only one `TERMINAL` mechanism; the use of a list is for compatibility with
+                  methods that are also used for systems.
+
+        COMMENT:
+            based on _terminal_mech_tuples; process.output contains the output of the `TERMINAL` mechanism.
+        COMMENT
 
     monitoringMechanisms : MechanismList
         a list of all of the monitoring mechanisms in the process.
@@ -723,11 +722,13 @@ class Process_Base(Process):
 
     targetMechanisms : MechanismList
         a list with the `TARGET` mechanism of the process.
-        (Note:  a process can have only one `TARGET` mechanism; the use of a list
-        is for compatibility with methods that are also used for systems.)
 
-        .. based on _target_mech_tuples
-           system.ouput contains the output of `TERMINAL` mechanism.
+        .. note:: A process can have only one `TARGET` mechanism; the use of a list is for compatibility with
+                  methods that are also used for systems.
+
+        COMMENT:
+            based on _target_mech_tuples
+        COMMENT
 
     systems : List[System]
         a list of the systems to which the process belongs.
@@ -737,43 +738,44 @@ class Process_Base(Process):
              It is assigned to the ``phaseSpec`` for the mechanism in the pathway with the largest ``phaseSpec`` value.
 
     numPhases : int : default 1
-        the number of phases for the process.
-        It is assigned as ``_phaseSpecMax + 1``.
+        the number of ref:`phases <System_Execution_Phase>` for the process.
+
+        COMMENT:
+            It is assigned as ``_phaseSpecMax + 1``.
+        COMMENT
 
       .. _isControllerProcess : bool : :keyword:`False`
              identifies whether the process is an internal one created by a ControlMechanism.
 
     learning : Optional[LearningProjection]
-        determines whether the process is configured for learning.  The value can be the name of the
-        LearningProjection class, a call to its constructor, or the name of or reference to an existing LearningProjection.
+        determines whether the process is configured for learning.  The value can be a `LearningProjection`,
+        the keyword `LEARNING_PROJECTION`, the name of the class, or a call to its constructor.
 
-        .. note::
-        If an existing instance of a LearningProjection used for the specification, or a call to the LearningProjection
-        constructor, that object itself, or the one created by the constructor, will **not** be used as the actual
-        LearningProjection for the process. Rather it will be used as a template (including any parameters that
-        are specified) for creating LearningProjections for all the MappingProjections in the process.
+        .. note::  If an existing `LearningProjection` or a call to the constructor is used for the specification,
+                   the object itself will **not** be used as the LearningProjection for the process. Rather it
+                   will be used as a template (including any parameters that are specified) for creating
+                   LearningProjections for all of the `MappingProjections <MappingProjection>` in the process.
 
-      .. _learning_enabled : bool
-             indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
-             has been specified (see above).
+                   .. _learning_enabled : bool
+                      indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
+                      has been specified (see above).
 
     results : List[outputState.value]
-        a list of return values (outputState.value) from a sequence of executions.
+        a list of return values from a sequence of executions of the process.
 
     timeScale : TimeScale : default TimeScale.TRIAL
-        determines the default TimeScale value used by mechanisms in the pathway.
+        determines the default `TimeScale` value used by mechanisms in the pathway.
 
     name : str : default Process-<index>
         the name of the process.
-        Specified in the name argument of the call to create the process;
+        Specified in the `name` argument of the constructor for the process;
         if not is specified, a default is assigned by ProcessRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+        (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        the PreferenceSet for the process.
-        Specified in the prefs argument of the call to create the process;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the process.
+        Specified in the `prefs` argument of the constructor for the process;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
 
 
     """
@@ -843,7 +845,7 @@ class Process_Base(Process):
 
         if not context:
             # context = self.__class__.__name__
-            context = INITIALIZING + self.name + kwSeparator + kwProcessInit
+            context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
 
         super(Process_Base, self).__init__(variable_default=default_input_value,
                                            param_defaults=params,
@@ -1249,7 +1251,7 @@ class Process_Base(Process):
                                                                                 state_list=[(MATRIX,
                                                                                              self.learning)],
                                                                                 state_type=ParameterState,
-                                                                                state_param_identifier=kwParameterState,
+                                                                                state_param_identifier=PARAMETER_STATE,
                                                                                 constraint_value=self.learning,
                                                                                 constraint_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
@@ -1261,7 +1263,7 @@ class Process_Base(Process):
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
                                                                                 state_name=MATRIX,
-                                                                                state_spec=kwParameterState,
+                                                                                state_spec=PARAMETER_STATE,
                                                                                 state_params=self.learning,
                                                                                 constraint_value=self.learning,
                                                                                 constraint_value_name=LEARNING_PROJECTION,
@@ -1301,7 +1303,7 @@ class Process_Base(Process):
                                                                                 state_list=[(MATRIX,
                                                                                              self.learning)],
                                                                                 state_type=ParameterState,
-                                                                                state_param_identifier=kwParameterState,
+                                                                                state_param_identifier=PARAMETER_STATE,
                                                                                 constraint_value=self.learning,
                                                                                 constraint_value_name=LEARNING_PROJECTION,
                                                                                 context=context)
@@ -1314,7 +1316,7 @@ class Process_Base(Process):
                                                                                 owner=preceding_item,
                                                                                 state_type=ParameterState,
                                                                                 state_name=MATRIX,
-                                                                                state_spec=kwParameterState,
+                                                                                state_spec=PARAMETER_STATE,
                                                                                 state_params=self.learning,
                                                                                 constraint_value=self.learning,
                                                                                 constraint_value_name=LEARNING_PROJECTION,
@@ -1910,8 +1912,7 @@ class Process_Base(Process):
                 name=self.name+'_Input Projection to '+comparator_target.name)
 
     def initialize(self):
-        """Assign the values specified for each mechanism in the process' \
-        :py:data:`initial_values <Process_Base.initial_values>` attribute.
+        """Assign the values specified for each mechanism in the process' `initial_values` attribute.
         """
         # FIX:  INITIALIZE PROCESS INPUTS??
         for mech, value in self.initial_values.items():
@@ -1927,18 +1928,19 @@ class Process_Base(Process):
                 runtime_params=None,
                 context=None
                 ):
-        """Coordinate execution of mechanisms in project list (self.pathway)
+        """Execute the mechanisms specified in the process` `pathway` attribute.
 
-        First check that input is provided (required).
-        Then go through mechanisms in pathway list, and execute each one in the order they appear in the list.
+        COMMENT:
+            First check that input is provided (required) and appropriate.
+            Then execute each mechanism in the order they appear in the `pathway` list.
+        COMMENT
 
         Arguments
         ---------
 
         input : List[value] or ndarray: default input to process
-            input to use for execution of the process.
-            This must be consistent with input of the first mechanism in the process'
-            py:data:`pathway <Process_Base.pathway>`.
+            input used to execute the process.
+            This must be compatible with the input of the `ORIGIN` mechanism (the first in its `pathway`).
 
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether mechanisms are executed for a single time step or a trial.
@@ -1957,7 +1959,7 @@ class Process_Base(Process):
         -------
 
         output of process : ndarray
-            output of last mechanism in pathway
+            output of process` `TERMINAL` mechanism (the last in its `pathway`).
 
         COMMENT:
            IMPLEMENTATION NOTE:
@@ -2124,8 +2126,10 @@ class Process_Base(Process):
             time_scale=None):
         """Run a sequence of executions
 
-        Call execute method for each execution in a sequence specified by inputs.  See :doc:`Run` for details of
-        formatting input specifications.
+        COMMENT:
+            Call execute method for each execution in a sequence specified by the `inputs` argument (required).
+            See `Run` for details of formatting input specifications.
+        COMMENT
 
         Arguments
         ---------
@@ -2134,36 +2138,36 @@ class Process_Base(Process):
             input for each in a sequence of executions (see :doc:`Run` for a detailed description of formatting
             requirements and options).
 
-        reset_clock : bool : default :keyword:`True`
-            reset :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
+        reset_clock : bool : default True
+            reset `CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
-        initialize : bool default :keyword:`False`
-            calls the :py:meth:`initialize <Process_Base.initialize>` method of the process before a sequence of
-            executions.
+        initialize : bool default False
+            call the process' `initialize` method before a sequence of executions.
 
-        targets : List[input] or np.ndarray(input) : default `None`
-            target values for monitoring mechanisms for each execution (used for learning).  The length (of the
-            outermost level if a nested list, or lowest axis if an ndarray) must be equal to that of inputs.
+        targets : List[input] or np.ndarray(input) : default None
+            target value(s) assigned to the process` `target <Process_Base.targetMechanisms>` mechanism for each
+            execution (during learning).  The length (of the outermost level if a nested list, or lowest axis if an
+            ndarray) must be equal to that of the `inputs` argument (see above).
 
-        learning : bool :  default `None`
+        learning : bool :  default None
             enables or disables learning during execution.
             If it is not specified, current state is left intact.
             If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= `None`
+        call_before_trial : Function : default None
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= `None`
+        call_after_trial : Function : default None
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= `None`
+        call_before_time_step : Function : default None
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= `None`
+        call_after_time_step : Function : default None
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether mechanisms are executed for a single time step or a trial.
+            specifies whether mechanisms are executed for a single `time_step or a trial <Run_Timing>`.
 
         Returns
         -------
@@ -2194,7 +2198,9 @@ class Process_Base(Process):
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         variable = [list(i) for i in self.variable]
-        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',str([[float("{:0.3}".format(float(i))) for i in value] for value in variable]))))
+        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',
+                                                 str([[float("{:0.3}".format(float(i)))
+                                                       for i in value] for value in variable]))))
 
     def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
@@ -2223,8 +2229,7 @@ class Process_Base(Process):
             print("\n\n****************************************\n")
 
     def show(self, options=None):
-        """Print ``executionList``, `ORIGIN` and `TERMINAL` mechanisms,
-        ``outputs`` and their labels for the system.
+        """Print list of all mechanisms in the process, followed by its `ORIGIN` and `TERMINAL` mechanisms.
 
         Arguments
         ---------

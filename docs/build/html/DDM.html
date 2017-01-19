@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
-        <link rel="next" title="Control Mechanisms" href="ControlMechanism.html"/>
+        <link rel="next" title="TransferMechanism" href="TransferMechanism.html"/>
         <link rel="prev" title="IntegratorMechanism" href="IntegratorMechanism.html"/> 
 
   
@@ -99,6 +99,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="ControlMechanism.html">Control Mechanisms</a></li>
@@ -236,7 +237,7 @@ using the keywords in the list below, as in the following example:</p>
 <p class="first admonition-title">Note</p>
 <p class="last">Parameters specified in the <code class="xref any docutils literal"><span class="pre">params</span></code> argument (as in the example above) will be used for both
 <code class="xref any docutils literal"><span class="pre">TRIAL</span></code> and <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code> mode, since parameters specified in the <code class="xref any docutils literal"><span class="pre">params</span></code> argument of a mechanism&#8217;s constructor
-override corresponding ones specified as arguments of its <code class="xref any docutils literal"><span class="pre">function</span></code>
+override corresponding ones specified as arguments of its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 (see <span class="xref doc">COMPONENT</span>).  In the example above, this means that even if the <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> parameter is
 set to <code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, the <code class="xref any docutils literal"><span class="pre">drift_rate</span></code> of 0.2 will be used (rather than 0.1).  For parameters NOT specified
 as entries in the <code class="xref any docutils literal"><span class="pre">params</span></code> dictionary, the value specified for those in the function will be used in both <code class="xref any docutils literal"><span class="pre">TRIAL</span></code>
@@ -373,7 +374,7 @@ and/or  a custom function and its parameters (see <a class="reference internal" 
 <li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for the process.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the process.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
@@ -439,8 +440,8 @@ only assigned if <a class="reference internal" href="#DDM.DDM.function" title="D
 <dt id="DDM.DDM.name">
 <code class="descname">name</code><a class="headerlink" href="#DDM.DDM.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default DDM-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the name argument of the call to create the projection;
-if not is specified, a default is assigned by MechanismRegistry
+Specified in the <a class="reference internal" href="#DDM.DDM.name" title="DDM.DDM.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the projection;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
@@ -448,7 +449,7 @@ if not is specified, a default is assigned by MechanismRegistry
 <dt id="DDM.DDM.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#DDM.DDM.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; a PreferenceSet for the mechanism.
-Specified in the prefs argument of the call to create the mechanism;
+Specified in the <a class="reference internal" href="#DDM.DDM.prefs" title="DDM.DDM.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
@@ -474,7 +475,7 @@ returns output</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="TransferMechanism.html" class="btn btn-neutral float-right" title="TransferMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="IntegratorMechanism.html" class="btn btn-neutral" title="IntegratorMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

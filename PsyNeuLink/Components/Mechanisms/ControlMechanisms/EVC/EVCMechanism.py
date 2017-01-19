@@ -102,14 +102,14 @@ is described below.
 EVC Calculation
 ^^^^^^^^^^^^^^^
 
-The default EVC :py:data:`function <EVCMechanism.function>` calculates the expected value of control (EVC) by a
-conducting a grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is
-determined by the `allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing
-one value from the `allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An
-`allocationPolicy` is constructed for every possible combination of values, and stored in the EVCMechanism's
-`controlSignalSearchSpace` attribute.  The EVCMechanism's `run_simulation` method is then used to simulate the system
-under each  `allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return
-the policy  with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
+The default EVC `function <EVCMechanism.function>` calculates the expected value of control (EVC) by a conducting a
+grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is determined by the
+`allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing one value from the
+`allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An `allocationPolicy` is
+constructed for every possible combination of values, and stored in the EVCMechanism's `controlSignalSearchSpace`
+attribute.  The EVCMechanism's `run_simulation` method is then used to simulate the system under each
+`allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return the policy
+with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
 `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for each simulation run (in
 `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the following four functions,
 each of which can be customized by using the EVCMechanism's `assign_params` method to designate custom functions (the
@@ -179,7 +179,7 @@ ControlSignal for each parameter that it controls.  One `outputState <OutputStat
 each of its ControlSignals, and the value of that outputState is the ControlSignal's `intensity`.  When an EVCMechanism
 is :ref:`created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has been
 specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
-see `Mechanism_Specifying_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
+see `Mechanism_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
 attribute. Each ControlSignal is associated with a `ControlProjection` that projects to the
 :doc:`parameterState <ParameterState>` for the parameter controlled by that ControlSignal. The EVCMechanism's
 :py:data:`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals. The
@@ -390,7 +390,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
-        #     this should override the default sender kwSystemDefaultController in ControlProjection._instantiate_sender
+        #     this should override the default sender SYSTEM_DEFAULT_CONTROLLER in ControlProjection._instantiate_sender
         #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
 
         # - specification of function: default is default allocation policy (BADGER/GUMBY)
@@ -453,12 +453,12 @@ class EVCMechanism(ControlMechanism_Base):
 
     name : str : default EVCMechanism-<index>
         a string used for the name of the mechanism.
-        If not is specified, a default is assigned by MechanismRegistry
+        If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
-        the PreferenceSet for the mechanism.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
 
     Attributes
@@ -641,7 +641,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     """
 
-    componentType = "EVCMechanism"
+    componentType = EVC_MECHANISM
     initMethod = INIT_FUNCTION_METHOD_ONLY
 
 

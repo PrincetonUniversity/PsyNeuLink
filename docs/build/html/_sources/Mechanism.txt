@@ -2,11 +2,11 @@ Mechanisms
 ==========
 
 .. toctree::
-   :maxdepth: 1
+  :maxdepth: 1
 
-   ProcessingMechanism
-   ControlMechanism
-   MonitoringMechanism
+  ProcessingMechanism
+  ControlMechanism
+  MonitoringMechanism
 
 .. toctree::
    :maxdepth: 3
