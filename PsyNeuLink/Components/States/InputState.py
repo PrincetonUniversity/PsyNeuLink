@@ -208,7 +208,7 @@ class InputState(State_Base):
 
         Class attributes
         ----------------
-            + componentType (str) = kwInputState
+            + componentType (str) = INPUT_STATE
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination, Operation.SUM)
                 + FUNCTION_PARAMS (dict)
@@ -223,7 +223,7 @@ class InputState(State_Base):
 
         StateRegistry
         -------------
-            All kwInputState are registered in StateRegistry, which maintains an entry for the subclass,
+            All INPUT_STATE are registered in StateRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
 
     COMMENT
@@ -256,8 +256,8 @@ class InputState(State_Base):
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the PreferenceSet for the inputState.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the inputState.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
 
@@ -283,7 +283,7 @@ class InputState(State_Base):
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
-        Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -294,16 +294,16 @@ class InputState(State_Base):
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the PreferenceSet for the inputState.
-        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the inputState.
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     """
 
     #region CLASS ATTRIBUTES
 
-    componentType = kwInputState
+    componentType = INPUT_STATE
     paramsType = INPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE

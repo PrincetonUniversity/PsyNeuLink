@@ -9,8 +9,13 @@
 # ********************************************  Keywords ***************************************************************
 
 # **********************************************************************************************************************
-# ******************************************    CONSTANTS    ***********************************************************
+# ******************************************    CLASSES    *************************************************************
 # **********************************************************************************************************************
+
+# IMPLEMENTATION NOTE:
+#  These class are used for documentation purposes only.
+#  The attributes of each are assigned to constants (listed in the next section of this module)
+#    that are the ones actually used by the code.
 
 class Keywords:
     """
@@ -89,6 +94,10 @@ class Keywords:
         self.TARGET = TARGET
 
 # parameter_keywords = set()
+
+# **********************************************************************************************************************
+# ******************************************    CONSTANTS  *************************************************************
+# **********************************************************************************************************************
 
 ON = True
 OFF = False
@@ -190,8 +199,8 @@ kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
-kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
-kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
+PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
+PARAM_INSTANCE_DEFAULTS = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
 PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
@@ -215,14 +224,14 @@ kwComponentCategory = "Function_Base"
 # Component TYPES  -----------------
 
 # Mechanisms:
-kwProcessingMechanism = "ProcessingMechanism"
-kwMonitoringMechanism = "MonitoringMechanism"
-kwControlMechanism = "ControlMechanism"
+PROCESSING_MECHANISM = "ProcessingMechanism"
+MONITORING_MECHANISM = "MonitoringMechanism"
+CONTROL_MECHANISM = "ControlMechanism"
 
 # States:
-kwInputState = "InputState"
+INPUT_STATE = "InputState"
 OUTPUT_STATE = "OutputState"
-kwParameterState = "ParameterState"
+PARAMETER_STATE = "ParameterState"
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -230,43 +239,43 @@ CONTROL_PROJECTION = "ControlProjection"
 LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
-kwExampleFunction = "EXAMPLE FUNCTION"
-kwUserDefinedFunctionType = "USER DEFINED FUNCTION TYPE"
-kwCombinationFunction = "COMBINATION FUNCTION"
-kwIntegratorFunction = "INTEGRATOR FUNCTION"
-kwTransferFunction = "TRANSFER FUNCTION"
-kwDistributionFunction = "DISTRIBUTION FUNCTION"
-LEARNING_FUNCTION = 'LEARNING FUNCTION'
+EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
+USER_DEFINED_FUNCTION_TYPE = "USER DEFINED FUNCTION TYPE"
+COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
+INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
+TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
+LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
+DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 
 
 # Component SUBTYPES -----------------
 
 # ControlMechanisms:
-kwDefaultControlMechanism = "DefaultControlMechanism"
-kwEVCMechanism = "EVCMechanism"
+DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
+EVC_MECHANISM = "EVCMechanism"
 
 # MonitoringMechanisms:
-kwComparatorMechanism = "ComparatorMechanism"
+COMPARATOR_MECHANISM = "ComparatorMechanism"
+WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 
 # ProcessingMechanisms:
-kwDDM = "DDM"
-kwLinearMechanism = "LinearMechanism"
-kwSigmoidLayer = "SigmoidLayer"
-kwIntegratorMechanism = "IntegratorMechanism"
+DDM_MECHANISM = "DDM"
+TRANSFER_MECHANISM = "TransferMechanism"
+INTEGRATOR_MECHANISM = "IntegratorMechanmism"
 
 # Function:
-kwContradiction = "Contradiction"
-kwUserDefinedFunction = "USER DEFINED FUNCTION"
-kwReduce = "Reduce"
-kwLinearCombination = "LinearCombination"
-kwLinear = "Linear"
-kwExponential = "Exponential"
-kwLogistic = "Logistic"
-kwSoftMax = 'SoftMax'
-kwIntegrator = "Integrator"
-kwLinearMatrix = "Linear Matrix"
-kwBackProp = 'Backpropagation Learning Algorithm'
-kwRL = 'Reinforcement Learning Algorithm'
+CONTRADICTION_FUNCTION = "Contradiction"
+USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
+REDUCE_FUNCTION = "Reduce"
+LINEAR_COMBINATION_FUNCTION = "LinearCombination"
+LINEAR_FUNCTION = "Linear"
+EXPONENTIAL_FUNCTION = "Exponential"
+LOGISTIC_FUNCTION = "Logistic"
+SOFTMAX_FUNCTION = 'SoftMax'
+INTEGRATOR_FUNCTION = "Integrator"
+LINEAR_MATRIX_FUNCTION = "Linear Matrix"
+BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
+RL_FUNCTION = 'Reinforcement Learning Algorithm'
 
 
 #endregion
@@ -274,11 +283,11 @@ kwRL = 'Reinforcement Learning Algorithm'
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 SYSTEM = "System"
-kwSystemInit = 'System.__init__'
-kwDefaultSystem = "DefaultSystem"
-kwController = "controller"
-kwEnableController = "enable_controller"
-kwControllerPhaseSpec = 'ControllerPhaseSpec'
+SYSTEM_INIT = 'System.__init__'
+DEFAULT_SYSTEM = "DefaultSystem"
+CONTROLLER = "controller"
+ENABLE_CONTROLLER = "enable_controller"
+CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
 RUN = 'Run'
 
@@ -288,7 +297,7 @@ RUN = 'Run'
 
 PROCESS = "PROCESS"
 kwProcesses = "processes"
-kwProcessInit = 'Process.__init__'
+PROCESS_INIT = 'Process.__init__'
 PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
@@ -356,13 +365,12 @@ PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
-kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
 COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
 VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
-kwSystemDefaultController = "DefaultController"
+SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 

@@ -383,7 +383,7 @@ def system(default_input_value=None,
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
+        the `PreferenceSet` for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -448,7 +448,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
-                                kwController: DefaultController,
+                                CONTROLLER: DefaultController,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
@@ -475,6 +475,8 @@ class System_Base(System):
 
     Attributes
     ----------
+
+    componentType : SYSTEM
 
     processes : list of Process objects
         list of processes in the system specified by the `process` parameter.
@@ -629,15 +631,15 @@ class System_Base(System):
 
     name : str : default System-<index>
         the name of the system;
-        Specified in the name argument of the call to create the system;
+        Specified in the `name` argument of the constructor for the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system.
-        Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for system.
+        Specified in the `prefs` argument of the constructor for the system;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
         (see :ref:`PreferenceSet <LINK>` for details).
 
     """
@@ -703,7 +705,7 @@ class System_Base(System):
 
         if not context:
             # context = INITIALIZING + self.name
-            context = INITIALIZING + self.name + kwSeparator + kwSystemInit
+            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         super().__init__(variable_default=default_input_value,
                          param_defaults=params,
@@ -715,17 +717,17 @@ class System_Base(System):
 
         # Controller is DefaultControlMechanism
         from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-        if self.paramsCurrent[kwController] is DefaultControlMechanism:
+        if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
             # Get DefaultController from MechanismRegistry
             from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
-            self.controller = list(MechanismRegistry[kwDefaultControlMechanism].instanceDict.values())[0]
+            self.controller = list(MechanismRegistry[DEFAULT_CONTROL_MECHANISM].instanceDict.values())[0]
         # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
             # MODIFIED 11/6/16 OLD:
-            self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
+            self.controller = self.paramsCurrent[CONTROLLER](params={SYSTEM: self})
             # # MODIFIED 11/6/16 NEW:
-            # self.controller = self.paramsCurrent[kwController](system=self)
+            # self.controller = self.paramsCurrent[CONTROLLER](system=self)
             # MODIFIED 11/6/16 END
 
         # Check whether controller has input, and if not then disable
@@ -749,7 +751,7 @@ class System_Base(System):
             # Controller phaseSpec not specified
             try:
                 # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[kwControllerPhaseSpec]
+                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
                 self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
             except:
                 # No System specification, so use System max as default
@@ -787,7 +789,7 @@ class System_Base(System):
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        controller = target_set[kwController]
+        controller = target_set[CONTROLLER]
         if (not isinstance(controller, ControlMechanism_Base) and
                 not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
             raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".

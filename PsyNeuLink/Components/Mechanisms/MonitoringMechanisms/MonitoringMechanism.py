@@ -110,7 +110,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
 
     """
 
-    componentType = "ProcessingMechanism"
+    componentType = MONITORING_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences

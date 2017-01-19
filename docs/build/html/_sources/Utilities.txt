@@ -1,4 +1,4 @@
-Functions
+Utilities
 =========
 
 .. toctree::
@@ -8,4 +8,8 @@ Functions
 	Run
 	Log
 	Preferences
+
+.. automodule:: Utilities
+   :members:
+   :exclude-members: random
 

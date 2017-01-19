@@ -94,3 +94,29 @@
     - function
     - _instantiate_attributes_after_function
 - Functions
+
+### rST / SPHNINX:
+- PsyNeuLink terms should generally be "formatted" (i.e., by enclosing in back-ticks (`term`);
+    a reference should be a link at least the first it is used in any paragarph;
+    the term should still be formated as a reference, but generally the link should be suppressed  
+    in subsequent appearances in the same paragraph (by using the keyword role:  :keyword:`term`).
+- The format for terms should be kept as simple as possible while remaining unambiguous:
+    - wheverever possible, use simple backticks (e.g., `term`);
+    - if the term is ambiguous (i.e., it is used by more than one module, 
+        such as the attributes 'variable', 'function', or value'),
+        then add further specification: `term <Module.term>`.
+    - to force a term that will be automatically parsed by Spinx as an attribute or argument, 
+        to appear as normal text, use the ref role:  :ref:`term`.
+    - note: arguments to methods and functions can not be linked (in the way that attributes can);
+        therefore, they must be verbally designated (e.g.: the `params` argument of a function...)
+- Section references should be formatted as links, and also kept as simple as possible:
+    - wherever possible, simply enclose in backticks (e.g., `section`)
+    - to assign a link to some other description, use the ref role (e.g., :ref:`my text <section>`) 
+    - the titles for the rst files for all classes are singular;
+        therefore, to refer to the plural of a class (e.g., Mechanisms),
+        the module must be expliclity referenced (e.g., `Mechanisms <Mechanism>`)
+    - to flag references to sections that have not yet been documented (or labelled), 
+        use the following construction: `section <LINK>`.
+ 
+        
+           
