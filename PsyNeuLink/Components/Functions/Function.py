@@ -323,8 +323,8 @@ class Contradiction(Function_Base): # Example
     """
 
     # Function componentName and type (defined at top of module)
-    componentName = kwContradiction
-    componentType = kwExampleFunction
+    componentName = CONTRADICTION_FUNCTION
+    componentType = EXAMPLE_FUNCTION_TYPE
 
     # Variable class default
     # This is used both to type-cast the variable, and to initialize variableInstanceDefault
@@ -476,8 +476,8 @@ class UserDefinedFunction(Function_Base):
 
     Linear.function returns scalar result
     """
-    componentName = kwUserDefinedFunction
-    componentType = kwUserDefinedFunctionType
+    componentName = USER_DEFINED_FUNCTION
+    componentType = USER_DEFINED_FUNCTION_TYPE
 
     variableClassDefault = [0]
 
@@ -522,7 +522,7 @@ class UserDefinedFunction(Function_Base):
 #endregion
 
 class CombinationFunction(Function_Base):
-    componentType = kwCombinationFunction
+    componentType = COMBINATION_FUNCTION_TYPE
 
 
 class Reduce(CombinationFunction): # ------------------------------------------------------------------------
@@ -545,7 +545,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
     Reduce.function returns combined values:
     - single scalar value
     """
-    componentName = kwReduce
+    componentName = REDUCE_FUNCTION
 
     variableClassDefault = [0, 0]
     # variableClassDefault_locked = True
@@ -655,7 +655,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
     - 1D np.array if variable was a single np.variable or np.ndarray
     """
 
-    componentName = kwLinearCombination
+    componentName = LINEAR_COMBINATION_FUNCTION
 
     # MODIFIED 11/29/16 NEW:
     classPreferences = {
@@ -887,7 +887,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 #endregion
 
 class TransferFunction(Function_Base):
-    componentType = kwTransferFunction
+    componentType = TRANFER_FUNCTION_TYPE
 
 
 class Linear(TransferFunction): # --------------------------------------------------------------------------------------
@@ -902,7 +902,7 @@ class Linear(TransferFunction): # ----------------------------------------------
     Linear.function returns scalar result
     """
 
-    componentName = kwLinear
+    componentName = LINEAR_FUNCTION
 
     # MODIFIED 11/29/16 NEW:
     classPreferences = {
@@ -1032,7 +1032,7 @@ class Exponential(TransferFunction): # -----------------------------------------
     Exponential.function returns scalar result
     """
 
-    componentName = kwExponential
+    componentName = EXPONENTIAL_FUNCTION
 
     # # Params
     # RATE = "rate"
@@ -1105,7 +1105,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     Logistic.function returns scalar result
     """
 
-    componentName = kwLogistic
+    componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN,BIAS})
 
     variableClassDefault = 0
@@ -1177,7 +1177,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     SoftMax.function returns scalar result
     """
 
-    componentName = kwSoftMax
+    componentName = SOFTMAX_FUNCTION
 
     variableClassDefault = 0
 
@@ -1315,7 +1315,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Returns sender 2D array linearly transformed by self.matrix
     """
 
-    componentName = kwLinearMatrix
+    componentName = LINEAR_MATRIX_FUNCTION
 
     DEFAULT_FILLER_VALUE = 0
 
@@ -1678,7 +1678,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 #  DDM_NavarroAndFuss
 
 class IntegratorFunction(Function_Base):
-    componentType = kwIntegratorFunction
+    componentType = INTEGRATOR_FUNCTION_TYPE
 
 
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
@@ -1705,7 +1705,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Integrator.function returns scalar result
     """
 
-    componentName = kwIntegrator
+    componentName = INTEGRATOR_FUNCTION
 
     variableClassDefault = [[0]]
 
@@ -2108,7 +2108,7 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 class LearningFunction(Function_Base):
-    componentType = LEARNING_FUNCTION
+    componentType = LEARNING_FUNCTION_TYPE
 
 
 LEARNING_RATE = "learning_rate"
@@ -2139,7 +2139,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
          + LEARNING_RATE: (float) - learning rate (default: 1.0)
     """
 
-    componentName = kwRL
+    componentName = RL_FUNCTION
 
     variableClassDefault = [[0],[0],[0]]
 
@@ -2247,7 +2247,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
          + kwTransferFunctionDerivative - (function) derivative of TransferMechanism function (default: derivative of logistic)
     """
 
-    componentName = kwBackProp
+    componentName = BACKPROPAGATION_FUNCTION
 
     variableClassDefault = [[0],[0],[0]]
 

@@ -478,6 +478,28 @@ def get_value_from_array(array):
     """
 
 def random_matrix(sender, receiver, range=1, offset=0):
+    """Generate a random matrix
+
+    Calls np.random.rand to generate a 2d np.array with random values.
+
+    Arguments
+    ----------
+    sender : int
+        specifies number of rows.
+
+    receiver : int
+        spcifies number of columns.
+
+    range : int
+        specifies upper limit (lower limit = 0).
+
+    offset : int
+        specifies amount added to each entry of the matrix.
+
+    Returns
+    -------
+    2d np.array
+    """
     return (range * np.random.rand(sender, receiver)) + offset
 
 def underscore_to_camelCase(item):

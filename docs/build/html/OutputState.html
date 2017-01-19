@@ -310,8 +310,8 @@ and/or a custom function and its parameters (see <span class="xref doc">Componen
 <li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) &#8211; a string used for the name of the outputState.
 If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
 belongs (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the PreferenceSet for the outputState.
-If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the outputState.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
@@ -383,7 +383,7 @@ the outputState&#8217;s <code class="docutils literal"><span class="pre">functio
 <dt id="OutputState.OutputState.name">
 <code class="descname">name</code><a class="headerlink" href="#OutputState.OutputState.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; name of the outputState.
-Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+Specified in the <a class="reference internal" href="#OutputState.OutputState.name" title="OutputState.OutputState.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the outputState.  If not is specified, a default is
 assigned by the StateRegistry of the mechanism to which the outputState belongs
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 <div class="admonition note">
@@ -398,9 +398,9 @@ creation.</p>
 <dl class="attribute">
 <dt id="OutputState.OutputState.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#OutputState.OutputState.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the PreferenceSet for the outputState.
-Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
-assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the outputState.
+Specified in the <a class="reference internal" href="#OutputState.OutputState.prefs" title="OutputState.OutputState.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the projection;  if it is not specified, a default is
+assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
