@@ -33,7 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
+        <link rel="next" title="Control Mechanisms" href="ControlMechanism.html"/>
+        <link rel="prev" title="DDM" href="DDM.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -120,6 +123,10 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
+          <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
+      
+          <li><a href="ProcessingMechanism.html">Processing Mechanisms</a> &raquo;</li>
+      
     <li>TransferMechanism</li>
       <li class="wy-breadcrumbs-aside">
         
@@ -156,7 +163,7 @@ of PsyNeuLink Functions (<a class="reference internal" href="Function.html#Funct
 <div class="section" id="creating-a-transfermechanism">
 <span id="transfer-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
 <p>A TransferMechanism can be created either directly, by calling its constructor, or using the <code class="xref py py-class docutils literal"><span class="pre">mechanism</span></code>
-function and specifying &#8220;TransferMechanism&#8221; as its <code class="docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the
+function and specifying <code class="xref any docutils literal"><span class="pre">TRANSFER_MECHANISM</span></code> as its <code class="xref any docutils literal"><span class="pre">mech_spec</span></code> argument.  Its function is specified in the
 <code class="docutils literal"><span class="pre">function</span></code> argument, which can be simply the name of the class (first example below), or a call to its constructor
 which can include arguments specifying the function&#8217;s parameters (second example):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_linear_transfer_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
@@ -232,10 +239,10 @@ and/or a custom function and its parameters (see <a class="reference internal" h
 <li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the <code class="xref std std-keyword docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">TRIAL</span></code> time scale.
 This must be set to <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> for the <code class="docutils literal"><span class="pre">rate</span></code> parameter to have an effect.</li>
 <li><strong>name</strong> (<em>str : default TransferMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
-If not is specified, a default is assigned by MechanismRegistry
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for mechanism.
-If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 <li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
 <dt>context</dt>
@@ -321,17 +328,17 @@ function, the <code class="xref std std-keyword docutils literal"><span class="p
 <dt id="TransferMechanism.TransferMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#TransferMechanism.TransferMechanism.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default TransferMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the name argument of the call to create the projection;
-if not is specified, a default is assigned by MechanismRegistry
+Specified in the <a class="reference internal" href="#TransferMechanism.TransferMechanism.name" title="TransferMechanism.TransferMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the projection;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="TransferMechanism.TransferMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#TransferMechanism.TransferMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for mechanism.
-Specified in the prefs argument of the call to create the mechanism;
-if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
+Specified in the <a class="reference internal" href="#TransferMechanism.TransferMechanism.prefs" title="TransferMechanism.TransferMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
@@ -344,6 +351,15 @@ if it is not specified, a default is assigned using <code class="docutils litera
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ControlMechanism.html" class="btn btn-neutral float-right" title="Control Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="DDM.html" class="btn btn-neutral" title="DDM" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

@@ -199,15 +199,17 @@ in the system&#8217;s <a class="reference internal" href="System.html#System.Sys
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
 <p>PsyNeuLink supports two time scales for executing objects: <code class="xref py py-data docutils literal"><span class="pre">TIME_STEP</span></code> and
 <code class="xref py py-data docutils literal"><span class="pre">TRIAL</span></code>.  Every mechanism defines how it is executed at one or both of these time
-scales, and its current mode of execution is determined by its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.timeScale" title="Mechanism.Mechanism_Base.timeScale"><code class="xref py py-data docutils literal"><span class="pre">timeScale</span></code></a> parameter.</p>
-<ul class="simple">
+scales, and its current mode of execution is determined by its <code class="xref py py-data docutils literal"><span class="pre">timeScale</span></code> parameter.</p>
+<ul class="simple" id="run-time-step">
 <li><code class="xref py py-data docutils literal"><span class="pre">TIME_STEP</span></code>:  this mode of execution is a mechanism&#8217;s closest approximation
 to continuous, or &#8220;real time&#8221; processing.  Execution of a time_step is defined as a single execution of all objects
 in the scope of execution at their time_step time scale.  Mechanisms called upon to execute a time_step that do
 not support that time scale of execution have the option of generating an exception, being ignored, or providing
 their trial mode response, either on the first time_step, every time_step, or the last time_step in the sequence
 being run (see :ref:<a href="#id1"><span class="problematic" id="id2">`</span></a>Timing &lt;LINK&gt; for further details).</li>
-<li><code class="xref py py-data docutils literal"><span class="pre">TIME_STEP</span></code>: this mode of execution is the &#8220;ballistic&#8221; execution of a
+</ul>
+<ul class="simple" id="run-trial">
+<li><code class="xref py py-data docutils literal"><span class="pre">TRIAL</span></code>: this mode of execution is the &#8220;ballistic&#8221; execution of a
 mechanism to a state that would have been achieved with time_step execution to a specified criterion.  The
 criterion can be specified in terms of the number of time_steps, or a condition to be met by the mechanism&#8217;s
 output.  It is up to the mechanism how it implements its trial mode of execution (i.e., whether this is done by
@@ -388,7 +390,7 @@ targets to be constructed programatically, in response to computations made duri
 <span id="run-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="Run.run">
-<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10b62f630&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10b62fba8&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10b62fcc0&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10b62f4e0&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10b62f518&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10b62f1d0&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10b62f208&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10b62f160&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10b62f588&gt; = None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10b62ff98&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">Run.</code><code class="descname">run</code><span class="sig-paren">(</span><em>object</em>, <em>inputs: &lt;typecheck.tc_predicates.any object at 0x10b4d2b70&gt;</em>, <em>num_executions: &lt;typecheck.framework.optional object at 0x10b4d23c8&gt; = None</em>, <em>reset_clock: bool = True</em>, <em>initialize: bool = False</em>, <em>intial_values: &lt;typecheck.framework.optional object at 0x10b4d2198&gt; = None</em>, <em>targets: &lt;typecheck.framework.optional object at 0x10b4d2c50&gt; = None</em>, <em>learning: &lt;typecheck.framework.optional object at 0x10b4d20f0&gt; = None</em>, <em>call_before_trial: &lt;typecheck.framework.optional object at 0x10b4d2f98&gt; = None</em>, <em>call_after_trial: &lt;typecheck.framework.optional object at 0x10b4d2a58&gt; = None</em>, <em>call_before_time_step: &lt;typecheck.framework.optional object at 0x10b4d2be0&gt; = None</em>, <em>call_after_time_step: &lt;typecheck.framework.optional object at 0x10b4c9080&gt; = None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale: &lt;typecheck.framework.optional object at 0x10b4c9160&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Run.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a sequence of executions for a process or system</p>
 <blockquote>
 <div><dl class="docutils">

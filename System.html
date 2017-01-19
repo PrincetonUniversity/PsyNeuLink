@@ -309,7 +309,7 @@ execution, as input to mechanisms that close recurrent loops (designated as <a c
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -371,7 +371,7 @@ list or 1d np.array that must be compatible with the format of the first item of
 for its entry.  Values in the dictionary will override argument values</li>
 <li><strong>name</strong> (<em>str : default System-&lt;index&gt;</em>) &#8211; a string used for the name of the system
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names)</li>
-<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : System.classPreferences</em>) &#8211; the PreferenceSet for system (see <span class="xref doc">ComponentPreferenceSet</span> for specification of PreferenceSet)</li>
+<li><strong>prefs</strong> (<em>PreferenceSet or specification dict : System.classPreferences</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for system (see <span class="xref doc">ComponentPreferenceSet</span> for specification of PreferenceSet)</li>
 </ul>
 </td>
 </tr>
@@ -394,6 +394,12 @@ for its entry.  Values in the dictionary will override argument values</li>
 <p class="last">Systems should NEVER be instantiated by a direct call to the base class.
 They should be instantiated using the <a class="reference internal" href="#System.system" title="System.system"><code class="xref py py-func docutils literal"><span class="pre">system()</span></code></a> factory method (see it for description of parameters).</p>
 </div>
+<dl class="attribute">
+<dt id="System.System_Base.componentType">
+<code class="descname">componentType</code><a class="headerlink" href="#System.System_Base.componentType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>SYSTEM</em></p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="System.System_Base.processes">
 <code class="descname">processes</code><a class="headerlink" href="#System.System_Base.processes" title="Permalink to this definition">¶</a></dt>
