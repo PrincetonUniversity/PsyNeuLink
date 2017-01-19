@@ -59,6 +59,13 @@ Structure
 ---------
 
 COMMENT:
+    .. _MappingProjection_Sender:
+    .. _MappingProjection_Receiver:
+    XXXX NEED TO ADD DESCRIPTION OF SENDER AND RECEIVER -- SPECIFIED AS MECHANISM OR STATE.
+
+COMMENT
+
+COMMENT:
     XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningProjection CAN BE SPECIFIED HERE:
             IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
             SEE BELOW:  If there is a params[FUNCTION_PARAMS][MATRIX][1]
@@ -84,23 +91,27 @@ In addition to its ``function``, MappingProjections use the following two the pr
   .. _Matrix_Keywords:
 
   *Matrix keyword*.  This is used to specify a type of matrix without having to speicfy its individual values.  Any
-  of the following keywords can be use:
+  of the following keywords can be used:
 
-  * :keyword:`IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
-    values are the same.
-  * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's value,
-    and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
-  * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of
-    the sender's value, and a number of columns equal to the length of the receiver's value, all the elements of
-    which are filled with random values uniformly distributed between 0 and 1.
-  * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
-    is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
-  * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
-    assigns an :keyword:`IDENTITY_MATRIX`.
+      * `IDENTITY_MATRIX` - a square matrix of 1's; this requires that the length of the sender and receiver
+        values are the same.
+      ..
+      * :keyword:`FULL_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of the sender's
+        value, and a number of columns equal to the length of the receiver's value, all the elements of which are 1's.
+      ..
+      * :keyword:`RANDOM_CONNECTIVITY_MATRIX` - a matrix that has a number of rows equal to the length of
+        the sender's value, and a number of columns equal to the length of the receiver's value, all the elements of
+        which are filled with random values uniformly distributed between 0 and 1.
+      ..
+      * :keyword:`AUTO_ASSIGN_MATRIX` - if the sender and receiver are of equal length, an  :keyword:`IDENTITY_MATRIX`
+        is assigned;  otherwise, it a :keyword:`FULL_CONNECTIVITY_MATRIX` is assigned.
+      ..
+      * :keyword:`DEFAULT_MATRIX` - used if no matrix specification is provided in the constructor;  it presently
+        assigns an :keyword:`IDENTITY_MATRIX`.
   ..
-  :py:class:`random_matrix`.  This is a convenience function that provides more flexibility than
-  :keyword:`RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender, receiver,
-  with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
+  *Random matrix function* (:py:func:`random_matrix <Utilities.random_matrix>`).  This is a convenience function that
+  provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a sender and
+  receiver, with random numbers drawn from a uniform distribution within a specified range and with a specified offset.
 
   .. _MappingProjection_Tuple_Specification:
   *Tuple*.  This is used to specify a projection to the parameterState for the
@@ -195,7 +206,7 @@ class MappingProjection(Projection_Base):
                                    FUNCTION_PARAMS: {
                                        # LinearMatrix.kwReceiver: receiver.value,
                                        LinearMatrix.MATRIX: LinearMatrix.DEFAULT_MATRIX},
-                                   PROJECTION_SENDER: kwInputState, # Assigned to class ref in __init__ module
+                                   PROJECTION_SENDER: INPUT_STATE, # Assigned to class ref in __init__ module
                                    PROJECTION_SENDER_VALUE: [1],
                                    })
             + classPreference (PreferenceSet): MappingPreferenceSet, instantiated in __init__()
@@ -209,18 +220,18 @@ class MappingProjection(Projection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        the source of the projection's input.  If a mechanism is specified, its primary outputState will be used.
-        If it is not specified, it will be assigned in the context in which the projection is used.
+        specifies the source of the projection's input.  If a mechanism is specified, its primary outputState will be
+        used. If it is not specified, it will be assigned in the context in which the projection is used.
 
     receiver: Optional[InputState or Mechanism]
-        the destination of the projection's output.  If a mechanism is specified, its primary inputState will be used.
-        If it is not specified, it will be assigned in the context in which the projection is used.
+        specifies the destination of the projection's output.  If a mechanism is specified, its primary inputState
+        will be used. If it is not specified, it will be assigned in the context in which the projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default :keyword:`DEFAULT_MATRIX`
         the matrix used by ``function`` (default: LinearCombination) to transform the value of the ``sender``.
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
-        the operation used to combine the value of any projections to the matrix's parameterState with the
+        specifies the operation used to combine the value of any projections to the matrix's parameterState with the
         :py:data:`matrix <MappingProjection.matrx>`.  Most commonly used with LearningProjections.
 
     params : Optional[Dict[param keyword, param value]]
@@ -234,12 +245,24 @@ class MappingProjection(Projection_Base):
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
-        the PreferenceSet for the MappingProjection.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the MappingProjection.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
+
+    componentType : MAPPING_PROJECTION
+
+    sender : OutputState
+        identifies the source of the projection's input.
+
+    receiver: InputState
+        identifies the destination of the projection.
+
+    param_modulation_operation : ModulationOperation
+        determines the operation used to combine the value of any projections to the matrix's parameterState with the
+        `matrix`.
 
     monitoringMechanism : MonitoringMechanism
         source of error signal for matrix weight changes when :doc:`learning <LearningProjection>` is used.
@@ -249,14 +272,14 @@ class MappingProjection(Projection_Base):
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
-        Specified in the name argument of the call to create the projection;
+        Specified in the `name` argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the PreferenceSet for projection.
-        Specified in the prefs argument of the call to create the projection;
-        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for projection.
+        Specified in the `prefs` argument of the constructor for the projection;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     """

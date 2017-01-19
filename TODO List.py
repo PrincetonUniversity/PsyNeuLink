@@ -5,15 +5,15 @@
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
 # √ System
-#   Process
-#   Mechanism
+# √ Process
+# √ Mechanism
 #   ProcessingMechanism
 #   DefaultProcessingMechanism
 # √ DDM
 #   IntegratorMechanism
 #   TransferMechanism
 #   MonitoringMechanism
-#   DefaultMontioringMechanism
+#   DefaultMonitoringMechanism
 #   ComparatorMechanism
 #   WeightedErrorMechanism
 # √ ControlMechanism
@@ -33,6 +33,8 @@
 #   Log
 #   TimeScale
 #   Registry
+#
+# DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS
 #
 # DOCUMENT: FINISH DOCUMENTING:
 #             .. _ControlMechanism_Specifying_Control:
@@ -280,6 +282,8 @@
     #      FOR OPTIONAL INPUT, AND ADD ARGUMENT TO SYSTEM FOR ASSIGNING INPUT AT EXECUTE TIME
 #endregion
 
+# DOCUMENT:  Add links throughout for time_step and trial
+
 #region DEVELOPMENT
 # time_step DDM integration
 #
@@ -459,15 +463,15 @@
 #           (since those are process-specific) but not other projections
 #
 # QUESTION: RL:
-#           Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
-#               - how to provide reward for outcome of first trial, if it is selected probabilistically
-#               - must process trial, get reward from environment, then execute learning
-#               SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#           Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
-#               - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
-#               SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
-#               - system should be take functions that specify values to use as inputs based on outputs
-#                   as per SOLUTION to Option 1 using lambda functions
+#       Option 1 - Provide Process with reward for option selected: more natural, but introduces timing problems:
+#           - how to provide reward for outcome of first trial, if it is selected probabilistically
+#           - must process trial, get reward from environment, then execute learning
+#           SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
+#       Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
+#           - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
+#           SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
+#           - system should be take functions that specify values to use as inputs based on outputs
+#               as per SOLUTION to Option 1 using lambda functions
 
 # QUESTION: Default object (e.g., default_projection for Process): should they be templates or objects?
 #                                                                  or signify (e.g., class = template)
@@ -501,9 +505,10 @@
 #       automatic component of the drift for each stimulus (== weight matrix)
 #    *  d(parameter_value)/d(control signal intensity) for each control signal ==
 #                                                          differential of the parameterModulationFunction
-#       NOTE:  THIS IS DISTINCT FROM THE ControlProjection.function
-#                                               (== intensity_function) WHICH MAPS ALLCATION -> ControlProjection Intensity
-#              BUT IS ISOMORPHIC IF ControlProjection.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
+#       NOTE:
+#          THIS IS DISTINCT FROM THE ControlProjection.function
+#                                           (== intensity_function) WHICH MAPS ALLCATION -> ControlProjection Intensity
+#          BUT IS ISOMORPHIC IF ControlProjection.function IS Linear with slope = 1 and offsent 0 (i.e,. its default)
 #       QUESTION:  DO WE CARE ABOUT THE DIFFERENTIAL ON ALLOCATION -> parameter_value (.e., ControlSiganl.function)
 #                       OR ControlProjection Intensity -> parameter_value (i.e., parameterModulation function)??
 #        SEBASTIAN FAVORS LEAVING IT AS DIFFERENTIAL ON parameterModulation function
@@ -527,7 +532,7 @@
 #   MATRIX -> kwWeightMatrix;  matrix -> weightMatrix in MappingProjection
 #   item -> element for any array/vector/matrix contexts
 #   function (and execute Method) -> executeFunction (since it can be standalone (e.g., provided as param)
-#   kwParameterState -> PARAMETER_STATES
+#   PARAMETER_STATE -> PARAMETER_STATES
 #   MechanismParamValueparamModulationOperation -> MechanismParamValueParamModulationOperation
 #   functionParams -> ParameterStates
 #   InputStateParams, OutputStateParams and ParameterStateParams => <*>Specs
@@ -1144,7 +1149,7 @@
 
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
-# - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / kwSystemDefaultController(str)
+# - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / SYSTEM_DEFAULT_CONTROLLER(str)
 #
 # - SystemDefaultInputState and SystemDefaultOutputState:
 # - SystemDefaultSender = ProcessDefaultInput
@@ -1251,6 +1256,8 @@
 
 #region COMPONENT:
 # -----------------------------------------------------------------------------------------------------------
+#
+# FIX!!: Get straight ComponentName vs. ComponentType (e.g.,. EVCMechanism, ComparatorMechanism)
 #
 # FIX!!: VARIABLE VS. VALUE BUSINESS:
 #     QUESTION: is mechanism.value always == mechanism.outputValue (if not, document example)
@@ -1411,7 +1418,7 @@
 #                - that now gets its own parameters as its variables (one for each parameterState)
 #                - it can't handle kwOperaton (one of its parameters) as its variable!
 #            SOLUTION:
-#                - FUNCTION_PARAMS: {kwParameterState: None}}:  suppresses ParameterStates
+#                - FUNCTION_PARAMS: {PARAMETER_STATE: None}}:  suppresses ParameterStates
 #                - handled in Mechanism._instantiate_parameter_states()
 #                - add DOCUMENTATION in Components and/or Mechanisms or ParameterStates;
 #                      include note that functionParams are still accessible in paramsCurrent[functionParams]
@@ -1757,7 +1764,7 @@
 #
 # - IMPLEMENTATION OF MULTIPLE INPUT AND OUTPUT STATES:
 # - IMPLEMENT:  ABSTRACT HANDLING OF MULTIPLE STATES (AT LEAST FOR INPUT AND OUTPUT STATES, AND POSSIBLE PARAMETER??
-# - Implement: Add StateSpec tuple specificaton in list for  kwInputState and OutputStates
+# - Implement: Add StateSpec tuple specificaton in list for  INPUT_STATE and OutputStates
 #        - akin to ParamValueProjection
 #        - this is because OrderedDict is a specialty class so don't want to impose their use on user specification
 #        - adjust _validate_params and instantiate_output_state accordingly
@@ -1796,7 +1803,7 @@
 # - implement:
 #     Regarding ProcessDefaultMechanism (currently defined as Mechanism_Base.defaultMechanism)
 #        # IMPLEMENTATION NOTE: move this to a preference (in Process??)
-#        defaultMechanism = kwDDM
+#        defaultMechanism = DDM_MECHANISM
 #
 #endregion
 

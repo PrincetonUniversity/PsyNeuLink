@@ -6,11 +6,11 @@ from PsyNeuLink.Globals.Keywords import *
 
 # from Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # sample_mech = TransferMechanism(name='Sample',
-#                        params={FUNCTION:kwLogistic},
+#                        params={FUNCTION:LOGISTIC_FUNCTION},
 #                        default_input_value = [0,0])
 #
 # target_mech = TransferMechanism(name='Target',
-#                        params={FUNCTION:kwLogistic},
+#                        params={FUNCTION:LOGISTIC_FUNCTION},
 #                        default_input_value = [0,0])
 
 import numpy as np

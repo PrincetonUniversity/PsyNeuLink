@@ -33,7 +33,7 @@ and a LearningProjection to that MappingProjection  (see :ref:`learning in a pro
 and :ref:`automatic creation of LearningSignals  <LearningProjection_Automatic_Creation> for details).
 
 
-.. _Comparator_Structure
+.. _Comparator_Structure:
 
 Structure
 ---------
@@ -173,12 +173,12 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     name : str : default ComparatorMechanism-<index>
         a string used for the name of the mechanism.
-        If not is specified, a default is assigned by MechanismRegistry
+        If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the PreferenceSet for mechanism.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
 
@@ -224,14 +224,14 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     name : str : default ComparatorMechanism-<index>
         the name of the mechanism.
-        Specified in the name argument of the call to create the mechanism;
-        if not is specified, a default is assigned by MechanismRegistry
+        Specified in the `name` argument of the constructor for the mechanism;
+        if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the PreferenceSet for mechanism.
-        Specified in the prefs argument of the call to create the mechanism;
-        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for mechanism.
+        Specified in the `prefs` argument of the constructor for the mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     """

@@ -323,14 +323,20 @@ the projection&#8217;s default <code class="docutils literal"><span class="pre">
 <li><strong>name</strong> (<em>str : default LearningProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the LearningProjection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the PreferenceSet for the LearningProjection.
-If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the LearningProjection.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<dl class="attribute">
+<dt id="LearningProjection.LearningProjection.componentType">
+<code class="descname">componentType</code><a class="headerlink" href="#LearningProjection.LearningProjection.componentType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>LEARNING_PROJECTION</em></p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.sender">
 <code class="descname">sender</code><a class="headerlink" href="#LearningProjection.LearningProjection.sender" title="Permalink to this definition">¶</a></dt>
@@ -394,7 +400,7 @@ parameterState that is the LearningProjection&#8217;s <code class="docutils lite
 <dt id="LearningProjection.LearningProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#LearningProjection.LearningProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default LearningProjection-&lt;index&gt;</em> &#8211; the name of the LearningProjection.
-Specified in the name argument of the call to create the projection;
+Specified in the <a class="reference internal" href="#LearningProjection.LearningProjection.name" title="LearningProjection.LearningProjection.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the projection;
 if not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -402,9 +408,9 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dl class="attribute">
 <dt id="LearningProjection.LearningProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#LearningProjection.LearningProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the PreferenceSet for projection.
-Specified in the prefs argument of the call to create the projection;
-if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for projection.
+Specified in the <a class="reference internal" href="#LearningProjection.LearningProjection.prefs" title="LearningProjection.LearningProjection.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the projection;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 
