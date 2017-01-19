@@ -2163,6 +2163,47 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
+    def show_graph(self):
+
+	    import graphviz as gv
+	        
+	    system_graph = self.graph
+	    # build graph and configure visualisation settings
+
+	    # is there a way to take in *args so  
+	    # people can change these settings?
+	    G = gv.Digraph(engine = "dot", 
+	    			   # format = "svg", 
+	                   node_attr = {'fontsize':'12', 
+	                   				'fontname': 'arial', 
+	                   				'shape':'oval'}, 
+	                   edge_attr = {'arrowhead':'halfopen', 
+	                   				'fontsize': '10', 
+	                   				'fontname': 'arial'},
+	                   graph_attr = {"rankdir" : "BT"})
+
+	    # build list of receivers
+	    receivers = list(system_graph.keys())
+	    
+	    # loop through each reciever
+	    for receiver in receivers:
+	        receiver_name = receiver[0].name
+	        G.node(receiver_name)
+	        senders = system_graph[receiver]
+	        # loop through each sender
+	        for sender in senders:
+	            sender_name = sender[0].name
+	            G.node(sender_name)
+	            # find the right edge (projection)
+	            for projection in sender[0].outputState.sendsToProjections:
+	                if projection.receiver.owner == receiver[0]:
+	                    edge_name = projection.name
+	            # add the edge
+	            G.edge(sender_name, receiver_name, label = " {0} ".format(edge_name))
+
+	    G.view(self.name.replace(" ", "-"), cleanup=True)
+
+
     # @property
     # def learning_execution_graph_mechs(self):
     #     """Mechanisms whose mech_tuples appear as keys in self.executionGraph
