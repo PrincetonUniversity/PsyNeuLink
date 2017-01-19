@@ -124,7 +124,7 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
 
   Used to determine how the value of any projections to the `parameterState <ParameterState>` for the
   `matrix <MappingProjection.matrix>` influence it.  For example, this is used for a `LearningProjection` to apply
-  weight changes to the `matrix <MappingProjection.matrx>` during learning. The
+  weight changes to the `matrix <MappingProjection.matrix>` during learning. The
   :keyword:`param_modulation_operation` attribute must be assigned a value of `ModulationOperation` and the operation
   is always applied in an element-wise (Hadamard) manner. The default operation is :keyword:`ADD`.
 
@@ -139,7 +139,7 @@ parameter to transform the value of its `sender <MappingProjection.sender>`, and
 the its `matrix <MappingProjetion.matrix> parameter based on any projections it receives (e.g., a `LearningProjection`).
 This will bring into effect any changes that occurred during the previous execution (e.g., due to learning).
 Because of :ref:`Lazy Evaluation <LINK>`, those changes will only take effect after the current execution (as a
-consequene, inspecting `matrix <MappingProjection.matrix>` will not show the effects of projections to its
+consequence, inspecting `matrix <MappingProjection.matrix>` will not show the effects of projections to its
 parameterState until the MappingProjection has been executed).
 
 .. _Projection_Class_Reference:
@@ -216,34 +216,37 @@ class MappingProjection(Projection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        specifies the source of the projection's input.  If a mechanism is specified, its primary outputState will be
-        used. If it is not specified, it will be assigned in the context in which the projection is used.
+        specifies the source of the projection's input. If a mechanism is specified, its
+        `primary outputState <Mechanism_OutputStates>` will be used. If it is not specified, it will be assigned in
+        the context in which the projection is used.
 
     receiver: Optional[InputState or Mechanism]
-        specifies the destination of the projection's output.  If a mechanism is specified, its primary inputState
-        will be used. If it is not specified, it will be assigned in the context in which the projection is used.
+        specifies the destination of the projection's output.  If a mechanism is specified, its
+        `primary inputState <Mechanism_InputStates>` will be used. If it is not specified, it will be assigned in
+        the context in which the projection is used.
 
-    matrix : list, np.ndarray, np.matrix, function or keyword : default :keyword:`DEFAULT_MATRIX`
-        the matrix used by ``function`` (default: LinearCombination) to transform the value of the ``sender``.
+    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
+        the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
+        value of the `sender <MappingProjection.sender>`.
 
     param_modulation_operation : ModulationOperation : default ModulationOperation.ADD
         specifies the operation used to combine the value of any projections to the matrix's parameterState with the
-        :py:data:`matrix <MappingProjection.matrx>`.  Most commonly used with LearningProjections.
+        `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
-        By default, it contains an entry for the projection's default ``function`` assignment (LinearCombination);
+        a dictionary that can be used to specify the parameters for the projection, its function,
+        and/or a custom function and its parameters (see `Component` for specification of a parameter dictionary).
+        By default, it contains an entry for the projection's default assignment (`LinearCombination`).
 
     name : str : default MappingProjection-<index>
         a string used for the name of the MappingProjection.
-        If not is specified, a default is assigned by ProjectionRegistry
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+        If not is specified, a default is assigned by `ProjectionRegistry`
+        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the `PreferenceSet` for the MappingProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see `PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -258,13 +261,15 @@ class MappingProjection(Projection_Base):
 
     param_modulation_operation : ModulationOperation
         determines the operation used to combine the value of any projections to the matrix's parameterState with the
-        `matrix`.
+        `matrix <MappingProjection.matrix>` itself.
 
     monitoringMechanism : MonitoringMechanism
-        source of error signal for matrix weight changes when :doc:`learning <LearningProjection>` is used.
+        source of error signal for that determine changes to the `matrix <MappingProjection.matrix>` when
+        `learning <LearningProjection>` is used.
 
     matrix : 2d np.array
-        matrix used by ``function`` to transform input from ``sender`` and to ``value`` used by ``receiver``.
+        matrix used by `function <MappingProjection.function>` to transform input from the
+        `sender <MappingProjection.sender>` to the value proviced to the `receiver <MappingProjection.receiver>`.
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.

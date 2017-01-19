@@ -21,7 +21,7 @@
 # √ EVCMechanism
 #   ControlSignal
 #   Projection
-#   MappingProjection
+# √ MappingProjection
 #   ControlProjection
 #   LearningProjection
 #   State

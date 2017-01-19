@@ -234,22 +234,21 @@ the first can be any of the specifications described above;  the second must be 
 <li><p class="first"><a class="reference internal" href="#MappingProjection.MappingProjection.param_modulation_operation" title="MappingProjection.MappingProjection.param_modulation_operation"><code class="xref any py py-attr docutils literal"><span class="pre">param_modulation_operation</span></code></a></p>
 <p>Used to determine how the value of any projections to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for the
 <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> influence it.  For example, this is used for a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to apply
-weight changes to the <code class="xref any docutils literal"><span class="pre">matrix</span></code> during learning. The
-<a class="reference internal" href="#MappingProjection.MappingProjection.param_modulation_operation" title="MappingProjection.MappingProjection.param_modulation_operation"><code class="xref any py py-attr docutils literal"><span class="pre">param_modulation_operation</span></code></a> attribute must
-be assigned a value of <a class="reference internal" href="Utilities.html#Utilities.ModulationOperation" title="Utilities.ModulationOperation"><code class="xref any py py-class docutils literal"><span class="pre">ModulationOperation</span></code></a> and the operation is always applied in an element-wise (Hadamard)
-manner. The default operation is <code class="xref std std-keyword docutils literal"><span class="pre">ADD</span></code>.</p>
+weight changes to the <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> during learning. The
+<code class="xref std std-keyword docutils literal"><span class="pre">param_modulation_operation</span></code> attribute must be assigned a value of <a class="reference internal" href="Utilities.html#Utilities.ModulationOperation" title="Utilities.ModulationOperation"><code class="xref any py py-class docutils literal"><span class="pre">ModulationOperation</span></code></a> and the operation
+is always applied in an element-wise (Hadamard) manner. The default operation is <code class="xref std std-keyword docutils literal"><span class="pre">ADD</span></code>.</p>
 </li>
 </ul>
 </div>
 <div class="section" id="execution">
 <span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A MappingProjection uses its <code class="docutils literal"><span class="pre">function</span></code> and <code class="xref py py-data docutils literal"><span class="pre">matrix</span> <span class="pre">&lt;MappingProjection.matrx&gt;</span> <span class="pre">parameters</span> <span class="pre">to</span>
-<span class="pre">transform</span> <span class="pre">the</span> <span class="pre">value</span> <span class="pre">of</span> <span class="pre">its</span> <span class="pre">``sender`</span></code>, and assign this as the variable for its <code class="docutils literal"><span class="pre">receiver</span></code>.  When it is executed,
-updating the matrix parameterState will cause the value of any projections (e.g., a LearningProjection) it
-receives to be applied to the matrix. This will bring into effect any changes that occurred during the previous
-execution (e.g., due to learning).  Because of <span class="xref std std-ref">Lazy Evaluation</span>, those changes will only be effective
-after the current execution (in other words, inspecting <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref py py-data docutils literal"><span class="pre">matrix</span></code></a> will not show
-the effects of projections to its parameterState until the MappingProjection has been executed).</p>
+<p>A MappingProjection uses its <code class="xref any docutils literal"><span class="pre">function</span></code> and <code class="xref any docutils literal"><span class="pre">matrix</span></code>, and assign this as the variable for its
+<code class="xref any docutils literal"><span class="pre">receiver</span></code>.  When executed, updating its parameterStates will cause in turn update
+the its <code class="xref any docutils literal"><span class="pre">matrix</span> <span class="pre">&lt;MappingProjetion.matrix&gt;</span> <span class="pre">parameter</span> <span class="pre">based</span> <span class="pre">on</span> <span class="pre">any</span> <span class="pre">projections</span> <span class="pre">it</span> <span class="pre">receives</span> <span class="pre">(e.g.,</span> <span class="pre">a</span> <span class="pre">`LearningProjection</span></code>).
+This will bring into effect any changes that occurred during the previous execution (e.g., due to learning).
+Because of <span class="xref std std-ref">Lazy Evaluation</span>, those changes will only take effect after the current execution (as a
+consequence, inspecting <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> will not show the effects of projections to its
+parameterState until the MappingProjection has been executed).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="projection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -262,22 +261,25 @@ the effects of projections to its parameterState until the MappingProjection has
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; specifies the source of the projection&#8217;s input.  If a mechanism is specified, its primary outputState will be
-used. If it is not specified, it will be assigned in the context in which the projection is used.</li>
-<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; specifies the destination of the projection&#8217;s output.  If a mechanism is specified, its primary inputState
-will be used. If it is not specified, it will be assigned in the context in which the projection is used.</li>
-<li><strong>matrix</strong> (list, np.ndarray, np.matrix, function or keyword : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_MATRIX</span></code>) &#8211; the matrix used by <code class="docutils literal"><span class="pre">function</span></code> (default: LinearCombination) to transform the value of the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; specifies the source of the projection&#8217;s input. If a mechanism is specified, its
+<a class="reference internal" href="Mechanism.html#mechanism-outputstates"><span class="std std-ref">primary outputState</span></a> will be used. If it is not specified, it will be assigned in
+the context in which the projection is used.</li>
+<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; specifies the destination of the projection&#8217;s output.  If a mechanism is specified, its
+<a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a> will be used. If it is not specified, it will be assigned in
+the context in which the projection is used.</li>
+<li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX</em>) &#8211; the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
+value of the <a class="reference internal" href="#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
 <li><strong>param_modulation_operation</strong> (<em>ModulationOperation : default ModulationOperation.ADD</em>) &#8211; specifies the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the
-<code class="xref py py-data docutils literal"><span class="pre">matrix</span></code>.  Most commonly used with LearningProjections.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).
-By default, it contains an entry for the projection&#8217;s default <code class="docutils literal"><span class="pre">function</span></code> assignment (LinearCombination);</li>
+<a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> itself.  Most commonly used with <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>.</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the projection, its function,
+and/or a custom function and its parameters (see <code class="xref any docutils literal"><span class="pre">Component</span></code> for specification of a parameter dictionary).
+By default, it contains an entry for the projection&#8217;s default assignment (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).</li>
 <li><strong>name</strong> (<em>str : default MappingProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the MappingProjection.
-If not is specified, a default is assigned by ProjectionRegistry
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">ProjectionRegistry</span></code>
+(see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the MappingProjection.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
+(see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
 </tr>
@@ -305,19 +307,21 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="MappingProjection.MappingProjection.param_modulation_operation">
 <code class="descname">param_modulation_operation</code><a class="headerlink" href="#MappingProjection.MappingProjection.param_modulation_operation" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>ModulationOperation</em> &#8211; determines the operation used to combine the value of any projections to the matrix&#8217;s parameterState with the
-<a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</p>
+<a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> itself.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="MappingProjection.MappingProjection.monitoringMechanism">
 <code class="descname">monitoringMechanism</code><a class="headerlink" href="#MappingProjection.MappingProjection.monitoringMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for matrix weight changes when <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> is used.</p>
+<dd><p><em>MonitoringMechanism</em> &#8211; source of error signal for that determine changes to the <a class="reference internal" href="#MappingProjection.MappingProjection.matrix" title="MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> when
+<a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> is used.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="MappingProjection.MappingProjection.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#MappingProjection.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="docutils literal"><span class="pre">function</span></code> to transform input from <code class="docutils literal"><span class="pre">sender</span></code> and to <code class="docutils literal"><span class="pre">value</span></code> used by <code class="docutils literal"><span class="pre">receiver</span></code>.</p>
+<dd><p><em>2d np.array</em> &#8211; matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the
+<a class="reference internal" href="#MappingProjection.MappingProjection.sender" title="MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value proviced to the <a class="reference internal" href="#MappingProjection.MappingProjection.receiver" title="MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
