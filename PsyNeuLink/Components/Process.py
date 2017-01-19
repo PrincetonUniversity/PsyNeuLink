@@ -459,7 +459,7 @@ def process(process_spec=None,
         (see Registry module for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        the PreferenceSet for process (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the `PreferenceSet` for process (see ComponentPreferenceSet module for specification of PreferenceSet)
 
     COMMENT:
     context : str : default ''None''
@@ -768,13 +768,13 @@ class Process_Base(Process):
 
     name : str : default Process-<index>
         the name of the process.
-        Specified in the name argument of the call to create the process;
+        Specified in the `name` argument of the constructor for the process;
         if not is specified, a default is assigned by ProcessRegistry
         (see :ref:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Process.classPreferences
-        the PreferenceSet for the process.
-        Specified in the prefs argument of the call to create the process;  if it is not specified, a default is
+        the `PreferenceSet` for the process.
+        Specified in the `prefs` argument of the constructor for the process;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py (see :ref:`PreferenceSet <LINK>` for details).
 
 

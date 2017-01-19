@@ -179,7 +179,7 @@ ControlSignal for each parameter that it controls.  One `outputState <OutputStat
 each of its ControlSignals, and the value of that outputState is the ControlSignal's `intensity`.  When an EVCMechanism
 is :ref:`created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has been
 specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
-see `Mechanism_Specifying_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
+see `Mechanism_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `controlSignals`
 attribute. Each ControlSignal is associated with a `ControlProjection` that projects to the
 :doc:`parameterState <ParameterState>` for the parameter controlled by that ControlSignal. The EVCMechanism's
 :py:data:`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals. The
@@ -453,12 +453,12 @@ class EVCMechanism(ControlMechanism_Base):
 
     name : str : default EVCMechanism-<index>
         a string used for the name of the mechanism.
-        If not is specified, a default is assigned by MechanismRegistry
+        If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
-        the PreferenceSet for the mechanism.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
 
     Attributes

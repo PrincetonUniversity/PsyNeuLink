@@ -413,7 +413,7 @@ class DDM(ProcessingMechanism_Base):
         (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the PreferenceSet for the process.
+        the `PreferenceSet` for the process.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
 
@@ -475,13 +475,13 @@ class DDM(ProcessingMechanism_Base):
 
     name : str : default DDM-<index>
         the name of the mechanism.
-        Specified in the name argument of the call to create the projection;
-        if not is specified, a default is assigned by MechanismRegistry
+        Specified in the `name` argument of the constructor for the projection;
+        if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         a PreferenceSet for the mechanism.
-        Specified in the prefs argument of the call to create the mechanism;
+        Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 

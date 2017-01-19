@@ -383,7 +383,7 @@ def system(default_input_value=None,
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
+        the `PreferenceSet` for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -631,15 +631,15 @@ class System_Base(System):
 
     name : str : default System-<index>
         the name of the system;
-        Specified in the name argument of the call to create the system;
+        Specified in the `name` argument of the constructor for the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system.
-        Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for system.
+        Specified in the `prefs` argument of the constructor for the system;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
         (see :ref:`PreferenceSet <LINK>` for details).
 
     """

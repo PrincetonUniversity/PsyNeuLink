@@ -255,7 +255,7 @@ class State_Base(State):
 
     name : str : default <State subclass>-<index>
         the name of the state.
-        Specified in the name argument of the call to create the state;  if not is specified,
+        Specified in the `name` argument of the constructor for the state;  if not is specified,
         a default is assigned by StateRegistry based on the states's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -266,9 +266,9 @@ class State_Base(State):
             creation).
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the PreferenceSet for the state.
-        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the state.
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     """

@@ -18,7 +18,7 @@
         * :ref:`Mechanism_InputStates`
         * :ref:`Mechanism_ParameterStates`
         * :ref:`Mechanism_OutputStates`
-     * :ref:`Mechanism_Specifying_Parameters`
+     * :ref:`Mechanism_Parameters`
      * :ref:`Mechanism_Role_In_Processes_And_Systems`
     * :ref:`Mechanism_Execution`
      * :ref:`Mechanism_Runtime_Parameters`
@@ -73,7 +73,7 @@ above, or using one of the following:
       * <name of argument>:<value>
 
           this can contain any of the standard parameters for instantiating a mechanism
-          (see `Mechanism_Specifying_Parameters`) or ones specific to a particular type of mechanism
+          (see `Mechanism_Parameters`) or ones specific to a particular type of mechanism
           (see documentation for the subclass).  The key must be the name of the argument used to specify
           the parameter in the mechanism's constructor, and the value a legal value for that parameter.
           The parameter values specified will be used to instantiate the mechanism.  These can be overridden
@@ -128,7 +128,7 @@ so its constructor does not have a :keyword:`function` argument.  However, it do
 argument, that is used to set the LinearCombination function's `operation` parameter.
 
 For mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
-parameters can also be specified as entries in a :ref:`parameter dictionary <ParameterState_Specifying_Parameters>`
+parameters can also be specified as entries in a `parameter dictionary <ParameterState_Specifying_Parameters>`
 used for the `params` argument of the mechanism's constructor;  in such cases, values specified in the parameter
 dictionary will override any specified within the constructor for the function itself (see `DDM_Parameters` for an
 example). The parameters of a mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.function>`
@@ -258,14 +258,14 @@ same order in which they appear in mechanism's `outputStates <Mechanism_Base.out
 this is distinct from the mechanism's `value <Mechanism_Base.value>` attribute, which contains the full and unmodified
 results of its `function <Mechanism_Base.function`>.
 
-.. _Mechanism_Specifying_Parameters:
+.. _Mechanism_Parameters:
 
-Specifying Mechanism Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Mechanism Parameters
+~~~~~~~~~~~~~~~~~~~~
 
-Most mechanisms implement a standard set of parameters, that can be specified in a parameter dictionary assigned
-to `params` argument in the mechanism's constructor, or with the mechanism's `assign_params` method, using the following
-keywords:
+Most mechanisms implement a standard set of parameters, that can be specified in a
+`parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the mechanism's
+constructor, or with the mechanism's `assign_params` method, using the following keywords:
 
     * `INPUT_STATES` - specifies specialized inputStates required by a mechanism subclass
       (see :ref:`inputState specification <InputState_Creation>` for details of specification).
@@ -303,6 +303,11 @@ keywords:
     ..
     * `MONITOR_FOR_LEARNING` - specifies which of the mechanism's outputStates is used for learning
       (see :ref:`MonitoringMechanisms_Monitored_For_Learning` for details of specification).
+
+The parameters of a mechanism are listed in a dictionary in its `params <Mechanism_Base.params>
+attribute;  the key for each entry is the name of the parameter, and its value is the parameter's value.
+Each parameter is also an attribute of the mechanism (the name of which is the name of the parameter).
+The parameters of the mechanism's function are listed in the mechanism's `function_params` attribute.
 
 COMMENT:
     FOR DEVELOPERS:
@@ -367,14 +372,13 @@ Runtime Parameters
 ~~~~~~~~~~~~~~~~~~
 
 The parameters of a mechanism are usually specified when the mechanism is created.  However, these can be overridden
-when it executed.  This can be done by using the ``runtime_param`` argument of its
-:py:data:`execute <Mechanism_Base.execute>` method, or by specifying the runtime parameters in a tuple with the
-mechanism in the :py:data:`pathway <Process.Process_Base.pathway>` of a process (see Process
-:ref:`Process_Mechanisms`). In either case, runtime parameters  are specified using a dictionary that
-contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism's states
-(inputStates, parameterStates and/or outputStates) or its function; those dictionaries, in turn, contain
-entries for the values of the runtime parameters for a state, its function, or its projection(s) (see the
-``runtime_params`` argument of the :py:data:`execute <Mechanism_Base.execute>` method below for more details).
+when it executed.  This can be done by using the `runtime_param` argument of its `execute <Mechanism_Base.execute>`
+method, or by specifying the runtime parameters in a tuple with the mechanism in the `pathway` of a process (see
+Process :ref:`Process_Mechanisms`). In either case, runtime parameters are specified using a dictionary that
+contains one or more entries, each of which itself contains a dictionary corresponding to the mechanism's function or
+its states (inputStates, parameterStates and/or outputStates); those dictionaries, in turn, contain
+entries for the values of the runtime parameters for the function, a state, or its projection(s) (see the
+`runtime_params` argument of the `execute <Mechanism_Base.execute>` method below for more details).
 
 
 .. _Mechanism_Class_Reference:
@@ -409,28 +413,27 @@ class MechanismError(Exception):
 
 def mechanism(mech_spec=None, params=None, context=None):
     """Factory method for Mechanism; returns the type of mechanism specified or a default mechanism.
-
-    If called with no arguments, returns the default mechanism ([LINK for default]).
+    If called with no arguments, returns the `default mechanism <LINK>`.
 
     Arguments
     ---------
 
     mech_spec : Optional[Mechanism subclass, str, or dict]
         specification for the mechanism to create.
-        If it is `None`, returns the default mechanism ([LINK for default]);
-        if it is the name of a Mechanism subclass, a default instance of that subclass is returned;
-        if it is the name of a Mechanism subclass registered in the :py:class:`MechanismRegistry`
-        an instance of a default mechanism for that class is returned,
-        otherwise the string is used to name an instance of the default mechanism;
-        if it is a dict, it must be a mechanism specification dict (see :ref:`Mechanism_Creation`).
-        Note: if a name is not specified, the nth instance created will be named by using the mechanism's
-        ``componentType`` attribute as the base and adding an indexed suffix:  componentType-n.
+        If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
+        If it is string that is the name of a Mechanism subclass registered in the `MechanismRegistry`,
+        an instance of a `default mechanism <LINK>` for *that class* is returned;
+        otherwise, the string is used to name an instance of the `default mechanism <LINK>.
+        If it is a dict, it must be a `mechanism specification dictionary <`Mechanism_Creation>`.
+        If it is `None` or not specified, an instance of the `default mechanism <LINK>` is returned;
+        the nth instance created will be named by using the mechanism's :keyword:`componentType` attribute as the
+        base for the name and adding an indexed suffix:  componentType-n.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
-        It is passed to the relevant subclass to instantiate the mechanism. Entries can be any parameters described
-        in `Mechanism_Specifying_Parameters` that are relevant to the mechanism's subclass, and/or defined
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the mechanism and/or its function, and/or a custom function and its parameters.  It is passed to the relevant
+        subclass to instantiate the mechanism. Its entries can be used to specify any parameters described in
+        `Mechanism_Parameters` that are relevant to the mechanism's subclass, and/or defined
         specifically by that particular `Mechanism` subclass.
 
     COMMENT:
@@ -571,63 +574,76 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : 2d np.array : default ``variableInstanceDefault``
-        value used as input to the mechanism's ``function``.  When specified in the call to create an instance
-        (i.e., the mechanism's __init__ method), it is used as a template to define the format of the function's input
-        (length and type of elements), and the default value for the instance.
+    variable : 2d np.array : default variableInstanceDefault
+        value used as input to the mechanism's `function <Mechanism_Base.function>`.  When specified in a constructor
+        for the mechanism, it is used as a template to define the format (length and type of elements) and default
+        value of the function's input.
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input projection
 
     inputState : InputState : default default InputState
-        primary inputState for the mechanism;  same as first entry in ``inputStates`` attribute.
+        primary `inputState <Mechanism_InputStates>` for the mechanism;  same as first entry of its `inputStates
+        <Mechanism_Base.inputStates>` attribute.
 
     inputStates : OrderedDict[str, InputState]
-        a dictionary of the mechanism's inputStates.
-        The key of each entry is the name of the inputState, and its value is the inputState.
-        There is always at least one entry, which contains the primary inputState
-        (i.e., the one in the :py:data:`inputState <Mechanism_Base.inputState>` attribute).
+        a dictionary of the mechanism's `inputStates <Mechanism_InputStates>`.
+        The key of each entry is the name of an inputState, and its value is the inputState.
+        There is always at least one entry, which identifies the mechanism's primary inputState
+        (i.e., the one in the its `inputState <Mechanism_Base.inputState>` attribute).
 
-    inputValue : List[List or 1d np.array] : default ``variableInstanceDefault``
-        a list of values, one for the variable of each of the mechanism's inputStates.
-        The value of each item is equal to the value of the corresponding item in the mechanism's ``variable``
-        attribute (i.e., the item in the corresponding position of axis 0 of the ``variable`` 2d np.array).
-        The :py:data:`inputValue <Mechanism_Base.inputValue>` provides this information in a simpler list format.
+    inputValue : List[List or 1d np.array] : default variableInstanceDefault
+        a list of values, one for each `inputState <Mechanism_InputStates>` in the mechanism's
+        `inputStates <Mechanism_Base.inputStates>` attribute.  The value of each item is the same as the corresponding
+        item in the mechanism's `variable <Mechanism_Base.variable>` attribute.  The latter is a 2d np.array;
+        the :keyword:`inputValue attribute provides this information in a simpler list format.
 
     parameterStates : OrderedDict[str, ParameterState]
-        a dictionary of parameterStates, one for each parameter of the mechanism's function.
-        The key of each entry is the name of the parameterState, and its value is the parameterState.
-        Note: mechanism's function parameters are listed in the the
-        :py:data:`function_params <Mechanism_Base.function_params>` attribute).
+        a dictionary of parameterStates, one for each of the specifiable parameters of the mechanism and its function
+        (i.e., the ones for which there are arguments in their constructors).  The key of each entry in the
+        dictionary is the name of the parameterState, and its value is the parameterState itself.  The value of the
+        parameters of the mechanism are also accessible as attributes of the mechanism (using the name of the
+        parameter); the function parameters are listed in the mechanism's
+        `function_params <Mechanism_Base.function_params>` attribute.
+
+    function : Function, function or method
+        the primary function for the mechanism, called when it is executed.  It takes the mechanism's
+        `variable <Mechanism_Base.variable>` attribute as its input, and its result is assigned to the mechanism's
+        `value <Mechanism_Base.value` attribute.
 
     function_params : Dict[str, value]
-        has one entry for each parameter of the mechanism's function.
-        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
+        a dictionary of the parameters for the mechanism's primary function.  The key of each entry is the name of
+        a function parameter, and its value is the parameter's value.
 
     value : 2d np.array : default None
-        output of the mechanism's function;
-        Note: this is not necessarily equal to the :py:data:`outputValue <Mechanism_Base.outputValue>` attribute;
-        it is `None` until the mechanism has been executed at least once.
+        output of the mechanism's `function <Mechanism_Base.function>`.
+        Note: this is not necessarily the same as the mechanism's `outputValue <Mechanism_Base.outputValue>` attribute,
+        which lists the values of its `outputStates <Mechanism_Base.outputStates>`.
+        The keyword:`value` is `None` until the mechanism has been executed at least once.
 
         .. _value_template : 2d np.array : default None
                set equal to the value attribute when the mechanism is first initialized;
                maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
     outputState : OutputState : default default OutputState
-        primary outputState for the mechanism;  same as first entry in
-        :py:data:`outputStates <Mechanism_Base.outputStates>` attribute.
+        primary `outputState <Mechanism_OutputStates>` for the mechanism;  same as first entry of its
+        `outputStates <Mechanism_Base.outputStates>` attribute.
 
     outputStates : OrderedDict[str, InputState]
-        a dictionary of the mechanism's outputStates.
-        the key of each entry is the name of an outputState, and its value is the outputState.
-        There is always at least one entry, which contains the primary outputState
-        (i.e., the one in the :py:data:`outputState <Mechanism_Base.outputState>` attribute).
+        a dictionary of the mechanism's `outputStates <Mechanism_OutputStates>`.
+        The key of each entry is the name of an outputState, and its value is the outputState.
+        There is always at least one entry, which identifies the mechanism's primary outputState
+        (i.e., the one in its `outputState <Mechanism_Base.outputState>` attribute).
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
-        a list of values, one for the value of each of the mechanism's outputStates.
-        Note: this is not necessarily equal to the ``value`` attribute of the mechanism, since the outputState's
-        ``function`` and/or its :py:data:`calculate <Mechanism_Base.calculate>` attributes may calculate a new quantity
-        derived from an item of the mechanism's ``value``, and assign that to the outputState's ``value`` and the
-        corresponding item of the mechanism's :py:data:`outputValue <Mechanism_Base.outputValue>` attribute.
+        a list of values, one for each `outputState <Mechanism_OutputStates>` in the mechanism's
+        :keyword:`outputStates` attribute.
+
+        .. note:: The :keyword:`outputValue` of a mechanism is not necessarily the same as its
+                  `value <Mechanism_Base.value>` attribute, since the outputState's
+                  `function <OutputState.OutputState.function>` and/or its `calculate <Mechanism_Base.calculate>`
+                  attribute may use the mechanism's `value <Mechanism_Base.value>` to generate a derived quantity for
+                  the `value <OutputState.OutputState.value>` of the outputState and its corresponding item in the
+                  the mechanism's :keyword:`outputValue` attribute.
 
         COMMENT:
             EXAMPLE HERE
@@ -647,33 +663,35 @@ class Mechanism_Base(Mechanism):
                    it MUST also specify kwFunctionOutputStateValueMapping.
 
     phaseSpec : int or float :  default 0
-        Specifies the time_step(s) on which the mechanism is executed as part of a system
+        determines the time_step(s) at which the mechanism is executed as part of a system
         (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
         for how phases are used).
 
     processes : Dict[Process, str]:
-        Contains a dictionary of the processes to which the mechanism belongs, and its designation in each.
-        The key of each entry is a process to which the mechanism belongs, and its value the mechanism's designation
-        in that process (see Process :ref:`Process_Mechanisms` for designations and their meanings).
+        a dictionary of the processes to which the mechanism belongs, and a
+        `designation of its role <Mechanism_Role_In_Processes_And_Systems>` in each.  The key of each entry is a
+        process to which the mechanism belongs, and its value the mechanism's
+        `designation in that process <Process_Mechanisms>`.
 
     systems : Dict[System, str]:
-        Contains a dictionary of the systems to which the mechanism belongs, and its designation in each.
-        The key of each entry is a system to which the mechanism belongs, and its value the mechanism's designation
-        in that system (see System :ref:`System_Mechanisms` for designations and their meanings).
+        a dictionary of the systems to which the mechanism belongs, and a
+        `designation of its role <Mechanism_Role_In_Processes_And_Systems>` in each.
+        The key of each entry is a system to which the mechanism belongs, and its value the mechanism's
+        `designation in that system <System_Mechanisms>`.
 
-    timeScale : TimeScale : default TimeScale.TRIAL
-        Determines the default TimeScale value used by the mechanism when executed.
+    time_scale : TimeScale : default TimeScale.TRIAL
+        determines the default value of the `TimeScale` used by the mechanism when executed.
 
     name : str : default <Mechanism subclass>-<index>
         the name of the mechanism.
-        Specified in the name argument of the call to create the mechanism;  if not is specified,
-        a default is assigned by MechanismRegistry based on the mechanism's subclass
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+        Specified in the `name` argument of the constructor for the mechanism;  if not is specified,
+        a default is assigned by `MechanismRegistry` based on the mechanism's subclass
+        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the PreferenceSet for the mechanism.
-        Specified in the prefs argument of the call to create the mechanism;
-        if it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the mechanism.
+        Specified in the `prefs` argument of the constructor for the mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
         .. _stateRegistry : Registry
@@ -1239,9 +1257,10 @@ class Mechanism_Base(Mechanism):
     def execute(self, input=None, runtime_params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """Carry out a single execution of the mechanism.
 
-        Update inputState(s) and param(s), call subclass _execute, update outputState(s), and assign self.value
 
         COMMENT:
+            Update inputState(s) and parameter(s), call subclass _execute, update outputState(s), and assign self.value
+
             Execution sequence:
             - Call self.inputState.execute() for each entry in self.inputStates:
                 + execute every self.inputState.receivesFromProjections.[<Projection>.execute()...]
@@ -1268,32 +1287,32 @@ class Mechanism_Base(Mechanism):
 
         input : List[value] or ndarray : default variableInstanceDefault
             input to use for execution of the mechanism.
-            This must be consistent with the format mechanism's inputState(s):
-            the number of items in the outermost level of list,
-            or axis 0 of ndarray, must equal the number of inputStates (if there is more than one), and each
-            item must be compatible with the format (number and type of elements) of each inputState's variable
-            (see :ref:`Run_Inputs` for details of input specification formats).
+            This must be consistent with the format of the mechanism's inputState(s):
+            the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
+            of the mechanism's `inputStates  <Mechanism_Base.inputStates>`, and each item must be compatible with the
+            format (number and type of elements) of the corresponding inputState's
+            `variable <InputState.InputState.variable>` (see `Run Inputs <Run_Inputs>` for details of input
+            specification formats).
 
         COMMENT:
           MOVE THE BULK OF THIS TO THE DESCRIPTION OF RUNTIME PARAMS ABOVE, AND REFERENCE THAT.
         COMMENT
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
-            a dictionary that can include any of the parameters used as arguments to instantiate the object,
+            a dictionary that can include any of the parameters used as arguments to instantiate the mechanism,
             its function, or projection(s) to any of its states.  Any value assigned to a parameter will override
-            the current value of that parameter for this -- but only this execution of the mechanism; it will return
+            the current value of that parameter for this and only this execution of the mechanism; it will return
             to its previous value following execution.  Each entry is either the specification for one of the
-            mechanism's params (in which case the key is the name of the param, and its value the value to be
-            assigned to that param), or a dictionary for a specified type of state (in which case, the key is the
-            name of a specific state or a keyword indicating the type of state (:keyword:`INPUT_STATE_PARAMS`,
-            :keyword:`OUTPUT_STATE_PARAMS` or :keyword:`PARAMETER_STATE_PARAMS`), and the value is a dictionary
-            containing parameter dictionaries for that state or all states of the specified type).  The latter
-            (state dictionaries) contain entries that are themselves dictionaries containing parameters for the
-            state's function or its projections. The key for each entry is a keyword indicating whether it is for
-            the state's function (:keyword:`FUNCTON_PARAMS`), all of its projections (:keyword:`PROJECTION_PARAMS`),
-            a particular type of projection (:keyword:`MAPPING_PROJECTION_PARAMS` or
-            :keyword:`CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
+            mechanism's parameters (in which case the key is the name of the parameter, and its value the value to be
+            assigned to that parameter), or a dictionary for a specified type of state (in which case, the key is the
+            name of a specific state or a keyword for the type of state (`INPUT_STATE_PARAMS`, `OUTPUT_STATE_PARAMS`
+            or `PARAMETER_STATE_PARAMS`), and the value is a dictionary containing a parameter dictionary for that
+            state or all states of the specified type.  The latter (state dictionaries) contain entries that are
+            themselves dictionaries containing parameters for the state's function or its projections. The key for
+            each entry is a keyword indicating whether it is for the state's function (`FUNCTON_PARAMS`),
+            all of its projections (`PROJECTION_PARAMS`), a particular type of projection (`MAPPING_PROJECTION_PARAMS`
+            or `CONTROL_PROJECTION_PARAMS`), or to a specific projection (using its name), and the value of
             each entry is a dictionary containing the parameters for the function, projection, or set of projections
-            (keys of which are parameter names, and values the values to be assigned).
+            (the keys of which are parameter names, and the values of which are the parameter values to be assigned).
 
           COMMENT:
             ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
@@ -1328,14 +1347,14 @@ class Mechanism_Base(Mechanism):
           COMMENT
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether mechanisms are executed for a single time step or a trial.
+            specifies whether the mechanism is executed for a single time_step or a trial.
 
         Returns
         -------
 
-        output of mechanism : ndarray
-            outputState.value containing the output of each of the mechanism's outputStates[]
-            after either one time_step or the full trial
+        mechanism's outputValue : List[value]
+            list of the :keyword:`value` of each of the mechanism's `outputStates <Mechanism_OutputStates>` after
+            either one time_step or a trial.
 
         """
 
@@ -1497,32 +1516,34 @@ class Mechanism_Base(Mechanism):
             call_before_execution=None,
             call_after_execution=None,
             time_scale=None):
-        """Run a sequence of executions
+        """Run a sequence of executions.
 
-        Call execute method for each in a sequence of executions specified by the ``inputs`` argument
-        (see :ref:`Run_Inputs` in :doc:`Run` for additional details of formatting input specifications)
+        COMMENT:
+            Call execute method for each in a sequence of executions specified by the `inputs` argument.
+        COMMENT
 
         Arguments
         ---------
 
         inputs : List[input] or ndarray(input) : default default_input_value
-            the inputs used for each in a sequence of executions of the mechanism (see :ref:`Run_Inputs` in
-            :doc:`Run` for detailed description of formatting requirements and options).
+            the inputs used for each in a sequence of executions of the mechanism (see `Run_Inputs` for a detailed
+            description of formatting requirements and options).
 
-        call_before_execution : Function : default= `None`
+        call_before_execution : function : default None
             called before each execution of the mechanism.
 
-        call_after_execution : Function : default= `None`
+        call_after_execution : function : default None
             called after each execution of the mechanism.
 
-        time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether mechanisms are executed for a single time step or a trial.
+        time_scale : TimeScale : default TimeScale.TRIAL
+            specifies whether the mechanism is executed for a single time_step or a trial.
 
         Returns
         -------
 
-        <mechanism>.results : List[outputState.value]
-            list of the values of the outputStates for each execution of the mechanism
+        mechanism's outputValue : List[value]
+            list of the :keyword:`value` of each of the mechanism's `outputStates <Mechanism_OutputStates>` for
+            each execution of the mechanism.
 
         """
         from PsyNeuLink.Globals.Run import run
@@ -1618,13 +1639,18 @@ class Mechanism_Base(Mechanism):
 
 
     def initialize(self, value):
-        """Assign initial value to mechanism.value and update outputStates
+        """Assign an initial value to the mechanism's `value <Mechanism_Base.value>` attribute and update its
+        `outputStates <Mechanism_Base.outputStates>`.
 
-        Takes a number or 1d array and assigns it to the first item of the mechanism's ``value`` attribute
+        COMMENT:
+            Takes a number or 1d array and assigns it to the first item of the mechanism's
+            `value <Mechanism_Base.value>` attribute.
+        COMMENT
 
-        Parameters
+        Arguments
         ----------
         value : List[value] or 1d ndarray
+            value used to initialize the first item of the mechanism's `value <Mechanism_Base.value>` attribute.
 
         """
         if self.paramValidationPref:
