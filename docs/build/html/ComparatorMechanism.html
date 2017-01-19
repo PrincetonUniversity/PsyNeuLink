@@ -247,10 +247,10 @@ The following entries can be included:
 * <code class="xref std std-keyword docutils literal"><span class="pre">COMPARATOR_TARGET</span></code>:  Mechanism, InputState, or the name of or specification dictionary for one;
 * <a href="#id3"><span class="problematic" id="id4">:kewyord:`FUNCTION`</span></a>: Function or method;  default is <code class="xref py py-class docutils literal"><span class="pre">LinearCombination</span></code>.</li>
 <li><strong>name</strong> (<em>str : default ComparatorMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
-If not is specified, a default is assigned by MechanismRegistry
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for mechanism.
-If it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
 </ul>
 </td>
@@ -312,17 +312,17 @@ and is the second <code class="docutils literal"><span class="pre">value</span><
 <dt id="ComparatorMechanism.ComparatorMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#ComparatorMechanism.ComparatorMechanism.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default ComparatorMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the name argument of the call to create the mechanism;
-if not is specified, a default is assigned by MechanismRegistry
+Specified in the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.name" title="ComparatorMechanism.ComparatorMechanism.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the mechanism;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ComparatorMechanism.ComparatorMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ComparatorMechanism.ComparatorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the PreferenceSet for mechanism.
-Specified in the prefs argument of the call to create the mechanism;
-if it is not specified, a default is assigned using <code class="docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
+Specified in the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.prefs" title="ComparatorMechanism.ComparatorMechanism.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
 

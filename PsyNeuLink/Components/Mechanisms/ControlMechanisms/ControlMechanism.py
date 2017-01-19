@@ -40,7 +40,7 @@ Specifying control for a parameter
 
 ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be
 specified for control by assigning a `ControlProjection` as part of its value when creating the mechanism or function
-to which the parameter belongs (see `Mechanism_Specifying_Parameters`).
+to which the parameter belongs (see `Mechanism_Parameters`).
 
 .. _ControlMechanism_Monitored_OutputStates:
 
@@ -234,12 +234,12 @@ class ControlMechanism_Base(Mechanism_Base):
 
         name : str : default ControlMechanism-<index>
             a string used for the name of the mechanism.
-            If not is specified, a default is assigned by MechanismRegistry
+            If not is specified, a default is assigned by `MechanismRegistry`
             (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-            the PreferenceSet for the mechanism.
-            If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+            the `PreferenceSet` for the mechanism.
+            If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
             (see :py:class:`PreferenceSet <LINK>` for details).
     COMMENT
 

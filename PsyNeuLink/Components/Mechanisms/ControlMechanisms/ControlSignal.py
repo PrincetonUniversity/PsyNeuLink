@@ -263,8 +263,8 @@ class ControlSignal(OutputState):
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the PreferenceSet for the outputState.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the outputState.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
 
@@ -381,7 +381,7 @@ class ControlSignal(OutputState):
 
     name : str : default <State subclass>-<index>
         name of the outputState.
-        Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -392,9 +392,9 @@ class ControlSignal(OutputState):
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the PreferenceSet for the outputState.
-        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
+        the `PreferenceSet` for the outputState.
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
 
     """

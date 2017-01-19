@@ -6,7 +6,7 @@
 #   Function
 # √ System
 # √ Process
-#   Mechanism
+# √ Mechanism
 #   ProcessingMechanism
 #   DefaultProcessingMechanism
 # √ DDM
