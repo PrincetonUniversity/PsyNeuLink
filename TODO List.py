@@ -10,7 +10,7 @@
 #   ProcessingMechanism
 #   DefaultProcessingMechanism
 # √ DDM
-#   IntegratorMechanism
+# √ IntegratorMechanism
 #   TransferMechanism
 #   MonitoringMechanism
 #   DefaultMonitoringMechanism
