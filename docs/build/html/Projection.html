@@ -274,13 +274,14 @@ its constructor (the type of projection and its sender mechanism depend on the t
 <p>If the <code class="docutils literal"><span class="pre">sender</span></code> is not specified and it can&#8217;t be determined from the context (e.g., the preceding mechanism in the
 <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> of a process), or an outputState specification is not associated
 with a mechanism that can be determined from context, then a default mechanism of a type appropriate for the projection
-is used, and its primary outputState is assigned as the sender. The type of default mechanism type used by each type
-of projection is specified in its <code class="docutils literal"><span class="pre">paramClassDefaults[PROJECTION_SENDER]</span></code> class attribute, and is assigned as follows:</p>
+is used, and its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the sender. The type of default mechanism
+type used by each type of projection is specified in its <code class="docutils literal"><span class="pre">paramClassDefaults[PROJECTION_SENDER]</span></code> class attribute,
+and is assigned as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>: the
 <code class="xref py py-const docutils literal"><span class="pre">DefaultProcessingMechanism</span></code>
-is used, and its primary outputState is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+is used, and its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>: if the projection&#8217;s receiver belongs to a system, then the system&#8217;s
@@ -289,9 +290,10 @@ is used.  In either case, an outputState is added to the ControlMechanism and as
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>: if it is to a MappingProjection that projects to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
-mechanism of a process, then a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is created, and its primary outputState is assigned as
-the <code class="docutils literal"><span class="pre">sender</span></code>.  Otherwise, a <a class="reference internal" href="WeightedErrorMechanism.html"><span class="doc">WeightedErrorMechanism</span></a> is created and its primary outputState is assigned as
-the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+mechanism of a process, then a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is created, and its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.  Otherwise,
+a <a class="reference internal" href="WeightedErrorMechanism.html"><span class="doc">WeightedErrorMechanism</span></a> is created and its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the
+<code class="docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
 </div></blockquote>
 </div>

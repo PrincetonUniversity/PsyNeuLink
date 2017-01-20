@@ -138,12 +138,13 @@ This must be an :class:`OutputState`.  The projection is assigned to the sender'
 If the ``sender`` is not specified and it can't be determined from the context (e.g., the preceding mechanism in the
 :py:data:`pathway <Process.Process_Base.pathway>` of a process), or an outputState specification is not associated
 with a mechanism that can be determined from context, then a default mechanism of a type appropriate for the projection
-is used, and its primary outputState is assigned as the sender. The type of default mechanism type used by each type
-of projection is specified in its ``paramClassDefaults[PROJECTION_SENDER]`` class attribute, and is assigned as follows:
+is used, and its `primary outputState <OutputState_Primary>` is assigned as the sender. The type of default mechanism
+type used by each type of projection is specified in its ``paramClassDefaults[PROJECTION_SENDER]`` class attribute,
+and is assigned as follows:
 
   * :doc:`MappingProjection`: the
     :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
-    is used, and its primary outputState is assigned as the ``sender``.
+    is used, and its `primary outputState <OutputState_Primary>` is assigned as the ``sender``.
   ..
   COMMENT:
      CONFIRM THIS IS TRUE
@@ -153,9 +154,10 @@ of projection is specified in its ``paramClassDefaults[PROJECTION_SENDER]`` clas
     is used.  In either case, an outputState is added to the ControlMechanism and assigned as the ``sender``.
   ..
   * :doc:`LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL`
-    mechanism of a process, then a :doc:`ComparatorMechanism` is created, and its primary outputState is assigned as
-    the ``sender``.  Otherwise, a :doc:`WeightedErrorMechanism` is created and its primary outputState is assigned as
-    the ``sender``.
+    mechanism of a process, then a :doc:`ComparatorMechanism` is created, and its
+    `primary outputState <OutputState_Primary>` is assigned as the ``sender``.  Otherwise,
+    a `WeightedErrorMechanism` is created and its `primary outputState <OutputState_Primary>` is assigned as the
+    ``sender``.
 
 .. _Projection_Receiver:
 
