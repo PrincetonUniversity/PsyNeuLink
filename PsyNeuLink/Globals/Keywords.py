@@ -39,15 +39,15 @@ class Keywords:
 
     CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` mechanism, and receives a projection
-        that closes a recurrent loop in a process and/or system.  If it is an `ORIGIN` mechanism, then it is designated
-        as an `INITIALIZE_CYCLE` mechanism.
+        that closes a recurrent loop in a process and/or system.  If it is an `ORIGIN` mechanism, then it is simply
+        designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
-        projection that closes a loop in a process or system, and that is not an `ORIGIN` mechanism.  An
-        `initial value  <Run_InitialValues>` can be assigned to such mechanisms, that will be used to initialize
-        the process or system when it is first run.  For additional information, see `Run <Run_Initial_Values>`,
-        `System Mechanisms <System_Mechanisms>` and
+        projection that closes a loop in a process or system, and that is not an `ORIGIN` mechanism (since in that
+        case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
+        mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+        information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     TERMINAL
