@@ -346,7 +346,7 @@ class Projection_Base(Projection):
         the `PreferenceSet` for the projection.
         Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 

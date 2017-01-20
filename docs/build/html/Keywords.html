@@ -164,18 +164,18 @@ and for systems see <a class="reference internal" href="System.html#system-mecha
 <dt id="Keywords.Keywords.CYCLE">
 <code class="descname">CYCLE</code><a class="headerlink" href="#Keywords.Keywords.CYCLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is <em>not</em> an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and receives a projection
-that closes a recurrent loop in a process and/or system.  If it is an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, then it is designated
-as an <a class="reference internal" href="#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> mechanism.</p>
+that closes a recurrent loop in a process and/or system.  If it is an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, then it is simply
+designated as such (since it will be assigned input and therefore be initialized in any event).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.Keywords.INITIALIZE_CYCLE">
 <code class="descname">INITIALIZE_CYCLE</code><a class="headerlink" href="#Keywords.Keywords.INITIALIZE_CYCLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the <code class="xref any docutils literal"><span class="pre">sender</span></code> of a
-projection that closes a loop in a process or system, and that is not an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism.  An
-<code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such mechanisms, that will be used to initialize
-the process or system when it is first run.  For additional information, see <a class="reference internal" href="Run.html#run-initial-values"><span class="std std-ref">Run</span></a>,
-<a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
+projection that closes a loop in a process or system, and that is not an <a class="reference internal" href="#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism (since in that
+case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such
+mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+information, see <a class="reference internal" href="Run.html#run-initial-values"><span class="std std-ref">Run</span></a>, <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
 <a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
 </dd></dl>
 

@@ -24,9 +24,9 @@ Creating an IntegratorMechanism
 -------------------------------
 
 An IntegratorMechanism can be created directly, by calling its constructor, or using the
-:py:func:`mechanism` function and specifying :keyword:`IntegratorMechanism` as its `mech_spec` argument.  Its
-function is specified in the :keyword:`function` argument, which can be parameterized by calling its constructor with
-parameter values::
+:py:func:`mechanism <Mechanism.mechanism>` function and specifying :keyword:`IntegratorMechanism` as its `mech_spec`
+argument.  Its function is specified in the :keyword:`function` argument, which can be parameterized by calling its
+constructor with parameter values::
 
     my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(weighting=ADAPTIVE, rate=0.5))
 
@@ -38,12 +38,12 @@ Structure
 An IntegratorMechanism has a single `inputState <InputState>`, the `value <InputState.InputState.value>` of which is
 used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.   The
 :keyword:`default_input_value` argument specifies the format of its input (i.e., whether it is a single scalar or an
-array), as well as the value to use if none is provided when mechanism is executed.  The default
-`function <IntegratorMechanism.function>` is `Integrator`, with :keyword:`weighting` = :keyword:`ADAPTIVE`  and
-:keyword:`rate` = 0.5. However, a custom function can also be specified,  so long as it takes a numeric value, or
-a list or np.ndarray of numeric values, as its input, and returns a value of the same type and format.  The
-mechanism has a single `outputState <OutputState>, the `value <OutputState.OutputState.value>` of which is assigned the
-result of  the call to the mechanism's `function <IntegratorMechanism.function>`.
+array), as well as the value to use if none is provided when mechanism is executed.  The default for
+`function <IntegratorMechanism.function>` is `Integrator(weighting=ADAPTIVE, rate=0.5)`. However, a custom function can
+also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric values as its input,
+and returns a value of the same type and format.  The mechanism has a single `outputState <OutputState>, the `value
+<OutputState.OutputState.value>` of which is assigned the result of  the call to the mechanism's
+`function  <IntegratorMechanism.function>`.
 
 .. _IntegratorMechanism_Execution
 
@@ -134,8 +134,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         This must be set to `TimeScale.TIME_STEP` for the :keyword:`rate` parameter to have an effect.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see `Mechanism` for specification of a params dict).
+        a dictionary that can be used to specify the parameters for the mechanism, parameters for its
+        `function <IntegratorMechanism.function>, and/or a custom function and its parameters
+        (see `parameter dictionary <ParameterState_Specifying_Parameters>` for details).
 
     name : str : default IntegratorMechanism-<index>
         a string used for the name of the mechanism.
@@ -157,7 +158,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     name : str : default IntegratorMechanism-<index>
         the name of the mechanism.
-        Specified in the `name` argument of the constructor for the mechanism;
+        Specified in the :keyword:`name` argument of the constructor for the mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -165,7 +166,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         the `PreferenceSet` for mechanism.
         Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 

@@ -11,7 +11,7 @@
 #   DefaultProcessingMechanism
 # √ DDM
 # √ IntegratorMechanism
-#   TransferMechanism
+# √ TransferMechanism
 #   MonitoringMechanism
 #   DefaultMonitoringMechanism
 #   ComparatorMechanism
@@ -22,7 +22,7 @@
 #   ControlSignal
 #   Projection
 # √ MappingProjection
-#   ControlProjection
+# √ ControlProjection
 #   LearningProjection
 #   State
 #   InputState

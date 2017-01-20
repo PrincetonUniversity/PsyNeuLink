@@ -14,32 +14,37 @@
 Overview
 --------
 
-A LearningProjection takes a value (an *error signal*) from a :doc:`MonitoringMechanism` (its ``sender``),
-and uses this to compute a :py:data:`weightChangeMatrix <LearningProjection.weightChangeMatrix>` that is assigned as
-its value.  This is used to modify the :ref:`matrix <Mapping_Matrix>` parameter of a :doc:`MappingProjection`.  A
-LearningProjection can be assigned different :ref:`functions <LearningProjection_Function> to implement different
-learning algorithms, which are associated with corresponding types of :doc:`MonitoringMechanisms <MonitoringMechanism>`.
+A LearningProjection takes as its input the output of its `sender <LearningProjection.sender>` --
+a `MonitoringMechanism <MonitoringMechanism>`.  It uses this as an `errorSignal` to compute a `weightChangeMatrix`
+that is assigned as the `value <LearningProjection.value>` of the LearningProjection.  This is used, in turn,
+by the LearningProjection's `receiver <LearningProjection.receiver>` -- a `parameterState <ParameterState>` for
+a `MappingProjection` to modify its  `matrix <MappingProjection.matrix>` parameter.  A LearningProjection can
+be assigned different `functions <LearningProjection_Function>` to implement different learning algorithms,
+which are associated with corresponding types of `MonitoringMechanisms <MonitoringMechanism>`.
 
 .. _LearningProjection_Creation:
 
 Creating a LearningProjection
 ------------------------------------
 
-A LearningProjection can be created in any of the ways that can be used to
-:ref:`create a projection <Projection_Creation>`, or by including it in the specification of a
-:ref:`system <System>`, :ref:`process <Process>`, or projection in the :ref:`pathway <_Process_Projections>`
-of a process.  Its ``sender`` (the source of its error signal) must be a MonitoringMechanism, and its ``receiver``
-must be the parameterState of a MappingProjection.  When a LearningProjection is created, its full initialization is
-:ref:`deferred <Component_Deferred_Init>` until its ``sender`` and ``receiver`` have been fully specified.  This means
-that it is possible to create a LearningProjection using its constructor without specifying either its ``sender`` or
-its ``receiver``.
+A LearningProjection can be created in any of the ways that can be used to `create a projection <Projection_Creation>`,
+or by including it in the specification of a `system <System>`, `process <Process>`, or projection in the `pathway`
+of a process.  Its `sender <LearningProjection.sender>` (the source of its `errorSignal`) must be a
+`MonitoringMechanism`, and its `receiver <LearningProjection.receiver>` must be the `parameterState <ParameterState>`
+of a `MappingProjection`.  When a LearningProjection is created, its full initialization is
+:ref:`deferred <Component_Deferred_Init>` until its `sender <LearningProjection.sender>` and
+`receiver <LearningProjection.receiver>` have been fully specified.  This allows a LearningProjection to be created
+before its `sender` and/or `receiver` have been created (e.g., before them in a script), by calling its constructor
+without specifying its :keyword:`sender` or :keyword:`receiver` arguments.
 
-It is not necessary to assign a ``sender``;  if none is specified when it is initialized, a MonitoringMechanism of
-the appropriate type will be created (see :ref:`Structure <LearningProjection_Structure>` below).  However,
-a LearningProjection's ``receiver`` must be specified.  Once that is done, for the LearningProjection to be operational,
-initializaton must be completed by calling its ``deferred_init`` method.  This is not necessary if the
-LearningProjection is specified as part of a system, process, or a projection in the pathway of a process --
-in those cases, deferred initialization is completed automatically.
+It is also possible to create a LearningProjection without ever specifying its :keyword:`sender`.  In this case,
+when it is initialized, the type of `MonitoringMechanism <MonitoringMechanism>` it requires will be inferred from
+context, and created when it is initialized (see `Structure <LearningProjection_Structure>` below).  In contrast, a
+LearningProjection's :keyword:`receiver` must be explicitly specified at some point.  Once that is done,
+for the LearningProjection to be operational, initializaton must be completed by calling its `deferred_init`
+method.  This is not necessary if learning has been specified for a `system <System_Execution_Learning>`,
+`process <Process_Learning>`, or as the `projection <MappingProjection_Tuple_Specification>` in the `pathway` of a
+process -- in those cases, deferred initialization is completed automatically.
 
 COMMENT:
    REPLACE WITH THIS ONCE FUNCTIONALITY IS IMPLEMENTED
@@ -55,8 +60,8 @@ COMMENT
 Automatic creation
 ~~~~~~~~~~~~~~~~~~
 
-When learning is :ref:`specified for a process <Process_Learning>`, or in a
-:ref:`tuple that specifies a projection <MappingProjection_Tuple_Specification>`, PsyNeuLink automatically generates a
+When learning is specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`, or in a
+`tuple that specifies a LearningProjection <MappingProjection_Tuple_Specification>`, PsyNeuLink automatically generates a
 LearningProjection and the associated components required for learning to occur (shown in the
 :ref:`figure <LearningProjection_Simple_Learning_Figure>` and described under
 :ref:`Structure <LearningProjection_Structure>` below).  These are generated for each MappingProjection that will
@@ -343,7 +348,7 @@ class LearningProjection(Projection_Base):
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the `PreferenceSet` for the LearningProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
 
     Attributes
@@ -393,7 +398,7 @@ class LearningProjection(Projection_Base):
         the `PreferenceSet` for projection.
         Specified in the `prefs` argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
 
     """
