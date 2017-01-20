@@ -45,7 +45,7 @@ A WeightedErrorMechanism has a single inputState, a :keyword:`NEXT_LEVEL_PROJECT
 (:keyword:`WEIGHTED_ERROR`) outputState.  The **inputState** receives a MappingProjection from its
 :py:data:`errorSource <WeightedErrorMechanism.errorSource>` -- the Processing mechanism for which it computes the
 error.  :keyword:`NEXT_LEVEL_PROJECTION` is assigned to the MappingProjection projection from the
-:ref:`primary outputState <OutputState_Primary>` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
+`primary outputState <OutputState_Primary>` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
 to the next mechanism in the process.  Each row of it's :py:data:`matrix <MappingProjection.MappingProjection.matrix>`
 parameter corresponds to an element of the ``value`` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
 each column corresponds to an element of the ``value`` of the mechanism to which it projects, and each element of the

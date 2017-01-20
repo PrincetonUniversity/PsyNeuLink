@@ -76,12 +76,12 @@ been specified to be evaluated. OutputStates are specified to be evaluated. The 
 The contribution of each outputState to the overall evaluation can be specified by an exponent and/or a weight
 (see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and `below
 <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL` parameter is
-`MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the :ref:`primary outputState
-<OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an exponent and weight
-of 1.  When an EVCMechanism is :ref:`created automatically <EVCMechanism_Creation>`, an inputState is created for
-each outputState specified in its `MONITOR_FOR_CONTROL` parameter, and a `MappingProjection` is created that
-projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored by
-an EVCMechanism are listed in its `monitoredOutputStates` attribute.
+`MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
+`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an
+exponent and weight of 1.  When an EVCMechanism is :ref:`created automatically <EVCMechanism_Creation>`,
+an inputState is created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,
+and a `MappingProjection` is created that projects to that inputState from the outputState to be monitored.  The
+outputStates of a system being monitored by an EVCMechanism are listed in its `monitoredOutputStates` attribute.
 
 .. _EVC_Function
 
@@ -273,11 +273,12 @@ The following example implements a system with an EVCMechanism (and two processe
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
 It uses the system's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
-references the Reward mechanism (not shown);  its primary outputState will be used by default.  The second and third
-use keywords that are the names of outputStates of a  `DDM` mechanism (also not shown). The last one (RESPONSE_TIME)
-is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC computation will multiply
-the value of the primary outputState of the Reward mechanism by the value of the DDM_DECISION_VARIABLE outputState
-of the DDM mechanism, and then divide that by the value of the RESPONSE_TIME outputState of the DDM mechanism.
+references the Reward mechanism (not shown);  its `primary outputState <OutputState_Primary>` will be used by default.
+The second and third use keywords that are the names of outputStates of a  `DDM` mechanism (also not shown).
+The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
+computation will multiply the value of the primary outputState of the Reward mechanism by the value of the
+DDM_DECISION_VARIABLE outputState of the DDM mechanism, and then divide that by the value of the RESPONSE_TIME
+outputState of the DDM mechanism.
 
 COMMENT:
 ADD: This example specifies the EVCMechanism on its own, and then uses it for a system.
@@ -735,7 +736,8 @@ class EVCMechanism(ControlMechanism_Base):
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
             - it specifies options for assigning outputStates of terminal Mechanisms in the System
                 to self.monitoredOutputStates;  the options are:
-                + PRIMARY_OUTPUT_STATES: assign only the primary outputState for each terminal Mechanism
+                + PRIMARY_OUTPUT_STATES: assign only the `primary outputState <OutputState_Primary>` for each
+                  TERMINAL Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
             - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
         * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection

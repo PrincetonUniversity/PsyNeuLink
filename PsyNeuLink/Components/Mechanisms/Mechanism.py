@@ -248,15 +248,16 @@ itself.  Every mechanism has at least one ("primary") outputState, the :keyword:
 first item of the mechanism's `value <Mechanism_Base.value>` attribute (usually the direct output of the mechanism's
 `function <Mechanism_Base.function>`).  Other outputStates may be used for other purposes.  For example,
 some `ProcessingMechanisms <ProcessingMechanism>` (such as `TransferMechanism`) use outputStates to represent
-values derived from the value of their primary outputState (e.g., the mean and variance).  `ControlMechanisms
-<ControlMechanism>` assign one outputState for each of their `ControlProjections  <ControlProjection>`.  An outputState
-can be assigned to a particular item of the mechanism's `value <Mechanism_Base>value` attribute using the outputState's
-`index` parameter, and its `calculate` parameter can be used to modify that item before assigning it as the
-outputState's :keyword:`value` (see `OutputStates_Creation`). The :keyword:`value` attributes of all of a mechanism's
-outputStates  are assigned to the mechanism's `outputValue <Mechanism_Base.outputValue>` attribute (a list), in the
-same order in which they appear in mechanism's `outputStates <Mechanism_Base.outputStates>`  attribute.  Note that
-this is distinct from the mechanism's `value <Mechanism_Base.value>` attribute, which contains the full and unmodified
-results of its `function <Mechanism_Base.function`>.
+values derived from the value of their `primary outputState <OutputState_Primary>` (e.g., the mean and variance).
+`ControlMechanisms <ControlMechanism>` assign one outputState for each of their `ControlProjections
+<ControlProjection>`.  An outputState can be assigned to a particular item of the mechanism's `value
+<Mechanism_Base>value` attribute using the outputState's `index` parameter, and its `calculate` parameter can be used
+to modify that item before assigning it as the outputState's :keyword:`value` (see `OutputStates_Creation`). The
+:keyword:`value` attributes of all of a mechanism's outputStates  are assigned to the mechanism's `outputValue
+<Mechanism_Base.outputValue>` attribute (a list), in the same order in which they appear in mechanism's
+`outputStates <Mechanism_Base.outputStates>`  attribute.  Note that this is distinct from the mechanism's `value
+<Mechanism_Base.value>` attribute, which contains the full and unmodified results of its
+`function <Mechanism_Base.function>`.
 
 .. _Mechanism_Parameters:
 
@@ -630,9 +631,8 @@ class Mechanism_Base(Mechanism):
 
     outputStates : OrderedDict[str, InputState]
         a dictionary of the mechanism's `outputStates <Mechanism_OutputStates>`.
-        The key of each entry is the name of an outputState, and its value is the outputState.
-        There is always at least one entry, which identifies the mechanism's primary outputState
-        (i.e., the one in its `outputState <Mechanism_Base.outputState>` attribute).
+        The key of each entry is the name of an outputState, and its value is the outputState.  There is always
+        at least one entry, which identifies the mechanism's `primary outputState <OutputState_Primary>`.
 
     outputValue : List[value] : default mechanism.function(variableInstanceDefault)
         a list of values, one for each `outputState <Mechanism_OutputStates>` in the mechanism's

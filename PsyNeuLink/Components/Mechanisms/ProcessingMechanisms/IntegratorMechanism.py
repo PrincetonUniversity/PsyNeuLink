@@ -122,7 +122,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <IntegratorMechanism.variable>` for
-        `function <IntegratorMechanism.function>`, and the `primary outputState <Mechanism_OutputStates>` of the
+        `function <IntegratorMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
         mechanism.
 
     function : IntegratorFunction : default Integrator

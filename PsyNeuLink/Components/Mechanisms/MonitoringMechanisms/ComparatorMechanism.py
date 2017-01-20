@@ -39,9 +39,9 @@ Structure
 ---------
 
 A ComparatorMechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a MappingProjection from
-the primary outputState of a `TERMINAL` mechanism in a process;  the :keyword:`COMPARATOR_TARGET` inputState
-is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or system.
-It has five outputStates, described under Execution below.
+the `primary outputState <OutputState_Primary>` of a `TERMINAL` mechanism in a process;  the `COMPARATOR_TARGET`
+inputState is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or
+system.  It has five outputStates, described under Execution below.
 
 
 .. _Comparator_Execution
@@ -49,7 +49,8 @@ It has five outputStates, described under Execution below.
 Execution
 ---------
 
-A ComparatorMechanism always executes after the mechanism it is monitoring.  The ``value`` of the primary outputState of
+A ComparatorMechanism always executes after the mechanism it is monitoring.  The ``value`` of the
+`primary outputState <OutputState_Primary>` of
 the mechanism being monitored is assigned as the value of the ComparatorMechanism's :keyword:`COMPARATOR_SAMPLE`
 inputState;  the value of the :keyword:`COMPARATOR_TARGET` inputState is received from the process (or system to
 which it belongs) when it is run. When the ComparatorMechanism is executed, if ``comparison_operation`` is

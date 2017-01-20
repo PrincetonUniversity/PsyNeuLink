@@ -39,7 +39,7 @@ COMMENT:
     ??LEGACY:
     - as part of the instantiation of a mechanism:
         the mechanism outputState will automatically be used as the receiver:
-            if the mechanism is being instantiated on its own, the sender must be explicity specified
+            if the mechanism is being instantiated on its own, the sender must be explicitly specified
 COMMENT
 
 A MappingProjection can be created in any of the ways that can be used to create a `projection <Projection_Creation>`)
@@ -50,13 +50,13 @@ circumstances, using a `matrix <Mapping_Matrix>` appropriate to the circumstance
   between them; `AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
   context;
 ..
-* by a `ControlMechanism`, from outputStates listed in its
+* by a `ControlMechanism <ControlMechanism>`, from outputStates listed in its
   `monitoredOutputStates <ControlMechanism.ControlMechanism_Base.monitoredOutputStates>` attribute to assigned
-  inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` will be used;
-
-* by a `LearningProjection`, from a mechanism that is the source of an error signal, to a `MonitoringMechanism`
+  inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` is used for each;
+..
+* by a `LearningProjection`, from a mechanism that is the source of an error signal to a `MonitoringMechanism`
   that is used to evaluate that error and generate a learning signal from it
-  (see :ref:`LearningProjection_Automatic_Creation); the matrix used depends on the
+  (see `LearningProjection<LearningProjection_Automatic_Creation>`); the matrix used depends on the
   `function <LearningProjection.LearningProjection.function>` parameter of the LearningProjection.
 
 When a MappingProjection is created, its `matrix <MappingProjection.matrix>` and
@@ -99,6 +99,7 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
         given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>`.
       |
       .. _Matrix_Keywords:
+
       * **Matrix keyword**.  This is used to specify a type of matrix without having to specify its individual values.
         Any of the `matrix keywords <Keywords.MatrixKeywords>` can be used.
       |
@@ -108,6 +109,7 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
         specified offset.
       |
       .. _MappingProjection_Tuple_Specification:
+
       * **Tuple**.  This is used to specify a projection to the `parameterState <ParameterState>` for the matrix
         along with the `matrix <MappingProjection.matrix>`  itself. The tuple must have two items:
         the first can be any of the specifications described above;  the second must be a
@@ -217,7 +219,7 @@ class MappingProjection(Projection_Base):
 
     sender : Optional[OutputState or Mechanism]
         specifies the source of the projection's input. If a mechanism is specified, its
-        `primary outputState <Mechanism_OutputStates>` will be used. If it is not specified, it will be assigned in
+        `primary outputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the projection is used.
 
     receiver: Optional[InputState or Mechanism]

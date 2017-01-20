@@ -180,7 +180,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
-        `function <TransferMechanism.function>`, and the `primary outputState <Mechanism_OutputStates>`
+        `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
         of the mechanism.
 
     function : TransferFunction : default Linear
