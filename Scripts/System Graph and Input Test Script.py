@@ -245,3 +245,30 @@ print ('F: ',f.systems[s])
 #     for sender in senders:
 #         print('\t', sender[0].name, ":")
 #
+
+
+
+# # H) CYCLIC WITH MECHANISM THAT IS BOTH INTIALIZE AND TERMINAL ------------------------------------
+#
+# a = TransferMechanism(name='a',default_input_value=[0,0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+# e = TransferMechanism(name='e',default_input_value=[0])
+#
+# p1 = process(pathway=[a, b, c, b], name='p1')
+# p2 = process(pathway=[d, c], name='p2')
+#
+# s = system(processes=[p1, p2],
+#            name='Cyclic System with Terminal = Initialize Mechanism',
+#            initial_values={a:[1,1]})
+#
+# s.show()
+#
+# inputs={a:[2,2], d:[0]}
+# s.run(inputs=inputs)
+#
+# print ('A: ',a.systems[s])
+# print ('B: ',b.systems[s])
+# print ('C: ',c.systems[s])
+# print ('D: ',d.systems[s])

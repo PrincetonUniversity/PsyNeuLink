@@ -269,7 +269,7 @@ class MappingProjection(Projection_Base):
 
     matrix : 2d np.array
         matrix used by `function <MappingProjection.function>` to transform input from the
-        `sender <MappingProjection.sender>` to the value proviced to the `receiver <MappingProjection.receiver>`.
+        `sender <MappingProjection.sender>` to the value provided to the `receiver <MappingProjection.receiver>`.
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
