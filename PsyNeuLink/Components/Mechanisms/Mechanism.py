@@ -692,7 +692,7 @@ class Mechanism_Base(Mechanism):
         the `PreferenceSet` for the mechanism.
         Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
         .. _stateRegistry : Registry
                registry containing dicts for each state type (InputState, OutputState and ParameterState) with instance
