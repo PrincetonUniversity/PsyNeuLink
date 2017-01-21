@@ -3,4 +3,4 @@ WeightedErrorMechanism
 
 .. automodule:: WeightedErrorMechanism
    :members:
-   :exclude-members: random
+   :exclude-members: random, WeightedErrorOutput

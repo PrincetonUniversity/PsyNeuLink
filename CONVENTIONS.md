@@ -95,11 +95,17 @@
     - _instantiate_attributes_after_function
 - Functions
 
-### rST / SPHNINX:
-- PsyNeuLink terms should generally be "formatted" (i.e., by enclosing in back-ticks (`term`);
-    a reference should be a link at least the first it is used in any paragarph;
-    the term should still be formated as a reference, but generally the link should be suppressed  
-    in subsequent appearances in the same paragraph (by using the keyword role:  :keyword:`term`).
+### rST / SPHINX:
+Terminology used here:
+    - reference:  a formatted string (but not necessarily with a link); the two main forms are:
+        - `keyword` (shows up inside a small box)
+        - `text <referenced_location>`
+    - link: a "live" reference (i.e., when clicked, navigates somewhere); 
+            can be either a keyword or a text reference 
+- PsyNeuLink terms should generally be references (i.e., by enclosing in back-ticks (`term`);
+    - a reference should be a *link* at least the first it is used in any paragraph;
+    - in subsequent appearance in the same paragraph, the term should still be formated as a reference, 
+       but generally the link should be suppressed (by using the keyword role:  :keyword:`term`).
 - The format for terms should be kept as simple as possible while remaining unambiguous:
     - wheverever possible, use simple backticks (e.g., `term`);
     - if the term is ambiguous (i.e., it is used by more than one module, 

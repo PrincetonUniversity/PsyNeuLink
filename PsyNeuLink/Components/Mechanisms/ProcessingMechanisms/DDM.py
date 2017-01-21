@@ -30,7 +30,7 @@ mode), or integrated numerically (in `TIME_STEP` mode).
 .. _DDM_Creation:
 
 Creating a DDM Mechanism
------------------------------
+------------------------
 
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
 and specifying DDM as its `mech_spec` argument.  The analytic solution used in `TRIAL` mode is selected
@@ -388,8 +388,8 @@ class DDM(ProcessingMechanism_Base):
         the input to the mechanism to use if none is provided in a call to its
         :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
-        and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
-        of greater than 1 is handled).
+        and the `primary outputState <OutputState_Primary>` of the mechanism (see :ref:`Input` <DDM_Creation>` for how
+        an input with a length of greater than 1 is handled).
 
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
@@ -483,7 +483,7 @@ class DDM(ProcessingMechanism_Base):
         a PreferenceSet for the mechanism.
         Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:

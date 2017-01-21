@@ -12,29 +12,28 @@
 Overview
 --------
 
-A MonitoringMechanism monitors the outputState of a ProcessingMechanisms in a :doc:`process <Process>` or
-:doc:`system <System>`, which is evaluated by its ``function``.  This can generate an error signal (e.g.,
-for use in :doc:`learning <LearningProjection>`) or some other value (e.g., a conflict signal).
+A MonitoringMechanism monitors the `outputState <OutputState>` of a `ProcessingMechanism <ProcessingMechanism>` in a
+`process <Process>` or system <System>`.  This can generate an error signal (e.g., for use in
+`learning <LearningProjection>`) or some other value (e.g., a conflict signal).
 
 .. _MonitoringMechanism_Creation:
 
 Creating A MonitoringMechanism
 ---------------------------
 
-a MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. One or more MonitoringMechanisms are also created automatically when a process or system is created for
-which learning is specified (see :ref:`learning in a process <Process_Learning>`,
-and :ref:`automatic creation of LearningSignals <LearningProjection_Automatic_Creation> for details).
-Different types of MonitoringMechanisms monitor  different types of information, and therefore have varying input
-reqirements. See :doc:`subclasses  <MonitoringMechanisms>` for the specific requirements of each type.
+A MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
+type. One or more MonitoringMechanisms are also `created automatically <LearningProjection_Automatic_Creation>` when
+learning is specified for a `process  <Process_Learning> or `system <System_Execution_Learning>`. Different types of
+MonitoringMechanisms monitor  different types of information, and therefore have varying input requirements.
 
 Execution
 ---------
 
-A MonitoringMechanism always executes after the mechanism it is monitoring.  The ``value`` of the outputState of the
-mechanism being monitored is assigned as an item in the ``variable`` for the MonitoringMechanism's ``function``.
-Other items may be also be assigned (for example, a :doc:`ComparatorMechanism` takes an additional input against which it
-compares the monitored value).
+A MonitoringMechanism always executes after the mechanism it is monitoring.  The `value <OutputState.OutputState.value>`
+of the `outputState <OutputState>` of the mechanism being monitored is assigned as an item in the
+:keyword:`variable` for the `function <MonitoringMechanism.funciton>` of the MonitoringMechanism. Other items may be
+also be assigned (for example, a `ComparatorMechanism` takes an additional input `target
+<ComparatorMechanism.ComparatorMechanism.target>` against which it compares the monitored value).
 
 .. _MonitoringMechanism_Class_Reference:
 
@@ -94,7 +93,7 @@ class MonitoringMechanism_Base(Mechanism_Base):
 
     .. note::
        MonitoringMechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the constructor for a :doc:`subclass <MonitoringMechanism>`.
+       They should be instantiated using the constructor for a `subclass <MonitoringMechanism>`.
 
     COMMENT:
         Description:
@@ -146,17 +145,3 @@ class MonitoringMechanism_Base(Mechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=context)
-
-
-    # def _update_status(self, current_value):
-    #     """Test whether self.value has changed and set status accordingly
-    #     """
-    #
-    #     # if current_monitored_state != self._last_monitored_state:
-    #     if not np.array_equal(current_value,self._old_value):
-    #         self.status = CHANGED
-    #         self._old_value = current_value
-    #     else:
-    #         self.status = UNCHANGED
-    #     return self.status
-    #

@@ -405,5 +405,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
         # IMPLEMENTATION NOTE:  TBI when time_step is implemented for ComparatorMechanism
+        pass
 
 

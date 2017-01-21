@@ -203,50 +203,73 @@ constructor for the desired type of projection.  However, projections can also b
 in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> attribute of a process, or when a tuple is used to specify the
 parameter of a function (such as a <span class="xref std std-ref">ControlProjection for a mechanism</span>,
 or a <a class="reference internal" href="MappingProjection.html#mappingprojection-tuple-specification"><span class="std std-ref">LearningProjection for a MappingProjection</span></a>).</p>
-<p id="projection-in-context-specification"><em>In context specification</em>.  Any of the following can be used:</p>
+<p id="projection-in-context-specification"><strong>In context specification</strong>.  Any of the following can be used:</p>
 <blockquote>
-<div><p><em>Constructor</em>.  Used the same way in context as it is ordinarily.</p>
-<p><em>Projection object</em>.  This must be a reference to an existing instance of a projection.</p>
-<p><em>Projection keyword</em>.  This will create a default instance of the specified type, and can be any of the following:</p>
+<div><ul class="simple">
+<li><em>Constructor</em>.  Used the same way in context as it is ordinarily.</li>
+</ul>
 <ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PROJECTION</span></code> - a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with the <span class="xref doc">DefaultMechanism</span> as its <code class="docutils literal"><span class="pre">sender</span></code>.</li>
-<li><code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_PROJECTION</span></code> - a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> with the <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">DefaultControlMechanism</span></a>
+<li><em>Projection object</em>.  This must be a reference to an existing instance of a projection.</li>
+</ul>
+<ul>
+<li><p class="first"><em>Projection keyword</em>.  This will create a default instance of the specified type, and can be any of the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">MAPPING_PROJECTION</span></code> &#8211; a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with the <span class="xref doc">DefaultMechanism</span> as its <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">CONTROL_PROJECTION</span></code> &#8211; a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> with the <a class="reference internal" href="DefaultControlMechanism.html"><span class="doc">DefaultControlMechanism</span></a>
 as its <code class="docutils literal"><span class="pre">sender</span></code>.</li>
-<li><code class="xref std std-keyword docutils literal"><span class="pre">LEARNING_PROJECTION</span></code> - a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.  This can only be used for a projection to the
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">LEARNING_PROJECTION</span></code> &#8211; a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.  This can only be used for a projection to the
 matrix parameterState of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  If the <code class="docutils literal"><span class="pre">receiver</span></code> for the MappingProjection
 (the <em>error source*</em>) projects to a MonitoringMechanism, it will be used as the <code class="docutils literal"><span class="pre">sender</span></code> for the
 LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
-as will a MappingProjection from the error source to the MonitoringMechanism
-(see <span class="xref std std-ref">Automatic Instantiation</span> &lt;LearningProjection_Automatic_Creation&gt;` of a LearningProjection for details).</li>
+as will a MappingProjection from the error source to the MonitoringMechanism (see
+<span class="xref std std-ref">Automatic Instantiation</span> &lt;LearningProjection_Automatic_Creation&gt;` of a LearningProjection for details).</li>
 </ul>
-<p><em>Projection type</em>.  This must be the name of a projection subclass;  it will create a default instance of the
-specified type.</p>
-<p><em>Specification dictionary</em>.  This can contain an entry specifying the type of projection, and/or entries
-specifying the value of parameters used to instantiate it. These should take the following form:</p>
-<blockquote>
-<div><ul>
-<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_TYPE</span></code>: &lt;name of a projection type&gt;</p>
-<blockquote>
-<div><p>if this entry is absent, a default projection will be created that is appropriate for the context
-(for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).</p>
 </div></blockquote>
 </li>
-<li><p class="first"><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_PARAMS</span></code>: Dict[projection argument, argument value]</p>
+</ul>
+<ul class="simple">
+<li><em>Projection type</em>.  This must be the name of a projection subclass;  it will create a default instance of the
+specified type.</li>
+</ul>
+<ul>
+<li><p class="first"><em>Specification dictionary</em>.  This can contain an entry specifying the type of projection, and/or entries
+specifying the value of parameters used to instantiate it. These should take the following form:</p>
 <blockquote>
-<div><p>the key for each entry of the dict must be the name of a projection parameter (see <code class="xref py py-class docutils literal"><span class="pre">Projection_Base</span></code>
+<div><ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_TYPE</span></code>: &lt;name of a projection type&gt; &#8211;
+if this entry is absent, a default projection will be created that is appropriate for the context
+(for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><code class="xref std std-keyword docutils literal"><span class="pre">PROJECTION_PARAMS</span></code>: Dict[projection argument, argument value] &#8211;
+the key for each entry of the dict must be the name of a projection parameter (see <code class="xref py py-class docutils literal"><span class="pre">Projection_Base</span></code>
 below), and the value should be the value of the parameter.  It can contain any of the standard parameters
 for instantiating a projection (see <code class="xref py py-class docutils literal"><span class="pre">Projection_Base</span></code>) or ones specific to a particular type of
 projection (see documentation for subclass).  Note that parameter values in the specification dict will be
 used to instantiate the projection.  These can be overridden during execution by specifying
 <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for the projection, either when calling the
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref py py-meth docutils literal"><span class="pre">execute</span></code></a> method for a mechanism` directly, or where it is
-specified in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> of a process.</p>
+specified in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> of a process.</li>
+</ul>
 </div></blockquote>
 </li>
 </ul>
 </div></blockquote>
-</div></blockquote>
-<p id="projection-automatic-creation"><em>Automatic creation</em>.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
+<p id="projection-automatic-creation"><strong>Automatic creation</strong>.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
 a process automatically generates a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent mechanisms in its
 <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> if none is specified; and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>  projections
 are automatically generated when <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning</span></a> is specified for a process.  Creating a
@@ -274,13 +297,14 @@ its constructor (the type of projection and its sender mechanism depend on the t
 <p>If the <code class="docutils literal"><span class="pre">sender</span></code> is not specified and it can&#8217;t be determined from the context (e.g., the preceding mechanism in the
 <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref py py-data docutils literal"><span class="pre">pathway</span></code></a> of a process), or an outputState specification is not associated
 with a mechanism that can be determined from context, then a default mechanism of a type appropriate for the projection
-is used, and its primary outputState is assigned as the sender. The type of default mechanism type used by each type
-of projection is specified in its <code class="docutils literal"><span class="pre">paramClassDefaults[PROJECTION_SENDER]</span></code> class attribute, and is assigned as follows:</p>
+is used, and its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the sender. The type of default mechanism
+type used by each type of projection is specified in its <code class="docutils literal"><span class="pre">paramClassDefaults[PROJECTION_SENDER]</span></code> class attribute,
+and is assigned as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>: the
 <code class="xref py py-const docutils literal"><span class="pre">DefaultProcessingMechanism</span></code>
-is used, and its primary outputState is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+is used, and its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>: if the projection&#8217;s receiver belongs to a system, then the system&#8217;s
@@ -289,9 +313,10 @@ is used.  In either case, an outputState is added to the ControlMechanism and as
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>: if it is to a MappingProjection that projects to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
-mechanism of a process, then a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is created, and its primary outputState is assigned as
-the <code class="docutils literal"><span class="pre">sender</span></code>.  Otherwise, a <a class="reference internal" href="WeightedErrorMechanism.html"><span class="doc">WeightedErrorMechanism</span></a> is created and its primary outputState is assigned as
-the <code class="docutils literal"><span class="pre">sender</span></code>.</li>
+mechanism of a process, then a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is created, and its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the <code class="docutils literal"><span class="pre">sender</span></code>.  Otherwise,
+a <a class="reference internal" href="WeightedErrorMechanism.html"><span class="doc">WeightedErrorMechanism</span></a> is created and its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> is assigned as the
+<code class="docutils literal"><span class="pre">sender</span></code>.</li>
 </ul>
 </div></blockquote>
 </div>
