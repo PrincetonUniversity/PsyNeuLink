@@ -12,47 +12,56 @@
 Overview
 --------
 
-A WeightedErrorMechanism monitors the outputState of it's :py:data:`errorSource <WeightedErrorMechanism.errorSource>`:
-a ProcessingMechanism that projects to another mechanism in a :doc:`Process`.  It computes the contribution of each
-element of the output of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>` to the error in the output of
-the mechanism to which the :py:data:`errorSource <WeightedErrorMechanism.errorSource>` projects
-(the :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`).  The WeightedErrorMechanism
-``function``returns an error array that can be used by a :doc:`LearningProjection` to adjust a MappingProjection the
-:py:data:`errorSource <WeightedErrorMechanism.errorSource>`, so as to reduce its future contribution to the
-:py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
+A WeightedErrorMechanism monitors the `outputState <OutputState>` of it's
+`errorSource <WeightedErrorMechanism.errorSource>`, a `ProcessingMechanism` that projects to another mechanism in a
+`process <Process>`.  It computes the contribution of each element of the output of the
+`errorSource <WeightedErrorMechanism.errorSource>` to the error in the output of
+the mechanism to which the `errorSource <WeightedErrorMechanism.errorSource>` projects
+(the `weightedErrorSignal`).  The WeightedErrorMechanism `function <WeightedErrorMechanism.function>` returns an error
+array that can be used by a `LearningProjection` to adjust a `MappingProjection` to the
+`errorSource <WeightedErrorMechanism.errorSource>`, so as to reduce its future contribution to the
+`weightedErrorSignal`.
 
 .. _WeightedError_Creation:
 
 Creating A WeightedErrorMechanism
 ---------------------------------
 
-A WeightedErrorMechanism can be created either directly, by calling its constructor, or using the :class:`mechanism`
-function and specifying "WeightedErrorMechanism" as its ``mech_spec`` argument.  It can also be created by :ref:`in
-context specification of a LearningProjection <_Projection_Creation>` for a projection  to a ProcessingMechanism in
-a process that has at least one other ProcessingMechanism to which it projects. One or more WeightedErrors
-are also created automatically when a process system is created for which learning is specified; each is
-assigned a projection from the outputState of a ProcessingMechanism that receives a MappingProjection being
-learned, and a LearningProjection to that MappingProjection
-(see :ref:`learning in a process <Process_Learning>`, and
-:ref:`automatic creation of LearningSignals <LearningProjection_Automatic_Creation> for details).
+A WeightedErrorMechanism can be created directly by calling its constructor, or using the `mechanism` function and
+specifying :keyword:`WeightedErrorMechanism` as its `mech_spec` argument.  It can also be created by
+`in context specification of a LearningProjection <Projection_Creation>` for a MappingProjection; that MappingProjection
+must project to a ProcessingMechanism that is not a `TERMINAL` mechanism. One or more WeightedErrorMechanisms,
+are also `created automatically <LearningProjection_Automatic_Creation>`, along with associated LearningProjections,
+when learning is specified for a process or system with any
+COMMENT:
+    `INTERNAL` [ADD THIS WHEN mechanisms CAN RECEIVE MORE THAN ONE DESIGNATION
+COMMENT
+ProcessingMechanisms that are not `TERMINAL` or `SINGLETON` mechanisms.
 
 .. _WeightedError_Structure
 
 Structure
 ---------
 
-A WeightedErrorMechanism has a single inputState, a :keyword:`NEXT_LEVEL_PROJECTION` parameter, and a single
-(:keyword:`WEIGHTED_ERROR`) outputState.  The **inputState** receives a MappingProjection from its
-:py:data:`errorSource <WeightedErrorMechanism.errorSource>` -- the Processing mechanism for which it computes the
-error.  :keyword:`NEXT_LEVEL_PROJECTION` is assigned to the MappingProjection projection from the
-`primary outputState <OutputState_Primary>` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
-to the next mechanism in the process.  Each row of it's :py:data:`matrix <MappingProjection.MappingProjection.matrix>`
-parameter corresponds to an element of the ``value`` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
-each column corresponds to an element of the ``value`` of the mechanism to which it projects, and each element of the
-matrix is the weight of the association between the two.  The **outputState** of a WeightedErrorMechanism is
-typically assigned a :doc:`LearningProjection` that is used to modify the
-:py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter of a MappingProjection to the
-:py:data:`errorSource <WeightedErrorMechanism.errorSource>` (as shown in :ref:`this figure <Process_Learning_Figure>`).
+A WeightedErrorMechanism has a single `inputState <InputState>` and a single `outputState <OutputState>` (labelled
+`WEIGHTED_ERROR`).  It also has two primary attributes:  an `errorSource <WeightedErrorMechanism.errorSource and a
+`next_level_projection`.  The `errorSource <WeightedErrorMechanism.errorSource>` is the ProcessingMechanism for which
+the WeightedErrorMechanism computes an error.  The `next_level_projection` is the `MappingProjection` from the
+`primary outputState <OutputState_Primary>` of the `errorSource <WeightedErrorMechanism.errorSource>` to the next
+ProcessingMechanism in process or system.  The inputState of the WeightedErrorMechanism receives a
+MappingProjection from the `errorSource <WeightedErrorMechanism.errorSource>`, and the `WEIGHTED_ERROR` outputState
+COMMENT:
+    Each row of the  `matrix <MappingProjection.MappingProjection.matrix>` for that MappingProjection corresponds to an
+    element of the `value` for the `errorSource <WeightedErrorMechanism.errorSource>`, each column corresponds to an
+    element of the `value` of the mechanism to which it projects, and each element of the matrix is the weight of the
+    association between the two.
+COMMENT
+is assigned a `LearningProjection` to the MappingProjection that projects to the
+`errorSource <WeightedErrorMechanism.errorSource>`
+
+that is used to modify the
+`matrix <MappingProjection.MappingProjection.matrix>` parameter of a MappingProjection to the
+`errorSource <WeightedErrorMechanism.errorSource>` (as shown in :ref:`this figure <Process_Learning_Figure>`).
 
 .. _WeightedError_Execution
 
@@ -63,7 +72,7 @@ A WeightedErrorMechanism always executes after the mechanism it is monitoring.  
 contribution of each element of the ``value`` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
 to the ``error_signal``:  the error associated with each element of the ``value`` of the mechanism to which the
 :py:data:`errorSource <WeightedErrorMechanism.errorSource>` projects, scaled both by the weight of its association to
-that element specified by from :keyword:`NEXT_LEVEL_PROJECTION`) and the differential of the
+that element specified by from :keyword:`next_level_projection`) and the differential of the
 ``function`` for that mechanism.  This implements a core computation of the
 `Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  (or "backpropagation")
 learning algorithm. The ``function`` returns an array with the weighted errors for each element of the
@@ -168,9 +177,9 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
     errorSource : ProcessingMechanism
         the mechanism that projects to the WeightedErrorMechanism,
         and for which it calculates the :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
-        
+
     next_level_projection : MappingProjection
-        projection from the ``errorSource to the next mechanism in the process;  its ``matrix`` parameter is 
+        projection from the ``errorSource to the next mechanism in the process;  its ``matrix`` parameter is
         used to calculate the :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
 
     variable : 1d np.array

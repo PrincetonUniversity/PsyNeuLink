@@ -23,7 +23,7 @@ assigned a custom function.
 Creating an IntegratorMechanism
 -------------------------------
 
-An IntegratorMechanism can be created directly, by calling its constructor, or using the
+An IntegratorMechanism can be created directly by calling its constructor, or using the
 :py:func:`mechanism <Mechanism.mechanism>` function and specifying :keyword:`IntegratorMechanism` as its `mech_spec`
 argument.  Its function is specified in the :keyword:`function` argument, which can be parameterized by calling its
 constructor with parameter values::

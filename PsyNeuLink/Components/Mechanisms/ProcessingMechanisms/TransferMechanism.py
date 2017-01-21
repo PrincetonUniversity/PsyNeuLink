@@ -31,7 +31,7 @@ of PsyNeuLink Functions (`Linear`, `Exponential` or `Logistic`), or specified us
 Creating a TransferMechanism
 -----------------------------
 
-A TransferMechanism can be created directly, by calling its constructor, or using the :py:func:`mechanism`
+A TransferMechanism can be created directly by calling its constructor, or using the :py:func:`mechanism`
 function and specifying `TRANSFER_MECHANISM` as its `mech_spec` argument.  Its function is specified in the
 :keyword:`function` argument, which can be simply the name of the class (first example below), or a call to its
 constructor which can include arguments specifying the function's parameters (second example)::

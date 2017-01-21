@@ -12,79 +12,86 @@
 Overview
 --------
 
-A ComparatorMechanism monitors the outputState of a ProcessingMechanism in a :doc:`Process`, and compares this to a
-target provided as input to the ``run`` method of the process (or system to which it belongs) when it is executed.
-The comparison can be done using subtraction or division.
+A ComparatorMechanism monitors the `outputState <OutputState>` of a `ProcessingMechanism <ProcessingMechanism>` in a
+`process <Process>`, and compares this to a `target <Run_Targets>` provided as input to the :keyword:`run` method of
+the process or system to which it belongs. The comparison can be done using subtraction or division.
 
 .. _Comparator_Creation:
 
 Creating a ComparatorMechanism
 ------------------------------
 
-A ComparatorMechanism can be created either directly, by calling its constructor, or using the
-:class:`mechanism` function and specifying "ComparatorMechanism" as its ``mech_spec`` argument. The type of comparison
-is specified in the ``comparison_operation`` argument, which can be the keyword :keyword:`SUBTRACTION` or
-:keyword:`DIVISION`.  It can also be created by
-:ref:`in context specification of a LearningProjection <Projection_Creation>` for a projection to the
-`TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also
-created automatically when a process or system is created for which learning is specified; each is assigned a
+A ComparatorMechanism can be created directly by calling its constructor, or using the
+`mechanism` function and specifying keyword:`ComparatorMechanism` as its :keyword:`mech_spec` argument.  The type of
+comparison is specified in the `comparison_operation` argument, which can be `SUBTRACTION` or `DIVISION`.  It can also
+be created by `in context specification of a LearningProjection <Projection_Creation>` for a projection to the
+`TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically when learning is
+specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`; each is assigned a
 projection from the outputState of a `TERMINAL` mechanism that receives a MappingProjection being learned,
-and a LearningProjection to that MappingProjection  (see :ref:`learning in a process <Process_Learning>`,
-and :ref:`automatic creation of LearningSignals  <LearningProjection_Automatic_Creation> for details).
-
+and a LearningProjection to that MappingProjection  (see `learning in a process <Process_Learning>`,
+and `automatic creation of LearningSignals  <LearningProjection_Automatic_Creation>` for details).
 
 .. _Comparator_Structure:
 
 Structure
 ---------
 
-A ComparatorMechanism has two inputStates:  the :keyword:`SAMPLE inputState receives a MappingProjection from
-the `primary outputState <OutputState_Primary>` of a `TERMINAL` mechanism in a process;  the `COMPARATOR_TARGET`
-inputState is assigned its value from the ``target`` argument of a call to the :doc:`run <Run>` method of a process or
-system.  It has five outputStates, described under Execution below.
+A ComparatorMechanism has two `inputStates <InputState>`:
+
+    * :keyword:`SAMPLE` inputState receives a MappingProjection
+      from the `primary outputState <OutputState_Primary>` of a `TERMINAL` mechanism in a process;
+    ..
+    * `COMPARATOR_TARGET` inputState is assigned its value from the :keyword:`target` argument of a call to the
+      `run <Run>` method of a process or system.  It has five outputStates, described under
+      :ref:`Execution <Comparator_Execution>` below.
 
 
-.. _Comparator_Execution
+.. _Comparator_Execution:
 
 Execution
 ---------
 
-A ComparatorMechanism always executes after the mechanism it is monitoring.  The ``value`` of the
-`primary outputState <OutputState_Primary>` of
-the mechanism being monitored is assigned as the value of the ComparatorMechanism's :keyword:`COMPARATOR_SAMPLE`
-inputState;  the value of the :keyword:`COMPARATOR_TARGET` inputState is received from the process (or system to
-which it belongs) when it is run. When the ComparatorMechanism is executed, if ``comparison_operation`` is
-:keyword:`SUBTRACTION`, then its ``function`` subtracts the  :keyword:`COMPARATOR_SAMPLE` from the
-:keyword:`COMPARATOR_TARGET`; if ``comparison_operation`` is :keyword:`DIVISION`, the :keyword:`COMPARATOR_TARGET`
-is divided by the :keyword:`COMPARATOR_SAMPLE`.  After each execution of the mechanism:
+A ComparatorMechanism always executes after the mechanism it is monitoring.  The :keyword:`value` of the
+`primary outputState <OutputState_Primary>` of the mechanism being monitored is assigned as the :keyword:`value` of the
+ComparatorMechanism's :keyword:`COMPARATOR_SAMPLE` inputState;  the value of the :keyword:`COMPARATOR_TARGET`
+inputState is received from the process (or system to which it belongs) when it is run. When the ComparatorMechanism
+is executed, if `comparison_operation` is:
+
+    * `SUBTRACTION`, its `function <ComparatorMechanism.function>` subtracts the  `COMPARATOR_SAMPLE` from the
+      `COMPARATOR_TARGET`;
+    ..
+    * `DIVISION`, its `function <ComparatorMechanism.function>` divides the `COMPARATOR_TARGET`by the
+      `COMPARATOR_SAMPLE`.
+
+After each execution of the mechanism:
 
 .. _Comparator_Results:
 
-    * the **result** of the ``function`` calculation is assigned to the mechanism's ``value`` attribute, the value of
-      its :keyword:`COMPARISON_RESULT` outputState, and to the 1st item of its
-      :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
+    * the **result** of the `function <ComparatorMechanism.function>` calculation is assigned to the mechanism's
+      `value <ComparatorMechanism.value>` attribute, the value of its `COMPARISON_RESULT`
+      outputState, and to the 1st item of its `outputValue <ComparatorMechanism.outputValue>` attribute;
+    ..
+    * the **mean** of the result is assigned to the :keyword:`value` of the mechanism's `COMPARISON_MEAN` outputState,
+      and to the 2nd item of its `outputValue <ComparatorMechanism.outputValue>` attribute.
+    ..
 
-    * the **mean** of the result is assigned to the value of the mechanism's :keyword:`COMPARISON_MEAN` outputState,
-      and to the 2nd item of its :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
+    * the **sum** of the result is assigned to the :keyword:`value` of the mechanism's `COMPARISON_SUM` outputState,
+      and to the 3rd item of its `outputValue <ComparatorMechanism.outputValue>` attribute.
+    ..
 
-    * the **sum** of the result is assigned to the value of the mechanism's :keyword:`COMPARISON_SUM` outputState,
-      and to the 3rd item of its :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
+    * the **sum of squares** of the result is assigned to the :keyword:`value` of the mechanism's `COMPARISON_SSE`
+      outputState, and to the 4th item of its `outputValue <ComparatorMechanism.outputValue>` attribute.
+    ..
 
-    * the **sum of squares** of the result's elements ("sum squared error") is assigned to value of the mechanism's
-      :keyword:`COMPARISON_SSE` outputState, and to the 4th item of its
-      :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
-
-    * the **mean of the squares** of the result's elements ("mean squared error") is assigned to value of the
-      mechanism's :keyword:`COMPARISON_MSE` outputState, and to the 5th item of its
-      :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attribute.
+    * the **mean of the squares** of the result is assigned to the :keyword:`value` of the mechanism's
+      :keyword:`COMPARISON_MSE` outputState, and to the 5th item of its `outputValue <ComparatorMechanism.outputValue>`
+      attribute.
 
 .. _Comparator_Class_Reference:
 
 Class Reference
 ---------------
-
 """
-
 
 import typecheck as tc
 import numpy as np
@@ -105,19 +112,18 @@ class ComparatorError(Exception):
 
 class ComparatorMechanism(MonitoringMechanism_Base):
     """
-    ComparatorMechanism(                       \
+    ComparatorMechanism(              \
     default_sample_and_target=None,   \
     comparison_operation=SUBTRACTION, \
     params=None,                      \
     name=None,                        \
     prefs=None)
 
-    Implements ComparatorMechanism subclass of MonitoringMechanism
+    Implements the ComparatorMechanism subclass of `MonitoringMechanism`.
 
     COMMENT:
-
         Description:
-            ComparatorMechanism is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the
+            ComparatorMechanism is a subtype of the MonitoringMechanism Type of the Mechanism Category of the
                 Function class
             It's function uses the LinearCombination Function to compare two input variables
             COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
@@ -139,7 +145,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         MechanismRegistry:
             All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
               entry for the subclass, a count for all instances of it, and a dictionary of those instances
-
     COMMENT
 
     Arguments
@@ -147,23 +152,28 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     default_sample_and_target : Optional[List[array, array] or 2d np.array]
         the input to the ComparatorMechanism to use if none is provided in a call to its
-        :py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run` methods.
-        The first item is the :keyword:`COMPARATOR_SAMPLE` input and the second is the :keyword:`COMPARATOR_TARGET`
-        input, which must be the same length.  This also serves as a template to specify the length of inputs to the
-        ``function``.
+        `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods.
+        The first item is the `COMPARATOR_SAMPLE` item of the input and the second is the `COMPARATOR_TARGET`
+        item of the input, which must be the same length.  This also serves as a template to specify the length of
+        inputs to the `function <ComparatorMechanism.function>`.
 
     comparison_operation : keyword[SUBTRACTION or DIVISION] : default SUBTRACTION
-        specifies how the :keyword:`COMPARATOR_SAMPLE` and :keyword:`COMPARATOR_TARGET` will be compared:
-        * :keyword:`SUBTRACTION`: :keyword:`COMPARATOR_TARGET` - :keyword:`SAMPLE`;
-        * :keyword:`DIVISION`: :keyword:`COMPARATOR_TARGET` ÷ :keyword:`SAMPLE`.
+        specifies how the `COMPARATOR_SAMPLE` and `COMPARATOR_TARGET` will be compared:
+
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `SAMPLE`
+
+        * `DIVISION`: `COMPARATOR_TARGET` ÷ `SAMPLE`
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
-        The following entries can be included:
-        * :keyword:`COMPARATOR_SAMPLE`:  Mechanism, InputState, or the name of or specification dictionary for one;
-        * :keyword:`COMPARATOR_TARGET`:  Mechanism, InputState, or the name of or specification dictionary for one;
-        * :kewyord:`FUNCTION`: Function or method;  default is :class:`LinearCombination`.
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the mechanism, its function, and/or a custom function and its parameters.  The following entries can be
+        included:
+
+        * `COMPARATOR_SAMPLE`:  Mechanism, InputState, or the name of or specification dictionary for one;
+        ..
+        * `COMPARATOR_TARGET`:  Mechanism, InputState, or the name of or specification dictionary for one;
+        ..
+        * `FUNCTION`: Function, function or method;  default is `LinearCombination`.
 
     COMMENT:
         [TBI]
@@ -187,41 +197,42 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     ----------
 
     variable : 2d np.array
-        the input to ``function``.  The first item is the ``value`` of the :keyword:`COMPARATOR_SAMPLE` inputState,
-        and is the second ``value`` of the :keyword:`COMPARATOR_TARGET` inputState.
+        the input to `function <ComparatorMechanism.function>`.  The first item is the :keyword:`value` of the
+        `COMPARATOR_SAMPLE` inputState, and the second is the :keyword:`value` of the `COMPARATOR_TARGET` inputState.
 
     sample : 1d np.array
-        the first item of the ``variable`` and the ``value`` of the :keyword:`COMPARATOR_SAMPLE` inputState.
+        the first item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
+        `COMPARATOR_SAMPLE` inputState.
 
     target : 1d np.array
-        the second item of ``variable``, and the ``value`` of the :keyword:`COMPARATOR_TARGET` inputState.
+        the second item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
+        `COMPARATOR_TARGET` inputState.
 
     function : CombinationFunction : default LinearCombination
-        the function used to compare :keyword:`COMPARATOR_SAMPLE` with :keyword:`COMPARATOR_TARGET`.
+        the function used to compare `COMPARATOR_SAMPLE` with `COMPARATOR_TARGET`.
 
     comparison_operation : SUBTRACTION or DIVISION : default SUBTRACTION
-        determines the operation used by ``function`` to compare the :keyword:`COMPARATOR_SAMPLE` with
-        :keyword:`_COMPARATOR_TARGET`.
-        * :keyword:`SUBTRACTION`: :keyword:`COMPARATOR_TARGET` - :keyword:`COMPARATOR_SAMPLE`;
-        * :keyword:`DIVISION`: :keyword:`COMPARATOR_TARGET` ÷ :keyword:`COMPARATOR_SAMPLE`.
+        determines the operation used by `function <ComparatorMechanism.function>` to compare the `COMPARATOR_SAMPLE`
+        with `_COMPARATOR_TARGET`.
+
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPARATOR_SAMPLE`;
+
+        * `DIVISION`: `COMPARATOR_TARGET` ÷ `COMPARATOR_SAMPLE`.
 
     value : 2d np.array
-        holds the output of the comparison operation carried out by the ComparatorMechanism's ``function``.
-
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to the ``value`` of the :keyword:`COMPARTOR_RESULT` outputState
-            and the first item of ``outputValue``.
-    COMMENT
+        holds the output of the `comparison_operation` carried out by the ComparatorMechanism's
+        `function <ComparatorMechanism.function>`; its value is  also assigned to the `COMPARISON_RESULT` outputState
+        and the the first item of `outputValue <ComparatorMechanism.outputValue>`.
 
     outputValue : List[1d np.array, float, float, float, float]
         a list with the following items:
-        * **result** of the ``function`` calculation (value of :keyword:`COMPARISON_RESULT` outputState);
-        * **mean** of the result's elements (``value`` of :keyword:`COMPARISON_MEAN` outputState)
-        * **sum** of the result's elements (``value`` of :keyword:`COMPARISON_SUM` outputState)
-        * **sum of squares** of the result's elements (``value`` of :keyword:`COMPARISON_SSE` outputState)
-        * **mean of squares** of the result's elements (``value`` of :keyword:`COMPARISON_MSE` outputState)
+
+        * **result** of the `function <ComparatorMechanism.function>` calculation
+          and the :keyword:`value` of the `COMPARISON_RESULT` outputState;
+        * **mean** of the result's elements and the :keyword:`value` of the `COMPARISON_MEAN` outputState;
+        * **sum** of the result's elements and the :keyword:`value` of the `COMPARISON_SUM` outputState;
+        * **sum of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_SSE` outputState;
+        * **mean of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_MSE` outputState.
 
     name : str : default ComparatorMechanism-<index>
         the name of the mechanism.

@@ -12,9 +12,9 @@
 # √ DDM
 # √ IntegratorMechanism
 # √ TransferMechanism
-#   MonitoringMechanism
+# √ MonitoringMechanism
 #   DefaultMonitoringMechanism
-#   ComparatorMechanism
+# √ ComparatorMechanism
 #   WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
@@ -23,7 +23,7 @@
 #   Projection
 # √ MappingProjection
 # √ ControlProjection
-#   LearningProjection
+# √ LearningProjection
 #   State
 #   InputState
 #   ParameterState
