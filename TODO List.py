@@ -2216,6 +2216,8 @@
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningProjection (that can also be used as arg for Process)
 #                 _validate_function:  must be BP or RL (add list somewhere of what is supported)
 #                 IMPLEMENT: MONITOR_FOR_LEARNING AS STATE SPECIFICATION (CF. LearningProjection._instantiate_sender)
+#
+# FIX: change errorSignal -> error_signal (but must be sure not to interfere / get confused with existing error_signal)
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
                 # FIX: ?? SHOULD THIS USE _assign_defaults:
