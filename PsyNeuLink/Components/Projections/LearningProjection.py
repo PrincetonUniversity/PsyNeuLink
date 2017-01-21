@@ -240,7 +240,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
                                                                                       COMPARATOR_SAMPLE
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
-                                                                                         NEXT_LEVEL_PROJECTION
+                                                                                         PROJECTION_TO_NEXT_MECHANISM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
@@ -870,7 +870,7 @@ FROM TODO:
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
                     monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
-                                                         params={NEXT_LEVEL_PROJECTION:projection},
+                                                         params={PROJECTION_TO_NEXT_MECHANISM:projection},
                                                          name=self.mappingProjection.name + " Weighted_Error")
 
                     # Instantiate MappingProjection to provide monitoring_mechanism with error signal

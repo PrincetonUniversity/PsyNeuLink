@@ -44,26 +44,32 @@ Structure
 ---------
 
 A WeightedErrorMechanism has a single `inputState <InputState>` and a single `outputState <OutputState>` (labelled
-`WEIGHTED_ERROR`).  It also has four primary attributes:
+`WEIGHTED_ERROR`).  It also has four primary attributes:  an
 
-`errorSource <WeightedErrorMechanism.errorSource
-`next_level_projection`
-`error_signal <WeightedErrorMechanism.error_signal>
-`weighted_error_signal
+  * `errorSource <WeightedErrorMechanism.errorSource>`: the ProcessingMechanism for which the WeightedErrorMechanism
+    computes the `weighted_error_Signal`;
+  ..
+  * `next_mechanism`: a ProcessingMechanism to which the `errorSource <WeightedErrorMechanism.errorSource>` projects;
+  ..
+  * `projection_to_next_mechanism`: the `MappingProjection` from the `errorSource <WeightedErrorMechanism.errorSource>`
+    to the `next_mechanism`;
+  ..
+  * `error_signal <WeightedErrorMechanism.error_signal>`: the error for the output of the `next_mechanism`;
+  ..
+  * `weighted_error_Signal`: the error for the output of the `errorSource`, weighted by the contribution that each
+    element of its elements makes to the `error_signal <WeightedErrorMechanism.error_signal>`.
 
-The `errorSource <WeightedErrorMechanism.errorSource>` is the ProcessingMechanism for which
-the WeightedErrorMechanism computes an error.  The `next_level_projection` is the `MappingProjection` from the
-`primary outputState <OutputState_Primary>` of the `errorSource <WeightedErrorMechanism.errorSource>` to the next
-ProcessingMechanism in process or system.  The inputState of the WeightedErrorMechanism receives a
-MappingProjection from the `errorSource <WeightedErrorMechanism.errorSource>`, and the `WEIGHTED_ERROR` outputState
+The WeightedErrorMechanism receives a MappingProjection to its inputState from the
+`errorSource  <WeightedErrorMechanism.errorSource>`, and its `WEIGHTED_ERROR` outputState
+is assigned a `LearningProjection` to the MappingProjection it is being used to train (and that projects to the
+`errorSource <WeightedErrorMechanism.errorSource>`)
+
 COMMENT:
     Each row of the  `matrix <MappingProjection.MappingProjection.matrix>` for that MappingProjection corresponds to an
     element of the `value` for the `errorSource <WeightedErrorMechanism.errorSource>`, each column corresponds to an
     element of the `value` of the mechanism to which it projects, and each element of the matrix is the weight of the
     association between the two.
 COMMENT
-is assigned as the `sender <LearningProjection.sender>` of a `LearningProjection` for the MappingProjection that
-projects to the `errorSource <WeightedErrorMechanism.errorSource>`
 
 .. _WeightedError_Execution
 
@@ -71,19 +77,16 @@ Execution
 ---------
 
 A WeightedErrorMechanism always executes after the mechanism it is monitoring.  It's
-`function <WeightedErrorMechanism.function>` computes the contribution that each element of the output of the
-`errorSource <WeightedErrorMechanism.errorSource>` makes to each element of the error signal computed for the
-mechanism to which the `errorSource <WeightedErrorMechanism.errorSource>` projects.  The contribution of each
-element of the `errorSource <WeightedErrorMechanism.errorSource>` is computed for each element of the output of the
-mechanism to which it projects, weighted both by the strength of its association to that element specified by
-the `next_level_projection`, and the differential of the :keyword:`function` of that next mechanism.  This implements
-a core computation of the `Generalized Delta Rule
-<http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  implemented by the `BackPropagation` learning
-function. The WeightedErrorMechanism's `function <WeightedErrorMechanism>` returns an array with the weighted errors
-for each element of the `errorSource <WeightedErrorMechanism.errorSource>`, that is assigned to its
-`value <WeightedErrorMechanism.value>` and  `outputValue <WeightedErrorMechanism.outputValue>` attributes, and the
-:keyword:`value` of of its `WEIGHTED_ERROR` outputState.
-
+`function <WeightedErrorMechanism.function>` computes its `weighted_error_signal`: the contribution that each element
+of the output of the `errorSource <WeightedErrorMechanism.errorSource>` makes to the
+`error_signal <WeightedErrorMechanism>` (i.e., the error for the output of the `next_mechanism`), weighted both by the
+strength of its association to each element of the `next_mechanism` (specified in `projection_to_next_mechanism`),
+and the differential of the :keyword:`function` of `next_mechanism`.  This implements a core computation of the
+`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  implemented by the
+`BackPropagation` learning function. The `function <WeightedErrorMechanism>` of the WeightedErrorMechanism returns
+the `weighted_error_signal`, that is assigned to its `value <WeightedErrorMechanism.value>` and
+`outputValue <WeightedErrorMechanism.outputValue>` attributes, and the :keyword:`value` of of its `WEIGHTED_ERROR`
+outputState.
 
 .. _WeightedError_Class_Reference:
 
@@ -100,7 +103,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism i
 
 # WeightedErrorMechanism output (used to create and name outputStates):
 WEIGHTED_ERRORS = 'WeightedErrors'
-NEXT_LEVEL_PROJECTION = 'next_level_projection'
+PROJECTION_TO_NEXT_MECHANISM = 'projection_to_next_mechanism'
 
 # WeightedErrorMechanism output indices (used to index output values):
 class WeightedErrorOutput(AutoNumber):
@@ -128,10 +131,11 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         Description:
             WeightedErrorMechanism is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the
             Function class
-            It's function computes the contribution of each sender element (rows of the NEXT_LEVEL_PROJECTION param)
+            It's function computes the contribution of each sender element (rows of PROJECTION_TO_NEXT_MECHANISM param)
                to the error values of the receivers
-                 (elements of the error_signal array, columns of the matrix of the NEXT_LEVEL_PROJECTION param),
-               weighted by the association of each sender with each receiver (specified in NEXT_LEVEL_PROJECTION.matrix)
+                 (elements of the error_signal array, columns of the matrix of the PROJECTION_TO_NEXT_MECHANISM param),
+               weighted by the association of each sender with each receiver
+               (specified in PROJECTION_TO_NEXT_MECHANISM.matrix)
             The function returns an array with the weighted errors for each sender element
 
         Class attributes:
@@ -139,7 +143,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
             + classPreference (PreferenceSet): WeightedError_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (1D np.array):
-            + paramClassDefaults (dict): {NEXT_LEVEL_PROJECTION: MappingProjection}
+            + paramClassDefaults (dict): {PROJECTION_TO_NEXT_MECHANISM: MappingProjection}
             + paramNames (dict): names as above
 
         Class methods:
@@ -161,9 +165,9 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
         Includes the following entry:
 
-        * :keyword:`NEXT_LEVEL_PROJECTION`:  MappingProjection;
+        * :keyword:`PROJECTION_TO_NEXT_MECHANISM`:  MappingProjection;
           its :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter is used to calculate the
-          :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`; it's width (number of columns)
+          `weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`; it's width (number of columns)
           must match the length of ``error_signal``.
 
     name : str : default WeightedErrorMechanism-<index>
@@ -183,12 +187,12 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         the mechanism that projects to the WeightedErrorMechanism,
         and for which it calculates the :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
-    next_level_projection : MappingProjection
+    projection_to_next_mechanism : MappingProjection
         projection from the ``errorSource to the next mechanism in the process;  its ``matrix`` parameter is
         used to calculate the :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
     variable : 1d np.array
-        error_signal from mechanism to which next_level_projection projects;  used by ``function`` to compute
+        error_signal from mechanism to which projection_to_next_mechanism projects;  used by ``function`` to compute
         :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
     value : 1d np.array
@@ -196,7 +200,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     weighted_error_signal : 1d np.array
         specifies the weighted contribution made by each element of the ``value`` of the error source to the
-        ``error_signal`` received from the next mechanism in the process (the one to which ``next_level_projection``
+        ``error_signal`` received from the next mechanism in the process (the one to which ``projection_to_next_mechanism``
         projects.
 
     outputValue : List[1d np.array]
@@ -230,7 +234,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
     # WeightedErrorMechanism parameter assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        NEXT_LEVEL_PROJECTION: None,
+        PROJECTION_TO_NEXT_MECHANISM: None,
         OUTPUT_STATES:[WEIGHTED_ERRORS],
     })
 
@@ -260,18 +264,22 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
                          context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that width of NEXT_LEVEL_PROJECTION matrix equals length of error_signal
+        """Insure that width of PROJECTION_TO_NEXT_MECHANISM matrix equals length of error_signal
 
-        Validate that width of matrix for projection in NEXT_LEVEL_PROJECTION param equals length of error_signal
+        Validate that width of matrix for projection in PROJECTION_TO_NEXT_MECHANISM param equals length of error_signal
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        cols = target_set[NEXT_LEVEL_PROJECTION].matrix.shape[1]
+        cols = target_set[PROJECTION_TO_NEXT_MECHANISM].matrix.shape[1]
         error_signal_len = len(self.variable[0])
         if  cols != error_signal_len:
             raise WeightedErrorError("Number of columns ({}) of weight matrix for {}"
                                      " must equal length of error_signal ({})".
                                      format(cols,self.name,error_signal_len))
+
+    def _instantiate_attributes_before_function(self, context=None):
+        self.next_mechanism = self.paramsCurrent[PROJECTION_TO_NEXT_MECHANISM].receiver.owner
+        super()._instantiate_attributes_before_function(context=context)
 
     def _execute(self,
                 variable=None,
@@ -294,13 +302,13 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         error = self.variable[0]
 
         # Get weight matrix for projection from next mechanism in the process (to one after that)
-        next_level_matrix = self.paramsCurrent[NEXT_LEVEL_PROJECTION].matrix
+        next_level_matrix = self.paramsCurrent[PROJECTION_TO_NEXT_MECHANISM].matrix
 
         # Get output of the next mechanism in the process
-        next_level_output = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.outputState.value
+        next_level_output = self.next_mechanism.outputState.value
 
         # Get derivative for next mechanism's function
-        derivative_fct = self.paramsCurrent[NEXT_LEVEL_PROJECTION].receiver.owner.function_object.derivative
+        derivative_fct = self.next_mechanism.function_object.derivative
 
         # Compute derivative of error with respect to current output of next mechanism
         output_derivative = derivative_fct(output=next_level_output)
