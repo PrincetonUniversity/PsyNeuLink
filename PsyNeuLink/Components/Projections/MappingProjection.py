@@ -447,9 +447,9 @@ class MappingProjection(Projection_Base):
 
         # # MODIFIED 12/21/16 OLD:
         # # Check whether weights changed
-        # if self.monitoringMechanism and self.monitoringMechanism.summedErrorSignal:
+        # if self.monitoringMechanism and self.monitoringMechanism.summed_error_signal:
         # MODIFIED 12/21/16 NEW:
-        # Check whether errorSignal has changed
+        # Check whether error_signal has changed
         if self.monitoringMechanism and self.monitoringMechanism.status == CHANGED:
         # MODIFIED 12/21/16 END
 

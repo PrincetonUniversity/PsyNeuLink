@@ -15,7 +15,7 @@
 # √ MonitoringMechanism
 #   DefaultMonitoringMechanism
 # √ ComparatorMechanism
-#   WeightedErrorMechanism
+# √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
 # √ EVCMechanism
