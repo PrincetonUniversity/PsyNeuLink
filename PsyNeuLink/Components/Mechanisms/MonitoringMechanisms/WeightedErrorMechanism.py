@@ -17,10 +17,10 @@ A WeightedErrorMechanism monitors the `outputState <OutputState>` of it's
 `process <Process>`.  It computes the contribution of each element of the output of the
 `errorSource <WeightedErrorMechanism.errorSource>` to the error in the output of
 the mechanism to which the `errorSource <WeightedErrorMechanism.errorSource>` projects
-(the `weightedErrorSignal`).  The WeightedErrorMechanism `function <WeightedErrorMechanism.function>` returns an error
+(the `weighted_error_signal`).  The WeightedErrorMechanism `function <WeightedErrorMechanism.function>` returns an error
 array that can be used by a `LearningProjection` to adjust a `MappingProjection` to the
 `errorSource <WeightedErrorMechanism.errorSource>`, so as to reduce its future contribution to the
-`weightedErrorSignal`.
+`weighted_error_signal`.
 
 .. _WeightedError_Creation:
 
@@ -44,8 +44,14 @@ Structure
 ---------
 
 A WeightedErrorMechanism has a single `inputState <InputState>` and a single `outputState <OutputState>` (labelled
-`WEIGHTED_ERROR`).  It also has two primary attributes:  an `errorSource <WeightedErrorMechanism.errorSource and a
-`next_level_projection`.  The `errorSource <WeightedErrorMechanism.errorSource>` is the ProcessingMechanism for which
+`WEIGHTED_ERROR`).  It also has four primary attributes:
+
+`errorSource <WeightedErrorMechanism.errorSource
+`next_level_projection`
+`error_signal <WeightedErrorMechanism.error_signal>
+`weighted_error_signal
+
+The `errorSource <WeightedErrorMechanism.errorSource>` is the ProcessingMechanism for which
 the WeightedErrorMechanism computes an error.  The `next_level_projection` is the `MappingProjection` from the
 `primary outputState <OutputState_Primary>` of the `errorSource <WeightedErrorMechanism.errorSource>` to the next
 ProcessingMechanism in process or system.  The inputState of the WeightedErrorMechanism receives a
@@ -69,33 +75,14 @@ A WeightedErrorMechanism always executes after the mechanism it is monitoring.  
 `errorSource <WeightedErrorMechanism.errorSource>` makes to each element of the error signal computed for the
 mechanism to which the `errorSource <WeightedErrorMechanism.errorSource>` projects.  The contribution of each
 element of the `errorSource <WeightedErrorMechanism.errorSource>` is computed for each element of the output of the
-mechanism to which it projects, weighted both by the strength of its association to that element as specified in
-the `next_level_projection`, and the differential of the :keyword:`function` for that mechanism.
-
-
-  This
-implements
-a core computation of the
-`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  (or "backpropagation")
-learning algorithm. The ``function`` returns an array with the weighted errors for each element of the
-:py:data:`errorSource <WeightedErrorMechanism.errorSource>`, which is placed in its ``value``
-and  :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attributes, and the value of of its
-(:keyword:`WEIGHTED_ERROR`) outputState.
-
-
-OLD:
-A WeightedErrorMechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
-contribution of each element of the ``value`` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
-to the ``error_signal``:  the error associated with each element of the ``value`` of the mechanism to which the
-:py:data:`errorSource <WeightedErrorMechanism.errorSource>` projects, scaled both by the weight of its association to
-that element specified by from :keyword:`next_level_projection`) and the differential of the
-``function`` for that mechanism.  This implements a core computation of the
-`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  (or "backpropagation")
-learning algorithm. The ``function`` returns an array with the weighted errors for each element of the
-:py:data:`errorSource <WeightedErrorMechanism.errorSource>`, which is placed in its ``value``
-and  :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attributes, and the value of of its
-(:keyword:`WEIGHTED_ERROR`) outputState.
-
+mechanism to which it projects, weighted both by the strength of its association to that element specified by
+the `next_level_projection`, and the differential of the :keyword:`function` of that next mechanism.  This implements
+a core computation of the `Generalized Delta Rule
+<http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  implemented by the `BackPropagation` learning
+function. The WeightedErrorMechanism's `function <WeightedErrorMechanism>` returns an array with the weighted errors
+for each element of the `errorSource <WeightedErrorMechanism.errorSource>`, that is assigned to its
+`value <WeightedErrorMechanism.value>` and  `outputValue <WeightedErrorMechanism.outputValue>` attributes, and the
+:keyword:`value` of of its `WEIGHTED_ERROR` outputState.
 
 
 .. _WeightedError_Class_Reference:
@@ -176,7 +163,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
         * :keyword:`NEXT_LEVEL_PROJECTION`:  MappingProjection;
           its :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter is used to calculate the
-          :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`; it's width (number of columns)
+          :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`; it's width (number of columns)
           must match the length of ``error_signal``.
 
     name : str : default WeightedErrorMechanism-<index>
@@ -194,20 +181,20 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     errorSource : ProcessingMechanism
         the mechanism that projects to the WeightedErrorMechanism,
-        and for which it calculates the :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
+        and for which it calculates the :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
     next_level_projection : MappingProjection
         projection from the ``errorSource to the next mechanism in the process;  its ``matrix`` parameter is
-        used to calculate the :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
+        used to calculate the :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
     variable : 1d np.array
         error_signal from mechanism to which next_level_projection projects;  used by ``function`` to compute
-        :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
+        :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
     value : 1d np.array
-        output of ``function``, same as :py:data:`weightedErrorSignal <WeightedErrorMechanism.weightedErrorSignal>`.
+        output of ``function``, same as :py:data:`weighted_error_signal <WeightedErrorMechanism.weighted_error_signal>`.
 
-    weightedErrorSignal : 1d np.array
+    weighted_error_signal : 1d np.array
         specifies the weighted contribution made by each element of the ``value`` of the error source to the
         ``error_signal`` received from the next mechanism in the process (the one to which ``next_level_projection``
         projects.
@@ -293,9 +280,9 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        """Compute weightedErrorSignal for errorSource from derivative of error_signal for mechanism it projects to.
+        """Compute weighted_error_signal for errorSource from derivative of error_signal for mechanism it projects to.
 
-        Return weightedErrorSignal.
+        Return weighted_error_signal.
         """
 
         if not context:
@@ -320,10 +307,10 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         error_derivative = error * output_derivative
 
         # Compute error terms for each unit of current mechanism weighted by contribution to error in the next one
-        self.weightedErrorSignal = np.dot(next_level_matrix, error_derivative)
+        self.weighted_error_signal = np.dot(next_level_matrix, error_derivative)
 
         # Compute summed error for use by callers to decide whether to update
-        self.summedErrorSignal = np.sum(self.weightedErrorSignal)
+        self.summedErrorSignal = np.sum(self.weighted_error_signal)
 
-        return self.weightedErrorSignal
+        return self.weighted_error_signal
 
