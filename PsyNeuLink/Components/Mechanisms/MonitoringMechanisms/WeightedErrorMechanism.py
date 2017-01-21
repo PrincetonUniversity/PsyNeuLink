@@ -119,10 +119,10 @@ class WeightedErrorError(Exception):
 
 class WeightedErrorMechanism(MonitoringMechanism_Base):
     """
-    WeightedErrorMechanism(     \
-    error_signal=None, \
-    params=None,       \
-    name=None,         \
+    WeightedErrorMechanism( \
+    error_signal=None,      \
+    params=None,            \
+    name=None,              \
     prefs=None)
 
     Implements WeightedErrorMechanism subclass of MonitoringMechanism.
