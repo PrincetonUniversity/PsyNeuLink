@@ -40,8 +40,6 @@ myMechanism_3 = DDM(function=BogaczEtAl(drift_rate=3.0,
                     name='My_DDM_3'
                     )
 
-myMechanism_2.function = NavarroAndFuss()
-
 process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE),
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 

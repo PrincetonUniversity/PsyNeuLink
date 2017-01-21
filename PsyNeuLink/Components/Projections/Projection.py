@@ -63,49 +63,49 @@ or a :ref:`LearningProjection for a MappingProjection <MappingProjection_Tuple_S
 
 .. _Projection_In_Context_Specification:
 
-*In context specification*.  Any of the following can be used:
+**In context specification**.  Any of the following can be used:
 
-  *Constructor*.  Used the same way in context as it is ordinarily.
+  * *Constructor*.  Used the same way in context as it is ordinarily.
+  ..
+  * *Projection object*.  This must be a reference to an existing instance of a projection.
+  ..
+  * *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
 
-  *Projection object*.  This must be a reference to an existing instance of a projection.
+      * :keyword:`MAPPING_PROJECTION` -- a :doc:`MappingProjection` with the :doc:`DefaultMechanism` as its ``sender``.
+      |
+      * :keyword:`CONTROL_PROJECTION` -- a :doc:`ControlProjection` with the :doc:`DefaultControlMechanism`
+        as its ``sender``.
+      |
+      * :keyword:`LEARNING_PROJECTION` -- a :doc:`LearningProjection`.  This can only be used for a projection to the
+        matrix parameterState of a :doc:`MappingProjection`.  If the ``receiver`` for the MappingProjection
+        (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the
+        LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
+        as will a MappingProjection from the error source to the MonitoringMechanism (see
+        :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
+  ..
+  * *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
+    specified type.
+  ..
+  * *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
+    specifying the value of parameters used to instantiate it. These should take the following form:
 
-  *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
-
-  * :keyword:`MAPPING_PROJECTION` - a :doc:`MappingProjection` with the :doc:`DefaultMechanism` as its ``sender``.
-  * :keyword:`CONTROL_PROJECTION` - a :doc:`ControlProjection` with the :doc:`DefaultControlMechanism`
-    as its ``sender``.
-  * :keyword:`LEARNING_PROJECTION` - a :doc:`LearningProjection`.  This can only be used for a projection to the
-    matrix parameterState of a :doc:`MappingProjection`.  If the ``receiver`` for the MappingProjection
-    (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the
-    LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
-    as will a MappingProjection from the error source to the MonitoringMechanism
-    (see :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
-
-  *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
-  specified type.
-
-  *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
-  specifying the value of parameters used to instantiate it. These should take the following form:
-
-      * :keyword:`PROJECTION_TYPE`: <name of a projection type>
-
-          if this entry is absent, a default projection will be created that is appropriate for the context
-          (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
-
-      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value]
-
-          the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
-          below), and the value should be the value of the parameter.  It can contain any of the standard parameters
-          for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
-          projection (see documentation for subclass).  Note that parameter values in the specification dict will be
-          used to instantiate the projection.  These can be overridden during execution by specifying
-          :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the
-          :py:meth:`execute <Mechanism.Mechanism_Base.execute>` method for a mechanism` directly, or where it is
-          specified in the :py:data:`pathway <Process.Process_Base.pathway>` of a process.
+      * :keyword:`PROJECTION_TYPE`: <name of a projection type> --
+        if this entry is absent, a default projection will be created that is appropriate for the context
+        (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
+      |
+      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value] --
+        the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
+        below), and the value should be the value of the parameter.  It can contain any of the standard parameters
+        for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
+        projection (see documentation for subclass).  Note that parameter values in the specification dict will be
+        used to instantiate the projection.  These can be overridden during execution by specifying
+        :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the
+        :py:meth:`execute <Mechanism.Mechanism_Base.execute>` method for a mechanism` directly, or where it is
+        specified in the :py:data:`pathway <Process.Process_Base.pathway>` of a process.
 
 .. _Projection_Automatic_Creation:
 
-*Automatic creation*.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
+**Automatic creation**.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
 a process automatically generates a :doc:`MappingProjection` between adjacent mechanisms in its
 :py:data:`pathway <Process.Process_Base.pathway>` if none is specified; and :doc:`LearningProjection`  projections
 are automatically generated when :ref:`learning <Process_Learning>` is specified for a process.  Creating a
