@@ -56,18 +56,34 @@ COMMENT:
     element of the `value` of the mechanism to which it projects, and each element of the matrix is the weight of the
     association between the two.
 COMMENT
-is assigned a `LearningProjection` to the MappingProjection that projects to the
-`errorSource <WeightedErrorMechanism.errorSource>`
-
-that is used to modify the
-`matrix <MappingProjection.MappingProjection.matrix>` parameter of a MappingProjection to the
-`errorSource <WeightedErrorMechanism.errorSource>` (as shown in :ref:`this figure <Process_Learning_Figure>`).
+is assigned as the `sender <LearningProjection.sender>` of a `LearningProjection` for the MappingProjection that
+projects to the `errorSource <WeightedErrorMechanism.errorSource>`
 
 .. _WeightedError_Execution
 
 Execution
 ---------
 
+A WeightedErrorMechanism always executes after the mechanism it is monitoring.  It's
+`function <WeightedErrorMechanism.function>` computes the contribution that each element of the output of the
+`errorSource <WeightedErrorMechanism.errorSource>` makes to each element of the error signal computed for the
+mechanism to which the `errorSource <WeightedErrorMechanism.errorSource>` projects.  The contribution of each
+element of the `errorSource <WeightedErrorMechanism.errorSource>` is computed for each element of the output of the
+mechanism to which it projects, weighted both by the strength of its association to that element as specified in
+the `next_level_projection`, and the differential of the :keyword:`function` for that mechanism.
+
+
+  This
+implements
+a core computation of the
+`Generalized Delta Rule <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_  (or "backpropagation")
+learning algorithm. The ``function`` returns an array with the weighted errors for each element of the
+:py:data:`errorSource <WeightedErrorMechanism.errorSource>`, which is placed in its ``value``
+and  :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attributes, and the value of of its
+(:keyword:`WEIGHTED_ERROR`) outputState.
+
+
+OLD:
 A WeightedErrorMechanism always executes after the mechanism it is monitoring.  It's ``function`` computes the
 contribution of each element of the ``value`` of the :py:data:`errorSource <WeightedErrorMechanism.errorSource>`
 to the ``error_signal``:  the error associated with each element of the ``value`` of the mechanism to which the
@@ -79,6 +95,8 @@ learning algorithm. The ``function`` returns an array with the weighted errors f
 :py:data:`errorSource <WeightedErrorMechanism.errorSource>`, which is placed in its ``value``
 and  :py:data:`outputValue <Mechanism.Mechanism_Base.outputValue>` attributes, and the value of of its
 (:keyword:`WEIGHTED_ERROR`) outputState.
+
+
 
 .. _WeightedError_Class_Reference:
 
