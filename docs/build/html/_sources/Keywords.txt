@@ -2,5 +2,5 @@ Keywords
 ========
 
 .. automodule:: Keywords
-   :members:
+   :members: Keywords, MatrixKeywords
    :exclude-members: random, LinearCombination

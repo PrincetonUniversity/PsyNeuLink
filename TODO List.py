@@ -10,20 +10,20 @@
 #   ProcessingMechanism
 #   DefaultProcessingMechanism
 # √ DDM
-#   IntegratorMechanism
-#   TransferMechanism
-#   MonitoringMechanism
+# √ IntegratorMechanism
+# √ TransferMechanism
+# √ MonitoringMechanism
 #   DefaultMonitoringMechanism
-#   ComparatorMechanism
-#   WeightedErrorMechanism
+# √ ComparatorMechanism
+# √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
 # √ EVCMechanism
 #   ControlSignal
 #   Projection
-#   MappingProjection
-#   ControlProjection
-#   LearningProjection
+# √ MappingProjection
+# √ ControlProjection
+# √ LearningProjection
 #   State
 #   InputState
 #   ParameterState
@@ -281,7 +281,7 @@
     #     BUT NOT FOR REPORTING, AND SHOULD NOT BE CONSIDERED TERMINALS FOR EVC MONITORING
     #      FOR OPTIONAL INPUT, AND ADD ARGUMENT TO SYSTEM FOR ASSIGNING INPUT AT EXECUTE TIME
 #endregion
-
+#
 # DOCUMENT:  Add links throughout for time_step and trial
 
 #region DEVELOPMENT
@@ -578,6 +578,26 @@
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 #
 # TEST warnings.warn
+#
+# IMPLEMENT: REFACTOR EVC and LEARNING:
+#
+#            EVC:  1) MonitoringMechanism - new one that implements current EVCMechanism's objective function (i.e.,
+#                                            (i.e., using LinearCombination).
+#                  2) EVCMechanism - new version that takes output of MonitoringMechanism, and just handles search.
+#                  3) ControlProjection - as it is now.
+#
+#            Learning: 1) MonitoringMechanism - use relevant one, as it does now.
+#                      2) LearningMechanism - move BP and RL implementations from LearningProjection to this/these;
+#                                               takes output of MonitoringMechanism (as errorSignal)
+#                                               as well as an errorSource as its input
+#                                               (rather than figuring it out, as it does now);
+#                                               BP version calculates gradient on that;  RL does its thing;
+#                                               generates modification specification for LearningProjection.
+#                      3) LearningProjection - simplified version (paralleling ControlProjection implementation):
+#                                                * takes modification specification from LearningMechanism and
+#                                                     formats it for item being modified (learned);
+#                                                * can be used for MappingProjection or ProcessingMechanism.
+#
 #
 # - IMPLEMENT: Config (that locally stashes default values for user)
 #
@@ -1837,12 +1857,8 @@
 #
 # FIX: IMPLEMENT _update FOR ControlMechanism (CURRENTLY OVERRIDDEN)
 # FIX: EVCMecchanism prefs not settable
-# IMPLEMENT: Implement way of specifying default allocation policy for ControlSignals in system
-#                   MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCMECHANISM THAT IS USED IF NO OTHER IS SPECIFED
-#
 # FIX: Component: UNCOMMENT WHEN EVC IS GIVEN A PREF SET
-# IMPLEMENT: ADD _instantiate_input_states TO ControlMechanism AND
-# IMPLEMENT      MOVE ASSIGNMENT OF monitor_for_control_factors TO THERE
+#
 # FIX: MAKE EVCMechanism._update_predicted_inputs MORE EFFICIENT
 #
 # FIX: WHICH IS CORRECT (SEBASTIAN):
@@ -1871,6 +1887,13 @@
 # - FIX: ?? For ControlMechanism (and subclasses) what should default_input_value (~= variable) be used for?
 # - EVC: USE THE NEW METHOD TO CREATE MONITORING CHANNELS WHEN PROJECIONS ARE AUTOMATCIALLY ADDED BY A PROCESS
 #         OR IF params[INPUT_STATES] IS SPECIFIED IN __init__()
+#
+# IMPLEMENT: Implement way of specifying default allocation policy for ControlSignals in system
+#
+#                   MAKE IT AN ARGUMENT / ATTRIBUTE OF THE EVCMECHANISM THAT IS USED IF NO OTHER IS SPECIFED
+# IMPLEMENT: ADD _instantiate_input_states TO ControlMechanism AND
+#
+# IMPLEMENT      MOVE ASSIGNMENT OF monitor_for_control_factors TO THERE
 #
 # - IMPLEMENT: controlSignals attribute:  list of control signals for mechanism
 #                                        (get from outputStates.sendsToProjections)
@@ -2193,6 +2216,8 @@
 # IMPLEMENT: RL:  make Backprop vs. RL an arg for LearningProjection (that can also be used as arg for Process)
 #                 _validate_function:  must be BP or RL (add list somewhere of what is supported)
 #                 IMPLEMENT: MONITOR_FOR_LEARNING AS STATE SPECIFICATION (CF. LearningProjection._instantiate_sender)
+#
+# FIX: change errorSignal -> error_signal (but must be sure not to interfere / get confused with existing error_signal)
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
 # FIX: [LearningProjection]:
                 # FIX: ?? SHOULD THIS USE _assign_defaults:

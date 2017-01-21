@@ -13,7 +13,7 @@
 # **********************************************************************************************************************
 
 # IMPLEMENTATION NOTE:
-#  These class are used for documentation purposes only.
+#  These classes are used for documentation purposes only.
 #  The attributes of each are assigned to constants (listed in the next section of this module)
 #    that are the ones actually used by the code.
 
@@ -23,63 +23,60 @@ class Keywords:
     ----------
 
     ORIGIN
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
         and that receives the input to the process or system when it is :ref:`executed or run <Run>`.  A process may
         have only one `ORIGIN` mechanism, but a system may have many.  Note that the `ORIGIN`
         mechanism of a process is not necessarily an `ORIGIN` of the system to which it belongs, as it may
         receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
         system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
         method.  For additional details about `ORIGIN` mechanisms in processes, see
-        :ref:`Process Mechanisms <Process_Mechanisms>` and
-        :ref:`Process Input and Output <Process_Input_And_Ouput>`; and for systems see
-        :ref:`System Mechanisms <System_Mechanisms>` and
-        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Ouput>`;
+        and for systems see `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     INTERNAL
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     CYCLE
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is *not* an :py:data:`ORIGIN <Keywords.ORIGIN>`
-        mechanism, and receives a projection that closes a recurrent loop in a process and/or system.  If it is an
-        :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism, then it is designated as an
-        :py:data:`INITIALIZE_CYCLE  <Keywords.INITIALIZE_CYCLE>` mechanism.
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` mechanism, and receives a projection
+        that closes a recurrent loop in a process and/or system.  If it is an `ORIGIN` mechanism, then it is simply
+        designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the ``sender`` of a projection that closes a loop in
-        a process or system, and that is not an :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism.  An
-        :ref:`initial value  <Run_InitialValues>` can be assigned to such mechanisms, that will be used to initialize
-        the process or system when it is first run.  For additional information, see :ref:`Run <Run_Initial_Values>`,
-        :ref:`System Mechanisms <System_Mechanisms>` and
-        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
+        projection that closes a loop in a process or system, and that is not an `ORIGIN` mechanism (since in that
+        case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
+        mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+        information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     TERMINAL
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
-        that provides the output to the process or system when it is :ref:`executed or run <Run>`.  A process may
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
+        that provides the output to the process or system when it is `executed or run <Run>`.  A process may
         have only one `TERMINAL` mechanism, but a system may have many.  Note that the `TERMINAL`
         mechanism of a process is not necessarily a `TERMINAL` mechanism of the system to which it belongs,
         as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
         or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
-        :ref:`Process_Mechanisms` and :ref:`Process_Input_And_Ouput`; and for systems see :ref:`System_Mechanisms`.
+        `Process_Mechanisms` and `Process_Input_And_Ouput`; and for systems see `System_Mechanisms`.
 
     SINGLETON
-        A :doc:`ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
-        of an :py:data:`ORIGIN <Keywords.ORIGIN>` and/or a :py:data:`TERMINAL <Keywords.TERMINAL>` mechanism.
+        A `ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
+        of an `ORIGIN` and/or a `TERMINAL` mechanism.
 
     MONITORING
-        A :doc:`MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a TARGET; that is, it
-        is associated with an :py:data:`INTERNAL <Keywords.INTERNAL>` rather than a :py:data:`TERMINAL
-        <Keywords.TERMINAL>` ProcessingMechanism in the process and/or system to which it belongs. For
-        :py:class:`backpropagation <Function.BackPropagation>` learning, it is a :doc:WeightedErrorMechanism.
-        See :ref:`MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
+        A `MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a `TARGET`; that is, it
+        is associated with an `INTERNAL` rather than a `TERMINAL` ProcessingMechanism in the process and/or system to
+        which it belongs. For `backpropagation <Function.BackPropagation>` learning, it is a `WeightedErrorMechanism`.
+        See `MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
 
     TARGET
-        A :doc:`ComparatorMechanism <ComparatorMechanism>` of a process and/or system configured for learning that
-        receives a target value from its ``execute`` or ``run`` method.  It must be associated with the
-        :py:data:`TERMINAL <Keyword.TERMINAL>` mechanism of the process or system. The :keyword:`TARGET` mechanisms of
-        a process or system are listed in its :keyword:`targetMechanisms` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details, see :ref:`TARGET mechanisms <LearningProjection_Targets>`
-        and specifying :ref:`target values <Run_Targets>`.
+        A `ComparatorMechanism` of a process and/or system configured for learning that receives a target value from
+        its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
+        mechanism of the process or system. The `TARGET` mechanisms of a process or system are listed in its
+        :keyword:`targetMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
+        details, see `TARGET mechanisms <LearningProjection_Targets>` and specifying `target values <Run_Targets>`.
 
 
     """
@@ -93,7 +90,40 @@ class Keywords:
         self.MONITORING = MONITORING
         self.TARGET = TARGET
 
-# parameter_keywords = set()
+
+class MatrixKeywords:
+    """
+    Attributes
+    ----------
+
+    IDENTITY_MATRIX
+        a square matrix of 1's; this requires that the length of the sender and receiver values are the same.
+
+    FULL_CONNECTIVITY_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are 1's.
+
+    RANDOM_CONNECTIVITY_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are filled with random values uniformly
+        distributed between 0 and 1.
+
+    AUTO_ASSIGN_MATRIX
+        if the sender and receiver are of equal length, an `IDENTITY_MATRIX` is assigned;  otherwise, a
+        `FULL_CONNECTIVITY_MATRIX` is assigned.
+
+    DEFAULT_MATRIX
+        used if no matrix specification is provided in the constructor;  it presently assigns an `IDENTITY_MATRIX`.
+
+    """
+    def __init__(self):
+        self.MATRIX = MATRIX
+        self.IDENTITY_MATRIX = IDENTITY_MATRIX
+        self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
+        self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
+        self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
+        self.DEFAULT_MATRIX = DEFAULT_MATRIX
+
 
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS  *************************************************************

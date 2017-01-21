@@ -14,47 +14,48 @@
 Overview
 --------
 
-A ControlProjection is a :doc:`projection <Projection> that projects to the :doc:`parameterState <ParameterState>`
-of a mechanism.  It takes the value of an outputState of another mechanism (e.g., usually a :doc:`ControlMechanism`),
-and uses it to modify the value of the parameter associated with the parameterState to which it projects.
+A ControlProjection is a `projection <Projection> that projects to the `parameterState <ParameterState>` of a mechanism.
+It takes the value of an `outputState <OutputState> of another mechanism (e.g., usually a
+`ControlMechanism <ControlMechanism>`), and uses it to  modify the value of the parameter associated with the
+parameterState to which it projects.
 
 .. _ControlProjection_Creation:
 
 Creating a ControlProjection
 ----------------------------
 
-A ControlProjection can be created using any of the standard ways to :ref:`create a projection <Projection_Creation>`,
-or by including it in the :ref:`specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism,
-MappingProjection, or the ``function`` of either of these.  If a ControlProjection is created using its constructor on
-its own, the ``receiver`` argument must be specified.  If it is included in a parameter specification,
-the parameterState for the parameter being specified will be assigned as the ControlProjection's ``receiver``.  If
-its ``sender`` is not specified, its assignment depends on the ``receiver``.  If the receiver belongs to a mechanism
-that is part of a system, then the ControlProjection's ``sender`` is assigned to an outputState of the system's
-:ref:`controller  <System_Execution_Control>`. Otherwise, the ``sender`` is assigned to the outputState of a
-:any:`DefaultControlMechanism`.
+A ControlProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
+or by including it in the `specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism,
+MappingProjection, or the :keyword:`function` of either of these.  If a ControlProjection is created using its
+constructor on its own, the `receiver <ControlProjection.receiver>` argument must be specified.  If it is included in a
+parameter specification, the parameterState for the parameter being specified will be assigned as the
+ControlProjection's `receiver <ControlProjection.receiver>`.  If its `sender <ControlProjection.sender>` is not
+specified, its assignment depends on the `receiver <ControlProjection.receiver>`.  If the receiver belongs to a
+mechanism that is part of a system, then the ControlProjection's `sender <ControlProjection.sender>` is assigned to an
+outputState of the system's `controller`. Otherwise, the `sender <ControlProjection.sender>` is assigned to
+the outputState of a `DefaultControlMechanism`.
 
 .. _ControlProjection_Structure:
 
 Structure
 ---------
 
-A ControlProjection has the same structure as a :doc:`Projection`.  Its
-:py:data:`sender <Projection.Projection_Base.sender>` can be the outputState of any mechanism, but is generally a
-:doc:`ControlMechansm`, and commonly the :doc:`ControlSignal` of an :doc:`EVCMechanism.`.  Its
-:py:data:`receiver <Projection.Projection_Base.receiver>` is always the :doc:`paramterState <ParameterState>` of a
-mechanism or :doc:`MappingProjection`, that is associated with a parameter of either the parameterState's owner or
-it owner's ``function``.  The ``function`` of a ControlProjection is, by default, the identity function;  that is,
-it uses the value of its sender to modify the value of the parameter that it controls.
-
+A ControlProjection has the same structure as a `Projection`.  Its `sender <ControlProjection.sender>`
+can be the outputState of any mechanism, but is generally a `ControlMechanism <ControlMechanism>` and commonly the
+`ControlSignal` of an `EVCMechanism`.  Its `receiver <ControlProjection.receiver>` is always the `parameterState
+<ParameterState>` of a mechanism or `MappingProjection`, that is associated with a parameter of either the
+parameterState's owner or it owner's :keyword:`function`.  The `function <ControlProjection.function>` of a
+ControlProjection is, by default, the identity function;  that is, it uses the :keyword:`value` of its `sender
+<ControlProjection.sender>` to modify the value of the parameter that it controls.
 
 .. _ControlProjection_Execution:
 
 Execution
 ---------
 
-A ControlProjection uses its ``function`` to assign its value from the one received from its :py:data:`sender`*[]:
-This is used by the parmaterState to which it projects to modify the corresponding parameter of the
-parameterState's owner or its owner's ``function``.
+A ControlProjection uses its `function <ControlProjection.function>` to assign its `value <ControlProjection.value>`
+from the one received  from its `sender <ControlProjection.sender>`.  This is used by the paramaterState to which the
+ControlProjection projects to modify the corresponding parameter of its owner or owner's :keyword:`function`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlProjection are not applied until the
@@ -94,16 +95,17 @@ class ControlProjection(Projection_Base):
      name=None,                                       \
      prefs=None)
 
-     Implements a projection that controls the parameter of a mechanism's function.
+     Implements a projection that controls the parameter of a mechanism or its :keyword:`function`.
 
     COMMENT:
         Description:
             The ControlProjection class is a type in the Projection category of Component.
             It implements a projection to the parameterState of a mechanism that modifies a parameter of its function.
             It:
-               - takes an allocation (scalar) as its input (self.variable)
-               - uses self.function (params[FUNCTION]) to compute intensity based on allocation from self.sender,
-                   used by self.receiver.owner to modify a parameter of self.receiver.owner.function.
+               - takes a scalar as its input (sometimes referred to as an "allocation")
+               - uses its `function` to compute its value (sometimes referred to as its "intensity"
+                 based on its input (allocation) its `sender`,
+               - used to modify a parameter of the owner of the `receiver` or its `function`.
 
         ** MOVE:
         ProjectionRegistry:
@@ -131,21 +133,23 @@ class ControlProjection(Projection_Base):
     ---------
 
     sender : Optional[Mechanism or OutputState]
-        the source of the allocation for the ControlProjection;  usually an outputState of a :doc:`ControlMechanism`.
-        If it is not specified, the :doc:`DefaultControlMechanism` for the system to which the receiver belongs
-        will be assigned.
+        specifies the source of the input for the ControlProjection;  usually an `outputState <OutputState>` of a
+        `ControlMechanism <ControlMechanism>`, and commonly the `ControlSignal` of an `EVCMechanism`.  If it is not
+        specified, an outputState of the `DefaultControlMechanism` for the system to which the receiver belongs will
+        be assigned.
 
     receiver : Optional[Mechanism or ParameterState]
-        the parameterState associated with the parameter of a function to be controlled.  This must be specified,
+        specifies the parameterState associated with the parameter to be controlled.  This must be specified,
         or be able to be determined by the context in which the ControlProjection is created or assigned.
 
     function : TransferFunction : default Linear
-        converts the value of the ControlProjection's :pyd:data:`sender`  into its ``value``.
+        specifies the function used to convert the :keyword:`value` of the ControlProjection's
+        `sender <ControlProjection.sender>`  to its own `value <ControlProjection.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the projection, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
-        By default, it contains an entry for the projection's default ``function`` and cost function assignments.
+        a dictionary that can be used to specify the parameters for the projection, its
+        `function <ControlProjection.function>`, and/or a custom function and its parameters
+        (see `parameter dictionary <ParameterState_Specifying_Parameters>` for details).
 
     name : str : default ControlProjection-<index>
         a string used for the name of the ControlProjection.
@@ -155,7 +159,7 @@ class ControlProjection(Projection_Base):
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the `PreferenceSet` for the ControlProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
@@ -163,14 +167,15 @@ class ControlProjection(Projection_Base):
     componentType : CONTROL_PROJECTION
 
     sender : OutputState of ControlProjection
-        mechanism that provides the current input for the ControlProjection (usuall a :doc:`ControlMechanisms`).
+        mechanism that provides the current input for the ControlProjection (usually a
+        `ControlMechanism <ControlMechanism>`).
 
     receiver : ParameterState of Mechanism
-        :doc:`parameterState <ParameterState>` for the parameter to be modified by ControlProjection.
+        :doc:`parameterState <ParameterState>` for the parameter to be modified by the ControlProjection.
 
     value : float
-        during initialization, assigned keyword string (either INITIALIZING or DEFERRED_INITIALIZATION);
-        during execution, returns the ``value`` of the ControlProjection.
+        during initialization, assigned a keyword string (either `INITIALIZING` or `DEFERRED_INITIALIZATION`);
+        during execution, is assigned the current value of the ControlProjection.
 
     name : str : default ControlProjection-<index>
         the name of the ControlProjection.
@@ -182,7 +187,7 @@ class ControlProjection(Projection_Base):
         the `PreferenceSet` for projection.
         Specified in the `prefs` argument of the constructor for the projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
 
     """

@@ -273,7 +273,7 @@ class OutputState(State_Base):
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
         the `PreferenceSet` for the outputState.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
 
     Attributes
@@ -334,7 +334,7 @@ class OutputState(State_Base):
         the `PreferenceSet` for the outputState.
         Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
