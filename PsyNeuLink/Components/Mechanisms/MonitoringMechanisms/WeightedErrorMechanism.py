@@ -318,7 +318,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         self.weighted_error_signal = np.dot(next_level_matrix, error_derivative)
 
         # Compute summed error for use by callers to decide whether to update
-        self.summedErrorSignal = np.sum(self.weighted_error_signal)
+        self.summed_error_signal = np.sum(self.weighted_error_signal)
 
         return self.weighted_error_signal
 

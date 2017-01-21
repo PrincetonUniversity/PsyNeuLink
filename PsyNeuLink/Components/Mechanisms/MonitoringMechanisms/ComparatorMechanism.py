@@ -485,7 +485,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
             comparison_array = self.function(variable=self.variable, params=runtime_params)
 
-            self.summedErrorSignal = sum
+            self.summed_error_signal = sum
 
             return comparison_array
 
