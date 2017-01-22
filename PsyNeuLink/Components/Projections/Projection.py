@@ -24,27 +24,29 @@
 Overview
 --------
 
-Projections allow information to be passed between mechanisms.  A projection takes an input from the output of
-one mechanism (its ``sender``), and does whatever conversion is needed to transmit that information as the input
-to another mechanism (its ``receiver``).  There are three types of projections that serve difference purposes:
+Projections allow information to be passed between mechanisms.  A projection takes its input from the
+`outputState <OutputState>` of one mechanism (its `sender <Projection.sender>`), and does whatever conversion is
+needed to transmit that information to the `inputState <InputState>` of another mechanism (its
+`receiver <Projection.receiver>`).  There are three types of projections that serve difference purposes:
 
-* :doc:`MappingProjection`
-    These take the ouptut of one :doc:`ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
-    the projection's :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmit this as
-    input to another ProcessingMechanism.  Typically, MappingProjections are used to connect the mechanisms in the
-    :py:data:`pathway <Process.Process_Base.pathway>` of a :doc:`Process`.
+* `MappingProjection`
+    These take the output of a `ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
+    the projection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmit the result as
+    input to another ProcessingMechanism.  Typically, MappingProjections are used to connect mechanisms in the
+    `pathway` of a `Process`.
 ..
-* :doc:`ControlProjection`
-    These take a "control allocation" specification — usually the ouptput of a  :doc:`ControlMechanism
-    <ControlMechanism>` — and transmit this to the parameterState of ProcessingMechanism,  which uses this to
-    modulate the value of the corresponding parameter of the mechanism's function.  ControlProjections are
-    typically used in the context of a :doc:`System`.
+* `ControlProjection`
+    These take an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
+    of a `ControlMechanism <ControlMechanism>`, and transmit this to the `parameterState <ParameterState>` of
+    a ProcessingMechanism which uses this to modulate a parameter of the mechanism or its function.
+    ControlProjections are typically used in the context of a `System`.
 ..
-* :doc:`LearningProjection`
-    These take an "error signal" — usually the output of a :doc:`MonitoringMechanism <MonitoringMechanism>` — and
-    transmit this to the parameterState of a :doc:`MappingProjection`, which uses this to modify its
-    :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used in the
-    context of a :doc:`System` or :doc:`Process` that uses learning.
+* `LearningProjection`
+    These take an `error_signal <LearningProjection.LearningProjection.error_signal>`, usually the output of a
+    `MonitoringMechanism <MonitoringMechanism>`, and transmit this to the `parameterState <ParameterState>` of a
+    `MappingProjection` which uses this to modify its `matrix <MappingProjection.MappingProjection.matrix>`
+    parameter. LearningProjections are used when learning has been specified for a `process <Process_Learning>`
+    or `system <System_Execution_Learning>`.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the inputState and/or outputState of the receiver
@@ -55,36 +57,42 @@ COMMENT
 Creating a Projection
 ---------------------
 
-Projections can be created in several ways.  The simplest is to use the standard Python method of calling the
-constructor for the desired type of projection.  However, projections can also be specified "in context," for example
-in the :py:data:`pathway <Process.Process_Base.pathway>` attribute of a process, or when a tuple is used to specify the
-parameter of a function (such as a :ref:`ControlProjection for a mechanism <Mechanism_Assigning_A_ControlProjection>`,
-or a :ref:`LearningProjection for a MappingProjection <MappingProjection_Tuple_Specification>`).
+A projection can be created on its own, by calling the constructor for the desired type of projection.  More
+commonly, however, projections are either specified `in context <Projection_In_Context_Specification>`, or
+are `created automatically <Projection_Automatic_Creation>`, as described below.
+
 
 .. _Projection_In_Context_Specification:
 
-**In context specification**.  Any of the following can be used:
+In Context Specification
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Projections can be specified in a number of places where they are required or permitted,
+for example in the specification of a `pathway` for a `process <Process>`, where the value of a parameter is specified
+(e.g., to assign a ControlProjection) or where a MappingProjection is specified (to assign it a LearningProjection).
+
+Any of the following can be used to specify a projection in context:
 
   * *Constructor*.  Used the same way in context as it is ordinarily.
   ..
-  * *Projection object*.  This must be a reference to an existing instance of a projection.
+  * *Projection reference*.  This must be a reference to a projection that has already been created.
   ..
-  * *Projection keyword*.  This will create a default instance of the specified type, and can be any of the following:
+  * *Projection keyword*.  This creates a default instance of the specified type, and can be any of the following:
 
-      * :keyword:`MAPPING_PROJECTION` -- a :doc:`MappingProjection` with the :doc:`DefaultMechanism` as its ``sender``.
+      * `MAPPING_PROJECTION` -- a `MappingProjection` with the `DefaultMechanism` as its :keyword:`sender`.
       |
-      * :keyword:`CONTROL_PROJECTION` -- a :doc:`ControlProjection` with the :doc:`DefaultControlMechanism`
-        as its ``sender``.
+      * `CONTROL_PROJECTION` -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
-      * :keyword:`LEARNING_PROJECTION` -- a :doc:`LearningProjection`.  This can only be used for a projection to the
-        matrix parameterState of a :doc:`MappingProjection`.  If the ``receiver`` for the MappingProjection
-        (the *error source**) projects to a MonitoringMechanism, it will be used as the ``sender`` for the
-        LearningProjection. Otherwise, a MonitoringMechanism will be created that is appropriate for the error source,
-        as will a MappingProjection from the error source to the MonitoringMechanism (see
-        :ref:`Automatic Instantiation` <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
+      * `LEARNING_PROJECTION` -- a `LearningProjection`.  At present, this can only be used together with the
+        `specification of a MappingProjection <MappingProjection_Tuple_Specification>`.  If the :keyword:`receiver`
+        of the MappingProjection (that will be the `error_source  <LearningProjection.LearningProjection.error_source>`
+        of the LearningProjection) projects to a `MonitoringMechanism`, the latter will be used as the
+        :keyword:`sender` for the LearningProjection.  Otherwise, a MonitoringMechanism will be created that is
+        appropriate for the :keyword:`error_source`, as will a MappingProjection from the :keyword:`error_source` to
+        the MonitoringMechanism (see `Automatic Instantiation <LearningProjection_Automatic_Creation>` of a
+        LearningProjection for details).
   ..
-  * *Projection type*.  This must be the name of a projection subclass;  it will create a default instance of the
-    specified type.
+  * *Projection type*.  This creates a default instance of the specified Projection subclass.
   ..
   * *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
@@ -105,7 +113,10 @@ or a :ref:`LearningProjection for a MappingProjection <MappingProjection_Tuple_S
 
 .. _Projection_Automatic_Creation:
 
-**Automatic creation**.  Under some circumstances PsyNeuLink will automatically create a projection. For example,
+Automatic creation
+~~~~~~~~~~~~~~~~~~
+
+Under some circumstances PsyNeuLink will automatically create a projection. For example,
 a process automatically generates a :doc:`MappingProjection` between adjacent mechanisms in its
 :py:data:`pathway <Process.Process_Base.pathway>` if none is specified; and :doc:`LearningProjection`  projections
 are automatically generated when :ref:`learning <Process_Learning>` is specified for a process.  Creating a
