@@ -166,12 +166,15 @@ class ControlProjection(Projection_Base):
 
     componentType : CONTROL_PROJECTION
 
-    sender : OutputState of ControlProjection
+    sender : OutputState of ControlMechanism
         mechanism that provides the current input for the ControlProjection (usually a
         `ControlMechanism <ControlMechanism>`).
 
     receiver : ParameterState of Mechanism
         :doc:`parameterState <ParameterState>` for the parameter to be modified by the ControlProjection.
+
+    allocation : 1d np.array
+        the input to the ControlProjection; same as the :keyword:`value` of the `sender <ControlProjection.sender>`.
 
     value : float
         during initialization, assigned a keyword string (either `INITIALIZING` or `DEFERRED_INITIALIZATION`);
@@ -342,3 +345,7 @@ class ControlProjection(Projection_Base):
         self.variable = self.sender.value
         self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
         return self.value
+
+    @property
+    def allocation(self):
+        return self.sender.value

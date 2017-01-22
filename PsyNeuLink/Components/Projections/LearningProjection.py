@@ -373,7 +373,7 @@ class LearningProjection(Projection_Base):
 
     error_signal : 1d np.array
         output of `errorSource <LearningProjection.errorSource>` (`sender <LearningProjection.sender>`) used as the
-        input for the LearningProjection's `function <LearningProjection.function`, to determine changes to the
+        input for the LearningProjection's `function <LearningProjection.function>`, to determine changes to the
         `mappingWeightMatrix`.
 
     variable : 1d np.array
