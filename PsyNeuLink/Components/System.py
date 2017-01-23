@@ -1462,6 +1462,8 @@ class System_Base(System):
             Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism
 
         """
+        # Call Component execute() function for general processing
+        super().execute()
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
