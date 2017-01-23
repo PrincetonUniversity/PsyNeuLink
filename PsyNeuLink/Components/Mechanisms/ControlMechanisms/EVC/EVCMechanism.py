@@ -526,7 +526,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
             controller.controlSignals is a list of controlSignal objects
             controller.controlSignalSearchSpace is a list of all allocationPolicies specifed by allocation_samples
-            controlSignal.allocationSamples is the set of samples specified for that controlSignal
+            controlSignal.allocation_samples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
             controller.allocationPolicy - holds current allocationPolicy
             controller.outputValue is a list of current controlSignal values
@@ -1225,9 +1225,9 @@ class EVCMechanism(ControlMechanism_Base):
 
         Update prediction mechanisms
         Construct controlSignalSearchSpace (from allocation_samples of each item in controlSignals):
-            * get `allocationSamples` for each ControlSignal in `controlSignals`
+            * get `allocation_samples` for each ControlSignal in `controlSignals`
             * construct `controlSignalSearchSpace`: a 2D np.array of control allocation policies, each policy of which
-              is a different combination of values, one from the `allocationSamples` of each ControlSignal.
+              is a different combination of values, one from the `allocation_samples` of each ControlSignal.
         Call self.function -- default is ControlSignalGridSearch
         Return an allocation_policy
 
@@ -1241,11 +1241,11 @@ class EVCMechanism(ControlMechanism_Base):
         control_signal_sample_lists = []
         control_signals = self.controlSignals
 
-        # Get allocationSamples for all ControlSignals
+        # Get allocation_samples for all ControlSignals
         num_control_signals = len(control_signals)
 
         for control_signal in self.controlSignals:
-            control_signal_sample_lists.append(control_signal.allocationSamples)
+            control_signal_sample_lists.append(control_signal.allocation_samples)
 
         # Construct controlSignalSearchSpace:  set of all permutations of ControlProjection allocations
         #                                     (one sample from the allocationSample of each ControlProjection)

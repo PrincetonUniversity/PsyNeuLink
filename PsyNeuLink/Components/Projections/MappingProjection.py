@@ -42,26 +42,56 @@ COMMENT:
             if the mechanism is being instantiated on its own, the sender must be explicitly specified
 COMMENT
 
-A MappingProjection can be created in any of the ways that can be used to create a `projection <Projection_Creation>`)
-or by specifying it in the `pathway` of a process. MappingProjections are also generated automatically in the following
-circumstances, using a `matrix <Mapping_Matrix>` appropriate to the circumstance:
+A MappingProjection can be created in any of the ways that can be used to create a `projection <Projection_Creation>`).
+MappingProjections are also generated automatically in the following circumstances, using a `matrix <Mapping_Matrix>`
+appropriate to the circumstance:
 
-* by a `process <Process>`, when two adjacent mechanisms in its `pathway` do not already have a projection assigned
-  between them; `AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
-  context;
-..
-* by a `ControlMechanism <ControlMechanism>`, from outputStates listed in its
-  `monitoredOutputStates <ControlMechanism.ControlMechanism_Base.monitoredOutputStates>` attribute to assigned
-  inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` is used for each;
-..
-* by a `LearningProjection`, from a mechanism that is the source of an error signal to a `MonitoringMechanism`
-  that is used to evaluate that error and generate a learning signal from it
-  (see `LearningProjection<LearningProjection_Automatic_Creation>`); the matrix used depends on the
-  `function <LearningProjection.LearningProjection.function>` parameter of the LearningProjection.
+  * by a `process <Process>`, when two adjacent mechanisms in its `pathway` do not already have a projection assigned
+    between them; `AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
+    context;
+  ..
+  * by a `ControlMechanism <ControlMechanism>`, from outputStates listed in its
+    `monitoredOutputStates <ControlMechanism.ControlMechanism_Base.monitoredOutputStates>` attribute to assigned
+    inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` is used for each;
+  ..
+  * by a `LearningProjection`, from a mechanism that is the source of an error signal to a `MonitoringMechanism`
+    that is used to evaluate that error and generate a learning signal from it
+    (see `LearningProjection<LearningProjection_Automatic_Creation>`); the matrix used depends on the
+    `function <LearningProjection.LearningProjection.function>` parameter of the LearningProjection.
 
-When a MappingProjection is created, its `matrix <MappingProjection.matrix>` and
-`param_modulation_operation <MappingProjection.param_modulation_operation>` attributes can be specified,
-or they can be assigned by default (see below).
+.. _Mapping_Matrix_Specification:
+
+The `matrix <MappingProjection.matrix>` parameter of a MappingProjection is used to transform the input from its
+`sender <MappingProjection.sender>`, the result of which is provided to its `receiver <MappingProjection.receiver>`.
+It can be specified in any of the following formats:
+
+  * **List, array or matrix**.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
+    it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
+    or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
+    (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
+    given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>`.
+
+  .. _Matrix_Keywords:
+  * **Matrix keyword**.  This is used to specify a type of matrix without having to specify its individual values.
+    Any of the `matrix keywords <Keywords.MatrixKeywords>` can be used.
+
+  ..
+  * **Random matrix function** (:py:func:`random_matrix <Utilities.random_matrix>`).  This is a convenience function
+    that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a
+    sender and receiver, with random numbers drawn from a uniform distribution within a specified range and with a
+    specified offset.
+
+  .. _MappingProjection_Tuple_Specification:
+  * **Tuple**.  This is used to specify a projection to the `parameterState <ParameterState>` for the matrix
+    along with the `matrix <MappingProjection.matrix>`  itself. The tuple must have two items:
+    the first can be any of the specifications described above;  the second must be a
+    `projection specification <Projection_In_Context_Specification>`.
+
+  COMMENT:
+      XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
+                BUT ALSO A CONTROL_PROJECTION OR A MAPPING_PROJECTION
+      XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
+  COMMENT
 
 .. _Mapping_Structure:
 
@@ -90,35 +120,8 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
 * `matrix <MappingProjection.matrix>`
 
   Used by the MappingProjection's `function <MappingProjection.function>` to carry out a matrix transformation of its
-  input. It can be specified using any of the following formats:
-
-      * **List, array or matrix**.  If it is a list, each item must be a list or 1d np.array of numbers.  Otherwise,
-        it must be a 2d np.array or np.matrix.  In each case, the outer dimension (outer list items, array axis 0,
-        or matrix rows) corresponds to the elements of the `sender <MappingProjection.sender>`, and the inner dimension
-        (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
-        given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>`.
-      |
-      .. _Matrix_Keywords:
-
-      * **Matrix keyword**.  This is used to specify a type of matrix without having to specify its individual values.
-        Any of the `matrix keywords <Keywords.MatrixKeywords>` can be used.
-      |
-      * **Random matrix function** (:py:func:`random_matrix <Utilities.random_matrix>`).  This is a convenience function
-        that provides more flexibility than `RANDOM_CONNECTIVITY_MATRIX`.  It generates a random matrix sized for a
-        sender and receiver, with random numbers drawn from a uniform distribution within a specified range and with a
-        specified offset.
-      |
-      .. _MappingProjection_Tuple_Specification:
-
-      * **Tuple**.  This is used to specify a projection to the `parameterState <ParameterState>` for the matrix
-        along with the `matrix <MappingProjection.matrix>`  itself. The tuple must have two items:
-        the first can be any of the specifications described above;  the second must be a
-        `projection specification <Projection_In_Context_Specification>`.
-      COMMENT:
-          XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
-                    BUT ALSO A CONTROL_PROJECTION OR A MAPPING_PROJECTION
-          XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
-      COMMENT
+  input, that is then provided to its `receiver <MappingProjection.receiver>`.  It can be specified using a number of
+  different formats, as described `above <Mapping_Matrix_Specification>`.
 
 .. _Mapping_Parameter_Modulation_Operation:
 
