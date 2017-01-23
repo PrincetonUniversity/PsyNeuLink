@@ -49,7 +49,7 @@ primary attributes:
 * `allocation`: assigned to the ControlSignal by the EVCMechanism to which it belongs, and converted to its
   `intensity` by its `function <ControlSignal.function>`. Its value corresponds to the current round of execution of
   the EVCMechanism to which the ControlSignal belongs.  The value in the previous round of execution can be accessed
-  using the ControlSignal's `lastAllocation` attribute.
+  using the ControlSignal's `last_allocation` attribute.
 ..
 * `allocation_samples`:  list of the allocation values to be sampled when the `EVCMechanism` to which the
   ControlSignal belongs determines its `allocation_policy <EVCMechanism.EVCMechanism.allocation_policy>`.
@@ -74,12 +74,12 @@ primary attributes:
 
     .. _ControlSignal_Cost_Functions:
 
-    * `intensityCost`, calculated by the `intensityCostFunction` based on the current `intensity` of the ControlSignal.
+    * `intensity_cost`, calculated by the `intensityCostFunction` based on the current `intensity` of the ControlSignal.
     |
-    * `adjustmentCost`, calculated by the `adjustmentCostFunction` based on a change in the ControlSignal's
+    * `adjustment_cost`, calculated by the `adjustmentCostFunction` based on a change in the ControlSignal's
       `intensity` from its last value.
     |
-    * `durationCost`, calculated by the `durationCostFunction` based on an integral of the the ControlSignal's `cost`.
+    * `duration_cost`, calculated by the `durationCostFunction` based on an integral of the the ControlSignal's `cost`.
     |
     * `cost`, calculated by the `costCombinationFunction` that combines the results of any cost functions that are
       enabled (as described in the following section).
@@ -244,7 +244,7 @@ class ControlSignal(OutputState):
         value used as `variable <ControlSignal.variable>` for the ControlSignal's `function <ControlSignal.function>`
         to determine its `intensity`.
 
-    lastAllocation : float
+    last_allocation : float
         value of `allocation` in the previous execution of ControlSignal's `owner <ControlSignal.owner>`.
 
     allocation_samples : list : DEFAULT_SAMPLE_VALUES
@@ -269,30 +269,30 @@ class ControlSignal(OutputState):
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
 
     intensityCostFunction : TransferFunction : default default Exponential
-        calculates `intensityCost` from the curent value of `intensity`. It can be any `TransferFunction`, or any other
+        calculates `intensity_cost` from the curent value of `intensity`. It can be any `TransferFunction`, or any other
         function that takes and returns a scalar value. The default is `Exponential`.  It can be disabled permanently
         for the ControlSignal by assigning `None`.
 
-    intensityCost : float
+    intensity_cost : float
         cost associated with the current `intensity`.
 
-    adjustmentCostFunction : TransferFunction : default Linear
-        calculates `adjustmentCost` based on the change in `intensity` from  `lastIntensity`.  It can be any
+    adjustment_cost_function : TransferFunction : default Linear
+        calculates `adjustment_cost` based on the change in `intensity` from  `lastIntensity`.  It can be any
         `TransferFunction`, or any other function that takes and returns a scalar value. It can be disabled
         permanently for the ControlSignal by assigning `None`.
 
-    adjustmentCost : float
+    adjustment_cost : float
         cost associated with last change to `intensity`.
 
-    durationCostFunction : IntegratorFunction : default Linear
+    duration_cost_function : IntegratorFunction : default Linear
         calculates an integral of the ControlSignal's `cost`.  It can be any `IntegratorFunction`, or any other
         function that takes a list or array of two values and returns a scalar value. It can be disabled permanently
         for the ControlSignal by assigning `None`.
 
-    durationCost : float
+    duration_cost : float
         intregral of `cost`.
 
-    costCombinationFunction : function : default Reduce(operation=SUM)
+    cost_combination_function : function : default Reduce(operation=SUM)
         combines the results of all cost functions that are enabled, and assigns the result to `cost`.
         It can be any function that takes an array and returns a scalar value.
 
@@ -534,7 +534,11 @@ class ControlSignal(OutputState):
                 raise ControlSignalError("{} is not a valid cost function for {}".
                                          format(cost_function, cost_function_name))
 
-            setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
+            # MODIFIED 1/23/17 OLD:
+            # setattr(self,  underscore_to_camelCase('_'+cost_function_name), cost_function)
+            # MODIFIED 1/23/17 NEW:
+            setattr(self,  cost_function_name, cost_function)
+            # MODIFIED 1/23/17 END
 
         self.controlSignalCostOptions = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
 
@@ -544,15 +548,19 @@ class ControlSignal(OutputState):
         # Default intensity params
         self.default_allocation = defaultControlAllocation
         self.allocation = self.default_allocation  # Amount of control currently licensed to this signal
-        self.lastAllocation = self.allocation
+        self.last_allocation = self.allocation
         self.intensity = self.allocation
 
         # Default cost params
-        self.intensityCost = self.intensityCostFunction(self.intensity)
-        self.adjustmentCost = 0
-        self.durationCost = 0
-        self.last_duration_cost = self.durationCost
-        self.cost = self.intensityCost
+        # # MODIFIED 1/23/17 OLD:
+        # self.intensity_cost = self.intensityCostFunction(self.intensity)
+        # MODIFIED 1/23/17 NEW:
+        self.intensity_cost = self.intensity_cost_function(self.intensity)
+        # MODIFIED 1/23/17 END
+        self.adjustment_cost = 0
+        self.duration_cost = 0
+        self.last_duration_cost = self.duration_cost
+        self.cost = self.intensity_cost
         self.last_cost = self.cost
 
         # If intensity function (self.function) is identity function, set ignoreIntensityFunction
@@ -591,10 +599,10 @@ class ControlSignal(OutputState):
         super(OutputState, self).update(params=params, time_scale=time_scale, context=context)
 
         # store previous state
-        self.lastAllocation = self.allocation
+        self.last_allocation = self.allocation
         self.lastIntensity = self.intensity
         self.last_cost = self.cost
-        self.last_duration_cost = self.durationCost
+        self.last_duration_cost = self.duration_cost
 
         # update current intensity
         # FIX: INDEX MUST BE ASSIGNED WHEN OUTPUTSTATE IS CREATED FOR ControlMechanism (IN PLACE OF LIST OF PROJECTIONS)
@@ -623,22 +631,41 @@ class ControlSignal(OutputState):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
+        # # MODIFIED 1/23/17 OLD:
+        # if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
+        #     intensity_cost = self.intensity_cost = self.intensityCostFunction(self.intensity)
+        #     if self.prefs.verbosePref:
+        #         print("++ Used intensity cost")
+        #
+        # if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
+        #     adjustment_cost = self.adjustment_cost = self.adjustmentCostFunction(intensity_change)
+        #     if self.prefs.verbosePref:
+        #         print("++ Used adjustment cost")
+        #
+        # if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
+        #     duration_cost = self.duration_cost = self.durationCostFunction([self.last_duration_cost, new_cost])
+        #     if self.prefs.verbosePref:
+        #         print("++ Used duration cost")
+        #
+        # new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
+        # MODIFIED 1/23/17 NEW:
         if self.controlSignalCostOptions & ControlSignalCostOptions.INTENSITY_COST:
-            intensity_cost = self.intensityCost = self.intensityCostFunction(self.intensity)
+            intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
 
         if self.controlSignalCostOptions & ControlSignalCostOptions.ADJUSTMENT_COST:
-            adjustment_cost = self.adjustmentCost = self.adjustmentCostFunction(intensity_change)
+            adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
         if self.controlSignalCostOptions & ControlSignalCostOptions.DURATION_COST:
-            duration_cost = self.durationCost = self.durationCostFunction([self.last_duration_cost, new_cost])
+            duration_cost = self.duration_cost = self.duration_cost_function([self.last_duration_cost, new_cost])
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
 
-        new_cost = self.costCombinationFunction([float(intensity_cost), adjustment_cost, duration_cost])
+        new_cost = self.cost_combination_function([float(intensity_cost), adjustment_cost, duration_cost])
+        # MODIFIED 1/23/17 END
 
         if new_cost < 0:
             new_cost = 0
@@ -685,11 +712,11 @@ class ControlSignal(OutputState):
                 controller.log.entries[self.name + " " + kpAllocation] =     \
                     LogEntry(CurrentTime(), context, float(self.allocation))
                 controller.log.entries[self.name + " " + kpIntensityCost] =  \
-                    LogEntry(CurrentTime(), context, float(self.intensityCost))
+                    LogEntry(CurrentTime(), context, float(self.intensity_cost))
                 controller.log.entries[self.name + " " + kpAdjustmentCost] = \
-                    LogEntry(CurrentTime(), context, float(self.adjustmentCost))
+                    LogEntry(CurrentTime(), context, float(self.adjustment_cost))
                 controller.log.entries[self.name + " " + kpDurationCost] =   \
-                    LogEntry(CurrentTime(), context, float(self.durationCost))
+                    LogEntry(CurrentTime(), context, float(self.duration_cost))
                 controller.log.entries[self.name + " " + kpCost] =           \
                     LogEntry(CurrentTime(), context, float(self.cost))
     #endregion
@@ -779,9 +806,9 @@ class ControlSignal(OutputState):
     #         self.controlSignalCostOptions &= ~ControlSignalCostOptions.DURATION_COST
     #
     def get_costs(self):
-        """Return three-element list with the values of ``intensityCost``, ``adjustmentCost`` and ``durationCost``
+        """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
         """
-        return [self.intensityCost, self.adjustmentCost, self.durationCost]
+        return [self.intensity_cost, self.adjustment_cost, self.duration_cost]
 
 
 
