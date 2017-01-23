@@ -254,7 +254,7 @@ class ControlMechanism_Base(Mechanism_Base):
     controlProjectionCosts : 2d np.array
         array of costs associated with each of the control signals in the `controlProjections` attribute.
 
-    allocationPolicy : 2d np.array
+    allocation_policy : 2d np.array
         array of values assigned to each control signal in the `controlProjections` attribute.
         This is the same as the ControlMechanism's `value <ControlMechanism.value>` attribute.
 
@@ -522,13 +522,13 @@ class ControlMechanism_Base(Mechanism_Base):
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Add outputState and assign as sender to requesting ControlProjection
 
-        # Updates allocationPolicy and controlSignalCosts attributes to accommodate instantiated projection
+        # Updates allocation_policy and controlSignalCosts attributes to accommodate instantiated projection
 
         Note:  params are expected to be params for controlSignal (outputState of ControlMechanism)
 
         Assume that:
-            # - self.value is populated (in _update_value) with an array of allocations from self.allocationPolicy;
-            - self.allocationPolicy has already been extended to include the particular (indexed) allocation
+            # - self.value is populated (in _update_value) with an array of allocations from self.allocation_policy;
+            - self.allocation_policy has already been extended to include the particular (indexed) allocation
                 to be used for the outputState being created here.
 
         INCREMENT BASED ON TOTAL NUMBER OF OUTPUTSTATES SO FAR
@@ -554,7 +554,7 @@ class ControlMechanism_Base(Mechanism_Base):
         except AttributeError:
             output_state_index = 0
         output_state_name = projection.receiver.name + '_ControlSignal'
-        output_state_value = self.allocationPolicy[output_state_index]
+        output_state_value = self.allocation_policy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
         from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
