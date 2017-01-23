@@ -20,7 +20,7 @@
 #   DefaultControlMechanism
 # √ EVCMechanism
 #   ControlSignal
-#   Projection
+# √ Projection
 # √ MappingProjection
 # √ ControlProjection
 # √ LearningProjection
@@ -72,7 +72,7 @@
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
 #             controller.inputValue: list of current outcome values for monitored_states
 #             controller.controlSignals: list of controlSignal objects
-#             controlSignal.allocationSamples: set of samples specified for that controlSignal
+#             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
 #             controller.allocationPolicy: current allocationPolicy
 #             controller.outputValue: list of current controlSignal values

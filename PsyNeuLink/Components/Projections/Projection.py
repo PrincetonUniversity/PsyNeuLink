@@ -67,10 +67,9 @@ are `created automatically <Projection_Automatic_Creation>`, as described below.
 In Context Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Projections can be specified in a number of places where they are required or permitted,
-for example in the specification of a `pathway` for a `process <Process>`, where the value of a parameter is specified
-(e.g., to assign a ControlProjection) or where a MappingProjection is specified (to assign it a LearningProjection).
-
+Projections can be specified in a number of places where they are required or permitted, for example in the
+specification of a `pathway` for a `process <Process>`, where the value of a parameter is specified
+(e.g., to assign a ControlProjection) or where a MappingProjection is specified  (to assign it a LearningProjection).
 Any of the following can be used to specify a projection in context:
 
   * *Constructor*.  Used the same way in context as it is ordinarily.
@@ -84,91 +83,95 @@ Any of the following can be used to specify a projection in context:
       * `CONTROL_PROJECTION` -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
       |
       * `LEARNING_PROJECTION` -- a `LearningProjection`.  At present, this can only be used together with the
-        `specification of a MappingProjection <MappingProjection_Tuple_Specification>`.  If the :keyword:`receiver`
-        of the MappingProjection (that will be the `error_source  <LearningProjection.LearningProjection.error_source>`
-        of the LearningProjection) projects to a `MonitoringMechanism`, the latter will be used as the
-        :keyword:`sender` for the LearningProjection.  Otherwise, a MonitoringMechanism will be created that is
-        appropriate for the :keyword:`error_source`, as will a MappingProjection from the :keyword:`error_source` to
-        the MonitoringMechanism (see `Automatic Instantiation <LearningProjection_Automatic_Creation>` of a
-        LearningProjection for details).
+        specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
+        :keyword:`receiver` of the MappingProjection projects to a `MonitoringMechanism <MonitoringMechanism>`,
+        the latter will be used as the :keyword:`sender` for the LearningProjection.  Otherwise,
+        a MonitoringMechanism will be created for it
+        (see `Automatic Instantiation <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
   ..
   * *Projection type*.  This creates a default instance of the specified Projection subclass.
   ..
   * *Specification dictionary*.  This can contain an entry specifying the type of projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
-      * :keyword:`PROJECTION_TYPE`: <name of a projection type> --
+      * :keyword:`PROJECTION_TYPE`: *<name of a projection type>* --
         if this entry is absent, a default projection will be created that is appropriate for the context
         (for example, a MappingProjection for an inputState, and a ControlProjection for a parameterState).
       |
-      * :keyword:`PROJECTION_PARAMS`: Dict[projection argument, argument value] --
-        the key for each entry of the dict must be the name of a projection parameter (see :class:`Projection_Base`
-        below), and the value should be the value of the parameter.  It can contain any of the standard parameters
-        for instantiating a projection (see :class:`Projection_Base`) or ones specific to a particular type of
-        projection (see documentation for subclass).  Note that parameter values in the specification dict will be
-        used to instantiate the projection.  These can be overridden during execution by specifying
-        :ref:`Mechanism_Runtime_parameters` for the projection, either when calling the
-        :py:meth:`execute <Mechanism.Mechanism_Base.execute>` method for a mechanism` directly, or where it is
-        specified in the :py:data:`pathway <Process.Process_Base.pathway>` of a process.
+      * :keyword:`PROJECTION_PARAMS`: *Dict[projection argument, argument value]* --
+        the key for each entry of the dictionary must be the name of a projection parameter, and its value the value
+        of the parameter.  It can contain any of the standard parameters for instantiating a projection (in particular
+        its `sender <Projection_Sender>` and `receiver <Projection_Receiver>` or ones specific to a particular type of
+        projection (see documentation for subclass).
+
+      COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
+        Note that parameter
+        values in the specification dictionary will be used to instantiate the projection.  These can be overridden
+        during execution by specifying `runtime parameters <Mechanism_Runtime_parameters>` for the projection,
+        either when calling the `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>`
+        method for a mechanism directly, or where it is specified in the `pathway` of a process.
+      COMMENT
 
 .. _Projection_Automatic_Creation:
 
 Automatic creation
 ~~~~~~~~~~~~~~~~~~
 
-Under some circumstances PsyNeuLink will automatically create a projection. For example,
-a process automatically generates a :doc:`MappingProjection` between adjacent mechanisms in its
-:py:data:`pathway <Process.Process_Base.pathway>` if none is specified; and :doc:`LearningProjection`  projections
-are automatically generated when :ref:`learning <Process_Learning>` is specified for a process.  Creating a
-:doc:`state <State>` will also automatically generate a projection and a sender mechanism, if none is specified in
-its constructor (the type of projection and its sender mechanism depend on the type of state -- see
-:doc:`state subclasses <States>` for details).
-
+Under some circumstances PsyNeuLink will automatically create a projection. For example, a `process <Process>`
+automatically generates a `MappingProjection` between adjacent mechanisms in its `pathway` if none is specified;
+and `LearningProjections <LearningProjection>` are automatically generated when `learning` is specified for a
+`process <Process_Learning>` or `system <System_Execution_Learning>`.  Creating a `state <State>` will also
+automatically generate a projection and a mechanism as the projection's `sender <Projection.sender>` if none is
+specified in the constructor for the state (the type of projection and mechanism depend on the type of state -- see
+`state subclasses <States>` for details).
 
 .. _Projection_Structure:
 
 Structure
 ---------
 
-In addition to its ``function``, a projection has two core components:
+In addition to its `function <Projection.function>`, a projection has two primary attributes:
 
 .. _Projection_Sender:
 
 Sender
 ~~~~~~
 
-This must be an :class:`OutputState`.  The projection is assigned to the sender's
-:py:data:`sendsToProjections <State.State_Base.sendsToProjections>` list, and the sender's ``value`` is used as the
-``variable`` for projection's ``function``.  A sender can be specified as:
+This must be an `OutputState`.  The projection is assigned to the outputState's
+`sendsToProjections <State.State_Base.sendsToProjections>` list, and outputState's `value
+<OutputState.OutputState.value>` is used as the :keyword:`variable` for projection's `function <Projection.function>`.
+A sender can be specified as:
 
-  * an **outputState**, in any of the ways used to :ref:`specify an outputState <OutputState_Specification>`.
+  * an **outputState**, in any of the ways used to `specify an outputState <OutputState_Specification>`.
   ..
   * a **mechanism**, in which case the mechanism's :ref:`primary outputState  <OutputState_Primary>` is assigned as the
-    ``sender``.
+    `sender <Projection.sender>`.
 
-If the ``sender`` is not specified and it can't be determined from the context (e.g., the preceding mechanism in the
-:py:data:`pathway <Process.Process_Base.pathway>` of a process), or an outputState specification is not associated
-with a mechanism that can be determined from context, then a default mechanism of a type appropriate for the projection
-is used, and its `primary outputState <OutputState_Primary>` is assigned as the sender. The type of default mechanism
-type used by each type of projection is specified in its ``paramClassDefaults[PROJECTION_SENDER]`` class attribute,
-and is assigned as follows:
+If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an outputState
+specification is not associated with a mechanism that can be determined from context, then a default mechanism of a
+type appropriate for the projection is used, and its `primary outputState <OutputState_Primary>` is assigned as the
+`sender <Projection.sender>`. The type of default mechanism
+COMMENT:
+    used by a projection is specified in its :keyword:`paramClassDefaults[PROJECTION_SENDER]` class attribute, and
+COMMENT
+is assigned as follows:
 
-  * :doc:`MappingProjection`: the
+  * `MappingProjection`: the
     :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
-    is used, and its `primary outputState <OutputState_Primary>` is assigned as the ``sender``.
+    is used, and its `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
   ..
   COMMENT:
      CONFIRM THIS IS TRUE
   COMMENT
-  * :doc:`ControlProjection`: if the projection's receiver belongs to a system, then the system's
-    :py:data:`controller <System.System_Base.controller>` is used.  Otherwise, the :doc:`DefaultControlMechanism`
-    is used.  In either case, an outputState is added to the ControlMechanism and assigned as the ``sender``.
+  * `ControlProjection`: if the projection's `receiver <Projection.receiver>` belongs to a system, then the system's
+    `controller` is used as the mechanism for the `sender <Projection.sender>.  Otherwise, the `DefaultControlMechanism`
+    is used.  In either case, an outputState is added to the ControlMechanism and assigned as the
+    projection's `sender <Projection.sender>`.
   ..
-  * :doc:`LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL`
-    mechanism of a process, then a :doc:`ComparatorMechanism` is created, and its
-    `primary outputState <OutputState_Primary>` is assigned as the ``sender``.  Otherwise,
-    a `WeightedErrorMechanism` is created and its `primary outputState <OutputState_Primary>` is assigned as the
-    ``sender``.
+  * `LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL` mechanism of a process,
+    then a `ComparatorMechanism` is created, and its `primary outputState <OutputState_Primary>` is assigned as the
+    `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
+    `primary outputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
 
 .. _Projection_Receiver:
 
@@ -176,19 +179,18 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The projection is assigned to the receiver's
-:py:data:`receivesFromProjections <State.State_Base.receivesFromProjections>` list, and the output of the projection's`
-`function`` is transmitted to its receiver, where it is combined with the input from any other projections to
-generate its ``variable``.  A receiver can be specified as:
+`receivesFromProjections <State.State_Base.receivesFromProjections>` list, and the output of the projection's
+`function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>` can be specified as:
 
   * an existing **inputState**;
   ..
-  * an existing **mechanism** or **projection**; which of these is permissible, and how a state is assigned is
+  * an existing **mechanism** or **projection**; which of these is permissible, and how a state is assigned to it, is
     determined by the type of projection — see subclasses for details).
   ..
   * a **specification dictionary** (see subclasses for details).
   ..
   .. note::
-     a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This adheres to the
+     a receiver **must** be specified for a projection;  PsyNeuLink cannot create a default.  This reflects the
      principle of :ref:`Lazy Evaluation <LINK>` which, here, means that objects can create other objects from which
      they *expect* input, but cannot *impose* the creation of "downstream" objects.
 
@@ -211,11 +213,12 @@ COMMENT
 Execution
 ---------
 
-A projection cannot be executed directly.  It is executed when the state to which it projects — its ``receiver`` —
-is updated;  that occurs when the state's owner mechanism is executed.  When a projection executes, it gets the value
-of its ``sender``, assigns this as the variable for its ``function``, calls the function, and assigns the result as
-the variable of its ``receiver``.  The function of a projection converts the value received from its  ``sender`` to a
-form suitable as input to its ``receiver``.
+A projection cannot be executed directly.  It is executed when the `state <States>` to which it projects — its
+`receiver <Projection.receiver>` — is updated;  that occurs when the state's owner mechanism is executed.  When a
+projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the :keyword:`variable`
+of its `function <Projection.function>`, calls the function, and provides the result as to its
+`receiver <Projection.receiver>`.  The `function <Projection.function>` of a projection converts the value received
+from its `sender <Projection.sender>` to a form suitable as input for its `receiver <Projection.receiver>`.
 
 .. _Projection_Class_Reference:
 

@@ -71,9 +71,8 @@ Class Reference
 """
 
 from PsyNeuLink.Components import DefaultController
-# from Globals.Defaults import *
-from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Projections.Projection import *
 
 projection_keywords.update({CONTROL_PROJECTION})
 parameter_keywords.update({CONTROL_PROJECTION})
@@ -289,7 +288,7 @@ class ControlProjection(Projection_Base):
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
             from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlSignal import ControlSignalError
+            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignalError
             if isinstance(self.sender, ControlMechanism_Base):
                 # MODIFIED 12/23/16 NEW:
                 #   [TRY AND EXCEPT IS NEW, AS IS ADDITION OF param ARG IN CALL TO _instantiate_control_projection]

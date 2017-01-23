@@ -556,7 +556,7 @@ class ControlMechanism_Base(Mechanism_Base):
         output_state_name = projection.receiver.name + '_ControlSignal'
         output_state_value = self.allocationPolicy[output_state_index]
         from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignal
         state = _instantiate_state(owner=self,
                                             state_type=ControlSignal,
                                             state_name=output_state_name,
