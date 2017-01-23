@@ -337,7 +337,7 @@ kpIntensity = "Control Signal Intensity"
 kpCostRange = "Control Signal Cost Range"
 kpIntensityCost = "Control Signal Intensity Cost"
 kpAdjustmentCost = "Control Signal Adjustment Cost"
-kpDurationCost = "Control Signal DurationCost"
+kpDurationCost = "Control Signal duration_cost"
 kpCost = "Control Signal Cost"
 
 
