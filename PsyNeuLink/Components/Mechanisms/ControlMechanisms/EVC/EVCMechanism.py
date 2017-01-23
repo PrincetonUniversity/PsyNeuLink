@@ -24,18 +24,18 @@ the purpose and structure of the EVCMechanism.
 An EVCMechanism has one ControlSignal for each parameter of the mechanism or function that it controls.  Each
 ControlSignal is associated with a :doc:`ControlProjection`.  The ControlProjection regulates the value of
 the parameter it controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`. A
-particular combination of ControlSignal intensities is called an `allocationPolicy`. When a system is executed,
-it concludes by executing the EVCMechanism, which determines the `allocationPolicy` (i.e., the ControlSignal
+particular combination of ControlSignal intensities is called an `allocation_policy`. When a system is executed,
+it concludes by executing the EVCMechanism, which determines the `allocation_policy` (i.e., the ControlSignal
 intensities, and thereby the values of the parameters being controlled) in the next round of execution.
 
 .. _EVCMechanism_EVC:
 
-The procedure by which the EVCMechanism selects an `allocationPolicy` when it is executed is determined by its
+The procedure by which the EVCMechanism selects an `allocation_policy` when it is executed is determined by its
 :py:data:`function <EVCMechanism.function>` attribute. By default, this evaluates the performance of the system under
-every possible `allocationPolicy`, and chooses the best one. It does this by simulating the system under each
-`allocationPolicy`, and evaluating the expected value of control (EVC), a cost-benefit analysis that weighs the cost
+every possible `allocation_policy`, and chooses the best one. It does this by simulating the system under each
+`allocation_policy`, and evaluating the expected value of control (EVC), a cost-benefit analysis that weighs the cost
 of the ControlSignals against the outcomes of performance for the given policy.  The EVCMechanism then selects the
-`allocationPolicy` that generates the maximum EVC, and that allocationPolicy is implemented for the next round of
+`allocation_policy` that generates the maximum EVC, and that allocation_policy is implemented for the next round of
 execution. Each step of this procedure can be modified, or it can be replaced entirely, by assigning custom functions
 to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
 
@@ -70,7 +70,7 @@ InputStates
 ~~~~~~~~~~~
 
 Each inputState of an EVCMechanism represents an outcome of processing that the EVCMechanism uses to evaluate the
-system's performance under an `allocationPolicy`.  One inputState is assigned to each of the outputStates that have
+system's performance under an `allocation_policy`.  One inputState is assigned to each of the outputStates that have
 been specified to be evaluated. OutputStates are specified to be evaluated. The EVCMechanism's
 `MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
 The contribution of each outputState to the overall evaluation can be specified by an exponent and/or a weight
@@ -88,12 +88,12 @@ outputStates of a system being monitored by an EVCMechanism are listed in its `m
 Function
 ~~~~~~~~
 
-The `function` of an EVCMechanism returns an `allocationPolicy` -- that is, the `intensity` of each of its
+The `function` of an EVCMechanism returns an `allocation_policy` -- that is, the `intensity` of each of its
 ControlSignals -- that will be used in the next round of the system's execution.  Any function can be used that
-returns an appropriate value (i.e., that specifies an `allocationPolicy` for the exact number of ControlSignals in
+returns an appropriate value (i.e., that specifies an `allocation_policy` for the exact number of ControlSignals in
 the EVCMechanism's `controlSignals` attribute, using the correct format for the `allocation` value of each
 ControlSignal). The default function `ControlSiginalGridSearch`, which evaluates the performance of the system under
-a range of specified allocationPolicies, and returns the `allocationPolicy` that generates the best performance (the
+a range of specified allocationPolicies, and returns the `allocation_policy` that generates the best performance (the
 greatest EVC). This evaluation and selection procedure, including four customizable evaluation functions that it uses,
 is described below.
 
@@ -103,12 +103,12 @@ EVC Calculation
 ^^^^^^^^^^^^^^^
 
 The default EVC `function <EVCMechanism.function>` calculates the expected value of control (EVC) by a conducting a
-grid search over every possible `allocationPolicy`.  The set of `allocationPolicies sampled is determined by the
+grid search over every possible `allocation_policy`.  The set of `allocationPolicies sampled is determined by the
 `allocation_samples <LINK>` attribute of each ControlSignal. Each policy is constructed by drawing one value from the
-`allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An `allocationPolicy` is
+`allocation_samples <LINK>` attribute of each of the EVCMechanism's ControlSignals.  An `allocation_policy` is
 constructed for every possible combination of values, and stored in the EVCMechanism's `controlSignalSearchSpace`
 attribute.  The EVCMechanism's `run_simulation` method is then used to simulate the system under each
-`allocationPolicy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return the policy
+`allocation_policy` in `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return the policy
 with the greatest EVC.  By default, only the maximum EVC is saved and returned.  However, by setting the
 `SAVE_ALL_VALUES_AND_POLICIES` parameter to true, each policy and its EVC can be saved for each simulation run (in
 `EVCpolicies` and `EVCvalues`, respectively). The EVC is calculated for each policy using the following four functions,
@@ -132,12 +132,12 @@ COMMENT
 
 * `value_function` - this is an "orchestrating" function that calls the three subordinate functions described below,
   which do the actual work of evaluating the performance of the system and the cost of the controlSignals under the
-  current `allocationPolicy`, and combining these to calculate the EVC.  This function can be replaced with a
+  current `allocation_policy`, and combining these to calculate the EVC.  This function can be replaced with a
   user-defined function to fully customize the calculation of the EVC, by assigning a custom function to the
   `value_function` attribute of the EVCMechanism (see `note <_EVCMechanism_Calling_and_Assigning_Functions>` below).
 ..
 * `outcome_function` - this combines the values of the outputStates in the EVCMechanism's `monitoredOutputStates`
-  attribute to generate an aggregated outcome value for the current `allocationPolicy`. The default is the
+  attribute to generate an aggregated outcome value for the current `allocation_policy`. The default is the
   `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState values,
   using any weights and/or exponents specified for the outputStates to scale and/or exponentiate the contribution
   that each makes to the aggregated outcome (see `ControlMechanism_OutputState_Tuple`, and
@@ -146,12 +146,12 @@ COMMENT
   `note <_EVCMechanism_Calling_and_Assigning_Functions>` below).
 ..
 * `cost_function` - this combines the costs of the EVCMechanism's ControlSignals to generate an
-  aggregated cost for the current `allocationPolicy`.  The default is the `LinearCombination` function,
+  aggregated cost for the current `allocation_policy`.  The default is the `LinearCombination` function,
   which sums the costs.  The evaluation of cost can be further customized by specifying a custom function for the
   `cost_function` attribute.
 ..
 * `combine_outcome_and_cost_function` - this combines the aggregated outcome and aggregated cost values for the
-  current `allocationPolicy`, to determine the EVC for that policy.  The default is the `LinearCombination`
+  current `allocation_policy`, to determine the EVC for that policy.  The default is the `LinearCombination`
   function, which subtracts the aggregated cost from the aggregated outcome. The way in which the outcome and cost
   are combined to determine the EVC can be customized by specifying a custom function for the
   `combine_outcome_and_cost_function` attribute (see `note <_EVCMechanism_Calling_and_Assigning_Functions>` below).
@@ -187,8 +187,8 @@ attribute. Each ControlSignal is associated with a `ControlProjection` that proj
 value of the ControlSignal's ControlProjection.  The value of the ControlProjection is then used by the parameterState
 to which it projects to modify the value of the parameter for which it is responsible.  A ControlSignal also
 calculates a `cost`, based on its intensity and/or its time course. This cost is included in the evaluation that the
-EVCMechanism carries out for a given `allocationPolicy`, and that it uses to adapt the ControlSignal's `allocation` in
-the future.  When the EVCMechanism chooses an `allocationPolicy` to evaluate, it selects an allocation value from the
+EVCMechanism carries out for a given `allocation_policy`, and that it uses to adapt the ControlSignal's `allocation` in
+the future.  When the EVCMechanism chooses an `allocation_policy` to evaluate, it selects an allocation value from the
 ControlSignal's `allocation_samples` attribute.
 
 Prediction Mechanisms
@@ -217,44 +217,44 @@ Execution
 ---------
 
 When an EVCMechanism is executed, it updates the value of its `predictionMechanisms`, and then calls its
-:py:data:`function <EVCMechanism.function>`, which determines and implements the `allocationPolicy` for the next round
-of the system's execution.  By default, the EVCMechanism identifies and implements the `allocationPolicy` that maximizes
+:py:data:`function <EVCMechanism.function>`, which determines and implements the `allocation_policy` for the next round
+of the system's execution.  By default, the EVCMechanism identifies and implements the `allocation_policy` that maximizes
 the EVC evaluated for the outputStates it is monitoring, as described below.  However, this procedure can be modified by
 specifying a custom function for any or all of the functions described below.
 
 .. _EVCMechanism_Default_Function:
 
-The default :py:data:`function <EVCMechanism.function>` for an EVCMechanism selects an `allocationPolicy` by assessing
+The default :py:data:`function <EVCMechanism.function>` for an EVCMechanism selects an `allocation_policy` by assessing
 the performance of the system under each of the policies in its `controlSignalSearchSpace` and selecting the
 one that yields the maximum EVC. The `controlSignalSearchSpace` is constructed by creating a set of
 allocationPolicies that represent all permutations of the allocation values to be sampled for each ControlSignal.
-Each `allocationPolicy` in the set is constructed by drawing one value from the `allocation_samples` of each
-ControlSignal, and the set contains all combinations of these values.  For each `allocationPolicy`, the default
+Each `allocation_policy` in the set is constructed by drawing one value from the `allocation_samples` of each
+ControlSignal, and the set contains all combinations of these values.  For each `allocation_policy`, the default
 :py:data:`function <EVCMechanism.function>` calls the EVCMechanism's `value_function` which, in turn, carries out
 the following steps:
 
-* **Implement the allocationPolicy.** Assign the `allocation <ControlSignal.ControlSignal.allocation>` value specifed
+* **Implement the allocation_policy.** Assign the `allocation <ControlSignal.ControlSignal.allocation>` value specifed
   for each ControlSignal.
 ..
-* **Simulate performance.**  Execute the system under the current `allocationPolicy` using the EVCMechanism's
+* **Simulate performance.**  Execute the system under the current `allocation_policy` using the EVCMechanism's
   `run_simulation` method and the value of its `predictedInputs` attribute as the input to the system (this uses
   the history of previous trials to generate an average expected input value).
 ..
-* **Calculate the EVC for the allocationPolicy.**  This uses three functions:
+* **Calculate the EVC for the allocation_policy.**  This uses three functions:
 
-    * the `outcome_function` calculates the **outcome** for the allocationPolicy by aggregating the value of the
+    * the `outcome_function` calculates the **outcome** for the allocation_policy by aggregating the value of the
       outputStates the EVCMechanism monitors (listed in its `monitoredOutputStates` attribute);
     ..
-    * the `cost_function` calculates the **cost** of the allocationPolicy by aggregating the `cost` of the
+    * the `cost_function` calculates the **cost** of the allocation_policy by aggregating the `cost` of the
       EVCMechanism's ControlSignals;
     ..
-    * the `combine_outcome_and_cost_function` calculates the **value** (EVC) of the allocationPolicy by subtracting the
+    * the `combine_outcome_and_cost_function` calculates the **value** (EVC) of the allocation_policy by subtracting the
       aggregated cost from the aggregated outcome.
 
 If the `save_all_values_and_policies` attribute is :keyword:`True`, the allocation policy is saved in the
 EVCMechanism's `EVCpolicies` attribute, and its value is saved in the `EVCvalues` attribute. The :py:data:`function
-<EVCMechanism.function>` returns the `allocationPolicy` that yielded the maximum EVC. This is then implemented by
-assigning the `allocation` specified for each ControlSignal by the designated `allocationPolicy`.  These allocations
+<EVCMechanism.function>` returns the `allocation_policy` that yielded the maximum EVC. This is then implemented by
+assigning the `allocation` specified for each ControlSignal by the designated `allocation_policy`.  These allocations
 determine the value of the parameters being controlled in the next round of the system's execution.
 
 This procedure can be modified by assigning custom functions for any or all of the ones described above,
@@ -428,20 +428,20 @@ class EVCMechanism(ControlMechanism_Base):
         specification options).
 
     function : function : ControlSignalGridSearch
-        specifies the function used to determine the `allocationPolicy` for the next execution of the system
+        specifies the function used to determine the `allocation_policy` for the next execution of the system
         (see :py:data:`function <EVCMechanism.function>` attribute for description of default function).
 
     value_function : function : `value_function`
-        specifies the function used to calculate the value of the current `allocationPolicy`.
+        specifies the function used to calculate the value of the current `allocation_policy`.
 
     outcome_function : function : LinearCombination(operation=PRODUCT)
-        specifies the function used to calculate the outcome associated with the current `allocationPolicy`.
+        specifies the function used to calculate the outcome associated with the current `allocation_policy`.
 
     cost_function : function : LinearCombination(operation=SUM)
-        specifies the function used to calculate the cost associated with the current `allocationPolicy`.
+        specifies the function used to calculate the cost associated with the current `allocation_policy`.
 
     combine_outcome_and_cost_function : function : LinearCombination(operation=SUM)
-        specifies the function used to combine the outcome and cost associated with the current `allocationPolicy`,
+        specifies the function used to combine the outcome and cost associated with the current `allocation_policy`,
         to determine its value.
 
     save_all_values_and_policies : bool : default :keyword:`False`
@@ -500,21 +500,21 @@ class EVCMechanism(ControlMechanism_Base):
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
     function : function : default ControlSignalGridSearch
-        determines the `allocationPolicy <EVCMechanism.allocationPolicy>` to use for the next round of the system's
+        determines the `allocation_policy <EVCMechanism.allocation_policy>` to use for the next round of the system's
         execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its `control signals <controlSignals>` (and contained in its
         `controlSignalSearchSpace` attribute), by executing the  system (using `run_simulation`) for each
-        combination, evaluating the result using `value_function`, and returning the allocationPolicy that generated
+        combination, evaluating the result using `value_function`, and returning the allocation_policy that generated
         the highest value.  If a custom function is specified, it must accomoudate a `controller` argument that
         specifies an EVCMechanism (and provides access to its attributes, including `controlSignalSearchSpace`),
         and must return an array with the same format (number and type of elements) as the EVCMechanism's
-        `allocationPolicy` attribute.
+        `allocation_policy` attribute.
 
     COMMENT:
         NOTES ON API FOR CUSTOM VERSIONS:
             Gets controller as argument (along with any standard params specified in call)
             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
-            Must return an allocation policy compatible with controller.allocationPolicy:
+            Must return an allocation policy compatible with controller.allocation_policy:
                 2d np.array with one array for each allocation value
 
             Following attributes are available:
@@ -528,7 +528,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller.controlSignalSearchSpace is a list of all allocationPolicies specifed by allocation_samples
             controlSignal.allocation_samples is the set of samples specified for that controlSignal
             [TBI:] controlSignal.allocation_range is the range that the controlSignal value can take
-            controller.allocationPolicy - holds current allocationPolicy
+            controller.allocation_policy - holds current allocation_policy
             controller.outputValue is a list of current controlSignal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_function - aggregates outcomes (using specified weights and exponentiation)
@@ -536,14 +536,14 @@ class EVCMechanism(ControlMechanism_Base):
             controller.combine_outcome_and_cost_function - combines outcoms and costs
     COMMENT
 
-    allocationPolicy : 2d np.array : `defaultControlAllocation <LINK>`
+    allocation_policy : 2d np.array : `defaultControlAllocation <LINK>`
         determines the value assigned as the variable for each control signal and its associated
         :doc:`ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
         that specifies an allocation for the corresponding control signal, and the number of items must equal the
         number of the EVCMechanism's control signals.
 
     value_function : function : default value_function()
-        calculates the value for a given `allocationPolicy`.  The default uses `outcome_function` to determine the
+        calculates the value for a given `allocation_policy`.  The default uses `outcome_function` to determine the
         outcome of the policy, `cost_function` to determine its cost, combines these using
         `combine_outcome_and_cost_function`, and returns the result as the first item of a three-item tuple, the second
         and third of which are the outcome and cost used to determine the result.  The default function can be
@@ -559,7 +559,7 @@ class EVCMechanism(ControlMechanism_Base):
         above).
 
     outcome_function : function : default LinearCombination(operation=PRODUCT)
-        calculates the outcome for a given `allocationPolicy`.  The default combines the values of the outputStates in
+        calculates the outcome for a given `allocation_policy`.  The default combines the values of the outputStates in
         `monitoredOutputStates` by taking their product, using the `LinearCombination` function.  The weights
         and/or exponents specified for the outputStates (see `ControlMechanism_OutputState_Tuple`, and
         `above <EVCMechanism_Examples>` for an example) are used as the `weights` and `exponents` parameters of the
@@ -580,7 +580,7 @@ class EVCMechanism(ControlMechanism_Base):
         the `controller` argument.
 
     cost_function : function : default LinearCombination(operation=SUM)
-        calculates the cost for a given `allocationPolicy`.  The default combines the costs of the ControlSignals in
+        calculates the cost for a given `allocation_policy`.  The default combines the costs of the ControlSignals in
         `controlSignals` by summing them using the `LinearCombination` function. If the default `COST_FUNCTION` is
         called by a custom `value_function`, the weights and/or exponents parameters of the function can be used,
         respectively, to scale and/or exponentiate the contribution of each ControlSignal's cost to the aggregated
@@ -595,7 +595,7 @@ class EVCMechanism(ControlMechanism_Base):
         `controlSignals` attribute of the `controller` argument.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
-        combines the outcome and cost for given `allocationPolicy` to determine its value.  The default uses the
+        combines the outcome and cost for given `allocation_policy` to determine its value.  The default uses the
         `LinearCombination` function to subtract the cost from the outcome, and returns the difference.  If the
         default `COMBINE_OUTCOME_AND_COST_FUNCTION` is called by a custom `value_function`, the weights and/or
         exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
@@ -606,7 +606,7 @@ class EVCMechanism(ControlMechanism_Base):
         returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom
         combine_outcome_and_cost_function must accomoudate two arguments (passed by name): a `controller` argument
         that is the EVCMechanism itself; an `outcome` argument that is a 1d array with the outcome of the current
-        `allocationPolicy`; and a `cost` argument that is 1d array with the cost of the current `allocationPolicy`.
+        `allocation_policy`; and a `cost` argument that is 1d array with the cost of the current `allocation_policy`.
 
     controlSignalSearchSpace : 2d np.array
         an array that contains arrays of control allocation policies.  Each control allocation policy contains one
@@ -1031,10 +1031,10 @@ class EVCMechanism(ControlMechanism_Base):
         """
         """
         try:
-            self.allocationPolicy = np.append(self.allocationPolicy, defaultControlAllocation)
+            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
         except AttributeError:
-            # self.allocationPolicy = np.atleast_2d(defaultControlAllocation)
-            self.allocationPolicy = np.array(defaultControlAllocation)
+            # self.allocation_policy = np.atleast_2d(defaultControlAllocation)
+            self.allocation_policy = np.array(defaultControlAllocation)
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
@@ -1221,7 +1221,7 @@ class EVCMechanism(ControlMechanism_Base):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Determine allocationPolicy for next run of system
+        """Determine allocation_policy for next run of system
 
         Update prediction mechanisms
         Construct controlSignalSearchSpace (from allocation_samples of each item in controlSignals):
@@ -1313,16 +1313,16 @@ class EVCMechanism(ControlMechanism_Base):
 
         if self.value is None:
             # Initialize value if it is None
-            self.value = self.allocationPolicy
+            self.value = self.allocation_policy
 
-        # Implement the current allocationPolicy over ControlSignals (outputStates),
+        # Implement the current allocation_policy over ControlSignals (outputStates),
         #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
         for i in range(len(self.controlSignals)):
             # self.controlSignals[list(self.controlSignals.values())[i]].value = np.atleast_1d(allocation_vector[i])
             self.value[i] = np.atleast_1d(allocation_vector[i])
         self._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
-        # Execute simulation run of system for the current allocationPolicy
+        # Execute simulation run of system for the current allocation_policy
         sim_clock = Clock('EVC SIMULATION CLOCK')
 
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
@@ -1330,7 +1330,7 @@ class EVCMechanism(ControlMechanism_Base):
         # Get cost of each controlSignal
         for control_signal in self.controlSignals:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-        # Get outcomes for current allocationPolicy
+        # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.inputStates)
         #    stored in self.inputValue = list(self.variable)
             self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)

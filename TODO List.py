@@ -62,7 +62,7 @@
 #           FROM EVCMechanism.control_signal_grid_search:
 #             Gets controller as argument (along with any standard params specified in call)
 #             Must include **kwargs to receive standard args (variable, params, time_scale, and context)
-#             Must return an allocation policy compatible with controller.allocationPolicy:
+#             Must return an allocation policy compatible with controller.allocation_policy:
 #                 2d np.array with one 1d array for each allocation value
 #
 #             Following attributes are available:
@@ -74,7 +74,7 @@
 #             controller.controlSignals: list of controlSignal objects
 #             controlSignal.allocation_samples: set of samples specified for that controlSignal
 #             [TBI:] controlSignal.allocation_range: range that the controlSignal value can take
-#             controller.allocationPolicy: current allocationPolicy
+#             controller.allocation_policy: current allocation_policy
 #             controller.outputValue: list of current controlSignal values
 #             controller.value_function: calls the three following functions (done explicitly, so each can be specified)
 #             controller.outcome_aggregation function: aggregates outcomes (using specified weights and exponentiation)
