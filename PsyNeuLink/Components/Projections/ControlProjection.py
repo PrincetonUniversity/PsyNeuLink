@@ -146,9 +146,10 @@ class ControlProjection(Projection_Base):
         `sender <ControlProjection.sender>`  to its own `value <ControlProjection.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the projection, its
-        `function <ControlProjection.function>`, and/or a custom function and its parameters
-        (see `parameter dictionary <ParameterState_Specifying_Parameters>` for details).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
 
     name : str : default ControlProjection-<index>
         a string used for the name of the ControlProjection.

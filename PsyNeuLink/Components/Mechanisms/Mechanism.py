@@ -434,8 +434,9 @@ def mechanism(mech_spec=None, params=None, context=None):
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the mechanism and/or its function, and/or a custom function and its parameters.  It is passed to the relevant
         subclass to instantiate the mechanism. Its entries can be used to specify any parameters described in
-        `Mechanism_Parameters` that are relevant to the mechanism's subclass, and/or defined
-        specifically by that particular `Mechanism` subclass.
+        `Mechanism_Parameters` that are relevant to the mechanism's subclass, and/or defined specifically by that
+        particular `Mechanism` subclass.  Values specified for parameters in the dictionary override any assigned to
+        those parameters in arguments of the constructor.
 
     COMMENT:
         context : str
@@ -612,8 +613,10 @@ class Mechanism_Base(Mechanism):
         `value <Mechanism_Base.value` attribute.
 
     function_params : Dict[str, value]
-        a dictionary of the parameters for the mechanism's primary function.  The key of each entry is the name of
-        a function parameter, and its value is the parameter's value.
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` of the parameters for the mechanism's primary
+        function.  The key of each entry is the name of a function parameter, and its value is the parameter's value.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor for the function.
 
     value : 2d np.array : default None
         output of the mechanism's `function <Mechanism_Base.function>`.

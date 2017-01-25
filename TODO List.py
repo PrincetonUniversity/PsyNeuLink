@@ -18,14 +18,14 @@
 # √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
-# √ EVCMechanism
-#   ControlSignal
+#   EVCMechanism
+# √ ControlSignal
 # √ Projection
 # √ MappingProjection
 # √ ControlProjection
 # √ LearningProjection
-#   State
-#   InputState
+# √ State
+# √ InputState
 #   ParameterState
 #   OutputState
 #   Run
