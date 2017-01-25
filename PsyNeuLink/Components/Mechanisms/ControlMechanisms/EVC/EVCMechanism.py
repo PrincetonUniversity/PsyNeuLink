@@ -419,8 +419,9 @@ class EVCMechanism(ControlMechanism_Base):
         and assigned an outputState named based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        a parameter dictionary passed to the constructor for the `prediction_mechanism_type` mechanism.
-        The same one is passed to all prediction mechanisms created for the EVCMechanism.
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to the constructor for the
+        `prediction_mechanism_type` mechanism. The same one is passed to all prediction mechanisms created for the
+        EVCMechanism.
 
     monitor_for_control : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
     default :keyword:`MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES`
@@ -449,8 +450,9 @@ class EVCMechanism(ControlMechanism_Base):
         values in ``EVCvalues``.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the mechanism, parameters for its function, and/or a custom function and its parameters.  Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default EVCMechanism-<index>
         a string used for the name of the mechanism.
@@ -484,8 +486,8 @@ class EVCMechanism(ControlMechanism_Base):
               and assigned an outputState named based on the same
 
     prediction_mechanism_params : Dict[param key, param value] : default `None`
-        a parameter dictionary passed to ``prediction_mechanism_type`` on instantiation.
-        The same dictionary will be passed to all instances of ``prediction_mechanism_type`` created.
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to ``prediction_mechanism_type`` on
+        instantiation.  The same dictionary will be passed to all instances of ``prediction_mechanism_type`` created.
 
     monitoredOutputStates : List[OutputState]
         each item is an outputState of a mechanism in the system that has been assigned a projection to a corresponding

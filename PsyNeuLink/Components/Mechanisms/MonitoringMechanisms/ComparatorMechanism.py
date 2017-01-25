@@ -175,6 +175,9 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         ..
         * `FUNCTION`: Function, function or method;  default is `LinearCombination`.
 
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
+
     COMMENT:
         [TBI]
         time_scale :  TimeScale : TimeScale.TRIAL

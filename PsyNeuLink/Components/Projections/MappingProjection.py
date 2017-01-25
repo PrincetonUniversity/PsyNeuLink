@@ -239,9 +239,10 @@ class MappingProjection(Projection_Base):
         `matrix <MappingProjection.matrix>` itself.  Most commonly used with `LearningProjections <LearningProjection>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the projection, its function,
-        and/or a custom function and its parameters (see `Component` for specification of a parameter dictionary).
-        By default, it contains an entry for the projection's default assignment (`LinearCombination`).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
+        the projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
 
     name : str : default MappingProjection-<index>
         a string used for the name of the MappingProjection.

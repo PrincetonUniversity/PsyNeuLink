@@ -74,14 +74,16 @@ primary attributes:
 
     .. _ControlSignal_Cost_Functions:
 
-    * `intensity_cost`, calculated by the `intensityCostFunction` based on the current `intensity` of the ControlSignal.
+    * `intensity_cost`, calculated by the `intensity_cost_function` based on the current `intensity` of the
+      ControlSignal.
     |
-    * `adjustment_cost`, calculated by the `adjustmentCostFunction` based on a change in the ControlSignal's
+    * `adjustment_cost`, calculated by the `adjustment_cost_function` based on a change in the ControlSignal's
       `intensity` from its last value.
     |
-    * `duration_cost`, calculated by the `durationCostFunction` based on an integral of the the ControlSignal's `cost`.
+    * `duration_cost`, calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
+      `cost`.
     |
-    * `cost`, calculated by the `costCombinationFunction` that combines the results of any cost functions that are
+    * `cost`, calculated by the `cost_combination_function` that combines the results of any cost functions that are
       enabled (as described in the following section).
 
     .. _ControlSignal_Toggle_Costs:
@@ -220,8 +222,9 @@ class ControlSignal(OutputState):
         `allocation_policy <EVCMechanism.EVCMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the ControlSignal and/or a custom function and
-        its parameters (see :doc:`Component` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
         a string used for the name of the outputState.
@@ -265,10 +268,10 @@ class ControlSignal(OutputState):
     value : number, list or np.ndarray
         result of `function <ControlSignal.function>`; same as `intensity`.
 
-    lastIntensity : float
+    last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
 
-    intensityCostFunction : TransferFunction : default default Exponential
+    intensity_cost_function : TransferFunction : default default Exponential
         calculates `intensity_cost` from the curent value of `intensity`. It can be any `TransferFunction`, or any other
         function that takes and returns a scalar value. The default is `Exponential`.  It can be disabled permanently
         for the ControlSignal by assigning `None`.

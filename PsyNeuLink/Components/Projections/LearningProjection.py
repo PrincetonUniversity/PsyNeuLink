@@ -333,9 +333,10 @@ class LearningProjection(Projection_Base):
         `matrix <MappingProjection.MappingProjection.matrix>` to be modified by the LearningProjection.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that specifies the parameters for the projection, its function, and/or a custom function and its
-        parameters (see :doc:`Component` for specification of a params dict). By default, it contains an entry for
-        the projection's default `function <LearningProjection.function>` and parameter assignments.
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
+        the projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default LearningProjection-<index>
         a string used for the name of the LearningProjection.

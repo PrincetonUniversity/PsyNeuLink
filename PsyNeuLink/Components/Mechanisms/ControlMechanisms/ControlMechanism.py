@@ -229,8 +229,10 @@ class ControlMechanism_Base(Mechanism_Base):
             specifies function used to combine values of monitored output states.
 
         params : Optional[Dict[param keyword, param value]]
-            a dictionary that can be used to specify the parameters for the mechanism, parameters for its function,
-            and/or a custom function and its parameters (see :doc:`Mechanism` for specification of a params dict).
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
+            for the mechanism, parameters for its function, and/or a custom function and its parameters. Values
+            specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+            constructor.
 
         name : str : default ControlMechanism-<index>
             a string used for the name of the mechanism.

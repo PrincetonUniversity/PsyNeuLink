@@ -262,8 +262,9 @@ class OutputState(State_Base):
         (see note under a description of the ``function`` attribute below).
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the outputState, parameters for its function, and/or a custom function and its parameters. Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
         a string used for the name of the outputState.

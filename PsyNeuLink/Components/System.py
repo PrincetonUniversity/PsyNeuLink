@@ -375,8 +375,9 @@ def system(default_input_value=None,
         (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
 
     params : dict : default None
-        a dictionary that can include any of the parameters above; the parameter's name should be used as the key
-        for its entry.  Values in the dictionary will override argument values
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
 
     name : str : default System-<index>
         a string used for the name of the system
