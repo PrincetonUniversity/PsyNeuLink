@@ -128,7 +128,8 @@ Every inputState is owned by a `mechanism <Mechanism>`. It can receive one or mo
 `MappingProjections <MappingProjection>` from other mechanisms, as well as from the process or system to which its
 owner belongs (if it is the `ORIGIN` mechanism for that process or system).  The projections received by an
 inputState are listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute.
-Like all PsyNeuLink components, it has the three following core attributes:
+
+Like all PsyNeuLink components, an inputState has the three following core attributes:
 
 * `variable <InputState.variable>`:  this serves as a template for the :keyword:`value` of each projection that the
   inputState receives: each must match both the number and type of elements of the inputState's

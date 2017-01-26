@@ -470,9 +470,9 @@ class ParameterState(State_Base):
         specifies the default value of the parameter for which the parameterState is responsible.
 
     value : number, list or np.ndarray
-        specifies the template for the parametersState's `variable <ParameterState.variable>` attribute (since a
-        parameterState's `variable <ParameterState.variable>` and `value <ParameterState.value>` attributes must have
-        the same format (number and type of elements).
+        specifies the template for the parametersState's `variable <ParameterState.variable>` (since a parameterState's
+        `variable <ParameterState.variable>` and `value <ParameterState.value>` attributes must have the same format
+        (number and type of elements).
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the values of the projections received by the parameterState.
@@ -507,8 +507,8 @@ class ParameterState(State_Base):
 
     receivesFromProjections : Optional[List[Projection]]
         a list of the projections received by the parameterState (i.e., for which it is a
-        `receiver <ParameterState.receiver>`); generally these are `ControlProjection(s) <ControlProjection>` and/or
-        `LearningProjection(s) <LearningProjection>`.
+        `receiver <Projection.Projection.receiver>`); generally these are `ControlProjection(s) <ControlProjection>`
+        and/or `LearningProjection(s) <LearningProjection>`.
 
     variable : number, list or np.ndarray
         the template for the `value <Projection.Projection.value>` of each projection that the parameterState receives,
