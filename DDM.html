@@ -303,7 +303,7 @@ threshold.  Often, by convention, the lower threshold is associated with the inc
 </ul>
 <p>The following assignments are made only assigned if the <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> function is used, and
 <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code>.  Otherwise, neither the <a class="reference internal" href="#DDM.DDM.outputValue" title="DDM.DDM.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a>
-nor the <a class="reference internal" href="Process.html#Process.Process_Base.outputState" title="Process.Process_Base.outputState"><code class="xref any py py-attr docutils literal"><span class="pre">outputState</span></code></a> attribute have a 6th item (if another function is assigned) or they are asssigned
+nor the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputState" title="Mechanism.Mechanism_Base.outputState"><code class="xref any py py-attr docutils literal"><span class="pre">outputState</span></code></a> attribute have a 6th item (if another function is assigned) or they are asssigned
 <code class="xref any docutils literal"><span class="pre">None</span></code> if <a class="reference internal" href="#DDM.DDM.time_scale" title="DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>.</p>
 <ul class="simple">
 <li><strong>mean correct response time</strong> (in seconds) is assigned to the 5th item of the mechanism&#8217;s</li>
@@ -347,8 +347,9 @@ automatically assigned to <a class="reference internal" href="Function.html#Func
 This must be set to <code class="xref any docutils literal"><span class="pre">TimeScale.TRIAL</span></code> to use one of the analytic solutions specified by
 <a class="reference internal" href="#DDM.DDM.function" title="DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. This  must be set to <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> to numerically (path) integrate the
 decision variable.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> for specification of a params dict).</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify parameters of the
+mechanism, parameters of its function, and/or  a custom function and its parameters. Values specified
+for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
@@ -379,7 +380,9 @@ of the decision variable (one step per <code class="xref any docutils literal"><
 <dt id="DDM.DDM.function_params">
 <code class="descname">function_params</code><a class="headerlink" href="#DDM.DDM.function_params" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[str, value]</em> &#8211; contains one entry for each parameter of the mechanism&#8217;s function.
-The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.</p>
+The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+constructor for the function.</p>
 </dd></dl>
 
 <dl class="attribute">

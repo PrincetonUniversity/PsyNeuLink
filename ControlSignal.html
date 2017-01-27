@@ -174,95 +174,110 @@
 <h1>ControlSignal<a class="headerlink" href="#controlsignal" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-ControlSignal"></span><p># <a class="reference internal" href="#ControlSignal.ControlSignal.intensity" title="ControlSignal.ControlSignal.intensity"><code class="xref py py-data docutils literal"><span class="pre">intensity</span></code></a></p>
-<div class="section" id="overview">
+<span class="target" id="module-EVC.ControlSignal"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> speicialized for use with an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>. It is used to modify the
-parameter of a mechanism or its function that has been <span class="xref std std-ref">specified for control</span>, in a system that regulates
-its performance using an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> as its <span class="xref std std-ref">controller</span>.  A ControlSignal
-is associated with a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for the parameter to be
-controlled.  It receives an <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> value specified by the EVCMechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, and uses that to
-compute an <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> that is assigned as the value of its ControlProjection. The parameterState that
-receives the ControlProjection uses that value to modify the value of the mechanism&#8217;s (or function&#8217;s) parameter for
-which it is responsible.  A ControlSignal also calculates a <code class="xref py py-data docutils literal"><span class="pre">cost</span></code>, based on its intensity and/or its time
-course, that is used by the EVCMechanism to adapt its allocation in the future.</p>
+<p>A ControlSignal is an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> specialized for use with an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>. It is used to modify the
+parameter of a mechanism or of its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> that has been
+<a class="reference internal" href="ControlMechanism.html#controlmechanism-specifying-control"><span class="std std-ref">specified for control</span></a>, in a system that regulates its performance using an
+<a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> as its <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  A ControlSignal is associated with a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for the parameter to be controlled.  It receives an <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value specified by the
+EVCMechanism&#8217;s <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.function" title="EVC.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and uses that to compute an <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> that is assigned as the
+<a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.value" title="ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ControlProjection. The parameterState that receives the
+ControlProjection uses that value to modify the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s (or function&#8217;s) parameter for
+which it is responsible.  A ControlSignal also calculates a <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>, based on its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> and/or its time course,
+that is used by the EVCMechanism to adapt its <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the future.</p>
 </div>
 <div class="section" id="creating-a-controlsignal">
 <span id="controlsignal-creation"></span><h2>Creating a ControlSignal<a class="headerlink" href="#creating-a-controlsignal" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is created automatically whenever the parameter of a mechanism or its function
-:ref:` is specified for control &lt;ControlMechanism_Specifying_Control&gt;` and the mechanism belongs to a system for which
-an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref py py-data docutils literal"><span class="pre">controller</span></code></a>.  Although a
-ControlSignal can be created using its constructor, or any of the other ways for
-<span class="xref std std-ref">creating an outputState</span>,  this is neither necessary nor advisable, as a ControlSignal
-has dedicated component and requirements for configuration that must be met for it to function properly.</p>
+<p>A ControlSignal is created automatically whenever the parameter of a mechanism or of its function
+is <a class="reference internal" href="ControlMechanism.html#controlmechanism-specifying-control"><span class="std std-ref">specified for control</span></a> and the mechanism belongs to a system for which
+an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  Although a ControlSignal can be created using its constructor, or any of the
+other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an outputState</span></a>,  this is neither necessary nor advisable,
+as a ControlSignal has dedicated components and requirements for configuration that must be met for it to function
+properly.</p>
 </div>
 <div class="section" id="structure">
 <span id="controlsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ControlSignal is owned by an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>, and associated with a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> that projects to the
-<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> associated with the paramter to be controlled.  Like all PsyNeuLink components,
-it has the three following core attributes:</p>
-<ul class="simple">
-<li><code class="docutils literal"><span class="pre">variable</span></code>:  this is a 1d array that receives an <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> from the EVCMechanism to which it belongs,
-and is equivalent to the ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code>.</li>
-<li><code class="docutils literal"><span class="pre">function</span></code>: this converts the ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> to its <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>.  By default this
-is an identity function (<code class="docutils literal"><span class="pre">(Linear(slope=1,</span> <span class="pre">intercept=0))</span></code>), but can be assigned another <a href="#id1"><span class="problematic" id="id2">:py:doc:`TransferFunction`</span></a>,
-or any other function that takes and returns a scalar value or 1d array.</li>
-<li><code class="docutils literal"><span class="pre">value</span></code>:  this is assigned the result of the ControlSignal`s <code class="docutils literal"><span class="pre">function</span></code>, and is equivalent to the ControlSignal&#8217;s
-<code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> attribute.</li>
+<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> associated with the paramter to be controlled.  A ControlSignal has the following
+primary attributes:</p>
+<ul class="simple" id="controlsignal-allocation">
+<li><a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>: assigned to the ControlSignal by the EVCMechanism to which it belongs, and converted to its
+<a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> by its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. Its value corresponds to the current round of execution of
+the EVCMechanism to which the ControlSignal belongs.  The value in the previous round of execution can be accessed
+using the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.last_allocation" title="EVC.ControlSignal.ControlSignal.last_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">last_allocation</span></code></a> attribute.</li>
 </ul>
-<p id="controlsignal-cost-attributes">A ControlSignal also has several additional attributes and functions that determine is operation:</p>
 <ul class="simple">
-<li><code class="xref py py-data docutils literal"><span class="pre">allocation</span></code>: assigned to the ControlSignal by the EVCMechanism to which it belongs, and converted to its
-<code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> by its <code class="docutils literal"><span class="pre">function</span></code>.  It is equivalent to the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute.  The value
-corresponds to the current round of execution.  The value in the previous round of execution can be accessed using
-the ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">lastAllocation</span></code> attribute.</li>
-<li><code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>: the result of the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">function</span></code> applied to its <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code>.  By
-default, the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">function</span></code> is an identity function that sets its <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> equal to its
-<code class="xref py py-data docutils literal"><span class="pre">allocation</span></code>.  The value corresponds to the current round of execution.  The value in the previous round
-of execution can be accessed using the ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">lastAllocation</span></code> attribute.</li>
-<li><code class="xref py py-data docutils literal"><span class="pre">allocation_samples</span></code>:  list of the allocation values for use by the EVCMechanism to which the
-ControlSignal belongs, when it constructs an <span class="xref std std-ref">allocationPolicy</span>
-(a particular combination of allocation values for its ControlSignals) to evaluate.</li>
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation_samples" title="EVC.ControlSignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a>:  list of the allocation values to be sampled when the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> to which the
+ControlSignal belongs determines its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.allocation_policy" title="EVC.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</li>
+</ul>
+<ul class="simple">
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>: converts the ControlSignal&#8217;s <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> to its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.  By default this
+is an identity function (<code class="xref std std-keyword docutils literal"><span class="pre">Linear(slope=1,</span> <span class="pre">intercept=0))</span></code>), that simpy uses the <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> as the
+<a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.  However, <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> can be assigned another <code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that
+takes and returns a scalar value or 1d array.</li>
+</ul>
+<ul class="simple" id="controlsignal-intensity">
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>:  the result of the ControlSignal`s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> applied to its <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>,
+and used to modify the value of the parameter for which the ControlSignal is responsible.  Its value corresponds
+to the current round of execution of the EVCMechanism to which the ControlSignal belongs.  The value in the previous
+round of execution can be accessed using the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">lastIntensity</span></code> attribute.</li>
 </ul>
 <ul id="controlsignal-costs">
-<li><p class="first"><em>Costs</em>. A ControlSignal has three <strong>cost attributes</strong>, the values of which are calculated from its
-<code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> to determine the total cost.  Each of these is calculated using a corresponding
-<strong>cost function</strong>.  Each of these functions can be customized, and the first three can be
-<a class="reference internal" href="#controlsignal-toggle-costs"><span class="std std-ref">enabled or disabled</span></a>:</p>
+<li><p class="first"><em>Costs</em>. A ControlSignal has three <strong>cost attributes</strong>, the values of which are calculated from its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> to
+determine the total cost.  Each of these is calculated using a corresponding <strong>cost function</strong>.  Each of these
+functions can be customized, and the first three can be <a class="reference internal" href="#controlsignal-toggle-costs"><span class="std std-ref">enabled or disabled</span></a>:</p>
 <blockquote>
 <div><ul class="simple" id="controlsignal-cost-functions">
-<li><code class="xref py py-data docutils literal"><span class="pre">intensityCost</span></code>, calculated by the <code class="xref py py-data docutils literal"><span class="pre">intensityCostFunction</span></code> based on the current
-<code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> of the ControlSignal.</li>
-<li><code class="xref py py-data docutils literal"><span class="pre">adjustmentCost</span></code>, calculated by the <code class="xref py py-data docutils literal"><span class="pre">adjustmentCostFunction</span></code> based on a change in the
-ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> from its last value.</li>
-<li><code class="xref py py-data docutils literal"><span class="pre">durationCost</span></code>, calculated by the <code class="xref py py-data docutils literal"><span class="pre">durationCostFunction</span></code> based on an integral of the
-the ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">cost</span></code>.</li>
-<li><code class="xref py py-data docutils literal"><span class="pre">cost</span></code>, calculated by the <code class="xref py py-data docutils literal"><span class="pre">costCombinationFunction</span></code> that combines the results of any cost
-functions that are enabled (as described in the following section).</li>
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity_cost" title="EVC.ControlSignal.ControlSignal.intensity_cost"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost</span></code></a>, calculated by the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity_cost_function" title="EVC.ControlSignal.ControlSignal.intensity_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost_function</span></code></a> based on the current <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> of the
+ControlSignal.</li>
 </ul>
-<p id="controlsignal-toggle-costs"><em>Enabling and Disabling Cost Functions</em>.  Any of the cost functions (except the
-<code class="xref py py-data docutils literal"><span class="pre">cost_combination_function</span></code>) can be enabled or disabled using the <code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function()</span></code> method
-to turn it <code class="xref std std-keyword docutils literal"><span class="pre">ON</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">OFF</span></code>. If it is disabled, that component of the cost is not included in the
-ControlSignal&#8217;s <code class="xref py py-data docutils literal"><span class="pre">cost</span></code> attribute.  A cost function  can also be permanently disabled for the
-ControlSignal by assigning it&#8217;s attribute the value of <code class="xref any docutils literal"><span class="pre">None</span></code>.  If a cost function is permanently
-disabled for a ControlSignal, it cannot be re-enabled using <code class="xref py py-meth docutils literal"><span class="pre">toggle_cost_function()</span></code>.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.adjustment_cost" title="EVC.ControlSignal.ControlSignal.adjustment_cost"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost</span></code></a>, calculated by the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.adjustment_cost_function" title="EVC.ControlSignal.ControlSignal.adjustment_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost_function</span></code></a> based on a change in the ControlSignal&#8217;s
+<a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> from its last value.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.duration_cost" title="EVC.ControlSignal.ControlSignal.duration_cost"><code class="xref any py py-attr docutils literal"><span class="pre">duration_cost</span></code></a>, calculated by the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.duration_cost_function" title="EVC.ControlSignal.ControlSignal.duration_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">duration_cost_function</span></code></a> based on an integral of the the ControlSignal&#8217;s
+<a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li><a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>, calculated by the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost_combination_function" title="EVC.ControlSignal.ControlSignal.cost_combination_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_combination_function</span></code></a> that combines the results of any cost functions that are
+enabled (as described in the following section).</li>
+</ul>
+<p id="controlsignal-toggle-costs"><em>Enabling and Disabling Cost Functions</em>.  Any of the cost functions (except the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost_combination_function" title="EVC.ControlSignal.ControlSignal.cost_combination_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_combination_function</span></code></a>) can
+be enabled or disabled using the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.toggle_cost_function" title="EVC.ControlSignal.ControlSignal.toggle_cost_function"><code class="xref any py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code></a> method to turn it <code class="xref any docutils literal"><span class="pre">ON</span></code> or <code class="xref any docutils literal"><span class="pre">OFF</span></code>. If it is disabled, that
+component of the cost is not included in the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> attribute.  A cost function  can  also be
+permanently disabled for the ControlSignal by assigning it&#8217;s attribute <code class="xref any docutils literal"><span class="pre">None</span></code>.  If a cost function is permanently
+disabled for a ControlSignal, it cannot be re-enabled using <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.toggle_cost_function" title="EVC.ControlSignal.ControlSignal.toggle_cost_function"><code class="xref any py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code></a>.</p>
 </div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <a class="reference internal" href="OutputState.html#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref any py py-attr docutils literal"><span class="pre">index</span></code></a> and <a class="reference internal" href="OutputState.html#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref any py py-attr docutils literal"><span class="pre">calculate</span></code></a>
+attributes of a ControlSignal are automatically assigned and should not be modified.</p>
+</div>
 </li>
 </ul>
-<p>NOTE: ControlSignals do not use the <code class="xref py py-data docutils literal"><span class="pre">index</span></code> attributes of an outputState.</p>
 </div>
 <div class="section" id="execution">
 <span id="controlsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal cannot be executed directly.  It is executed whenever the EVCMechanism to which it belongs is
-executed.  When this occures, the EVCMechanism providesthe ControlSignal with an <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code>, that is used by
-its <code class="docutils literal"><span class="pre">function</span></code> to compute its <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> for that round of execution.  The <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> is used
-by its associated ControlProjection to set the value of the parameterState to which it projects which, in turn,
-modifies the value of the mechanism or function parameter being controlled.  The <code class="xref py py-data docutils literal"><span class="pre">intensity</span> <span class="pre">is</span> <span class="pre">also</span> <span class="pre">used</span> <span class="pre">by</span>
-<span class="pre">the</span> <span class="pre">ControlSignal's</span> <span class="pre">:ref:`cost</span> <span class="pre">functions</span></code> to compute its <code class="xref py py-data docutils literal"><span class="pre">cost</span></code> attribute.
-That is used, along with its <code class="xref py py-data docutils literal"><span class="pre">allocation_samples</span></code> attribute, by the EVCMechanism to evaluate
-<a class="reference internal" href="EVCMechanism.html#evcmechanism-evc"><span class="std std-ref">expected value of control (EVC)</span></a> of the current
-<code class="xref py py-data docutils literal"><span class="pre">allocationPolicy</span></code>, and (possibly) adjust the ControlSignal&#8217;s
-<code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> for the next round of execution.</p>
+<p>A ControlSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> to which it belongs is
+executed.  When this occurs, the EVCMechanism provides the ControlSignal with an <a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>, that is used by its
+<a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> for that round of execution.  The <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is used
+by its associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to set the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> to which it
+projects. The paramemterState uses that value, in turn, to modify the value of the mechanism or function parameter
+being controlled.  The ControlSignal&#8217;s <a class="reference internal" href="#controlsignal-cost-functions"><span class="std std-ref">intensity`is also used by its `cost functions</span></a>
+to compute its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> attribute. That is used, along with its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation_samples" title="EVC.ControlSignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> attribute, by the EVCMechanism to
+evaluate the <a class="reference internal" href="EVCMechanism.html#evcmechanism-evc"><span class="std std-ref">expected value of control (EVC)</span></a> of the current
+<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.allocation_policy" title="EVC.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, and (possibly) adjust the ControlSignal&#8217;s
+<a class="reference internal" href="ControlProjection.html#ControlProjection.ControlProjection.allocation" title="ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the next round of execution.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes in a parameter in response to the execution of an EVCMechanism are not applied until the mechanism
@@ -273,40 +288,27 @@ with the parameter being controlled is next executed; see <span class="xref std 
 <div class="section" id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="ControlSignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>value=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements subclass of State that represents the output of a mechanism</p>
+<dt id="EVC.ControlSignal.ControlSignal">
+<em class="property">class </em><code class="descclassname">EVC.ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVC.ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>A subclass of OutputState that represents the output of an <code class="xref any docutils literal"><span class="pre">EVCmechanism</span></code> provided to a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a>) &#8211; the mechanism to which the outputState belongs; it must be specified or determinable from the context in which
-the outputState is created.</li>
-<li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; a template for the item of the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute to which the outputState will be assigned
-(specified by the <code class="docutils literal"><span class="pre">index</span></code> argument).  This must match (in number and type of elements) the <code class="docutils literal"><span class="pre">variable</span></code>
-argument; it is used to insure the compatibility of the source of the input to the outputState and its
-<code class="docutils literal"><span class="pre">variable</span></code> (used for its <code class="docutils literal"><span class="pre">function</span></code> and <code class="docutils literal"><span class="pre">calculate</span></code> routines).</li>
-<li><strong>value</strong> (<em>number, list or np.ndarray</em>) &#8211; used as the template for <code class="docutils literal"><span class="pre">variable</span></code>.</li>
-<li><strong>index</strong> (<em>int : default PRIMARY_OUTPUT_STATE</em>) &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the
-<code class="xref py py-data docutils literal"><span class="pre">calculate</span></code> function, to determine the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</li>
-<li><strong>calculate</strong> (function or method : default default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a>) &#8211; used to convert item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> to outputState&#8217;s <code class="docutils literal"><span class="pre">value</span></code> (and corresponding
-item of owner&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>.  It must accept a value
-that has the same format (number and type of elements) as the mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code>.</li>
-<li><strong>function</strong> (Function or method : default <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref py py-class docutils literal"><span class="pre">LinearCombination(operation=SUM)</span></code></a>) &#8211; function used to aggregate the values of the projections received by the outputState.
-It must produce a result that has the same format (number and type of elements) as its <code class="docutils literal"><span class="pre">value</span></code>.
-It is implemented for consistency with other states, but is not actively used by PsyNeuLInk at the moment
-(see note under a description of the <code class="docutils literal"><span class="pre">function</span></code> attribute below).</li>
-<li><strong>intensity_cost_function</strong> (Optional[TransferFuntion] : default <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code></a>) &#8211; calculates a cost based on the control signal <a class="reference internal" href="#ControlSignal.ControlSignal.intensity" title="ControlSignal.ControlSignal.intensity"><code class="xref py py-data docutils literal"><span class="pre">intensity</span></code></a>.</li>
-<li><strong>adjustment_cost_function</strong> (Optional[TransferFunction] : default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a>) &#8211; calculates a cost based on a change in the control signal <a class="reference internal" href="#ControlSignal.ControlSignal.intensity" title="ControlSignal.ControlSignal.intensity"><code class="xref py py-data docutils literal"><span class="pre">intensity</span></code></a> from its last value.</li>
-<li><strong>duration_cost_function</strong> (Optional[IntegratorFunction] : default <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref py py-class docutils literal"><span class="pre">Integrator</span></code></a>) &#8211; Calculates an integral of the ControlProjection&#8217;s <a class="reference internal" href="#ControlSignal.ControlSignal.cost" title="ControlSignal.ControlSignal.cost"><code class="xref py py-data docutils literal"><span class="pre">cost</span></code></a>.</li>
-<li><strong>cost_combination_function</strong> (function : default <code class="xref py py-class docutils literal"><span class="pre">Reduce(operation=SUM)</span></code>) &#8211; Combines the results of any cost functions that are enabled, and assigns the result to <a class="reference internal" href="#ControlSignal.ControlSignal.cost" title="ControlSignal.ControlSignal.cost"><code class="xref py py-data docutils literal"><span class="pre">cost</span></code></a>.</li>
-<li><strong>allocation_samples</strong> (list : default <code class="xref std std-keyword docutils literal"><span class="pre">DEFAULT_ALLOCATION_SAMPLES</span></code>) &#8211; List of values used by the ControlMechanism to which the ControlSignal belongs, when it constructs an
-<span class="xref std std-ref">allocationPolicy</span> (a particular combination of allocation
-values for its ControlSignals) to evaluate.  The default value is an array that ranges from 0.1 to 1 in steps
-of 0.1.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify the parameters for the outputState, parameters for its function,
-and/or a custom function and its parameters (see <span class="xref doc">Component</span> for specification of a params dict).</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a>) &#8211; specifies the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> to which to assign the ControlSignal.</li>
+<li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; specifies the function used to determine the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> of the ControlSignal from its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation" title="EVC.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</li>
+<li><strong>intensity_cost_function</strong> (<em>Optional[TransferFuntion] : default Exponential</em>) &#8211; specifies the function used to calculate the contribution of the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> to its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
+<li><strong>adjustment_cost_function</strong> (<em>Optional[TransferFunction] : default Linear</em>) &#8211; specifies the function used to calculate the contribution of the change in the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
+(from its <code class="xref any docutils literal"><span class="pre">lastIntensity</span></code> value) to its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
+<li><strong>duration_cost_function</strong> (<em>Optional[IntegratorFunction] : default Integrator</em>) &#8211; specifies the function used to calculate the contribution of the ControlSignal&#8217;s duration to its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
+<li><strong>cost_combination_function</strong> (function : default <code class="xref py py-class docutils literal"><span class="pre">Reduce(operation=SUM)</span></code>) &#8211; speciies the function used to combine the results of any cost functions that are enabled, the result of
+whihc is assigned as the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
+<li><strong>allocation_samples</strong> (<em>list : default range(0.1, 1, 0.1)</em>) &#8211; specifies the values used by <code class="xref any docutils literal"><span class="pre">ControlSignal's</span> <span class="pre">`ControlSignal.owner</span></code> to determine its
+<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.allocation_policy" title="EVC.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> (see <a class="reference internal" href="#controlsignal-execution"><span class="std std-ref">Execution</span></a>).</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
+override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) &#8211; a string used for the name of the outputState.
 If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
 belongs (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
@@ -319,170 +321,129 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.owner">
-<code class="descname">owner</code><a class="headerlink" href="#ControlSignal.ControlSignal.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Mechanism</em> &#8211; the mechanism to which the outputState belongs.</p>
+<dt id="EVC.ControlSignal.ControlSignal.owner">
+<code class="descname">owner</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>EVCMechanism</em> &#8211; the <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a> to which the ControlSignal belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.sendsToProjections">
-<code class="descname">sendsToProjections</code><a class="headerlink" href="#ControlSignal.ControlSignal.sendsToProjections" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the projections sent by the outputState (i.e., for which the outputState is a <code class="docutils literal"><span class="pre">sender</span></code>).</p>
+<dt id="EVC.ControlSignal.ControlSignal.allocation">
+<code class="descname">allocation</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default: defaultControlAllocation</em> &#8211; value used as <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.variable" title="EVC.ControlSignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+to determine its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.variable">
-<code class="descname">variable</code><a class="headerlink" href="#ControlSignal.ControlSignal.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; assigned an item of the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a> of its owner mechanism.</p>
+<dt id="EVC.ControlSignal.ControlSignal.last_allocation">
+<code class="descname">last_allocation</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.last_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; value of <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation" title="EVC.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the previous execution of ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.owner" title="EVC.ControlSignal.ControlSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.index">
-<code class="descname">index</code><a class="headerlink" href="#ControlSignal.ControlSignal.index" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 0</em> &#8211; the item in the owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> attribute used as input of the
-<code class="xref py py-data docutils literal"><span class="pre">calculate</span></code> function, to determine the <code class="docutils literal"><span class="pre">value</span></code> of the outputState.</p>
+<dt id="EVC.ControlSignal.ControlSignal.allocation_samples">
+<code class="descname">allocation_samples</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.allocation_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list : DEFAULT_SAMPLE_VALUES</em> &#8211; set of values to sample by the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.owner" title="EVC.ControlSignal.ControlSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> to determine its
+<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.allocation_policy" title="EVC.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.calculate">
-<code class="descname">calculate</code><a class="headerlink" href="#ControlSignal.ControlSignal.calculate" title="Permalink to this definition">¶</a></dt>
-<dd><p>function or method : default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a> &#8211; function used to convert the item of owner mechanism&#8217;s <code class="docutils literal"><span class="pre">value</span></code> specified by the
-<code class="xref py py-data docutils literal"><span class="pre">index</span></code> attribute;  it is combined with the result of the outputState&#8217;s
-<code class="docutils literal"><span class="pre">function</span></code> to determine it&#8217;s <code class="docutils literal"><span class="pre">value</span></code>, and the corresponding item of the owner mechanism&#8217;s
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>. Default is Linear (identity function)
-which simply transfers the value as is.</p>
+<dt id="EVC.ControlSignal.ControlSignal.variable">
+<code class="descname">variable</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; same as <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation" title="EVC.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>;  used by <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.value">
-<code class="descname">value</code><a class="headerlink" href="#ControlSignal.ControlSignal.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; assigned the result of the <code class="xref py py-data docutils literal"><span class="pre">calculate</span></code> function, combined with any result of
-the outputState&#8217;s <code class="docutils literal"><span class="pre">function</span></code>, which is also assigned to the corresopnding item of the owner mechanism&#8217;s
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>.</p>
+<dt id="EVC.ControlSignal.ControlSignal.function">
+<code class="descname">function</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction :  default Linear(slope=1, intercept=0)</em> &#8211; converts <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation" title="EVC.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> into the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.  The default is the identity function, which
+assigns the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.allocation" title="EVC.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> as its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.function">
-<code class="descname">function</code><a class="headerlink" href="#ControlSignal.ControlSignal.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>CombinationFunction : default LinearCombination(operation=SUM))</em> &#8211; performs an element-wise (Hadamard) aggregation  of the <code class="docutils literal"><span class="pre">values</span></code> of the projections received by the
-outputState.  The result is combined with the result of the calculate function and assigned as the <code class="docutils literal"><span class="pre">value</span></code>
-of the outputState, and the corresponding item of the owner&#8217;s
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.outputValue" title="Mechanism.Mechanism_Base.outputValue"><code class="xref py py-data docutils literal"><span class="pre">outputValue</span></code></a>.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Currently PsyNeuLink does not support projections to outputStates.  The <code class="docutils literal"><span class="pre">function</span></code> attribute is
-implemented for consistency with other states classes, and for potential future use.  The default simply
-passes its input to its output. The <code class="docutils literal"><span class="pre">function</span></code> attribute can be modified to change this behavior.
-However, for compatibility with future versions, it is <em>strongly</em> recommended that such functionality
-be implemented by assigning the desired function to the <code class="xref py py-data docutils literal"><span class="pre">calculate</span></code>
-attribute; this will insure compatibility with future versions.</p>
-</div>
+<dt id="EVC.ControlSignal.ControlSignal.intensity">
+<code class="descname">intensity</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; result of <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  assigned as the value of the ControlSignal&#8217;s ControlProjection,
+and used to modify the value of the parameter to which the ControlSignal is assigned.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.allocation">
-<code class="descname">allocation</code><a class="headerlink" href="#ControlSignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : default: defaultControlAllocation</em> &#8211; value used as <code class="docutils literal"><span class="pre">variable</span></code> for ControlProjection&#8217;s <code class="docutils literal"><span class="pre">function</span></code> to determine its control signal
-<code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>.</p>
+<dt id="EVC.ControlSignal.ControlSignal.value">
+<code class="descname">value</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; result of <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.function" title="EVC.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; same as <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.allocationSamples">
-<code class="descname">allocationSamples</code><a class="headerlink" href="#ControlSignal.ControlSignal.allocationSamples" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list : DEFAULT_SAMPLE_VALUES</em> &#8211; set of values used by ControlMechanisms that sample different allocation values in order to
-adaptively adjust the function of mechanisms in their systems.</p>
-<span class="target" id="controlsignal-function-attributes"></span></dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">function</code></dt>
-<dd><p><em>TransferFunction :  default Linear</em> &#8211; converts <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> into <code class="xref any docutils literal"><span class="pre">control</span> <span class="pre">signal</span>
-<span class="pre">:py:data:`intensity</span></code> that is provided as output to receiver of projection.</p>
+<dt id="EVC.ControlSignal.ControlSignal.last_intensity">
+<code class="descname">last_intensity</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.last_intensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> of the ControlSignal on the previous execution of its <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.owner" title="EVC.ControlSignal.ControlSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.intensityCostFunction">
-<code class="descname">intensityCostFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.intensityCostFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>TransferFunction : default default <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code></a> &#8211; calculates &#8220;intensityCost`` from the curent value of <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>.
-It can be any <code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function  that takes and
-returns a scalar value. The default is <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref py py-class docutils literal"><span class="pre">Exponential</span></code></a>.
-It can be disabled permanently for the ControlProjection by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+<dt id="EVC.ControlSignal.ControlSignal.intensity_cost_function">
+<code class="descname">intensity_cost_function</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.intensity_cost_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction : default default Exponential</em> &#8211; calculates <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity_cost" title="EVC.ControlSignal.ControlSignal.intensity_cost"><code class="xref any py py-attr docutils literal"><span class="pre">intensity_cost</span></code></a> from the curent value of <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>. It can be any <code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any other
+function that takes and returns a scalar value. The default is <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>.  It can be disabled permanently
+for the ControlSignal by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.adjustmentCostFunction">
-<code class="descname">adjustmentCostFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.adjustmentCostFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>TransferFunction : default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a> &#8211; calculates <code class="xref py py-data docutils literal"><span class="pre">adjustmentCost</span></code> based on the change in
-<code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> from its last value. It can be any
-<code class="xref py py-class docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and
-returns a scalar value. It can be disabled permanently for the ControlProjection by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+<dt id="EVC.ControlSignal.ControlSignal.intensity_cost">
+<code class="descname">intensity_cost</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.intensity_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; cost associated with the current <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.durationCostFunction">
-<code class="descname">durationCostFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.durationCostFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>IntegratorFunction : default <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref py py-class docutils literal"><span class="pre">Linear</span></code></a> &#8211; calculates an integral of the ControlProjection&#8217;s <code class="xref py py-data docutils literal"><span class="pre">cost</span></code>.
-It can be any <code class="xref py py-class docutils literal"><span class="pre">IntegratorFunction</span></code>, or any other function that takes a
-list or array of two values and returns a scalar value. It can be disabled permanently for the ControlSignal by
-assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+<dt id="EVC.ControlSignal.ControlSignal.adjustment_cost_function">
+<code class="descname">adjustment_cost_function</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.adjustment_cost_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction : default Linear</em> &#8211; calculates <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.adjustment_cost" title="EVC.ControlSignal.ControlSignal.adjustment_cost"><code class="xref any py py-attr docutils literal"><span class="pre">adjustment_cost</span></code></a> based on the change in <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> from  <code class="xref any docutils literal"><span class="pre">lastIntensity</span></code>.  It can be any
+<code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that takes and returns a scalar value. It can be disabled
+permanently for the ControlSignal by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.costCombinationFunction">
-<code class="descname">costCombinationFunction</code><a class="headerlink" href="#ControlSignal.ControlSignal.costCombinationFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p>function : default <code class="xref py py-class docutils literal"><span class="pre">Reduce(operation=SUM)</span></code> &#8211; combines the results of any cost functions that are enabled, and assigns the result to <code class="xref py py-data docutils literal"><span class="pre">cost&gt;</span></code>.
+<dt id="EVC.ControlSignal.ControlSignal.adjustment_cost">
+<code class="descname">adjustment_cost</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.adjustment_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; cost associated with last change to <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.intensity" title="EVC.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="EVC.ControlSignal.ControlSignal.duration_cost_function">
+<code class="descname">duration_cost_function</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.duration_cost_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>IntegratorFunction : default Linear</em> &#8211; calculates an integral of the ControlSignal&#8217;s <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.  It can be any <code class="xref any docutils literal"><span class="pre">IntegratorFunction</span></code>, or any other
+function that takes a list or array of two values and returns a scalar value. It can be disabled permanently
+for the ControlSignal by assigning <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="EVC.ControlSignal.ControlSignal.duration_cost">
+<code class="descname">duration_cost</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.duration_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; intregral of <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="EVC.ControlSignal.ControlSignal.cost_combination_function">
+<code class="descname">cost_combination_function</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.cost_combination_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function : default Reduce(operation=SUM)</em> &#8211; combines the results of all cost functions that are enabled, and assigns the result to <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.cost" title="EVC.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.
 It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.intensity">
-<code class="descname">intensity</code><a class="headerlink" href="#ControlSignal.ControlSignal.intensity" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; output of <code class="docutils literal"><span class="pre">function</span></code>, used to determine controlled parameter of task;  same as the ControlSignal&#8217;s <code class="docutils literal"><span class="pre">value</span></code>
-attribute.</p>
+<dt id="EVC.ControlSignal.ControlSignal.cost">
+<code class="descname">cost</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.cost" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> &#8211; combined result of all cost functions that are enabled.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.intensityCost">
-<code class="descname">intensityCost</code><a class="headerlink" href="#ControlSignal.ControlSignal.intensityCost" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; cost associated with current <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>.</p>
+<dt id="EVC.ControlSignal.ControlSignal.sendsToProjections">
+<code class="descname">sendsToProjections</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.sendsToProjections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>[List[ControlProjection]]</em> &#8211; a list with one item &#8211; the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> assigned to the ControlSignal.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.adjustmentCost">
-<code class="descname">adjustmentCost</code><a class="headerlink" href="#ControlSignal.ControlSignal.adjustmentCost" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; cost associated with last change to <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignal.durationCost">
-<code class="descname">durationCost</code><a class="headerlink" href="#ControlSignal.ControlSignal.durationCost" title="Permalink to this definition">¶</a></dt>
-<dd><p>intregral of <code class="xref py py-data docutils literal"><span class="pre">cost</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignal.cost">
-<code class="descname">cost</code><a class="headerlink" href="#ControlSignal.ControlSignal.cost" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; current value of ControlProjection&#8217;s <code class="xref py py-data docutils literal"><span class="pre">cost</span></code>;
-combined result of all cost functions that are enabled.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignal.lastAllocation">
-<code class="descname">lastAllocation</code><a class="headerlink" href="#ControlSignal.ControlSignal.lastAllocation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; <code class="xref py py-data docutils literal"><span class="pre">allocation</span></code> for last execution of the ControlProjection.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignal.lastIntensity">
-<code class="descname">lastIntensity</code><a class="headerlink" href="#ControlSignal.ControlSignal.lastIntensity" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; <code class="xref py py-data docutils literal"><span class="pre">intensity</span></code> for last execution of the ControlProjection.</p>
-<span class="target" id="controlprojection-cost-functions"></span></dd></dl>
-
-<dl class="attribute">
-<dt id="ControlSignal.ControlSignal.name">
-<code class="descname">name</code><a class="headerlink" href="#ControlSignal.ControlSignal.name" title="Permalink to this definition">¶</a></dt>
+<dt id="EVC.ControlSignal.ControlSignal.name">
+<code class="descname">name</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> &#8211; name of the outputState.
-Specified in the <a class="reference internal" href="#ControlSignal.ControlSignal.name" title="ControlSignal.ControlSignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the outputState.  If not is specified, a default is
+Specified in the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.name" title="EVC.ControlSignal.ControlSignal.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> argument of the constructor for the outputState.  If not is specified, a default is
 assigned by the StateRegistry of the mechanism to which the outputState belongs
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 <div class="admonition note">
@@ -495,17 +456,17 @@ creation.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ControlSignal.ControlSignal.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#ControlSignal.ControlSignal.prefs" title="Permalink to this definition">¶</a></dt>
+<dt id="EVC.ControlSignal.ControlSignal.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the outputState.
-Specified in the <a class="reference internal" href="#ControlSignal.ControlSignal.prefs" title="ControlSignal.ControlSignal.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the projection;  if it is not specified, a default is
+Specified in the <a class="reference internal" href="#EVC.ControlSignal.ControlSignal.prefs" title="EVC.ControlSignal.ControlSignal.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> argument of the constructor for the projection;  if it is not specified, a default is
 assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ControlSignal.ControlSignal.update">
-<code class="descname">update</code><span class="sig-paren">(</span><em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.update" title="Permalink to this definition">¶</a></dt>
+<dt id="EVC.ControlSignal.ControlSignal.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 1&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adjust the control signal, based on the allocation value passed to it</p>
 <p>Computes new intensity and cost attributes from allocation</p>
 <dl class="docutils">
@@ -535,16 +496,16 @@ pass allocation (input to controlSignal) along as its output</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ControlSignal.ControlSignal.toggle_cost_function">
-<code class="descname">toggle_cost_function</code><span class="sig-paren">(</span><em>cost_function_name</em>, <em>assignment=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.toggle_cost_function" title="Permalink to this definition">¶</a></dt>
+<dt id="EVC.ControlSignal.ControlSignal.toggle_cost_function">
+<code class="descname">toggle_cost_function</code><span class="sig-paren">(</span><em>cost_function_name</em>, <em>assignment=True</em><span class="sig-paren">)</span><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.toggle_cost_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enables/disables use of a cost function.</p>
 <p><code class="docutils literal"><span class="pre">cost_function_name</span></code> should be a keyword (list under <a class="reference internal" href="ControlProjection.html#controlprojection-structure"><span class="std std-ref">Structure</span></a>).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="ControlSignal.ControlSignal.get_costs">
-<code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ControlSignal.ControlSignal.get_costs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensityCost</span></code>, <code class="docutils literal"><span class="pre">adjustmentCost</span></code> and <code class="docutils literal"><span class="pre">durationCost</span></code></p>
+<dt id="EVC.ControlSignal.ControlSignal.get_costs">
+<code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#EVC.ControlSignal.ControlSignal.get_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensity_cost</span></code>, <code class="docutils literal"><span class="pre">adjustment_cost</span></code> and <code class="docutils literal"><span class="pre">duration_cost</span></code></p>
 </dd></dl>
 
 </dd></dl>
