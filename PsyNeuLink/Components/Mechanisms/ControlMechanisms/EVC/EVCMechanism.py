@@ -470,11 +470,16 @@ class EVCMechanism(ControlMechanism_Base):
         if `True`, assigns EVCMechanism when instantiated as the DefaultController
 
     system : System
-        the system for which EVCMechanism is the `controller`.
+        the `system <System>` for which EVCMechanism is the `controller`.
+
+    controlSignals : OrderedDict[str, ControlSignal]
+        list of `outputStates <OutputState>` for the EVCMechanism, each of which corresponds to one of its
+        ControlSignals.
 
     predictionMechanisms : List[ProcessingMechanism]
-        a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, one for each of its
-        `ORIGIN` mechanisms.
+        a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the `system <System>` for
+        which the EVCMechanism is the `controller`, one for each of its `ORIGIN` mechanisms, listed in the order
+        in which they are listed in the system's `processes <System.System_Base.processes>` attribute.
 
     predictionProcesses : List[Process]
         a list of prediction processes added to the system, each comprised of one of its `ORIGIN` mechanisms
@@ -483,12 +488,19 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
         the `ProcessingMechanism` class used for `prediction mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
         Each instance is named based on `ORIGIN` mechanism + PREDICTION_MECHANISM,
-              and assigned an `outputState <OutputState>` with a name based on the same
+        and assigned an `outputState <OutputState>` with a name based on the same
 
-    prediction_mechanism_params : Dict[param key, param value] : default `None`
+    prediction_mechanism_params : Dict[param key, param value] : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to `prediction_mechanism_type` when
         the `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
         to all instances of `prediction_mechanism_type` created.
+
+    predictedInput : 3d np.array
+        array with the `value <Mechanism.Mechanism_Base.value>` of each
+        `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in `predictionMechanisms`.  Each item of
+        axis 0 corresponds to the `value <Mechanism.Mechanism_Base.value>` of a prediction mechanism,
+        axis 1 an `inputState <InputState>` of that prediction mechanism, and
+        axis 2 the elements of the input for that inputState.
 
     monitoredOutputStates : List[OutputState]
         each item is an outputState of a mechanism in the system that has been assigned a projection to a corresponding
@@ -539,7 +551,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller.combine_outcome_and_cost_function - combines outcoms and costs
     COMMENT
 
-    allocation_policy : 2d np.array : `defaultControlAllocation <LINK>`
+    allocation_policy : 2d np.array : defaultControlAllocation
         determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
         associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
         that specifies an `allocation` for the corresponding ControlSignal, and the number of items must equal the
@@ -628,7 +640,7 @@ class EVCMechanism(ControlMechanism_Base):
     EVCmaxPolicy : 1d np.array
         an array of the ControlSignal intensity values for the allocation policy that generated `EVCmax`.
 
-    save_all_values_and_policies : bool : default :keyword:`False`
+    save_all_values_and_policies : bool : default False
         specifies whether or not to save all allocation policies and associated EVC values (in addition to the max).
         If it is specified, each policy tested in the `controlSignalSearchSpace` is saved in `EVCpolicies` and their
         values are saved in `EVCvalues`.
@@ -639,10 +651,6 @@ class EVCMechanism(ControlMechanism_Base):
 
     EVCvalues :  1d np.array
         array of EVC values corresponding to the policies in `EVCPolicies`.
-
-    controlSignals : OrderedDict[str, ControlSignal]
-        list of `outputStates <OutputState>` for the EVCMechanism, each of which corresponds to one of its
-        ControlSignals.
 
     """
 
@@ -1300,18 +1308,28 @@ class EVCMechanism(ControlMechanism_Base):
                        time_scale=TimeScale.TRIAL,
                        context=None):
         """
-        DOCUMNETATION NEEDED
+        Run simulation of `system <System>` for which the EVCMechanism is the `controller`.
 
-        Parameters
+        Arguments
         ----------
-        inputs
-        allocation_vector
-        runtime_params
-        time_scale
-        context
 
-        Returns
-        -------
+        inputs : List[input] or ndarray(input) : default default_input_value
+            the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
+            should be the `value <Mechanism.Mechanism_Base.value> for each
+            `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `predictionMechanisms`
+            attribute.  These are available from the `predictedInput` attribute.
+
+        allocation_vector : (1D np.array)
+            the allocation policy to use in running the simulation, with one allocation value for each of the
+            EVCMechanism's ControlSignals (listed in `controlSignals`).
+
+        runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]
+            a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
+            their functions, or projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
+            description.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
 
         """
 
