@@ -26,9 +26,9 @@
 # √ LearningProjection
 # √ State
 # √ InputState
-#   ParameterState
-#   OutputState
-#   Run
+# √ ParameterState
+# √ OutputState
+# √ Run
 #   Preferences
 #   Log
 #   TimeScale
