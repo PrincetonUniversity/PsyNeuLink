@@ -404,8 +404,9 @@ class DDM(ProcessingMechanism_Base):
         decision variable.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-        and/or  a custom function and its parameters (see `Mechanism` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify parameters of the
+        mechanism, parameters of its function, and/or  a custom function and its parameters. Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default DDM-<index>
         a string used for the name of the mechanism.
@@ -438,6 +439,8 @@ class DDM(ProcessingMechanism_Base):
     function_params : Dict[str, value]
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor for the function.
 
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`; same items as `outputValue <DDM.outputValue>`.

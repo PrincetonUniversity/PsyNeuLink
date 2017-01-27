@@ -13,14 +13,16 @@
 Overview
 --------
 
-An inputState of a mechanism receives the input from projections from other mechanisms in a process or system,
-and/or the input for a process or system itself (if the mechanism to which the inputState belongs is the
-`ORIGIN` mechanism of that process or system --
-see :ref:`role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`).
-A list of projections received by an inputState is kept in its
-:py:data:`receivesFromProjections <InputState.receivesFromProjections>` attribute. It's ``function`` combines the
-values of these inputs, and the result is assigned to a corresponding item in the owner mechanism's ``variable`` and
-:py:data:`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes (see :ref:`Mechanism_InputStates`).
+An inputState receives the input to a mechanism provided by the projections to that mechanism from others in a process
+or system.  If the inputState belongs to an `ORIGIN` mechanism (see
+`role of mechanisms in processes and systems <Mechanism_Role_In_Processes_And_Systems>`), then it receives the input
+specified when that process or system is `run <Run>`.  The projections received by an inputState are
+listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute. Its
+`function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
+corresponding to the inputState in the owner mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
+`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
+for additional details about the role of inputStates in mechanisms).
+
 
 .. _InputState_Creation:
 
@@ -28,10 +30,11 @@ Creating an InputState
 ----------------------
 
 InputStates are created automatically when a mechanism is created.  For example, if a mechanism is created within
-the :ref:`pathway of a process <Process_Pathway>`, its inputState will be created and assigned as the ``receiver``
-of a MappingProjection from the  preceding mechanism in the pathway;  and a :doc:`ControlMechanism`
-automatically creates an inputState for each mechanism that it monitors.  PsyNeuLink does not currently support the
-explicit creation of inputStates (this may be implemented in the future).  However they can modified as described below.
+the `pathway` of a process`, the inputState for that mechanism will be created and assigned as the
+`receiver <MappingProjection.MappingProjection.receiver>` of a `MappingProjection` from the  preceding mechanism in the
+pathway;  and a `ControlMechanism <ControlMechanism>` automatically creates an inputState for each mechanism that it
+monitors. PsyNeuLink does not currently support the explicit creation of inputStates (this may be implemented in the
+future). However they can modified as described below.
 
 COMMENT:
 An inputState can be created by calling its constructor, but in general this is not necessary as a mechanism can
@@ -121,37 +124,37 @@ COMMENT
 Structure
 ---------
 
-Every inputState is owned by a :doc:`mechanism <Mechanism>`. It can receive one or more MappingProjections from other
-mechanisms, as well as from the process to which its owner belongs (if it is the
-:py:data:`ORIGIN` <keyword:`Keywords.Keywords.ORIGIN>` mechanism for that process).  A list of projections received
-by an inputState is kept in its :py:data:`receivesFromProjections <InputState.receivesFromProjections>` attribute.
-Like all PsyNeuLink components, it has the three following core attributes:
+Every inputState is owned by a `mechanism <Mechanism>`. It can receive one or more
+`MappingProjections <MappingProjection>` from other mechanisms, as well as from the process or system to which its
+owner belongs (if it is the `ORIGIN` mechanism for that process or system).  The projections received by an
+inputState are listed in its `receivesFromProjections <InputState.receivesFromProjections>` attribute.
 
-* ``variable``:  this serves as a template for the ``value`` of each projection that the inputState receives;
-  each must match both the number and type of elements of the inputState's ``variable``.
+Like all PsyNeuLink components, an inputState has the three following core attributes:
+
+* `variable <InputState.variable>`:  this serves as a template for the :keyword:`value` of each projection that the
+  inputState receives: each must match both the number and type of elements of the inputState's
+  `variable <InputState.variable>`.
 ..
-* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``value`` of all of the projections
-  received by the inputState.  The default function is :any:`LinearCombination` that sums the values.
-  A custom function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in
-  some way), so long as it generates a result that is compatible with the ``value`` expected for the inputState
-  by the mechanism's ``variable``.  It assigns the result to the inputState's ``value`` attribute.
+* `function <InputState.function>`:  this performs an elementwise (Hadamard) aggregation  of the
+  :keyword:`value` of all of the projections received by the inputState, and assigns the result to the inputState's
+  `value <InputState.value>` attribute.  The default function is `LinearCombination` that sums the values.  A custom
+  function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long
+  as it generates a result that is compatible with the format of the `value <InputState.value>` of the inputState
+  expected by its owner mechanism's `variable <Mechanism.Mechanism_Base.variable>`.
 ..
-* ``value``:  this is the aggregated value of the projections received by the inputState, assigned to it by the
-  inputState's ``function``.  It must be compatible
-  COMMENT:
-  both with the inputState's ``variable`` (since the ``function``
-  of an inputState only combines the values of its projections, but does not otherwise transform its input),
-  COMMENT
-  with item of the owner mechanism's ``variable`` to which it is assigned.
+* `value <InputState.value>`:  this is the aggregated value of the projections received by the inputState, assigned to
+  it by the inputState's `function <InputState.function>`.  It must be compatible with item of the owner mechanism's
+  `variable <Mechanism.Mechanism_Base.variable>` to which the inputState has been assigned.
 
 Execution
 ---------
 
 An inputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the inputStat executes any projections it receives, calls its ``function`` to aggregate their
-values, and then assigns this to its ``value`` attribute.  This, in turn, is assigned as the value of the item in the
-mechanism's ``variable`` and :py:data`inputValue <InputState.inputValue>` attributes to which the inputState is assigned
-(see :ref:`mechanism variable and inputValue attributes <Mechanism_Variable>`)`.
+When this occurs, the inputState executes any projections it receives, calls its `function <InputState.function>` to
+aggregate their values, and then assigns the result to the inputState's `value <InputState.value>` attribute.  This,
+in turn, is assigned to the item of the mechanism's `variable <Mechanism.Mechanism_Base.variable>` and
+`inputValue <Mechanism.Mechanism_Base.inputValue>` attributes corresponding to that inputState
+(see `mechanism variable and inputValue attributes <Mechanism_Variable>` for additional details).
 
 .. _InputState_Class_Reference:
 
@@ -197,7 +200,7 @@ class InputState(State_Base):
     name=None,                                 \
     prefs=None)
 
-    Implements subclass of State that calculates and represents the input of a mechanism
+    Implements a subclass of State that calculates and represents the input to a mechanism.
 
     COMMENT:
 
@@ -237,18 +240,22 @@ class InputState(State_Base):
         the inputState is created.
 
     reference_value : number, list or np.ndarray
-        the item of the owner mechanism's ``variable`` attribute that corresponds to the inputState.
+        the value of the item of the owner mechanism's `variable <Mechanism.Mechanism_Base.variable>` attribute to which
+        the inputState is assigned; used as the template for the inputState's `value <InputState.value>` attribute.
 
     value : number, list or np.ndarray
-        used as the template for ``variable``.
+        specifies the template for the inputState's `variable <InputState.variable>` attribute (since an inputState's
+        `variable <InputState.variable>` and `value <InputState.value>` attributes must have the same format
+        (number and type of elements).
 
     function : Function or method : default LinearCombination(operation=SUM)
-        function used to aggregate the values of the projections received by the inputState.
+        specifies the function used to aggregate the values of the projections received by the inputState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the inputState, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the inputState or its function, and/or a custom function and its parameters. Values specified for parameters in
+        the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default InputState-<index>
         a string used for the name of the inputState.
@@ -268,18 +275,19 @@ class InputState(State_Base):
         the mechanism to which the inputState belongs.
 
     receivesFromProjections : Optional[List[Projection]]
-        a list of the projections received by the inputState (i.e., for which it is a ``receiver``).
+        a list of the projections received by the inputState
+        (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
 
     variable : number, list or np.ndarray
-        the template for the ``value`` of each projection that the inputState receives, each of which must match
-        its number and types of elements.
+        the template for the `value <Projection.Projection.value>` of each projection that the inputState receives,
+        each of which must match the format (number and types of elements) of the inputState's :keyword:`variable`.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an element-wise (Hadamard) aggregation  of the ``values`` of the projections received by the
-        inputState.
+        performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each
+        projection received by the inputState.
 
     value : number, list or np.ndarray
-        the aggregated value of the projections received by the inputState, output of ``function``.
+        the aggregated value of the projections received by the inputState; output of `function <InputState.function>`.
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
@@ -357,7 +365,7 @@ class InputState(State_Base):
                 since the latter will be called with the value of this InputState;
 
         Notes:
-        * Relevant component of owner.function's variable should have been provided
+        * Relevant item of owner.function's variable should have been provided
             as reference_value arg in the call to InputState__init__()
         * Insures that self.value has been assigned (by call to super()._validate_function)
         * This method is called only if the parameterValidationPref is True

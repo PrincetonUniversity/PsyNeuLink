@@ -145,10 +145,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
         """Instantiate requested controlProjection and associated inputState
         """
 
-        # Instantiate inputStates and allocationPolicy attribute for controlSignal allocations
+        # Instantiate inputStates and allocation_policy attribute for controlSignal allocations
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
         self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
-        self.allocationPolicy = self.inputValue
+        self.allocation_policy = self.inputValue
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,

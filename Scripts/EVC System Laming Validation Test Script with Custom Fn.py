@@ -13,7 +13,7 @@ from PsyNeuLink.Globals.Keywords import *
 # np.random.seed(0)
 
 def test_search_function(controller=None, **kwargs):
-    result = np.array(controller.allocationPolicy).reshape(len(controller.allocationPolicy), -1)
+    result = np.array(controller.allocation_policy).reshape(len(controller.allocation_policy), -1)
     return result
 
 def test_outcome_function(**kwargs):

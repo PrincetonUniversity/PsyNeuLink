@@ -162,7 +162,9 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
-        for the mechanism, its function, and/or a custom function and its parameters.
+        for the mechanism, its function, and/or a custom function and its parameters. Includes a
+        :keyword:`PROJECTION_TO_NEXT_MECHANISM` entry for the `projection_to_next_me.  Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default WeightedErrorMechanism-<index>
         a string used for the name of the mechanism.
