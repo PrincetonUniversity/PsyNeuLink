@@ -64,11 +64,11 @@ it can be an OrderedDict in which the key for each entry is a string  specifying
 created, and its value is one of the specifications below.  Each outputState to be created can be specified using any
 of the following formats:
 
-    * A reference to an existing **outputState** object.  Its `variable <OutputState.variable>` must match (in the
+    * A reference to an **existing outputState**.  Its `variable <OutputState.variable>` must match (in the
       number and type of its elements) the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` to
       which the outputState is assigned (designated by its `index <OutputState_Index>` attribute).
     ..
-    * A reference to the **OutputState class** or a **string**.  This creates a default outputState that is
+    * A reference to the **OutputState class** or a ** name string**.  This creates a default outputState that is
       assigned the first item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` as its value.  If the
       name of the OutputState class or its keyword (:keyword:`OUTPUTSTATE`) are used, a default name is assigned to the
       outputState;  if a string is used, it is assigned as the name of the outputState
@@ -138,20 +138,21 @@ Like all PsyNeuLink components, an outputState has the three following core attr
 ..
 * `function <OutputState.function>`: this aggregates the values of any projections received by the outputState,
   which are combined with the result of the function specified by the outputState's `calculate <OutputState_Calculate>`
-  attribute and then assigned as the outputState's `value <OutputState.value>`.
+  attribute, and then assigned as the outputState's `value <OutputState.value>`.
 
+  .. OutputState_Function_Note_1:
   .. note::
-       At present PsyNeuLink does not support projections to outputStates, so its `function <OutputState.function>`
-       attribute is not used, and the outputState's `value <OutputState.value>` is determined exclusively by the
-       function specified for its `calculate <OutputState_Calculate>` attribute (see `note <OutputState_Function_Note>`
-        about `function <OutputState.function>` for additional details).
+       At present the `function <OutputState.function>` of an outputState is not used, and the outputState's
+       `value <OutputState.value>` is determined exclusively by the function specified for its `calculate
+       <OutputState_Calculate>` attribute (see `note <OutputState_Function_Note_2>` for details).
   COMMENT:
      SEE update() METHOD FOR NOTES ON FUTURE IMPLEMENTATION OF FUNCTION.
   COMMENT
 ..
-* `value <OutputState.value>`:  this is assigned the result of the outputState`s `function <OutputState.function>`,
-  possibly modified by its `calculate <OutputState.calculate>` attribute, and used as the input to any projections
-  that it sends (though see `note <OutputState_Function_Note>` about `function <OutputState.function>`).
+* `value <OutputState.value>`:  this is assigned the result of the function specified by the
+  `calculate <OutputState.calculate>` attribute, possibly modified by the result of the outputState`s
+  `function <OutputState.function>` (though see `note <OutputState_Function_Note_2>`).  It is used as the input to any
+  projections that the outputStatue sends.
 
 .. _OutputState_Attributes:
 
@@ -165,17 +166,16 @@ An outputState also has two additional attributes that determine its operation:
 
 .. _OutputState_Calculate:
 
-* `calculate <OutputState.calculate>`:  this specifies a function used to convert the item of its owner mechanism's
-  `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (designated by its
-  `index <OutputState.index>` attribute).  The result is combined with the result of the outputState's
-  `function <OutputState.function>` attribute (which aggregates the value of its projections) to determine the
-  outputState's `value <OutputState.value>` (though see `note <OutputState_Function_Note>` about current use of
-  `function <OutputState.function>`). The
-  default for `calculate  <OutputState.calculate>` is an identity function (`Linear` with its :keyword:`slope=1` and
-  its :keyword:`intercept=0`), which simply assigns the item of the mechanism's `value <Mechanism.Mechanism_Base.value>`
-  designated by ouputState's `index <OutputState.index>` attribute, unmodified, as the `value <OutputState.value>` of
-  the outputState. However, `calculate  <OutputState.calculate>` can be assigned any function that can take as input
-  the designated item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>`, and be combined with the
+* `calculate <OutputState.calculate>`:  this specifies the function used to convert the item of the owner mechanism's
+  `value <Mechanism.Mechanism_Base.value>` (designated by the outputState's `index <OutputState.index>` attribute),
+  before assigning it as the outputState's `value <OutputState.vaue>`.  The result is combined with the result of the
+  outputState's `function <OutputState.function>` attribute (which aggregates the value of its projections), to
+  determine the outputState's `value <OutputState.value>` (though see `note <OutputState_Function_Note_1>`). The
+  default for `calculate  <OutputState.calculate>` is an identity function (`Linear` with :keyword:`slope=1` and
+  :keyword:`intercept=0`), which simply assigns the specified item of the mechanism's
+  `value <Mechanism.Mechanism_Base.value>` unmodified as the `value <OutputState.value>` of the outputState. However,
+  `calculate  <OutputState.calculate>` can be assigned any function that can take as its input the designated item
+  of the owner mechanism's `value <Mechanism.Mechanism_Base.value>`, and the result of which can be combined with the
   result of the outputState's `function <OutputState.function>`.
 
 .. _OutputState_Execution:
@@ -185,10 +185,12 @@ Execution
 
 An outputState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
 When the mechanism is executed, it places the results of its execution in its `value <Mechanism.Mechanism_Base.value>`
-attribute.  The `value <OutputState.value>` of the outputState is then updated by calling its
-`function <OutputState.function>` (though see `note <OutputState_Function_Note>`),  as well as the function specified by
-its `calculate <OutputState_Calculate>` attribute, and combining their results.  The final result is assigned to the
-outputState's `value <OutputState.value>`, as well as to a corresponding item of the mechanism's
+attribute. The outputState's `index <OutputState.index>` attribute designates one item of the mechanmism's
+`value <Mechanism.Mechanism_Base.value>` for use by the outputState.  The outputState is updated by calling the function
+specified by its `calculate <OutputState_Calculate>` attribute with the designated item of the mechanism's
+`value <Mechanism.Mechanism_Base.value>` as its input.  This is possibly modified by the result of the outputState's
+`function <OutputState.function>` (though see `note <OutputState_Function_Note_2>`).  The final result is assigned as
+the outputState's `value <OutputState.value>`, as well as to a corresponding item of the mechanism's
 `outputValue  <Mechanism.Mechanism_Base.outputValue>` attribute. It is also used as the input to any projections for
 which the outputState is the `sender <Projection.Projection.sender>`.
 
@@ -281,23 +283,25 @@ class OutputState(State_Base):
         specifies the template for the outputState's `value <OutputState.value>`.
 
     index : int : default PRIMARY_OUTPUT_STATE
-        specifies the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` attribute used as input
-        for the function specified by the outputState's `calculate <OutputState.calculate>` argument, to determine
-        the outputState's `value <OutputState.value>`.
+        specifies the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` used as input for the
+        function specified by the outputState's `calculate <OutputState.calculate>` attribute, to determine the
+        outputState's `value <OutputState.value>`.
 
-    calculate : function or method : default Linear
-        specifies the function used to convert the item of the owner mechanism's
-        `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by the :keyword:`index`
-        argument) to the outputState's  `value <OutputState.value>`.  It must accept a value that has the same format
-        (number and type of elements) as the item of the mechanism's `value <Mechanism.Mechanism_Base.value>`.
+    calculate : Function, function, or method : default Linear
+        specifies the function used to convert the designated item of the owner mechanism's
+        `value <Mechanism.Mechanism_Base.value>` (specified by the outputState's :keyword:`index` attribute),
+        before it is assigned as the outputState's `value <OutputState.value>`.  The function must accept a value that
+        has the same format (number and type of elements) as the item of the mechanism's
+        `value <Mechanism.Mechanism_Base.value>`.
 
-    function : Function or method : default LinearCombination(operation=SUM)
+    function : Function, function, or method : default LinearCombination(operation=SUM)
         function used to aggregate the values of the projections received by the outputState.
-        It must produce a result that has the same format (number and type of elements) as its the item of the
-        mechanisms `value <Mechanism.Mechanism_Base.value>` to which the outputStates is assigned (specified by its
+        It must produce a result that has the same format (number and type of elements) as the item of the mechanism's
+        `value <Mechanism.Mechanism_Base.value>` to which the outputState is assigned (specified by its
         :keyword:`index` argument).
+
         .. note::
-           This is not used a present (see `note <OutputState_Function_Note>` for additonal details).
+             This is not used a present (see `note <OutputState_Function_Note_2>` for additonal details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -331,15 +335,15 @@ class OutputState(State_Base):
 
     index : int
         the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` used as input for the function
-        specified by `calculate <OutputState.calculate>`.
+        specified by its `calculate <OutputState.calculate>` attribute.
 
     calculate : function or method : default Linear
         function used to convert the item of the owner mechanism's `value <Mechanism.Mechanism_Base.value>` specified by
         the outputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
-        outputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
-        outputState, as well as the value of the corresponding item of the owner mechanism's `outputValue
-        <Mechanism.Mechanism_Base.outputValue>` (though see `note below <OutputState_Function_Note>` about current
-        use of `function <OutputState.function>`). The default (`Linear`) transfers the value unmodified.
+        outputState's `function <OutputState.function>` ((though see `note below <OutputState_Function_Note_2>`)
+        to determine both the `value <OutputState.value>` of the outputState, as well as the value of the
+        corresponding item of the owner mechanism's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
+        The default (`Linear`) transfers the value unmodified.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation  of the values of the projections received by the
@@ -347,11 +351,12 @@ class OutputState(State_Base):
         `calculate <OutputState.calculate>`, and assigned as both the outputState's `value <OutputState.value>`
         and the corresponding item of the owner's `outputValue <Mechanism.Mechanism_Base.outputValue>`.
 
-        .. _OutputState_Function_Note:
+        .. _OutputState_Function_Note_2:
 
         .. note::
-           Currently PsyNeuLink does not currently support projections to outputStates.  The :keyword:`function`
-           attribute is implemented for consistency with other state classes, but it is not used at present.
+           Currently PsyNeuLink does not currently support projections to outputStates.  Therefore, the
+           :keyword:`function` attribute is not used.  It is implemented strictly for consistency with other
+           state classes, and for potential future use.
            COMMENT:
              and for potential future use.  The default simply
              passes its input to its output. The :keyword:`function` attribute can be modified to change this behavior.
