@@ -71,9 +71,8 @@ Class Reference
 """
 
 from PsyNeuLink.Components import DefaultController
-# from Globals.Defaults import *
-from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Projections.Projection import *
 
 projection_keywords.update({CONTROL_PROJECTION})
 parameter_keywords.update({CONTROL_PROJECTION})
@@ -147,9 +146,10 @@ class ControlProjection(Projection_Base):
         `sender <ControlProjection.sender>`  to its own `value <ControlProjection.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the projection, its
-        `function <ControlProjection.function>`, and/or a custom function and its parameters
-        (see `parameter dictionary <ParameterState_Specifying_Parameters>` for details).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
 
     name : str : default ControlProjection-<index>
         a string used for the name of the ControlProjection.
@@ -166,12 +166,15 @@ class ControlProjection(Projection_Base):
 
     componentType : CONTROL_PROJECTION
 
-    sender : OutputState of ControlProjection
+    sender : OutputState of ControlMechanism
         mechanism that provides the current input for the ControlProjection (usually a
         `ControlMechanism <ControlMechanism>`).
 
     receiver : ParameterState of Mechanism
         :doc:`parameterState <ParameterState>` for the parameter to be modified by the ControlProjection.
+
+    allocation : 1d np.array
+        the input to the ControlProjection; same as the :keyword:`value` of the `sender <ControlProjection.sender>`.
 
     value : float
         during initialization, assigned a keyword string (either `INITIALIZING` or `DEFERRED_INITIALIZATION`);
@@ -286,7 +289,7 @@ class ControlProjection(Projection_Base):
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its controlSignal projection
             from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlSignal import ControlSignalError
+            from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.ControlSignal import ControlSignalError
             if isinstance(self.sender, ControlMechanism_Base):
                 # MODIFIED 12/23/16 NEW:
                 #   [TRY AND EXCEPT IS NEW, AS IS ADDITION OF param ARG IN CALL TO _instantiate_control_projection]
@@ -342,3 +345,7 @@ class ControlProjection(Projection_Base):
         self.variable = self.sender.value
         self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
         return self.value
+
+    @property
+    def allocation(self):
+        return self.sender.value

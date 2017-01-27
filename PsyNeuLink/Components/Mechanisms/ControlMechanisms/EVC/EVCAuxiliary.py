@@ -145,14 +145,14 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         Description
         -----------
             * Called by ControlSignalGridSearch.
-            * Call system.execute for each `allocationPolicy` in `controlSignalSearchSpace`.
+            * Call system.execute for each `allocation_policy` in `controlSignalSearchSpace`.
             * Store an array of values for outputStates in `monitoredOutputStates` (i.e., the inputStates in `inputStates`)
-                for each `allocationPolicy`.
-            * Call `_compute_EVC` for each allocationPolicy to calculate the EVC, identify the  maximum,
+                for each `allocation_policy`.
+            * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
                 and assign to `EVCmax`.
-            * Set `EVCmaxPolicy` to the `allocationPolicy` (outputState.values) corresponding to EVCmax.
+            * Set `EVCmaxPolicy` to the `allocation_policy` (outputState.values) corresponding to EVCmax.
             * Set value for each controlSignal (outputState.value) to the values in `EVCmaxPolicy`.
-            * Return an allocationPolicy.
+            * Return an allocation_policy.
 
             Note:
             * runtime_params is used for self.__execute (that calculates the EVC for each call to system.execute);
@@ -376,12 +376,12 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         # TEST PRINT:
         # print ("\nEND OF TRIAL 1 EVC outputState: {0}\n".format(controller.outputState.value))
 
-        #region ASSIGN AND RETURN allocationPolicy
+        #region ASSIGN AND RETURN allocation_policy
         # Convert EVCmaxPolicy into 2d array with one controlSignal allocation per item,
-        #     assign to controller.allocationPolicy, and return (where it will be assigned to controller.value).
+        #     assign to controller.allocation_policy, and return (where it will be assigned to controller.value).
         #     (note:  the conversion is to be consistent with use of controller.value for assignments to controlSignals.value)
-        controller.allocationPolicy = np.array(controller.EVCmaxPolicy).reshape(len(controller.EVCmaxPolicy), -1)
-        return controller.allocationPolicy
+        controller.allocation_policy = np.array(controller.EVCmaxPolicy).reshape(len(controller.EVCmaxPolicy), -1)
+        return controller.allocation_policy
         #endregion
 
 def _compute_EVC(args):

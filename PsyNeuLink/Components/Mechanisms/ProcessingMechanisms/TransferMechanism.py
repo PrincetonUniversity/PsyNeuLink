@@ -209,8 +209,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         `range <TransferMechanism.range>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the mechanism, its function,
-        and/or a custom function and its parameters (see `Mechanism` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+        the dictionary override any assigned to those parameters in arguments of the constructor.
 
     time_scale :  TimeScale : TimeScale.TRIAL
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
