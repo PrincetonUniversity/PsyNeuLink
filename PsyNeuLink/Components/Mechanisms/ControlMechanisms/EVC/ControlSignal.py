@@ -712,16 +712,21 @@ class ControlSignal(OutputState):
             controller.log.entries[self.name + " " +
                                       kpIntensity] = LogEntry(CurrentTime(), context, float(self.intensity))
             if not self.ignoreIntensityFunction:
-                controller.log.entries[self.name + " " + kpAllocation] =     \
-                    LogEntry(CurrentTime(), context, float(self.allocation))
-                controller.log.entries[self.name + " " + kpIntensityCost] =  \
-                    LogEntry(CurrentTime(), context, float(self.intensity_cost))
-                controller.log.entries[self.name + " " + kpAdjustmentCost] = \
-                    LogEntry(CurrentTime(), context, float(self.adjustment_cost))
-                controller.log.entries[self.name + " " + kpDurationCost] =   \
-                    LogEntry(CurrentTime(), context, float(self.duration_cost))
-                controller.log.entries[self.name + " " + kpCost] =           \
-                    LogEntry(CurrentTime(), context, float(self.cost))
+                controller.log.entries[self.name + " " + kpAllocation] = LogEntry(CurrentTime(),
+                                                                                  context,
+                                                                                  float(self.allocation))
+                controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry(CurrentTime(),
+                                                                                      context,
+                                                                                      float(self.intensity_cost))
+                controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry(CurrentTime(),
+                                                                                      context,
+                                                                                      float(self.adjustment_cost))
+                controller.log.entries[self.name + " " + kpDurationCost] = LogEntry(CurrentTime(),
+                                                                                    context,
+                                                                                    float(self.duration_cost))
+                controller.log.entries[self.name + " " + kpCost] = LogEntry(CurrentTime(),
+                                                                            context,
+                                                                            float(self.cost))
     #endregion
 
         self.value = self.intensity
