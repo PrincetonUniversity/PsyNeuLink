@@ -30,10 +30,8 @@ COMMENT
 `DIVISION`.  It can also be created by `in-context specification <Projection_Creation>` of a LearningProjection for a
 projection to the `TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically
 when learning is specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`. Each
-ComparatorMechanism is assigned a projection from a `TERMINAL` mechanism that receives a MappingProjection being learned.
-
-
-and a LearningProjection to that MappingProjection  (see `learning in a process <Process_Learning>`,
+ComparatorMechanism is assigned a projection from a `TERMINAL` mechanism that receives a MappingProjection being
+learned. A LearningProjection to that MappingProjection is also created (see `learning in a process <Process_Learning>`,
 and `automatic creation of LearningSignals  <LearningProjection_Automatic_Creation>` for details).
 
 .. _Comparator_Structure:
@@ -43,7 +41,7 @@ Structure
 
 A ComparatorMechanism has two `inputStates <InputState>`:
 
-    * :keyword:`SAMPLE` inputState receives a MappingProjection
+    * :keyword:`COMPARATOR_SAMPLE` inputState receives a MappingProjection
       from the `primary outputState <OutputState_Primary>` of a `TERMINAL` mechanism in a process;
     ..
     * `COMPARATOR_TARGET` inputState is assigned its value from the :keyword:`target` argument of a call to the
@@ -59,7 +57,8 @@ Execution
 A ComparatorMechanism always executes after the mechanism it is monitoring.  The :keyword:`value` of the
 `primary outputState <OutputState_Primary>` of the mechanism being monitored is assigned as the :keyword:`value` of the
 ComparatorMechanism's :keyword:`COMPARATOR_SAMPLE` inputState;  the value of the :keyword:`COMPARATOR_TARGET`
-inputState is received from the process (or system to which it belongs) when it is run. When the ComparatorMechanism
+inputState is received from the process (or system to which it belongs) when it is run (i.e., the input provided
+ in the process' or system's :keyword:`execute` method or :keyword:`run` method). When the ComparatorMechanism
 is executed, if `comparison_operation` is:
 
     * `SUBTRACTION`, its `function <ComparatorMechanism.function>` subtracts the  `COMPARATOR_SAMPLE` from the
@@ -165,7 +164,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     comparison_operation : keyword[SUBTRACTION or DIVISION] : default SUBTRACTION
         specifies how the `COMPARATOR_SAMPLE` and `COMPARATOR_TARGET` will be compared:
 
-        * `SUBTRACTION`: `COMPARATOR_TARGET` - `SAMPLE`
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPASAMPLE`
 
         * `DIVISION`: `COMPARATOR_TARGET` ÷ `SAMPLE`
 
