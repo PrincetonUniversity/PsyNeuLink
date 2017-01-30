@@ -1437,8 +1437,11 @@ class Mechanism_Base(Mechanism):
                                       time_scale=time_scale,
                                       context=context)
 
-        # context = context + ' ' + ASSIGN_VALUE
-        context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
+        # MODIFIED 1/28/17 NEW:
+        # # context = context + ' ' + ASSIGN_VALUE
+        # context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
+        # MODIFIED 1/28/17 END
+
         self.value = np.atleast_2d(self.value)
         # Set status based on whether self.value has changed
         self.status = self.value
@@ -1730,26 +1733,26 @@ class Mechanism_Base(Mechanism):
     def value(self, assignment):
         self._value = assignment
 
-        # MODIFIED 1/28/17 NEW: [COPIED FROM State]
-        # Store value in log if specified
-        # Get logPref
-        if self.prefs:
-            log_pref = self.prefs.logPref
-
-        # Get context
-        try:
-            curr_frame = inspect.currentframe()
-            prev_frame = inspect.getouterframes(curr_frame, 2)
-            context = inspect.getargvalues(prev_frame[1][0]).locals['context']
-        except KeyError:
-            context = ""
-
-        # If context is consistent with log_pref, record value to log
-        if (log_pref is LogLevel.ALL_ASSIGNMENTS or
-                (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
-                (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
-            self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
-        # MODIFIED 1/28/17 END
+        # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
+        # # Store value in log if specified
+        # # Get logPref
+        # if self.prefs:
+        #     log_pref = self.prefs.logPref
+        #
+        # # Get context
+        # try:
+        #     curr_frame = inspect.currentframe()
+        #     prev_frame = inspect.getouterframes(curr_frame, 2)
+        #     context = inspect.getargvalues(prev_frame[1][0]).locals['context']
+        # except KeyError:
+        #     context = ""
+        #
+        # # If context is consistent with log_pref, record value to log
+        # if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+        #         (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
+        #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
+        #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+        # # MODIFIED 1/28/17 END
 
 
     @property

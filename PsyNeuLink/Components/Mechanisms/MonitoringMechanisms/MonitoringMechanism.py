@@ -13,7 +13,7 @@ Overview
 --------
 
 A MonitoringMechanism monitors the `outputState <OutputState>` of a `ProcessingMechanism <ProcessingMechanism>` in a
-`process <Process>` or system <System>`.  This can generate an error signal (e.g., for use in
+`process <Process>` or `system <System>`.  This can generate an error signal (e.g., for use in
 `learning <LearningProjection>`) or some other value (e.g., a conflict signal).
 
 .. _MonitoringMechanism_Creation:
@@ -21,19 +21,20 @@ A MonitoringMechanism monitors the `outputState <OutputState>` of a `ProcessingM
 Creating A MonitoringMechanism
 ---------------------------
 
-A MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. One or more MonitoringMechanisms are also `created automatically <LearningProjection_Automatic_Creation>` when
-learning is specified for a `process  <Process_Learning> or `system <System_Execution_Learning>`. Different types of
-MonitoringMechanisms monitor  different types of information, and therefore have varying input requirements.
+Generally, one or more `MonitoringMechanisms  <MonitoringMechanism>` are `created automatically
+<LearningProjection_Automatic_Creation>` when learning is specified for a `process  <Process_Learning> or `system
+<System_Execution_Learning>`.  However, MonitoringMechanisms can also be created using the standard Python method of
+calling the constructor for the desired type.  Different types of MonitoringMechanisms monitor  different types of
+information, and therefore have varying input requirements.
 
 Execution
 ---------
 
-A MonitoringMechanism always executes after the mechanism it is monitoring.  The `value <OutputState.OutputState.value>`
-of the `outputState <OutputState>` of the mechanism being monitored is assigned as an item in the
-:keyword:`variable` for the `function <MonitoringMechanism.funciton>` of the MonitoringMechanism. Other items may be
-also be assigned (for example, a `ComparatorMechanism` takes an additional input `target
-<ComparatorMechanism.ComparatorMechanism.target>` against which it compares the monitored value).
+MonitoringMechanisms always execute after all of the mechanism being monitored in the system have execute.
+The `value <OutputState.OutputState.value>` of the `outputState <OutputState>` of the mechanism being monitored is
+assigned as the primary input to the MonitoringMechanism. Other items may be also be assigned (for example,
+a `ComparatorMechanism` takes an additional  input `target <ComparatorMechanism.ComparatorMechanism.target>` against
+which it compares the monitored value).
 
 .. _MonitoringMechanism_Class_Reference:
 
