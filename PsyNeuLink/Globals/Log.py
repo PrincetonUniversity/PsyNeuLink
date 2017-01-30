@@ -17,18 +17,20 @@ Overview
 A Log object is a set of structures and methods for recording information about PsyNeuLink components during their
 "life cycle" (i.e., as they are created, validated, executed, etc.).  Every component has a log object -- assigned to
 its :keyword:`log` attribute when the component is created -- that maintains a dictionary with entries for each
-attribute of the component that has been designated to be logged.  Information is added the entries under specified
+attribute of the component that has been designated to be logged.  Information is added to the entries under specified
 conditions (e.g., when the component is initialized, validated, executed, etc.), which can be designated by a
-`LogLevel` specification in the component's preferences; entries can also be made by the user programmatically.  The
-information in a log is displayed using its `print_entries` method.
+`LogLevel` specification in the component's preferences; entries can also be made by the user programmatically.
+Each entry contains the time at which a value was assigned to the attribute, the context in which this occured, and
+the value assigned.  This information can be displayed using the log's `print_entries` method.
 
+Creating Logs and Entries
+-------------------------
 
-Creating Log Entries
---------------------
+Whenever any PsyNeuLink component is created, a log object is also automatically created and assigned to the
+component's :keyword:`log` attribute.  Entries are made to the log based on the `LogLevel` specified in the
+`logPref` item of the component's :keyword:`prefs` attribute.
 
-Every mechanism, process and system system has a log object, that is assigned to its :keyword:`log` attribute.  The
-log is assigned any entries specified in the `logPref` of the prefs arg used to instantiate the owner object
-Adding an item to self.owner.prefs.logPref will validate and add an entry for that attribute to the log dict
+Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict
 
 An attribute is logged if:
 
@@ -47,10 +49,12 @@ The following entries are automatically included in self.entries for a Mechanism
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
 
+DEFAULT LogLevel FOR ALL COMPONENTS IS VALUE_ASSIGNMENT
+
 Structure
 ---------
 
-Each entry of self.entries has:
+Each entry of log.entries has:
     + a key that is the name of the attribute being logged
     + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
     + each tuple has three items:
@@ -58,13 +62,11 @@ Each entry of self.entries has:
         - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
         - value (value): the value assigned to the attribute
 
-The LogLevel class (see declaration above) defines five levels of logging:
+The LogLevel class (see declaration above) defines six levels of logging:
     + OFF: No logging for attributes of the owner object
-    [TBI:
-      + INITIALIZATION: Log values only when value is first assigned (usually to a default value) during initialization
-    + VALUE_ASSIGNMENT: Log values only when final value assignment has been during execution
-    + EXECUTION: Log values for all assignments during exeuction (e.g., including aggregation of projections)
-    + VALIDATION: Log value assignments during validation as well as execution
+    + VALUE_ASSIGNMENT: Log values only when final value assignment has been made during execution
+    + EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)
+    + VALIDATION: Log value assignments during validation as well as execution and initialization
     + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
     Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons
 
@@ -523,9 +525,9 @@ class Log:
             entries = [entries]
 
         variable_width = 50
-        time_width = 5
+        time_width = 10
         context_width = 70
-        value_width = 8
+        value_width = 7
         kwSpacer = ' '
 
 
@@ -535,7 +537,8 @@ class Log:
         if not args or kwContext in args:
             header = header + " " + kwContext.ljust(context_width, kwSpacer)
         if not args or kwValue in args:
-            header = header + "   " + kwValue.rjust(value_width)
+            # header = header + "   " + kwValue.rjust(value_width)
+            header = header + "  " + kwValue
 
         print("\nLog for {0}:".format(self.owner.name))
 
@@ -564,10 +567,10 @@ class Log:
                     if not args or kwContext in args:
                         data_str = data_str + context.ljust(context_width, kwSpacer)
                     if not args or kwValue in args:
-                        # data_str = data_str + " " + str(value).rjust(value_width)
-                        # data_str = data_str + " " + "{0:.5}".format(str(value).rjust(value_width))
+                        # data_str = data_str + " " + str(value).rjust(value_width) # <- WORKS
                         # data_str = data_str + " " + "{:10.5}".format(str(value).strip("[]"))  # <- WORKS
-                        data_str = data_str + " " + "{0: 4.2f}".format(value).rjust(value_width)
+                        data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
+                        # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
 
 # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
 #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))
