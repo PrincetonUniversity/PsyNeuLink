@@ -21,13 +21,18 @@ the process or system to which it belongs. The comparison can be done using subt
 Creating a ComparatorMechanism
 ------------------------------
 
-A ComparatorMechanism can be created directly by calling its constructor, or using the
-`mechanism` function and specifying keyword:`ComparatorMechanism` as its :keyword:`mech_spec` argument.  The type of
-comparison is specified in the `comparison_operation` argument, which can be `SUBTRACTION` or `DIVISION`.  It can also
-be created by `in context specification of a LearningProjection <Projection_Creation>` for a projection to the
-`TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically when learning is
-specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`; each is assigned a
-projection from the outputState of a `TERMINAL` mechanism that receives a MappingProjection being learned,
+A ComparatorMechanism can be created directly by calling its constructor
+COMMENT:
+    , or using the
+    `mechanism` function and specifying keyword:`ComparatorMechanism` as its :keyword:`mech_spec` argument.
+COMMENT
+. The type of comparison is specified in the `comparison_operation` argument, which can be `SUBTRACTION` or
+`DIVISION`.  It can also be created by `in-context specification <Projection_Creation>` of a LearningProjection for a
+projection to the `TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically
+when learning is specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`. Each
+ComparatorMechanism is assigned a projection from a `TERMINAL` mechanism that receives a MappingProjection being learned.
+
+
 and a LearningProjection to that MappingProjection  (see `learning in a process <Process_Learning>`,
 and `automatic creation of LearningSignals  <LearningProjection_Automatic_Creation>` for details).
 
