@@ -102,7 +102,7 @@ COMMENT
 
     **Components of Learning**
 
-    .. figure:: _static/LearningProjection_Simple_Learning_fig.png
+    .. figure:: _static/LearningProjection_Simple_Learning_fig.jpg
        :alt: Schematic of mechanisms and projections involved in learning
        :scale: 50%
 
@@ -190,7 +190,7 @@ is assigned a WeightedErrorMechanism rather than a ComparatorMechanism for learn
 
     **TERMINAL** and **TARGET** Mechanisms in Learning
 
-    .. figure:: _static/LearningProjection_TERMINAL_vs_TARGET_fig.png
+    .. figure:: _static/LearningProjection_TERMINAL_vs_TARGET_fig.jpg
        :alt: Schematic of mechanisms and projections involved in learning
        :scale: 50 %
 
