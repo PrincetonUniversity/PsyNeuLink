@@ -10,18 +10,21 @@
 #### Format:
 - class names:
     fully capitalized camelCase [ClassName]
-- externally available attributes that do not correspond to an argument of a constructor:
-    camelCase without initial capitalization [externalAttribute]
+DEPRECATED:
+    - externally available attributes that do not correspond to an argument of a constructor:
+        camelCase without initial capitalization [externalAttribute]
+    all attributes should now use underscore format: [all_attributes]
 - arguments of constructors and methods, and any attributes corresponding to them (must be same name):
-    lowercase and underscore separator(s) [constructor_arg, method_arg]
+    lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
 - externally available methods and functions:
     lowercase and underscore separator(s) (enforced by PEP8) [external_method, any_function]
 - internal attributes, methods and functions:
     initial undercore, lowercase, and underscore separatos(s) [_internal_method, _internal_attribute]
 - externally accessible keywords:
     all capitals and underscore separator(s) [KEY_WORD]
-- internal keywords:
-    prepend kw followed by camelCase [kwKeyword]
+DEPRECATED:
+    - internal keywords:
+        prepend kw followed by camelCase [kwKeyword]
 
 ### GRAMMATICAL:
 
@@ -118,9 +121,14 @@ Terminology used here:
 - Section references should be formatted as links, and also kept as simple as possible:
     - wherever possible, simply enclose in backticks (e.g., `section`)
     - to assign a link to some other description, use the ref role (e.g., :ref:`my text <section>`) 
-    - the titles for the rst files for all classes are singular;
-        therefore, to refer to the plural of a class (e.g., Mechanisms),
-        the module must be expliclity referenced (e.g., `Mechanisms <Mechanism>`)
+    - for classes that have subclasses, the titles in the rst file (that will appear in the text of the reference) are plural
+      even though the name of the file itself (to which the reference must be made) is singular;
+        therefore, to have the singular form appear in the text (e.g., ControlMechanism),
+        the module must be explicitly referenced (e.g., `ControlMechanism <ControlMechanism>`);
+        [this appears to be redundant, but it is necessary]
+    - conversely, for classes without subclasses, the title in the rst file is singular;
+        therefore, to refer to the plural of such a class (e.g., InputState),
+        the module must be explicitly referenced (e.g., `InputStates <InputState>`);
     - to flag references to sections that have not yet been documented (or labelled), 
         use the following construction: `section <LINK>`.
  

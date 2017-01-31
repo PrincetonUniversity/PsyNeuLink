@@ -451,8 +451,9 @@ def process(process_spec=None,
         <Process_Learning>`). It must be the same length as the `TERMINAL` mechanism's output.
 
     params : Optional[Dict[param keyword, param value]
-        a dictionary that can include any of the parameters above;  the parameter's name is used as the keyword for its
-        entry; values in the dictionary will override corresponding argument values.
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        the parameter's name is used as the keyword for its entry. Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
 
     name : str : default Process-<index>
         a string used for the name of the process
@@ -1946,9 +1947,9 @@ class Process_Base(Process):
             specifies whether mechanisms are executed for a single time step or a trial.
 
         params : Dict[param keyword, param value] :  default None
-            a dictionary that can include any of the parameters used as arguments to instantiate the object.
-            Use parameter's name as the keyword for its entry; values will override current parameter values
-            only for the current execution.
+            a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters used
+            as arguments to instantiate the object. Use parameter's name as the keyword for its entry.  Values specified
+            for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
         COMMENT:
             context : str : default EXECUTING + self.name

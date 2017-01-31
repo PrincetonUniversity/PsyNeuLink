@@ -2042,10 +2042,10 @@ import typecheck as tc
 # # It is called and printed out after each update of the control signal below;  note that it returns the updated value
 # # Note: the function (whether a method or a lambda function) must be in a list so it is not called before being passed
 # testFunction_getVersion = Function.Linear([x.get_intensity_cost])
-# testFunction_lambdaVersion = Function.Linear([lambda: x.intensityCost])
+# testFunction_lambdaVersion = Function.Linear([lambda: x.intensity_cost])
 # label = x.get_intensity_cost
 #
-# print("\nINITIAL {0}".format(x.durationCost))
+# print("\nINITIAL {0}".format(x.duration_cost))
 #
 # #Print out test of function with object property assigned as its default variable argument
 # getVersion = testFunction_getVersion.function()
