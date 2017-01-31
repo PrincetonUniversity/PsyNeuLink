@@ -247,7 +247,7 @@ parameter's value.
 
     **How a ParameterState Determines the Value of a Parameter**
 
-    .. figure:: _static/ParameterState_fig.*
+    .. figure:: _static/ParameterState_fig.jpg
        :alt: ParameterState
        :scale: 75 %
 
@@ -343,7 +343,7 @@ including runtime specifications:
 
     **How a ParameterState Determines the Value of a Parameter**
 
-    .. figure:: _static/ParameterState_fig.*
+    .. figure:: _static/ParameterState_fig.jpg
        :alt: ParameterState
        :scale: 75 %
 
