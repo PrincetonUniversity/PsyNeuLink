@@ -1,19 +1,14 @@
-from PsyNeuLink.Components.Component import Component
-from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Functions.Function import Linear
-
 class Constraint(object):
     def __init__(self, owner, dependencies, condition, time_scales = None):
-        self.owner = owner
+        self.owner = owner # ScheduleVariable that falls under this constraint
         if isinstance(dependencies, ScheduleVariable):
             self.dependencies = (dependencies,)
         else:
-            self.dependencies = dependencies
-        self.time_scales = time_scales
-        if self.time_scales is None:
+            self.dependencies = dependencies # Tuple of ScheduleVariables on which this constraint depends
+        self.time_scales = time_scales # Time Scales over which the constraint queries each dependency
+        if self.time_scales is None: # Defaults to 'trial'
             self.time_scales = ('trial',)*len(self.dependencies)
-        self.condition = condition
+        self.condition = condition # Condition to be evaluated
 
     def is_satisfied(self):
         def resolve_time(var, scale):
@@ -25,6 +20,7 @@ class Constraint(object):
                 return var.component.calls_since_initialization
             else:
                 pass
+                ## TODO Throw proper error
                 #throw ValueError()
         if self.condition(*tuple((resolve_time(var, scale) for var, scale in zip(self.dependencies, self.time_scales)))):
             return True
@@ -65,6 +61,9 @@ class ScheduleVariable(object):
             self.unfilled_constraints.append(con)
             self.filled_constraints.remove(con)
 
+    def new_trial(self):
+        self.component.new_trial()
+
 def TerminalScheduleVariable(ScheduleVariable):
     def __init__(self, own_constraints = None, dependent_constraints = None, priority = None):
         self.own_constraints = []
@@ -85,10 +84,14 @@ class Scheduler(object):
         self.var_dict = {}
         self.constraints = []
         self.var_list = []
-        self.clock = clock
-        self.terminal = terminal
         if var_dict is not None:
             self.add_vars(var_dict)
+        if clock is not None:
+            self.clock = self.set_clock(clock)
+        else:
+            self.clock = None
+        if terminal is not None:
+            self.terminal = self.set_terminal(terminal)
         if constraints is not None:
             self.add_constraints(constraints)
         self.current_step = 0
@@ -151,6 +154,8 @@ class Scheduler(object):
             firing_queue = update_firing_queue(firing_queue, change_list)
 
     def generate_trial(self):
+        for var in self.var_list:
+            var.new_trial()
         trial_terminated = False
         while(not trial_terminated):
             for var in self.generate_time_step():
@@ -164,16 +169,20 @@ class Scheduler(object):
 
 
 def main():
+    from PsyNeuLink.Components.Component import Component
+    from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls
+    from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+    from PsyNeuLink.Components.Functions.Function import Linear
     A = TransferMechanism(function = Linear(), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
-    Terminal = TransferMechanism(function=Linear(), name = 'Terminal')
+    Terminal = TransferMechanism(function = Linear(), name = 'Terminal')
     sched = Scheduler()
     sched.set_clock(Clock)
     sched.set_terminal(Terminal)
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
-    sched.add_constraints([(A, (Clock,), first_n_calls(12)),
+    sched.add_constraints([(A, (Clock,), every_n_calls(1)),
                            (B, (A,), every_n_calls(2)),
                            (C, (B,), every_n_calls(2)),
                            (Terminal, (C,), every_n_calls(2))])
@@ -182,6 +191,11 @@ def main():
     for mech in sched.generate_trial():
         mech.execute()
         print(mech.name)
+    print('=================================')
+    for mech in sched.generate_trial():
+        mech.execute()
+        print(mech.name)
+
 
     # for i in range(12):
     #     for result in sched.generate_time_step():
