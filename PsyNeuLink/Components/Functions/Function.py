@@ -1992,6 +1992,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
 class NF_Results(AutoNumber):
+    RESULT = ()
     MEAN_ER = ()
     MEAN_DT = ()
     PLACEMARKER = ()

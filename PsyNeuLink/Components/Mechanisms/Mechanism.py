@@ -398,9 +398,14 @@ from PsyNeuLink.Globals.Registry import register_category
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
+    """Specifies outputStates to be monitored by a `ControlMechanism` (see `ControlMechanism_Monitored_OutputStates
+    for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
+    """Only monitor explicitly specified outputstates."""
     PRIMARY_OUTPUT_STATES = ()
+    """Monitor only the `primary outputState <OutputState_Primary>` of a mechanism."""
     ALL_OUTPUT_STATES = ()
+    """Monitor all outputStates <Mechanism.Mechanism_Base.outputStates>` of a mechanism."""
     NUM_MONITOR_STATES_OPTIONS = ()
 
 
@@ -1361,7 +1366,6 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        # context = context or  EXECUTING + ' ' + append_type_to_name(self)
         context = context or NO_CONTEXT
 
 
@@ -1375,19 +1379,6 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call mechanism's _execute method for init
-            # # MODIFIED 12/8/16 OLD:
-            # elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-            #     return self._execute(variable=self.variable,
-            #                          params=runtime_params,
-            #                          time_scale=time_scale,
-            #                          context=context)
-            # # Only call mechanism's function method for init
-            # elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-            #     return self.function(variable=self.variable,
-            #                          params=runtime_params,
-            #                          time_scale=time_scale,
-            #                          context=context)
-            # MODIFIED 12/8/16 NEW:
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self._execute(variable=self.variable,
                                                  runtime_params=runtime_params,
@@ -1403,7 +1394,6 @@ class Mechanism_Base(Mechanism):
                                              time_scale=time_scale,
                                              context=context)
                 return np.atleast_2d(return_value)
-            # MODIFIED 12/8/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -1441,31 +1431,10 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
-        # #TEST:
-        # print ("BEFORE param update:  DDM Drift Rate {}".
-        #        format(self.parameterStates[DRIFT_RATE].value))
         self._update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        # MODIFIED 11/27/16 NEW:
-        # FIX ASSIGN PARAMETERSTATE PARAMETER VALUES TO PARAMS HERE AND PASS TO __EXECUTE__()
-        # # If any runtime_params were assigned, assign values to params used to call mechanism's _execute method
-        # if runtime_params:
-        # Assign current paramameterState values to params used to call mechanism's _execute method
-        # FIX: UPDATE THIS TO USE user_params ONCE THOSE HAVE ALL BEEN ASSIGNED parameterStates IN
-        # _instantiate_parameter_states
-        # FIX: MOVED TO _update_parameter_states BUT NOW ScratchPad doesn't work
-        # runtime_params = {}
-        # for param in self.function_params:
-        #     try:
-        #         runtime_params[param] = self.parameterStates[param].value
-        #     except KeyError:
-        #         runtime_params[param] = self.paramsCurrent[FUNCTION_PARAMS][param]
-        # MODIFIED 11/27/16 END
-
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
-# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
-# DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
         self.value = self._execute(variable=self.inputValue,
                                       runtime_params=runtime_params,
@@ -1473,14 +1442,14 @@ class Mechanism_Base(Mechanism):
                                       time_scale=time_scale,
                                       context=context)
 
-        # MODIFIED 12/8/16 NEW:
-        self.value = np.atleast_2d(self.value)
-        # MODIFIED 12/8/16 END
+        # MODIFIED 1/28/17 NEW:
+        # # context = context + ' ' + ASSIGN_VALUE
+        # context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
+        # MODIFIED 1/28/17 END
 
-        # MODIFIED 12/20/16 NEW:
+        self.value = np.atleast_2d(self.value)
         # Set status based on whether self.value has changed
         self.status = self.value
-        # MODIFIED 12/20/16 END
 
         #endregion
 
@@ -1769,7 +1738,28 @@ class Mechanism_Base(Mechanism):
     def value(self, assignment):
         self._value = assignment
 
-    # MODIFIED 12/20/16 NEW:
+        # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
+        # # Store value in log if specified
+        # # Get logPref
+        # if self.prefs:
+        #     log_pref = self.prefs.logPref
+        #
+        # # Get context
+        # try:
+        #     curr_frame = inspect.currentframe()
+        #     prev_frame = inspect.getouterframes(curr_frame, 2)
+        #     context = inspect.getargvalues(prev_frame[1][0]).locals['context']
+        # except KeyError:
+        #     context = ""
+        #
+        # # If context is consistent with log_pref, record value to log
+        # if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+        #         (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
+        #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
+        #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+        # # MODIFIED 1/28/17 END
+
+
     @property
     def status(self):
         return self._status
@@ -1782,7 +1772,6 @@ class Mechanism_Base(Mechanism):
         else:
             self._status = CHANGED
             self._old_value = current_value
-    # MODIFIED 12/20/16 END
 
 
     @property

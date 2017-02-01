@@ -106,7 +106,10 @@ PROJECTION_TO_NEXT_MECHANISM = 'projection_to_next_mechanism'
 
 # WeightedErrorMechanism output indices (used to index outputValue):
 class WeightedErrorOutput(AutoNumber):
+    """Indices of the `outputValue <WeightedErrorMechanism.outputValue>` attribute of the WeightedErrorMechanism
+    containing the values described below."""
     ERROR_SIGNAL = ()
+    """`error_signal` attribute of the WeightedErrorMechanism"""
 
 class WeightedErrorError(Exception):
     def __init__(self, error_value):

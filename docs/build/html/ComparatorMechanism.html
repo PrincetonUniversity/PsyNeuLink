@@ -176,14 +176,13 @@ the process or system to which it belongs. The comparison can be done using subt
 </div>
 <div class="section" id="creating-a-comparatormechanism">
 <span id="comparator-creation"></span><h2>Creating a ComparatorMechanism<a class="headerlink" href="#creating-a-comparatormechanism" title="Permalink to this headline">¶</a></h2>
-<p>A ComparatorMechanism can be created directly by calling its constructor, or using the
-<a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> function and specifying keyword:<a class="reference internal" href="#"><span class="doc">ComparatorMechanism</span></a> as its <code class="xref std std-keyword docutils literal"><span class="pre">mech_spec</span></code> argument.  The type of
-comparison is specified in the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.comparison_operation" title="ComparatorMechanism.ComparatorMechanism.comparison_operation"><code class="xref any py py-attr docutils literal"><span class="pre">comparison_operation</span></code></a> argument, which can be <code class="xref any docutils literal"><span class="pre">SUBTRACTION</span></code> or <code class="xref any docutils literal"><span class="pre">DIVISION</span></code>.  It can also
-be created by <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">in context specification of a LearningProjection</span></a> for a projection to the
-<a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process.  One or more ComparatorMechanisms are also created automatically when learning is
-specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>; each is assigned a
-projection from the outputState of a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism that receives a MappingProjection being learned,
-and a LearningProjection to that MappingProjection  (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>,
+<p>A ComparatorMechanism can be created directly by calling its constructor
+. The type of comparison is specified in the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.comparison_operation" title="ComparatorMechanism.ComparatorMechanism.comparison_operation"><code class="xref any py py-attr docutils literal"><span class="pre">comparison_operation</span></code></a> argument, which can be <code class="xref any docutils literal"><span class="pre">SUBTRACTION</span></code> or
+<code class="xref any docutils literal"><span class="pre">DIVISION</span></code>.  It can also be created by <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">in-context specification</span></a> of a LearningProjection for a
+projection to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of a process.  One or more ComparatorMechanisms are also created automatically
+when learning is specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>. Each
+ComparatorMechanism is assigned a projection from a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism that receives a MappingProjection being
+learned. A LearningProjection to that MappingProjection is also created (see <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning in a process</span></a>,
 and <a class="reference internal" href="LearningProjection.html#learningprojection-automatic-creation"><span class="std std-ref">automatic creation of LearningSignals</span></a> for details).</p>
 </div>
 <div class="section" id="structure">
@@ -191,7 +190,7 @@ and <a class="reference internal" href="LearningProjection.html#learningprojecti
 <p>A ComparatorMechanism has two <a class="reference internal" href="InputState.html"><span class="doc">inputStates</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="xref std std-keyword docutils literal"><span class="pre">SAMPLE</span></code> inputState receives a MappingProjection
+<li><code class="xref std std-keyword docutils literal"><span class="pre">COMPARATOR_SAMPLE</span></code> inputState receives a MappingProjection
 from the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> of a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism in a process;</li>
 </ul>
 <ul class="simple">
@@ -206,8 +205,10 @@ from the <a class="reference internal" href="OutputState.html#outputstate-primar
 <p>A ComparatorMechanism always executes after the mechanism it is monitoring.  The <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the
 <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> of the mechanism being monitored is assigned as the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the
 ComparatorMechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">COMPARATOR_SAMPLE</span></code> inputState;  the value of the <code class="xref std std-keyword docutils literal"><span class="pre">COMPARATOR_TARGET</span></code>
-inputState is received from the process (or system to which it belongs) when it is run. When the ComparatorMechanism
-is executed, if <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.comparison_operation" title="ComparatorMechanism.ComparatorMechanism.comparison_operation"><code class="xref any py py-attr docutils literal"><span class="pre">comparison_operation</span></code></a> is:</p>
+inputState is received from the process (or system to which it belongs) when it is run (i.e., the input provided</p>
+<blockquote>
+<div>in the process&#8217; or system&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method). When the ComparatorMechanism</div></blockquote>
+<p>is executed, if <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.comparison_operation" title="ComparatorMechanism.ComparatorMechanism.comparison_operation"><code class="xref any py py-attr docutils literal"><span class="pre">comparison_operation</span></code></a> is:</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">SUBTRACTION</span></code>, its <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> subtracts the  <code class="xref any docutils literal"><span class="pre">COMPARATOR_SAMPLE</span></code> from the
@@ -222,19 +223,19 @@ is executed, if <a class="reference internal" href="#ComparatorMechanism.Compara
 <blockquote id="comparator-results">
 <div><ul class="simple">
 <li>the <strong>result</strong> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculation is assigned to the mechanism&#8217;s
-<a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.value" title="ComparatorMechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, the value of its <code class="xref any docutils literal"><span class="pre">COMPARISON_RESULT</span></code>
+<a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.value" title="ComparatorMechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, the value of its <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT" title="ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_RESULT</span></code></a>
 outputState, and to the 1st item of its <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.outputValue" title="ComparatorMechanism.ComparatorMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute;</li>
 </ul>
 <ul class="simple">
-<li>the <strong>mean</strong> of the result is assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">COMPARISON_MEAN</span></code> outputState,
+<li>the <strong>mean</strong> of the result is assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_MEAN" title="ComparatorMechanism.ComparatorOutput.COMPARISON_MEAN"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_MEAN</span></code></a> outputState,
 and to the 2nd item of its <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.outputValue" title="ComparatorMechanism.ComparatorMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 </ul>
 <ul class="simple">
-<li>the <strong>sum</strong> of the result is assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">COMPARISON_SUM</span></code> outputState,
+<li>the <strong>sum</strong> of the result is assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_SUM" title="ComparatorMechanism.ComparatorOutput.COMPARISON_SUM"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_SUM</span></code></a> outputState,
 and to the 3rd item of its <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.outputValue" title="ComparatorMechanism.ComparatorMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 </ul>
 <ul class="simple">
-<li>the <strong>sum of squares</strong> of the result is assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">COMPARISON_SSE</span></code>
+<li>the <strong>sum of squares</strong> of the result is assigned to the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the mechanism&#8217;s <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_SSE" title="ComparatorMechanism.ComparatorOutput.COMPARISON_SSE"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_SSE</span></code></a>
 outputState, and to the 4th item of its <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.outputValue" title="ComparatorMechanism.ComparatorMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a> attribute.</li>
 </ul>
 <ul class="simple">
@@ -246,6 +247,43 @@ attribute.</li>
 </div>
 <div class="section" id="class-reference">
 <span id="comparator-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ComparatorMechanism.ComparatorOutput">
+<em class="property">class </em><code class="descclassname">ComparatorMechanism.</code><code class="descname">ComparatorOutput</code><a class="headerlink" href="#ComparatorMechanism.ComparatorOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indices of the <code class="xref any docutils literal"><span class="pre">outputValue</span></code> attribute of the ComparatorMechanism containing the
+values described below.</p>
+<dl class="attribute">
+<dt id="ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT">
+<code class="descname">COMPARISON_RESULT</code><em class="property"> = &lt;ComparatorOutput.COMPARISON_RESULT: 0&gt;</em><a class="headerlink" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Result of the ComparatorMechanism&#8217;s <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ComparatorMechanism.ComparatorOutput.COMPARISON_MEAN">
+<code class="descname">COMPARISON_MEAN</code><em class="property"> = &lt;ComparatorOutput.COMPARISON_MEAN: 1&gt;</em><a class="headerlink" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_MEAN" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mean of the elements in the</em> &#8211; keyword`value` of the COMPARISON_RESULT outputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ComparatorMechanism.ComparatorOutput.COMPARISON_SUM">
+<code class="descname">COMPARISON_SUM</code><em class="property"> = &lt;ComparatorOutput.COMPARISON_SUM: 2&gt;</em><a class="headerlink" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_SUM" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Sum of the elements in</em> &#8211; keyword`value` of the COMPARISON_RESULT outputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ComparatorMechanism.ComparatorOutput.COMPARISON_SSE">
+<code class="descname">COMPARISON_SSE</code><em class="property"> = &lt;ComparatorOutput.COMPARISON_SSE: 3&gt;</em><a class="headerlink" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_SSE" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Sum squares of the elements in</em> &#8211; keyword`value` of the COMPARISON_RESULT outputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ComparatorMechanism.ComparatorOutput.COMPARISON_MSE">
+<code class="descname">COMPARISON_MSE</code><em class="property"> = &lt;ComparatorOutput.COMPARISON_MSE: 4&gt;</em><a class="headerlink" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_MSE" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mean of the squares of the elements in</em> &#8211; keyword`value` of the COMPARISON_RESULT outputState.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="ComparatorMechanism.ComparatorMechanism">
 <em class="property">class </em><code class="descclassname">ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>default_sample_and_target=None</em>, <em>comparison_operation=SUBTRACTION</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
@@ -262,7 +300,7 @@ item of the input, which must be the same length.  This also serves as a templat
 inputs to the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 <li><strong>comparison_operation</strong> (<em>keyword[SUBTRACTION or DIVISION] : default SUBTRACTION</em>) &#8211; <p>specifies how the <code class="xref any docutils literal"><span class="pre">COMPARATOR_SAMPLE</span></code> and <code class="xref any docutils literal"><span class="pre">COMPARATOR_TARGET</span></code> will be compared:</p>
 <ul>
-<li><code class="xref any docutils literal"><span class="pre">SUBTRACTION</span></code>: <code class="xref any docutils literal"><span class="pre">COMPARATOR_TARGET</span></code> - <code class="xref any docutils literal"><span class="pre">SAMPLE</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">SUBTRACTION</span></code>: <code class="xref any docutils literal"><span class="pre">COMPARATOR_TARGET</span></code> - <code class="xref any docutils literal"><span class="pre">COMPASAMPLE</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">DIVISION</span></code>: <code class="xref any docutils literal"><span class="pre">COMPARATOR_TARGET</span></code> ÷ <code class="xref any docutils literal"><span class="pre">SAMPLE</span></code></li>
 </ul>
 </li>
@@ -334,7 +372,7 @@ with <code class="xref any docutils literal"><span class="pre">_COMPARATOR_TARGE
 <dt id="ComparatorMechanism.ComparatorMechanism.value">
 <code class="descname">value</code><a class="headerlink" href="#ComparatorMechanism.ComparatorMechanism.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> &#8211; holds the output of the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.comparison_operation" title="ComparatorMechanism.ComparatorMechanism.comparison_operation"><code class="xref any py py-attr docutils literal"><span class="pre">comparison_operation</span></code></a> carried out by the ComparatorMechanism&#8217;s
-<a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; its value is  also assigned to the <code class="xref any docutils literal"><span class="pre">COMPARISON_RESULT</span></code> outputState
+<a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; its value is  also assigned to the <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT" title="ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_RESULT</span></code></a> outputState
 and the the first item of <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.outputValue" title="ComparatorMechanism.ComparatorMechanism.outputValue"><code class="xref any py py-attr docutils literal"><span class="pre">outputValue</span></code></a>.</p>
 </dd></dl>
 
@@ -344,11 +382,11 @@ and the the first item of <a class="reference internal" href="#ComparatorMechani
 <dd><p><em>List[1d np.array, float, float, float, float]</em> &#8211; a list with the following items:</p>
 <ul class="simple">
 <li><strong>result</strong> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorMechanism.function" title="ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculation
-and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <code class="xref any docutils literal"><span class="pre">COMPARISON_RESULT</span></code> outputState;</li>
-<li><strong>mean</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <code class="xref any docutils literal"><span class="pre">COMPARISON_MEAN</span></code> outputState;</li>
-<li><strong>sum</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <code class="xref any docutils literal"><span class="pre">COMPARISON_SUM</span></code> outputState;</li>
-<li><strong>sum of squares</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <code class="xref any docutils literal"><span class="pre">COMPARISON_SSE</span></code> outputState;</li>
-<li><strong>mean of squares</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <code class="xref any docutils literal"><span class="pre">COMPARISON_MSE</span></code> outputState.</li>
+and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT" title="ComparatorMechanism.ComparatorOutput.COMPARISON_RESULT"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_RESULT</span></code></a> outputState;</li>
+<li><strong>mean</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_MEAN" title="ComparatorMechanism.ComparatorOutput.COMPARISON_MEAN"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_MEAN</span></code></a> outputState;</li>
+<li><strong>sum</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_SUM" title="ComparatorMechanism.ComparatorOutput.COMPARISON_SUM"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_SUM</span></code></a> outputState;</li>
+<li><strong>sum of squares</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_SSE" title="ComparatorMechanism.ComparatorOutput.COMPARISON_SSE"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_SSE</span></code></a> outputState;</li>
+<li><strong>mean of squares</strong> of the result&#8217;s elements and the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#ComparatorMechanism.ComparatorOutput.COMPARISON_MSE" title="ComparatorMechanism.ComparatorOutput.COMPARISON_MSE"><code class="xref any py py-attr docutils literal"><span class="pre">COMPARISON_MSE</span></code></a> outputState.</li>
 </ul>
 </dd></dl>
 
@@ -380,11 +418,6 @@ returns output</p>
 </dd></dl>
 
 </dd></dl>
-
-<dl class="function">
-<dt id="ComparatorMechanism.random">
-<code class="descclassname">ComparatorMechanism.</code><code class="descname">random</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &rarr; x in the interval [0, 1).<a class="headerlink" href="#ComparatorMechanism.random" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 </div>

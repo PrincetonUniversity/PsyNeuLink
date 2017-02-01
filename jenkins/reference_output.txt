@@ -48,9 +48,9 @@ EVC Test System
 EVCMechanism-1
 
 	Monitoring the following mechanism outputStates:
-		Decision: DDM_response_time (exp: -1.0; wt: 1.0)
-		Decision: DDM_probability_upperBound (exp: 1.0; wt: 1.0)
-		Reward: transfer_result (exp: 1.0; wt: 1.0)
+		Decision: DDM_response_time (exp: [-1.]; wt: [ 1.])
+		Decision: DDM_probability_upperBound (exp: [ 1.]; wt: [ 1.])
+		Reward: transfer_result (exp: [ 1.]; wt: [ 1.])
 
 	Controlling the following mechanism parameters:
 		Decision: drift_rate
@@ -69,6 +69,7 @@ EVCMechanism-1
 		starting_point: 0
 		t0: 0.45
 		threshold: 1.0
+	time_scale: TimeScale.TRIAL
 - output: 1.0
 
 'Input_PredictionMechanism'  executed:
@@ -118,6 +119,7 @@ RESULTS (time step 1):
 		starting_point: 0
 		t0: 0.45
 		threshold: 1.0
+	time_scale: TimeScale.TRIAL
 - output: 0.1
 
 'Input_PredictionMechanism'  executed:
@@ -535,66 +537,96 @@ comparatorMechanism weights:
  [[ 1.]
  [ 1.]
  [ 1.]]
-result:  [ 0.  0.  1.]
+
+
+**** TRIAL:  0
 
 reward prediction weights: 
  [[ 1.  0.  0.]
  [ 0.  1.  0.]
  [ 0.  0.  1.]]
-result:  [ 1.  0.  0.]
+action selected:  [ 0.  0.  1.]
+
+
+**** TRIAL:  1
 
 reward prediction weights: 
  [[ 1.    0.    0.  ]
  [ 0.    1.    0.  ]
  [ 0.    0.    0.95]]
-result:  [ 0.  1.  0.]
+action selected:  [ 0.    0.    0.19]
 
-reward prediction weights: 
- [[ 1.    0.    0.  ]
- [ 0.    1.    0.  ]
- [ 0.    0.    0.95]]
-result:  [ 0.    0.    0.95]
 
-reward prediction weights: 
- [[ 1.    0.    0.  ]
- [ 0.    1.    0.  ]
- [ 0.    0.    0.95]]
-result:  [ 0.      0.      0.9025]
+**** TRIAL:  2
 
 reward prediction weights: 
  [[ 1.      0.      0.    ]
  [ 0.      1.      0.    ]
- [ 0.      0.      0.9025]]
-result:  [ 0.  1.  0.]
+ [ 0.      0.      0.9405]]
+action selected:  [ 0.      0.      0.9405]
+
+
+**** TRIAL:  3
 
 reward prediction weights: 
  [[ 1.        0.        0.      ]
  [ 0.        1.        0.      ]
- [ 0.        0.        0.857375]]
-result:  [ 0.        0.        0.857375]
+ [ 0.        0.        0.893475]]
+action selected:  [ 0.        0.        0.178695]
 
-reward prediction weights: 
- [[ 1.        0.        0.      ]
- [ 0.        0.95      0.      ]
- [ 0.        0.        0.857375]]
-result:  [ 0.    0.95  0.  ]
+
+**** TRIAL:  4
 
 reward prediction weights: 
  [[ 1.          0.          0.        ]
+ [ 0.          1.          0.        ]
+ [ 0.          0.          0.88454025]]
+action selected:  [ 0.          0.          0.88454025]
+
+
+**** TRIAL:  5
+
+reward prediction weights: 
+ [[ 1.          0.          0.        ]
+ [ 0.          1.          0.        ]
+ [ 0.          0.          0.84031324]]
+action selected:  [ 0.2  0.   0. ]
+
+
+**** TRIAL:  6
+
+reward prediction weights: 
+ [[ 0.99        0.          0.        ]
+ [ 0.          1.          0.        ]
+ [ 0.          0.          0.84031324]]
+action selected:  [ 0.  1.  0.]
+
+
+**** TRIAL:  7
+
+reward prediction weights: 
+ [[ 0.99        0.          0.        ]
  [ 0.          0.95        0.        ]
- [ 0.          0.          0.81450625]]
-result:  [ 0.      0.9025  0.    ]
+ [ 0.          0.          0.84031324]]
+action selected:  [ 0.    0.95  0.  ]
+
+
+**** TRIAL:  8
 
 reward prediction weights: 
- [[ 1.          0.          0.        ]
+ [[ 0.99        0.          0.        ]
  [ 0.          0.9025      0.        ]
- [ 0.          0.          0.81450625]]
-result:  [ 0.        0.857375  0.      ]
+ [ 0.          0.          0.84031324]]
+action selected:  [ 0.      0.9025  0.    ]
+
+
+**** TRIAL:  9
 
 reward prediction weights: 
- [[ 1.          0.          0.        ]
+ [[ 0.99        0.          0.        ]
  [ 0.          0.857375    0.        ]
- [ 0.          0.          0.81450625]]
+ [ 0.          0.          0.84031324]]
+action selected:  [ 0.          0.          0.16806265]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -635,6 +667,7 @@ Preference:                           Base Value:                         Curren
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 10.0
+	time_scale: TimeScale.TRIAL
 - output: 10.0
 
 'My_DDM_2' mechanism executed:
@@ -646,6 +679,7 @@ Preference:                           Base Value:                         Curren
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 20.0
+	time_scale: TimeScale.TRIAL
 - output: 20.0
 
 'My_DDM_3' mechanism executed:
@@ -657,13 +691,12 @@ Preference:                           Base Value:                         Curren
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 30.0
+	time_scale: TimeScale.TRIAL
 - output: 30.0
 
 Log for My_DDM-1:
 
-Variable:                                          Time       Value
-drift_rate Control Signal Intensity............... 0:0:10:10     1.00
-threshold Control Signal Intensity................ 0:0:10:10     1.00
+Variable:                                          Time        Value
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1136,7 +1169,7 @@ RUNNING Mixed NN & DDM script.py
 - output: -1.0 2.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  -0.18, 0.00326, 1.11, 0.339, 0.982
+- input:  -0.463, -0.353, 0.676, 0.156, 0.63
 - params:
 	function: Logistic
 		bias: 0
@@ -1144,10 +1177,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.455 0.501 0.753 0.584 0.727
+- output: 0.386 0.413 0.663 0.539 0.652
 
 'My_DDM-2' mechanism executed:
-- input:  3.02
+- input:  2.65
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1155,6 +1188,7 @@ RUNNING Mixed NN & DDM script.py
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 1
+	time_scale: TimeScale.TRIAL
 - output: 1.0
 
 ''Neural Network DDM Process' component' completed:
@@ -1184,7 +1218,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 2.0 3.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  2.79, 1.03, 4.64, 2.67, 1.52
+- input:  1.06, 2.82, 3.27, 1.72, 3.07
 - params:
 	function: Logistic
 		bias: 0
@@ -1192,10 +1226,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.942 0.737 0.99 0.935 0.82
+- output: 0.743 0.944 0.963 0.848 0.956
 
 'My_DDM-2' mechanism executed:
-- input:  4.43
+- input:  4.45
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1203,6 +1237,7 @@ RUNNING Mixed NN & DDM script.py
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 1
+	time_scale: TimeScale.TRIAL
 - output: 1.0
 
 ''Neural Network DDM Process' component' completed:
@@ -1232,7 +1267,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 5.0 5.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  6.11, 2.21, 9.15, 5.48, 2.55
+- input:  2.6, 6.29, 6.52, 3.57, 6.12
 - params:
 	function: Logistic
 		bias: 0
@@ -1240,10 +1275,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.998 0.901 1.0 0.996 0.928
+- output: 0.931 0.998 0.999 0.973 0.998
 
 'My_DDM-2' mechanism executed:
-- input:  4.82
+- input:  4.9
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1251,6 +1286,7 @@ RUNNING Mixed NN & DDM script.py
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 1
+	time_scale: TimeScale.TRIAL
 - output: 1.0
 
 ''Neural Network DDM Process' component' completed:
@@ -1561,12 +1597,11 @@ F:  INITIALIZE_CYCLE
 
 RUNNING Documentation Examples Script.py
 
+[-1.]
+[ 1.]
 [ 1.]
 [ 1.]
 [-1.]
-[-1.]
-[ 1.]
 [ 0.65077768]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-

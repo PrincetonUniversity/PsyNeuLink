@@ -302,12 +302,19 @@ DDM_RT_CORRECT_VARIANCE = "DDM_RT_correct_variance"
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
 class DDM_Output(AutoNumber):
+    """Indices of the `outputValue <DDM.outputValue>` attribute of the DDM containing the values described below."""
     DECISION_VARIABLE = ()
+    """Current value of the decision variable."""
     RESPONSE_TIME = ()
+    """`time_steps` or estimated number of seconds since beginning of decision process."""
     P_UPPER_MEAN = ()
+    """Probability that decision variable reached or exceeded the upper threshold (`NavarroAndFuss` function only)."""
     P_LOWER_MEAN = ()
+    """Probability that decision variable reached or exceeded the lower threshold (`NavarroAndFuss` function only)."""
     RT_CORRECT_MEAN = ()
+    """Estimated mean response time for responses reaching the upper bound (`NavarroAndFuss` function only)."""
     RT_CORRECT_VARIANCE = ()
+    """Estimated variance of response times for responses reaching the upper bound (`NavarroAndFuss` function only)."""
     NUM_OUTPUT_VALUES = ()
 
 

@@ -372,9 +372,7 @@ def run(object,
         clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
         context=None):
-    """
-    COMMENT:
-    run(                         \
+    """run(                         \
     inputs,                      \
     num_executions=None,         \
     reset_clock=True,            \
@@ -388,7 +386,6 @@ def run(object,
     call_after_time_step=None,   \
     clock=CentralClock,          \
     time_scale=None)
-    COMMENT
 
     Run a sequence of executions for a `process <Process>` or `system <System>`.
 

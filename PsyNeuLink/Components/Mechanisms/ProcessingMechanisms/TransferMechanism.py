@@ -111,9 +111,14 @@ TRANSFER_VARIANCE = "transfer_variance"
 
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
+    """Indices of the `outputValue <TransferMechanism.outputValue>` attribute of the TransferMechanism containing the
+    values described below."""
     RESULT = ()
+    """Result of the TransferMechanism's `function <TransferMechanism.function>`."""
     MEAN = ()
+    """Mean of the elements in the :keyword`value` of the RESULT outputState."""
     VARIANCE = ()
+    """Variance of the elements in the :keyword`value` of the RESULT outputState."""
 
 # TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
