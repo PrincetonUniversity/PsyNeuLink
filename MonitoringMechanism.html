@@ -182,31 +182,25 @@
 <span class="target" id="module-MonitoringMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A MonitoringMechanism monitors the <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> in a
-<a class="reference internal" href="Process.html"><span class="doc">process</span></a> or system &lt;System&gt;`.  This can generate an error signal (e.g., for use in
+<a class="reference internal" href="Process.html"><span class="doc">process</span></a> or <a class="reference internal" href="System.html"><span class="doc">system</span></a>.  This can generate an error signal (e.g., for use in
 <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a>) or some other value (e.g., a conflict signal).</p>
 </div>
 <div class="section" id="creating-a-monitoringmechanism">
 <span id="monitoringmechanism-creation"></span><h2>Creating A MonitoringMechanism<a class="headerlink" href="#creating-a-monitoringmechanism" title="Permalink to this headline">¶</a></h2>
-<p>A MonitoringMechanism can be created by using the standard Python method of calling the constructor for the desired
-type. One or more MonitoringMechanisms are also <a class="reference internal" href="LearningProjection.html#learningprojection-automatic-creation"><span class="std std-ref">created automatically</span></a> when
-learning is specified for a <code class="xref any docutils literal"><span class="pre">process</span></code>. Different types of
-MonitoringMechanisms monitor  different types of information, and therefore have varying input requirements.</p>
+<p>Generally, one or more <a class="reference internal" href="#"><span class="doc">MonitoringMechanisms</span></a> are <a class="reference internal" href="LearningProjection.html#learningprojection-automatic-creation"><span class="std std-ref">created automatically</span></a> when learning is specified for a <code class="xref any docutils literal"><span class="pre">process</span></code>.  However, MonitoringMechanisms can also be created using the standard Python method of
+calling the constructor for the desired type.  Different types of MonitoringMechanisms monitor  different types of
+information, and therefore have varying input requirements.</p>
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A MonitoringMechanism always executes after the mechanism it is monitoring.  The <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-of the <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of the mechanism being monitored is assigned as an item in the
-<code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> for the <code class="xref any docutils literal"><span class="pre">function</span></code> of the MonitoringMechanism. Other items may be
-also be assigned (for example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> takes an additional input <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> against which it compares the monitored value).</p>
+<p>MonitoringMechanisms always execute after all of the mechanism being monitored in the system have execute.
+The <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of the mechanism being monitored is
+assigned as the primary input to the MonitoringMechanism. Other items may be also be assigned (for example,
+a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> takes an additional  input <a class="reference internal" href="ComparatorMechanism.html#ComparatorMechanism.ComparatorMechanism.target" title="ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> against
+which it compares the monitored value).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="monitoringmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="MonitoringMechanism.ComparatorOutput">
-<em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">ComparatorOutput</code><a class="headerlink" href="#MonitoringMechanism.ComparatorOutput" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
 <dl class="class">
 <dt id="MonitoringMechanism.MonitoringMechanism_Base">
 <em class="property">class </em><code class="descclassname">MonitoringMechanism.</code><code class="descname">MonitoringMechanism_Base</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#MonitoringMechanism.MonitoringMechanism_Base" title="Permalink to this definition">¶</a></dt>
