@@ -106,6 +106,36 @@ from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 
 
+ComparatorMechanism = 'ComparatorMechanism'
+
+# ComparatorMechanism parameter keywords:
+COMPARATOR_SAMPLE = "comparatorSampleSource"
+COMPARATOR_TARGET = "comparatorTargetSource"
+COMPARISON_OPERATION = "comparison_operation"
+
+# ComparatorMechanism outputs (used to create and name outputStates):
+COMPARISON_RESULT = 'ComparisonArray'
+COMPARISON_MEAN = 'ComparisonMean'
+COMPARISON_SUM = 'ComparisonSum'
+COMPARISON_SSE = 'ComparisonSumSquares'
+COMPARISON_MSE = 'ComparisonMSE'
+
+# ComparatorMechanism output indices (used to index output values):
+class ComparatorOutput(AutoNumber):
+    """Indices of the `outputValue <Comparator.outputValue>` attribute of the ComparatorMechanism containing the
+    values described below."""
+    COMPARISON_RESULT = ()
+    """Result of the ComparatorMechanism's `function <ComparatorMechanism.function>`."""
+    COMPARISON_MEAN = ()
+    """Mean of the elements in the :keyword`value` of the COMPARISON_RESULT outputState."""
+    COMPARISON_SUM = ()
+    """Sum of the elements in :keyword`value` of the COMPARISON_RESULT outputState."""
+    COMPARISON_SSE = ()
+    """Sum squares of the elements in :keyword`value` of the COMPARISON_RESULT outputState."""
+    COMPARISON_MSE = ()
+    """Mean of the squares of the elements in :keyword`value` of the COMPARISON_RESULT outputState."""
+
+
 class ComparatorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value

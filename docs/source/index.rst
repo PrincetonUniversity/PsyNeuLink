@@ -250,7 +250,6 @@ Contributors
       Projection
       Functions
       Run
-      Log
 
 .. toctree::
    :hidden:
@@ -262,7 +261,6 @@ Contributors
    Projection
    Function
    Run
-   Log
 
 
 .. _Indices_and_Tables:

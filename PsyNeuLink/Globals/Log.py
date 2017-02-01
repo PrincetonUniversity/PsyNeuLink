@@ -114,11 +114,17 @@ from PsyNeuLink.Globals.Keywords import *
 
 
 class LogLevel(IntEnum):
-    OFF               = 0   # No recording
-    VALUE_ASSIGNMENT  = 1   # Record only final value assignments during execution
-    EXECUTION    = 2   # Record all value assignments during execution
-    VALIDATION        = 3   # Record all value assignemnts during validation and execution
-    ALL_ASSIGNMENTS   = 4   # Record all value assignments during initialization, validation and execution
+    """Specifies levels of logging, as descrdibed below."""
+    OFF = 0
+    """No recording."""
+    VALUE_ASSIGNMENT = 1
+    """Record only final value assignments during execution."""
+    EXECUTION = 2
+    """Record all value assignments during execution."""
+    VALIDATION = 3
+    """Record all value assignemnts during validation and execution."""
+    ALL_ASSIGNMENTS = 4
+    """Record all value assignments during initialization, validation and execution."""
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
