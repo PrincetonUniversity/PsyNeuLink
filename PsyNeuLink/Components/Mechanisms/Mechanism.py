@@ -398,9 +398,14 @@ from PsyNeuLink.Globals.Registry import register_category
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
+    """Specifies outputStates to be monitored by a `ControlMechanism` (see `ControlMechanism_Monitored_OutputStates
+    for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
+    """Only monitor explicitly specified outputstates."""
     PRIMARY_OUTPUT_STATES = ()
+    """Monitor only the `primary outputState <OutputState_Primary>` of a mechanism."""
     ALL_OUTPUT_STATES = ()
+    """Monitor all outputStates <Mechanism.Mechanism_Base.outputStates>` of a mechanism."""
     NUM_MONITOR_STATES_OPTIONS = ()
 
 

@@ -18,7 +18,7 @@
 # √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
-#   EVCMechanism
+# √ EVCMechanism
 # √ ControlSignal
 # √ Projection
 # √ MappingProjection
