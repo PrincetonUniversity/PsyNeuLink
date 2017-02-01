@@ -113,7 +113,7 @@ the opportunity to test and explore how they interact with one another in a sing
 
 **Major Components in PsyNeuLink**
 
-.. figure:: _static/System_simple_fig.png
+.. figure:: _static/System_simple_fig.jpg
    :alt: Overview of major PsyNeuLink components
    :scale: 50 %
 
