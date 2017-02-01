@@ -152,6 +152,7 @@ INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
+ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'

@@ -18,7 +18,7 @@
 # √ WeightedErrorMechanism
 # √ ControlMechanism
 #   DefaultControlMechanism
-#   EVCMechanism
+# √ EVCMechanism
 # √ ControlSignal
 # √ Projection
 # √ MappingProjection
@@ -1073,6 +1073,8 @@
     #  ?? RESTRICT THEM ONLY TO CATEGORY D
     #  ?? ALLOW DICT ENTRIES FOR EACH (WITH DEDICATED KEYS)
 #
+# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
+# DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF function **
 
 #endregion
 
@@ -1134,7 +1136,7 @@
 #region LOG: -----------------------------------------------------------------------------------------------------------------
 #
 # IMPLEMENT:
-#             0) MOVE LIST OF RECORDED ENTRIES TO kwLogEntries param, AND USE logPref TO TURN RECORDING ON AND OFF
+#             0) MOVE LIST OF RECORDED ENTRIES TO LOG_ENTRIES param, AND USE logPref TO TURN RECORDING ON AND OFF
 #             X) VALIDATE LOG VALUES (IN set_preferences)
 #             Y) Fix CentralClock
 #             4) IMPLEMENT RELEVANT SETTER METHODS IN Process, Mechanism and Projections (AKIN TO ONES IN State):
@@ -1147,7 +1149,7 @@
 #                 SHOULD TRY TO GET ENTRIES FROM logPrefs??
 #                 SHOULD USE classLogEntries AS DEFAULT IN CALL TO Log;
 #                 SHOULD ADD SysetmLogEntries IN CALL TO Log (IN FUNCTIONS OR IN LOG??)
-#                 SHOULD ADD kwLogEntries PARAM IN WHICH VARIABLES CAN BE ASSIGNED
+#                 SHOULD ADD LOG_ENTRIES PARAM IN WHICH VARIABLES CAN BE ASSIGNED
 #             5) DEAL WITH validate_log IN PreferenceSet
 #             6) REVISIT Log METHODS (add_entry, log_entries, etc.) TO MAKE SURE THEY MAKE SENSE AND FUNCTION PROPERLY:
 #                 ADAPT THEM TO LogEntry tuple FORMAT
@@ -1169,6 +1171,7 @@
 
 #region DEFAULTS: ------------------------------------------------------------------------------------------------------------
 #
+# - IMPLEMENT Logging of values during initialization
 # - IMPLEMENT DefaultControlMechanism(object) / DefaultController(name) / SYSTEM_DEFAULT_CONTROLLER(str)
 #
 # - SystemDefaultInputState and SystemDefaultOutputState:

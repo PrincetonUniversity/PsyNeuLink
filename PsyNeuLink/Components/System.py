@@ -1841,48 +1841,35 @@ class System_Base(System):
                                                  re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 
 
-    class InspectOptions(AutoNumber):
-        """Option value keywords for inspect() and show() methods
-
-        Values:
-
-            :keyword:`ALL`
-
-            :keyword:`EXECUTION_SETS`
-
-            :keyword:`ExecutionList`
-
-            :keyword:`ATTRIBUTES`
-
-            :keyword:`ALL_OUTPUTS`
-
-            :keyword:`ALL_OUTPUT_LABELS`
-
-            :keyword:`PRIMARY_OUTPUTS`
-
-            :keyword:`PRIMARY_OUTPUT_LABELS`
-
-            :keyword:`MONITORED_OUTPUTS`
-
-            :keyword:`MONITORED_OUTPUT_LABELS`
-
-            :keyword:`FLAT_OUTPUT`
-
-            :keyword:`DICT_OUTPUT`
-
-        """
-        ALL = ()
-        EXECUTION_SETS = ()
-        ExecutionList = ()
-        ATTRIBUTES = ()
-        ALL_OUTPUTS = ()
-        ALL_OUTPUT_LABELS = ()
-        PRIMARY_OUTPUTS = ()
-        PRIMARY_OUTPUT_LABELS = ()
-        MONITORED_OUTPUTS = ()
-        MONITORED_OUTPUT_LABELS = ()
-        FLAT_OUTPUT = ()
-        DICT_OUTPUT = ()
+    # TBI:
+    # class InspectOptions(AutoNumber):
+    #     """Option value keywords for `inspect` and `show` methods.
+    #     """
+    #     ALL = ()
+    #     """Show all values.
+    #     """
+    #     EXECUTION_SETS = ()
+    #     """Show `execution_sets` attribute."""
+    #     ExecutionList = ()
+    #     """Show `executionList` attribute."""
+    #     ATTRIBUTES = ()
+    #     """Show system's attributes."""
+    #     ALL_OUTPUTS = ()
+    #     """"""
+    #     ALL_OUTPUT_LABELS = ()
+    #     """"""
+    #     PRIMARY_OUTPUTS = ()
+    #     """"""
+    #     PRIMARY_OUTPUT_LABELS = ()
+    #     """"""
+    #     MONITORED_OUTPUTS = ()
+    #     """"""
+    #     MONITORED_OUTPUT_LABELS = ()
+    #     """"""
+    #     FLAT_OUTPUT = ()
+    #     """"""
+    #     DICT_OUTPUT = ()
+    #     """"""
 
     def show(self, options=None):
         """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` mechanisms,
