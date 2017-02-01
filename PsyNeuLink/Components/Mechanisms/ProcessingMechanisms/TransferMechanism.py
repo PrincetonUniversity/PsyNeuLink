@@ -416,7 +416,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         noise = target_set[NOISE]
         if isinstance(noise, float) and noise>=0 and noise<=1:
             self.noise_function = False
-        elif isinstance(noise, function_type):
+        elif callable(noise):
             self.noise_function = True
         else:
             raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".

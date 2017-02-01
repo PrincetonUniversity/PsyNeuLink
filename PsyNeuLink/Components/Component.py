@@ -1457,7 +1457,7 @@ class Component(object):
 
             # If param is a function_type, allow any other function_type
             # MODIFIED 1/9/16 NEW:
-            elif isinstance(param_value, function_type):
+            elif callable(param_value):
                 target_set[param_name] = param_value
             # MODIFIED 1/9/16 END
 
