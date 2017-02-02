@@ -848,6 +848,9 @@ class LinearCombination(CombinationFunction): # --------------------------------
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
+            print(self.variable, " (@line 851)")
+            print(scale, " (@line 852)")
+            print(offset, " (@line 853)")
             return (self.variable * scale) + offset
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
@@ -1017,7 +1020,6 @@ class Linear(TransferFunction): # ----------------------------------------------
         # FIX: ??CORRECT:
         return self.slope
         # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
-
 
 class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (RATE, SCALE)
@@ -1720,7 +1722,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE)=CONSTANT,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
-                 context='Integrator Init'):
+                 noise=0.0,
+                 context="Integrator Init"):
 
         # Assign here as default, for use in initialization of function
         self.oldValue = self.paramClassDefaults[kwInitializer]
@@ -1728,7 +1731,8 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
-                                                 params=params)
+                                                 params=params,
+                                                 noise=noise)
 
         super().__init__(variable_default=variable_default,
                                          params=params,
@@ -1772,6 +1776,16 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                  target_set=target_set,
                                  context=context)
 
+        noise = target_set[NOISE]
+
+        if isinstance(noise, float) and noise>=0 and noise<=1:
+            self.noise_function = False
+        elif callable(noise):
+            self.noise_function = True
+        else:
+            raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".
+                                format(noise, self.name))
+
         # Make sure initializer is compatible with variable
         try:
             if not iscompatible(target_set[kwInitializer],self.variableClassDefault):
@@ -1806,6 +1820,10 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
+        noise = self.paramsCurrent[NOISE]
+
+        if self.noise_function:
+            noise = self.noise()
 
         try:
             old_value = params[kwInitializer]
@@ -1832,7 +1850,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if not INITIALIZING in context:
+        if context == None:
+            self.oldValue = 0
+        elif not INITIALIZING in context:
             self.oldValue = value
 
         return value

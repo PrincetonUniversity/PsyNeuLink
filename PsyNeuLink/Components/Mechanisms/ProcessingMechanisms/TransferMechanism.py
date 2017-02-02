@@ -513,12 +513,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
         # Scale noise to be between +noise and -noise
+
         if self.noise_function:
             noise = self.noise()
+            print(self.noise())
         else:
             noise = self.noise * ((2 * np.random.normal()) - 1)
         rate = self.rate
         range = self.range
+
         #endregion
 
 
@@ -528,7 +531,14 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
-            current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
+            current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input)
+            current_input2 = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
+            print(noise, " = noise @line 536")
+            print(self.noise(), " = self.noise() @line 536")
+
+            print(current_input, " = current_input ------")
+            print(noise, " = noise")
+            print(current_input2, " = current_input2 ------")
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
         else:

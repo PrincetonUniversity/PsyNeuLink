@@ -589,7 +589,8 @@ class DDM(ProcessingMechanism_Base):
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         if default_input_value is None:
-            default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
+            default_input_value = 0.0
+            # default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -613,7 +614,7 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        functions = {BogaczEtAl, NavarroAndFuss}
+        functions = {BogaczEtAl, NavarroAndFuss, Integrator}
         if not target_set[FUNCTION] in functions:
             function_names = list(function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
@@ -700,17 +701,13 @@ class DDM(ProcessingMechanism_Base):
             variable = self.variableInstanceDefault
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
-        if time_scale == TimeScale.TIME_STEP:
-            raise MechanismError("TIME_STEP mode not yet implemented for DDM")
-            # IMPLEMENTATION NOTES:
-            # Get params
-            # Implement with calls to a step_function, that does not reset self.outputValue
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
-            # Assign "self.decision_variable"
-            # Implement terminate() below
+        if self.timeScale == TimeScale.TIME_STEP:
+            result = self.function()
+            #Throws an error if length of this array < 4 
+            return np.array([[result],[0], [0], [0]])
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
-        elif time_scale == TimeScale.TRIAL:
+        elif self.timeScale == TimeScale.TRIAL:
 
             # # Get length of self.outputValue from OUTPUT_STATES
             # # Note: use paramsCurrent here (instead of outputStates), as during initialization the execute method
