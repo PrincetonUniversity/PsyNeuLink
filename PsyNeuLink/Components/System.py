@@ -318,7 +318,7 @@ def system(default_input_value=None,
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
-           learning:tc.optional(_is_learning_spec)=None,
+           # learning:tc.optional(_is_learning_spec)=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -331,10 +331,24 @@ def system(default_input_value=None,
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
-    learning=None,                            \
     params=None,                              \
     name=None,                                \
     prefs=None)
+
+    COMMENT:
+       VERSION WITH learning
+        system(                                   \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=`None`,               \
+        learning=None,                            \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
+    COMMENT
 
     Factory method for System: returns instance of System.
 
@@ -377,8 +391,10 @@ def system(default_input_value=None,
         specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its `controller`
         (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
 
-    learning : Optional[LearningProjection spec]
-        implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
+    COMMENT:
+        learning : Optional[LearningProjection spec]
+            implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
+    COMMENT
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -414,7 +430,7 @@ def system(default_input_value=None,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
-                       learning=learning,
+                       # learning=learning,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -434,6 +450,21 @@ class System_Base(System):
     params=None,                              \
     name=None,                                \
     prefs=None)
+
+    COMMENT:
+        VERSION WITH learning
+        System_Base(                              \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=`None`,               \
+        learning=None,                            \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
+    COMMENT
 
     Abstract class for System.
 
@@ -678,7 +709,7 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitor_for_control=None,
-                 learning=None,
+                 # learning=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -921,7 +952,6 @@ class System_Base(System):
             process = processes_spec[i].process
             process_input = processes_spec[i].input
             self.variable.append(process_input)
-
 
             # IMPLEMENT: THIS IS WHERE LEARNING SPECIFIED FOR A SYSTEM SHOULD BE IMPLEMENTED FOR EACH PROCESS IN THE
             #            SYSTEM;  NOTE:  IF THE PROCESS IS ALREADY INSTANTIATED WITHOUT LEARNING
