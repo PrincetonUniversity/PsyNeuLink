@@ -260,6 +260,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismT
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
                                                                                       COMPARATOR_TARGET
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -317,6 +318,7 @@ def system(default_input_value=None,
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           learning:tc.optional(_is_learning_spec)=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -328,7 +330,8 @@ def system(default_input_value=None,
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=`None`,  \
+    monitor_for_control=`None`,               \
+    learning=None,                            \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -374,6 +377,9 @@ def system(default_input_value=None,
         specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its `controller`
         (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
 
+    learning : Optional[LearningProjection spec]
+        implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
+
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
         the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
@@ -408,6 +414,7 @@ def system(default_input_value=None,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
+                       learning=learning,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -422,7 +429,8 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=`None`,      \
+    monitor_for_control=`None`,               \
+    learning=None,                            \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -498,11 +506,8 @@ class System_Base(System):
         determines whether the `controller` is executed during system execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any process in the system
-        COMMENT:
-            or for the system itself.
-        COMMENT
-        .
+        indicates whether learning is being used;  is set to True if learning is specified for any processes
+        in the system or for the system itself.
 
     graph : OrderedDict
         contains a graph of all of the mechanisms in the system.
@@ -673,6 +678,7 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitor_for_control=None,
+                 learning=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -862,7 +868,7 @@ class System_Base(System):
         self._all_mech_tuples = []
         self._allMechanisms = MechanismList(self, self._all_mech_tuples)
 
-        # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
+        # Get list of processes specified in arg to init, possibly appended by EVCMechanism (with prediction processes)
         processes_spec = self.processes
 
         # Assign default Process if PROCESS is empty, or invalid
@@ -916,16 +922,21 @@ class System_Base(System):
             process_input = processes_spec[i].input
             self.variable.append(process_input)
 
+            # IMPLEMENT: THIS IS WHERE LEARNING SPECIFIED FOR A SYSTEM SHOULD BE IMPLEMENTED FOR EACH PROCESS IN THE
+            #            SYSTEM;  NOTE:  IF THE PROCESS IS ALREADY INSTANTIATED WITHOUT LEARNING
+            #            (FIRST CONDITIONAL BELOW), MAY NEED TO BE RE-INSTANTIATED WITH LEARNING
+            #            (QUESTION:  WHERE TO GET SPECS FOR PROCESS FOR RE-INSTANTIATION??)
+
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process
-            if not isinstance(process, Process):
+            else:
                 if inspect.isclass(process) and issubclass(process, Process):
                     # FIX: MAKE SURE THIS IS CORRECT
-                    # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
+                    # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=process_input, context=self)
