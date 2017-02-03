@@ -442,8 +442,7 @@ def process(process_spec=None,
         the type of matrix used for default projections (see `matrix` parameter for `MappingProjection`).
 
     learning : Optional[LearningProjection spec]
-        implements :ref:`learning <LearningProjection_CreationLearningSignal>` for all
-        eligible projections in the process.
+        implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
         the value assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
