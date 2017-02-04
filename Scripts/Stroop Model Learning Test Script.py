@@ -112,8 +112,7 @@ mySystem.run(num_executions=2,
 # [[-0.02380258  0.9793176 ]
 #  [ 1.97619742  2.9793176 ]]
 
-
-# correct response & weights after 1st trial:
+# Correct response & weights after 1st trial:
 #
 # response
 #     0.5090    0.5432
