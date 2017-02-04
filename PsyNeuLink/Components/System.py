@@ -399,11 +399,11 @@ def system(default_input_value=None,
             implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
     COMMENT
 
-    targets : Optional[List[List]], 2d np.ndarray] : default ndarray's of zeroes
-        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
-        each `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
+    targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
+        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of each
+        `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
         number of items as there are `targetMechanisms`, and each item must have the same format (length and number
-        of elements` as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
+        of elements) as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
         `TARGET` mechanism.
 
     params : dict : default None
@@ -552,6 +552,10 @@ class System_Base(System):
         indicates whether learning is being used;  is set to True if learning is specified for any processes
         in the system or for the system itself.
 
+    targets : 2d nparray : default zeroes
+        used as template for the values of the system's `targetInputStates`, and to represent the targets specified in
+        the :keyword:`targets` argument of system's `execute <System.execute>` and `run <System.run>` methods.
+
     graph : OrderedDict
         contains a graph of all of the mechanisms in the system.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
@@ -643,6 +647,12 @@ class System_Base(System):
         COMMENT:
             based on _target_mech_tuples)
         COMMENT
+
+    targetInputStates : List[SystemTargetInputState]
+        one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
+        :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
+        provide their values to the the `target <ComparatorMechanism.ComparatorMechanism.target>` inputState of each
+        `TARGET` mechanism during execution.
 
     COMMENT:
        IS THIS CORRECT:
