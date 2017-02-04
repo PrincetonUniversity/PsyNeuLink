@@ -442,8 +442,7 @@ def process(process_spec=None,
         the type of matrix used for default projections (see `matrix` parameter for `MappingProjection`).
 
     learning : Optional[LearningProjection spec]
-        implements :ref:`learning <LearningProjection_CreationLearningSignal>` for all
-        eligible projections in the process.
+        implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
         the value assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
@@ -2323,10 +2322,14 @@ class Process_Base(Process):
         return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
-    """Encodes input to the process and transmits it to the `ORIGIN` mechanism in the process
+    """Encodes either an input to or target for the process and transmits it to the corresponding mechanism
 
-    Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
-    MappingProjection that projects to one or more inputStates of the `ORIGIN` mechanism in the process.
+    Each instance encodes one of the following:
+    - an item of the `input <Process.input>` to the process (a 1d array in the 2d input array) and provides it to a
+        `MappingProjection` that projects to one or more `inputStates <Mechanism.Mechanism_Base.inputStates>` of the
+        `ORIGIN` mechanism in the process.
+    - a `target <Process.target>` to the process (also a 1d array) and provides it to a `MappingProjection` that
+         projects to the `TARGET` mechanism of the process.
 
     (See :ref:`Process_Input_And_OuputProcess` for an explanation of the mapping from processInputStates to
     `ORIGIN` mechanism inputStates when there is more than one process input value and/or mechanism inputState)
@@ -2334,7 +2337,7 @@ class ProcessInputState(OutputState):
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()
 
-       self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
+       self.value is used to represent the corresponding item of the input arg to process.execute or process.run
 
     """
     def __init__(self, owner=None, variable=None, name=None, prefs=None):
