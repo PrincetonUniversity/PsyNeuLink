@@ -1466,9 +1466,9 @@ class System_Base(System):
 
     def _instantiate_target_inputs(self, context=None):
 
-        if self.targets is None:
+        if self.learning and self.targets is None:
             if not self.targetMechanisms:
-                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has not targetMechanisms".
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
                                   format(self.name))
             elif len(self.targetMechanisms)==1:
                 error_msg = "Learning has been specified for {} so a target must also be specified"
