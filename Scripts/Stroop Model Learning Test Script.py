@@ -117,15 +117,12 @@ mySystem.run(num_executions=2,
 #
 # response
 #     0.5090    0.5432
-#
 # hidden-output weights
 #     0.0146    1.0135
 #     2.0022    3.0020
-#
 # color-hidden weights
 #     0.0119    1.0103
 #     2.0119    3.0103
-#
 # words-hidden weights
 #    -0.0238    0.9793
 #     1.9762    2.9793
