@@ -1470,7 +1470,7 @@ class System_Base(System):
 
         # Create SystemTargetInputState for each TARGET mechanism in targetMechanisms and
         #    assign MappingProjection from the SystemTargetInputState
-        #    to the TARGET mechanism's COMPARATOR_TARGET inputState
+        #    to the TARGET mechanism's COMPARATOR_TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
 
