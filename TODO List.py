@@ -34,6 +34,8 @@
 #   TimeScale
 #   Registry
 #
+# DOCUMENT: targets argunment in system() and System_Base.__init__()
+
 # DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS
 #
 # DOCUMENT: FINISH DOCUMENTING:
