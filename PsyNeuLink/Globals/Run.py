@@ -572,13 +572,18 @@ def run(object,
                     object.target = targets[input_num]
 
                 elif object_type == SYSTEM:
-                    # This assumes that target order is aligned with order of targets in targetMechanisms list;
-                    # it is tested for dict format in _construct_stimulus_sets, but can't be insured for list format.
-                    for i, target in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
-                        # Assign current target to value attribute of ProcessInputState of each process
-                        # to which the targetMechanism belongs (i.e., that project to it's COMPARATOR_TARGET inputState)
-                        for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
-                            process_target_projection.sender.value = targets[input_num][i]
+                    # Note: the following assumes that the order of the items in targets is alligned with
+                    #       the oreder of the TARGET mechanisms in the sytem's targetMechanisms list;
+                    #       it is tested for dict format in _construct_stimulus_sets,
+                    #       but can't be insured for list format.
+                    # For each TARGET mechanism in the system's targetMechanismList
+                    for i, target_mech in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
+                    # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+                    #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+                        object.targetInputStates[i].value = targets[input_num][i]
+                        for process_target_projection in \
+                                target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+                            process_target_projection.sender.value = process_target_projection.sender.value * 0
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name

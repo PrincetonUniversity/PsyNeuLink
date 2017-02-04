@@ -319,6 +319,7 @@ def system(default_input_value=None,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            # learning:tc.optional(_is_learning_spec)=None,
+           targets:tc.optional(tc.any(list, np.ndarray))=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -331,6 +332,7 @@ def system(default_input_value=None,
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
+    targets=None                              \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -345,6 +347,7 @@ def system(default_input_value=None,
         enable_controller=:keyword:`False`,       \
         monitor_for_control=`None`,               \
         learning=None,                            \
+        targets=None                              \
         params=None,                              \
         name=None,                                \
         prefs=None)
@@ -396,6 +399,13 @@ def system(default_input_value=None,
             implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
     COMMENT
 
+    targets : Optional[List[List]], 2d np.ndarray] : default ndarray's of zeroes
+        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
+        each `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
+        number of items as there are `targetMechanisms`, and each item must have the same format (length and number
+        of elements` as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
+        `TARGET` mechanism.
+
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
         the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
@@ -431,6 +441,7 @@ def system(default_input_value=None,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
                        # learning=learning,
+                       targets=targets,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -446,7 +457,7 @@ class System_Base(System):
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
-    learning=None,                            \
+    targets=None,                             \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -461,6 +472,7 @@ class System_Base(System):
         enable_controller=:keyword:`False`,       \
         monitor_for_control=`None`,               \
         learning=None,                            \
+        targets=None,                             \
         params=None,                              \
         name=None,                                \
         prefs=None)
@@ -710,6 +722,7 @@ class System_Base(System):
                  enable_controller=False,
                  monitor_for_control=None,
                  # learning=None,
+                 targets=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -724,6 +737,7 @@ class System_Base(System):
                                                  controller=controller,
                                                  enable_controller=enable_controller,
                                                  monitor_for_control=monitor_for_control,
+                                                 targets=targets,
                                                  params=params)
 
         # MODIFIED 12/15/16 OLD:
@@ -733,6 +747,7 @@ class System_Base(System):
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.targets = None
+        self.targetInputStates = []
         self.learning = False
 
         register_category(entry=self,
@@ -1435,6 +1450,55 @@ class System_Base(System):
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
         # self.learningExecutionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
+
+        # Instantiate TargetInputStates
+        self._instantiate_target_inputs()
+
+    def _instantiate_target_inputs(self, context=None):
+
+        if self.targets is None:
+            if not self.targetMechanisms:
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has not targetMechanisms".
+                                  format(self.name))
+            elif len(self.targetMechanisms)==1:
+                error_msg = "Learning has been specified for {} so a target must also be specified"
+            else:
+                error_msg = "Learning has been specified for {} but no targets have been specified."
+            raise SystemError(error_msg.format(self.name))
+
+        self.targets = np.atleast_2d(self.targets)
+
+        # Create SystemTargetInputState for each TARGET mechanism in targetMechanisms and
+        #    assign MappingProjection from the SystemTargetInputState
+        #    to the TARGET mechanism's COMPARATOR_TARGET inputState
+        #    (i.e., from the SystemInputState to the ComparatorMechanism)
+        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+
+            # Create ProcessInputState for each target and assign to comparatorMechanism's target inputState
+            comparator_target = target_mech.inputStates[COMPARATOR_TARGET]
+
+            # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
+            #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
+            if len(self.targets[i]) != len(comparator_target.variable):
+                raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
+                                  "expected for its TARGET mechanism {}".
+                                   format(len(self.targets[i]),
+                                          self.targets[i],
+                                          len(comparator_target.variable),
+                                          target_mech.name))
+
+            target_input_state = SystemTargetInputState(owner=self,
+                                                        variable=comparator_target.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Target {}".format(i))
+            self.targetInputStates.append(target_input_state)
+
+            # Add MappingProjection from target_input_state to TARGET mechainsm's target inputState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            MappingProjection(sender=target_input_state,
+                    receiver=comparator_target,
+                    name=self.name+'_Input Projection to '+comparator_target.name)
+
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -2241,3 +2305,35 @@ class System_Base(System):
     #     :rtype: list of Mechanism objects
     #     """
     #     return list(mech_tuple[0] for mech_tuple in self.learningExecutionGraph)
+
+
+SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
+
+from PsyNeuLink.Components.States.OutputState import OutputState
+class SystemTargetInputState(OutputState):
+    """Encodes target for the system and transmits it to a `TARGET` mechanism in the system
+
+    Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
+    `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+     mechanism of the system.
+
+    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+       in Projection._instantiate_sender()
+
+       self.value is used to represent the item of the targets arg to system.execute or system.run
+
+    """
+    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+        """Pass variable to MappingProjection from Process to first Mechanism in Pathway
+
+        :param variable:
+        """
+        if not name:
+            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
+        else:
+            self.name = owner.name + "_" + name
+        self.prefs = prefs
+        self.sendsToProjections = []
+        self.owner = owner
+        self.value = variable
+
