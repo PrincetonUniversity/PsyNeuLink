@@ -69,6 +69,6 @@ for i in range(10):
 # Execute system:
 mySystem.execute(input=[[1,1],[1,1]])
 
-# SHOWIONS:
+# SHOW OPTIONS:
 # mySystem.show()
 # mySystem.controller.show()
