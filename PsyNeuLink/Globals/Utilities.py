@@ -7,43 +7,56 @@
 #
 #
 # *************************************************  Utilities *********************************************************
-#
-#
 
-"""
-******************************************** PsyNeuLink py DEPENDENCIES: ***********************************************
+"""Utilities that must be accessible to all PsyNeuLink modules, but are not PsyNeuLink-specific
 
-    toposort.py - graph analysis
-    mpi4py.py  - Parallelization using MPI
-    wfpt.py - Wald first passage times for DDM
+   That is:
+       do not require any information about PsyNeuLink objects
+       are not constrained to be used by PsyNeuLink objects
 
 ************************************************* UTILITIES ************************************************************
 
-CONTENTS:
 
-    TYPE CHECKING and VALUE COMPARISON:
-        is_numeric_or_none
-        is_numeric
-        iscompatible
+CONTENTS
+--------
 
-    ENUM:
-        Autonumber
-        ModulationOperation
-        get_modulationOperation_name
+TYPE CHECKING VALUE COMPARISON
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    KVO:
-        observe_value_at_keypath
+.. note::
+   PsyNeuLink-specific typechecking functions are in the `Component` module
 
-    OTHER UTILS:
-        merge_param_dicts
-        multi_getattr
-        np_array_less_that_2d
-        convert_to_np_array
-        type_match
-        get_value_from_array
-        is_matrix
-        underscore_to_camelCase
-        append_type_to_name
+* `is_numeric_or_none`
+* `is_numeric`
+* `iscompatible`
+
+ENUM
+~~~~
+
+* `Autonumber`
+* `ModulationOperation`
+* `get_modulationOperation_name`
+
+KVO
+~~~
+
+.. note::
+   This is for potential future use;  not currently used by PsyNeuLink objects
+
+* observe_value_at_keypath
+
+OTHER
+~~~~~
+* `merge_param_dicts`
+* `multi_getattr`
+* `np_array_less_that_2d`
+* `convert_to_np_array`
+* `type_match`
+* `get_value_from_array`
+* `is_matrix`
+* `underscore_to_camelCase`
+* `append_type_to_name`
+
 """
 
 import warnings
@@ -465,6 +478,28 @@ def get_value_from_array(array):
     """
 
 def random_matrix(sender, receiver, range=1, offset=0):
+    """Generate a random matrix
+
+    Calls np.random.rand to generate a 2d np.array with random values.
+
+    Arguments
+    ----------
+    sender : int
+        specifies number of rows.
+
+    receiver : int
+        spcifies number of columns.
+
+    range : int
+        specifies upper limit (lower limit = 0).
+
+    offset : int
+        specifies amount added to each entry of the matrix.
+
+    Returns
+    -------
+    2d np.array
+    """
     return (range * np.random.rand(sender, receiver)) + offset
 
 def underscore_to_camelCase(item):

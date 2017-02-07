@@ -13,11 +13,13 @@
 Overview
 --------
 
-A parameterState belongs to either a mechanism or a MappingProjection, and is used to represent and possibly modify
-the value of a parameter of its owner or it owner's function. It can receive one or more ControlProjections and/or
-LearningProjections that modify that parameter.   A list of the projections received by a parameterState is kept in
-its :py:data:`receivesFromProjections <ParameterState.receivesFromProjections>` attribute.  It's ``function`` combines
-the values of these inputs, and uses the result to modify the value of the parameter for which it is responsible.
+A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
+possibly modify the value of a parameter of its owner or it owner's function.  It can receive one or more
+`ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify that
+parameter.   The projections received by a parameterState are listed in its
+`receivesFromProjections <ParameterState.receivesFromProjections>` attribute.
+Its `function <ParameterState.function>` combines the values of these inputs, and uses the result to modify the value
+of the parameter for which it is responsible.
 
 
 .. _ParameterState_Creation:
@@ -25,13 +27,13 @@ the values of these inputs, and uses the result to modify the value of the param
 Creating a ParameterState
 -------------------------
 
-A parameterState can be created by calling its constructor, but in general this is not necessary or advisable, as
-parameterStates are created automatically when the mechanism or projection to which they belong is created.  The owner
-of a parameterState must be a mechanism or MappingProjection.  If the owner is not explicitly specified, and
-can't be determined by context, the parameterState will be assigned to the :py:class:`DefaultProcessingMechanism <LINK>`.
-One parameterState is created for each configurable parameter of its owner object, as well as for each parameter of
-that object's  ``function``.  Each parameterState is created using the specification of the parameter for which it is
-responsible, as described below.
+A parameterState can be created by calling its constructor, but in general this is not necessary or advisable as
+parameterStates are created automatically when the mechanism or projection to which they belong is created.  The
+`owner <ParamaterState.owner>` of a parameterState must be a `mechanism <Mechanism>` or `MappingProjection`.  If the
+`owner <ParamaterState.owner>` is not explicitly specified, and can't be determined by context, the parameterState
+will be assigned to the :ref:`DefaultProcessingMechanism`.  One parameterState is created for each configurable
+parameter of its owner, as well as for each parameter that has been speciied for that object's :keyword:`function`.
+Each parameterState is created using the specification of the parameter for which it is responsible, as described below.
 
 .. _ParameterState_Specifying_Parameters:
 
@@ -40,95 +42,106 @@ Specifying Parameters
 
 Parameters can be specified in one of several places:
 
-    * in an **argument for the parameter** in the constructor for the object and/or its function
-      (see also :ref:`Component_Specifying_Functions_and_Parameters` for additional details);
+    * In an **argument for the parameter** in the constructor for the `mechanism <Mechanism>` or
+      `function <Mechanism.Mechanism_Base.function>` to which the parameter belongs
+      (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
     ..
-    * in a **parameter dictionary** as the ``params`` argument in the constructor;  the entry for each parameter
-      must use the keyword for the parameter as its key, and the parameter's specification as its value
-      (see :ref:`ParameterState_Parameter_Specification_Examples` below);  parameters for an object's ``function`` must
-      be specified in an entry with the key :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary
-      containing an entry for each parameter of the function to be specified;
+    * In a **parameter dictionary** used to specify the `params` argument in the constructor for the object to which
+      the parameter belongs. The entry for each parameter must use the keyword for the parameter as its key,
+      and the parameter's specification as its value (see `examples <ParameterState_Specification_Examples>` below).
+      Parameters for an object's :keyword:`function` must be specified in an entry with the key
+      :keyword:`FUNCTION_PARAMS`, the value of which is a parameter dictionary containing an entry for each of the
+      function's parameters to be specified.  When a value is assigned to a parameter in a parameter dictionary,
+      it overrides any value assigned to the argument for the parameter in the object's constructor.
     ..
-    * in the :py:meth:`assign_params <Component.Component.assign_params>` method for the object.
+    * In the `assign_params` method for the object.
     COMMENT:
-        * in the :py:meth:`assign_params <Component.Component.assign_params>` method for the object.
-        ..
-        * when the object is executed, in the ``runtime_params`` argument of a call to object's
-          :py:meth:`execute <Mechanism.Mechanism_Base.execute>`
+        * When the object is executed, in the `runtime_params` argument of a call to object's
+          `execute <Mechanism.Mechanism_Base.execute>`
           IGNORE:
-              or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods
+              or `run <Mechanism.Mechanism_Base.run>` methods
           IGNORE
           method
           (only for a mechanism), or in a tuple with the mechanism where it is specified as part of the
-          :py:data:`pathway <Process.Process_Base.pathway>` for a process to which it belongs
+          `pathway` for a process to which it belongs
           (see :ref:`Runtime Specification <ParameterState_Runtime_Parameters:>` below).
     COMMENT
 
-The items specified for the parameter are used to create its ParameterState. The value specified (either explicitly,
-or by default) is assigned to the parameterState's :py:data:`baseValue <ParameterState.baseValue>`, and any projections
-assigned to it are added to its :py:data:`receiveFromProjections <ParameterState.receivesFromProjections>` attribute.
-When the owner is executed, the parameterState's :py:data:`baseValue <ParameterState.baseValue>` is combined with the
-value of the projections it receives to determine the value of the parameter for which it is responsible
-(see :ref:`Execution` for details).
+The value specified for the parameter (either explicitly or by default) is assigned as the parameterState's
+`baseValue <ParameterState.baseValue>`, and any projections assigned to it are added to its
+`receiveFromProjections <ParameterState.receivesFromProjections>` attribute. When the parameterState's owner is
+executed, the parameterState's `baseValue <ParameterState.baseValue>` is combined with the value of the projections
+it receives to determine the value of the parameter for which the parameterState is responsible
+(see `ParameterState_Execution` for details).
 
 The specification of a parameter can take any of the following forms:
 
-    * A **value**.  This must be a valid the value of the parameter.  The creates a default parameterState, assigns
-      the parameter's name as the parameterState's name, and assigns the specified value as its
-      :py:data:`baseValue <ParameterState.baseValue>`.
+    * A **value**.  This must be a valid value for the parameter.  it creates a default parameterState,
+      assigns the parameter's default value as the parameterState's `baseValue <ParameterState.baseValue>`,
+      and assigns the parameter's name as the name of the parameterState.
     ..
-    * An existing **parameterState** object or the name of one.  It's name must be the name of a parameter of the
-      owner's ``function``, and its value must be a valid for that parameter.  This capability is provided
-      for generality and potential future use, but its use is not advised.
-    ..
-    * A ref:`projection specification <Projection_In_Context_Specification>`.  This creates a default parameterState,
-      assigns the parameter's default value as the parameterState's :py:data:`baseValue <ParameterState.baseValue>`,
-      and assigns the parameter's name as the name of the parameterState;  it also creates and/or assigns the
-      specified projection, and assigns the parameterState as the projection's ``receiver``.  The projection must be
-      a ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
-    ..
-    * A :any:`ParamValueProjection` or 2-item (value, projection specification) **tuple**.  This creates a default
-      parameterState, uses the ``value`` (1st) item of the tuple as parameterState's
-      :py:data:`baseValue <ParameterState.baseValue>`, and assigns the parameter's name as the name of the
-      parameterState.  The projection (2nd) item of the tuple is used to creates and/or assign the specified
-      projection, that is assigned the parameterState as its ``receiver``.  The projection must be a
-      ControlProjection or LearningProjection, and its value must be a valid one for the parameter.
+    * A reference to an existing **parameterState** object.
+      COMMENT:
+      It's name must be the name of a parameter of the
+      owner's ``function``, and its
+      COMMENT
+      Its value must be a valid one for the parameter.
 
-.. note::
-   Currently, the ``function`` of an object, although it can be specified, cannot be assigned
-   COMMENT:
-   a ControlProjection, LearningProjection, or a runtime specification.
-   COMMENT
-   a ControlProjection or a LearningProjection.
-   This may change in the future.
+      .. note::
+          This capability is provided for generality and potential
+          future use, but its current use is not advised.
+    ..
+    * A `projection specification <Projection_In_Context_Specification>`.  This creates a default parameterState,
+      assigns the parameter's default value as the parameterState's `baseValue <ParameterState.baseValue>`,
+      and assigns the parameter's name as the name of the parameterState.  It also creates and/or assigns the
+      specified projection, and assigns the parameterState as the projection's
+      `receiver <Projection.Projection.receiver>`.  The projection must be a `ControlProjection` or
+      `LearningProjection`, and its value must be a valid one for the parameter.
+    ..
+    * A `ParamValueProjection` or 2-item (value, projection specification) **tuple**.  This creates a default
+      parameterState, uses the value (1st) item of the tuple as parameterState's
+      `baseValue <ParameterState.baseValue>`, and assigns the parameter's name as the name of the parameterState.
+      The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned
+      the parameterState as its `receiver <Projection.Projection.receiver>`.  The projection must be a
+      `ControlProjection` or `LearningProjection`, and its value must be a valid one for the parameter.
+
+      .. note::
+          Currently, the :keyword:`function` of an object, although it can be specified a parameter value,
+          cannot be assigned
+          COMMENT:
+          a ControlProjection, LearningProjection, or a runtime specification.
+          COMMENT
+          a ControlProjection or a LearningProjection. This may change in the future.
 
 The **default value** assigned to a parameterState is the default value of the argument for the parameter in the
-constructor for the owner.  If the value of a parameter is specified as :keyword:`None`, :keyword:`NotImplemented`,
+constructor for the parameter's owner.  If the value of a parameter is specified as `None`, `NotImplemented`,
 or any other non-numeric value that is not one of those listed above, then no parameter state is created and the
-parameter cannot be modified by a ControlProjection
+parameter cannot be modified by a `ControlProjection`
 COMMENT:
-, LearningProjection, or :ref:`runtime specification <ParameterState_Runtime_Parameters>`.
+    , LearningProjection, or :ref:`runtime specification <ParameterState_Runtime_Parameters>`.
 COMMENT
-or a LearningProjection.
+or `LearningProjection`.
 
 COMMENT:
-- No parameterState is created for parameters that are:
-   assigned a non-numeric value (including None, NotImplemented, False or True)
-      unless it is:
-          a tuple (could be one specifying ControlProjection, LearningProjection or ModulationOperation)
-          a dict with an entry with the key FUNCTION_PARAMS and a value that is a dict (otherwise exclude)
-   a function
-       IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-       (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-       i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+    - No parameterState is created for parameters that are:
+       assigned a non-numeric value (including None, NotImplemented, False or True)
+          unless it is:
+              a tuple (could be one specifying ControlProjection, LearningProjection or ModulationOperation)
+              a dict with an entry with the key FUNCTION_PARAMS and a value that is a dict (otherwise exclude)
+       a function
+           IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+           (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+           i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
 
-- self.variable must be compatible with self.value (enforced in _validate_variable)
-    note: although it may receive multiple projections, the output of each must conform to self.variable,
-          as they will be combined to produce a single value that must be compatible with self.variable
+    - self.variable must be compatible with self.value (enforced in _validate_variable)
+        note: although it may receive multiple projections, the output of each must conform to self.variable,
+              as they will be combined to produce a single value that must be compatible with self.variable
 COMMENT
 
-Examples
-~~~~~~~~
+
+.. _ParameterState_Specification_Examples:
+
+**Examples**
 
 In the following example, a mechanism is created with a function that has four parameters,
 each of which is specified using a different format::
@@ -139,22 +152,23 @@ each of which is specified using a different format::
                                                        param_d=ControlProjection)))
 
 The first parameter of the mechanism's function (``param_a``) is assigned a value directly; the second (``param_b``) is
-assigned a value and a ControlProjection; the third (``param_c``) is assigned a value and a :ref:`ControlProjection
-with a specified function  <ControlProjection_Structure>`; and the fourth (``param_d``) is assigned just a
-ControlProjection (the default vaue for the parameter will be used).
+assigned a value and a ControlProjection; the third (``param_c``) is assigned a value and a
+`ControlProjection with a specified function  <ControlProjection_Structure>`; and the fourth (``param_d``) is
+assigned just a `ControlProjection` (the default value for the parameter will be used).
 
-In the following example, a :doc:`MappingProjection` is created, and its
-:py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter is assigned a random weight matrix (using
-a :ref:`matrix keyword <Matrix_Keywords>`) and :doc:`LearningProjection`::
+In the following example, a `MappingProjection` is created, and its
+`matrix <MappingProjection.MappingProjection.matrix>` parameter is assigned a random weight matrix (using a
+`matrix keyword <Matrix_Keywords>`) and `LearningProjection`::
 
     my_mapping_projection = MappingProjection(sender=my_input_mechanism,
                                               receiver=my_output_mechanism,
                                               matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningProjection))
 
 .. note::
-   the :py:data:`matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
-   ``function``;  however, since it has only one standard function, its arguments are available in the constructor
-   for the projection (see :ref:`Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
+   the `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
+   `function <MappingProjection.MappingProjection.function>`;  however, since it has only one standard function,
+   its arguments are available in the constructor for the projection (see
+   `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
 
 COMMENT:
     ADD EXAMPLE USING A PARAMS DICT, INCLUDING FUNCTION_PARAMS, AND assign_params
@@ -165,93 +179,102 @@ COMMENT
 Structure
 ---------
 
-Every parameterState is owned by a :doc:`mechanism <Mechanism>` or :doc:`MappingProjection`. It can receive one or more
-:ref:`ControlProjections <ControlProjection>` or :ref:`LearningProjections <LearningProjection>` from other mechanisms.
-However, the format for the value of each (i.e., the number and type of its elements) must match the value of the
-parameter for which the parameterState is responsible.  When the parameterState is updated (i.e., the owner is executed)
-the values of its projections will be combined (using the  parameterState's ``function``) and the result will be used
-to modify the parameter for which the parameterState is responsible (see :ref:`Execution <_ParameterState_Execution>`
-below).  A list of projections received by a parameterState is maintained in its
-:py:data:`receiveFromProjections <ParameterState.receivesFromProjections>` attribute. Like all PsyNeuLink components,
-it has the three following core attributes:
+Every parameterState is owned by a `mechanism <Mechanism>` or `MappingProjection`. It can receive one or more
+`ControlProjections <ControlProjection>` or `LearningProjections <LearningProjection>`.  However, the format (the
+number and type of its elements) of each must match the value of the parameter for which the parameterState is
+responsible.  When the parameterState is updated (i.e., the owner is executed) the values of its projections are
+combined (using the  parameterState's `function <ParameterState.function>`) and the result is used to modify the
+parameter for which the parameterState is responsible (see `Execution <ParameterState_Execution>` below).  The
+projections received by a parameterState are listed in its `receiveFromProjections
+<ParameterState.receivesFromProjections>` attribute. Like all PsyNeuLink components, it has the three following core
+attributes:
 
-* ``variable``:  this serves as a template for the ``value`` of each projection that the parameterState receives; it
-  must match the format (the number and type of elements) of the parameter for which the parameterState is responsible.
-  Any projections the parameterState receives must, it turn, match the format of its ``variable``.
+* `variable <ParameterState.variable>`:  this serves as a template for the `value <Projection.Projection.value>` of
+  each projection that the parameterState receives.  It must match the format (the number and type of elements) of the
+  parameter for which the parameterState is responsible. Any projections the parameterState receives must, it turn,
+  match the format of :keyword:`variable`.
 
-* ``function``:  this performs an elementwise (Hadamard) aggregation  of the ``values`` of the projections
-   received by the parameterState.  The default function is :any:`LinearCombination` that multiplies the values.
-   A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
-   some way), so long as it generates a result that is compatible with the ``value`` of the parameterState.
+* `function <ParameterState.function>`:  this performs an elementwise (Hadamard) aggregation  of the values of the
+  projections received by the parameterState.  The default function is `LinearCombination` that multiplies the
+  values. A custom function can be specified (e.g., to perform a Hadamard sum, or to handle non-numeric values in
+  some way), so long as it generates a result that is compatible with the `value <ParameterState.value>` of the
+  parameterState.
 
-* ``value``:  this is the value assigned to the parameter for which the parameterState is responsible.  It is the
-  :py:data:`baseValue <ParameterState.baseValue>` of the parameterState, modified by aggregated value of the
-  projections received by the parameterState.
+* `value <ParameterState.value>`:  this is the value assigned to the parameter for which the parameterState is
+  responsible.  It is the `baseValue <ParameterState.baseValue>` of the parameterState, modified by
+  aggregated value of the projections received by the parameterState returned by the
+  `function <ParameterState.function>.
 
 In addition, a parameterState has two other attributes that are used to determine the value it assigns to the
-parameter for which it is responsible (as shown in the :ref:`figure <ParameterState_Figure>` below):
+parameter for which it is responsible (as shown in the `figure <ParameterState_Figure>` below):
 
 .. ParameterState_BaseValue:
 
-* :py:data:`baseValue <ParameterState.baseValue>`:  this is the default value of the parameter for which the
-  parameterState is responsible.  It is combined with the result of the parameterState's ``function``, which aggregates
-  the values received from its projections, to determine the value of the parameter for which the parameterState is
+* `baseValue <ParameterState.baseValue>`:  this is the default value of the parameter for which the
+  parameterState is responsible.  It is combined with the result of the parameterState's
+  `function <ParameterState.function>` to determine the value of the parameter for which the parameterState is
   responsible.
 
 .. ParameterState_Parameter_Modulation_Operation:
 
-* :py:data:`parameterModulationOperation <ParameterState.parameterModulationOperation>`: this determines how the
-  result of the parameterState's ``function`` (the aggregrated values of the projections it receives) is combined
-  with its ``baseValue`` to generate the value assigned to the parameter for which it is responsible.  This must be a
-  value of :any:`ModulationOperation`.  It can be specified in either the ``parameter_modulation_operation`` argument
+* `parameterModulationOperation <ParameterState.parameterModulationOperation>`: this determines how the
+  result of the parameterState's `function <ParameterState.function>` (the aggregated values of the projections it
+  receives) is combined with its `baseValue <ParameterState.baseValue>` to generate the value of the parameter
+  for which it is responsible.  This must be a value of `ModulationOperation`.  It can be specified in either
+  the :keyword:`parameter_modulation_operation` argument of the parameterState's constructor,
   COMMENT:
   of the constructor, or in a :keyword:`PARAMETER_MODULATION_OPERATION` entry of a params dictionary in either the
   constructor or a :keyword:`PARAMETER_STATE_PARAMS` dictionary in a
   :ref:`runtime specification <ParameterState_Runtime_Parameters>`.
   COMMENT
-  or in a :keyword:`PARAMETER_MODULATION_OPERATION` entry of a params dictionary in parameterState constructor.
-  The default is :keyword:`ModulationOperation.PRODUCT`, which multiples the aggregated value of the projections
-  times the parameterState's :py:data:`baseValue <ParameterState.baseValue>` to determine the value of the parameter.
+  or in its :keyword:`params` argument, in a :keyword:`PARAMETER_MODULATION_OPERATION` entry of a
+  `parameter dictionary <ParameterState_Specifying_Parameters>`. The default is `ModulationOperation.PRODUCT`,
+  which multiples the parameterState's `baseValue <ParameterState.baseValue>` by the aggregated value of the
+  result of the parameterState's `function <ParameterState.function>` to determine the value of the parameter.
 
-The value a parameter of the object is accessible as an attribute with the corresponding name, and the value of
-a parameter of its ``function`` is accessible either as ``object.function_object.<param_name>`` in its
-``function_params`` dictionary as ``object.function_params[<PARAM_KEYWORD>]``.  Parameter attribute values are
-read-only.  To re-assign the value of a parameter for an object or its ``function``, use its
-:py:meth:`assign_params <Component.assign_params>` method.
-
+The value of a parameter of a mechanism or projection is accessible as an attribute with the corresponding name
+(e.g., myMechanism.<param_name>.  The value of a parameter of a :keyword:`function` is accessible from the
+`function_params` attribute of the mechanism or projection to which the function belongs;  this is a dictionary with
+entries for each of the function's parameters. Each of the function's parameters can be referenced using a key that is
+the name of the parameter (e.g., ``myMech.function_object.<param_name>``).  Parameter attributes of mechanisms,
+projections, and their functions accessed in these ways are read-only.  To re-assign the value of a parameter,
+use the `assign_params` method of the mechanism or projection to which the parameter of function belongs.
 
 .. _ParameterState_Figure:
 
-The figure below shows how these factors are combined by the parameterState to determine a parameter value.
+The figure below shows how the specifications for a parameter are combined by its parameterState to determine the
+parameter's value.
 
     **How a ParameterState Determines the Value of a Parameter**
 
-    .. figure:: _static/ParameterState_fig.*
+    .. figure:: _static/ParameterState_fig.jpg
        :alt: ParameterState
        :scale: 75 %
 
        ..
 
-       +--------------+--------------------------------------------------------------------------------------+
-       | Component    | Impact of ParameterState on Parameter Value (including at runtime)                   |
-       +==============+======================================================================================+
-       | A (brown)    | ``baseValue`` (default value of parameter``)                                         |
-       +--------------+--------------------------------------------------------------------------------------+
-       | B (blue)     | parameterState's ``function`` combines ``value`` of  projections                     |
-       +--------------+--------------------------------------------------------------------------------------+
-       | C (green)    | parameterState's parameterModulationOperation combines projections and ``baseValue`` |
-       +--------------+--------------------------------------------------------------------------------------+
+       +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+       | Component    | Impact of ParameterState on Parameter Value                                                                                                                  |
+       +==============+==============================================================================================================================================================+
+       | A (brown)    | `baseValue <ParameterState.baseValue>` (default value of the parameter)                                                                                      |
+       +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+       | B (blue)     | parameterState's `function <ParameterState.function>` combines `value <Projection.Projection.value>` of projections                                          |
+       +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+       | C (green)    | parameterState's `parameterModulationOperation <ParameterState.parameterModulationOperation>` combines projections and `baseValue <ParameterState.baseValue>`|
+       +--------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-       In example, the values for the parameters (shown in brown) — ``param_x`` for the mechanism, and ``param_y``
-       for its ``function``, specify the :py:data:`baseValue <ParameterState.baseValue>` of the paramterStates for
-       each parameter (labeled "A" in the figure and shown in brown);  these are the values that will be used for
-       those parameters absent any other influences. However, param_y is assigned a ControlProjection, so its value
+       In example, the values for the parameters (shown in brown) -- ``param_x`` for the mechanism, and ``param_y``
+       for its ``function`` -- specify the :py:data:`baseValue <ParameterState.baseValue>` of the paramterState for
+       each parameter (labeled "A" in the figure).  These are the values that will be used for
+       those parameters absent any other influences. However, ``param_y`` is assigned a ControlProjection, so its value
        will also be determined by the value of the ControlProjection to its parameterState;  that will be combined
-       with its :py:data:`baseValue <ParameterState.baseValue>` using the
-       :py:data:`parameterModulationOperation <ParameterState.parameterModulationOperation>`
-       specified for the mechanism (``ModulationOperation.SUM``, shown in green). If there had been more than one
-       ControlProjection specified, their values would have been combined using the parameterState's ``function``
-       (lableled "B" and shown in blue in the figure), before combining the result with the baseValue.
+       with its `baseValue <ParameterState.baseValue>` using the
+       `parameterModulationOperation <ParameterState.parameterModulationOperation>`
+       specified for the mechanism (``ModulationOperation.SUM``, shown in green, and labeled "C" in the figure). If
+       there had been more than one ControlProjection specified, their values would have been combined using the
+       parameterState's `function <ParameterState.function>` (lableled "B" in the figure), before combining the result
+       with the
+       baseValue.
 
 
 .. _ParameterState_Execution:
@@ -260,15 +283,16 @@ Execution
 ---------
 
 A parameterState cannot be executed directly.  It is executed when the mechanism to which it belongs is executed.
-When this occurs, the parameterState executes any ControlProjections and/or LearningProjections it receives,
-calls its ``function`` to aggregate their values, combines this with its :py:data:`baseValue <ParameterState.baseValue>`
-using the :py:data:`parameterModulationOperation <ParameterState.parameterModulationOperation>`,
+When this occurs, the parameterState executes any `ControlProjections` and/or `LearningProjections` it receives, and
+calls its `function <ParameterState.function>` to aggregate their values.  It then combines the result with the
+parameterState's `baseValue <ParameterState.baseValue>` using its
+`parameterModulationOperation <ParameterState.parameterModulationOperation>` attribute,
 COMMENT:
 combines the result with any :ref:`runtime specification <ParameterState_Runtime_Parameters>` for the parameter using
 the :any:`ModulationOperation` specified for runtime parameters, and finally
 COMMENT
-and then assigns the result as the ``value`` of the parameterState which is used as the value of the parameter for
-which it is responsible.
+and then assigns the result as the `value <ParameterState.value>` of the parameterState.  This is used as the value of
+the parameter for which the parameterState is responsible.
 
 COMMENT:
     .. _ParameterState_Runtime_Parameters:
@@ -319,7 +343,7 @@ including runtime specifications:
 
     **How a ParameterState Determines the Value of a Parameter**
 
-    .. figure:: _static/ParameterState_fig.*
+    .. figure:: _static/ParameterState_fig.jpg
        :alt: ParameterState
        :scale: 75 %
 
@@ -398,7 +422,8 @@ class ParameterState(State_Base):
     name=None,                                                   \
     prefs=None)
 
-    Implements subclass of State that represents and possibly modifies the parameter value for a function
+    Implements a subclass of `State` that represents and possibly modifies the value of a parameter for a mechanism,
+    projection, or function.
 
     COMMENT:
 
@@ -435,28 +460,33 @@ class ParameterState(State_Base):
     Arguments
     ---------
 
-    owner : Mechanism
-        the mechanism to which the parameterState belongs;  it must be specified or determinable from the context in
-        which the parameterState is created.
+    owner : Mechanism or Projection
+        the `mechanism <Mechanism>` or `projection <Projection>` to which to which the parameterState belongs; it must
+        be specified or determinable from the context in which the parameterState is created. The owner of a
+        parameterState for the parameter of a :keyword:`function` should be specified as the mechanism or projection
+        to which the function belongs.
 
     reference_value : number, list or np.ndarray
-        the default value of the parameter for which the parameterState is responsible.
+        specifies the default value of the parameter for which the parameterState is responsible.
 
     value : number, list or np.ndarray
-        used as the template for ``variable``.
+        specifies the template for the parametersState's `variable <ParameterState.variable>` (since a parameterState's
+        `variable <ParameterState.variable>` and `value <ParameterState.value>` attributes must have the same format
+        (number and type of elements).
 
     function : Function or method : default LinearCombination(operation=SUM)
-        function used to aggregate the values of the projections received by the parameterState.
+        specifies the function used to aggregate the values of the projections received by the parameterState.
         It must produce a result that has the same format (number and type of elements) as its input.
 
     parameter_modulation_operation : ModulationOperation : default ModulationOperation.MULTIPLY
         specifies the operation by which the values of the projections received by the parameterState are used
-        to modify its :py:data:`baseValue <ParameterState.baseValue>` before assigning it to the parameter for
-        which it is responsible.
+        to modify its `baseValue <ParameterState.baseValue>` before assigning it as the value of the parameter for
+        which the parameterState is responsible.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify the parameters for the inputState, parameters for its function,
-        and/or a custom function and its parameters (see :doc:`Component` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the parameterState or its function, and/or a custom function and its parameters.  Values specified for
+        parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default InputState-<index>
         a string used for the name of the inputState.
@@ -464,9 +494,9 @@ class ParameterState(State_Base):
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the PreferenceSet for the inputState.
-        If it is not specified, a default is assigned using ``classPreferences`` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the inputState.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
 
     Attributes
@@ -476,31 +506,32 @@ class ParameterState(State_Base):
         the mechanism to which the parameterState belongs.
 
     receivesFromProjections : Optional[List[Projection]]
-        a list of the projections received by the parameterState (i.e., for which it is a ``receiver``);
-        generally these are ControlProjection(s) and/or LearningProjection(s).
+        a list of the projections received by the parameterState (i.e., for which it is a
+        `receiver <Projection.Projection.receiver>`); generally these are `ControlProjection(s) <ControlProjection>`
+        and/or `LearningProjection(s) <LearningProjection>`.
 
     variable : number, list or np.ndarray
-        the template for the ``value`` of each projection that the parameterState receives, each of which must match
-        its number and types of elements.
+        the template for the `value <Projection.Projection.value>` of each projection that the parameterState receives,
+        each of which must match the format (number and types of elements) of the parameterState's :keyword:`variable`.
 
     function : CombinationFunction : default LinearCombination(operation=PRODUCT))
-        performs an element-wise (Hadamard) aggregation  of the ``values`` of the projections received by the
-        parameterState.
+        performs an element-wise (Hadamard) aggregation  of the `value <Projecction.Projection.value>` of each
+        projection received by the parameterState.
 
     baseValue : number, list or np.ndarray
         the default value for the parameterState.  It is combined with the aggregated value of any projections it
-        receives using the :py:data:`parameterModulationOperation <ParameterState.parameterModulationOperation>`
-        and then assigned to ``value``.
+        receives using its `parameterModulationOperation <ParameterState.parameterModulationOperation>`
+        and then assigned to `value <ParameterState.value>`.
 
     parameterModulationOperation : ModulationOperation : default ModulationOperation.PRODUCT
         the arithmetic operation used to combine the aggregated value of any projections is receives
-        (the result of the parameterState's ``function``) with its :py:data:`baseValue <ParameterState.baseValue>`,
-        the result of which is assigned to ``value``.
+        (the result of the parameterState's `function <ParameterState.function>`) with its
+        `baseValue <ParameterState.baseValue>`, the result of which is assigned to `value <ParameterState.value>`.
 
     value : number, list or np.ndarray
-        the aggregated value of the projections received by the inputState, combined with the
-        :py:data:`baseValue <ParameterState.baseValue>` using the
-        :py:data:`parameterModulationOperation <ParameterState.parameterModulationOperation>`
+        the aggregated value of the projections received by the ParameterState, combined with the
+        `baseValue <ParameterState.baseValue>` using its
+        `parameterModulationOperation <ParameterState.parameterModulationOperation>`
         COMMENT:
         as well as any runtime specification
         COMMENT
@@ -508,7 +539,7 @@ class ParameterState(State_Base):
 
     name : str : default <State subclass>-<index>
         the name of the inputState.
-        Specified in the name argument of the call to create the outputState.  If not is specified, a default is
+        Specified in the `name` argument of the constructor for the outputState.  If not is specified, a default is
         assigned by the StateRegistry of the mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -519,16 +550,16 @@ class ParameterState(State_Base):
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the PreferenceSet for the inputState.
-        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the inputState.
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
     #region CLASS ATTRIBUTES
 
-    componentType = kwParameterState
+    componentType = PARAMETER_STATE
     paramsType = PARAMETER_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -833,3 +864,4 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
                                   context=context)
         if state:
             owner.parameterStates[param_name] = state
+

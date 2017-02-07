@@ -6,7 +6,7 @@ Processing Mechanisms
 
 	IntegratorMechanism
 	DDM
-	Transfer
+	TransferMechanism
 	
 ..
     .. automodule:: ProcessingMechanism

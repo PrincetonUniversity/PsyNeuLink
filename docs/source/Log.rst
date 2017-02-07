@@ -1,8 +1,11 @@
 Log
 ===
 
-[DOCUMENTATION COMING...]
+.. toctree::
+   :maxdepth: 3
 
-Entry 1: 10/20/16
------------------
+   Log
 
+.. automodule:: Log
+   :members:
+   :exclude-members: random

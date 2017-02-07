@@ -153,7 +153,6 @@ class ComponentError(Exception):
      def __str__(self):
          return repr(self.error_value)
 
-
 # *****************************************   COMPONENT CLASS  ********************************************************
 
 
@@ -1523,10 +1522,10 @@ class Component(object):
             param_set = PARAMS_CURRENT
             function = self._check_FUNCTION(param_set)
             if not function:
-                param_set = kwParamInstanceDefaults
+                param_set = PARAM_INSTANCE_DEFAULTS
                 function, param_set = self._check_FUNCTION(param_set)
                 if not function:
-                    param_set = kwParamClassDefaults
+                    param_set = PARAM_CLASS_DEFAULTS
                     function, param_set = self._check_FUNCTION(param_set)
 
         except KeyError:

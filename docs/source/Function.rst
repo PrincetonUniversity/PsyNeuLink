@@ -6,6 +6,7 @@ Functions
 
 .. automodule:: Function
 	:members: Contradiction,
+	          UserDefinedFunction,
 	          LinearCombination,
 	          Linear,
 	          Exponential,
