@@ -19,6 +19,7 @@ for i in range(count):
     comp = composition.Composition()
 end = time.time()
 print("passed in " + str(end-start) + " seconds for " + str(count) + " calls")
+
 # Unit tests for Composition.add_mechanism
 print("\n" + "add_mechanism tests:")
 comp = composition.Composition()
@@ -43,6 +44,7 @@ for i in range(count):
     comp.add_mechanism(mech_list[i])
 end = time.time()
 print("passed in " + str(end-start) + " seconds for " + str(count) + " calls")
+
 # Unit tests for Composition.add_projection
 print("\n" + "add_projection tests:")
 print("Test 1: Basic Test")
