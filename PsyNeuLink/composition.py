@@ -123,6 +123,7 @@ class Composition(object):
         # Identify Terminal Mechanisms
             if mech not in senders: # If the mech does not send any projections
                 self.terminal_mechanisms.append(mech) # Add as Terminal
+        
 
 
         return
