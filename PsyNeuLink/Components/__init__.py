@@ -10,13 +10,12 @@
 #
 # __all__ = ['INPUT_STATES',
 #            'OUTPUT_STATES',
-#            'kwParameterState',
+#            'PARAMETER_STATE',
 #            'MAPPING_PROJECTION',
 #            'CONTROL_PROJECTION',
 #            'LEARNING_PROJECTION']
 
 import inspect
-import warnings
 
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Registry import register_category
@@ -38,7 +37,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism import DefaultProcessingMechanism_Base
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 
 
 # DDM ------------------------------------------------------------------------------------------------------------------
@@ -49,7 +48,7 @@ register_category(entry=DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
-# kwDDM = DDM.__name__
+# DDM_MECHANISM = DDM.__name__
 
 # # ControlMechanisms ----------------------------------------------------------------------------------------------
 #
@@ -63,7 +62,7 @@ register_category(entry=DDM,
 #                   ControlMechanism_Base,
 #                   ControlMechanismRegistry,
 #                   context=kwInitPy)
-# # kwDefaultControlMechanism = DefaultControlMechanism.__name__
+# # DEFAULT_CONTROL_MECHANISM = DefaultControlMechanism.__name__
 #
 # # EVCMechanism
 # from Components.Mechanisms.EVCMechanism  import EVCMechanism
@@ -71,7 +70,7 @@ register_category(entry=DDM,
 #                   ControlMechanism_Base,
 #                   ControlMechanismRegistry,
 #                   context=kwInitPy)
-# # kwEVCMechanism = EVCMechanism.__name__
+# # EVC_MECHANISM = EVCMechanism.__name__
 #
 
 #endregion
@@ -96,10 +95,10 @@ DefaultMonitoringMechanism = ComparatorMechanism(name=kwDefaultMonitoringMechani
 # Instantiates DefaultController (ControlMechanism):
 # - automatically assigned as the sender of default ControlProjections (that use the CONTROL_PROJECTION keyword)
 # - instantiated before a System and/or any (other) ControlMechanism (e.g., EVC) has been instantiated
-# - can be overridden in System by kwControlMechanism
+# - can be overridden in System by CONTROL_MECHANISM
 # - uses the defaultControlAllocation (specified in Globals.Defaults) to assign ControlProjection intensities
 # Note: this is an instantiated object
-DefaultController = DefaultControlMechanism(name=kwSystemDefaultController)
+DefaultController = DefaultControlMechanism(name=SYSTEM_DEFAULT_CONTROLLER)
 
 # Specifies subclass of ControlMechanism used as the default class of control mechanism to instantiate and assign,
 #    in place of DefaultController, when instantiating a System for which an existing control mech is specified
@@ -115,14 +114,14 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 #       COULD USE CLASS REFERENCE (HERE AND ABOVE), BUT THEN HAVE TO INSURE A SINGLE OBJECT IS INSTANTIATED
 #       AT SOME POINT AND THAT THAT IS THE ONLY ONE USED THEREAFTER;  WHERE TO DO THAT INSTANTIATION?
 #       WHEN CONTROLLER IS ASSIGNED TO SYSTEM??
-# DefaultController = EVCMechanism(name=kwEVCMechanism)
+# DefaultController = EVCMechanism(name=EVC_MECHANISM)
 # DefaultController = EVCMechanism
 # MODIFIED END:
 
 # # # MODIFIED 6/28/16: EVC -- COMMENT OUT TO RUN
 # from Components.System import System_Base
 # # Use as default System (by EVC)
-# DefaultSystem = System_Base(name = kwDefaultSystem)
+# DefaultSystem = System_Base(name = DEFAULT_SYSTEM)
 
 
 # # Assign default inputState for Mechanism subclasses
@@ -163,7 +162,7 @@ register_category(entry=InputState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# kwInputState = InputState.__name__
+# INPUT_STATE = InputState.__name__
 
 # OutputState
 from PsyNeuLink.Components.States.OutputState import OutputState
@@ -179,7 +178,7 @@ register_category(entry=ParameterState,
                   base_class=State_Base,
                   registry=StateRegistry,
                   context=kwInitPy)
-# kwParameterState = ParameterState.__name__
+# PARAMETER_STATE = ParameterState.__name__
 
 # MODIFIED 9/11/16 END
 
@@ -405,4 +404,4 @@ Function.classPreferences = ComponentPreferenceSet(owner=Function,
 # # # MODIFIED 6/28/16: -- COMMENT OUT TO RUN
 # from Components.System import System_Base
 # # Use as default System (by EVC)
-# DefaultSystem = System_Base(name = kwDefaultSystem)
+# DefaultSystem = System_Base(name = DEFAULT_SYSTEM)

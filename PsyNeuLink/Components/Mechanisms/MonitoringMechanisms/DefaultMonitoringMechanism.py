@@ -13,12 +13,6 @@
 
 """
 
-# from numpy import sqrt, random, abs, tanh, exp
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.Functions.Function import LinearCombination
-
-
 class ComparatorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -110,7 +104,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
     """
 
-    componentType = "ComparatorMechanism"
+    componentType = COMPARATOR_MECHANISM
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TypeDefaultPreferences
@@ -228,7 +222,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
             # Validate FUNCTION
             # IMPLEMENTATION NOTE: Currently, only LinearCombination is supported
             # IMPLEMENTATION:  TEST INSTEAD FOR FUNCTION CATEGORY == COMBINATION
-            if not (comparison_function is kwLinearCombination):
+            if not (comparison_function is LINEAR_COMBINATION_FUNCTION):
                 raise ComparatorError("Unrecognized function {} specified for FUNCTION".
                                             format(comparison_function))
 
@@ -411,5 +405,6 @@ class ComparatorMechanism(MonitoringMechanism_Base):
         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
         """
         # IMPLEMENTATION NOTE:  TBI when time_step is implemented for ComparatorMechanism
+        pass
 
 

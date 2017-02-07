@@ -12,18 +12,18 @@
 """
 ..
     Sections:
-      * :ref:`System_Overview`
-      * :ref:`System_Creation`
-      * :ref:`System_Structure`
-         * :ref:`System_Graph`
-         * :ref:`System_Mechanisms`
-      * :ref:`System_Execution`
-         * :ref:`System_Execution_Order`
-         * :ref:`System_Execution_Phase`
-         * :ref:`System_Execution_Input_And_Initialization`
-         * :ref:`System_Execution_Learning`
-         * :ref:`System_Execution_Control`
-      * :ref:`System_Class_Reference`
+      * `System_Overview`
+      * `System_Creation`
+      * `System_Structure`
+         * `System_Graph`
+         * `System_Mechanisms`
+      * `System_Execution`
+         * `System_Execution_Order`
+         * `System_Execution_Phase`
+         * `System_Execution_Input_And_Initialization`
+         * `System_Execution_Learning`
+         * `System_Execution_Control`
+      * `System_Class_Reference`
 
 
 .. _System_Overview:
@@ -31,20 +31,21 @@
 Overview
 --------
 
-A system is a collection of processes that are executed together.  Executing a system executes all of the mechanisms
-in its processes in a structured order.  Projections between mechanisms in different processes within the system
-are permitted, as are recurrent projections, but projections from mechanisms in other systems are ignored
-(PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
+A system is a collection of `processes <Process>` that are executed together.  Executing a system executes all of the
+`mechanisms <Mechanism>` in its processes in a structured order.  `Projections <Projection>` between mechanisms in
+different processes within the system are permitted, as are recurrent projections, but projections from mechanisms
+in other systems are ignored (PsyNeuLink does not support ESP).  A system can include three types of mechanisms:
 
-* :doc:`ProcessingMechanism`
-    These receive input from one or more projections, transform the input in some way, and assign the result
-    as their output.
+* `ProcessingMechanism`
+    These receive input from one or more projections, transform the input in some way,
+    and assign the result as their output.
 
-* :doc:`MonitoringMechanism`
-    These monitor the output of other mechanisms for use in modifying the parameteres of projections (learning)
+* `ControlMechanism`
+    These monitor the output of other mechanisms for use in controlling the parameters of other mechanisms or their
+    functions.
 
-* :doc:`ControlMechanism`
-    These monitor the output of other mechanisms for use on controlling the parameters of other mechanisms
+* `MonitoringMechanism`
+    These monitor the output of other mechanisms for use in modifying the parameters of projections (learning)
 
 .. _System_Creation:
 
@@ -52,11 +53,10 @@ Creating a System
 -----------------
 
 Systems are created by calling the :py:func:`system` function.  If no arguments are provided, a system with a
-single process containing a single default mechanism will be returned (see [LINK for default] for default mechanism).
-Whenever a system is created, a :doc:`ControlMechanism` is created for it and assigned as its controller.  The
-controller can be specified using the :py:data:`controller <System_Base.controller>` parameter, by referencing an
-existing ControlMechanism, or simply specifying its class;   if one is none specified,
-a :doc:`DefaultControlMechanism` is created.
+single process containing a single :ref:`default mechanism <LINK>` will be returned. Whenever a system is created,
+a `ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller`.  The controller can be
+specified by assigning an existing ControlMechanism to the  :keyword:`controller`  argument of the system's constructor,
+or specifying a class of ControlMechanism;  if none is specified, a `DefaultControlMechanism` is created.
 
 .. _System_Structure:
 
@@ -69,59 +69,47 @@ Graph
 ~~~~~
 
 When an instance of a system is created, a graph is constructed that describes the connections (edges) among its
-mechanisms (nodes).  The graph is stored in the system's :py:data:`graph <System_Base.graph>` attribute,
-as a dict of dependencies,  that can be passed to graph theoretical tools for analysis.  A system can contain
-recurrent paths, such as feedback  loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses
-the graph of a system to determine the order in which its mechanisms are executed.  In order to execute such systems
-in an orderly manner, the graph must be acyclic.  So, for execution, PsyNeuLink constructs an
-:py:data:`executionGraph <System_Base.executionGraph>` from the system's :py:data:`graph <System_Base.graph>`.
-If the  system is acyclic, these are the same.  However, if the graph is cyclic, then the
-:py:data:`executionGraph <System_Base.executionGraph>` is a subset of the :py:data:`graph <System_Base.graph>`
-in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
+mechanisms (nodes).  The graph is assigned to the system's `graph` attribute.  This is a dictionary of dependencies,
+that can be passed to graph theoretical tools for analysis.  A system can have recurrent processing pathways, such as
+feedback loops, in which case the system will have a cyclic graph.  PsyNeuLink also uses the graph of a
+system to determine the order in which its mechanisms are executed.  In order to do so in an orderly manner, however,
+the graph must be acyclic.  So, for execution, PsyNeuLink constructs an `executionGraph` from the system's `graph`.
+If the  system is acyclic, these are the same.  If the system is cyclic, then the `executionGraph` is a subset of the
+`graph` in which the dependencies (edges) associated with projections that close a loop have been removed. Note that
 this only impacts the order of execution;  the projections themselves remain in effect, and will be fully functional
-during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed discussion).
-
+during the execution of the affected mechanisms (see :ref:`System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
 
-The mechanisms in a system are assigned the following designations based on the position they occupy in the graph
-structure and/or the role they play in a system:
+The mechanisms in a system are assigned designations based on the position they occupy in the `graph`
+and/or the role they play in a system:
 
-    COMMENT:
-        DOCUMENTATION: MAKE EACH :keyword:`<KEYWORD>` AN ATTRIBUTE OF A CLASS OF KEYWORDS WHERE THEY ARE DESCRIBED.
-        keywords
-    COMMENT
+    `ORIGIN`: receives input to the system, and does not receive projections from any other ProcessingMechanisms;
 
-    :py:data:`ORIGIN <Keywords.Keywords.ORIGIN>`: receives input to the system, and begins execution;
+    `TERMINAL`: provides output from the system, and does not send projections to any other ProcessingMechanisms;
 
-    :py:data:`TERMINAL <Keywords.Keywords.TERMINAL>`: final point of execution, and provides an output of the system;
+    `SINGLETON`: both an `ORIGIN` and a `TERMINAL` mechanism;
 
-    :py:data:`SINGLETON <Keywords.Keywords.SINGLETON>`: both an :keyword:`ORIGIN` and a :keyword:`TERMINAL` mechanism;
-
-    :py:data:`CYCLE <Keywords.Keywords.CYCLE>`: receives a projection that closes a recurrent loop;
-
-    :py:data:`INITIALIZE_CYCLE <Keywords.Keywords.INITIALIZE_CYCLE>`: sends a projection that closes a recurrent loop;
+    `INITIALIZE_CYCLE`: sends a projection that closes a recurrent loop;
     can be assigned an initial value;
 
-    :py:data:`MONITORING <Keywords.Keywords.MONITORING>`: monitors value of another mechanism for use in learning;
+    `CYCLE`: receives a projection that closes a recurrent loop;
 
-    :py:data:`TARGET <Keywords.Keywords.TARGET>`: ComparatorMechanism that monitors a
-    :keyword:`TERMINAL` mechanism of a process
+    `CONTROL`: monitors the value of another mechanism for use in controlling parameter values;
 
-    :py:data:`CONTROL <Keywords.Keywords.CONTROL>`: monitors the value of another mechanism used to control
-    parameters values;
+    `MONITORING`: monitors the value of another mechanism for use in learning;
 
-    :py:data:`INTERNAL <Keywords.Keywords.INTERNAL>`: processing mechanism that does not fall into any of the
-    categories above.
+    `TARGET`: ComparatorMechanism that monitors a `TERMINAL` mechanism of a process
 
-    .. note:: Any :keyword:`ORIGIN` and :keyword:`TERMINAL` mechanisms of a system must be, respectively,
-       the :keyword:`ORIGIN` or :keyword:`TERMINAL` of any process(es) to which they belong.  However, it is not
-       necessarily the case that the :keyword:`ORIGIN` and/or :keyword:`TERMINAL` mechanism of a process is also the
-       :keyword:`ORIGIN` and/or :keyword:`TERMINAL` of a system to which the process belongs
-       (see the Chain example below).
+    `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
+
+    .. note:: Any `ORIGIN` and `TERMINAL` mechanisms of a system must be, respectively,
+       the `ORIGIN` or `TERMINAL` of any process(es) to which they belong.  However, it is not
+       necessarily the case that the `ORIGIN` and/or `TERMINAL` mechanism of a process is also the
+       `ORIGIN` and/or `TERMINAL` of a system to which the process belongs (see the Chain example below).
 
     .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
@@ -148,12 +136,11 @@ COMMENT
    Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
    series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
    that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-   the system.  The `TERMINAL` mechanism for both processes projects to a :doc:`MonitoringMechanism
-   <MonitoringMechanism>` that is used to drive :doc:`learning <LearningProjection>` in Process B. It also projects
-   to a :doc:`ControlMechanism <ControlMechanism>` that :doc:`controls <ControlProjection>` ProcessingMechanisms in
-   both Processes A and B.  Note that while the mechanisms and projections responsible for learning and control
-   belong to the system and can monitor and/or control mechanisms belonging to more than one process (as shown for
-   control in this figure).
+   the system.  The `TERMINAL` mechanism for both processes projects to a `MonitoringMechanism` that is used to drive
+   `learning <LearningProjection>` in Process B. It also projects to a :doc:`ControlMechanism <ControlMechanism>`
+   that `controls <ControlProjection>` ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
+   projections responsible for learning and control belong to the system and can monitor and/or control mechanisms
+   belonging to more than one process (as shown for control in this figure).
 
 
 .. _System_Execution:
@@ -161,9 +148,9 @@ COMMENT
 Execution
 ---------
 
-A system can be executed by calling either its :py:meth:`execute <System_Base.execute>` or
-:py:meth:`run <System_Base.run>` methods. :py:meth:`execute <System_Base.execute>` executes each mechanism in the
-system once, whereas :py:meth:`run <System_Base.run>` allows a series of executions to be carried out.
+A system can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
+`execute <System_Base.execute>` executes each mechanism in the system once, whereas `run <System_Base.execute>`
+allows a series of executions to be carried out.
 
 .. _System_Execution_Order:
 
@@ -172,54 +159,53 @@ Order
 Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
 processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
 system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
-represented by the :py:data:`executionGraph <System_Base.executionGraph>`, which is a subset of the system's graph that
-has been "pruned" to be acyclic (i.e., devoid of recurrent loops).  While the
-:py:data:`executionGraph <System_Base.executionGraph>` is acyclic, all recurrent projections in the system remain
-intact during execution and can be initialized at the start of execution (see below).
+determined by the system's `executionGraph` attribute, which is a subset of the system's `graph` that has been
+"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
+projections in the system remain intact during execution and can be
+`initialized <System_Execution_Input_And_Initialization>` at the start of execution.
 
 .. _System_Execution_Phase:
 
 Phase
 ~~~~~
-Execution occurs in passes through a system called phases.  Each phase corresponds to a single time_step.
-When executing a system in trial mode, a trial is defined as the number of phases (time_steps) required to execute
-a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to that phase
-are executed.   Mechanisms are assigned a phase where they are listed in the pathway of a process (see Process).
-When a mechanism is executed, it receives input from any other mechanisms that project to it within the system.
+Execution occurs in passes through a system called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
+When executing a system in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
+execute a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to
+that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a
+`process <Process>`. When a mechanism is executed, it receives input from any other mechanisms that project to it
+within the system.
 
 .. _System_Execution_Input_And_Initialization:
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a system is specified in the ``input`` argument of either its :py:meth:`execute <System_Base.execute>` or
-:py:meth:`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of
-values, each of which is an appropriate input for the corresponding :keyword:`ORIGIN` mechanism (listed in
-:py:data:`originMechanisms <System_Base.originMechanisms>`). If the :py:meth:`execute <System_Base.execute>` method
-is used, input for only a single trial is provided, and only a single trial is executed.  The
-:py:meth:`run <System_Base.run>` method can be used for a sequence of executions (time_steps or trials),
-by providing it with a list or ndarray of inputs, one for each round of execution.  In both cases, two other types of
-input can be provided:  a list or ndarray of initialization values, and a list or ndarray of target values.
-Initialization values are assigned, at the start execution, as input to mechanisms that close recurrent loops
-(designated as :keyword:`INITIALIZE_CYCLE`, and listed in
-:py:data:`recurrentInitMechanisms <System_Base.recurrentInitMechanisms>`), and target values are assigned to the
-:py:data:`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of :doc:`ComparatorMechanisms`
-(see learning below;  also, see :doc:`Run` for additional details of formatting input specifications).
+The input to a system is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
+each of which is an appropriate input for the corresponding `ORIGIN` mechanism (listed in
+`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
+input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
+can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
+one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
+initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
+execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
+`recurrentInitMechanisms`), and target values are assigned to the
+`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of `ComparatorMechanisms <ComparatorMechanism>`
+(see learning below;  also, see `Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
 
 Learning
 ~~~~~~~~
-The system will execute learning if it is specified for any process in the system.  The :py:data:`learning
-<System_Base.learning>` attribute indicates whether learning is enabled for the system. Learning is executed for any
+The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
+indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
 learning) can be specified in either of two formats, sequence or mechanism, that are described in the :doc:`Run` module;
-see :ref:`Run_Inputs` and :ref:`Run_Targets`).  Both formats require that an input be provided for each
-:py:data:`ORIGIN <Keywords.Keywords.ORIGIN>` mechanism of the system (listed in its
-:py:data:`originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or
-mechanism format, one target must be provided for each :py:data:`TARGET` <Keywords.Keywords.TARGET>` mechanism
-(listed in its :py:data:`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified
-in a :ref:`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
+see `Run_Inputs` and `Run_Targets`).  Both formats require that an input be provided for each `ORIGIN` mechanism of
+the system (listed in its `originMechanisms <System_Base.originMechanisms>` attribute).  If the targets are specified
+in sequence or mechanism format, one target must be provided for each `TARGET` mechanism (listed in its
+`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
+`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
 
 .. note::
    A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
@@ -230,12 +216,9 @@ in a :ref:`function format <Run_Targets_Function_Format>`, which generates a tar
 
 Control
 ~~~~~~~
-Every system is associated with a single :py:data:`controller <System_Base.controller>`.  The controller monitors
-the outputState(s) of one or more mechanisms in the system
-COMMENT:
-    (listed in :py:data:`monitoredOutputStates <System_Base.monitoredOutputStates>`),
-COMMENT
-and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
+Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
+mechanisms in the system (listed in its `monitoredOutputStates` attribute), and uses that information to set the
+value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
 monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
 executed after all other mechanisms in the system are executed, and sets the values of any parameters that it
@@ -277,6 +260,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismT
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
                                                                                       COMPARATOR_TARGET
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -334,6 +318,8 @@ def system(default_input_value=None,
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           # learning:tc.optional(_is_learning_spec)=None,
+           targets:tc.optional(tc.any(list, np.ndarray))=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -345,10 +331,27 @@ def system(default_input_value=None,
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=:keyword:`None`,  \
+    monitor_for_control=`None`,               \
+    targets=None                              \
     params=None,                              \
     name=None,                                \
     prefs=None)
+
+    COMMENT:
+       VERSION WITH learning
+        system(                                   \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=`None`,               \
+        learning=None,                            \
+        targets=None                              \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
+    COMMENT
 
     Factory method for System: returns instance of System.
 
@@ -361,46 +364,59 @@ def system(default_input_value=None,
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default input for :keyword:`ORIGIN` mechanism of each Process
-        the input to the system if none is provided in a call to the execute() method or run() function.
-        Should contain one item corresponding to the input of each :keyword:`ORIGIN` mechanism in the system.
-
+    default_input_value : list or ndarray of values : default default input for `ORIGIN` mechanism of each Process
+        the input to the system if none is provided in a call to the `execute <System_Base.exeucte> or
+        `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` mechanism
+        in the system.
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
         COMMENT
 
-    processes : list of process specifications : default list(''DefaultProcess'')
+    processes : list of process specifications : default list('DefaultProcess')
         a list of the processes to include in the system.
-        Process specifications can be an instance, the class name (creates a default Process, or a specification
-        dictionary (see Processes for details).
+        Each process specification can be an instance, the class name (creates a default Process), or a specification
+        dictionary (see `Process` for details).
 
     initial_values : dict of mechanism:value entries
         a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
-        :keyword:`INITIALIZE_CYCLE`). The key for each entry is a mechanism object, and the value is a number,
+        `INITIALIZE_CYCLE`). The key for each entry is a mechanism object, and the value is a number,
         list or 1d np.array that must be compatible with the format of the first item of the mechanism's value
         (i.e., mechanism.value[0]).
 
     controller : ControlMechanism : default DefaultController
-        specifies the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        monitor_for_control, and specify the value of ControlProjections in the system.
+        specifies the `ControlMechanism` used to monitor the value of the outputState(s) for mechanisms specified in
+        `monitor_for_control`, and that specify the value of `ControlProjections` in the system.
 
     enable_controller :  bool : default :keyword:`False`
-        specifies whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
+        specifies whether the `controller` is executed during system execution.
 
     monitor_for_control : list of OutputState objects or specifications : default None
-        specifies the outputStates of the :keyword:`TERMINAL` mechanisms in the system to be monitored by its controller
-        (see :ref:`ControlMechanism_Monitored_OutputStates` for specifying the ``monitor_for_control`` argument).
+        specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its `controller`
+        (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
+
+    COMMENT:
+        learning : Optional[LearningProjection spec]
+            implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
+    COMMENT
+
+    targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
+        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of each
+        `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
+        number of items as there are `targetMechanisms`, and each item must have the same format (length and number
+        of elements) as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
+        `TARGET` mechanism.
 
     params : dict : default None
-        a dictionary that can include any of the parameters above; use the parameter's name as the keyword for its entry
-        values in the dictionary will override argument values
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
+        override any assigned to those parameters in arguments of the constructor.
 
     name : str : default System-<index>
         a string used for the name of the system
-        (see Registry module for conventions used in naming, including for default and duplicate names)
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system (see ComponentPreferenceSet module for specification of PreferenceSet)
+        the `PreferenceSet` for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -424,6 +440,8 @@ def system(default_input_value=None,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
+                       # learning=learning,
+                       targets=targets,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -438,16 +456,33 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=:keyword:`None`,      \
+    monitor_for_control=`None`,               \
+    targets=None,                             \
     params=None,                              \
     name=None,                                \
     prefs=None)
+
+    COMMENT:
+        VERSION WITH learning
+        System_Base(                              \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=`None`,               \
+        learning=None,                            \
+        targets=None,                             \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
+    COMMENT
 
     Abstract class for System.
 
     .. note::
        Systems should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :class:`system` factory method (see it for description of parameters).
+       They should be instantiated using the :func:`system` factory method (see it for description of parameters).
 
     COMMENT:
         Description
@@ -465,7 +500,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {kwProcesses: [Mechanism_Base.defaultMechanism],
-                                kwController: DefaultController,
+                                CONTROLLER: DefaultController,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
@@ -493,8 +528,10 @@ class System_Base(System):
     Attributes
     ----------
 
+    componentType : SYSTEM
+
     processes : list of Process objects
-        list of processes in the system specified by the process parameter.
+        list of processes in the system specified by the `process` parameter.
 
         .. can be appended with prediction processes by EVCMechanism
            used with self.input to constsruct self.process_tuples
@@ -509,14 +546,15 @@ class System_Base(System):
         ``monitor_for_control`` argument, and specify the value of ControlProjections in the system.
 
     enable_controller :  bool : default :keyword:`False`
-        determines whether the :py:data:`controller <System_Base.controller>` is executed during system execution.
+        determines whether the `controller` is executed during system execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any process in the system
-        COMMENT:
-            or for the system itself.
-        COMMENT
-        .
+        indicates whether learning is being used;  is set to True if learning is specified for any processes
+        in the system or for the system itself.
+
+    targets : 2d nparray : default zeroes
+        used as template for the values of the system's `targetInputStates`, and to represent the targets specified in
+        the :keyword:`targets` argument of system's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
         contains a graph of all of the mechanisms in the system.
@@ -526,7 +564,7 @@ class System_Base(System):
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
-        contains an acyclic subset of the system's graph, hierarchically organized by a toposort.
+        contains an acyclic subset of the system's `graph`, hierarchically organized by a toposort.
         Used to specify the order in which mechanisms are executed.
 
     execution_sets : list of sets
@@ -536,8 +574,7 @@ class System_Base(System):
 
     executionList : list of Mechanism objects
         contains a list of mechanisms in the order in which they are executed.
-        The list is a random sample of the permissible orders constrained by the
-        :py:data:`executionGraph <System_Base.executionGraph>`
+        The list is a random sample of the permissible orders constrained by the `executionGraph`.
 
     mechanisms : list of Mechanism objects
         contains a list of all mechanisms in the system.
@@ -546,7 +583,7 @@ class System_Base(System):
 
     mechanismsDict : Dict[Mechanism:Process]
         contains a dictionary of all mechanisms in the system, listing the processes to which they belong.
-        The key of each entry is a Mechanism object, and the value of each entry is a list of processes.
+        The key of each entry is a `Mechanism` object, and the value of each entry is a list of `processes <Process>`.
 
         .. Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
               xxx_mech_tuples are lists of tuples defined in the Process pathways;
@@ -572,7 +609,7 @@ class System_Base(System):
             Tuples for all MonitoringMechanisms in the system (used for learning).
 
         .. _target_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all ComparatorMechanisms  in the system that are a :keyword:`TERMINAL` for at least on process
+            Tuples for all ComparatorMechanisms  in the system that are a `TERMINAL` for at least on process
             to which it belongs and that process has learning enabled --  the criteria for being a target used in
             learning.
 
@@ -583,37 +620,53 @@ class System_Base(System):
             Tuple for the controller in the system.
 
     originMechanisms : MechanismList
-        contains all :keyword:`ORIGIN` mechanisms in the system (i.e., that don't receive projections from any other
+        contains all `ORIGIN` mechanisms in the system (i.e., that don't receive projections from any other
         mechanisms.
 
         .. based on _origin_mech_tuples
-           system.input contains the input to each :keyword:`ORIGIN` mechanism
+           system.input contains the input to each `ORIGIN` mechanism
 
     terminalMechanisms : MechanismList
-        contains all :keyword:`TERMINAL` mechanisms in the system (i.e., that don't project to any other mechanisms).
+        contains all `TERMINAL` mechanisms in the system (i.e., that don't project to any other ProcessingMechanisms).
 
         .. based on _terminal_mech_tuples
            system.ouput contains the output of each TERMINAL mechanism
 
     recurrentInitMechanisms : MechanismList
-        contains mechanisms with recurrent projections that are candidates for \
-        :ref:`initialization <System_Execution_Input_And_Initialization>`.
+        contains mechanisms with recurrent projections that are candidates for
+        `initialization <System_Execution_Input_And_Initialization>`.
 
     monitoringMechanisms : MechanismList)
-        contains all MONITORING mechanisms in the system (used for learning; based on _monitoring_mech_tuples).
+        contains all `MONITORING` mechanisms in the system (used for learning).
+        COMMENET:
+            based on _monitoring_mech_tuples)
+        COMMENT
 
     targetMechanisms : MechanismList)
-        contains all TARGET mechanisms in the system (used for learning; based on _target_mech_tuples).
+        contains all `TARGET` mechanisms in the system (used for learning.
+        COMMENT:
+            based on _target_mech_tuples)
+        COMMENT
+
+    targetInputStates : List[SystemTargetInputState]
+        one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
+        :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
+        provide their values to the the `target <ComparatorMechanism.ComparatorMechanism.target>` inputState of each
+        `TARGET` mechanism during execution.
 
     COMMENT:
        IS THIS CORRECT:
     COMMENT
 
     controlMechanisms : MechanismList
-        contains controller (CONTROL mechanism) of the system (based on _control_mech_tuples).
+        contains `controller` of the system
+        COMMENT:
+            ??and any other `ControlMechanisms <ControlMechanism>` in the system
+            (based on _control_mech_tuples).
+        COMMENT
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the outputValue of a TERMINAL mechanism in the system.
+        contains an array of 2D arrays, each of which is the `outputValue `of a `TERMINAL` mechanism in the system.
 
         .. _phaseSpecMax : int
             Maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
@@ -625,28 +678,28 @@ class System_Base(System):
         .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
-        values used to initialize mechanisms that close recurrent loops (designated as :keyword:`INITIALIZE_CYCLE`).
-        Must be the same length as the list of :keyword:`INITIAL_CYCLE` mechanisms in the system contained in
-        :py:data:`recurrentInitMechanisms <System_Base.recurrentInitMechanisms>.
+        values used to initialize mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
+        Must be the same length as the list of `INITIALIZE_CYCLE` mechanisms in the system contained in
+        `recurrentInitMechanisms`.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
-        determines the default TimeScale value used by mechanisms in the system.
+        determines the default `TimeScale` value used by mechanisms in the system.
 
     results : List[outputState.value]
         list of return values (outputState.value) from the sequence of executions.
 
     name : str : default System-<index>
         the name of the system;
-        Specified in the name argument of the call to create the system;
+        Specified in the `name` argument of the constructor for the system;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the PreferenceSet for system.
-        Specified in the prefs argument of the call to create the system;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for system.
+        Specified in the `prefs` argument of the constructor for the system;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
+        (see :ref:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -678,6 +731,8 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitor_for_control=None,
+                 # learning=None,
+                 targets=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -692,6 +747,7 @@ class System_Base(System):
                                                  controller=controller,
                                                  enable_controller=enable_controller,
                                                  monitor_for_control=monitor_for_control,
+                                                 targets=targets,
                                                  params=params)
 
         # MODIFIED 12/15/16 OLD:
@@ -701,6 +757,7 @@ class System_Base(System):
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.targets = None
+        self.targetInputStates = []
         self.learning = False
 
         register_category(entry=self,
@@ -711,7 +768,7 @@ class System_Base(System):
 
         if not context:
             # context = INITIALIZING + self.name
-            context = INITIALIZING + self.name + kwSeparator + kwSystemInit
+            context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         super().__init__(variable_default=default_input_value,
                          param_defaults=params,
@@ -723,17 +780,17 @@ class System_Base(System):
 
         # Controller is DefaultControlMechanism
         from PsyNeuLink.Components.Mechanisms.ControlMechanisms.DefaultControlMechanism import DefaultControlMechanism
-        if self.paramsCurrent[kwController] is DefaultControlMechanism:
+        if self.paramsCurrent[CONTROLLER] is DefaultControlMechanism:
             # Get DefaultController from MechanismRegistry
             from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
-            self.controller = list(MechanismRegistry[kwDefaultControlMechanism].instanceDict.values())[0]
+            self.controller = list(MechanismRegistry[DEFAULT_CONTROL_MECHANISM].instanceDict.values())[0]
         # Controller is not DefaultControlMechanism
         else:
             # Instantiate specified controller
             # MODIFIED 11/6/16 OLD:
-            self.controller = self.paramsCurrent[kwController](params={SYSTEM: self})
+            self.controller = self.paramsCurrent[CONTROLLER](params={SYSTEM: self})
             # # MODIFIED 11/6/16 NEW:
-            # self.controller = self.paramsCurrent[kwController](system=self)
+            # self.controller = self.paramsCurrent[CONTROLLER](system=self)
             # MODIFIED 11/6/16 END
 
         # Check whether controller has input, and if not then disable
@@ -757,7 +814,7 @@ class System_Base(System):
             # Controller phaseSpec not specified
             try:
                 # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[kwControllerPhaseSpec]
+                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
                 self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
             except:
                 # No System specification, so use System max as default
@@ -795,7 +852,7 @@ class System_Base(System):
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        controller = target_set[kwController]
+        controller = target_set[CONTROLLER]
         if (not isinstance(controller, ControlMechanism_Base) and
                 not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
             raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
@@ -867,7 +924,7 @@ class System_Base(System):
         self._all_mech_tuples = []
         self._allMechanisms = MechanismList(self, self._all_mech_tuples)
 
-        # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
+        # Get list of processes specified in arg to init, possibly appended by EVCMechanism (with prediction processes)
         processes_spec = self.processes
 
         # Assign default Process if PROCESS is empty, or invalid
@@ -921,16 +978,21 @@ class System_Base(System):
             process_input = processes_spec[i].input
             self.variable.append(process_input)
 
+            # IMPLEMENT: THIS IS WHERE LEARNING SPECIFIED FOR A SYSTEM SHOULD BE IMPLEMENTED FOR EACH PROCESS IN THE
+            #            SYSTEM;  NOTE:  IF THE PROCESS IS ALREADY INSTANTIATED WITHOUT LEARNING
+            #            (FIRST CONDITIONAL BELOW), MAY NEED TO BE RE-INSTANTIATED WITH LEARNING
+            #            (QUESTION:  WHERE TO GET SPECS FOR PROCESS FOR RE-INSTANTIATION??)
+
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process
-            if not isinstance(process, Process):
+            else:
                 if inspect.isclass(process) and issubclass(process, Process):
                     # FIX: MAKE SURE THIS IS CORRECT
-                    # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
+                    # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=process_input, context=self)
@@ -1399,6 +1461,55 @@ class System_Base(System):
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
         # self.learningExecutionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
 
+        # Instantiate TargetInputStates
+        self._instantiate_target_inputs()
+
+    def _instantiate_target_inputs(self, context=None):
+
+        if self.learning and self.targets is None:
+            if not self.targetMechanisms:
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
+                                  format(self.name))
+            elif len(self.targetMechanisms)==1:
+                error_msg = "Learning has been specified for {} so a target must also be specified"
+            else:
+                error_msg = "Learning has been specified for {} but no targets have been specified."
+            raise SystemError(error_msg.format(self.name))
+
+        self.targets = np.atleast_2d(self.targets)
+
+        # Create SystemTargetInputState for each TARGET mechanism in targetMechanisms and
+        #    assign MappingProjection from the SystemTargetInputState
+        #    to the TARGET mechanism's COMPARATOR_TARGET inputSate
+        #    (i.e., from the SystemInputState to the ComparatorMechanism)
+        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+
+            # Create ProcessInputState for each target and assign to comparatorMechanism's target inputState
+            comparator_target = target_mech.inputStates[COMPARATOR_TARGET]
+
+            # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
+            #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
+            if len(self.targets[i]) != len(comparator_target.variable):
+                raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
+                                  "expected for its TARGET mechanism {}".
+                                   format(len(self.targets[i]),
+                                          self.targets[i],
+                                          len(comparator_target.variable),
+                                          target_mech.name))
+
+            target_input_state = SystemTargetInputState(owner=self,
+                                                        variable=comparator_target.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Target {}".format(i))
+            self.targetInputStates.append(target_input_state)
+
+            # Add MappingProjection from target_input_state to TARGET mechainsm's target inputState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            MappingProjection(sender=target_input_state,
+                    receiver=comparator_target,
+                    name=self.name+'_Input Projection to '+comparator_target.name)
+
+
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
@@ -1414,7 +1525,7 @@ class System_Base(System):
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        :keyword:`INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
+        `INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
@@ -1433,7 +1544,7 @@ class System_Base(System):
         """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
 
-        Assign items of input to :keyword:`ORIGIN` mechanisms
+        Assign items of input to `ORIGIN` mechanisms
 
         Execute mechanisms in the order specified in executionList and with phases equal to
         ``CentralClock.time_step % numPhases``.
@@ -1455,7 +1566,7 @@ class System_Base(System):
         Arguments
         ---------
         input : list or ndarray
-            a list or array of input value arrays, one for each :keyword:`ORIGIN` mechanism in the system.
+            a list or array of input value arrays, one for each `ORIGIN` mechanism in the system.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
                specifies a default TimeScale for the system]
@@ -1759,26 +1870,26 @@ class System_Base(System):
             if :keyword:`True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the system before a
             sequence of executions.
 
-        targets : List[input] or np.ndarray(input) : default :keyword:`None`
+        targets : List[input] or np.ndarray(input) : default `None`
             the target values for the MonitoringMechanisms of the system for each execution (used for learning).
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
-        learning : bool :  default :keyword:`None`
+        learning : bool :  default `None`
             enables or disables learning during execution.
             If it is not specified, the current state is left intact.
             If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
-        call_before_trial : Function : default= :keyword:`None`
+        call_before_trial : Function : default= `None`
             called before each trial in the sequence is executed.
 
-        call_after_trial : Function : default= :keyword:`None`
+        call_after_trial : Function : default= `None`
             called after each trial in the sequence is executed.
 
-        call_before_time_step : Function : default= :keyword:`None`
+        call_before_time_step : Function : default= `None`
             called before each time_step of each trial is executed.
 
-        call_after_time_step : Function : default= :keyword:`None`
+        call_after_time_step : Function : default= `None`
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
@@ -1788,7 +1899,7 @@ class System_Base(System):
         -------
 
         <system>.results : List[outputState.value]
-            list of the value of the outputState for each :keyword:`TERMINAL` mechanism of the system returned for
+            list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
             each execution.
 
         """
@@ -1846,52 +1957,39 @@ class System_Base(System):
                                                  re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 
 
-    class InspectOptions(AutoNumber):
-        """Option value keywords for inspect() and show() methods
-
-        Values:
-
-            :keyword:`ALL`
-
-            :keyword:`EXECUTION_SETS`
-
-            :keyword:`ExecutionList`
-
-            :keyword:`ATTRIBUTES`
-
-            :keyword:`ALL_OUTPUTS`
-
-            :keyword:`ALL_OUTPUT_LABELS`
-
-            :keyword:`PRIMARY_OUTPUTS`
-
-            :keyword:`PRIMARY_OUTPUT_LABELS`
-
-            :keyword:`MONITORED_OUTPUTS`
-
-            :keyword:`MONITORED_OUTPUT_LABELS`
-
-            :keyword:`FLAT_OUTPUT`
-
-            :keyword:`DICT_OUTPUT`
-
-        """
-        ALL = ()
-        EXECUTION_SETS = ()
-        ExecutionList = ()
-        ATTRIBUTES = ()
-        ALL_OUTPUTS = ()
-        ALL_OUTPUT_LABELS = ()
-        PRIMARY_OUTPUTS = ()
-        PRIMARY_OUTPUT_LABELS = ()
-        MONITORED_OUTPUTS = ()
-        MONITORED_OUTPUT_LABELS = ()
-        FLAT_OUTPUT = ()
-        DICT_OUTPUT = ()
+    # TBI:
+    # class InspectOptions(AutoNumber):
+    #     """Option value keywords for `inspect` and `show` methods.
+    #     """
+    #     ALL = ()
+    #     """Show all values.
+    #     """
+    #     EXECUTION_SETS = ()
+    #     """Show `execution_sets` attribute."""
+    #     ExecutionList = ()
+    #     """Show `executionList` attribute."""
+    #     ATTRIBUTES = ()
+    #     """Show system's attributes."""
+    #     ALL_OUTPUTS = ()
+    #     """"""
+    #     ALL_OUTPUT_LABELS = ()
+    #     """"""
+    #     PRIMARY_OUTPUTS = ()
+    #     """"""
+    #     PRIMARY_OUTPUT_LABELS = ()
+    #     """"""
+    #     MONITORED_OUTPUTS = ()
+    #     """"""
+    #     MONITORED_OUTPUT_LABELS = ()
+    #     """"""
+    #     FLAT_OUTPUT = ()
+    #     """"""
+    #     DICT_OUTPUT = ()
+    #     """"""
 
     def show(self, options=None):
-        """Print ``execution_sets``, ``executionList``, :keyword:`ORIGIN`, :keyword:`TERMINAL` mechanisms,
-        :py:data:`TARGET <Keywords.Keywords.TARGET>` mechahinsms, ``outputs`` and their labels for the system.
+        """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` mechanisms,
+        `TARGET` mechahinsms, ``outputs`` and their labels for the system.
 
         Arguments
         ---------
@@ -1997,13 +2095,13 @@ class System_Base(System):
             :keyword:`OUTPUT_STATE_NAMES`: list of outputState names corrresponding to 1D arrays in output_value_array
 
             :keyword:`OUTPUT_VALUE_ARRAY`:3D ndarray of 2D arrays of output.value arrays of outputStates for all
-            :keyword:`TERMINAL` mechs
+            `TERMINAL` mechs
 
             :keyword:`NUM_PHASES_PER_TRIAL`:number of phases required to execute all mechanisms in the system
 
             :keyword:`MONITORING_MECHANISMS`:list of MONITORING mechanisms
 
-            :py:data:`TARGET <Keywords.Keywords.TARGET>`:list of TARGET mechanisms
+            `TARGET`:list of TARGET mechanisms
 
             :keyword:`LEARNING_PROJECTION_RECEIVERS`:list of MappingProjections that receive learning projections
 
@@ -2169,6 +2267,47 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
+    def show_graph(self):
+
+	    import graphviz as gv
+	        
+	    system_graph = self.graph
+	    # build graph and configure visualisation settings
+
+	    # is there a way to take in *args so  
+	    # people can change these settings?
+	    G = gv.Digraph(engine = "dot", 
+	    			   # format = "svg", 
+	                   node_attr = {'fontsize':'12', 
+	                   				'fontname': 'arial', 
+	                   				'shape':'oval'}, 
+	                   edge_attr = {'arrowhead':'halfopen', 
+	                   				'fontsize': '10', 
+	                   				'fontname': 'arial'},
+	                   graph_attr = {"rankdir" : "BT"})
+
+	    # build list of receivers
+	    receivers = list(system_graph.keys())
+	    
+	    # loop through each reciever
+	    for receiver in receivers:
+	        receiver_name = receiver[0].name
+	        G.node(receiver_name)
+	        senders = system_graph[receiver]
+	        # loop through each sender
+	        for sender in senders:
+	            sender_name = sender[0].name
+	            G.node(sender_name)
+	            # find the right edge (projection)
+	            for projection in sender[0].outputState.sendsToProjections:
+	                if projection.receiver.owner == receiver[0]:
+	                    edge_name = projection.name
+	            # add the edge
+	            G.edge(sender_name, receiver_name, label = " {0} ".format(edge_name))
+
+	    G.view(self.name.replace(" ", "-"), cleanup=True)
+
+
     # @property
     # def learning_execution_graph_mechs(self):
     #     """Mechanisms whose mech_tuples appear as keys in self.executionGraph
@@ -2176,3 +2315,35 @@ class System_Base(System):
     #     :rtype: list of Mechanism objects
     #     """
     #     return list(mech_tuple[0] for mech_tuple in self.learningExecutionGraph)
+
+
+SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
+
+from PsyNeuLink.Components.States.OutputState import OutputState
+class SystemTargetInputState(OutputState):
+    """Encodes target for the system and transmits it to a `TARGET` mechanism in the system
+
+    Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
+    `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+     mechanism of the system.
+
+    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+       in Projection._instantiate_sender()
+
+       self.value is used to represent the item of the targets arg to system.execute or system.run
+
+    """
+    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+        """Pass variable to MappingProjection from Process to first Mechanism in Pathway
+
+        :param variable:
+        """
+        if not name:
+            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
+        else:
+            self.name = owner.name + "_" + name
+        self.prefs = prefs
+        self.sendsToProjections = []
+        self.owner = owner
+        self.value = variable
+

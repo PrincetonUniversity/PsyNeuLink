@@ -30,7 +30,7 @@ mode), or integrated numerically (in `TIME_STEP` mode).
 .. _DDM_Creation:
 
 Creating a DDM Mechanism
------------------------------
+------------------------
 
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
 and specifying DDM as its `mech_spec` argument.  The analytic solution used in `TRIAL` mode is selected
@@ -302,12 +302,19 @@ DDM_RT_CORRECT_VARIANCE = "DDM_RT_correct_variance"
 
 # Indices for results used in return value tuple; auto-numbered to insure sequentiality
 class DDM_Output(AutoNumber):
+    """Indices of the `outputValue <DDM.outputValue>` attribute of the DDM containing the values described below."""
     DECISION_VARIABLE = ()
+    """Current value of the decision variable."""
     RESPONSE_TIME = ()
+    """`time_steps` or estimated number of seconds since beginning of decision process."""
     P_UPPER_MEAN = ()
+    """Probability that decision variable reached or exceeded the upper threshold (`NavarroAndFuss` function only)."""
     P_LOWER_MEAN = ()
+    """Probability that decision variable reached or exceeded the lower threshold (`NavarroAndFuss` function only)."""
     RT_CORRECT_MEAN = ()
+    """Estimated mean response time for responses reaching the upper bound (`NavarroAndFuss` function only)."""
     RT_CORRECT_VARIANCE = ()
+    """Estimated variance of response times for responses reaching the upper bound (`NavarroAndFuss` function only)."""
     NUM_OUTPUT_VALUES = ()
 
 
@@ -388,8 +395,8 @@ class DDM(ProcessingMechanism_Base):
         the input to the mechanism to use if none is provided in a call to its
         :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
-        and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
-        of greater than 1 is handled).
+        and the `primary outputState <OutputState_Primary>` of the mechanism (see :ref:`Input` <DDM_Creation>` for how
+        an input with a length of greater than 1 is handled).
 
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
@@ -404,8 +411,9 @@ class DDM(ProcessingMechanism_Base):
         decision variable.
 
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-        and/or  a custom function and its parameters (see `Mechanism` for specification of a params dict).
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify parameters of the
+        mechanism, parameters of its function, and/or  a custom function and its parameters. Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default DDM-<index>
         a string used for the name of the mechanism.
@@ -413,7 +421,7 @@ class DDM(ProcessingMechanism_Base):
         (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the PreferenceSet for the process.
+        the `PreferenceSet` for the process.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
 
@@ -438,6 +446,8 @@ class DDM(ProcessingMechanism_Base):
     function_params : Dict[str, value]
         contains one entry for each parameter of the mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor for the function.
 
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`; same items as `outputValue <DDM.outputValue>`.
@@ -475,15 +485,15 @@ class DDM(ProcessingMechanism_Base):
 
     name : str : default DDM-<index>
         the name of the mechanism.
-        Specified in the name argument of the call to create the projection;
-        if not is specified, a default is assigned by MechanismRegistry
+        Specified in the `name` argument of the constructor for the projection;
+        if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         a PreferenceSet for the mechanism.
-        Specified in the prefs argument of the call to create the mechanism;
+        Specified in the `prefs` argument of the constructor for the mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     COMMENT:
         MOVE TO METHOD DEFINITIONS:

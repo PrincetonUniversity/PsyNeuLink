@@ -1,3 +1,4 @@
+
 # PsyNeuLink Sytle Conventions
 
 ### NAMING:
@@ -9,25 +10,28 @@
 #### Format:
 - class names:
     fully capitalized camelCase [ClassName]
-- externally available attributes that do not correspond to an argument of a constructor:
-    camelCase without initial capitalization [externalAttribute]
+DEPRECATED:
+    - externally available attributes that do not correspond to an argument of a constructor:
+        camelCase without initial capitalization [externalAttribute]
+    all attributes should now use underscore format: [all_attributes]
 - arguments of constructors and methods, and any attributes corresponding to them (must be same name):
-    lowercase and underscore separator(s) [constructor_arg, method_arg]
+    lowercase and underscore separator(s) [constructor_arg, method_arg, object_attribute]
 - externally available methods and functions:
     lowercase and underscore separator(s) (enforced by PEP8) [external_method, any_function]
 - internal attributes, methods and functions:
     initial undercore, lowercase, and underscore separatos(s) [_internal_method, _internal_attribute]
 - externally accessible keywords:
     all capitals and underscore separator(s) [KEY_WORD]
-- internal keywords:
-    prepend kw followed by camelCase [kwKeyword]
+DEPRECATED:
+    - internal keywords:
+        prepend kw followed by camelCase [kwKeyword]
 
 ### GRAMMATICAL:
 
 #### Elements and items of lists and arrays:
 - "value": any specified token (numeric or string);
     generally references to the entity received, represented or output by a state or projection,
-    but can also refer to the specification of an attribute
+    but can also refer to the specification of an attribute∞∞
 - "element": refers to the finest grade constituent (highest dimension / axis)
 - "item" refers to any constituent at any level higher than the highest dimension / axis
 - Example:  [[a, b, c] [d, e, f]]
@@ -93,3 +97,40 @@
     - function
     - _instantiate_attributes_after_function
 - Functions
+
+### rST / SPHINX:
+Terminology used here:
+    - reference:  a formatted string (but not necessarily with a link); the two main forms are:
+        - `keyword` (shows up inside a small box)
+        - `text <referenced_location>`
+    - link: a "live" reference (i.e., when clicked, navigates somewhere); 
+            can be either a keyword or a text reference 
+- PsyNeuLink terms should generally be references (i.e., by enclosing in back-ticks (`term`);
+    - a reference should be a *link* at least the first it is used in any paragraph;
+    - in subsequent appearance in the same paragraph, the term should still be formated as a reference, 
+       but generally the link should be suppressed (by using the keyword role:  :keyword:`term`).
+- The format for terms should be kept as simple as possible while remaining unambiguous:
+    - wheverever possible, use simple backticks (e.g., `term`);
+    - if the term is ambiguous (i.e., it is used by more than one module, 
+        such as the attributes 'variable', 'function', or value'),
+        then add further specification: `term <Module.term>`.
+    - to force a term that will be automatically parsed by Spinx as an attribute or argument, 
+        to appear as normal text, use the ref role:  :ref:`term`.
+    - note: arguments to methods and functions can not be linked (in the way that attributes can);
+        therefore, they must be verbally designated (e.g.: the `params` argument of a function...)
+- Section references should be formatted as links, and also kept as simple as possible:
+    - wherever possible, simply enclose in backticks (e.g., `section`)
+    - to assign a link to some other description, use the ref role (e.g., :ref:`my text <section>`) 
+    - for classes that have subclasses, the titles in the rst file (that will appear in the text of the reference) are plural
+      even though the name of the file itself (to which the reference must be made) is singular;
+        therefore, to have the singular form appear in the text (e.g., ControlMechanism),
+        the module must be explicitly referenced (e.g., `ControlMechanism <ControlMechanism>`);
+        [this appears to be redundant, but it is necessary]
+    - conversely, for classes without subclasses, the title in the rst file is singular;
+        therefore, to refer to the plural of such a class (e.g., InputState),
+        the module must be explicitly referenced (e.g., `InputStates <InputState>`);
+    - to flag references to sections that have not yet been documented (or labelled), 
+        use the following construction: `section <LINK>`.
+ 
+        
+           
