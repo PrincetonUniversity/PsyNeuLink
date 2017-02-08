@@ -889,6 +889,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                     for process, status in mech.processes.items():
                         if process._isControllerProcess:
                             continue
+                        # MODIFIED 2/8/17 NEW:
+                        if not process in object.processes:
+                            continue
+                        # MODIFIED 2/8/17 END
                         if mech.systems[object] in {ORIGIN, SINGLETON}:
                             if phase == phase_spec:
                                 stimulus = np.array(stimuli[mech][execution])
