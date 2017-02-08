@@ -273,10 +273,12 @@ LEARNING_PROJECTION = "LearningProjection"
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
 USER_DEFINED_FUNCTION_TYPE = "USER DEFINED FUNCTION TYPE"
 COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
+DIST_FUNCTION_TYPE = "DIST FUNCTION TYPE"
 INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
 TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
+
 
 
 # Component SUBTYPES -----------------
@@ -307,6 +309,14 @@ INTEGRATOR_FUNCTION = "Integrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
+
+#Distribution functions 
+
+NORMAL_DIST_FUNCTION = "Normal Distribution"
+UNIFORM_DIST_FUNCTION = "Uniform Distribution"
+EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution"
+GAMMA_DIST_FUNCTION = "Gamma Distribution"
+WALD_DIST_FUNCTION = "Wald Distribution"
 
 
 #endregion
@@ -469,6 +479,27 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
+DRIFT_RATE = 'drift_rate'
+TIME_STEP_SIZE = 'time_step_size'
+
+####
+####
+####
+NOISE_COEFF = 'noise_coeff'
+####
+####
+####
+
+MEAN = 'mean'
+STANDARD_DEV = 'standard_dev'
+
+LOW = 'low'
+HIGH = 'high'
+
+BETA = 'beta'
+
+SHAPE = 'shape'
+
 WEIGHTING = "weighting"
 
 OUTPUT_TYPE = 'output'
@@ -487,6 +518,7 @@ LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'apaptive'
+DIFFUSION = 'diffusion'
 
 
 MATRIX = "matrix"

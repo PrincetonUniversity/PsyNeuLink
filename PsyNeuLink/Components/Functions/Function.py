@@ -1,3 +1,4 @@
+#
 # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -521,6 +522,7 @@ class UserDefinedFunction(Function_Base):
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
 
+
 class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
@@ -848,9 +850,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
         if np_array_less_than_2d(self.variable):
-            print(self.variable, " (@line 851)")
-            print(scale, " (@line 852)")
-            print(offset, " (@line 853)")
             return (self.variable * scale) + offset
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
@@ -960,7 +959,6 @@ class Linear(TransferFunction): # ----------------------------------------------
         """
 
         self._check_args(variable, params, context)
-
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
@@ -1719,10 +1717,12 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     def __init__(self,
                  variable_default=None,
                  rate:parameter_spec=1.0,
-                 weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE)=CONSTANT,
+                 weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  noise=0.0,
+                 drift_rate = 1.0, 
+                 time_step_size = 1.0, 
                  context="Integrator Init"):
 
         # Assign here as default, for use in initialization of function
@@ -1732,7 +1732,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         params = self._assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
                                                  params=params,
-                                                 noise=noise)
+                                                 noise=noise,
+                                                 drift_rate=drift_rate, 
+                                                 time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
                                          params=params,
@@ -1740,7 +1742,10 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = self.paramsCurrent[kwInitializer]
+        self.oldValue = [self.paramsCurrent[kwInitializer]]
+
+
+        # self.noise = self.paramsCurrent[NOISE]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1777,14 +1782,17 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                  context=context)
 
         noise = target_set[NOISE]
-
-        if isinstance(noise, float) and noise>=0 and noise<=1:
+        drift_rate = target_set[DRIFT_RATE]
+        time_step_size = target_set[TIME_STEP_SIZE]
+        # noise = self.noise
+        if isinstance(noise, float):
             self.noise_function = False
         elif callable(noise):
             self.noise_function = True
         else:
             raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".
                                 format(noise, self.name))
+
 
         # Make sure initializer is compatible with variable
         try:
@@ -1820,10 +1828,15 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
-        noise = self.paramsCurrent[NOISE]
+
+        drift_rate = self.paramsCurrent[DRIFT_RATE]
+        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
+
 
         if self.noise_function:
             noise = self.noise()
+        else:
+            noise = self.noise
 
         try:
             old_value = params[kwInitializer]
@@ -1835,14 +1848,24 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         # Compute function based on weighting param
         if weighting is CONSTANT:
-            value = old_value + rate
+            value = old_value + rate + noise 
             # return value
         elif weighting is SIMPLE:
-            value = old_value + (new_value * rate)
+            value = old_value + (new_value * rate) + noise 
             # return value
         elif weighting is ADAPTIVE:
             # return (1-rate)*old_value + rate*new_value
-            value = (1-rate)*old_value + rate*new_value
+            value = (1-rate)*old_value + rate*new_value + noise 
+        elif weighting is DIFFUSION: 
+            print("old_value = ", float(old_value))
+            print("drift_rate*time_step_size = ", drift_rate*time_step_size)
+            print("noise = ", noise)
+
+            value = old_value + drift_rate*time_step_size + noise
+            print("value =", float(value))
+            print("")
+            print("---------------------------------------------")
+            print("")
         else:
             # return new_value
             value = new_value
@@ -1850,11 +1873,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        if context == None:
-            self.oldValue = 0
-        elif not INITIALIZING in context:
-            self.oldValue = value
-
+        self.oldValue = value
         return value
 
     # def keyword(self, keyword):
@@ -2122,8 +2141,343 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
-#endregion
-# TBI
+
+class DistributionFunction(Function_Base):
+    componentType = DIST_FUNCTION_TYPE
+
+class NormalDist(DistributionFunction):
+    componentName = NORMAL_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 mean = 0.0,
+                 standard_dev = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mean=mean,
+                                                  standard_dev = standard_dev,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+        """Combine a list or array of values
+
+        Returns a scalar value
+
+        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
+        :params: (dict) with entries specifying:
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
+        :return: (scalar)
+        """
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        mean = self.paramsCurrent[MEAN]
+        standard_dev = self.paramsCurrent[STANDARD_DEV]
+
+        result = standard_dev*np.random.normal() + mean 
+
+        return result
+
+class ExponentialDist(DistributionFunction):
+    componentName = EXPONENTIAL_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 beta = 1.0,  
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(beta = beta, 
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+        """Combine a list or array of values
+
+        Returns a scalar value
+
+        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
+        :params: (dict) with entries specifying:
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
+        :return: (scalar)
+        """
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        beta = self.paramsCurrent[BETA]
+
+        result = np.random.exponential(beta)
+
+        return result
+
+class UniformDist(DistributionFunction):
+    componentName = UNIFORM_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 low = 0.0,
+                 high = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(low=low,
+                                                  high=high,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+        """Combine a list or array of values
+
+        Returns a scalar value
+
+        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
+        :params: (dict) with entries specifying:
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
+        :return: (scalar)
+        """
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        low = self.paramsCurrent[LOW]
+        high = self.paramsCurrent[HIGH]
+
+        result = np.random.uniform(low,high)
+
+        return result
+
+class GammaDist(DistributionFunction):
+    componentName = GAMMA_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 scale = 1.0,  
+                 shape = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(scale = scale,
+                                                  shape = shape,  
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+        """Combine a list or array of values
+
+        Returns a scalar value
+
+        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
+        :params: (dict) with entries specifying:
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
+        :return: (scalar)
+        """
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        scale = self.paramsCurrent[SCALE]
+        shape = self.paramsCurrent[SHAPE]
+
+        result = np.random.gamma(shape, scale)
+
+        return 
+
+class WaldDist(DistributionFunction):
+    componentName = GAMMA_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 scale = 1.0,  
+                 mean = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(scale = scale,
+                                                  mean = mean,   
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+        if not is_numeric(variable):
+            raise FunctionError("All elements of {} must be scalar values".
+                                format(self.__class__.__name__))
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+        """Combine a list or array of values
+
+        Returns a scalar value
+
+        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
+        :params: (dict) with entries specifying:
+                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
+        :return: (scalar)
+        """
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        scale = self.paramsCurrent[SCALE]
+        mean = self.paramsCurrent[MEAN]
+
+        result = np.random.gamma(mean, scale)
+
+        return result
+
+#endregion 
 
 #region **************************************   LEARNING FUNCTIONS ****************************************************
 
