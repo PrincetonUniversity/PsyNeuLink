@@ -1160,8 +1160,10 @@ class System_Base(System):
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
                     # MODIFIED 2/8/17 NEW:
-                    #    NEED TO TEST IF receiver_tuple is None (WHICH IT CAN BE IF THE RECEIVER IS IN A PROCESS
-                    #    THAT IS NOT IN THE SYSTEM (E.G., SEBASTIAN'S SCRIPT)
+                    # If receiver is not in system's list of mechanisms, must belong to a process that has
+                    #    not been included in the system, so ignore it
+                    if not receiver_tuple:
+                        continue
                     # MODIFIED 2/8/17 END
 
                     try:
