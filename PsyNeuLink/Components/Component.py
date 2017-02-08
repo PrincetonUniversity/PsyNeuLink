@@ -1460,7 +1460,8 @@ class Component(object):
             elif callable(param_value):
                 target_set[param_name] = param_value
             # MODIFIED 1/9/16 END
-
+            elif callable(param_value.function):
+                target_set[param_name] = param_value
             # Parameter is not a valid type
             else:
                 raise ComponentError("Value of {0} param ({1}) must be of type {2} ".
@@ -1516,7 +1517,6 @@ class Component(object):
 
         :return:
         """
-
         # Check if params[FUNCTION] is specified
         try:
             param_set = PARAMS_CURRENT
@@ -1609,7 +1609,9 @@ class Component(object):
 
         if (isinstance(function, COMPONENT_BASE_CLASS) or
                 isinstance(function, function_type) or
-                isinstance(function, method_type)):
+                isinstance(function, method_type) or
+                callable(function)):
+
             return function
         # Try as a Function class reference
         else:
@@ -1653,12 +1655,13 @@ class Component(object):
         :param request_set:
         :return:
         """
-
         try:
+
             function = self.paramsCurrent[FUNCTION]
 
         # params[FUNCTION] is NOT implemented
         except KeyError:
+
             function = None
 
         # params[FUNCTION] IS implemented
@@ -1676,6 +1679,7 @@ class Component(object):
                                       format(FUNCTION,
                                              self.paramsCurrent[FUNCTION].__class__.__name__,
                                              self.name))
+
                     function = None
 
             # If FUNCTION is a Function object, assign it to self.function (overrides hard-coded implementation)
@@ -1748,6 +1752,8 @@ class Component(object):
             # FUNCTION is a generic function (presumably user-defined), so "wrap" it in UserDefinedFunction:
             #   Note: calling UserDefinedFunction.function will call FUNCTION
             elif inspect.isfunction(function):
+                
+
                 from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
                 # # MODIFIED 1/10/17 OLD:
                 self.paramsCurrent[FUNCTION] = UserDefinedFunction(function=function, context=context).function

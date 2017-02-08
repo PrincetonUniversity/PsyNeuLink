@@ -98,7 +98,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction
+from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -365,7 +365,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                  initial_value=initial_value,
@@ -374,6 +373,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  time_scale=time_scale,
                                                  range=range,
                                                  params=params)
+
+        # self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.rate, noise = self.noise)
+        self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.rate, noise = self.noise)
 
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
@@ -414,12 +416,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Validate NOISE:
         noise = target_set[NOISE]
-        if isinstance(noise, float) and noise>=0 and noise<=1:
+        if isinstance(noise, float):
             self.noise_function = False
         elif callable(noise):
             self.noise_function = True
         else:
-            raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".
+            raise TransferError("noise parameter ({}) for {} must be a float or a function".
                                 format(noise, self.name))
 
         # Validate RATE:
@@ -512,13 +514,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        # Scale noise to be between +noise and -noise
-
         if self.noise_function:
             noise = self.noise()
-            print(self.noise())
         else:
-            noise = self.noise * ((2 * np.random.normal()) - 1)
+            noise = self.noise
         rate = self.rate
         range = self.range
 
@@ -531,14 +530,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
-            current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input)
-            current_input2 = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
-            print(noise, " = noise @line 536")
-            print(self.noise(), " = self.noise() @line 536")
+            current_input = self.integrator_function.function(self.inputState.value, params = {NOISE: noise, RATE: rate})[0]
 
-            print(current_input, " = current_input ------")
-            print(noise, " = noise")
-            print(current_input2, " = current_input2 ------")
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
         else:
