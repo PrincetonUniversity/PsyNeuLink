@@ -1159,6 +1159,11 @@ class System_Base(System):
                     receiver = projection.receiver.owner
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
 
+                    # MODIFIED 2/8/17 NEW:
+                    #    NEED TO TEST IF receiver_tuple is None (WHICH IT CAN BE IF THE RECEIVER IS IN A PROCESS
+                    #    THAT IS NOT IN THE SYSTEM (E.G., SEBASTIAN'S SCRIPT)
+                    # MODIFIED 2/8/17 END
+
                     try:
                         self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                     except KeyError:
@@ -1235,10 +1240,19 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            projection.sender.owner in sorted_processes or
+                            # MODIFIED 2/8/17 OLD:
+                            #          [THIS CHECKED FOR PROCESS IN SYSTEM'S LIST OF PROCESSES
+                            #           IT CRASHED IF first_mech WAS ASSIGNED TO ANY PROCESS THAT WAS NOT ALSO
+                            #           ASSIGNED TO THE SYSTEM TO WHICH THE first_mech BELONGS
+                            #  projection.sender.owner in sorted_processes or
+                            # MODIFIED 2/8/17 NEW:
+                            #          [THIS CHECKS THAT PROJECTION IS FROM A PROCESS IN first_mech's LIST OF PROCESSES]
+                            #           PROBABLY ISN"T NECESSARY, AS IT SHOULD BE COVERED BY INITIAL ASSIGNMENT OF PROJ]
+                            projection.sender.owner in first_mech.processes or
+                            # MODIFIED 2/8/17 END
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
-                            # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
+                            # or from mechanisms in other processes for which it is also an ORIGIN ([a,b,a], [a,c,a])
                             all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
                         for projection in input_state.receivesFromProjections)
                     for input_state in first_mech.inputStates.values()):
