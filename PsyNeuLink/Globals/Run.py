@@ -886,24 +886,40 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                     mech, runtime_params, phase_spec = object.processes[i]._mech_tuples[0]
                 # MODIFIED 12/19/16 END
 
-                    for process, status in mech.processes.items():
-                        if process._isControllerProcess:
-                            continue
-                        # MODIFIED 2/8/17 NEW:
-                        if not process in object.processes:
-                            continue
-                        # MODIFIED 2/8/17 END
-                        if mech.systems[object] in {ORIGIN, SINGLETON}:
-                            if phase == phase_spec:
-                                stimulus = np.array(stimuli[mech][execution])
-                                if not isinstance(stimulus, Iterable):
-                                    stimulus = np.array([stimulus])
-                            else:
-                                if not isinstance(stimuli[mech][execution], Iterable):
-                                    stimulus = np.zeros(1)
-                                else:
-                                    stimulus = np.zeros(len(stimuli[mech][execution]))
-                        stimuli_in_phase.append(stimulus)
+
+                    # # MODIFIED 2/8/17 OLD: [NO NEED TO CHECK PROCESSES HERE,
+                    # #  AS OUTER LOOP IS ON SYSTEM'S ORIGIN MECHANISMS, WHICH IS ALL THAT MATTERS]
+                    # for process, status in mech.processes.items():
+                    #     if process._isControllerProcess:
+                    #         continue
+                    #     # MODIFIED 2/8/17 NEW:
+                    #     if not process in object.processes:
+                    #         continue
+                    #     # MODIFIED 2/8/17 END
+                    #     if mech.systems[object] in {ORIGIN, SINGLETON}:
+                    #         if phase == phase_spec:
+                    #             stimulus = np.array(stimuli[mech][execution])
+                    #             if not isinstance(stimulus, Iterable):
+                    #                 stimulus = np.array([stimulus])
+                    #         else:
+                    #             if not isinstance(stimuli[mech][execution], Iterable):
+                    #                 stimulus = np.zeros(1)
+                    #             else:
+                    #                 stimulus = np.zeros(len(stimuli[mech][execution]))
+                    #     stimuli_in_phase.append(stimulus)
+                    # MODIFIED 2/8/16 NEW:
+                    if phase == phase_spec:
+                        stimulus = np.array(stimuli[mech][execution])
+                        if not isinstance(stimulus, Iterable):
+                            stimulus = np.array([stimulus])
+                    else:
+                        if not isinstance(stimuli[mech][execution], Iterable):
+                            stimulus = np.zeros(1)
+                        else:
+                            stimulus = np.zeros(len(stimuli[mech][execution]))
+                    stimuli_in_phase.append(stimulus)
+                    # MODIFIED 2/8/16 END
+
                 stimuli_in_execution.append(stimuli_in_phase)
             stim_list.append(stimuli_in_execution)
 

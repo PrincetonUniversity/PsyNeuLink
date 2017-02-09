@@ -156,7 +156,7 @@ def show_results():
 
 
 # Plot system:
-mySystem.show_graph()
+# mySystem.show_graph()
 
 # Run system:
 
