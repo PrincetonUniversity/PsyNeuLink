@@ -73,4 +73,4 @@ mySystem.execute(input=[[1,1],[1,1]])
 # mySystem.show()
 # mySystem.controller.show()
 
-mySystem.show_graph()
+# mySystem.show_graph()
