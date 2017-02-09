@@ -288,6 +288,7 @@ EVC_MECHANISM = "EVCMechanism"
 # MonitoringMechanisms:
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
+OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 
 # ProcessingMechanisms:
 DDM_MECHANISM = "DDM"

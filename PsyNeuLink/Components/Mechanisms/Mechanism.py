@@ -1247,7 +1247,6 @@ class Mechanism_Base(Mechanism):
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
         """
-
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, context=context)
 
