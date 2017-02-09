@@ -8,8 +8,104 @@
 #
 #
 # **************************************************  Log **************************************************************
-#
-#
+
+"""
+
+Overview
+--------
+
+A Log object is a set of structures and methods for recording information about PsyNeuLink components during their
+"life cycle" (i.e., as they are created, validated, executed, etc.).  Every component has a log object -- assigned to
+its :keyword:`log` attribute when the component is created -- that maintains a dictionary with entries for each
+attribute of the component that has been designated to be logged.  Information is added to the entries under specified
+conditions (e.g., when the component is initialized, validated, executed, etc.), which can be designated by a
+`LogLevel` specification in the component's preferences; entries can also be made by the user programmatically.
+Each entry contains the time at which a value was assigned to the attribute, the context in which this occured, and
+the value assigned.  This information can be displayed using the log's `print_entries` method.
+
+Creating Logs and Entries
+-------------------------
+
+Whenever any PsyNeuLink component is created, a log object is also automatically created and assigned to the
+component's :keyword:`log` attribute.  Entries are made to the log based on the `LogLevel` specified in the
+`logPref` item of the component's :keyword:`prefs` attribute.
+
+Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict
+
+An attribute is logged if:
+
+* it is one `automatically included <LINK>` in logging;
+..
+* it is included in the `LOG_ENTRIES` entry of the `params` attribute (``params[LOG_ENTRIES]``) of the component;
+..
+* the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
+
+Entry values are added by the setter method for the attribute being logged.
+
+The following entries are automatically included in self.entries for a Mechanism object:
+    - the value attribute of every State for which the Mechanism is an owner
+    [TBI: - value of every projection that sends to those States]
+    - the system variables defined in SystemLogEntries (see declaration above)
+    - any variables listed in the params[LOG_ENTRIES] of a Mechanism
+
+
+DEFAULT LogLevel FOR ALL COMPONENTS IS VALUE_ASSIGNMENT
+
+Structure
+---------
+
+Each entry of log.entries has:
+    + a key that is the name of the attribute being logged
+    + a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began
+    + each tuple has three items:
+        - time (CentralClock): when it was recorded in the run
+        - context (str): the context in which it was recorded (i.e., where the attribute value was assigned)
+        - value (value): the value assigned to the attribute
+
+The LogLevel class (see declaration above) defines six levels of logging:
+    + OFF: No logging for attributes of the owner object
+    + VALUE_ASSIGNMENT: Log values only when final value assignment has been made during execution
+    + EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)
+    + VALIDATION: Log value assignments during validation as well as execution and initialization
+    + ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)
+    Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons
+
+Entries can also be added programmatically by:
+    - including them in the logPref of a PreferenceSet
+    - using the add_entries() method (see below)
+    - using the log_entries() method (see below)
+
+The owner.prefs.logPref setting contains a list of entries to actively record
+    - when entries are added to an object's logPref list, the log.add_entries() method is called,
+        which validates the entries against the object's attributes and SystemLogEntries
+    - if entries are removed from the object's logPref list, they still remain in the log dict;
+        they can be deleted from the log dict using the remove_log_entries() method
+    - data is recorded in an entry using the log_entries() method, which records data to all entries
+        in the self.owner.prefs.logPrefs list;  this is generally carried out by the update methods
+        of Category classes in the Function hierarchy (e.g., Process, Mechanism and Projection)
+        on each cycle of the execution sequence;
+    - log_entries() adds entries to the self.owner.prefs.logPrefs list,
+        which will record data for those attributes when logging is active;
+    - suspend_entries() removes entries from the self.owner.prefs.logPrefs list;
+        data will not be recorded for those entries when logging is active
+
+    Notes:
+    * A list of viable entries should be defined as the classLogEntries class attribute of a Function subclass
+
+
+Logging Entries
+---------------
+
+
+.. _Log_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
+
+
 import warnings
 from collections import namedtuple
 from enum import IntEnum
@@ -18,11 +114,17 @@ from PsyNeuLink.Globals.Keywords import *
 
 
 class LogLevel(IntEnum):
-    OFF               = 0   # No recording
-    VALUE_ASSIGNMENT  = 1   # Record only final value assignments during execution
-    EXECUTION    = 2   # Record all value assignments during execution
-    VALIDATION        = 3   # Record all value assignemnts during validation and execution
-    ALL_ASSIGNMENTS   = 4   # Record all value assignments during initialization, validation and execution
+    """Specifies levels of logging, as descrdibed below."""
+    OFF = 0
+    """No recording."""
+    VALUE_ASSIGNMENT = 1
+    """Record only final value assignments during execution."""
+    EXECUTION = 2
+    """Record all value assignments during execution."""
+    VALIDATION = 3
+    """Record all value assignemnts during validation and execution."""
+    ALL_ASSIGNMENTS = 4
+    """Record all value assignments during initialization, validation and execution."""
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
@@ -93,7 +195,7 @@ class LogError(Exception):
 #endregion
 
 class Log:
-    """Maintain a log for an object, which contains a dict of attributes being logged and their value(s)
+    """Maintain a log for an object, which contains a dictionary of attributes being logged and their value(s).
 
     Description:
         Log maintains a dict (self.entries), with an entry for each attribute of the owner object being logged
@@ -106,14 +208,14 @@ class Log:
                 - value (value): the value assigned to the attribute
         An attribute is recorded if:
             - it is one automatically included in logging (see below)
-            - it is included in params[kwLogEntries] of the owner object
+            - it is included in params[LOG_ENTRIES] of the owner object
             - the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
             - the value attribute of every State for which the Mechanism is an owner
             [TBI: - value of every projection that sends to those States]
             - the system variables defined in SystemLogEntries (see declaration above)
-            - any variables listed in the params[kwLogEntries] of a Mechanism
+            - any variables listed in the params[LOG_ENTRIES] of a Mechanism
         The LogLevel class (see declaration above) defines five levels of logging:
             + OFF: No logging for attributes of the owner object
             + VALUE_ASSIGNMENT: Log values only when final value assignment has been during execution
@@ -429,9 +531,9 @@ class Log:
             entries = [entries]
 
         variable_width = 50
-        time_width = 5
+        time_width = 10
         context_width = 70
-        value_width = 8
+        value_width = 7
         kwSpacer = ' '
 
 
@@ -441,7 +543,8 @@ class Log:
         if not args or kwContext in args:
             header = header + " " + kwContext.ljust(context_width, kwSpacer)
         if not args or kwValue in args:
-            header = header + "   " + kwValue.rjust(value_width)
+            # header = header + "   " + kwValue.rjust(value_width)
+            header = header + "  " + kwValue
 
         print("\nLog for {0}:".format(self.owner.name))
 
@@ -470,10 +573,10 @@ class Log:
                     if not args or kwContext in args:
                         data_str = data_str + context.ljust(context_width, kwSpacer)
                     if not args or kwValue in args:
-                        # data_str = data_str + " " + str(value).rjust(value_width)
-                        # data_str = data_str + " " + "{0:.5}".format(str(value).rjust(value_width))
+                        # data_str = data_str + " " + str(value).rjust(value_width) # <- WORKS
                         # data_str = data_str + " " + "{:10.5}".format(str(value).strip("[]"))  # <- WORKS
-                        data_str = data_str + " " + "{0: 4.2f}".format(value).rjust(value_width)
+                        data_str = data_str + "{:2.5}".format(str(value).strip("[]")).rjust(value_width) # <- WORKS
+                        # data_str = data_str + "{:10.5}".format(str(value).strip("[]")) # <- WORKS
 
 # {time:{width}}: {part[0]:>3}{part[1]:1}{part[2]:<3} {unit:3}".format(
 #     jid=jid, width=width, part=str(mem).partition('.'), unit=unit))

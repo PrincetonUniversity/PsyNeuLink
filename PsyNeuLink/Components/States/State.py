@@ -13,25 +13,25 @@
 Overview
 --------
 
-A State is a component that provides an interface to a :doc:`projection <Projection>`, and represents the value
+A State provides an interface to a `projection <Projection>`, and represents the `value <Projection>`
 associated with that projection.  There are three types of states, all of which are used by
-:doc:`mechanisms <Mechanism>` and one of which is used by :doc:`projections <Projection>`, as summarized below.
+`mechanisms <Mechanism>` and one of which is used by `MappingProjections <MappingProjection>`, as summarized below:
 
 * **InputState**:
-     used by a mechanism to represent the input provided by one or more :doc:`MappingProjections <MappingProjection>`.
+     used by a mechanism to represent its input, and as the `receiver` of any incoming
+     `MappingProjections <MappingProjection>`.
 
 * **ParameterState**:
-    * used by a mechanism to represent the value of a parameter of its ``function``,
-      possibly regulated by a :doc:`ControlProjection`;
-    * used by a MappingProjection to represent the ``matrix`` parameter of its ``function``,
-      possibly regulated by a :doc:`LearningProjection`.
+    * used by a mechanism to represent the value of one of its parameters, or a parameter of its :keyword:`function`,
+      possibly regulated by a `ControlProjection`;
+    * used by a `MappingProjection` to represent the value of its `matrix <MappingProjection.MappingProjection.matrix>`
+    parameter, possibly regulated by a `LearningProjection`.
 
 * **OutputState**:
-    * used by a mechanism to represent its output, and as the source of any outgoing projection(s):
-
-      * :doc:`MappingProjection` for a :doc:`ProcessingMechanism <ProcessingMechanism>`;
-      * :doc:`ControlProjection` for a :doc:`ControlMechanism <ControlMechanism>`;
-      * :doc:`LearningProjection` for a :doc:`MonitoringMechanism <MonitoringMechanism>`.
+    * used by a mechanism to represent its output, and as the `sender <Projection>` of any outgoing projection(s):
+      * `MappingProjection` for a `ProcessingMechanism <ProcessingMechanism>`;
+      * `ControlProjection` for a `ControlMechanism <ControlMechanism>`;
+      * `LearningProjection` for a `MonitoringMechanism <MonitoringMechanism>`.
 
 .. _State_Creation:
 
@@ -40,38 +40,41 @@ Creating a State
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
 automatically by the objects to which they belong, and/or through specification in context (e.g., when
-:ref:`specifying the parameters <ParameterState_Specifying_Parameters>` of a mechanism or its function to be controlled,
-or :ref:`MappingProjections to be learned <MappingProjection_Tuple_Specification>).
+`specifying the parameters <ParameterState_Specifying_Parameters>` of a mechanism or its function to be controlled,
+or of a `MappingProjections to be learned <MappingProjection_Tuple_Specification>).
 
 Structure
 ---------
 
-Every state is owned by either a :doc:`mechanism <Mechanism>` or a :doc:`projection <Projection>`. Like all PsyNeuLink
+Every state is owned by either a `mechanism <Mechanism>` or a `projection <Projection>`. Like all PsyNeuLink
 components, a state has the three following core attributes:
 
-    * ``variable``:  for an inputState and parameterState, the value of this is determined by the value(s) of the
-      projection(s) that it receives (and that are listed in its ``receivesFromProjections`` attribute);  for an
-      outputState, it is the item of the owner mechanism's ``value`` to which the outputState is assigned (this
-      may be, but is not necessarily the output of the mechanism's ``function``).
+    * `variable <State.variable>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`,
+      the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
+      its `receivesFromProjections <State.receivesFromProjections>` attribute).  For an `outputState <OutputState>`,
+      it is the item of the owner mechanism's :keyword:`value` to which the outputState is assigned (specified by the
+      outputStates `index <OutputState_Index>` attribute.
     ..
-    * ``function``:  this aggregates the values of the projections that the state receives.  The default is a
-      :any:`LinearCombination` function that sums those values).  At present, the ``function`` of an outputState is not
-      actively used (see ``function`` attribute in :ref:`OutputState Class Reference <OutputState_Class_Reference>`).
+    * `function <State.function>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`, this
+      aggregates the values of the projections that the state receives (the default is `LinearCombination` that sums
+      the values).  At present, the `function <OutputState.OutputState.function>` of an outputState is not
+      actively used;  it simply returns the item of the owner mechanism's :keyword:`value` to which the outputState is
+      assigned.
     ..
-    * ``value``:  for an inputState and parameterState, this is the aggregated value of the projections it receives;
-      for an outputState, this is the value generated by the outputState based on the item of the mechanism's
-      ``value`` to which it is assigned, and the outputState's ``calculate`` attribute
-      (see :ref:`OutputState_Attributes`).
+    * `value <State.value>`:  for an `inputState <InputState>` and `parameterState <ParameterState>`, this is the
+      aggregated value of the projections it receives.  For an `outputState <OutputState>`, this is th item of the
+      owner mechanism's :keyword:`value` to which the outputState is assigned, possibly modified by a function
+      assigned to its `calculate <OutputState_Calculate>` attribute.
 
 Execution
 ---------
 
 A state cannot be executed directly.  It is executed when the component to which it belongs is executed.
-When this occurs, each inputState and parameterState belonging to the object executes any projections it  receives,
-calls its ``function`` to aggregate their values, and then assigns this as that state's ``value`` -- this conforms to a
-"lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more detailed discussion).  The ``value`` of an
-outputState is assigned after the ``function`` of the mechanism that owns it has been called (see
-:ref:`Mechanism OutputStates <Mechanism_OutputStates>`).
+When this occurs, each inputState and parameterState belonging to the component executes any projections it receives,
+calls its :keyword:`function` to aggregate their values, and then assigns this as that state's :keyword:`value` --
+this conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for a more detailed discussion).
+The :keyword:`value` of an outputState is assigned after the :keyword:`function` of the mechanism that owns it has
+been called (see `Mechanism OutputStates <Mechanism_OutputStates>`).
 
 .. _State_Class_Reference:
 
@@ -214,7 +217,7 @@ class State_Base(State):
         - value (value) - establishes type of value attribute and initializes it (default: [0])
         - owner(Mechanism) - assigns state to mechanism (default: NotImplemented)
         - params (dict):  (if absent, default state is implemented)
-            + FUNCTION (method)         |  Implemented in subclasses; used in update_state()
+            + FUNCTION (method)         |  Implemented in subclasses; used in update()
             + FUNCTION_PARAMS (dict) |
             + STATE_PROJECTIONS:<projection specification or list of ones>
                 if absent, no projections will be created
@@ -245,17 +248,17 @@ class State_Base(State):
         value with which the state was initialized.
 
     receivesFromProjections : Optional[List[Projection]]
-        list of projections for which the state is a ``receiver``.
+        list of projections for which the state is a :keyword:`receiver`.
 
     sendsToProjections : Optional[List[Projection]]
-        list of projections for which the state is a ``sender``.
+        list of projections for which the state is a :keyword:`sender`.
 
     value : number, list or np.ndarray
-        current value of the state (updated by ``update_state`` method).
+        current value of the state (updated by `update <State.update>` method).
 
     name : str : default <State subclass>-<index>
         the name of the state.
-        Specified in the name argument of the call to create the state;  if not is specified,
+        Specified in the `name` argument of the constructor for the state;  if not is specified,
         a default is assigned by StateRegistry based on the states's subclass
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
@@ -266,10 +269,10 @@ class State_Base(State):
             creation).
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the PreferenceSet for the state.
-        Specified in the prefs argument of the call to create the projection;  if it is not specified, a default is
-        assigned using ``classPreferences`` defined in __init__.py
-        (see :py:class:`PreferenceSet <LINK>` for details).
+        the `PreferenceSet` for the state.
+        Specified in the `prefs` argument of the constructor for the projection;  if it is not specified, a default is
+        assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -1135,6 +1138,7 @@ class State_Base(State):
 
     :param context: (str)
     :return: None
+
     """
 
         #region GET STATE-SPECIFIC PARAM_SPECS
@@ -1333,11 +1337,11 @@ def _instantiate_state_list(owner,
                          (state_spec, params_dict) tuple(s), or None
                          if None, instantiate a default using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of states in params;  must be one of:
-        - kwInputState
+        - INPUT_STATE
         - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of state(s):
-        - kwInputState: self.variable
+        - INPUT_STATE: self.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)

@@ -13,5 +13,5 @@ States
 
 .. automodule:: State
    :members:
-   :exclude-members: random
+   :exclude-members: random, update
 

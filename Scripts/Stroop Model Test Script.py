@@ -42,6 +42,7 @@ word_reading_process = process(
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   name='Stroop Model',
+                  targets=[0,0],
                   prefs=system_prefs,
                   )
 
@@ -68,6 +69,8 @@ for i in range(10):
 # Execute system:
 mySystem.execute(input=[[1,1],[1,1]])
 
-# SHOWIONS:
+# SHOW OPTIONS:
 # mySystem.show()
 # mySystem.controller.show()
+
+# mySystem.show_graph()

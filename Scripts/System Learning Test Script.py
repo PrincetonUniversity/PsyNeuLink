@@ -101,13 +101,8 @@ def show_target():
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 
-# p.show()
-# s.show()
-#
 # p.execute()
-
 # s.execute()
-
 s.run(num_executions=10,
       # inputs=stim_list,
       inputs=[[-1, 30],[2, 10]],

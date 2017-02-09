@@ -9,8 +9,13 @@
 # ********************************************  Keywords ***************************************************************
 
 # **********************************************************************************************************************
-# ******************************************    CONSTANTS    ***********************************************************
+# ******************************************    CLASSES    *************************************************************
 # **********************************************************************************************************************
+
+# IMPLEMENTATION NOTE:
+#  These classes are used for documentation purposes only.
+#  The attributes of each are assigned to constants (listed in the next section of this module)
+#    that are the ones actually used by the code.
 
 class Keywords:
     """
@@ -18,63 +23,60 @@ class Keywords:
     ----------
 
     ORIGIN
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
         and that receives the input to the process or system when it is :ref:`executed or run <Run>`.  A process may
-        have only one :keyword:`ORIGIN` mechanism, but a system may have many.  Note that the :keyword:`ORIGIN`
-        mechanism of a process is not necessarily an :keyword:`ORIGIN` of the system to which it belongs, as it may
-        receive projections from other processes in the system. The :keyword:`ORIGIN` mechanisms of a process or
+        have only one `ORIGIN` mechanism, but a system may have many.  Note that the `ORIGIN`
+        mechanism of a process is not necessarily an `ORIGIN` of the system to which it belongs, as it may
+        receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
         system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
-        method.  For additional details about :keyword:`ORIGIN` mechanisms in processes, see
-        :ref:`Process Mechanisms <Process_Mechanisms>` and
-        :ref:`Process Input and Output <Process_Input_And_Ouput>`; and for systems see
-        :ref:`System Mechanisms <System_Mechanisms>` and
-        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        method.  For additional details about `ORIGIN` mechanisms in processes, see
+        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Ouput>`;
+        and for systems see `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     INTERNAL
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     CYCLE
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is *not* an :py:data:`ORIGIN <Keywords.ORIGIN>`
-        mechanism, and receives a projection that closes a recurrent loop in a process and/or system.  If it is an
-        :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism, then it is designated as an
-        :py:data:`INITIALIZE_CYCLE  <Keywords.INITIALIZE_CYCLE>` mechanism.
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` mechanism, and receives a projection
+        that closes a recurrent loop in a process and/or system.  If it is an `ORIGIN` mechanism, then it is simply
+        designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the ``sender`` of a projection that closes a loop in
-        a process or system, and that is not an :py:data:`ORIGIN <Keywords.ORIGIN>` mechanism.  An
-        :ref:`initial value  <Run_InitialValues>` can be assigned to such mechanisms, that will be used to initialize
-        the process or system when it is first run.  For additional information, see :ref:`Run <Run_Initial_Values>`,
-        :ref:`System Mechanisms <System_Mechanisms>` and
-        :ref:`System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
+        projection that closes a loop in a process or system, and that is not an `ORIGIN` mechanism (since in that
+        case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
+        mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+        information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     TERMINAL
-        A :doc:`ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
-        that provides the output to the process or system when it is :ref:`executed or run <Run>`.  A process may
-        have only one :keyword:`TERMINAL` mechanism, but a system may have many.  Note that the :keyword:`TERMINAL`
-        mechanism of a process is not necessarily a :keyword:`TERMINAL` mechanism of the system to which it belongs,
-        as it may send projections to other processes in the system.  The :keyword:`TERMINAL` mechanisms of a process
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
+        that provides the output to the process or system when it is `executed or run <Run>`.  A process may
+        have only one `TERMINAL` mechanism, but a system may have many.  Note that the `TERMINAL`
+        mechanism of a process is not necessarily a `TERMINAL` mechanism of the system to which it belongs,
+        as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
         or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details about :keyword:`TERMINAL` mechanisms in processes, see
-        :ref:`Process_Mechanisms` and :ref:`Process_Input_And_Ouput`; and for systems see :ref:`System_Mechanisms`.
+        :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
+        `Process_Mechanisms` and `Process_Input_And_Ouput`; and for systems see `System_Mechanisms`.
 
     SINGLETON
-        A :doc:`ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
-        of an :py:data:`ORIGIN <Keywords.ORIGIN>` and/or a :py:data:`TERMINAL <Keywords.TERMINAL>` mechanism.
+        A `ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
+        of an `ORIGIN` and/or a `TERMINAL` mechanism.
 
     MONITORING
-        A :doc:`MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a TARGET; that is, it
-        is associated with an :py:data:`INTERNAL <Keywords.INTERNAL>` rather than a :py:data:`TERMINAL
-        <Keywords.TERMINAL>` ProcessingMechanism in the process and/or system to which it belongs. For
-        :py:class:`backpropagation <Function.BackPropagation>` learning, it is a :doc:WeightedErrorMechanism.
-        See :ref:`MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
+        A `MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a `TARGET`; that is, it
+        is associated with an `INTERNAL` rather than a `TERMINAL` ProcessingMechanism in the process and/or system to
+        which it belongs. For `backpropagation <Function.BackPropagation>` learning, it is a `WeightedErrorMechanism`.
+        See `MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
 
     TARGET
-        A :doc:`ComparatorMechanism <ComparatorMechanism>` of a process and/or system configured for learning that
-        receives a target value from its ``execute`` or ``run`` method.  It must be associated with the
-        :py:data:`TERMINAL <Keyword.TERMINAL>` mechanism of the process or system. The :keyword:`TARGET` mechanisms of
-        a process or system are listed in its :keyword:`targetMechanisms` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details, see :ref:`TARGET mechanisms <LearningProjection_Targets>`
-        and specifying :ref:`target values <Run_Targets>`.
+        A `ComparatorMechanism` of a process and/or system configured for learning that receives a target value from
+        its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
+        mechanism of the process or system. The `TARGET` mechanisms of a process or system are listed in its
+        :keyword:`targetMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
+        details, see `TARGET mechanisms <LearningProjection_Targets>` and specifying `target values <Run_Targets>`.
 
 
     """
@@ -88,7 +90,44 @@ class Keywords:
         self.MONITORING = MONITORING
         self.TARGET = TARGET
 
-# parameter_keywords = set()
+
+class MatrixKeywords:
+    """
+    Attributes
+    ----------
+
+    IDENTITY_MATRIX
+        a square matrix of 1's; this requires that the length of the sender and receiver values are the same.
+
+    FULL_CONNECTIVITY_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are 1's.
+
+    RANDOM_CONNECTIVITY_MATRIX
+        a matrix that has a number of rows equal to the length of the sender's value, and a number of columns equal
+        to the length of the receiver's value, all the elements of which are filled with random values uniformly
+        distributed between 0 and 1.
+
+    AUTO_ASSIGN_MATRIX
+        if the sender and receiver are of equal length, an `IDENTITY_MATRIX` is assigned;  otherwise, a
+        `FULL_CONNECTIVITY_MATRIX` is assigned.
+
+    DEFAULT_MATRIX
+        used if no matrix specification is provided in the constructor;  it presently assigns an `IDENTITY_MATRIX`.
+
+    """
+    def __init__(self):
+        self.MATRIX = MATRIX
+        self.IDENTITY_MATRIX = IDENTITY_MATRIX
+        self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX
+        self.RANDOM_CONNECTIVITY_MATRIX = RANDOM_CONNECTIVITY_MATRIX
+        self.AUTO_ASSIGN_MATRIX = AUTO_ASSIGN_MATRIX
+        self.DEFAULT_MATRIX = DEFAULT_MATRIX
+
+
+# **********************************************************************************************************************
+# ******************************************    CONSTANTS  *************************************************************
+# **********************************************************************************************************************
 
 ON = True
 OFF = False
@@ -97,7 +136,7 @@ AUTO = True
 
 # Used by initDirective
 INIT_FULL_EXECUTE_METHOD = 'init using the full base class execute method'
-INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass __execute__ method'
+INIT__EXECUTE__METHOD_ONLY = 'init using only the subclass _execute method'
 INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 
 
@@ -113,6 +152,7 @@ INITIALIZING = " INITIALIZING "  # Used as context for Log
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = ': Assign' # Used in context for Log
+ASSIGN_VALUE = ': Assign value'
 kwAggregate = ': Aggregate' # Used in context for Log
 kwReceiver = "receiver"
 kwValidate = 'Validate'
@@ -190,8 +230,8 @@ kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
-kwParamClassDefaults = "paramClassDefaults"        # "Factory" default params for a Function
-kwParamInstanceDefaults = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
+PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
+PARAM_INSTANCE_DEFAULTS = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
 PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
@@ -215,14 +255,14 @@ kwComponentCategory = "Function_Base"
 # Component TYPES  -----------------
 
 # Mechanisms:
-kwProcessingMechanism = "ProcessingMechanism"
-kwMonitoringMechanism = "MonitoringMechanism"
-kwControlMechanism = "ControlMechanism"
+PROCESSING_MECHANISM = "ProcessingMechanism"
+MONITORING_MECHANISM = "MonitoringMechanism"
+CONTROL_MECHANISM = "ControlMechanism"
 
 # States:
-kwInputState = "InputState"
+INPUT_STATE = "InputState"
 OUTPUT_STATE = "OutputState"
-kwParameterState = "ParameterState"
+PARAMETER_STATE = "ParameterState"
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
@@ -230,43 +270,43 @@ CONTROL_PROJECTION = "ControlProjection"
 LEARNING_PROJECTION = "LearningProjection"
 
 # Function:
-kwExampleFunction = "EXAMPLE FUNCTION"
-kwUserDefinedFunctionType = "USER DEFINED FUNCTION TYPE"
-kwCombinationFunction = "COMBINATION FUNCTION"
-kwIntegratorFunction = "INTEGRATOR FUNCTION"
-kwTransferFunction = "TRANSFER FUNCTION"
-kwDistributionFunction = "DISTRIBUTION FUNCTION"
-LEARNING_FUNCTION = 'LEARNING FUNCTION'
+EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
+USER_DEFINED_FUNCTION_TYPE = "USER DEFINED FUNCTION TYPE"
+COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
+INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
+TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
+LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
+DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
 
 
 # Component SUBTYPES -----------------
 
 # ControlMechanisms:
-kwDefaultControlMechanism = "DefaultControlMechanism"
-kwEVCMechanism = "EVCMechanism"
+DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
+EVC_MECHANISM = "EVCMechanism"
 
 # MonitoringMechanisms:
-kwComparatorMechanism = "ComparatorMechanism"
+COMPARATOR_MECHANISM = "ComparatorMechanism"
+WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
 
 # ProcessingMechanisms:
-kwDDM = "DDM"
-kwLinearMechanism = "LinearMechanism"
-kwSigmoidLayer = "SigmoidLayer"
-kwIntegratorMechanism = "IntegratorMechanism"
+DDM_MECHANISM = "DDM"
+TRANSFER_MECHANISM = "TransferMechanism"
+INTEGRATOR_MECHANISM = "IntegratorMechanmism"
 
 # Function:
-kwContradiction = "Contradiction"
-kwUserDefinedFunction = "USER DEFINED FUNCTION"
-kwReduce = "Reduce"
-kwLinearCombination = "LinearCombination"
-kwLinear = "Linear"
-kwExponential = "Exponential"
-kwLogistic = "Logistic"
-kwSoftMax = 'SoftMax'
-kwIntegrator = "Integrator"
-kwLinearMatrix = "Linear Matrix"
-kwBackProp = 'Backpropagation Learning Algorithm'
-kwRL = 'Reinforcement Learning Algorithm'
+CONTRADICTION_FUNCTION = "Contradiction"
+USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
+REDUCE_FUNCTION = "Reduce"
+LINEAR_COMBINATION_FUNCTION = "LinearCombination"
+LINEAR_FUNCTION = "Linear"
+EXPONENTIAL_FUNCTION = "Exponential"
+LOGISTIC_FUNCTION = "Logistic"
+SOFTMAX_FUNCTION = 'SoftMax'
+INTEGRATOR_FUNCTION = "Integrator"
+LINEAR_MATRIX_FUNCTION = "Linear Matrix"
+BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
+RL_FUNCTION = 'Reinforcement Learning Algorithm'
 
 
 #endregion
@@ -274,11 +314,11 @@ kwRL = 'Reinforcement Learning Algorithm'
 #region ----------------------------------------------    SYSTEM   ----------------------------------------------------
 
 SYSTEM = "System"
-kwSystemInit = 'System.__init__'
-kwDefaultSystem = "DefaultSystem"
-kwController = "controller"
-kwEnableController = "enable_controller"
-kwControllerPhaseSpec = 'ControllerPhaseSpec'
+SYSTEM_INIT = 'System.__init__'
+DEFAULT_SYSTEM = "DefaultSystem"
+CONTROLLER = "controller"
+ENABLE_CONTROLLER = "enable_controller"
+CONROLLER_PHASE_SPEC = 'ControllerPhaseSpec'
 
 RUN = 'Run'
 
@@ -288,7 +328,7 @@ RUN = 'Run'
 
 PROCESS = "PROCESS"
 kwProcesses = "processes"
-kwProcessInit = 'Process.__init__'
+PROCESS_INIT = 'Process.__init__'
 PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
@@ -356,13 +396,12 @@ PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 kwPredictionProcess = "PredictionProcess"
 CONTROL_SIGNAL = 'control_signal'
 CONTROL_PROJECTIONS = 'ControlProjections'
-kwValueAggregationFunction = 'ValueAggregationFunction'
 OUTCOME_FUNCTION = 'outcome_function'
 COST_FUNCTION = 'cost_function'
 COMBINE_OUTCOME_AND_COST_FUNCTION = 'combine_outcome_and_cost_function'
 VALUE_FUNCTION = 'value_function'
 SAVE_ALL_VALUES_AND_POLICIES = 'save_all_values_and_policies'
-kwSystemDefaultController = "DefaultController"
+SYSTEM_DEFAULT_CONTROLLER = "DefaultController"
 EVC_SIMULATION = 'SIMULATING'
 ALLOCATION_SAMPLES = "allocation_samples"
 

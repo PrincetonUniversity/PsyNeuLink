@@ -14,11 +14,13 @@
 """
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
 
 # **************************************** DefaultProcessingMechanism ******************************************************
 
 
+# class DefaultProcessingMechanism_Base(ProcessingMechanism_Base):
 class DefaultProcessingMechanism_Base(Mechanism_Base):
     """Use to implement SystemDefaultInputMechanism, DefaultControlMechanism, and SystemDefaultOutputMechanism
 
@@ -34,7 +36,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
             + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
-    componentType = "DefaultProcessingMechanism"
+    componentType = DEFAULT_PROCESSING_MECHANISM
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE

@@ -76,6 +76,8 @@ class FunctionOutputType(IntEnum):
     NP_2D_ARRAY = 2
 
 
+# Typechecking *********************************************************************************************************
+
 # TYPE_CHECK for Function Instance or Class
 def is_Function(x):
     if not x:
@@ -97,9 +99,22 @@ def is_function_type(x):
     else:
         return False
 
+
 # *******************************   get_param_value_for_keyword ********************************************************
 
 def get_param_value_for_keyword(owner, keyword):
+    """Return the value for a keyword used by a subclass of Function
+
+    Parameters
+    ----------
+    owner : Component
+    keyword : str
+
+    Returns
+    -------
+    value
+
+    """
     try:
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except FunctionError as e:
@@ -122,25 +137,6 @@ def get_param_value_for_function(owner, function):
         if owner.prefs.verbosePref:
             print ("Function ({}) can't be evaluated for {}".format(function, owner.name))
         return None
-
-def optional_parameter_spec(param):
-    if not param:
-        return True
-    return parameter_spec(param)
-
-def parameter_spec(param):
-    # if is_numeric(param):
-    if (isinstance(param, (numbers.Number,
-                           np.ndarray,
-                           list,
-                           tuple,
-                           function_type,
-                           ParamValueProjection,
-                           Projection)) or
-        (inspect.isclass(param) and issubclass(param, Projection)) or
-        param in parameter_keywords):
-        return True
-    return False
 
 
 class Function_Base(Function):
@@ -290,6 +286,10 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
     @functionOutputType.setter
     def functionOutputType(self, value):
 
+        if not value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
+            self._functionOutputType = value
+            return
+
         # Attempt to set outputType but conversion not enabled
         if value and not self.paramsCurrent[kwFunctionOutputTypeConversion]:
             raise FunctionError("output conversion is not enabled for {0}".format(self.__class__.__name__))
@@ -323,8 +323,8 @@ class Contradiction(Function_Base): # Example
     """
 
     # Function componentName and type (defined at top of module)
-    componentName = kwContradiction
-    componentType = kwExampleFunction
+    componentName = CONTRADICTION_FUNCTION
+    componentType = EXAMPLE_FUNCTION_TYPE
 
     # Variable class default
     # This is used both to type-cast the variable, and to initialize variableInstanceDefault
@@ -357,10 +357,10 @@ class Contradiction(Function_Base): # Example
         # NOTES:
         #    * paramsCurrent can be changed by including params in call to function
         #    * paramInstanceDefaults can be changed by calling assign_default
-        super(Contradiction, self).__init__(variable_default=variable_default,
-                                            params=params,
-                                            prefs=prefs,
-                                            context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
     def function(self,
                 variable=None,
@@ -459,7 +459,7 @@ class Contradiction(Function_Base): # Example
         if message:
             raise FunctionError(message)
 
-        super(Contradiction, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
 
 
 #region ****************************************   FUNCTIONS   *********************************************************
@@ -476,14 +476,14 @@ class UserDefinedFunction(Function_Base):
 
     Linear.function returns scalar result
     """
-    componentName = kwUserDefinedFunction
-    componentType = kwUserDefinedFunctionType
+    componentName = USER_DEFINED_FUNCTION
+    componentType = USER_DEFINED_FUNCTION_TYPE
 
     variableClassDefault = [0]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-                               kwFunctionOutputTypeConversion: True,
+                               kwFunctionOutputTypeConversion: False,
                                PARAMETER_STATE_PARAMS: None
     })
 
@@ -522,7 +522,7 @@ class UserDefinedFunction(Function_Base):
 #endregion
 
 class CombinationFunction(Function_Base):
-    componentType = kwCombinationFunction
+    componentType = COMBINATION_FUNCTION_TYPE
 
 
 class Reduce(CombinationFunction): # ------------------------------------------------------------------------
@@ -545,7 +545,7 @@ class Reduce(CombinationFunction): # -------------------------------------------
     Reduce.function returns combined values:
     - single scalar value
     """
-    componentName = kwReduce
+    componentName = REDUCE_FUNCTION
 
     variableClassDefault = [0, 0]
     # variableClassDefault_locked = True
@@ -655,7 +655,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
     - 1D np.array if variable was a single np.variable or np.ndarray
     """
 
-    componentName = kwLinearCombination
+    componentName = LINEAR_COMBINATION_FUNCTION
 
     # MODIFIED 11/29/16 NEW:
     classPreferences = {
@@ -700,10 +700,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                                  operation=operation,
                                                  params=params)
 
-        super(LinearCombination, self).__init__(variable_default=variable_default,
-                                                params=params,
-                                                prefs=prefs,
-                                                context=context)
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
 
         if self.exponents is not None:
             self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
@@ -883,11 +883,11 @@ class LinearCombination(CombinationFunction): # --------------------------------
         return result
 
 
-#region ***********************************  TransferMechanism FUNCTIONS  *******************************************************
+#region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 #endregion
 
 class TransferFunction(Function_Base):
-    componentType = kwTransferFunction
+    componentType = TRANFER_FUNCTION_TYPE
 
 
 class Linear(TransferFunction): # --------------------------------------------------------------------------------------
@@ -902,7 +902,7 @@ class Linear(TransferFunction): # ----------------------------------------------
     Linear.function returns scalar result
     """
 
-    componentName = kwLinear
+    componentName = LINEAR_FUNCTION
 
     # MODIFIED 11/29/16 NEW:
     classPreferences = {
@@ -935,7 +935,7 @@ class Linear(TransferFunction): # ----------------------------------------------
                                                  intercept=intercept,
                                                  params=params)
 
-        super(Linear, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                      params=params,
                                      prefs=prefs,
                                      context=context)
@@ -1032,7 +1032,7 @@ class Exponential(TransferFunction): # -----------------------------------------
     Exponential.function returns scalar result
     """
 
-    componentName = kwExponential
+    componentName = EXPONENTIAL_FUNCTION
 
     # # Params
     # RATE = "rate"
@@ -1056,7 +1056,7 @@ class Exponential(TransferFunction): # -----------------------------------------
                                                  scale=scale,
                                                  params=params)
 
-        super(Exponential, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                           params=params,
                                           prefs=prefs,
                                           context=context)
@@ -1105,7 +1105,7 @@ class Logistic(TransferFunction): # --------------------------------------------
     Logistic.function returns scalar result
     """
 
-    componentName = kwLogistic
+    componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN,BIAS})
 
     variableClassDefault = 0
@@ -1177,7 +1177,7 @@ class SoftMax(TransferFunction): # ---------------------------------------------
     SoftMax.function returns scalar result
     """
 
-    componentName = kwSoftMax
+    componentName = SOFTMAX_FUNCTION
 
     variableClassDefault = 0
 
@@ -1315,7 +1315,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     Returns sender 2D array linearly transformed by self.matrix
     """
 
-    componentName = kwLinearMatrix
+    componentName = LINEAR_MATRIX_FUNCTION
 
     DEFAULT_FILLER_VALUE = 0
 
@@ -1391,7 +1391,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :return none:
         """
 
-        super(LinearMatrix, self)._validate_params(request_set, target_set, context)
+        super()._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = self.variable
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
@@ -1678,7 +1678,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 #  DDM_NavarroAndFuss
 
 class IntegratorFunction(Function_Base):
-    componentType = kwIntegratorFunction
+    componentType = INTEGRATOR_FUNCTION_TYPE
 
 
 class Integrator(IntegratorFunction): # --------------------------------------------------------------------------------------
@@ -1705,7 +1705,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     Integrator.function returns scalar result
     """
 
-    componentName = kwIntegrator
+    componentName = INTEGRATOR_FUNCTION
 
     variableClassDefault = [[0]]
 
@@ -1730,7 +1730,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  weighting=weighting,
                                                  params=params)
 
-        super(Integrator, self).__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable_default,
                                          params=params,
                                          prefs=prefs,
                                          context=context)
@@ -1992,6 +1992,7 @@ class BogaczEtAl(IntegratorFunction): # ----------------------------------------
 
 # Results from Navarro and Fuss DDM solution (indices for return value tuple)
 class NF_Results(AutoNumber):
+    RESULT = ()
     MEAN_ER = ()
     MEAN_DT = ()
     PLACEMARKER = ()
@@ -2101,14 +2102,14 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
-
+#endregion
 # TBI
 
 #region **************************************   LEARNING FUNCTIONS ****************************************************
 
 
 class LearningFunction(Function_Base):
-    componentType = LEARNING_FUNCTION
+    componentType = LEARNING_FUNCTION_TYPE
 
 
 LEARNING_RATE = "learning_rate"
@@ -2139,7 +2140,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
          + LEARNING_RATE: (float) - learning rate (default: 1.0)
     """
 
-    componentName = kwRL
+    componentName = RL_FUNCTION
 
     variableClassDefault = [[0],[0],[0]]
 
@@ -2247,7 +2248,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
          + kwTransferFunctionDerivative - (function) derivative of TransferMechanism function (default: derivative of logistic)
     """
 
-    componentName = kwBackProp
+    componentName = BACKPROPAGATION_FUNCTION
 
     variableClassDefault = [[0],[0],[0]]
 
@@ -2319,8 +2320,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         return weight_change_matrix
 
-# *****************************************   OBJECTIVE FUNCTIONS ******************************************************
-
+#region *****************************************   OBJECTIVE FUNCTIONS ************************************************
+#endregion
 # TBI
 
-#  *****************************************   REGISTER FUNCTIONS   ****************************************************
+#region  *****************************************   REGISTER FUNCTIONS ************************************************
