@@ -942,7 +942,15 @@ class System_Base(System):
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
         # Convert all entries to (process, input) tuples, with None as filler for absent input
+        input_index = input_index_curr = 0
         for i in range(len(processes_spec)):
+
+            # MODIFIED 2/8/17 NEW:
+            # Get list of origin mechanisms for processes that have already been converted
+            #   (for use below in assigning input)
+            orig_mechs_already_processed = list(p[0].originMechanisms[0] for
+                                                p in processes_spec if isinstance(p,ProcessTuple))
+            # MODIFIED 2/8/17 END
 
             # Entry is not a tuple
             #    presumably it is a process spec, so enter it as first item of ProcessTuple
@@ -967,16 +975,18 @@ class System_Base(System):
                 if processes_spec[i].process._isControllerProcess:
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
-                    from PsyNeuLink.Components.Process import Process_Base
+                    # MODIFIED 2/8/17 NEW:
                     # Replace input item in tuple with one from command line
-                    # FIX: ASSIGN FROM RELEVANT ORIGIN MECHANISM HERE (THOUGH originMechanisms MAY NOT YET BE DEFINED)
-                    #      CHECK IF processes_spec[i].process.originMechanisms[0] IS SAME AS ANY OTHER ONE
-                    #      IN process_spec SO FAR AND, IF SO, ASSIGN IT THAT ONE'S VALUE AND DON'T INCREMENT I
-                    #      OTHERWISE, ASSIGN TO input[i]
-        # list(process.originMechanisms[0].name for process in processes_spec if isinstance(process,Process_Base))
-        # list(process[0].originMechanisms[0].name for process in processes_spec if isinstance(process, tuple))
-
-                    processes_spec[i] = ProcessTuple(processes_spec[i].process, input[i])
+                    # Note:  check if origin mechanism for current process is same as any previous one;
+                    #        if it is, use that one (and don't increment index for input
+                    #        otherwise, assign input and increment input_index
+                    try:
+                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].originMechanisms[0])
+                    except ValueError:
+                        input_index += 1
+                    processes_spec[i] = ProcessTuple(processes_spec[i].process, input[input_index_curr])
+                    input_index_curr = input_index
+                    # MODIFIED 2/8/17 END
 
             # Validate input
             if (processes_spec[i].input is not None and
@@ -1254,10 +1264,10 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            # MODIFIED 2/8/17 OLD:
-                            #          [THIS CHECKED FOR PROCESS IN SYSTEM'S LIST OF PROCESSES
-                            #           IT CRASHED IF first_mech WAS ASSIGNED TO ANY PROCESS THAT WAS NOT ALSO
-                            #           ASSIGNED TO THE SYSTEM TO WHICH THE first_mech BELONGS
+                            # # MODIFIED 2/8/17 OLD:
+                            # #          [THIS CHECKED FOR PROCESS IN SYSTEM'S LIST OF PROCESSES
+                            # #           IT CRASHED IF first_mech WAS ASSIGNED TO ANY PROCESS THAT WAS NOT ALSO
+                            # #           ASSIGNED TO THE SYSTEM TO WHICH THE first_mech BELONGS
                             #  projection.sender.owner in sorted_processes or
                             # MODIFIED 2/8/17 NEW:
                             #          [THIS CHECKS THAT PROJECTION IS FROM A PROCESS IN first_mech's LIST OF PROCESSES]
