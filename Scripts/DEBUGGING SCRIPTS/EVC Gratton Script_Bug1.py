@@ -155,8 +155,8 @@ def show_results():
                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
 
 
-# Plot system:
-mySystem.show_graph()
+# # Plot system:
+# mySystem.show_graph()
 
 # Run system:
 
