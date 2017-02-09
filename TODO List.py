@@ -581,6 +581,8 @@
 #
 # TEST warnings.warn
 #
+# IMPLEMENT:  typecheck name arg in constructors to be a str
+#
 # IMPLEMENT: REFACTOR EVC and LEARNING:
 #
 #            EVC:  1) MonitoringMechanism - new one that implements current EVCMechanism's objective function (i.e.,

@@ -9,6 +9,19 @@
 # *************************************************  EVCMechanism ******************************************************
 
 #FIX: SEARCH FOR :ref`xxx <LINK>`
+# EVC_MONITORING_MECH TODO LIST:
+#  EVCMechanism:
+#     Move EVC Outcome_function to ObjectiveFunction's function
+#     Validate that EVMEchanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
+#     Point EVCMechnism.outcome to self.variable / self.inputValue
+#     Make sure _add_monitored_state works (needs to update self.system.graph)
+#  ObjectiveMechanism:
+#     Validate ObjectiveMechanism.monitor argument
+#     Implement its function using weights_and_exponents
+#     Make sure _add_monitored_state works
+#     Flag it for execution along with controller (i.e,. phaseMax+2),
+#            and make sure it does not pre-empt 'TERMINAL' status of any processing mechanisms it is monitoring
+
 """
 
 Overview
@@ -724,20 +737,101 @@ class EVCMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
 
+        """
+        self._instantiate_prediction_mechanisms(context=context)
+        self._instantiate_monitoring_mechanism(context=context)
+
+        # MODIFIED 2/9/17 NEW:
+        # Re-instantiate system with predictionMechanism Process(es) and monitoringMechanism added
+        self.system._instantiate_processes(input=self.system.variable, context=context)
+        self.system._instantiate_graph(context=context)
+        # MODIFIED 2/9/17 END
+
+
+    def _instantiate_prediction_mechanisms(self, context=None):
+        """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
+
         Instantiate PredictionMechanisms for ORIGIN mechanisms in self.system; these will now be TERMINAL mechanisms
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
             - therefore if an associated input mechanism must be monitored by the EVCMechanism, it must be specified
                 explicitly in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
 
-        Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
-            - if specification in outputState is None:
-                 do NOT monitor this state (this overrides any other specifications)
-            - if an outputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
-            - if a mechanism is terminal and/or specified in the system or controller:
-                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
-                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
-            Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
+        For each ORIGIN mechanism in self.system:
+            - instantiate a corresponding predictionMechanism
+            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction mechanism
+            - add the process to self.system.processes
 
+        Instantiate self.predictedInput:
+            - one item of axis 0 for each predictionMechanism
+            - one item of axis 1 for each inputState of a predictionMechanism
+            - one item of axis 2 for each element of the input to an inputState of the predictionMechanism
+
+        Args:
+            context:
+        """
+
+        from PsyNeuLink.Components.Process import Process_Base
+
+        self.predictionMechanisms = []
+        self.predictionProcesses = []
+
+        for mech in self.system.originMechanisms.mechanisms:
+
+            # Get any params specified for predictionMechanism(s) by EVCMechanism
+            try:
+                prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
+            except KeyError:
+                prediction_mechanism_params = {}
+
+            # Add outputState with name based on originMechanism
+            output_state_name = mech.name + '_' + PREDICTION_MECHANISM_OUTPUT
+            prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
+
+            # Instantiate predictionMechanism
+            prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
+                                                            name=mech.name + "_" + PREDICTION_MECHANISM,
+                                                            params = prediction_mechanism_params,
+                                                            context=context)
+
+            # Assign list of processes for which prediction_mechanism will provide input during the simulation
+            # - used in _get_simulation_system_inputs()
+            # - assign copy, since don't want to include the prediction process itself assigned to mech.processes below
+            prediction_mechanism.use_for_processes = list(mech.processes.copy())
+
+            self.predictionMechanisms.append(prediction_mechanism)
+
+            # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
+            prediction_process = Process_Base(default_input_value=None,
+                                              params={
+                                                  PATHWAY:[(mech, mech.phaseSpec),
+                                                                   IDENTITY_MATRIX,
+                                                                   (prediction_mechanism, mech.phaseSpec)]},
+                                              name=mech.name + "_" + kwPredictionProcess,
+                                              context=context
+                                              )
+            prediction_process._isControllerProcess = True
+            # Add the process to the system's processes param (with None as input)
+            self.system.params[kwProcesses].append((prediction_process, None))
+            # Add the process to the controller's list of prediction processes
+            self.predictionProcesses.append(prediction_process)
+
+        # MODIFIED 12/27 NEW:
+        # Assign predictedInputs
+        self.predictedInput = []
+        for i in range(len(self.system.originMechanisms)):
+            # self.predictedInput.append(process[0].originMechanisms[0].inputValue)
+            self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
+        self.predictedInput = np.array(self.predictedInput)
+        # MODIFIED 12/27 END
+
+        # # MODIFIED 2/9/17 OLD: [MOVED TO _instantiate_input_states]
+        # # Re-instantiate system with predictionMechanism Process(es) added
+        # self.system._instantiate_processes(input=self.system.variable, context=context)
+        # self.system._instantiate_graph(context=context)
+        # MODIFIED 2/9/17 END
+
+    def _instantiate_monitoring_mechanism(self, context=None):
+        """
         Assign inputState to controller for each state to be monitored;
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitoredOutputStates:
@@ -746,6 +840,34 @@ class EVCMechanism(ControlMechanism_Base):
                 (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
             - each inputState is assigned a name with the following format:
                 '<name of mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
+
+        Notes:
+        * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
+            will be instantiated to a corresponding inputState of the ControlMechanism
+        * self.inputStates is the usual ordered dict of states,
+            each of which receives a projection from a corresponding outputState in self.monitoredOutputStates
+        """
+
+        from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
+        self._get_monitored_states(context=context)
+        monitored_states = list(zip(self.monitoredOutputStates, self.monitor_for_control_weights_and_exponents))
+        self.monitoring_mechanism = ObjectiveMechanism(monitor=monitored_states)
+        MappingProjection(sender=self.monitoring_mechanism,
+                          receiver=self,
+                          matrix=IDENTITY_MATRIX)
+
+    def _get_monitored_states(self, context=None):
+        """
+        Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
+            - if specification in outputState is None:
+                 do NOT monitor this state (this overrides any other specifications)
+            - if an outputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
+            - if a mechanism is terminal and/or specified in the system or controller:
+                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
+                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
+            Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
@@ -762,20 +884,10 @@ class EVCMechanism(ControlMechanism_Base):
 
         """
 
-        self._instantiate_prediction_mechanisms(context=context)
-
-        from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Components.States.OutputState import OutputState
-
-        # Clear self.variable, as items will be assigned in call(s) to _instantiate_monitoring_input_state()
-        self.variable = None
+        from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 
         # PARSE SPECS
-
-        controller_specs = []
-        system_specs = []
-        mech_specs = []
-        all_specs = []
 
         # Get controller's MONITOR_FOR_CONTROL specifications (optional, so need to try)
         try:
@@ -827,7 +939,7 @@ class EVCMechanism(ControlMechanism_Base):
         # Get MONITOR_FOR_CONTROL specifications for each mechanism and outputState in the System
         # Assign outputStates to self.monitoredOutputStates
         self.monitoredOutputStates = []
-        
+
         # Notes:
         # * Use all_specs to accumulate specs from all mechanisms and their outputStates
         #     (for use in generating exponents and weights below)
@@ -963,7 +1075,7 @@ class EVCMechanism(ControlMechanism_Base):
                             not mech in self.system.terminalMechanisms.mechanisms):
                         continue
 
-                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it 
+                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
                         if output_state is mech.outputState:
                             self.monitoredOutputStates.append(output_state)
@@ -1015,32 +1127,6 @@ class EVCMechanism(ControlMechanism_Base):
         self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
 
 
-        # INSTANTIATE INPUT STATES
-
-        # Instantiate inputState for each monitored state in the list
-        # from Components.States.OutputState import OutputState
-        for monitored_state in self.monitoredOutputStates:
-            if isinstance(monitored_state, OutputState):
-                self._instantiate_monitoring_input_state(monitored_state, context=context)
-            elif isinstance(monitored_state, Mechanism):
-                for output_state in monitored_state.outputStates:
-                    self._instantiate_monitoring_input_state(output_state, context=context)
-            else:
-                raise EVCError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
-                               "neither a OutputState nor Mechanism".format(monitored_state))
-
-
-        if self.prefs.verbosePref:
-            print ("{0} monitoring:".format(self.name))
-            for state in self.monitoredOutputStates:
-                weight = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][0]
-                exponent = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][1]
-
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
-
-        self.inputValue = self.variable.copy() * 0.0
-
-        return self.inputStates
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """
@@ -1057,106 +1143,6 @@ class EVCMechanism(ControlMechanism_Base):
                                                 context=context)
 
         self.controlSignals = list(self.outputStates.values())
-
-    def _instantiate_prediction_mechanisms(self, context=None):
-        """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
-
-        For each ORIGIN mechanism in self.system:
-            - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction mechanism
-            - add the process to self.system.processes
-
-        Instantiate self.predictedInput:
-            - one item of axis 0 for each predictionMechanism
-            - one item of axis 1 for each inputState of a predictionMechanism
-            - one item of axis 2 for each element of the input to an inputState of the predictionMechanism
-
-        Args:
-            context:
-        """
-
-        from PsyNeuLink.Components.Process import Process_Base
-
-        self.predictionMechanisms = []
-        self.predictionProcesses = []
-
-        for mech in self.system.originMechanisms.mechanisms:
-
-            # Get any params specified for predictionMechanism(s) by EVCMechanism
-            try:
-                prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
-            except KeyError:
-                prediction_mechanism_params = {}
-
-            # Add outputState with name based on originMechanism
-            output_state_name = mech.name + '_' + PREDICTION_MECHANISM_OUTPUT
-            prediction_mechanism_params[OUTPUT_STATES] = [output_state_name]
-
-            # Instantiate predictionMechanism
-            prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                                                            name=mech.name + "_" + PREDICTION_MECHANISM,
-                                                            params = prediction_mechanism_params,
-                                                            context=context)
-
-            # Assign list of processes for which prediction_mechanism will provide input during the simulation
-            # - used in _get_simulation_system_inputs()
-            # - assign copy, since don't want to include the prediction process itself assigned to mech.processes below
-            prediction_mechanism.use_for_processes = list(mech.processes.copy())
-
-            self.predictionMechanisms.append(prediction_mechanism)
-
-            # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
-            prediction_process = Process_Base(default_input_value=None,
-                                              params={
-                                                  PATHWAY:[(mech, mech.phaseSpec),
-                                                                   IDENTITY_MATRIX,
-                                                                   (prediction_mechanism, mech.phaseSpec)]},
-                                              name=mech.name + "_" + kwPredictionProcess,
-                                              context=context
-                                              )
-            prediction_process._isControllerProcess = True
-            # Add the process to the system's processes param (with None as input)
-            self.system.params[kwProcesses].append((prediction_process, None))
-            # Add the process to the controller's list of prediction processes
-            self.predictionProcesses.append(prediction_process)
-
-        # MODIFIED 12/27 NEW:
-        # Assign predictedInputs
-        self.predictedInput = []
-        for i in range(len(self.system.originMechanisms)):
-            # self.predictedInput.append(process[0].originMechanisms[0].inputValue)
-            self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
-        self.predictedInput = np.array(self.predictedInput)
-        # MODIFIED 12/27 END
-
-        # Re-instantiate system with predictionMechanism Process(es) added
-        self.system._instantiate_processes(input=self.system.variable, context=context)
-        self.system._instantiate_graph(context=context)
-
-    def _instantiate_monitoring_input_state(self, monitored_state, context=None):
-        """Instantiate inputState with projection from monitoredOutputState
-
-        Validate specification for outputState to be monitored
-        Instantiate inputState with value of monitoredOutputState
-        Instantiate MappingProjection to inputState from monitoredOutputState
-
-        Args:
-            monitored_state (OutputState):
-            context:
-        """
-
-        self._validate_monitored_state_spec(monitored_state, context=context)
-
-        state_name = monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
-
-        # Instantiate inputState
-        input_state = self._instantiate_control_mechanism_input_state(state_name,
-                                                                      monitored_state.value,
-                                                                      context=context)
-
-        # Instantiate MappingProjection from monitored_state to new input_state
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
 
     def _instantiate_function(self, context=None):
         super()._instantiate_function(context=context)
