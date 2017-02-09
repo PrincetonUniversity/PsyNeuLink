@@ -60,6 +60,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  monitor=None,
+                 function=LinearCombination,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -71,7 +72,8 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitor=monitor,
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  monitor=monitor,
                                                   params=params)
 
         super().__init__(variable=default_input_value,
@@ -130,10 +132,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         #         raise ObjectiveError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
         #                              "neither an OutputState nor Mechanism".format(item))
 
-        monitored_items = list(zip(*self.monitor))[0]
-        weights_and_exponents = list(zip(*self.monitor))[1]
-
-        for item in monitored_items:
+        for item in self.monitor:
             self._instantiate_input_state_for_monitored_state(item, context=context)
 
         if self.prefs.verbosePref:
