@@ -919,7 +919,9 @@ class System_Base(System):
             - add each pair as an entry in self.executionGraph
         """
 
-        self.variable = []
+        # # MODIFIED 2/8/17 OLD:  [SEE BELOW]
+        # self.variable = []
+        # MODIFIED 2/8/17 END
         self.mechanismsDict = {}
         self._all_mech_tuples = []
         self._allMechanisms = MechanismList(self, self._all_mech_tuples)
@@ -951,21 +953,29 @@ class System_Base(System):
             if isinstance(processes_spec[i], tuple) and not isinstance(processes_spec[i], ProcessTuple):
                 processes_spec[i] = ProcessTuple(processes_spec[i][0], processes_spec[i][1])
 
+            # Input was NOT provided on command line, so get it from the process
             if input is None:
-                # FIX: ASSIGN PROCESS INPUT TO SYSTEM INPUT
                 process = processes_spec[i].process
                 process_input = []
                 for process_input_state in process.processInputStates:
                     process_input.extend(process_input_state.value)
                 processes_spec[i] = ProcessTuple(process, process_input)
-            # If input was provided on command line, assign that to input item of tuple
+            # Input was provided on command line, so assign that to input item of tuple
             else:
                 # Assign None as input to processes implemented by controller (controller provides their input)
                 #    (e.g., prediction processes implemented by EVCMechanism)
                 if processes_spec[i].process._isControllerProcess:
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
-                    # Replace input item in tuple with one from variable
+                    from PsyNeuLink.Components.Process import Process_Base
+                    # Replace input item in tuple with one from command line
+                    # FIX: ASSIGN FROM RELEVANT ORIGIN MECHANISM HERE (THOUGH originMechanisms MAY NOT YET BE DEFINED)
+                    #      CHECK IF processes_spec[i].process.originMechanisms[0] IS SAME AS ANY OTHER ONE
+                    #      IN process_spec SO FAR AND, IF SO, ASSIGN IT THAT ONE'S VALUE AND DON'T INCREMENT I
+                    #      OTHERWISE, ASSIGN TO input[i]
+        # list(process.originMechanisms[0].name for process in processes_spec if isinstance(process,Process_Base))
+        # list(process[0].originMechanisms[0].name for process in processes_spec if isinstance(process, tuple))
+
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, input[i])
 
             # Validate input
@@ -976,7 +986,11 @@ class System_Base(System):
 
             process = processes_spec[i].process
             process_input = processes_spec[i].input
-            self.variable.append(process_input)
+
+            # # MODIFIED 2/8/17 OLD: [MOVED ASSIGNMENT OF self.variable TO _instantiate_graph()
+            # #                       SINCE THAT IS WHERE SYSTEM'S ORIGIN MECHANISMS ARE IDENTIFIED]
+            # self.variable.append(process_input)
+            # # MODIFIED 2/8/17 END
 
             # IMPLEMENT: THIS IS WHERE LEARNING SPECIFIED FOR A SYSTEM SHOULD BE IMPLEMENTED FOR EACH PROCESS IN THE
             #            SYSTEM;  NOTE:  IF THE PROCESS IS ALREADY INSTANTIATED WITHOUT LEARNING
@@ -997,7 +1011,8 @@ class System_Base(System):
                     #           in Pathway, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=process_input, context=self)
                 elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here; include process_input as ??param, and context=self
+                    # IMPLEMENT:  HANDLE Process specification dict here;
+                    #             include process_input as ??param, and context=self
                     raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
@@ -1015,11 +1030,6 @@ class System_Base(System):
 
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
-
-            # FIX: SHOULD BE ABLE TO PASS PROCESS_INPUT HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
-            # FIX: MODIFY _instantiate_pathway TO ACCEPT input AS ARG
-            # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
-            # process._instantiate_pathway(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mech_tuples
             #     to construct self._all_mech_tuples and mechanismsDict
@@ -1070,10 +1080,12 @@ class System_Base(System):
 
             process._allMechanisms = MechanismList(process, tuples_list=process._mech_tuples)
 
-        self.variable = convert_to_np_array(self.variable, 2)
-
-        # Instantiate processList using process_tuples, and point self.processes to it
-        # Note: this also points self.params[kwProcesses] to self.processes
+        # # MODIFIED 2/8/17 OLD: [SEE ABOVE]
+        # self.variable = convert_to_np_array(self.variable, 2)
+        # # MODIFIED 2/8/17 END
+        #
+        # # Instantiate processList using process_tuples, and point self.processes to it
+        # # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
@@ -1361,8 +1373,19 @@ class System_Base(System):
         self.executionList = self._toposort_with_ordered_mech_tuples(self.executionGraph)
         # MODIFIED 10/31/16 END
 
+        # MODIFIED 2/8/17 NEW:
+        # Construct self.variable from inputs to ORIGIN mechanisms
+        self.variable = []
+        for mech in self.originMechanisms:
+            orig_mech_input = []
+            for input_state in mech.inputStates.values():
+                orig_mech_input.extend(input_state.value)
+            self.variable.append(orig_mech_input)
+        self.variable = convert_to_np_array(self.variable, 2)
+        # MODIFIED 2/8/17 END
+
         # Validate initial values
-        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
+        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
