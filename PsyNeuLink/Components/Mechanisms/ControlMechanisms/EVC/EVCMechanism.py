@@ -10,17 +10,20 @@
 
 #FIX: SEARCH FOR :ref`xxx <LINK>`
 # EVC_MONITORING_MECH TODO LIST:
+
 #  EVCMechanism:
-#     Move EVC Outcome_function to ObjectiveFunction's function
-#     Validate that EVMEchanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
-#     Point EVCMechnism.outcome to self.variable / self.inputValue
+#     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
 #     Make sure _add_monitored_state works (needs to update self.system.graph)
+
 #  ObjectiveMechanism:
 #     Validate ObjectiveMechanism.monitor argument
-#     Implement its function using weights_and_exponents
 #     Make sure _add_monitored_state works
 #     Flag it for execution along with controller (i.e,. phaseMax+2),
 #            and make sure it does not pre-empt 'TERMINAL' status of any processing mechanisms it is monitoring
+#     Assign result of function to outputState
+#     Allow inputStates to be named (so they can be used as ComparatorMechanism)
+
+#  Replace ComparatorMechanmism with ObjectiveMechanisms using a particular function and named inputStates
 
 """
 
@@ -47,7 +50,7 @@ The procedure by which the EVCMechanism selects an `allocation_policy` when it i
 `function <EVCMechanism.function>` attribute. By default, this evaluates the performance of the system under every
 possible `allocation_policy`, and chooses the best one. It does this by simulating the system under each
 `allocation_policy`, and evaluating the expected value of control (EVC): a cost-benefit analysis that weighs
-the cost of the ControlSignals against the outcomes of performance for the given policy.  The EVCMechanism then
+the cost of the ControlSignals against the outcome of performance for the given policy.  The EVCMechanism then
 selects the `allocation_policy` that generates the maximum EVC, and that allocation_policy is implemented for the
 next round of execution. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
 custom functions to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
@@ -552,7 +555,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
             controller._assign_simulation_inputs assigns value of predictionMechanisms to inputs of ORIGIN mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the mechanism outputStates being monitored for outcomes
+            controller.monitored_states is a list of the mechanism outputStates being monitored for outcome
             controller.inputValue is a list of current outcome values (values for monitored_states)
             controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
             controller.controlSignals is a list of controlSignal objects
@@ -562,7 +565,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller.allocation_policy - holds current allocation_policy
             controller.outputValue is a list of current controlSignal values
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
-            controller.outcome_function - aggregates outcomes (using specified weights and exponentiation)
+            controller.outcome_function - aggregates monitored outcomes (using specified weights and exponentiation)
             controller.cost_function - aggregate costs of control signals
             controller.combine_outcome_and_cost_function - combines outcoms and costs
     COMMENT
@@ -582,8 +585,9 @@ class EVCMechanism(ControlMechanism_Base):
         value), and the outcome and cost from which it was calculated (these can be scalar values or `None`).
         If used with the EVCMechanism's default `function <EVCMechanism.function>`, a custom `value_function` must
         accommodate three arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism for
-        which it is carrying out the calculation; an :keyword:`outcomes` argument that is a 2d array of values,
-        each item of which is the value of an outputState in the EVCMechanism's `monitoredOutputStates` attribute;
+        which it is carrying out the calculation; an :keyword:`outcome` argument that is a scalar value that reflects
+        the outcome of the function of the ObjectiveMechanism (based on the value of the outputStates being monitored
+        (and specified in the EVCMechanism's `monitoredOutputStates` attribute;
         and a :keyword:`costs` argument that is a 2d array of costs, each item of which is the `cost` of a
         ControlSignal in the EVCMechanism's `controlSignals` attribute.  A custom function assigned to
         `value_function` can also call any of the other EVCMechanism functions described below (however,
@@ -606,9 +610,9 @@ class EVCMechanism(ControlMechanism_Base):
         used with the EVCMechanism's default `value_function`, a custom outcome_function must accommodate two
         arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism itself (and can be used
         access to its attributes, including the `monitor_for_control_weights_and_exponents` attribute that lists the
-        weights and exponents assigned to each outputState being monitored);  and an :keyword:`outcomes` argument,
-        that is 1d array of scalar values specifying the value for each outputState listed in the
-        `monitoredOutputStates` attribute of the :keyword:`controller` argument.
+        weights and exponents assigned to each outputState being monitored);  and an :keyword:`outcome` argument,
+        that is a scalar value specifying the result of the ObjectiveMechanism's function (based on the outputStates
+        listed in the `monitoredOutputStates` attribute of the :keyword:`controller` argument).
 
     cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost for a given `allocation_policy`.  The default combines the `cost` of each ControlSignals in
@@ -852,8 +856,9 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
         self._get_monitored_states(context=context)
-        monitored_states = list(zip(self.monitoredOutputStates, self.monitor_for_control_weights_and_exponents))
-        self.monitoring_mechanism = ObjectiveMechanism(monitor=monitored_states)
+        # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
+        self.monitoring_mechanism = ObjectiveMechanism(function=self.outcome_function,
+                                                       monitor=self.monitoredOutputStates)
         MappingProjection(sender=self.monitoring_mechanism,
                           receiver=self,
                           matrix=IDENTITY_MATRIX)
@@ -1095,7 +1100,7 @@ class EVCMechanism(ControlMechanism_Base):
                                        format(output_state_name, mech.name))
 
 
-        # ASSIGN WEIGHTS AND EXPONENTS
+        # ASSIGN WEIGHTS AND EXPONENTS TO OUTCOME_FUNCTION
 
         # Note: these values will be superceded by any assigned as arguments to the outcome_function
         #       if it is specified in the constructor for the mechanism
@@ -1125,8 +1130,6 @@ class EVCMechanism(ControlMechanism_Base):
         # Assign weights and exponents to monitor_for_control_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
         self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
-
-
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """
