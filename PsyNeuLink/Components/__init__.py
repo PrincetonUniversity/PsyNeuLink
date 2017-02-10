@@ -88,7 +88,7 @@ DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCES
 
 # Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
 # Note: this must be an instantiated object
-DefaultMonitoringMechanism = ComparatorMechanism(name=kwDefaultMonitoringMechanism)
+DefaultMonitoringMechanism = ComparatorMechanism(name=DEFAULT_MONITORING_MECHANISM)
 
 # Use as PROJECTION_SENDER (default sender for ControlProjections) if sender is not specified (in ControlProjection)
 
