@@ -2585,7 +2585,6 @@
 #
 #     Make sure add_monitored_state works
 #     Allow inputStates to be named (so they can be used as ComparatorMechanism)
-#     Augment to take a function for each inputState (as well as its weight and exponent)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
 #   using a particular function and named inputStates
@@ -2593,7 +2592,8 @@
 #   with three inputStates:
 #     1) output of ObjectiveMechanism for next processingMechanism in the process
 #     2) derivative of activation function of next processingMechanism in the process
-#         assign the derivate to the function of this inputState
+#         that gets the derivative from next processingMechanism's [DERIVATIVE] outputState
+#                 (if there is none, then BP can't be used)
 #     3) matrix parameter of the MappingProjection to the next processingMechanism in the process
 #         asterix this as a violoatin of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
 #    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections

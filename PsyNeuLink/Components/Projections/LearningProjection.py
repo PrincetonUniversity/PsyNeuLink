@@ -241,6 +241,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
                                                                                          PROJECTION_TO_NEXT_MECHANISM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
@@ -870,9 +871,18 @@ FROM TODO:
                 #        (computes contribution of each element in errorSource to error at level to which it projects)
                 if next_level_monitoring_mechanism:
                     error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
-                    monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
-                                                         params={PROJECTION_TO_NEXT_MECHANISM:projection},
-                                                         name=self.mappingProjection.name + " Weighted_Error")
+                    # # MODIFIED 2/10/17 OLD:
+                    # monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
+                    #                                      params={PROJECTION_TO_NEXT_MECHANISM:projection},
+                    #                                      name=self.mappingProjection.name + " Weighted_Error")
+                    # MODIFIED 2/10/17 NEW:
+                    monitoring_mechanism = ObjectiveMechanism(monitor=[projection.parameterStates[MATRIX],
+                                                                       next_level_monitoring_mechanism,
+                                                                       # self.errorSource[DERIVATIVE]],
+                                                                       self.errorSource],
+                                                              function=WeightedError,
+                                                              name=self.mappingProjection.name + " Weighted_Error")
+                    # MODIFIED 2/10/17 END
 
                     # Instantiate MappingProjection to provide monitoring_mechanism with error signal
                     MappingProjection(sender=next_level_monitoring_mechanism,

@@ -291,8 +291,8 @@ Class Reference
 ---------------
 
 """
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 
 OBJECT = 0
@@ -838,7 +838,7 @@ class EVCMechanism(ControlMechanism_Base):
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
         """
 
-        from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
         self._get_monitored_states(context=context)
@@ -889,7 +889,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import validate_monitored_state
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_state
 
         # PARSE SPECS
 

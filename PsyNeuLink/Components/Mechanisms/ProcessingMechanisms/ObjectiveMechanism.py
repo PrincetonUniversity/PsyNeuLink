@@ -13,7 +13,7 @@
 
 """
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 
@@ -31,7 +31,7 @@ class ObjectiveError(Exception):
         return repr(self.error_value)
 
 
-class ObjectiveMechanism(MonitoringMechanism_Base):
+class ObjectiveMechanism(ProcessingMechanism_Base):
     """Implement ObjectiveMechanism subclass
     """
 
