@@ -316,6 +316,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
         # Get derivative for next mechanism's function
         derivative_fct = self.next_mechanism.function_object.derivative
 
+
         # Compute derivative of error with respect to current output of next mechanism
         output_derivative = derivative_fct(output=next_level_output)
         error_derivative = error * output_derivative
