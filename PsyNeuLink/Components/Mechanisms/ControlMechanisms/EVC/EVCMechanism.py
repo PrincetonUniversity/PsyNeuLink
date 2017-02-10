@@ -1363,15 +1363,16 @@ class EVCMechanism(ControlMechanism_Base):
         sim_clock = Clock('EVC SIMULATION CLOCK')
 
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
-        self.monitoring_mechanism.execute()
+
+        # Get outcomes for current allocation_policy
+        #    = the values of the monitored output states (self.inputStates)
+        #    stored in self.inputValue = list(self.variable)
+        self.monitoring_mechanism.execute(context=EVC_SIMULATION)
+        self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
         # Get cost of each controlSignal
         for control_signal in self.controlSignals:
             self.controlSignalCosts = np.append(self.controlSignalCosts, np.atleast_2d(control_signal.cost),axis=0)
-        # Get outcomes for current allocation_policy
-        #    = the values of the monitored output states (self.inputStates)
-        #    stored in self.inputValue = list(self.variable)
-            self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
