@@ -134,7 +134,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
     def _validate_monitored_state(self, state_spec, context=None):
         """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
 
-        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
+        Called by both self._validate_params() and self.add_monitored_state()
         """
         state_spec_is_OK = False
 
@@ -305,6 +305,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        self._validate_monitored_state_spec(states_spec, context=context)
+        self._validate_monitored_state(states_spec, context=context)
         self._instantiate_monitored_output_states(states_spec, context=context)
 

@@ -844,7 +844,7 @@ class EVCMechanism(ControlMechanism_Base):
         self._get_monitored_states(context=context)
 
         for state in self.monitored_output_states:
-            self._validate_monitored_state_spec(state)
+            self._validate_monitored_state_in_system(state)
 
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
         self.monitoring_mechanism = ObjectiveMechanism(function=self.outcome_function,
@@ -912,7 +912,7 @@ class EVCMechanism(ControlMechanism_Base):
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
-        #FIX: ADD CALL TO ObjectiveMechanism validate_monitored_state_spec HERE? (IN WHICH CASE GET RID OF else BELOW
+        #FIX: ADD CALL TO ObjectiveMechanism validate_monitored_state HERE? (IN WHICH CASE GET RID OF else BELOW)
 
         # Extract references to mechanisms and/or outputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
@@ -925,7 +925,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Validate remaining items as one of the following:
             elif isinstance(item, (Mechanism, OutputState, MonitoredOutputStatesOption, str)):
                 all_specs_extracted_from_tuples.append(item)
-            # FIX: REMOVE THIS IF HANDLED BY validate_monitored_state_spec ABOVE
+            # FIX: REMOVE THIS IF HANDLED BY validate_monitored_state ABOVE
             else:
                 raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
                                "in MONITOR_FOR_CONTROL for a mechanism, controller or system in its scope".
@@ -1131,8 +1131,8 @@ class EVCMechanism(ControlMechanism_Base):
         #    (so that it is accessible to custom functions)
         self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
 
-    def _validate_monitored_state_spec(self, state_spec, context=None):
-        """Validate specified outputstate is for a Mechanism in the System
+    def _validate_monitored_state_in_system(self, state_spec, context=None):
+        """Validate specified outputstate is for a mechanism in the controller's system
 
         Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_state() (in ControlMechanism)
         """
@@ -1144,7 +1144,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Confirm it is a mechanism in the system
         if not state_spec in self.system.mechanisms:
-            raise ObjectiveError("Request for controller in {0} to monitor the outputState(s) of "
+            raise EVCError("Request for controller in {0} to monitor the outputState(s) of "
                                               "a mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
 
@@ -1241,7 +1241,6 @@ class EVCMechanism(ControlMechanism_Base):
               is a different combination of values, one from the `allocation_samples` of each ControlSignal.
         Call self.function -- default is ControlSignalGridSearch
         Return an allocation_policy
-
         """
 
         self._update_predicted_input()
@@ -1313,7 +1312,7 @@ class EVCMechanism(ControlMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        self._validate_monitored_state_spec(states_spec, context=context)
+        self._validate_monitored_state_in_system(states_spec, context=context)
         self._instantiate_monitored_output_states(states_spec, context=context)
 
     def run_simulation(self,
@@ -1386,7 +1385,6 @@ class EVCMechanism(ControlMechanism_Base):
     #         self._value_function = ValueFunction()
     #     else:
     #         self._value_function = assignment
-
 
     @property
     def value_function(self):

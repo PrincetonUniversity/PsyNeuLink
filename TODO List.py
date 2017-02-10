@@ -2577,11 +2577,10 @@
 #endregion
 
 #region ObjectiveMechanism -----------------------------------------------------------------------------------
+#
 #     Validate ObjectiveMechanism.monitor argument
+#
 #     Make sure add_monitored_state works
-#     Flag it for execution along with controller (i.e,. phaseMax+2),
-#            and make sure it does not pre-empt 'TERMINAL' status of any processing mechanisms it is monitoring
-#     Assign result of function to outputState
 #     Allow inputStates to be named (so they can be used as ComparatorMechanism)
 #     Augment to take a function for each inputState (as well as its weight and exponent)
 #     Move it to ProcessingMechanism
