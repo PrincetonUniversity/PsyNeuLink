@@ -105,7 +105,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
             else:
                 # Validate each item of MONITOR_FOR_CONTROL
                 for item in target_set[MONITOR_FOR_CONTROL]:
-                    self._validate_monitored_state(item, context=context)
+                    validate_monitored_state(self, item, context=context)
                 # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
@@ -127,58 +127,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         except KeyError:
             pass
         #endregion
-
-# FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
-# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITOR_FOR_CONTROL param
-
-    def _validate_monitored_state(self, state_spec, context=None):
-        """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
-
-        Called by both self._validate_params() and self.add_monitored_state()
-        """
-        state_spec_is_OK = False
-
-        if isinstance(state_spec, MonitoredOutputStatesOption):
-            state_spec_is_OK = True
-
-        if isinstance(state_spec, tuple):
-            if len(state_spec) != 3:
-                raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
-                                     "has {2} items;  it should be 3".
-                                     format(state_spec, self.name, len(state_spec)))
-
-            if not isinstance(state_spec[1], numbers.Number):
-                raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                     "must be a number".
-                                     format(state_spec, self.name, state_spec[0]))
-
-            if not isinstance(state_spec[2], numbers.Number):
-                raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                     "must be a number".
-                                     format(state_spec, self.name, state_spec[0]))
-
-            # Set state_spec to the output_state item for validation below
-            state_spec = state_spec[0]
-
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, (Mechanism, OutputState)):
-            state_spec_is_OK = True
-
-        if isinstance(state_spec, str):
-            if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
-                state_spec_is_OK = True
-        try:
-            self.outputStates[state_spec]
-        except (KeyError, AttributeError):
-            pass
-        else:
-            state_spec_is_OK = True
-
-        if not state_spec_is_OK:
-            raise MechanismError("Specification ({0}) in MONITOR_FOR_CONTROL for {1} is not "
-                                 "a Mechanism or OutputState object or the name of one".
-                                 format(state_spec, self.name))
-#endregion
 
     def _instantiate_input_states(self, context=None):
 
@@ -293,18 +241,64 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
 
 
     def add_monitored_states(self, states_spec, context=None):
-        """Validate and then instantiate outputStates to be monitored by EVC
+        """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
 
         Use by other objects to add a state or list of states to be monitored by EVC
         states_spec can be a Mechanism, OutputState or list of either or both
         If item is a Mechanism, each of its outputStates will be used
-        All of the outputStates specified must be for a Mechanism that is in self.System
 
         Args:
             states_spec (Mechanism, MechanimsOutputState or list of either or both:
             context:
         """
         states_spec = list(states_spec)
-        self._validate_monitored_state(states_spec, context=context)
+        validate_monitored_state(self, states_spec, context=context)
         self._instantiate_monitored_output_states(states_spec, context=context)
 
+def validate_monitored_state(self, state_spec, context=None):
+    """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
+
+    Called by both self._validate_params() and self.add_monitored_state()
+    """
+    state_spec_is_OK = False
+
+    if isinstance(state_spec, MonitoredOutputStatesOption):
+        state_spec_is_OK = True
+
+    if isinstance(state_spec, tuple):
+        if len(state_spec) != 3:
+            raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+                                 "has {2} items;  it should be 3".
+                                 format(state_spec, self.name, len(state_spec)))
+
+        if not isinstance(state_spec[1], numbers.Number):
+            raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                 "must be a number".
+                                 format(state_spec, self.name, state_spec[0]))
+
+        if not isinstance(state_spec[2], numbers.Number):
+            raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                 "must be a number".
+                                 format(state_spec, self.name, state_spec[0]))
+
+        # Set state_spec to the output_state item for validation below
+        state_spec = state_spec[0]
+
+    from PsyNeuLink.Components.States.OutputState import OutputState
+    if isinstance(state_spec, (Mechanism, OutputState)):
+        state_spec_is_OK = True
+
+    if isinstance(state_spec, str):
+        if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
+            state_spec_is_OK = True
+    try:
+        self.outputStates[state_spec]
+    except (KeyError, AttributeError):
+        pass
+    else:
+        state_spec_is_OK = True
+
+    if not state_spec_is_OK:
+        raise ObjectiveError("Specification of state to be monitored ({0}) by {1} is not "
+                             "a Mechanism, OutputState, the name of one, or a MonitoredOutputStatesOption value".
+                             format(state_spec, self.name))

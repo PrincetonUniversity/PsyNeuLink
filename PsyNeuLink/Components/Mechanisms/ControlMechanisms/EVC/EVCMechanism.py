@@ -889,6 +889,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
+        from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import validate_monitored_state
 
         # PARSE SPECS
 
@@ -912,24 +913,18 @@ class EVCMechanism(ControlMechanism_Base):
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
-        #FIX: ADD CALL TO ObjectiveMechanism validate_monitored_state HERE? (IN WHICH CASE GET RID OF else BELOW)
-
         # Extract references to mechanisms and/or outputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
         all_specs_extracted_from_tuples = []
         for item in all_specs:
+            # Validate specification
+            validate_monitored_state(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OBJECT])
-                continue
-            # Validate remaining items as one of the following:
-            elif isinstance(item, (Mechanism, OutputState, MonitoredOutputStatesOption, str)):
-                all_specs_extracted_from_tuples.append(item)
-            # FIX: REMOVE THIS IF HANDLED BY validate_monitored_state ABOVE
+            # Otherwise, add item as specified:
             else:
-                raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
-                               "in MONITOR_FOR_CONTROL for a mechanism, controller or system in its scope".
-                               format(item, self.name))
+                all_specs_extracted_from_tuples.append(item)
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
         option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
