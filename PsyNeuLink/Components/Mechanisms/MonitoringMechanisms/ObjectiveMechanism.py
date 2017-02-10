@@ -83,12 +83,109 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
                          context=self)
 
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate monitor argument
+        """
+
+        super()._validate_params(request_set=request_set,
+                                                                 target_set=target_set,
+                                                                 context=context)
+
+        #region VALIDATE MONITORED STATES (for use by ControlMechanism)
+        # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
+        #       as it can reference entries in that param
+        try:
+            if not target_set[MONITOR_FOR_CONTROL] or target_set[MONITOR_FOR_CONTROL] is NotImplemented:
+                pass
+            # It is a MonitoredOutputStatesOption specification
+            elif isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
+                # Put in a list (standard format for processing by _instantiate_monitored_output_states)
+                target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
+            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
+            else:
+                # Validate each item of MONITOR_FOR_CONTROL
+                for item in target_set[MONITOR_FOR_CONTROL]:
+                    self._validate_monitored_state(item, context=context)
+                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
+                # FIX:     INDICATING THAT IT WILL BE IGNORED;
+                # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
+                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
+                # # Validate WEIGHTS if it is specified
+                # try:
+                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
+                # except KeyError:
+                #     # WEIGHTS not specified, so ignore
+                #     pass
+                # else:
+                #     # Insure that number of weights specified in WEIGHTS
+                #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
+                #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
+                #     if not num_weights != num_monitored_states:
+                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
+                #                        "does not match the number of monitored states ({1})".
+                #                        format(num_weights, num_monitored_states))
+        except KeyError:
+            pass
+        #endregion
+
+# FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
+# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITOR_FOR_CONTROL param
+
+    def _validate_monitored_state(self, state_spec, context=None):
+        """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
+
+        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
+        """
+        state_spec_is_OK = False
+
+        if isinstance(state_spec, MonitoredOutputStatesOption):
+            state_spec_is_OK = True
+
+        if isinstance(state_spec, tuple):
+            if len(state_spec) != 3:
+                raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+                                     "has {2} items;  it should be 3".
+                                     format(state_spec, self.name, len(state_spec)))
+
+            if not isinstance(state_spec[1], numbers.Number):
+                raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                     "must be a number".
+                                     format(state_spec, self.name, state_spec[0]))
+
+            if not isinstance(state_spec[2], numbers.Number):
+                raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                     "must be a number".
+                                     format(state_spec, self.name, state_spec[0]))
+
+            # Set state_spec to the output_state item for validation below
+            state_spec = state_spec[0]
+
+        from PsyNeuLink.Components.States.OutputState import OutputState
+        if isinstance(state_spec, (Mechanism, OutputState)):
+            state_spec_is_OK = True
+
+        if isinstance(state_spec, str):
+            if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
+                state_spec_is_OK = True
+        try:
+            self.outputStates[state_spec]
+        except (KeyError, AttributeError):
+            pass
+        else:
+            state_spec_is_OK = True
+
+        if not state_spec_is_OK:
+            raise MechanismError("Specification ({0}) in MONITOR_FOR_CONTROL for {1} is not "
+                                 "a Mechanism or OutputState object or the name of one".
+                                 format(state_spec, self.name))
+#endregion
+
     def _validate_monitored_state_spec(self, state_spec, context=None):
         """Validate specified outputstate is for a Mechanism in the System
 
         Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
         """
-        super(ControlMechanism_Base, self)._validate_monitored_state(state_spec=state_spec, context=context)
+        self._validate_monitored_state(state_spec=state_spec, context=context)
 
         # Get outputState's owner
         from PsyNeuLink.Components.States.OutputState import OutputState
@@ -106,8 +203,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
             if self.prefs.verbosePref:
                 print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
                       " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
-
-
 
     def _instantiate_input_states(self, context=None):
 
@@ -145,8 +240,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
 
         self.inputValue = self.variable.copy() * 0.0
 
-
-    # def _instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
     def _instantiate_input_state_for_monitored_state(self,monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
@@ -232,7 +325,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
 
 
-    def _add_monitored_states(self, states_spec, context=None):
+    def add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
 
         Use by other objects to add a state or list of states to be monitored by EVC

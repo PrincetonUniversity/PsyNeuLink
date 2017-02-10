@@ -13,11 +13,15 @@
 
 #  EVCMechanism:
 #     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
-#     Make sure _add_monitored_state works (needs to update self.system.graph)
+#     Allow it to take monitoring_mechanism as an argument
+#           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
+#     Make sure add_monitored_state works:
+#           Needs to call ObjectiveMechanism.add_monitored_state
+#           Needs to update self.system.graph to include ObjectiveMechanism:
 
 #  ObjectiveMechanism:
 #     Validate ObjectiveMechanism.monitor argument
-#     Make sure _add_monitored_state works
+#     Make sure add_monitored_state works
 #     Flag it for execution along with controller (i.e,. phaseMax+2),
 #            and make sure it does not pre-empt 'TERMINAL' status of any processing mechanisms it is monitoring
 #     Assign result of function to outputState
@@ -751,7 +755,6 @@ class EVCMechanism(ControlMechanism_Base):
         self.system._instantiate_graph(context=context)
         # MODIFIED 2/9/17 END
 
-
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
 
@@ -914,6 +917,8 @@ class EVCMechanism(ControlMechanism_Base):
         # If there are none, assign PRIMARY_OUTPUT_STATES as default
         all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
+        #FIX: ADD CALL TO ObjectiveMechanism validate_monitored_state_spec HERE? (IN WHICH CASE GET RID OF else BELOW
+
         # Extract references to mechanisms and/or outputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
         all_specs_extracted_from_tuples = []
@@ -925,7 +930,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Validate remaining items as one of the following:
             elif isinstance(item, (Mechanism, OutputState, MonitoredOutputStatesOption, str)):
                 all_specs_extracted_from_tuples.append(item)
-            # IMPLEMENTATION NOTE: This should never occur, as should have been found in _validate_monitored_state()
+            # FIX: REMOVE THIS IF HANDLED BY validate_monitored_state_spec ABOVE
             else:
                 raise EVCError("PROGRAM ERROR:  illegal specification ({0}) encountered by {1} "
                                "in MONITOR_FOR_CONTROL for a mechanism, controller or system in its scope".
@@ -1203,22 +1208,6 @@ class EVCMechanism(ControlMechanism_Base):
                                           self.name,
                                           num_control_projections))
 
-    def _add_monitored_states(self, states_spec, context=None):
-        """Validate and then instantiate outputStates to be monitored by EVC
-
-        Use by other objects to add a state or list of states to be monitored by EVC
-        states_spec can be a Mechanism, OutputState or list of either or both
-        If item is a Mechanism, each of its outputStates will be used
-        All of the outputStates specified must be for a Mechanism that is in self.System
-
-        Args:
-            states_spec (Mechanism, MechanimsOutputState or list of either or both:
-            context:
-        """
-        states_spec = list(states_spec)
-        self._validate_monitored_state_spec(states_spec, context=context)
-        self._instantiate_monitored_output_states(states_spec, context=context)
-
     def _execute(self,
                     variable=None,
                     runtime_params=None,
@@ -1292,6 +1281,22 @@ class EVCMechanism(ControlMechanism_Base):
             #  (in case more than one process uses that (and therefore projects to) originMechanism
             for value, j in zip(origin_mech.inputValue, range(len(origin_mech.inputValue))):
                 self.predictedInput[i][j] = prediction_mech.outputState.value
+
+    def add_monitored_states(self, states_spec, context=None):
+        """Validate and then instantiate outputStates to be monitored by EVC
+
+        Use by other objects to add a state or list of states to be monitored by EVC
+        states_spec can be a Mechanism, OutputState or list of either or both
+        If item is a Mechanism, each of its outputStates will be used
+        All of the outputStates specified must be for a Mechanism that is in self.System
+
+        Args:
+            states_spec (Mechanism, MechanimsOutputState or list of either or both:
+            context:
+        """
+        states_spec = list(states_spec)
+        self._validate_monitored_state_spec(states_spec, context=context)
+        self._instantiate_monitored_output_states(states_spec, context=context)
 
     def run_simulation(self,
                        inputs,
