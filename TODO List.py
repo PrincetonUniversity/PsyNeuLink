@@ -2578,7 +2578,10 @@
 
 #region ObjectiveMechanism -----------------------------------------------------------------------------------
 #
-#     Validate ObjectiveMechanism.monitor argument
+#     Validate ObjectiveMechanism.monitor argument:
+#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_montiored_states) and
+#               monitor (in ObjectiveMechanism._validate_monitored_states) needs to be handled in a more principled way
+#               either in their _validate_params method, or in class function
 #
 #     Make sure add_monitored_state works
 #     Allow inputStates to be named (so they can be used as ComparatorMechanism)
