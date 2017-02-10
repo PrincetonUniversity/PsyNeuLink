@@ -1363,6 +1363,7 @@ class EVCMechanism(ControlMechanism_Base):
         sim_clock = Clock('EVC SIMULATION CLOCK')
 
         self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
+        self.monitoring_mechanism.execute()
 
         # Get cost of each controlSignal
         for control_signal in self.controlSignals:
