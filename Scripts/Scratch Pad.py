@@ -23,14 +23,73 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
-# ORIGINAL:
-# transfer_mechanism_1 = TransferMechanism()
+
+for i, j in zip(range(5), range(5)):
+    print(i, j)
+    j = 3
+    print(j)
+
+# # ORIGINAL:
+# # transfer_mechanism_1 = TransferMechanism()
+# # # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
+# # # TM1_parameter_state = ParameterState(value=22)
+# # transfer_mechanism_2 = TransferMechanism()
+# # # transfer_mechanism_3 = TransferMechanism()
+# # transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
+# #
+# # # my_process = process(pathway=[transfer_mechanism_1,
+# # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
+# # #                                                                                     ModulationOperation.OVERRIDE)}}),
+# # #                               transfer_mechanism_2])
+# # # my_process.run(inputs=[[[0]]])
+# #
+# # # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
+# # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+# # print(transfer_mechanism_3.execute(input=1.0,
+# #                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+# #
+#
+# my_control = ControlProjection(name='MY CONTROL')
+#
+# transfer_mechanism_Y = TransferMechanism(function=lambda x, y: x + y,
+#                                          name='MY_TRANSFER_MECH_Y'
+#                                          )
+#
+# transfer_mechanism_Y.exeucte([2, 3])
+#
+# transfer_mechanism_X = TransferMechanism(function=Logistic(bias=0,
+#                                                            gain=ControlProjection()),
+#                                          # noise=(0.3, CONTROL_PROJECTION),
+#                                          noise=ControlProjection,
+#                                          # noise='MY CONTROL',
+#                                          rate=(0.1, ControlProjection),
+#                                          params={OUTPUT_STATES:10.0},
+#                                          # params={OUTPUT_STATES:['JDC OUTPUT STATE',
+#                                          #                        {NAME:TRANSFER_MEAN,
+#                                          #                         CALCULATE:lambda x: np.mean(x)}]},
+#                                          name='MY_TRANSFER_MECH_X'
+#                                          )
+#
+# transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
+#                                                          gain=CONTROL_PROJECTION
+#                                                          ),
+#                                        noise=(0.3, ControlProjection),
+#                                        name='MY_TRANSFER_MECH'
+#                                        )
+#
+#
+# transfer_mechanism_1 = TransferMechanism(function=Linear(slope=(1, ControlProjection)))
 # # transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
 # # TM1_parameter_state = ParameterState(value=22)
-# transfer_mechanism_2 = TransferMechanism()
+# transfer_mechanism_2 = TransferMechanism(function=Logistic(bias=(3, ControlProjection),
+#                                                            gain=ControlProjection
+#                                                            )
+#                                          # noise=(3, ControlProjection)
+#                                          )
 # # transfer_mechanism_3 = TransferMechanism()
-# transfer_mechanism_3 = TransferMechanism(function=Linear(slope=3))
+# transfer_mechanism_3 = TransferMechanism(function=Linear(slope=1))
 #
+# transfer_mechanism_1.execute()
 # # my_process = process(pathway=[transfer_mechanism_1,
 # #                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
 # #                                                                                     ModulationOperation.OVERRIDE)}}),
@@ -39,124 +98,71 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # # mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
 # # mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
+# transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
 # print(transfer_mechanism_3.execute(input=1.0,
-#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(2.0, ModulationOperation.OVERRIDE)}}))
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
+# # print(transfer_mechanism_3.execute(input=1.0))
+# print(transfer_mechanism_3.execute(input=1.0,
+#                                    runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
+#                                                                                    ModulationOperation.OVERRIDE),
+#                                                                             # SLOPE:(6.0,
+#                                                                             #        ModulationOperation.OVERRIDE
+#                                                                                       }}))
+# # print(transfer_mechanism_3.run(inputs=[1.0],
+# #                                num_executions=3))
 #
-
-my_control = ControlProjection(name='MY CONTROL')
-
-transfer_mechanism_Y = TransferMechanism(function=lambda x, y: x + y,
-                                         name='MY_TRANSFER_MECH_Y'
-                                         )
-
-transfer_mechanism_Y.exeucte([2, 3])
-
-transfer_mechanism_X = TransferMechanism(function=Logistic(bias=0,
-                                                           gain=ControlProjection()),
-                                         # noise=(0.3, CONTROL_PROJECTION),
-                                         noise=ControlProjection,
-                                         # noise='MY CONTROL',
-                                         rate=(0.1, ControlProjection),
-                                         params={OUTPUT_STATES:10.0},
-                                         # params={OUTPUT_STATES:['JDC OUTPUT STATE',
-                                         #                        {NAME:TRANSFER_MEAN,
-                                         #                         CALCULATE:lambda x: np.mean(x)}]},
-                                         name='MY_TRANSFER_MECH_X'
-                                         )
-
-transfer_mechanism = TransferMechanism(function=Logistic(bias=(3, ControlProjection()),
-                                                         gain=CONTROL_PROJECTION
-                                                         ),
-                                       noise=(0.3, ControlProjection),
-                                       name='MY_TRANSFER_MECH'
-                                       )
-
-
-transfer_mechanism_1 = TransferMechanism(function=Linear(slope=(1, ControlProjection)))
-# transfer_mechanism_1 = TransferMechanism(noise=(0.1, ControlProjection))
-# TM1_parameter_state = ParameterState(value=22)
-transfer_mechanism_2 = TransferMechanism(function=Logistic(bias=(3, ControlProjection),
-                                                           gain=ControlProjection
-                                                           )
-                                         # noise=(3, ControlProjection)
-                                         )
-# transfer_mechanism_3 = TransferMechanism()
-transfer_mechanism_3 = TransferMechanism(function=Linear(slope=1))
-
-transfer_mechanism_1.execute()
 # my_process = process(pathway=[transfer_mechanism_1,
-#                               (transfer_mechanism_2,{PARAMETER_STATE_PARAMS:{SLOPE:(1.0,
-#                                                                                     ModulationOperation.OVERRIDE)}}),
-#                               transfer_mechanism_2])
-# my_process.run(inputs=[[[0]]])
-
-# mapping_1 = MappingProjection(sender=transfer_mechanism_1, receiver=transfer_mechanism_3)
-# mapping_2 = MappingProjection(sender=transfer_mechanism_2, receiver=transfer_mechanism_3)
-transfer_mechanism_3.function_object.runtimeParamStickyAssignmentPref = False
-print(transfer_mechanism_3.execute(input=1.0,
-                                   runtime_params={PARAMETER_STATE_PARAMS:{SLOPE:(6.0, ModulationOperation.OVERRIDE)}}))
-# print(transfer_mechanism_3.execute(input=1.0))
-print(transfer_mechanism_3.execute(input=1.0,
-                                   runtime_params={PARAMETER_STATE_PARAMS:{INTERCEPT:(100.0,
-                                                                                   ModulationOperation.OVERRIDE),
-                                                                            # SLOPE:(6.0,
-                                                                            #        ModulationOperation.OVERRIDE
-                                                                                      }}))
-# print(transfer_mechanism_3.run(inputs=[1.0],
-#                                num_executions=3))
-
-my_process = process(pathway=[transfer_mechanism_1,
-                               # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
-                              transfer_mechanism_3])
-
-print("My Process: \n", my_process.run(inputs=[[1.0]],
-                                       num_executions=3))
-# print("My Process: \n", my_process.execute(input=[[1.0]]))
-# print("My Process: \n", my_process.execute(input=[1.0]))
-
-# transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
-
-
-
-
-
-# transfer_process = process(pathway = [transfer_mechanism_1])
-# print(transfer_process.execute())
-print ('Done')
-
-# my_mech1 = TransferMechanism(function=Logistic)
-# my_mech2 = TransferMechanism(function=Logistic)
-# my_monitor = ComparatorMechanism()
-# my_LEARNING_PROJECTION = LearningProjection()
-# my_mapping_projection = MappingProjection(sender=my_mech1, receiver=my_mech2)
-# # my_LEARNING_PROJECTION = LearningProjection(sender=my_monitor, receiver=my_mapping_projection)
-# # my_LEARNING_PROJECTION = LearningProjection(receiver=my_mapping_projection)
-# my_LEARNING_PROJECTION._deferred_init(context="TEST")
-
-# my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
-#                                  threshold=20.0),
-#              params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
-#                                       THRESHOLD:30.0}}
-#              )
-# # my_DDM.execute(time_scale=TimeScale.TIME_STEP)
-# my_DDM.execute()
+#                                # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
+#                               transfer_mechanism_3])
 #
-# TEST = True
-
-# my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
-#                                                      function=Integrator(
-#                                                                          # variable_default=[0,0],
-#                                                                          weighting=SIMPLE,
-#                                                                          rate=[1]
-#                                                                          )
-#                                                      )
-# print(my_adaptive_integrator.execute([1]))
-# print(my_adaptive_integrator.execute([1]))
-# print(my_adaptive_integrator.execute([1]))
-# print(my_adaptive_integrator.execute([3]))
-# print(my_adaptive_integrator.execute([3]))
-# print(my_adaptive_integrator.execute([3]))
-# print(my_adaptive_integrator.execute([3]))
+# print("My Process: \n", my_process.run(inputs=[[1.0]],
+#                                        num_executions=3))
+# # print("My Process: \n", my_process.execute(input=[[1.0]]))
+# # print("My Process: \n", my_process.execute(input=[1.0]))
+#
+# # transfer_mechanism_1.assign_params(request_set={FUNCTION: Logistic(gain=10)})
+#
+#
+#
+#
+#
+# # transfer_process = process(pathway = [transfer_mechanism_1])
+# # print(transfer_process.execute())
+# print ('Done')
+#
+# # my_mech1 = TransferMechanism(function=Logistic)
+# # my_mech2 = TransferMechanism(function=Logistic)
+# # my_monitor = ComparatorMechanism()
+# # my_LEARNING_PROJECTION = LearningProjection()
+# # my_mapping_projection = MappingProjection(sender=my_mech1, receiver=my_mech2)
+# # # my_LEARNING_PROJECTION = LearningProjection(sender=my_monitor, receiver=my_mapping_projection)
+# # # my_LEARNING_PROJECTION = LearningProjection(receiver=my_mapping_projection)
+# # my_LEARNING_PROJECTION._deferred_init(context="TEST")
+#
+# # my_DDM = DDM(function=BogaczEtAl(drift_rate=2.0,
+# #                                  threshold=20.0),
+# #              params={FUNCTION_PARAMS:{DRIFT_RATE:3.0,
+# #                                       THRESHOLD:30.0}}
+# #              )
+# # # my_DDM.execute(time_scale=TimeScale.TIME_STEP)
+# # my_DDM.execute()
+# #
+# # TEST = True
+#
+# # my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
+# #                                                      function=Integrator(
+# #                                                                          # variable_default=[0,0],
+# #                                                                          weighting=SIMPLE,
+# #                                                                          rate=[1]
+# #                                                                          )
+# #                                                      )
+# # print(my_adaptive_integrator.execute([1]))
+# # print(my_adaptive_integrator.execute([1]))
+# # print(my_adaptive_integrator.execute([1]))
+# # print(my_adaptive_integrator.execute([3]))
+# # print(my_adaptive_integrator.execute([3]))
+# # print(my_adaptive_integrator.execute([3]))
+# # print(my_adaptive_integrator.execute([3]))
 
 #endregion
 
