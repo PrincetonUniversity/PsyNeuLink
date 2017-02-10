@@ -2595,7 +2595,9 @@
 #         that gets the derivative from next processingMechanism's [DERIVATIVE] outputState
 #                 (if there is none, then BP can't be used)
 #     3) matrix parameter of the MappingProjection to the next processingMechanism in the process
-#         asterix this as a violoatin of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
+#         asterix this as a violation of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
+#    - IMPLEMENT WeightedError(array, array, matrix) Function (that computes the dot product)
+#    - IMPLEMENT TransferMechanism.outputStates[DERIVATIVE] (per Kristin)
 #    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections
 #         that go to another ProcessingMechanism that itself projects to an ObjectiveMechanism (i.e., to avoid
 #         ones that go to mechanisms that are not part of learning (e.g., other Processing or Control mechanisms)
