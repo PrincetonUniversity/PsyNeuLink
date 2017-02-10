@@ -1141,14 +1141,8 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
         # Note: done here (rather than in call to outcome_function in value_function) for efficiency
-        # self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
-        # self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
         self.paramsCurrent[OUTCOME_FUNCTION].assign_params(request_set={WEIGHTS:weights,
                                                                         EXPONENTS:exponents})
-        # from PsyNeuLink.Components.Functions.Function import LinearCombination
-        # self.paramsCurrent[OUTCOME_FUNCTION] = LinearCombination(operation=PRODUCT,
-        #                                                          weights=weights,
-        #                                                          exponents=exponents)
 
         # Assign weights and exponents to monitor_for_control_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
