@@ -309,7 +309,7 @@ execution, as input to mechanisms that close recurrent loops (designated as <a c
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -329,7 +329,7 @@ in sequence or mechanism format, one target must be provided for each <a class="
 <div class="section" id="control">
 <span id="system-execution-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
 <p>Every system is associated with a single <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute), and uses that information to set the
+mechanisms in the system (listed in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute), and uses that information to set the
 value of parameters for those or other mechanisms in the system, or their functions
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for a description of how to specify which outputStates are
 monitored, and <a class="reference internal" href="ControlProjection.html#controlprojection-creation"><span class="std std-ref">Creating a ControlProjection</span></a> for specifying parameters to be controlled). The controller is

@@ -192,7 +192,7 @@ which it is the <a class="reference internal" href="System.html#system-execution
 <p>ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">system is created</span></a>, and assigned as
 the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a> for that system. The <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a> to be monitored by a
-ControlMechanism are specified in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> argument, which can take  a number of
+ControlMechanism are specified in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> argument, which can take  a number of
 <a class="reference internal" href="#controlmechanism-monitored-outputstates"><span class="std std-ref">forms</span></a>.  When the ControlMechanism is created, it automatically creates its
 own <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> for each of the outputStates it monitors, and assigns a  <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from each
 of those outputStates to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections
@@ -307,14 +307,14 @@ order listed:</p>
 </div></blockquote>
 <p>The set of weights and exponents assigned to each outputState is listed in the ControlMechanism&#8217;s
 <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents" title="EVC.EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitor_for_control_weights_and_exponents</span></code></a> attribute, in the same order as the outputStates are listed in its
-<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute.  Each item in the list is a tuple with the weight and exponent for a given
+<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute.  Each item in the list is a tuple with the weight and exponent for a given
 outputState.</p>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism that is a system&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the values of the
-outputStates in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute, and uses those to determine the value of its
+outputStates in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and uses those to determine the value of its
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>. In the subsequent round of execution, each ControlProjection&#8217;s value is
 used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects to update the parameter being controlled.</p>
 <div class="admonition note">
