@@ -1133,7 +1133,10 @@ class Component(object):
         self.paramInstanceDefaults.update(validated_set)
         self.paramsCurrent = self.paramInstanceDefaults
 
-        # FIX: 2/9/17 NEEDS TO ASSIGN USER_PARAMS AS WELL
+        # MODIFIED 2/10/17 NEW:
+        for param_name, param_value in validated_set.items():
+            self.user_params[param_name]=param_value
+        # MODIFIED 2/10/17 END
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
