@@ -27,7 +27,7 @@ Creating A ControlMechanism
 ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
-ControlMechanism are specified in its `monitoredOutputStates` argument, which can take  a number of
+ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
 `forms <ControlMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates its
 own `inputState <InputState>` for each of the outputStates it monitors, and assigns a  `MappingProjection` from each
 of those outputStates to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections
@@ -119,7 +119,7 @@ order listed:
 
 The set of weights and exponents assigned to each outputState is listed in the ControlMechanism's
 `monitor_for_control_weights_and_exponents` attribute, in the same order as the outputStates are listed in its
-`monitoredOutputStates` attribute.  Each item in the list is a tuple with the weight and exponent for a given
+`monitored_output_states` attribute.  Each item in the list is a tuple with the weight and exponent for a given
 outputState.
 
 .. _ControlMechanism_Execution:
@@ -129,7 +129,7 @@ Execution
 
 A ControlMechanism that is a system's `controller` is always the last mechanism to be executed (see `System Control
 <System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the values of the
-outputStates in its `monitoredOutputStates` attribute, and uses those to determine the value of its
+outputStates in its `monitored_output_states` attribute, and uses those to determine the value of its
 `ControlProjections <ControlProjection>`. In the subsequent round of execution, each ControlProjection's value is
 used by the `ParameterState` to which it projects to update the parameter being controlled.
 
@@ -340,30 +340,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                                  target_set=target_set,
                                                                  context=context)
 
-    def _validate_monitored_state_spec(self, state_spec, context=None):
-        """Validate specified outputstate is for a Mechanism in the System
-
-        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
-        """
-        super(ControlMechanism_Base, self)._validate_monitored_state(state_spec=state_spec, context=context)
-
-        # Get outputState's owner
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, OutputState):
-            state_spec = state_spec.owner
-
-        # Confirm it is a mechanism in the system
-        if not state_spec in self.system.mechanisms:
-            raise ControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
-                                              "a mechanism ({1}) that is not in {2}".
-                                              format(self.system.name, state_spec.name, self.system.name))
-
-        # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminalMechanisms.mechanisms:
-            if self.prefs.verbosePref:
-                print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
-                      " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
-
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
         """
@@ -385,81 +361,6 @@ class ControlMechanism_Base(Mechanism_Base):
         raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
-
-    def _instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
-        """Instantiate inputState for ControlMechanism
-
-        Extend self.variable by one item to accommodate new inputState
-        Instantiate the inputState using input_state_name and input_state_value
-        Update self.inputState and self.inputStates
-
-        Args:
-            input_state_name (str):
-            input_state_value (2D np.array):
-            context:
-
-        Returns:
-            input_state (InputState):
-
-        """
-
-        # First, test for initialization conditions:
-
-        # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
-        if self.variable is None:
-            self.variable = np.atleast_2d(input_state_value)
-
-        # If there is a single item in self.variable, it could be the one assigned on initialization
-        #     (in order to validate ``function`` and get its return value as a template for self.value);
-        #     in that case, there should be no inputStates yet, so pass
-        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
-        elif len(self.variable) == 1:
-            try:
-                self.inputStates
-            except AttributeError:
-                # If there are no inputStates, this is the usual initialization condition;
-                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
-                pass
-            else:
-                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
-        # Other than on initialization (handled above), it is a PROGRAM ERROR if
-        #    the number of inputStates is not equal to the number of items in self.variable
-        elif len(self.variable) != len(self.inputStates):
-            raise ControlMechanismError("PROGRAM ERROR:  The number of inputStates ({}) does not match "
-                                        "the number of items found for the variable attribute ({}) of {}"
-                                        "when creating {}".
-                                        format(len(self.inputStates),
-                                               len(self.variable),
-                                               self.name,input_state_name))
-
-        # Extend self.variable to accommodate new inputState
-        else:
-            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
-
-        variable_item_index = self.variable.size-1
-
-        # Instantiate inputState
-        from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.States.InputState import InputState
-        input_state = _instantiate_state(owner=self,
-                                         state_type=InputState,
-                                         state_name=input_state_name,
-                                         state_spec=defaultControlAllocation,
-                                         state_params=None,
-                                         constraint_value=np.array(self.variable[variable_item_index]),
-                                         constraint_value_name='Default control allocation',
-                                         context=context)
-
-        #  Update inputState and inputStates
-        try:
-            self.inputStates[input_state.name] = input_state
-        except AttributeError:
-            self.inputStates = OrderedDict({input_state_name:input_state})
-            self.inputState = list(self.inputStates.values())[0]
-
-        self.inputValue = list(state.value for state in self.inputStates.values())
-
-        return input_state
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlProjections
@@ -617,11 +518,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
-        for state_name, state in list(self.inputStates.items()):
+        for state_name, state in list(self.monitoring_mechanism.inputStates.items()):
             for projection in state.receivesFromProjections:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
-                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                monitored_state_index = self.monitored_output_states.index(monitored_state)
 
                 # # MODIFIED 1/9/16 OLD:
                 # exponent = \
