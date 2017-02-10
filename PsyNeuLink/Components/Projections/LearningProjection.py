@@ -876,13 +876,12 @@ FROM TODO:
                     #                                      params={PROJECTION_TO_NEXT_MECHANISM:projection},
                     #                                      name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 NEW:
-                    derivative = next_level_monitoring_mechanism.owner.outputState.sendsToProjections[0].\
-                        receiver.owner.receiver.owner.function_object.derivative
+                    activation_function = next_level_monitoring_mechanism.owner.outputState.sendsToProjections[0].\
+                        receiver.owner.receiver.owner.function_object
                     monitoring_mechanism = ObjectiveMechanism(monitor=[projection.parameterStates[MATRIX],
                                                                        next_level_monitoring_mechanism,
-                                                                       # self.errorSource[DERIVATIVE]],
                                                                        self.errorSource],
-                                                              function=WeightedError(derivative=derivative),
+                                                              function=BackPropagation(activation_function=activation_function),
                                                               name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 END
 
