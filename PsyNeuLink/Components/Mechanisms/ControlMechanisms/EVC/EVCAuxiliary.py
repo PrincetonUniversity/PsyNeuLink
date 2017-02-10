@@ -27,7 +27,7 @@ kwEVCAuxFunctionType = "EVC AUXILIARY FUNCTION TYPE"
 kwValueFunction = "EVC VALUE FUNCTION"
 kwControlSignalGridSearchFunction = "EVC CONTROL SIGNAL GRID SEARCH FUNCTION"
 CONTROLLER = 'controller'
-OUTCOMES = 'outcomes'
+OUTCOME = 'outcome'
 COSTS = 'costs'
 
 
@@ -79,7 +79,7 @@ class ValueFunction(EVCAuxiliaryFunction):
                          context=self.componentName+INITIALIZING)
 
     def function(self, **kwargs):
-        """aggregate outcomes, costs, combine, and return value
+        """aggregate costs, combine with outcome, and return value
         """
 
         context = kwargs['context']
@@ -88,34 +88,19 @@ class ValueFunction(EVCAuxiliaryFunction):
             return (np.array([0]), np.array([0]), np.array([0]))
 
         controller = kwargs[CONTROLLER]
-        outcomes = kwargs[OUTCOMES]
+        outcome = kwargs[OUTCOME]
         costs = kwargs[COSTS]
 
-        outcome_function = controller.paramsCurrent[OUTCOME_FUNCTION]
         cost_function = controller.paramsCurrent[COST_FUNCTION]
         combine_function = controller.paramsCurrent[COMBINE_OUTCOME_AND_COST_FUNCTION]
 
-        # Aggregate outcome values (= weighted sum of exponentiated values of monitored output states)
-        # Note: assignment of weights and exponents is done in _instantiate_input_states() for efficiency
-        # weights, exponents = zip(*controller.monitor_for_control_weights_and_exponents)
-
-        # MODIFIED 1/10/17
-
         from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-
-        if isinstance(outcome_function, UserDefinedFunction):
-            outcome = outcome_function.function(controller=controller, outcomes=outcomes)
-        else:
-            outcome = outcome_function.function(variable=outcomes,
-                                        # params={WEIGHTS:weights,
-                                        #         EXPONENTS:exponents},
-                                        context=context)
 
         # Aggregate costs
         if isinstance(cost_function, UserDefinedFunction):
             cost = cost_function.function(controller=controller, costs=costs)
         else:
-            cost = cost_function.function(variable=outcomes, context=context)
+            cost = cost_function.function(variable=costs, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
@@ -146,7 +131,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         -----------
             * Called by ControlSignalGridSearch.
             * Call system.execute for each `allocation_policy` in `controlSignalSearchSpace`.
-            * Store an array of values for outputStates in `monitoredOutputStates` (i.e., the inputStates in `inputStates`)
+            * Store an array of values for outputStates in `monitored_output_states` (i.e., the inputStates in `inputStates`)
                 for each `allocation_policy`.
             * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
                 and assign to `EVCmax`.
@@ -397,7 +382,7 @@ def _compute_EVC(args):
         context (value): context passed to ctlr.update
 
     Returns (float, float, float):
-        (EVC_current, aggregated_outcomes, aggregated_costs)
+        (EVC_current, outcome, aggregated_costs)
 
     """
 
@@ -410,7 +395,7 @@ def _compute_EVC(args):
                         context=context)
 
     EVC_current = ctlr.paramsCurrent[VALUE_FUNCTION].function(controller=ctlr,
-                                                              outcomes=ctlr.inputValue,
+                                                              outcome=ctlr.inputValue,
                                                               costs=ctlr.controlSignalCosts,
                                                               context=context)
 

@@ -217,7 +217,7 @@ in sequence or mechanism format, one target must be provided for each `TARGET` m
 Control
 ~~~~~~~
 Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its `monitoredOutputStates` attribute), and uses that information to set the
+mechanisms in the system (listed in its `monitored_output_states` attribute), and uses that information to set the
 value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
 monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
