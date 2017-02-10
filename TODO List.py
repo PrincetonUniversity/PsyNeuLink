@@ -1472,7 +1472,7 @@
 # IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
-# **IMPLEMENT: System.monitoredOutputStates:
+# **IMPLEMENT: System.monitored_output_states:
 #              @property, that gets list of all outputStates monitored by the system's controller
 #              object should include their names, objects, and the inputState used to monitor it
 # IMPLEMENT:  INITIALIZE USING TOPOSORT AND THEN RUN WITH FULL SET OF PROJECTIONS
@@ -1733,7 +1733,7 @@
 #
 # FIX MonitorOutputStates ISSUES:
 #     FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
-#     IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
+#     IMPLEMENT: Replace monitored_output_states tuple format (outputState or mech, exp, weight) with
 #                       (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
 #     FIX: MAKE MONITOR_FOR_CONTROL A REQUIRED PARAM FOR System CLASS
 #          ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
@@ -1845,8 +1845,8 @@
 #      THIS SHOULD OBVIATE NEED FOR DefaultControlMechanism
 #      THEN TEST EVC System Laming Validation Test with weights assigned to EVC
 #
-# FIX monitor_for_control ISSUES (cf monitoredOutputStates ISSUES UNDER MECHANISM (ABOVE))
-#     FIX:  ADD monitoredOutputStates ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
+# FIX monitor_for_control ISSUES (cf monitored_output_states ISSUES UNDER MECHANISM (ABOVE))
+#     FIX:  ADD monitored_output_states ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
 #                 TO IT RATHER THAN EVCMechanism (AS THEY CURRENTLY DO).
 #     - IMPLEMENT: MONITOR_FOR_CONTROL_OPTION for individual Mechanisms (in ControlMechanism):
 #            TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITOR_FOR_CONTROL specification

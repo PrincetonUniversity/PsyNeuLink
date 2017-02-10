@@ -27,7 +27,7 @@ Creating A ControlMechanism
 ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
-ControlMechanism are specified in its `monitoredOutputStates` argument, which can take  a number of
+ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
 `forms <ControlMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates its
 own `inputState <InputState>` for each of the outputStates it monitors, and assigns a  `MappingProjection` from each
 of those outputStates to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections
@@ -119,7 +119,7 @@ order listed:
 
 The set of weights and exponents assigned to each outputState is listed in the ControlMechanism's
 `monitor_for_control_weights_and_exponents` attribute, in the same order as the outputStates are listed in its
-`monitoredOutputStates` attribute.  Each item in the list is a tuple with the weight and exponent for a given
+`monitored_output_states` attribute.  Each item in the list is a tuple with the weight and exponent for a given
 outputState.
 
 .. _ControlMechanism_Execution:
@@ -129,7 +129,7 @@ Execution
 
 A ControlMechanism that is a system's `controller` is always the last mechanism to be executed (see `System Control
 <System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the values of the
-outputStates in its `monitoredOutputStates` attribute, and uses those to determine the value of its
+outputStates in its `monitored_output_states` attribute, and uses those to determine the value of its
 `ControlProjections <ControlProjection>`. In the subsequent round of execution, each ControlProjection's value is
 used by the `ParameterState` to which it projects to update the parameter being controlled.
 
@@ -518,11 +518,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
-        for state_name, state in list(self.inputStates.items()):
+        for state_name, state in list(self.monitoring_mechanism.inputStates.items()):
             for projection in state.receivesFromProjections:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
-                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                monitored_state_index = self.monitored_output_states.index(monitored_state)
 
                 # # MODIFIED 1/9/16 OLD:
                 # exponent = \
