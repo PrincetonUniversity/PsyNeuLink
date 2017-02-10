@@ -100,7 +100,7 @@ class ValueFunction(EVCAuxiliaryFunction):
         if isinstance(cost_function, UserDefinedFunction):
             cost = cost_function.function(controller=controller, costs=costs)
         else:
-            cost = cost_function.function(variable=outcome, context=context)
+            cost = cost_function.function(variable=costs, context=context)
 
         # Combine outcome and cost to determine value
         if isinstance(combine_function, UserDefinedFunction):
