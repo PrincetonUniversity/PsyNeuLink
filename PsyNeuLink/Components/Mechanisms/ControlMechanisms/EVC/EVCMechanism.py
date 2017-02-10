@@ -101,7 +101,7 @@ parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifie
 exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, an inputState is
 created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
 that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
-by an EVCMechanism are listed in its `monitoredOutputStates` attribute.
+by an EVCMechanism are listed in its `monitored_output_states` attribute.
 
 .. _EVC_Function
 
@@ -156,7 +156,7 @@ COMMENT
   user-defined function to fully customize the calculation of the EVC, by assigning a custom function to the
   `value_function` attribute of the EVCMechanism (see `note <EVCMechanism_Calling_and_Assigning_Functions>` below).
 ..
-* `outcome_function` - this combines the values of the outputStates in the EVCMechanism's `monitoredOutputStates`
+* `outcome_function` - this combines the values of the outputStates in the EVCMechanism's `monitored_output_states`
   attribute to generate an aggregated outcome value for the current `allocation_policy`. The default is the
   `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState values, using any
   `weights and/or exponents specified for the outputStates <ControlMechanism_OutputState_Tuple>` to scale and/or
@@ -262,7 +262,7 @@ following steps:
 * **Calculate the EVC for the allocation_policy.**  This uses three functions:
 
     * the `outcome_function` calculates the **outcome** for the allocation_policy by aggregating the value of the
-      outputStates the EVCMechanism monitors (listed in its `monitoredOutputStates` attribute);
+      outputStates the EVCMechanism monitors (listed in its `monitored_output_states` attribute);
     ..
     * the `cost_function` calculates the **cost** of the allocation_policy by aggregating the `cost` of the
       EVCMechanism's ControlSignals;
@@ -525,12 +525,12 @@ class EVCMechanism(ControlMechanism_Base):
         axis 1 an `inputState <InputState>` of that prediction mechanism, and
         axis 2 the elements of the input for that inputState.
 
-    monitoredOutputStates : List[OutputState]
+    monitored_output_states : List[OutputState]
         each item is an outputState of a mechanism in the system that has been assigned a projection to a corresponding
         inputState of the EVCMechanism.
 
     monitoredValues : 3D np.array
-        an array of values of the outputStates in `monitoredOutputStates` (equivalent to the values of
+        an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
         the EVCMechanism's `inputStates <EVCMechanism.inputStates>`).
 
     monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
@@ -591,7 +591,7 @@ class EVCMechanism(ControlMechanism_Base):
         accommodate three arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism for
         which it is carrying out the calculation; an :keyword:`outcome` argument that is a scalar value that reflects
         the outcome of the function of the ObjectiveMechanism (based on the value of the outputStates being monitored
-        (and specified in the EVCMechanism's `monitoredOutputStates` attribute;
+        (and specified in the EVCMechanism's `monitored_output_states` attribute;
         and a :keyword:`costs` argument that is a 2d array of costs, each item of which is the `cost` of a
         ControlSignal in the EVCMechanism's `controlSignals` attribute.  A custom function assigned to
         `value_function` can also call any of the other EVCMechanism functions described below (however,
@@ -599,14 +599,14 @@ class EVCMechanism(ControlMechanism_Base):
 
     outcome_function : function : default LinearCombination(operation=PRODUCT)
         calculates the outcome for a given `allocation_policy`.  The default combines the values of the outputStates in
-        `monitoredOutputStates` by taking their product, using the `LinearCombination` function.  The
+        `monitored_output_states` by taking their product, using the `LinearCombination` function.  The
         `weights and/or exponents specified for the outputStates <ControlMechanism_OutputState_Tuple>` (see
         examples <EVCMechanism_Examples>`) are used as the `weights` and `exponents` parameters of the
         `LinearCombination` function, respectively. If the default `outcome_function` is called by a custom
         `value_function`, the weights and/or exponents can be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS`
         entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` specified for the `params` argument of
         the `LinearCombination` function. The length of each array must equal the number of (and values be listed in
-        the same order as) the outputStates in the EVCMechanism's `monitoredOutputStates` attribute.  These
+        the same order as) the outputStates in the EVCMechanism's `monitored_output_states` attribute.  These
         specifications will supercede any made for individual outputStates in the `monitor_for_control` argument or
         `MONITOR_FOR_CONTROL <monitor_for_control>` entry of a parameter specification dictionary for the
         EVCMechanism (see `ControlMechanism_Monitored_OutputStates`).  The default function can also be replaced
@@ -616,7 +616,7 @@ class EVCMechanism(ControlMechanism_Base):
         access to its attributes, including the `monitor_for_control_weights_and_exponents` attribute that lists the
         weights and exponents assigned to each outputState being monitored);  and an :keyword:`outcome` argument,
         that is a scalar value specifying the result of the ObjectiveMechanism's function (based on the outputStates
-        listed in the `monitoredOutputStates` attribute of the :keyword:`controller` argument).
+        listed in the `monitored_output_states` attribute of the :keyword:`controller` argument).
 
     cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost for a given `allocation_policy`.  The default combines the `cost` of each ControlSignals in
@@ -658,7 +658,7 @@ class EVCMechanism(ControlMechanism_Base):
         the maximum EVC value over all allocation policies in `controlSignalSearchSpace`.
 
     EVCmaxStateValues : 2d np.array
-        an array of the values for the outputStates in `monitoredOutputStates` using the allocation policy that
+        an array of the values for the outputStates in `monitored_output_states` using the allocation policy that
         generated `EVCmax`.
 
     EVCmaxPolicy : 1d np.array
@@ -746,6 +746,8 @@ class EVCMechanism(ControlMechanism_Base):
         """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
 
         """
+        super()._instantiate_input_states(context=context)
+
         self._instantiate_prediction_mechanisms(context=context)
         self._instantiate_monitoring_mechanism(context=context)
 
@@ -841,7 +843,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
         Assign inputState to controller for each state to be monitored;
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
-            For each item in self.monitoredOutputStates:
+            For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
             - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
                 (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
@@ -849,10 +851,10 @@ class EVCMechanism(ControlMechanism_Base):
                 '<name of mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
 
         Notes:
-        * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
+        * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
         * self.inputStates is the usual ordered dict of states,
-            each of which receives a projection from a corresponding outputState in self.monitoredOutputStates
+            each of which receives a projection from a corresponding outputState in self.monitored_output_states
         """
 
         from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import ObjectiveMechanism
@@ -860,18 +862,18 @@ class EVCMechanism(ControlMechanism_Base):
 
         self._get_monitored_states(context=context)
 
-        for state in self.monitoredOutputStates:
+        for state in self.monitored_output_states:
             self._validate_monitored_state_spec(state)
 
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
         self.monitoring_mechanism = ObjectiveMechanism(function=self.outcome_function,
-                                                       monitor=self.monitoredOutputStates)
+                                                       monitor=self.monitored_output_states)
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
-            for state in self.monitoredOutputStates:
-                weight = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][0]
-                exponent = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][1]
+            for state in self.monitored_output_states:
+                weight = self.monitor_for_control_weights_and_exponents[self.monitored_output_states.index(state)][0]
+                exponent = self.monitor_for_control_weights_and_exponents[self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         MappingProjection(sender=self.monitoring_mechanism,
@@ -892,15 +894,15 @@ class EVCMechanism(ControlMechanism_Base):
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
             - it specifies options for assigning outputStates of terminal Mechanisms in the System
-                to self.monitoredOutputStates;  the options are:
+                to self.monitored_output_states;  the options are:
                 + PRIMARY_OUTPUT_STATES: assign only the `primary outputState <OutputState_Primary>` for each
                   TERMINAL Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
             - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
-        * self.monitoredOutputStates is a list, each item of which is a Mechanism.outputState from which a projection
+        * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
         * self.inputStates is the usual ordered dict of states,
-            each of which receives a projection from a corresponding outputState in self.monitoredOutputStates
+            each of which receives a projection from a corresponding outputState in self.monitored_output_states
 
         """
 
@@ -959,8 +961,8 @@ class EVCMechanism(ControlMechanism_Base):
                            format(self.name, option_specs))
 
         # Get MONITOR_FOR_CONTROL specifications for each mechanism and outputState in the System
-        # Assign outputStates to self.monitoredOutputStates
-        self.monitoredOutputStates = []
+        # Assign outputStates to self.monitored_output_states
+        self.monitored_output_states = []
 
         # Notes:
         # * Use all_specs to accumulate specs from all mechanisms and their outputStates
@@ -976,7 +978,7 @@ class EVCMechanism(ControlMechanism_Base):
             # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
             # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
             # - use local_specs (which now has this mechanism's specs with those from controller and system specs)
-            #     to assign outputStates to self.monitoredOutputStates
+            #     to assign outputStates to self.monitored_output_states
 
             mech_specs = []
             output_state_specs = []
@@ -1073,13 +1075,13 @@ class EVCMechanism(ControlMechanism_Base):
                     option_spec = None
 
 
-            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitoredOutputStates
+            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitored_output_states
 
             for output_state_name, output_state in list(mech.outputStates.items()):
 
                 # If outputState is named or referenced anywhere, include it
                 if (output_state in local_specs or output_state.name in local_specs):
-                    self.monitoredOutputStates.append(output_state)
+                    self.monitored_output_states.append(output_state)
                     continue
 
 # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
@@ -1100,14 +1102,14 @@ class EVCMechanism(ControlMechanism_Base):
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
                         if output_state is mech.outputState:
-                            self.monitoredOutputStates.append(output_state)
+                            self.monitored_output_states.append(output_state)
                             continue
                     # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
                     elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
-                        self.monitoredOutputStates.append(output_state)
+                        self.monitored_output_states.append(output_state)
                     elif mech.name in local_specs or mech in local_specs:
                         if output_state is mech.outputState:
-                            self.monitoredOutputStates.append(output_state)
+                            self.monitored_output_states.append(output_state)
                             continue
                     elif option_spec is None:
                         continue
@@ -1122,7 +1124,7 @@ class EVCMechanism(ControlMechanism_Base):
         # Note: these values will be superceded by any assigned as arguments to the outcome_function
         #       if it is specified in the constructor for the mechanism
 
-        num_monitored_output_states = len(self.monitoredOutputStates)
+        num_monitored_output_states = len(self.monitored_output_states)
         weights = np.ones((num_monitored_output_states,1))
         exponents = np.ones_like(weights)
 
@@ -1130,12 +1132,12 @@ class EVCMechanism(ControlMechanism_Base):
         for spec in all_specs:
             if isinstance(spec, tuple):
                 object_spec = spec[OBJECT]
-                # For each outputState in monitoredOutputStates
-                for item in self.monitoredOutputStates:
+                # For each outputState in monitored_output_states
+                for item in self.monitored_output_states:
                     # If either that outputState or its owner is the object specified in the tuple
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
                         # Assign the weight and exponent specified in the tuple to that outputState
-                        i = self.monitoredOutputStates.index(item)
+                        i = self.monitored_output_states.index(item)
                         weights[i] = spec[WEIGHT]
                         exponents[i] = spec[EXPONENT]
 
@@ -1199,13 +1201,13 @@ class EVCMechanism(ControlMechanism_Base):
 
         if isinstance(outcome_Function, Function):
             # Insure that length of the weights and/or exponents arguments for the outcome_function
-            #    matches the number of monitoredOutputStates
-            num_monitored_output_states = len(self.monitoredOutputStates)
+            #    matches the number of monitored_output_states
+            num_monitored_output_states = len(self.monitored_output_states)
             if outcome_Function.weights is not None:
                 num_outcome_weights = len(outcome_Function.weights)
                 if  num_outcome_weights != num_monitored_output_states:
                     raise EVCError("The length of the weights argument {} for the {} of {} "
-                                   "must equal the number of its monitoredOutputStates {}".
+                                   "must equal the number of its monitored_output_states {}".
                                    format(num_outcome_weights,
                                           outcome_Function,
                                           self.name,
