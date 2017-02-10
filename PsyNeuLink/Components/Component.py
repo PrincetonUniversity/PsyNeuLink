@@ -1108,11 +1108,11 @@ class Component(object):
 
 
     def assign_params(self, request_set:dict=None):
-        """Validates specified params, adds to them paramsInstanceDefaults, and instantiates any if necessary
+        """Validates specified params, adds them TO paramsInstanceDefaults, and instantiates any if necessary
 
         Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
         Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
-        Instantiate any items in request set that require it (i.e, function or states).
+        Instantiate any items in request set that require it (i.e., function or states).
 
         """
         context=COMMAND_LINE
@@ -1132,6 +1132,8 @@ class Component(object):
 
         self.paramInstanceDefaults.update(validated_set)
         self.paramsCurrent = self.paramInstanceDefaults
+
+        # FIX: 2/9/17 NEEDS TO ASSIGN USER_PARAMS AS WELL
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
