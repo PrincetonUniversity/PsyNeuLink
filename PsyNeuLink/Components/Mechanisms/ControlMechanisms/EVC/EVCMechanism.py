@@ -9,25 +9,6 @@
 # *************************************************  EVCMechanism ******************************************************
 
 #FIX: SEARCH FOR :ref`xxx <LINK>`
-# EVC_MONITORING_MECH TODO LIST:
-
-#  EVCMechanism:
-#     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
-#     Allow it to take monitoring_mechanism as an argument
-#           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
-#     Make sure add_monitored_state works:
-#           Needs to call ObjectiveMechanism.add_monitored_state
-#           Needs to update self.system.graph to include ObjectiveMechanism:
-
-#  ObjectiveMechanism:
-#     Validate ObjectiveMechanism.monitor argument
-#     Make sure add_monitored_state works
-#     Flag it for execution along with controller (i.e,. phaseMax+2),
-#            and make sure it does not pre-empt 'TERMINAL' status of any processing mechanisms it is monitoring
-#     Assign result of function to outputState
-#     Allow inputStates to be named (so they can be used as ComparatorMechanism)
-
-#  Replace ComparatorMechanmism with ObjectiveMechanisms using a particular function and named inputStates
 
 """
 

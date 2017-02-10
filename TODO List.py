@@ -2128,7 +2128,7 @@
 #
 #endregion
 
-#region MAPPING_PROJECTION: ------------------------------------------------------------------------------------------------------
+#region MAPPING_PROJECTION: --------------------------------------------------------------------------------------------
 #
 # TEST: DOES ASSIGNING A MappingProjection OR ControlProjection TO THE Matrix ParameterState OF A MappingProjection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_PROJECTION.
@@ -2136,7 +2136,7 @@
 #
 #endregion
 
-#region CONTROL_PROJECTION: ------------------------------------------------------------------------------------------------------
+#region CONTROL_PROJECTION: --------------------------------------------------------------------------------------------
 #
 #
 # FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_function (like LearningProjection)
@@ -2574,4 +2574,43 @@
 #region ComparatorMechanism -----------------------------------------------------------------------------------
 # FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # IMPLEMENT: ComparatorMechanism Processing Mechanism TYPE, ComparatorMechanism SUBTYPE
+#endregion
+
+#region ObjectiveMechanism -----------------------------------------------------------------------------------
+#     Validate ObjectiveMechanism.monitor argument
+#     Make sure add_monitored_state works
+#     Flag it for execution along with controller (i.e,. phaseMax+2),
+#            and make sure it does not pre-empt 'TERMINAL' status of any processing mechanisms it is monitoring
+#     Assign result of function to outputState
+#     Allow inputStates to be named (so they can be used as ComparatorMechanism)
+#     Augment to take a function for each inputState (as well as its weight and exponent)
+#     Move it to ProcessingMechanism
+#  Replace ComparatorMechanmism with ObjectiveMechanism
+#   using a particular function and named inputStates
+#  Replace WeightedErrorMechanism with ObjectiveMechanism
+#   with three inputStates:
+#     1) output of ObjectiveMechanism for next processingMechanism in the process
+#     2) derivative of activation function of next processingMechanism in the process
+#         assign the derivate to the function of this inputState
+#     3) matrix parameter of the MappingProjection to the next processingMechanism in the process
+#         asterix this as a violoatin of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
+#    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections
+#         that go to another ProcessingMechanism that itself projects to an ObjectiveMechanism (i.e., to avoid
+#         ones that go to mechanisms that are not part of learning (e.g., other Processing or Control mechanisms)
+#
+#endregion
+
+#region AdaptiveMechanisms -----------------------------------------------------------------------------------
+#  These chnage the parameters of other mechanisms (Control) or projections (Learning)
+#  Create as Type of Mechanism (after removing MonitoringMechanism and ControlMechanism
+#  Move LearningMechanism and ControlMechanism under this category;  Get rid of MonitoringMechanism
+#endregion
+
+#region EVCMechanism -----------------------------------------------------------------------------------
+#     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
+#     Allow it to take monitoring_mechanism as an argument
+#           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
+#     Make sure add_monitored_state works:
+#           Needs to call ObjectiveMechanism.add_monitored_state
+#           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
