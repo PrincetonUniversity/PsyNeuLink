@@ -859,9 +859,21 @@ class EVCMechanism(ControlMechanism_Base):
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
         self._get_monitored_states(context=context)
+
+        for state in self.monitoredOutputStates:
+            self._validate_monitored_state_spec(state)
+
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
         self.monitoring_mechanism = ObjectiveMechanism(function=self.outcome_function,
                                                        monitor=self.monitoredOutputStates)
+
+        if self.prefs.verbosePref:
+            print ("{0} monitoring:".format(self.name))
+            for state in self.monitoredOutputStates:
+                weight = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][0]
+                exponent = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][1]
+                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+
         MappingProjection(sender=self.monitoring_mechanism,
                           receiver=self,
                           matrix=IDENTITY_MATRIX)
@@ -1114,7 +1126,7 @@ class EVCMechanism(ControlMechanism_Base):
         weights = np.ones((num_monitored_output_states,1))
         exponents = np.ones_like(weights)
 
-        # Get and assign specification of exponents and weights for mechanisms or outputStates specified in tuples
+        # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
         for spec in all_specs:
             if isinstance(spec, tuple):
                 object_spec = spec[OBJECT]
@@ -1129,12 +1141,41 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
         # Note: done here (rather than in call to outcome_function in value_function) for efficiency
-        self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
-        self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
+        # self.paramsCurrent[OUTCOME_FUNCTION].weights = weights
+        # self.paramsCurrent[OUTCOME_FUNCTION].exponents = exponents
+        self.paramsCurrent[OUTCOME_FUNCTION].assign_params(request_set={WEIGHTS:weights,
+                                                                       EXPONENTS:exponents})
+#         from PsyNeuLink.Components.Functions.Function import LinearCombination
+# self.paramsCurrent[OUTCOME_FUNCTION] = LinearCombination(operation=PRODUCT,
+#                                                                  weights=weights,
+#                                                                  exponents=exponents)
 
         # Assign weights and exponents to monitor_for_control_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
         self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
+
+    def _validate_monitored_state_spec(self, state_spec, context=None):
+        """Validate specified outputstate is for a Mechanism in the System
+
+        Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_state() (in ControlMechanism)
+        """
+
+        # Get outputState's owner
+        from PsyNeuLink.Components.States.OutputState import OutputState
+        if isinstance(state_spec, OutputState):
+            state_spec = state_spec.owner
+
+        # Confirm it is a mechanism in the system
+        if not state_spec in self.system.mechanisms:
+            raise ObjectiveError("Request for controller in {0} to monitor the outputState(s) of "
+                                              "a mechanism ({1}) that is not in {2}".
+                                              format(self.system.name, state_spec.name, self.system.name))
+
+        # Warn if it is not a terminalMechanism
+        if not state_spec in self.system.terminalMechanisms.mechanisms:
+            if self.prefs.verbosePref:
+                print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
+                      " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """

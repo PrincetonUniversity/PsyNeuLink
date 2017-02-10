@@ -88,8 +88,8 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         """
 
         super()._validate_params(request_set=request_set,
-                                                                 target_set=target_set,
-                                                                 context=context)
+                                 target_set=target_set,
+                                 context=context)
 
         #region VALIDATE MONITORED STATES (for use by ControlMechanism)
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
@@ -180,30 +180,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
                                  format(state_spec, self.name))
 #endregion
 
-    def _validate_monitored_state_spec(self, state_spec, context=None):
-        """Validate specified outputstate is for a Mechanism in the System
-
-        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
-        """
-        self._validate_monitored_state(state_spec=state_spec, context=context)
-
-        # Get outputState's owner
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, OutputState):
-            state_spec = state_spec.owner
-
-        # Confirm it is a mechanism in the system
-        if not state_spec in self.system.mechanisms:
-            raise ObjectiveError("Request for controller in {0} to monitor the outputState(s) of "
-                                              "a mechanism ({1}) that is not in {2}".
-                                              format(self.system.name, state_spec.name, self.system.name))
-
-        # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminalMechanisms.mechanisms:
-            if self.prefs.verbosePref:
-                print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
-                      " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
-
     def _instantiate_input_states(self, context=None):
 
         # Clear self.variable, as items will be assigned in call(s) to _instantiate_input_state_for_monitored_state()
@@ -230,14 +206,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         for item in self.monitor:
             self._instantiate_input_state_for_monitored_state(item, context=context)
 
-        if self.prefs.verbosePref:
-            print ("{0} monitoring:".format(self.name))
-            for state in self.monitoredOutputStates:
-                weight = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][0]
-                exponent = self.monitor_for_control_weights_and_exponents[self.monitoredOutputStates.index(state)][1]
-
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
-
         self.inputValue = self.variable.copy() * 0.0
 
     def _instantiate_input_state_for_monitored_state(self,monitored_state, context=None):
@@ -258,8 +226,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
             input_state (InputState):
 
         """
-
-        self._validate_monitored_state_spec(monitored_state, context=context)
 
         input_state_name = monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
         input_state_value = monitored_state.value
