@@ -289,7 +289,9 @@ def validate_monitored_state(self, state_spec, context=None):
         state_spec_is_OK = True
 
     if isinstance(state_spec, str):
-        if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
+        # FIX: TEST THAT STR IS THE NAME OF AN OUTPUTSTATER OF A MECHANISM IN THE SELF.SYSTEM
+        # if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
+        if any(state_spec in m.outputStates for m in self.system.mechanisms):
             state_spec_is_OK = True
     try:
         self.outputStates[state_spec]
