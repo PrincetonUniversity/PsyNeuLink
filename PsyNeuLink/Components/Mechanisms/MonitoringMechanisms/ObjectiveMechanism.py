@@ -206,7 +206,8 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         for item in self.monitor:
             self._instantiate_input_state_for_monitored_state(item, context=context)
 
-        self.inputValue = self.variable.copy() * 0.0
+        # self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
+        self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
 
     def _instantiate_input_state_for_monitored_state(self,monitored_state, context=None):
         """Instantiate inputState with projection from monitoredOutputState
