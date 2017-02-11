@@ -1560,10 +1560,10 @@ class Mechanism_Base(Mechanism):
             mechanism_string = ' '
         else:
             mechanism_string = ' mechanism'
-        # print ("\n\'{}\'{} executed:\n- input:  {}".
-        #        format(self.name,
-        #               mechanism_string,
-        #               [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
+        print ("\n\'{}\'{} executed:\n- input:  {}".
+               format(self.name,
+                      mechanism_string,
+                      [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
 
         if params:
             print("- params:")
