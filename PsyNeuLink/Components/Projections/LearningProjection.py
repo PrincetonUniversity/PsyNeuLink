@@ -849,7 +849,7 @@ FROM TODO:
                 #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
                 if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
                     try:
-                        next_level_LEARNING_PROJECTION = projection.parameterStates[MATRIX].receivesFromProjections[0]
+                        next_level_learning_projection = projection.parameterStates[MATRIX].receivesFromProjections[0]
                     except (AttributeError, KeyError):
                         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
                         #    => no LearningProjection
@@ -859,7 +859,7 @@ FROM TODO:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
                         # next_level_weight_matrix = projection.matrix
-                        next_level_montioring_mech_output = next_level_LEARNING_PROJECTION.sender
+                        next_level_montioring_mech_output = next_level_learning_projection.sender
 
             # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
@@ -876,15 +876,16 @@ FROM TODO:
                     #                                      params={PROJECTION_TO_NEXT_MECHANISM:projection},
                     #                                      name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 NEW:
-                    from PsyNeuLink.Components.Functions.Function import WeightedError
+                    next_level_output = \
+                        next_level_montioring_mech_output.owner.inputState.receivesFromProjections[0].sender
+                    activity = np.zeros_like(next_level_output.value)
                     matrix=projection.parameterStates[MATRIX]
                     derivative = next_level_montioring_mech_output.sendsToProjections[0].\
                         receiver.owner.receiver.owner.function_object.derivative
-                    activity = self.errorSource.outputState.value
-                    error = next_level_montioring_mech_output.value
-                    monitoring_mechanism = ObjectiveMechanism(monitor=[self.errorSource,
+                    from PsyNeuLink.Components.Functions.Function import WeightedError
+                    monitoring_mechanism = ObjectiveMechanism(monitor=[next_level_output,
                                                                        next_level_montioring_mech_output],
-                                                              function=WeightedError(variable=[activity, error],
+                                                              function=WeightedError(variable=[activity, error_signal],
                                                                                      matrix=matrix,
                                                                                      derivative=derivative),
                                                               name=self.mappingProjection.name + " Weighted_Error")
