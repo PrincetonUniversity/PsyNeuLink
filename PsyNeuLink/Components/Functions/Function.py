@@ -904,7 +904,7 @@ class WeightedError(CombinationFunction):
     from PsyNeuLink.Components.States.ParameterState import ParameterState
     @tc.typecheck
     def __init__(self,
-                 variable,
+                 variable_default,
                  matrix=None,
                  # derivative:is_function_type,
                  derivative=None,
@@ -917,7 +917,7 @@ class WeightedError(CombinationFunction):
                                                   derivative=derivative,
                                                   params=params)
 
-        super().__init__(variable_default=variable,
+        super().__init__(variable_default=variable_default,
                          params=params,
                          prefs=prefs,
                          context=context)
