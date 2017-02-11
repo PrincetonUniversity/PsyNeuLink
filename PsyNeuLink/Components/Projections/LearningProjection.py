@@ -248,7 +248,7 @@ from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Functions.Function import BackPropagation
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
 
 # Params:
 
@@ -877,12 +877,12 @@ FROM TODO:
                     #                                      name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 NEW:
                     matrix=projection.parameterStates[MATRIX]
-                    activation_function = next_level_monitoring_mechanism.owner.outputState.sendsToProjections[0].\
-                        receiver.owner.receiver.owner.function_object
-                    monitoring_mechanism = ObjectiveMechanism(monitor=[next_level_monitoring_mechanism,
-                                                                       self.errorSource],
-                                                              function=BackPropagation(
-                                                                      activation_function=activation_function),
+                    derivative = next_level_monitoring_mechanism.owner.outputState.sendsToProjections[0].\
+                        receiver.owner.receiver.owner.function_object.derivative
+                    monitoring_mechanism = ObjectiveMechanism(monitor=[self.errorSource,
+                                                                       next_level_monitoring_mechanism],
+                                                              function=WeightedError(matrix=matrix,
+                                                                                     derivative=derivative),
                                                               name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 END
 
