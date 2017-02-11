@@ -1952,8 +1952,8 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     """
 
     if mechanism_state.owner != owner:
-        reassign = input("\nState {0}, assigned to {1} in {2}, already belongs to {3}"
-                         " You can choose to reassign it (r), copy it (c), or assign default (d):".
+        reassign = input("\nState for \'{0}\' parameter, assigned to {1} in {2}, already belongs to {3}. "
+                         "You can reassign it (r), copy it (c), or assign default (d):".
                          format(mechanism_state.name, param_name, owner.name,
                                 mechanism_state.owner.name))
         while reassign != 'r' and reassign != 'c' and reassign != 'd':

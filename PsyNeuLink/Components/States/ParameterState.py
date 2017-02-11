@@ -859,7 +859,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     else:
         state = _instantiate_state(owner=owner,
                                   state_type=ParameterState,
-                                  state_name=param_name,
+                                  state_name=param_name,
                                   state_spec=param_value,
                                   state_params=None,
                                   constraint_value=param_value,
