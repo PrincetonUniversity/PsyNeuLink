@@ -875,7 +875,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
-class WeightedErrorFunction(CombinationFunction):
+class WeightedError(CombinationFunction):
     """Calculate the contribution of each sender to the error signal based on the weight matrix
 
     Description:
@@ -905,8 +905,9 @@ class WeightedErrorFunction(CombinationFunction):
     @tc.typecheck
     def __init__(self,
                  variable,
-                 matrix:ParameterState,
-                 derivative:is_function_type,
+                 matrix=None,
+                 # derivative:is_function_type,
+                 derivative=None,
                  params=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
@@ -930,7 +931,9 @@ class WeightedErrorFunction(CombinationFunction):
         """
         super()._validate_variable(variable=variable, context=context)
 
+        # FIX: MAKE SURE VARIABLE ndim = 2
         variable = np.array(variable)
+        # self.variable = np.atleast_2d(variable)
 
         # variable must have two 1d items
         if variable.shape[0] != 2:
@@ -945,15 +948,25 @@ class WeightedErrorFunction(CombinationFunction):
                               context=context)
 
         matrix = target_set[MATRIX].value
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if not isinstance(target_set[MATRIX], ParameterState):
+            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
+                                format(matrix, self.__class__.__name__))
+
+        if not isinstance(matrix, (np.ndarray, np.matrix)):
+            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
+                                format(matrix, self.__class__.__name__))
+
         if matrix.ndim != 2:
-            raise FunctionError("matrix arg for {} must be 2d (it is {})".
+            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
                                format(self.__class__.__name__, matrix.ndim))
 
         # Height of matrix (no. of rows) must be same as length of activity vector
         rows = matrix.shape[0]
-        activity_len = len(self.variable[1])
+        activity_len = len(self.variable[0])
         if  rows != activity_len:
-            raise FunctionError("Number of rows ({}) of matrix arg for {}"
+            raise FunctionError("Number of rows ({}) of \'matrix\' arg for {}"
                                      " must equal length of activity vector ({})".
                                      format(rows,self.__class__.__name__,activity_len))
 
@@ -961,9 +974,14 @@ class WeightedErrorFunction(CombinationFunction):
         cols = matrix.shape[1]
         error_len = len(self.variable[1])
         if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of matrix arg for {}"
+            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
                                      " must equal length of error vector ({})".
                                      format(cols,self.__class__.__name__,error_len))
+
+        if not isinstance(target_set['derivative'],(function_type, method_type)):
+            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray nor matrix".
+                                format(matrix, self.__class__.__name__))
+
 
     def function(self,
                 variable,
