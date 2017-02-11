@@ -114,7 +114,7 @@ for every possible combination of values, and stored in the EVCMechanism's `cont
 EVCMechanism's `run_simulation` method is then used to simulate the system under each `allocation_policy` in
 `controlSignalSearchSpace`, calculate the EVC for each of those policies, and return the policy with the greatest EVC.
 By default, only the maximum EVC is saved and returned.  However, by setting the `save_all_values_and_policies`
-attribute to `True`, each policy and its EVC can be saved for each simulation run (in `EVC_policies` and `EVCvalues`,
+attribute to `True`, each policy and its EVC can be saved for each simulation run (in `EVC_policies` and `EVC_values`,
 respectively). The EVC is calculated for each policy using the following four functions, each of which can be
 customized by using the EVCMechanism's `assign_params` method to designate custom functions (the safest way),
 or by assigning them directly to the corresponding attribute (see `note <EVCMechanism_Calling_and_Assigning_Functions>`
@@ -255,7 +255,7 @@ following steps:
       aggregated cost from the aggregated outcome.
 
 If the `save_all_values_and_policies` attribute is `True`, the allocation policy is saved in the
-EVCMechanism's `EVC_policies` attribute, and its value is saved in the `EVCvalues` attribute. The
+EVCMechanism's `EVC_policies` attribute, and its value is saved in the `EVC_values` attribute. The
 `function <EVCMechanism.function>` returns the allocation_policy that yielded the maximum EVC. This is then
 implemented by assigning the `allocation` specified for each ControlSignal by the designated allocation_policy.
 These allocations determine the value of the parameters being controlled in the next round of the system's execution.
@@ -453,7 +453,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     save_all_values_and_policies : bool : default False
         when it is :keyword:`True`, saves all of the control allocation policies tested in `EVC_policies` and their
-        values in `EVCvalues`.
+        values in `EVC_values`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -509,13 +509,23 @@ class EVCMechanism(ControlMechanism_Base):
         axis 1 an `inputState <InputState>` of that prediction mechanism, and
         axis 2 the elements of the input for that inputState.
 
+    monitoring_mechanism : ObjectiveMechanism
+        the 'ObjectiveMechanism' that monitors the mechanisms and/or outputStates used by the EVCMechanism to evaluate
+        the system's performance.  Each mechanism and/or outputState listed in the EVCMechanism's
+        `monitored_output_states` attribute projects to an inputState of the `monitoring_mechanism`.  The EVCMechanism's
+        `outcome_function` is assiged as the `function <ObjectiveMechanism.function>` for `monitoring_mechanism`.
+        Its result is provided by a projection from the `monitoring_mechanism` to the EVCMechanism.
+
     monitored_output_states : List[OutputState]
         each item is an outputState of a mechanism in the system that has been assigned a projection to a corresponding
         inputState of the EVCMechanism.
 
-    monitoredValues : 3D np.array
-        an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-        the EVCMechanism's `inputStates <EVCMechanism.inputStates>`).
+    COMMENT:
+    [TBI]
+        monitored_values : 3D np.array
+            an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
+            the EVCMechanism's `inputStates <EVCMechanism.inputStates>`).
+    COMMENT
 
     monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
         a list of tuples, each of which contains the weight and exponent (in that order) for an outputState in
@@ -638,26 +648,26 @@ class EVCMechanism(ControlMechanism_Base):
         the mechanism's ControlSignals.  By default, it is assigned a set of all possible allocation policies
         (using np.meshgrid to construct all permutations of ControlSignal values).
 
-    EVCmax : 1d np.array with single value
+    EVC_max : 1d np.array with single value
         the maximum EVC value over all allocation policies in `controlSignalSearchSpace`.
 
-    EVCmaxStateValues : 2d np.array
+    EVC_max_state_values : 2d np.array
         an array of the values for the outputStates in `monitored_output_states` using the allocation policy that
-        generated `EVCmax`.
+        generated `EVC_max`.
 
-    EVCmaxPolicy : 1d np.array
-        an array of the ControlSignal intensity values for the allocation policy that generated `EVCmax`.
+    EVC_max_policy : 1d np.array
+        an array of the ControlSignal intensity values for the allocation policy that generated `EVC_max`.
 
     save_all_values_and_policies : bool : default False
         specifies whether or not to save all allocation policies and associated EVC values (in addition to the max).
         If it is specified, each policy tested in the `controlSignalSearchSpace` is saved in `EVC_policies` and their
-        values are saved in `EVCvalues`.
+        values are saved in `EVC_values`.
 
     EVC_policies : 2d np.array
         array of allocation policies tested in `controlSignalSearchSpace`.  The values of each are stored in
-        `EVCvalues`.
+        `EVC_values`.
 
-    EVCvalues :  1d np.array
+    EVC_values :  1d np.array
         array of EVC values corresponding to the policies in `EVC_policies`.
 
     """
