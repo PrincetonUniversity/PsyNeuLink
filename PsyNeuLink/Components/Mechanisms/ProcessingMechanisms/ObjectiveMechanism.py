@@ -215,7 +215,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # # MODIFIED 2/10/17 OLD:
         # variable_item_index = self.variable.size-1
         # MODIFIED 2/10/17 NEW:
-        variable_item_index = len(self.variable[0])-1
+        # variable_item_index = len(self.variable[0])-1
+        variable_item_index = self.variable.shape[0]-1
         # MODIFIED 2/10/17 END
 
         # Instantiate inputState
