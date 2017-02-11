@@ -954,6 +954,20 @@ class WeightedError(CombinationFunction):
             raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
                                 format(matrix, self.__class__.__name__))
 
+        try:
+            activity_len = len(self.variable[0])
+        except TypeError:
+            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
+        try:
+            error_len = len(self.variable[1])
+        except TypeError:
+            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
+        if activity_len != error_len:
+            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
+                format(activity_len, error_len, self.__class__.__name__))
+
         if not isinstance(matrix, (np.ndarray, np.matrix)):
             raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
                                 format(matrix, self.__class__.__name__))
@@ -962,24 +976,7 @@ class WeightedError(CombinationFunction):
             raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
                                format(self.__class__.__name__, matrix.ndim))
 
-        # Height of matrix (no. of rows) must be same as length of activity vector
-        rows = matrix.shape[0]
-        try:
-            activity_len = len(self.variable[0])
-        except TypeError:
-            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-        if  rows != activity_len:
-            raise FunctionError("Number of rows ({}) of \'matrix\' arg for {}"
-                                     " must equal length of activity vector ({})".
-                                     format(rows,self.__class__.__name__,activity_len))
-
-        # Width of matrix (no. of columns) must be same as length of error vector
         cols = matrix.shape[1]
-        try:
-            error_len = len(self.variable[1])
-        except TypeError:
-            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
         if  cols != error_len:
             raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
                                      " must equal length of error vector ({})".
@@ -1000,11 +997,12 @@ class WeightedError(CombinationFunction):
 
         activity = self.variable[0]
         error = self.variable[1]
+        matrix = self.matrix.value
 
         activity_derivative = self.derivative(output=activity)
         error_derivative = error * activity_derivative
 
-        return np.dot(self.matrix, error_derivative)
+        return np.dot(matrix, error_derivative)
 
 
 #region ***********************************  TRANSFER FUNCTIONS  ***********************************************
