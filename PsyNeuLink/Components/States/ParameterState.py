@@ -842,7 +842,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     if param_name is FUNCTION_PARAMS:
         for function_param_name, function_param_value in param_value.items():
             # Assignment of ParameterState for function or method not currently supported
-            if isinstance(function_param_value, (function_type, method_type)):
+            if isinstance(function_param_value, (function_type, method_type)):
                 continue
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
