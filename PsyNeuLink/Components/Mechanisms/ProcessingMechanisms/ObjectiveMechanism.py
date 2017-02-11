@@ -212,11 +212,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         else:
             self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
 
-        # # MODIFIED 2/10/17 OLD:
-        # variable_item_index = self.variable.size-1
-        # MODIFIED 2/10/17 NEW:
         variable_item_index = self.variable.shape[0]-1
-        # MODIFIED 2/10/17 END
 
         # Instantiate inputState
         from PsyNeuLink.Components.States.State import _instantiate_state
