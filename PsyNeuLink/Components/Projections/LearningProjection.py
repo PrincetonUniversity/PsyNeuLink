@@ -835,7 +835,7 @@ FROM TODO:
             elif isinstance(self.mappingProjection.receiver, InputState):
                 self.errorSource = self.mappingProjection.receiver.owner
 
-            next_level_monitoring_mechanism = None
+            next_level_montioring_mech_output = None
 
             # Check if errorSource has a projection to a MonitoringMechanism or a ProcessingMechanism
             for projection in self.errorSource.outputState.sendsToProjections:
@@ -859,7 +859,7 @@ FROM TODO:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
                         # next_level_weight_matrix = projection.matrix
-                        next_level_monitoring_mechanism = next_level_LEARNING_PROJECTION.sender
+                        next_level_montioring_mech_output = next_level_LEARNING_PROJECTION.sender
 
             # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
@@ -869,8 +869,8 @@ FROM TODO:
                 # errorSource at next level projects to a MonitoringMechanism:
                 #    instantiate WeightedErrorMechanism MonitoringMechanism and the back-projection for its error signal:
                 #        (computes contribution of each element in errorSource to error at level to which it projects)
-                if next_level_monitoring_mechanism:
-                    error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
+                if next_level_montioring_mech_output:
+                    error_signal = np.zeros_like(next_level_montioring_mech_output.value)
                     # # MODIFIED 2/10/17 OLD:
                     # monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
                     #                                      params={PROJECTION_TO_NEXT_MECHANISM:projection},
@@ -878,23 +878,24 @@ FROM TODO:
                     # MODIFIED 2/10/17 NEW:
                     from PsyNeuLink.Components.Functions.Function import WeightedError
                     matrix=projection.parameterStates[MATRIX]
-                    derivative = next_level_monitoring_mechanism.owner.outputState.sendsToProjections[0].\
+                    derivative = next_level_montioring_mech_output.sendsToProjections[0].\
                         receiver.owner.receiver.owner.function_object.derivative
+                    activity = self.errorSource.outputState.value
+                    error = next_level_montioring_mech_output.value
                     monitoring_mechanism = ObjectiveMechanism(monitor=[self.errorSource,
-                                                                       next_level_monitoring_mechanism],
-                                                              function=WeightedError(variable=[self.errorSource.value,
-                                                                                               next_level_monitoring_mechanism.value],
+                                                                       next_level_montioring_mech_output],
+                                                              function=WeightedError(variable=[activity, error],
                                                                                      matrix=matrix,
                                                                                      derivative=derivative),
                                                               name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 END
 
                     # Instantiate MappingProjection to provide monitoring_mechanism with error signal
-                    MappingProjection(sender=next_level_monitoring_mechanism,
+                    MappingProjection(sender=next_level_montioring_mech_output,
                             receiver=monitoring_mechanism,
                             # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
                             matrix=IDENTITY_MATRIX,
-                            name=next_level_monitoring_mechanism.name +
+                            name=next_level_montioring_mech_output.name +
                                  ' to '+monitoring_mechanism.name +
                                  ' ' + MAPPING_PROJECTION + ' Projection')
 
