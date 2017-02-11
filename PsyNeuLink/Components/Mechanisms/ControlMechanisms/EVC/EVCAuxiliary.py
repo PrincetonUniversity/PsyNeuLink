@@ -183,7 +183,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         controller.EVCmax = None
         controller.EVCvalues = []
-        controller.EVCpolicies = []
+        controller.EVC_policies = []
 
         # Reset context so that System knows this is a simulation (to avoid infinitely recursive loop)
         context = context.replace(EXECUTING, '{0} {1}'.format(controller.name, EVC_SIMULATION))
@@ -310,14 +310,14 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
                 if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     controller.EVCvalues = np.concatenate(Comm.allgather(EVC_values), axis=0)
-                    controller.EVCpolicies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
+                    controller.EVC_policies = np.concatenate(Comm.allgather(EVC_policies), axis=0)
             else:
                 controller.EVCmax = EVC_max
                 controller.EVCmaxStateValues = EVC_max_state_values
                 controller.EVCmaxPolicy = EVC_max_policy
                 if controller.paramsCurrent[SAVE_ALL_VALUES_AND_POLICIES]:
                     controller.EVCvalues = EVC_values
-                    controller.EVCpolicies = EVC_policies
+                    controller.EVC_policies = EVC_policies
             # # TEST PRINT:
             # import re
             # print("\nFINAL:\n\tmax tuple:\n\t\tEVC_max: {}\n\t\tEVC_max_state_values: {}\n\t\tEVC_max_policy: {}".

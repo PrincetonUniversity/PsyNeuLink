@@ -10,6 +10,18 @@
 
 """
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
+One inputState is assigned to each of the
+`outputStates <OutputState>` that have been specified to be evaluated. The EVCMechanism's
+`MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
+The contribution of each outputState to the overall evaluation can be specified by an exponent and/or a weight
+(see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and
+`below <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL`
+parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
+`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an
+exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, an inputState is
+created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
+that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
+by an EVCMechanism are listed in its `monitored_output_states` attribute.
 
 """
 
