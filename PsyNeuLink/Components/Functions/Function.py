@@ -964,7 +964,10 @@ class WeightedError(CombinationFunction):
 
         # Height of matrix (no. of rows) must be same as length of activity vector
         rows = matrix.shape[0]
-        activity_len = len(self.variable[0])
+        try:
+            activity_len = len(self.variable[0])
+        except TypeError:
+            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
         if  rows != activity_len:
             raise FunctionError("Number of rows ({}) of \'matrix\' arg for {}"
                                      " must equal length of activity vector ({})".
@@ -972,7 +975,11 @@ class WeightedError(CombinationFunction):
 
         # Width of matrix (no. of columns) must be same as length of error vector
         cols = matrix.shape[1]
-        error_len = len(self.variable[1])
+        try:
+            error_len = len(self.variable[1])
+        except TypeError:
+            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
         if  cols != error_len:
             raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
                                      " must equal length of error vector ({})".
@@ -984,16 +991,18 @@ class WeightedError(CombinationFunction):
 
 
     def function(self,
-                variable,
+                variable=None,
                 params=None,
                 time_scale=TimeScale.TRIAL,
                 context=None):
 
-        activity = variable[0]
-        error = variable[1]
+        self._check_args(variable, params, context)
+
+        activity = self.variable[0]
+        error = self.variable[1]
 
         activity_derivative = self.derivative(output=activity)
-        error_derivative = variable[1] * activity_derivative
+        error_derivative = error * activity_derivative
 
         return np.dot(self.matrix, error_derivative)
 
