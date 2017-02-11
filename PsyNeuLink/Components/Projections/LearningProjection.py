@@ -876,12 +876,15 @@ FROM TODO:
                     #                                      params={PROJECTION_TO_NEXT_MECHANISM:projection},
                     #                                      name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 NEW:
+                    from PsyNeuLink.Components.Functions.Function import WeightedError
                     matrix=projection.parameterStates[MATRIX]
                     derivative = next_level_monitoring_mechanism.owner.outputState.sendsToProjections[0].\
                         receiver.owner.receiver.owner.function_object.derivative
                     monitoring_mechanism = ObjectiveMechanism(monitor=[self.errorSource,
                                                                        next_level_monitoring_mechanism],
-                                                              function=WeightedError(matrix=matrix,
+                                                              function=WeightedError(variable=[self.errorSource.value,
+                                                                                               next_level_monitoring_mechanism.value],
+                                                                                     matrix=matrix,
                                                                                      derivative=derivative),
                                                               name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 END
@@ -996,7 +999,7 @@ FROM TODO:
 
         super()._instantiate_function(context)
 
-        from PsyNeuLink.Components.Functions.Function import ACTIVATION_FUNCTION
+        from PsyNeuLink.Components.Functions.Function import ACTIVATION_FUNCTION, TransferFunction
         # Insure that the learning function is compatible with the activation function of the errorSource
         error_source_activation_function_type = type(self.errorSource.function_object)
         function_spec = self.function_object.paramsCurrent[ACTIVATION_FUNCTION]

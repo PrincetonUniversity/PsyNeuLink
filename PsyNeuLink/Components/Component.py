@@ -618,6 +618,10 @@ class Component(object):
                     for item in kwargs[arg]:
                         self.paramClassDefaults[FUNCTION_PARAMS][item] = default(item)
                 else:
+                    if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
+                        raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
+                                             "(it can be \'None\') in its constructor or in paramClassDefaults".
+                                             format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default(arg)
 
             # param corresponding to arg IS already in paramClassDefaults, so ignore
