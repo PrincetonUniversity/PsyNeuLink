@@ -41,7 +41,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
 
