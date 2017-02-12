@@ -1816,7 +1816,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        # MODIFIED 12/6/16 NEW:
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_monitoring_mechanism_projections(mech):
             """Recursively trace projections to monitoring mechanisms;
                    return ComparatorMechanism if one is found upstream;
@@ -1825,6 +1825,9 @@ class Process_Base(Process):
             for input_state in mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
+                    # If projection is not from another ObjectiveMechanism, ignore
+                    if not isinstance(sender, ObjectiveMechanism):
+                        continue
                     if isinstance(sender, ComparatorMechanism):
                         return sender
                     if sender.inputStates:
@@ -1835,7 +1838,6 @@ class Process_Base(Process):
                             continue
                     else:
                         continue
-        # MODIFIED 12/6/16 END
 
         if not self.learning:
             raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
@@ -1846,13 +1848,9 @@ class Process_Base(Process):
 
         if not comparators:
 
-            # # MODIFIED 12/6/16 OLD:
-            # raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
-            #                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
-
-            # MODIFIED 12/6/16 NEW:
             # Trace projections to first monitoring_mechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
+            #    in which case, should not assign Comparator, but rather WeightedError ObjectiveMechanism)
             comparator = trace_monitoring_mechanism_projections(self._monitoring_mech_tuples[0][0])
             if comparator:
                 if self.prefs.verbosePref:
@@ -1867,7 +1865,6 @@ class Process_Base(Process):
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
-            # MODIFIED 12/6/16 END
 
         elif len(comparators) > 1:
             comparator_names = list(comparatorMechanism.name for comparatorMechanism in comparators)
