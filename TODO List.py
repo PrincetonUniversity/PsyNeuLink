@@ -69,8 +69,8 @@
 #
 #             Following attributes are available:
 #             controller.run: executes a specified number of trials with the simulation inputs
-#             controller.predictedInputs: ndarray of current value of outputState
-#                                          for each predictionMechanism in self.system.predictionMechanisms
+#             controller.predicted_inputs: ndarray of current value of outputState
+#                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
 #             controller.inputValue: list of current outcome values for monitored_states
 #             controller.controlSignals: list of controlSignal objects
@@ -985,11 +985,11 @@
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
-# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
+# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED prediction_mechanisms USURP terminalMechanism STATUS
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
 # DOCUMENT:  PREDICTION_MECHANISM_TYPE IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
 #                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL predictionMechanisms
+# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL prediction_mechanisms
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
