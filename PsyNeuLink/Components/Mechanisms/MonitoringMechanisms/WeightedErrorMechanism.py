@@ -94,8 +94,6 @@ Class Reference
 
 """
 
-
-
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 # from PsyNeuLink.Components.States.InputState import InputState
