@@ -83,7 +83,7 @@ the EVCMechanism's `outcome_function` attribute.  By default, the ObjectiveMecha
 the `primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, and its function
 calcaultes the product of their values.  However, the contribution of each item listed in
 `monitor_for_control <EVCMechanism.monitor_for_control>` can be specified using a weight
-and/or an exponent (see `ControlMechanism_Monitored_OutputStates` for specifying these parameter;
+and/or an exponent (see `ObjectiveMechanism_Monitored_OutputStates` for specifying these parameters;
 and `below <EVCMechanism_Examples>` for examples). The outputStates of the system being monitored by an EVCMechanism
 are listed in its `monitored_output_states` attribute.
 
@@ -143,7 +143,7 @@ COMMENT
 * `outcome_function` - this combines the values of the outputStates in the EVCMechanism's `monitored_output_states`
   attribute to generate an aggregated outcome value for the current `allocation_policy`. The default is the
   `LinearCombination` function, which computes an elementwise (Hadamard) product of the outputState values, using any
-  `weights and/or exponents specified for the outputStates <ControlMechanism_OutputState_Tuple>` to scale and/or
+  `weights and/or exponents specified for the outputStates <ObjectiveMechanism_OutputState_Tuple>` to scale and/or
   exponentiate the contribution that each makes to the aggregated outcome (see `examples <EVCMechanism_Examples>`).
   Evaluation of the system's performance can be further customized by specifying a custom function for the
   EVCMechanism's `outcome_function` attribute (see `note <EVCMechanism_Calling_and_Assigning_Functions>` below).

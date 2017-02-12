@@ -13,7 +13,15 @@
 One inputState is assigned to each of the
 `outputStates <OutputState>` that have been specified to be evaluated. The EVCMechanism's
 `MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
-The contribution of each outputState to the overall evaluation can be specified by an exponent and/or a weight
+
+
+
+Overview
+--------
+
+An ObjectiveMechanism monitors the `outputStates <OutputState>` of one or more `ProcessingMechanism` specified in its
+`monitor <ObjectiveMechanism.monitor>` attribute, and evaluates them using its `function`.  The contribution of each
+outputState to the evaluation can be specified by an exponent and/or a weight
 (see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and
 `below <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL`
 parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
@@ -22,6 +30,129 @@ exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMe
 created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
 that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
 by an EVCMechanism are listed in its `monitored_output_states` attribute.
+
+.. _Comparator_Creation:
+
+Creating a ComparatorMechanism
+------------------------------
+
+An ObjectiveMechanism can be created directly by calling its constructor.  ObjectiveMechanisms are also created
+automatically by other types of mechanisms (such as an `EVCMechanism`
+COMMENT:
+   or a `LearningMechanism`).
+COMMENT
+).
+The mechanisms and/or outputStates monitored by an ObjectiveMechanism are specified by the
+:keyword:`monitor` argument in its constructor.  These can be specified in a variety of ways, and assigned
+weights and/or exponents to specify the contribution of each to the evaluation (as described
+`below <Monitored OutputStates>`); however all are converted to references to outputStates, that are listed in the
+ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute.
+
+.. _ObjectiveMechanism_Monitored_OutputStates:
+
+Monitored OutputStates
+~~~~~~~~~~~~~~~~~~~~~~
+
+The outputState(s) monitored by an ObjectiveMechanism can be specified in any of the places listed below.  The
+list also describes the order of precedence when more than one specification pertains to the same
+outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
+name of one (see :ref:ControlMechanism_Examples' below). The specification of whether an outputState is monitored by
+a ControlMechanism can be done in the following places:
+
+* **OutputState**: an outputState can be *excluded* from being monitored by assigning `None` as the value of the
+  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the outputState's ``params``
+  argument.  This specification takes precedence over any others;  that is, specifying `None` will suppress
+  monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
+  outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
+  based on one of the other specification methods below.
+..
+* **Mechanism**: the outputState of a particular mechanism can be designated to be monitored, by specifying it in the
+  `MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the mechanism's `params` argument.  The value
+  of the entry must be either a list containing the outputState(s) and/or their name(s),
+  a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a `MonitoredOutputStatesOption` value, or `None`.
+  The values of `MonitoredOutputStatesOption` are treated as follows:
+
+    * `PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism is monitored;
+    |
+    * `ALL_OUTPUT_STATES`:  all of the mechanism's outputStates are monitored.
+
+  This specification takes precedence over any of the other types listed below:  if it is `None`, then none of
+  that mechanism's outputStates will be monitored;   if it specifies outputStates to be monitored, those will be
+  monitored even if the mechanism is not a `TERMINAL` mechanism (see below).
+..
+* **ControlMechanism** or **System**: outputStates to be monitored by a `ControlMechanism` can be specified in the
+  ControlMechanism itself , or in the system for which that ControlMechanism is the `controller`.  The specification can
+  be in the :keyword:`monitor_for_control` argument of the ControlMechanism or System's constructor, or in the
+  `MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the `params` argument of the constructor.
+  In either case, the value must be a list, each item of which must be one of the following:
+
+  * an existing **outputState** or the name of one.
+  |
+  * a **mechanism** or the name of one -- only the mechanism's primary (first) outputState will be monitored,
+    unless a `MonitoredOutputStatesOption` value is also in the list (see below) or the specification is
+    overridden in a params dictionary for the mechanism (see above);
+  |
+  * a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`;
+  |
+  * a value of `MonitoredOutputStatesOption` --  this applies to any mechanisms that appear in the list
+    (except those that override it with their own :keyword:`monitor_for_control` specification); if the value of
+    `MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
+
+    * `PRIMARY_OUTPUT_STATES` -- only the primary (first) outputState of the `TERMINAL` mechanism(s)
+      in the system for which the ControlMechanism is the `controller` is monitored;
+    |
+    * `ALL_OUTPUT_STATES` -- all of the outputStates of the `TERMINAL` mechanism(s)
+      in the system for which the ControlMechanism is the `controller` are monitored;
+  * `None`.
+
+  Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
+  in the constructor or params dictionary for an outputState or mechanism.
+
+.. _ObjectiveMechanism_OutputState_Tuple:
+
+**MonitoredOutputState Tuple**
+
+A tuple can be used wherever an outputState can be specified, to determine how its value is combined with others by
+the ObjectiveMechanism's `function <ObjectiveMechanism.function>`. Each tuple must have the three following items in
+the order listed:
+
+  * an outputState or mechanism, the name of one, or a specification dictionary for one;
+  ..
+  * a weight (int) - multiplies the value of the outputState.
+  ..
+  * an exponent (int) - exponentiates the value of the outputState;
+
+COMMENT:
+    The set of weights and exponents assigned to each outputState is listed in the ObjectiveMechanism's
+    `monitor_for_control_weights_and_exponents` attribute, in the same order as the outputStates are listed in its
+    `monitored_output_states` attribute.  Each item in the list is a tuple with the weight and exponent for a given
+    outputState.
+COMMENT
+
+
+.. _ObjectiveMechanism_Structure:
+
+Structure
+---------
+
+An ObjectiveMechanism has an `inputState <InputState>` for each of the outputStates listed in its
+`monitor <ObjectiveMechanism.monitor>` attribute. Each inputState receives a projection from the corresponding
+outputState.
+
+.. _ObjectiveMechanism_Execution:
+
+Execution
+---------
+
+Each time an ObjectiveMechanism is executed, it updates its inputStates with the values of outputStates listed in
+its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>` to
+evaluaate these.  The result is assigned as the value of its outputState.
+
+.. _ObjectiveMechanism_Class_Reference:
+
+Class Reference
+---------------
+
 
 """
 
@@ -77,8 +208,15 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-        """
+    """
+    ControlMechanism_Base(     \
+    default_input_value=None,  \
+    monitor=None,  \
+    function=LinearCombination,           \
+    params=None,               \
+    name=None,                 \
+    prefs=None)
+    """
 
         if default_input_value is None:
             default_input_value = self.variableClassDefault
