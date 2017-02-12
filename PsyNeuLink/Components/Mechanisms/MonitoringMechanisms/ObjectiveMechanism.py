@@ -146,7 +146,7 @@ Execution
 
 Each time an ObjectiveMechanism is executed, it updates its inputStates with the values of outputStates listed in
 its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>` to
-evaluaate these.  The result is assigned as the value of its outputState.
+evaluate these.  The result is assigned as the value of its outputState.
 
 .. _ObjectiveMechanism_Class_Reference:
 
