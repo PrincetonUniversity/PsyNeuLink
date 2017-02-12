@@ -232,7 +232,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate monitor argument
         """
@@ -389,7 +388,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         # Instantiate MappingProjection from monitored_state to new input_state
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
-
 
     def add_monitored_states(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
