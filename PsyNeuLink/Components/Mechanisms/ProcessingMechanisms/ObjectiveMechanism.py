@@ -220,7 +220,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  monitor=None,
-                 names:tc.optional(str)=None,
+                 names:tc.optional(list)=None,
                  function=LinearCombination,
                  role:tc.optional(str)=None,
                  params=None,
@@ -457,6 +457,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #endregion
 
     def _instantiate_input_states(self, context=None):
+        """Instantiate input state for each outputState specified in `monitor <Objective.monitor>` arg
+
+          Note:  assumes that `monitor <Objective.monitor>` has been parse into a list of outputStates
+                 in _validate_monitored_state()
+        """
 
         # Clear self.variable, as items will be assigned in call(s) to _instantiate_input_state_for_monitored_state()
         self.variable = None
@@ -479,13 +484,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #         raise ObjectiveError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
         #                              "neither an OutputState nor Mechanism".format(item))
 
-        for item in self.monitor:
-            self._instantiate_input_state_for_monitored_state(item, context=context)
+        names = self.names or [None] * len(self.monitor)
+        for monitored_state, name in zip(self.monitor, names):
+            self._instantiate_input_state_for_monitored_state(monitored_state, name, context=context)
 
         # self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
         self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
 
-    def _instantiate_input_state_for_monitored_state(self,monitored_state, context=None):
+    def _instantiate_input_state_for_monitored_state(self,monitored_state, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
         Validate specification for state to be monitored
@@ -503,9 +509,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             input_state (InputState):
 
         """
-
-        input_state_name = monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
         input_state_value = monitored_state.value
+        input_state_name = name or monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
 
         # First, test for initialization conditions:
 
