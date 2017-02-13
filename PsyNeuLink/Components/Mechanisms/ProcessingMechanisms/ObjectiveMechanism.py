@@ -75,6 +75,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  default_input_value=None,
                  monitor=None,
                  function=LinearCombination,
+                 role:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -88,6 +89,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   monitor=monitor,
+                                                  role=role,
                                                   params=params)
 
         super().__init__(variable=default_input_value,
