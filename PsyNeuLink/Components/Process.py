@@ -540,7 +540,7 @@ class Process_Base(Process):
     COMMENT:
         Description
         -----------
-            Process is a Category of the Function class.
+            Process is a Category of the Component class.
             It implements a Process that is used to execute a sequence of mechanisms connected by projections.
             NOTES:
                 * if no pathway or time_scale is provided:

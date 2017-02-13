@@ -505,7 +505,7 @@ class Mechanism_Base(Mechanism):
     COMMENT:
         Description
         -----------
-            Mechanism is a Category of the Function class.
+            Mechanism is a Category of the Component class.
             A mechanism is associated with a name and:
             - one or more inputStates:
                 two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:

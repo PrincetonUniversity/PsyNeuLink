@@ -224,13 +224,146 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
         """
-        ControlMechanism_Base(     \
-        default_input_value=None,  \
-        monitor=None,  \
-        function=LinearCombination,           \
-        params=None,               \
-        name=None,                 \
+        ObjectiveMechanism(           \
+        default_input_value=None,     \
+        monitor=None,                 \
+        function=LinearCombination,   \
+        role=None                     \
+        params=None,                  \
+        name=None,                    \
         prefs=None)
+
+    Implements the ObjectiveMechanism subclass of `ProcessingMechanism`.
+
+    COMMENT:
+        Description:
+            ObjectiveMechanism is a subtype of the ProcessingMechanism Type of the Mechanism Category of the
+                Component class
+            It's function uses the LinearCombination Function to compare two input variables
+            COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
+            The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
+                as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
+
+        Class attributes:
+            + componentType (str): ComparatorMechanism
+            + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
+            + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
+            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
+                                          FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
+            + paramNames (dict): names as above
+
+        Class methods:
+            None
+
+        MechanismRegistry:
+            All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
+              entry for the subclass, a count for all instances of it, and a dictionary of those instances
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_sample_and_target : Optional[List[array, array] or 2d np.array]
+        the input to the ComparatorMechanism to use if none is provided in a call to its
+        `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods.
+        The first item is the `COMPARATOR_SAMPLE` item of the input and the second is the `COMPARATOR_TARGET`
+        item of the input, which must be the same length.  This also serves as a template to specify the length of
+        inputs to the `function <ComparatorMechanism.function>`.
+
+    comparison_operation : keyword[SUBTRACTION or DIVISION] : default SUBTRACTION
+        specifies how the `COMPARATOR_SAMPLE` and `COMPARATOR_TARGET` will be compared:
+
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPASAMPLE`
+
+        * `DIVISION`: `COMPARATOR_TARGET` ÷ `SAMPLE`
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the mechanism, its function, and/or a custom function and its parameters.  The following entries can be
+        included:
+
+        * `COMPARATOR_SAMPLE`:  Mechanism, InputState, or the name of or specification dictionary for one;
+        ..
+        * `COMPARATOR_TARGET`:  Mechanism, InputState, or the name of or specification dictionary for one;
+        ..
+        * `FUNCTION`: Function, function or method;  default is `LinearCombination`.
+
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
+
+    COMMENT:
+        [TBI]
+        time_scale :  TimeScale : TimeScale.TRIAL
+            specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+            This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
+    COMMENT
+
+    name : str : default ComparatorMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 2d np.array
+        the input to `function <ComparatorMechanism.function>`.  The first item is the :keyword:`value` of the
+        `COMPARATOR_SAMPLE` inputState, and the second is the :keyword:`value` of the `COMPARATOR_TARGET` inputState.
+
+    sample : 1d np.array
+        the first item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
+        `COMPARATOR_SAMPLE` inputState.
+
+    target : 1d np.array
+        the second item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
+        `COMPARATOR_TARGET` inputState.
+
+    function : CombinationFunction : default LinearCombination
+        the function used to compare `COMPARATOR_SAMPLE` with `COMPARATOR_TARGET`.
+
+    comparison_operation : SUBTRACTION or DIVISION : default SUBTRACTION
+        determines the operation used by `function <ComparatorMechanism.function>` to compare the `COMPARATOR_SAMPLE`
+        with `_COMPARATOR_TARGET`.
+
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPARATOR_SAMPLE`;
+
+        * `DIVISION`: `COMPARATOR_TARGET` ÷ `COMPARATOR_SAMPLE`.
+
+    value : 2d np.array
+        holds the output of the `comparison_operation` carried out by the ComparatorMechanism's
+        `function <ComparatorMechanism.function>`; its value is  also assigned to the `COMPARISON_RESULT` outputState
+        and the the first item of `outputValue <ComparatorMechanism.outputValue>`.
+
+    outputValue : List[1d np.array, float, float, float, float]
+        a list with the following items:
+
+        * **result** of the `function <ComparatorMechanism.function>` calculation
+          and the :keyword:`value` of the `COMPARISON_RESULT` outputState;
+        * **mean** of the result's elements and the :keyword:`value` of the `COMPARISON_MEAN` outputState;
+        * **sum** of the result's elements and the :keyword:`value` of the `COMPARISON_SUM` outputState;
+        * **sum of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_SSE` outputState;
+        * **mean of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_MSE` outputState.
+
+    name : str : default ComparatorMechanism-<index>
+        the name of the mechanism.
+        Specified in the `name` argument of the constructor for the mechanism;
+        if not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        the `PreferenceSet` for mechanism.
+        Specified in the `prefs` argument of the constructor for the mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+
         """
 
         if default_input_value is None:

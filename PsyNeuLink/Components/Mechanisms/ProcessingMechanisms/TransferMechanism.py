@@ -156,7 +156,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         Description
         -----------
             TransferMechanism is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the
-                Function class
+                Component class
             It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
         Class attributes
