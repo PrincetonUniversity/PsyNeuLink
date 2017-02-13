@@ -530,7 +530,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if time_scale is TimeScale.TIME_STEP:
 
             current_input = self.integrator_function.function(self.inputState.value, context=context)
-            print(current_input, " = current_input")
 
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
