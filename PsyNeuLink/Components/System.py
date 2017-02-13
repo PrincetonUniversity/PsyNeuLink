@@ -1170,7 +1170,9 @@ class System_Base(System):
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-                    all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base, ControlMechanism_Base))
+                    all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
+                                                                   ControlMechanism_Base,
+                                                                   ObjectiveMechanism))
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
                 try:
