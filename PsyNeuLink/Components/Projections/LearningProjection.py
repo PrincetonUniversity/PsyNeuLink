@@ -871,11 +871,6 @@ FROM TODO:
                 #        (computes contribution of each element in errorSource to error at level to which it projects)
                 if next_level_montioring_mech_output:
                     error_signal = np.zeros_like(next_level_montioring_mech_output.value)
-                    # # MODIFIED 2/10/17 OLD:
-                    # monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
-                    #                                      params={PROJECTION_TO_NEXT_MECHANISM:projection},
-                    #                                      name=self.mappingProjection.name + " Weighted_Error")
-                    # MODIFIED 2/10/17 NEW:
                     next_level_output = projection.receiver.owner.outputState
                     activity = np.zeros_like(next_level_output.value)
                     matrix=projection.parameterStates[MATRIX]
@@ -890,15 +885,6 @@ FROM TODO:
                                                                                      derivative=derivative),
                                                               role=LEARNING,
                                                               name=self.mappingProjection.name + " Weighted_Error")
-                    # MODIFIED 2/10/17 END
-                    # # Instantiate MappingProjection to provide monitoring_mechanism with error signal
-                    # MappingProjection(sender=next_level_montioring_mech_output,
-                    #         receiver=monitoring_mechanism,
-                    #         # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
-                    #         matrix=IDENTITY_MATRIX,
-                    #         name=next_level_montioring_mech_output.name +
-                    #              ' to '+monitoring_mechanism.name +
-                    #              ' ' + MAPPING_PROJECTION + ' Projection')
 
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to a MonitoringMechanism:
