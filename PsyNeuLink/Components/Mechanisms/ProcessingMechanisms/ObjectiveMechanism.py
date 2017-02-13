@@ -176,6 +176,9 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination
 OBJECT = 0
 WEIGHT = 1
 EXPONENT = 2
+ROLE = 'role'
+NAMES = 'names'
+MONITOR = 'monitor'
 
 OBJECTIVE_RESULT = "ObjectiveResult"
 
@@ -217,6 +220,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  monitor=None,
+                 names:tc.optional(str)=None,
                  function=LinearCombination,
                  role:tc.optional(str)=None,
                  params=None,
@@ -227,6 +231,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         ObjectiveMechanism(           \
         default_input_value=None,     \
         monitor=None,                 \
+        names=None,                   \
         function=LinearCombination,   \
         role=None                     \
         params=None,                  \
@@ -271,12 +276,20 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         item of the input, which must be the same length.  This also serves as a template to specify the length of
         inputs to the `function <ComparatorMechanism.function>`.
 
-    comparison_operation : keyword[SUBTRACTION or DIVISION] : default SUBTRACTION
-        specifies how the `COMPARATOR_SAMPLE` and `COMPARATOR_TARGET` will be compared:
+    monitor : [List[OutputState or Mechanism or MonitoredOutputStateOption]
+        specifies the outputStates that will be monitored, and evaluated by `function <ObjectiveMechanism>`
+        (see `monitor <ObjectiveMechanism.monitor>` for details of specification).
 
-        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPASAMPLE`
+    names: List[str]
+        specifies names for the outputStates listed in `monitor <ObjectiveMechanism.monitor>`.  If specified,
+        the number of items in the list must equal the number of items in `monitor <ObjectiveMechanism.monitor>`.
 
-        * `DIVISION`: `COMPARATOR_TARGET` ÷ `SAMPLE`
+    function: Function, function or method
+        specifies the function used to evaluate the value of the outputStates listed in
+        `monitor <ObjectiveMechanism.monitor>`.
+
+    role: Optional[LEARNING, CONTROL]
+        specifies if the ObjectiveMechanism is being used for learning or control.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -370,8 +383,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  monitor=monitor,
+        params = self._assign_args_to_param_dicts(monitor=monitor,
+                                                  names=names,
+                                                  function=function,
                                                   role=role,
                                                   params=params)
 
@@ -389,6 +403,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+        if target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
+            raise ObjectiveError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
+                                 format(target_set[ROLE], self.name))
+
+        if target_set[NAMES]:
+            if len(target_set[NAMES]) != len(target_set[MONITOR]):
+                raise ObjectiveError("The number of items in \'names\'arg ({}) must equal of the number in the "
+                                     "\`monitor\` arg for {}".
+                                     format(len(target_set[NAMES]), len(target_set[MONITOR]), self.name))
+
+            for name in target_set[NAMES]:
+                if not isinstance(name, str):
+                    raise ObjectiveError("it in \'names\'arg ({}) of {} is not a string".
+                                         format(target_set[NAMES], self.name))
 
         #region VALIDATE MONITORED STATES (for use by ControlMechanism)
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
