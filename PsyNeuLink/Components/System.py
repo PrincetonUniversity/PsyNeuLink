@@ -875,11 +875,7 @@ class System_Base(System):
         """
         self._instantiate_processes(input=self.variable, context=context)
         self._instantiate_graph(context=context)
-
-        # MODIFIED 12/20/16 NEW:
-
         self._instantiate_learning_graph(context=context)
-        # MODIFIED 12/20/16 END
 
     def _instantiate_function(self, context=None):
         """Suppress validation of function
