@@ -879,6 +879,7 @@ FROM TODO:
                     from PsyNeuLink.Components.Functions.Function import WeightedError
                     monitoring_mechanism = ObjectiveMechanism(monitor=[next_level_output,
                                                                        next_level_montioring_mech_output],
+                                                              names=['ACTIVITY','ERROR_SIGNAL'],
                                                               function=WeightedError(variable_default=[activity,
                                                                                                        error_signal],
                                                                                      matrix=matrix,
