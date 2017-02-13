@@ -51,7 +51,7 @@ appropriate to the circumstance:
     context;
   ..
   * by a `ControlMechanism <ControlMechanism>`, from outputStates listed in its
-    `monitoredOutputStates <ControlMechanism.ControlMechanism_Base.monitoredOutputStates>` attribute to assigned
+    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute to assigned
     inputStates in the `ControlMechanism <ControlMechanism_Creation>`); an `IDENTITY_MATRIX` is used for each;
   ..
   * by a `LearningProjection`, from a mechanism that is the source of an error signal to a `MonitoringMechanism`

@@ -68,7 +68,7 @@ parameters (in addition to those specified for the function):
     ..
     * `rate <TransferMechanism.rate>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`, the input is exponentially
       time-averaged before transforming it (higher value specifies faster rate); if `time_scale` is
-      :keyword:`TimeScale.TIME_STEP`, `rate <TransferMechanism.rate>` is ignored.
+      :keyword:`TimeScale.TRIAL`, `rate <TransferMechanism.rate>` is ignored.
     ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
