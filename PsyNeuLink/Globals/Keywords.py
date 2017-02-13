@@ -290,6 +290,7 @@ EVC_MECHANISM = "EVCMechanism"
 # MonitoringMechanisms:
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
+OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 
 # ProcessingMechanisms:
 DDM_MECHANISM = "DDM"
@@ -358,7 +359,7 @@ kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-kwDefaultMonitoringMechanism = "DefaultMonitoringMechanism"
+DEFAULT_MONITORING_MECHANISM = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict

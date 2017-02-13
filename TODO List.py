@@ -34,6 +34,8 @@
 #   TimeScale
 #   Registry
 #
+# DOCUMENT: targets argunment in system() and System_Base.__init__()
+
 # DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS
 #
 # DOCUMENT: FINISH DOCUMENTING:
@@ -67,8 +69,8 @@
 #
 #             Following attributes are available:
 #             controller.run: executes a specified number of trials with the simulation inputs
-#             controller.predictedInputs: ndarray of current value of outputState
-#                                          for each predictionMechanism in self.system.predictionMechanisms
+#             controller.predicted_inputs: ndarray of current value of outputState
+#                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
 #             controller.inputValue: list of current outcome values for monitored_states
 #             controller.controlSignals: list of controlSignal objects
@@ -579,6 +581,8 @@
 #
 # TEST warnings.warn
 #
+# IMPLEMENT:  typecheck name arg in constructors to be a str
+#
 # IMPLEMENT: REFACTOR EVC and LEARNING:
 #
 #            EVC:  1) MonitoringMechanism - new one that implements current EVCMechanism's objective function (i.e.,
@@ -981,11 +985,11 @@
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
-# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
+# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED prediction_mechanisms USURP terminalMechanism STATUS
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
 # DOCUMENT:  PREDICTION_MECHANISM_TYPE IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
 #                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL predictionMechanisms
+# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL prediction_mechanisms
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
@@ -1468,7 +1472,7 @@
 # IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
-# **IMPLEMENT: System.monitoredOutputStates:
+# **IMPLEMENT: System.monitored_output_states:
 #              @property, that gets list of all outputStates monitored by the system's controller
 #              object should include their names, objects, and the inputState used to monitor it
 # IMPLEMENT:  INITIALIZE USING TOPOSORT AND THEN RUN WITH FULL SET OF PROJECTIONS
@@ -1729,7 +1733,7 @@
 #
 # FIX MonitorOutputStates ISSUES:
 #     FIX: GET RID OF MonitoredOutputStatesOption enum; just use keywords (also in documentation)
-#     IMPLEMENT: Replace monitoredOutputStates tuple format (outputState or mech, exp, weight) with
+#     IMPLEMENT: Replace monitored_output_states tuple format (outputState or mech, exp, weight) with
 #                       (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
 #     FIX: MAKE MONITOR_FOR_CONTROL A REQUIRED PARAM FOR System CLASS
 #          ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
@@ -1841,8 +1845,8 @@
 #      THIS SHOULD OBVIATE NEED FOR DefaultControlMechanism
 #      THEN TEST EVC System Laming Validation Test with weights assigned to EVC
 #
-# FIX monitor_for_control ISSUES (cf monitoredOutputStates ISSUES UNDER MECHANISM (ABOVE))
-#     FIX:  ADD monitoredOutputStates ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
+# FIX monitor_for_control ISSUES (cf monitored_output_states ISSUES UNDER MECHANISM (ABOVE))
+#     FIX:  ADD monitored_output_states ATTRIBUTE TO ControlMechanism, AND THEN MAKE SURE THAT DOCSTRING REFERENCES RESOLVE
 #                 TO IT RATHER THAN EVCMechanism (AS THEY CURRENTLY DO).
 #     - IMPLEMENT: MONITOR_FOR_CONTROL_OPTION for individual Mechanisms (in ControlMechanism):
 #            TBI: Implement either:  (Mechanism, MonitoredOutputStatesOption) tuple in MONITOR_FOR_CONTROL specification
@@ -2124,7 +2128,7 @@
 #
 #endregion
 
-#region MAPPING_PROJECTION: ------------------------------------------------------------------------------------------------------
+#region MAPPING_PROJECTION: --------------------------------------------------------------------------------------------
 #
 # TEST: DOES ASSIGNING A MappingProjection OR ControlProjection TO THE Matrix ParameterState OF A MappingProjection work?
 #       IF NOT, MODIFY matrix_spec TO ONLY ALLOW A LEARNING_PROJECTION.
@@ -2132,7 +2136,7 @@
 #
 #endregion
 
-#region CONTROL_PROJECTION: ------------------------------------------------------------------------------------------------------
+#region CONTROL_PROJECTION: --------------------------------------------------------------------------------------------
 #
 #
 # FIX: ControlProjection._instantiate_receiver has to be called before _instantiate_function (like LearningProjection)
@@ -2570,4 +2574,45 @@
 #region ComparatorMechanism -----------------------------------------------------------------------------------
 # FIX: IN ComparatorMechanism _instantiate_attributes_before_function:  USE ASSIGN_DEFAULT
 # IMPLEMENT: ComparatorMechanism Processing Mechanism TYPE, ComparatorMechanism SUBTYPE
+#endregion
+
+#region ObjectiveMechanism -----------------------------------------------------------------------------------
+#
+#     Validate ObjectiveMechanism.monitor argument:
+#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_montiored_states) and
+#               monitor (in ObjectiveMechanism._validate_monitored_states) needs to be handled in a more principled way
+#               either in their _validate_params method, or in class function
+#
+#     Make sure add_monitored_state works
+#     Allow inputStates to be named (so they can be used as ComparatorMechanism)
+#     Augment to take a function for each inputState (as well as its weight and exponent)
+#     Move it to ProcessingMechanism
+#  Replace ComparatorMechanmism with ObjectiveMechanism
+#   using a particular function and named inputStates
+#  Replace WeightedErrorMechanism with ObjectiveMechanism
+#   with three inputStates:
+#     1) output of ObjectiveMechanism for next processingMechanism in the process
+#     2) derivative of activation function of next processingMechanism in the process
+#         assign the derivate to the function of this inputState
+#     3) matrix parameter of the MappingProjection to the next processingMechanism in the process
+#         asterix this as a violoatin of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
+#    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections
+#         that go to another ProcessingMechanism that itself projects to an ObjectiveMechanism (i.e., to avoid
+#         ones that go to mechanisms that are not part of learning (e.g., other Processing or Control mechanisms)
+#
+#endregion
+
+#region AdaptiveMechanisms -----------------------------------------------------------------------------------
+#  These chnage the parameters of other mechanisms (Control) or projections (Learning)
+#  Create as Type of Mechanism (after removing MonitoringMechanism and ControlMechanism
+#  Move LearningMechanism and ControlMechanism under this category;  Get rid of MonitoringMechanism
+#endregion
+
+#region EVCMechanism -----------------------------------------------------------------------------------
+#     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
+#     Allow it to take monitoring_mechanism as an argument
+#           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
+#     Make sure add_monitored_state works:
+#           Needs to call ObjectiveMechanism.add_monitored_state
+#           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
