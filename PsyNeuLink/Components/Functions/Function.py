@@ -657,21 +657,12 @@ class LinearCombination(CombinationFunction): # --------------------------------
 
     componentName = LINEAR_COMBINATION_FUNCTION
 
-    # MODIFIED 11/29/16 NEW:
     classPreferences = {
         kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
-    # MODIFIED 11/29/16 END
 
-    # # Operation indicators
-    # class Operation(Enum):
-    #     SUM = 0
-    #     PRODUCT = 1
-    #     SUBTRACT = 2
-    #     DIVIDE = 3
-    #
     variableClassDefault = [2, 2]
     # variableClassDefault_locked = True
 
@@ -685,10 +676,13 @@ class LinearCombination(CombinationFunction): # --------------------------------
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
-                 # weights:is_numeric_or_none=None,
-                 # exponents:is_numeric_or_none=None,
+                 # MODIFIED 2/10/17 OLD: [CAUSING CRASHING FOR SOME REASON]
+                 # # weights:is_numeric_or_none=None,
+                 # # exponents:is_numeric_or_none=None,
+                 # MODIFIED 2/10/17 NEW:
                  weights=None,
                  exponents=None,
+                 # MODIFIED 2/10/17 END
                  operation:tc.enum(SUM, PRODUCT, DIFFERENCE, QUOTIENT)=SUM,
                  params=None,
                  prefs:is_pref_set=None,
@@ -712,8 +706,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1,1)
 
-
-# MODIFIED 6/12/16 NEW:
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
 
@@ -796,7 +788,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
         #     raise FunctionError("Operation param missing")
         # if not operation == self.Operation.SUM and not operation == self.Operation.PRODUCT:
         #     raise FunctionError("Operation param ({0}) must be Operation.SUM or Operation.PRODUCT".format(operation))
-# MODIFIED 6/12/16 END
 
     def function(self,
                 variable=None,
@@ -883,6 +874,135 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                format(self.paramsCurrent[OPERATION].self.Operation.SUM))
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
+
+class WeightedError(CombinationFunction):
+    """Calculate the contribution of each sender to the error signal based on the weight matrix
+
+    Description:
+
+    Initialization arguments:
+     - variable (1d np.array or list, 1d np.rarray or list): activity vector and error vector, respectively
+     - matrix (2d np.array or List(list))
+     - derivative (function or method)
+    WeightedError.function returns dot product of matrix and error * derivative of activity
+    Returns 1d np.array (error_signal)
+    """
+
+    componentName = WEIGHTED_ERROR_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'WeightedErrorCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
+    variableClassDefault = [[0], [0]]
+    # variableClassDefault_locked = True
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
+    @tc.typecheck
+    def __init__(self,
+                 variable_default,
+                 matrix=None,
+                 # derivative:is_function_type,
+                 derivative=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(matrix=matrix,
+                                                  derivative=derivative,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+
+        # FIX: MAKE SURE VARIABLE ndim = 2
+        variable = np.array(variable)
+        # self.variable = np.atleast_2d(variable)
+
+        # variable must have two 1d items
+        if variable.shape[0] != 2:
+            raise FunctionError("variable for {} ({0}) must have two arrays (activity and error vectors)".
+                               format(self.__class__.__name__, variable))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Insure that dimensions of matrix are compatible with activity and error vectors in variable
+        """
+        super()._validate_params(request_set=request_set,
+                              target_set=target_set,
+                              context=context)
+
+        matrix = target_set[MATRIX].value
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if not isinstance(target_set[MATRIX], ParameterState):
+            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
+                                format(matrix, self.__class__.__name__))
+
+        try:
+            activity_len = len(self.variable[0])
+        except TypeError:
+            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
+        try:
+            error_len = len(self.variable[1])
+        except TypeError:
+            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
+        if activity_len != error_len:
+            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
+                format(activity_len, error_len, self.__class__.__name__))
+
+        if not isinstance(matrix, (np.ndarray, np.matrix)):
+            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
+                                format(matrix, self.__class__.__name__))
+
+        if matrix.ndim != 2:
+            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
+                               format(self.__class__.__name__, matrix.ndim))
+
+        cols = matrix.shape[1]
+        if  cols != error_len:
+            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
+                                     " must equal length of error vector ({})".
+                                     format(cols,self.__class__.__name__,error_len))
+
+        if not isinstance(target_set['derivative'],(function_type, method_type)):
+            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray nor matrix".
+                                format(matrix, self.__class__.__name__))
+
+
+    def function(self,
+                variable=None,
+                params=None,
+                time_scale=TimeScale.TRIAL,
+                context=None):
+
+        self._check_args(variable, params, context)
+
+        activity = self.variable[0]
+        error = self.variable[1]
+        matrix = self.matrix.value
+
+        activity_derivative = self.derivative(output=activity)
+        error_derivative = error * activity_derivative
+
+        return np.dot(matrix, error_derivative)
 
 
 #region ***********************************  TRANSFER FUNCTIONS  ***********************************************
@@ -2287,7 +2407,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
         if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
             raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
                                 format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
-
 
     def _instantiate_function(self, context=None):
         """Get derivative of activation function being used
