@@ -184,7 +184,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
 
@@ -208,15 +208,15 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-    """
-    ControlMechanism_Base(     \
-    default_input_value=None,  \
-    monitor=None,  \
-    function=LinearCombination,           \
-    params=None,               \
-    name=None,                 \
-    prefs=None)
-    """
+        """
+        ControlMechanism_Base(     \
+        default_input_value=None,  \
+        monitor=None,  \
+        function=LinearCombination,           \
+        params=None,               \
+        name=None,                 \
+        prefs=None)
+        """
 
         if default_input_value is None:
             default_input_value = self.variableClassDefault
