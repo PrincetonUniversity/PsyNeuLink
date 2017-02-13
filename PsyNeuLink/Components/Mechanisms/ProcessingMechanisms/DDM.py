@@ -489,8 +489,6 @@ class DDM(ProcessingMechanism_Base):
                                      threshold=1.0,
                                      noise=0.5, 
                                      t0=.200),
-                 # drift_rate = 1.0, 
-                 noise_coeff = 0.5, 
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
@@ -502,16 +500,18 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
-                                                  noise_coeff = noise_coeff, 
-                                                  # drift_rate = drift_rate, 
                                                   params=params,
                                                   )
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         if default_input_value is None:
-          default_input_value = 0
-            # default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
+          try: 
+            default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
+          except: 
+
+            default_input_value = 0.0
+            
 
         super(DDM, self).__init__(variable=default_input_value,
                                   params=params,
@@ -535,7 +535,7 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        functions = {BogaczEtAl, NavarroAndFuss, Integrator}
+        functions = {BogaczEtAl, NavarroAndFuss, Integrator, DDMIntegrator}
         if not target_set[FUNCTION] in functions:
             function_names = list (function.componentName for function in functions)
             raise DDMError("{} param of {} must be one of the following functions: {}".
@@ -545,17 +545,6 @@ class DDM(ProcessingMechanism_Base):
             # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
             del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_VARIANCE.value]
             del target_set[OUTPUT_STATES][DDM_Output.RT_CORRECT_MEAN.value]
-
-        # Validate NOISE:
-        noise_coeff = target_set[NOISE_COEFF]
-        if isinstance(noise_coeff, float):
-            self.noise_coeff_function = False
-        elif callable(noise_coeff):
-            self.noise_coeff_function = True
-        else:
-            raise TransferError("noise parameter ({}) for {} must be a float or a function".
-                                format(noise_coeff, self.name))
-
 
         try:
             threshold = target_set[FUNCTION_PARAMS][THRESHOLD]
@@ -622,14 +611,9 @@ class DDM(ProcessingMechanism_Base):
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
-        if self.noise_coeff_function:
-            noise_coeff = self.noise_coeff()
-            time_step_size = 1.0
-            noise_val = np.sqrt(time_step_size*float(abs(noise_coeff)))*np.random.normal()
-        else:
-            noise_coeff = self.noise_coeff
-            time_step_size = 1.0
-            noise_val = np.sqrt(time_step_size*float(abs(noise_coeff)))*np.random.normal()
+
+        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented: 
+        time_step_size = 1.0
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
@@ -638,16 +622,8 @@ class DDM(ProcessingMechanism_Base):
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
-            print("inside of the DDM, noise = ", noise_coeff)
-            result =(self.function(params={NOISE: noise_val, RATE: 0.0}))
-            
+            result = self.function(context=context)
             return np.array([result,[0.0],[0.0],[0.0]])
-            # IMPLEMENTATION NOTES:
-            # Get params
-            # Implement with calls to a step_function, that does not reset self.outputValue
-            # Should be sure that initial value of self.outputState.value = self.parameterStates[BIAS]
-            # Assign "self.decision_variable"
-            # Implement terminate() below
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
@@ -667,6 +643,7 @@ class DDM(ProcessingMechanism_Base):
             # drift_rate = float((self.inputState.value * self.parameterStates[DRIFT_RATE].value))
             # # MODIFIED 11/21/16 NEW:
             drift_rate = float((self.variable * self.parameterStates[DRIFT_RATE].value))
+
             # MODIFIED 11/21/16 END
 
             starting_point = float(self.parameterStates[STARTING_POINT].value)

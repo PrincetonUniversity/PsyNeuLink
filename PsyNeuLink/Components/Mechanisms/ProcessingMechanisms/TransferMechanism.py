@@ -108,6 +108,7 @@ INITIAL_VALUE = 'initial_value'
 TRANSFER_RESULT = "transfer_result"
 TRANSFER_MEAN = "transfer_mean "
 TRANSFER_VARIANCE = "transfer_variance"
+TRANSFER_DIFFERENTIAL = "transfer_differential"
 
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
@@ -328,6 +329,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
 
+
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -416,11 +418,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Validate NOISE:
         noise = target_set[NOISE]
-        if isinstance(noise, float):
-            self.noise_function = False
-        elif callable(noise):
-            self.noise_function = True
-        else:
+        if (isinstance(noise, float) == False) and (callable(noise) == False):
+            print("arrived")
             raise TransferError("noise parameter ({}) for {} must be a float or a function".
                                 format(noise, self.name))
 
@@ -505,6 +504,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
+
+
         if INITIALIZING in context:
             self.previous_input = self.variable
 
@@ -514,10 +515,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        if self.noise_function:
-            noise = self.noise()
-        else:
-            noise = self.noise
+
         rate = self.rate
         range = self.range
 
@@ -530,7 +528,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
-            current_input = self.integrator_function.function(self.inputState.value, params = {NOISE: noise, RATE: rate})[0]
+
+            current_input = self.integrator_function.function(self.inputState.value, context=context)
+            print(current_input, " = current_input")
 
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
