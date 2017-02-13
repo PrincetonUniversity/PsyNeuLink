@@ -1982,6 +1982,8 @@
 #
 # FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
 #                    rename reference_value??
+# IMPLEMENT: full _instantiate_input_states capability per _instantiate_output_states (see ObjectiveMechanism):
+#                 ??include `senders` arg (and use version of _get_monitored_states in EVC)
 # IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
 # FIX: ``value`` should not be used as the name of the variable arg for states
@@ -2588,16 +2590,11 @@
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
 #   using a particular function and named inputStates
-#  Replace WeightedErrorMechanism with ObjectiveMechanism
-#   with three inputStates:
-#     1) output of ObjectiveMechanism for next processingMechanism in the process
-#     2) derivative of activation function of next processingMechanism in the process
-#         that gets the derivative from next processingMechanism's [DERIVATIVE] outputState
-#                 (if there is none, then BP can't be used)
-#     3) matrix parameter of the MappingProjection to the next processingMechanism in the process
-#         asterix this as a violation of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
-#    - IMPLEMENT WeightedError(array, array, matrix) Function (that computes the dot product)
-#    - IMPLEMENT TransferMechanism.outputStates[DERIVATIVE] (per Kristin)
+#   FIX: typechecking
+#   FIX: rename `monitor` and `names` args
+#   - IMPLEMENT call to _instantiate_input_states (not plural) once that is implemented (see State above):
+#                    - parse `monitor` arg into inputState specifications and pass to _instantiate_input_states()
+#   - IMPLEMENT TransferMechanism.outputStates[DERIVATIVE] (per Kristin)
 #    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections
 #         that go to another ProcessingMechanism that itself projects to an ObjectiveMechanism (i.e., to avoid
 #         ones that go to mechanisms that are not part of learning (e.g., other Processing or Control mechanisms)
