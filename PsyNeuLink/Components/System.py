@@ -306,8 +306,9 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components import SystemDefaultControlMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 
 # System factory method:
@@ -1141,6 +1142,12 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
+            # If sender is an ObjectiveMechanism being used for learning or control,
+            # Assign as MONITORING and move on
+            if isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role:
+                sender_mech.systems[self] = MONITORING
+                return
+
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
@@ -1349,12 +1356,15 @@ class System_Base(System):
 
         for mech_tuple in self._all_mech_tuples:
 
-            if isinstance(mech_tuple.mechanism, MonitoringMechanism_Base):
-                if not mech_tuple.mechanism in self._monitoring_mech_tuples:
+            mech = mech_tuple.mechanism
+
+            if (isinstance(mech, MonitoringMechanism_Base) or
+                    (isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING))):
+                if not mech in self._monitoring_mech_tuples:
                     self._monitoring_mech_tuples.append(mech_tuple)
 
-            if isinstance(mech_tuple.mechanism, ComparatorMechanism):
-                if not mech_tuple.mechanism in self._target_mech_tuples:
+            if isinstance(mech, ComparatorMechanism):
+                if not mech in self._target_mech_tuples:
                     self._target_mech_tuples.append(mech_tuple)
 
 
@@ -1422,10 +1432,12 @@ class System_Base(System):
             if isinstance(sender_mech, MappingProjection):
                 return
 
-            # All other sender_mechs should be MonitoringMechanisms
-            elif not isinstance(sender_mech, MonitoringMechanism_Base):
+            # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
+            elif not (isinstance(sender_mech, MonitoringMechanism_Base) or
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
-                                  "must be a MonitoringMechanism or a MappingProjection".format(sender_mech))
+                                  "must be a MonitoringMechanism, ObjectiveMechanism, or a MappingProjection".
+                                  format(sender_mech))
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
@@ -1828,7 +1840,7 @@ class System_Base(System):
         # Then update all MappingProjections
         for component in self.learningExecutionList:
 
-            if isinstance(component, MonitoringMechanism_Base):
+            if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
                 continue
 
             component_type = "mappingProjection"

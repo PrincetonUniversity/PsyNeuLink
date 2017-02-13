@@ -888,6 +888,7 @@ FROM TODO:
                                                                                                        error_signal],
                                                                                      matrix=matrix,
                                                                                      derivative=derivative),
+                                                              role=LEARNING,
                                                               name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 END
                     # # Instantiate MappingProjection to provide monitoring_mechanism with error signal
