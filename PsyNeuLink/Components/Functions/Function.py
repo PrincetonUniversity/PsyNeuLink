@@ -140,7 +140,7 @@ def get_param_value_for_function(owner, function):
 
 
 class Function_Base(Function):
-    """Implement abstract class for Component category of Function class
+    """Implement abstract class for Function category of Component class
 
     Description:
         Function functions are ones used by other function categories;
