@@ -890,15 +890,14 @@ FROM TODO:
                                                                                      derivative=derivative),
                                                               name=self.mappingProjection.name + " Weighted_Error")
                     # MODIFIED 2/10/17 END
-
-                    # Instantiate MappingProjection to provide monitoring_mechanism with error signal
-                    MappingProjection(sender=next_level_montioring_mech_output,
-                            receiver=monitoring_mechanism,
-                            # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
-                            matrix=IDENTITY_MATRIX,
-                            name=next_level_montioring_mech_output.name +
-                                 ' to '+monitoring_mechanism.name +
-                                 ' ' + MAPPING_PROJECTION + ' Projection')
+                    # # Instantiate MappingProjection to provide monitoring_mechanism with error signal
+                    # MappingProjection(sender=next_level_montioring_mech_output,
+                    #         receiver=monitoring_mechanism,
+                    #         # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
+                    #         matrix=IDENTITY_MATRIX,
+                    #         name=next_level_montioring_mech_output.name +
+                    #              ' to '+monitoring_mechanism.name +
+                    #              ' ' + MAPPING_PROJECTION + ' Projection')
 
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to a MonitoringMechanism:
