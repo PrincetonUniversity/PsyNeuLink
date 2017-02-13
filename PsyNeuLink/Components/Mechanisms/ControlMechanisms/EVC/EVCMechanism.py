@@ -34,13 +34,11 @@ intensities, and thereby the values of the parameters being controlled) in the n
 The procedure by which the EVCMechanism selects an `allocation_policy` when it is executed is determined by its
 `function <EVCMechanism.function>` attribute. By default, this evaluates the performance of the system under every
 possible `allocation_policy`, and chooses the best one. It does this by simulating the system under each
-`allocation_policy`, and evaluating the output of the mechanisms and/or outputStates specified in its
-`monitor_for_control <EVCMechanism.monitor_for_control>` attribute.  It uses these values to calculated the expected
-value of control (EVC): a cost-benefit analysis that weighs the cost of the ControlSignals against the outcome of
-performance for the given policy. The EVCMechanism selects the `allocation_policy` that generates the maximum EVC,
-and that allocation_policy is  implemented for the next round of execution. Each step of this procedure can be
-modified, or it can be replaced entirely, by assigning custom functions to corresponding parameters of the EVCMechanism,
-as described under `EVC_Calculation` below.
+`allocation_policy`, and evaluating the expected value of control (EVC): a cost-benefit analysis that weighs
+the cost of the ControlSignals against the outcome of performance for the given policy.  The EVCMechanism then
+selects the `allocation_policy` that generates the maximum EVC, and that allocation_policy is implemented for the
+next round of execution. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
+custom functions to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
 
 .. _EVCMechanism_Creation:
 
@@ -294,8 +292,8 @@ Class Reference
 ---------------
 
 """
-from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import *
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 
 OBJECT = 0
@@ -851,7 +849,7 @@ class EVCMechanism(ControlMechanism_Base):
             each of which receives a projection from a corresponding outputState in self.monitored_output_states
         """
 
-        from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
         self._get_monitored_states(context=context)
@@ -902,7 +900,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ObjectiveMechanism import validate_monitored_state
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_state
 
         # PARSE SPECS
 

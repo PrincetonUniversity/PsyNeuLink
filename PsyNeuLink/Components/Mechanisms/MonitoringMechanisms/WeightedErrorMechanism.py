@@ -94,8 +94,6 @@ Class Reference
 
 """
 
-
-
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 # from PsyNeuLink.Components.States.InputState import InputState
@@ -315,6 +313,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
         # Get derivative for next mechanism's function
         derivative_fct = self.next_mechanism.function_object.derivative
+
 
         # Compute derivative of error with respect to current output of next mechanism
         output_derivative = derivative_fct(output=next_level_output)
