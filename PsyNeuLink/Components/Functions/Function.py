@@ -1784,13 +1784,17 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         noise = target_set[NOISE]
         drift_rate = target_set[DRIFT_RATE]
         time_step_size = target_set[TIME_STEP_SIZE]
-        # noise = self.noise
+        
+        # Validate NOISE:
+        # If the noise is a float, continue; if it is function, set self.noise_function to True 
+        # (flags noise to be executed before passing it to integrator )
+        # Otherwise, error 
         if isinstance(noise, float):
             self.noise_function = False
         elif callable(noise):
             self.noise_function = True
         else:
-            raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".
+            raise FunctionError("noise parameter ({}) for {} must be a float or a function".
                                 format(noise, self.name))
 
 
@@ -1832,7 +1836,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         drift_rate = self.paramsCurrent[DRIFT_RATE]
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
-
+        #if noise is a function, execute it 
         if self.noise_function:
             noise = self.noise()
         else:
@@ -1849,35 +1853,71 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Compute function based on weighting param
         if weighting is CONSTANT:
             value = old_value + rate + noise 
-            # return value
         elif weighting is SIMPLE:
             value = old_value + (new_value * rate) + noise 
-            # return value
         elif weighting is ADAPTIVE:
-            # return (1-rate)*old_value + rate*new_value
             value = (1-rate)*old_value + rate*new_value + noise 
         elif weighting is DIFFUSION: 
-            print("old_value = ", float(old_value))
-            print("drift_rate*time_step_size = ", drift_rate*time_step_size)
-            print("noise = ", noise)
-
-            value = old_value + drift_rate*time_step_size + noise
-            print("value =", float(value))
-            print("")
-            print("---------------------------------------------")
-            print("")
+            value = old_value + drift_rate*old_value*time_step_size + np.sqrt(time_step_size*noise)*np.random.normal()
         else:
-            # return new_value
             value = new_value
-
+ 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        self.oldValue = value
+        if not INITIALIZING in context:
+            self.oldValue = value
+
         return value
 
-    # def keyword(self, keyword):
-    #     return keyword
+class DDMIntegrator(Integrator): # --------------------------------------------------------------------------------------
+    componentName = DDM_INTEGRATOR_FUNCTION
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=None,
+                 rate:parameter_spec=1.0,
+                 weighting:tc.enum(DIFFUSION)=DIFFUSION,
+                 params:tc.optional(dict)=None,
+                 prefs:is_pref_set=None,
+                 noise=0.5,
+                 drift_rate = 1.0, 
+                 time_step_size = 1.0, 
+                 context="DDMIntegrator Init"):
+
+        # Assign here as default, for use in initialization of function
+        self.oldValue = self.paramClassDefaults[kwInitializer]
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                 weighting=weighting,
+                                                 params=params,
+                                                 noise=noise,
+                                                 drift_rate=drift_rate, 
+                                                 time_step_size=time_step_size)
+
+        super().__init__(variable_default=variable_default,
+                                         params=params,
+                                         prefs=prefs,
+                                         context=context)
+
+        # Reassign to kWInitializer in case default value was overridden
+        self.oldValue = [self.paramsCurrent[kwInitializer]]
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        noise = target_set[NOISE]
+        if (isinstance(noise, float) == False):
+            raise FunctionError("noise parameter ({}) for {} must be a float.".
+                                format(noise, self.name))
+
+    
+
+#     # def keyword(self, keyword):
+#     #     return keyword
 
 # region DDM
 #
@@ -2146,6 +2186,17 @@ class DistributionFunction(Function_Base):
     componentType = DIST_FUNCTION_TYPE
 
 class NormalDist(DistributionFunction):
+
+    """Return a random sample from a normal distribution.
+
+    Description:
+        Draws samples from a normal distribution of the specified mean and variance using numpy.random.normal
+
+    Initialization arguments:
+        - mean (float)
+        - standard_dev (float)
+
+    """
     componentName = NORMAL_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -2174,33 +2225,11 @@ class NormalDist(DistributionFunction):
         self.functionOutputType = None
 
 
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-        if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
-
-
     def function(self,
             variable=None,
             params=None,
             time_scale=TimeScale.TRIAL,
             context=None):
-        """Combine a list or array of values
-
-        Returns a scalar value
-
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
-        """
 
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
@@ -2213,6 +2242,15 @@ class NormalDist(DistributionFunction):
         return result
 
 class ExponentialDist(DistributionFunction):
+    """Return a random sample from an exponential distribution.
+
+    Description:
+        Draws samples from an exponential distribution of the specified beta using numpy.random.exponential 
+
+    Initialization arguments:
+        - beta (float)
+
+    """
     componentName = EXPONENTIAL_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -2238,34 +2276,11 @@ class ExponentialDist(DistributionFunction):
 
         self.functionOutputType = None
 
-
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-        if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
-
-
     def function(self,
             variable=None,
             params=None,
             time_scale=TimeScale.TRIAL,
             context=None):
-        """Combine a list or array of values
-
-        Returns a scalar value
-
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
-        """
 
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
@@ -2277,6 +2292,16 @@ class ExponentialDist(DistributionFunction):
         return result
 
 class UniformDist(DistributionFunction):
+    """Return a random sample from a uniform distribution.
+
+    Description:
+        Draws samples from a uniform distribution of the specified low and high values using numpy.random.uniform
+
+    Initialization arguments:
+        - low (float)
+        - high (float)
+
+    """
     componentName = UNIFORM_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -2304,34 +2329,11 @@ class UniformDist(DistributionFunction):
 
         self.functionOutputType = None
 
-
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-        if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
-
-
     def function(self,
             variable=None,
             params=None,
             time_scale=TimeScale.TRIAL,
             context=None):
-        """Combine a list or array of values
-
-        Returns a scalar value
-
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
-        """
 
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
@@ -2344,6 +2346,16 @@ class UniformDist(DistributionFunction):
         return result
 
 class GammaDist(DistributionFunction):
+    """Return a random sample from a gamma distribution.
+
+    Description:
+        Draws samples from a gamma distribution of the specified mean and variance using numpy.random.gamma
+
+    Initialization arguments:
+        - scale (float)
+        - shape (float)
+
+    """
     componentName = GAMMA_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -2371,34 +2383,11 @@ class GammaDist(DistributionFunction):
 
         self.functionOutputType = None
 
-
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-        if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
-
-
     def function(self,
             variable=None,
             params=None,
             time_scale=TimeScale.TRIAL,
             context=None):
-        """Combine a list or array of values
-
-        Returns a scalar value
-
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
-        """
 
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
@@ -2408,9 +2397,19 @@ class GammaDist(DistributionFunction):
 
         result = np.random.gamma(shape, scale)
 
-        return 
+        return result
 
 class WaldDist(DistributionFunction):
+    """Return a random sample from a wald distribution.
+
+    Description:
+        Draws samples from a wald distribution of the specified mean and variance using numpy.random.wald
+
+    Initialization arguments:
+        - mean (float)
+        - scale (float)
+
+    """
     componentName = GAMMA_DIST_FUNCTION
 
     variableClassDefault = [0]
@@ -2439,33 +2438,11 @@ class WaldDist(DistributionFunction):
         self.functionOutputType = None
 
 
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-        if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
-
-
     def function(self,
             variable=None,
             params=None,
             time_scale=TimeScale.TRIAL,
             context=None):
-        """Combine a list or array of values
-
-        Returns a scalar value
-
-        :var variable: (list or np.array of numbers) - values to calculate (default: [0, 0]:
-        :params: (dict) with entries specifying:
-                           OPERATION: LinearCombination.Operation - operation to perform (default: SUM):
-        :return: (scalar)
-        """
 
         # Validate variable and assign to self.variable, and validate params
         self._check_args(variable=variable, params=params, context=context)
@@ -2473,7 +2450,7 @@ class WaldDist(DistributionFunction):
         scale = self.paramsCurrent[SCALE]
         mean = self.paramsCurrent[MEAN]
 
-        result = np.random.gamma(mean, scale)
+        result = np.random.wald(mean, scale)
 
         return result
 
