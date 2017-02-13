@@ -1165,14 +1165,17 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a ComparatorMechanism or
-            #     it projects only to ComparatorMechanism(s)
+            # Assign as TERMINAL (or SINGLETON) if it:
+            #    - has no outgoing projections and
+            #    - it is not a ComparatorMechanism or
+            #      it projects only to ComparatorMechanism(s) and/or ObjectiveMechanisms used for learning
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-                    all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
-                                                                   ControlMechanism_Base,
-                                                                   ObjectiveMechanism))
+                    all(all((isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
+                                                                   ControlMechanism_Base)) or
+                                 (isinstance(projection.receiver.owner, ObjectiveMechanism) and
+                                  projection.receiver.owner.role is LEARNING))
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
                 try:
