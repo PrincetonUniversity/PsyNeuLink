@@ -757,6 +757,7 @@ class System_Base(System):
         self.function = self.execute
         self.outputStates = {}
         self._phaseSpecMax = 0
+        self.stimulusInputStates = []
         self.targets = None
         self.targetInputStates = []
         self.learning = False
@@ -1265,8 +1266,25 @@ class System_Base(System):
 
         for process in sorted_processes:
             first_mech = process.firstMechanism
+
+            # MODIFIED 2/13/17 NEW:
+            # Treat as ORIGIN if it has a projectoin from a SystemTargetInputState (which means it was labelled as an
+            #    origin in a previous pass -- before learning and/or control was implemented) which should not have
+            #    changed
+            try:
+                if ORIGIN in first_mech.systems[self]:
+                    continue
+            except KeyError:
+                pass
+            # if any(
+            #         any(isinstance(projection, SystemTargetInputState)
+            #       for projection in input_state.receivesFromProjections)
+            #     for input_state in first_mech.inputStates.values()):
+            #     continue
+            # # MODIFIED 2/13/17 END
+
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
-            #    - the process itself (ProcessInputState
+            #    - the process itself (ProcessInputState)
             #    - another mechanism in the in process (i.e., feedback projections from *within* the process)
             #    - mechanisms from other process for which it is an origin
             # Notes:
@@ -1291,7 +1309,9 @@ class System_Base(System):
                             projection.sender.owner in list(process.mechanisms) or
                             # or from mechanisms in other processes for which it is also an ORIGIN ([a,b,a], [a,c,a])
                             all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
+                        # For all the projections to each inputState
                         for projection in input_state.receivesFromProjections)
+                    # For all inputStates for the first_mech
                     for input_state in first_mech.inputStates.values()):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
                 mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
@@ -1410,6 +1430,9 @@ class System_Base(System):
         self.variable = convert_to_np_array(self.variable, 2)
         # MODIFIED 2/8/17 END
 
+        # Instantiate StimulusInputStates
+        self._instantiate_stimulus_inputs()
+
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
@@ -1422,6 +1445,39 @@ class System_Base(System):
             if not iscompatible(value, mech._value_template[0]):
                 raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                   format(value, self.name, append_type_to_name(self)))
+
+    def _instantiate_stimulus_inputs(self, context=None):
+
+
+# FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
+# FIX: RENAME SystemTargetInputState -> SystemInputState
+
+        # Create SystemInputState for each ORIGIN mechanism in originMechanisms and
+        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
+        for i, origin_mech in zip(range(len(self.originMechanisms)), self.originMechanisms):
+
+            # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
+            # length of the ORIGIN inputState's variable attribute
+            if len(self.variable[i]) != len(origin_mech.inputState.variable):
+                raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
+                                  "corresponding ORIGIN mechanism ()".
+                                   format(i,
+                                          len(self.variable[i]),
+                                          len(origin_mech.inputState.variable),
+                                          origin_mech.name))
+
+            stimulus_input_state = SystemTargetInputState(owner=self,
+                                                        variable=origin_mech.inputState.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Input {}".format(i))
+            self.stimulusInputStates.append(stimulus_input_state)
+
+            # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            MappingProjection(sender=stimulus_input_state,
+                    receiver=origin_mech,
+                    name=self.name+' Input Projection to '+origin_mech.name)
+
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of monitoringMechanisms and learningProjections for use in learning
@@ -1574,8 +1630,7 @@ class System_Base(System):
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             MappingProjection(sender=target_input_state,
                     receiver=comparator_target,
-                    name=self.name+'_Input Projection to '+comparator_target.name)
-
+                    name=self.name+' Input Projection to '+comparator_target.name)
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -1682,12 +1737,19 @@ class System_Base(System):
             # p=0
             for i in range(num_inputs):
 
-                # FIX: REPLACE THIS WITH ASSIGNEMENT OF SystemInputState FOR EACH INPUT JUST AS FOR TARGETS
-                #      AND ASSIGN INPUT TO THOSE IN Run
-                origin_mech = self.originMechanisms[i]
-                process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
-                process._assign_input_values(input=input[i], context=context)
+                # # MODIFIED 2/13/17 NEW:
+                # origin_mech = self.originMechanisms[i]
+                # process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
+                # process._assign_input_values(input=input[i], context=context)
+                # MODIFIED 2/13/17 NEWER:
 
+                self.stimulusInputStates[i].value = input[i]
+
+                # Nullify inputs to ORIGIN mechanism from any processes
+                for input_state in self.originMechanisms[i].inputStates:
+                    for projection in input_state.receivesFromProjections:
+                        if isinstance(projection.sender, ProcessInputState):
+                            projection.sender.value = None
 
         self.input = input
         #endregion
