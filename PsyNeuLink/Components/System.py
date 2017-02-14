@@ -1674,27 +1674,30 @@ class System_Base(System):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            p=0
-            for i in range(num_inputs):
+            process_num=0
+            for input_num in range(num_inputs):
 
                 # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process)
-                if input[i] is None:
-                    p +=1
+                if input[input_num] is None:
+                    process_num +=1
                     continue
 
-                # Don't assign input to process if it's ORIGIN mechanism belongs to another process
-                #     that has already been assigned its input (to avoid that ORIGIN mechanism getting
-                #     two copies of the input when they system is executed)
-                origin_mech = self.originMechanisms[i]
-                if origin_mech in list(process.originMechanisms[0] for process in self.processes[0:p]):
-                    p += 1
+                # Insure that if ORIGIN mechanism belongs to more than one process, only the first of these
+                #    is assigned an input, so that the ORIGIN mechanism gets only one input when the system
+                #    is executed, rather than multiple copies (i.e., one from each process to which it belongs).
+                origin_mech = self.originMechanisms[input_num]
+                while orig_mechanism is not the origin of the curren process
+                    proces_num +=1
+
+                if origin_mech in list(process.originMechanisms[0] for process in self.processes[0:process_num]):
+                    process_num += 1
                     continue
 
-                process = self.processes[p]
+                process = self.processes[process_num]
 
                 # Assign input as value of corresponding Process inputState
-                process._assign_input_values(input=input[i], context=context)
-                p += 1
+                process._assign_input_values(input=input[input_num], context=context)
+                process_num += 1
 
         self.input = input
         #endregion
