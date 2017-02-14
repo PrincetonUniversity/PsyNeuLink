@@ -1576,7 +1576,11 @@ class Mechanism_Base(Mechanism):
                 param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Component):
-                    param = param_value.__self__.__name__
+                    # # MODIFIED 2/14/17 OLD:
+                    # param = param_value.__self__.__name__
+                    # MODIFIED 2/14/17 NEW:
+                    param = param_value.name
+                    # MODIFIED 2/14/17 END
                     param_is_function = True
                 elif isinstance(param_value, type(Component)):
                     param = param_value.__name__
