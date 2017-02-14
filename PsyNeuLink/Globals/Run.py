@@ -562,6 +562,13 @@ def run(object,
 
             input_num = execution%len(inputs)
 
+
+            # # MODIFIED 2/13/17 NEW:
+            # # Assign inputs
+            # if object_type == SYSTEM:
+            # # WHAT ABOUT IF IT IS A PROCESS??
+            # # MODIFIED 2/13/17 END
+
             # Assign targets:
             if targets is not None:
 
