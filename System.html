@@ -309,7 +309,7 @@ execution, as input to mechanisms that close recurrent loops (designated as <a c
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -341,7 +341,7 @@ controls, which then take effect in the next round of execution.</p>
 <span id="system-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="System.system">
-<code class="descclassname">System.</code><code class="descname">system</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=SystemDefaultControlMechanism</em>, <em>enable_controller=:keyword:`False`</em>, <em>monitor_for_control=`None`</em>, <em>targets=None                                  params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.system" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">System.</code><code class="descname">system</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=SystemDefaultControlMechanism</em>, <em>enable_controller=:keyword:`False`</em>, <em>monitor_for_control=`None`</em>, <em>targets=None                                    params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.system" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for System: returns instance of System.</p>
 <p>If called with no arguments, returns an instance of System with a single default process and mechanism;
 if called with a name string, that is used as the name of the instance of System returned;
@@ -521,13 +521,13 @@ based on _target_mech_tuples)</div></blockquote>
 <dl class="method">
 <dt id="System.System_Base.initialize">
 <code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign <a class="reference internal" href="#System.System_Base.initialize" title="System.System_Base.initialize"><code class="xref py py-data docutils literal"><span class="pre">initial_values</span></code></a> to mechanisms designated as         <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> and contained in recurrentInitMechanisms.</p>
+<dd><p>Assign <a class="reference internal" href="#System.System_Base.initialize" title="System.System_Base.initialize"><code class="xref py py-data docutils literal"><span class="pre">initial_values</span></code></a> to mechanisms designated as           <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a> and contained in recurrentInitMechanisms.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="System.System_Base.execute">
 <code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.execute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Execute mechanisms in system at specified <a class="reference internal" href="#system-execution-phase"><span class="std std-ref">phases</span></a> in order         specified by the <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a> attribute.</p>
+<dd><p>Execute mechanisms in system at specified <a class="reference internal" href="#system-execution-phase"><span class="std std-ref">phases</span></a> in order               specified by the <a class="reference internal" href="#System.System_Base.executionGraph" title="System.System_Base.executionGraph"><code class="xref py py-data docutils literal"><span class="pre">executionGraph</span></code></a> attribute.</p>
 <p>Assign items of input to <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms</p>
 <p>Execute mechanisms in the order specified in executionList and with phases equal to
 <code class="docutils literal"><span class="pre">CentralClock.time_step</span> <span class="pre">%</span> <span class="pre">numPhases</span></code>.</p>
@@ -700,6 +700,20 @@ each execution.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="System.System_Base.show_graph">
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='LR'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows a graph of a system&#8217;s mechanisms and projections.</p>
+<p>Arguments</p>
+<dl class="docutils">
+<dt>output_fmt</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">output format can be either &#8216;pdf&#8217; or &#8216;jupyter&#8217;</span><dd>pdf will actually render and open a pdf
+jupyter will just return the graph to the output stream, ideal for working in jupyter notebooks</dd>
+<dt>direction</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">can be used to set rank direction of graph</span><dd>possible inputs are BT, TB, LR, and RL</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
