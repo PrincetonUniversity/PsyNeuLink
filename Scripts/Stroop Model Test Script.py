@@ -2,6 +2,7 @@ from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
+import os
 
 process_prefs = {REPORT_OPUTPUT_PREF: True,
                  VERBOSE_PREF: False}
@@ -73,4 +74,6 @@ mySystem.execute(input=[[1,1],[1,1]])
 # mySystem.show()
 # mySystem.controller.show()
 
-# mySystem.show_graph()
+mySystem.show_graph()
+
+# print(os.environ['PATH'])

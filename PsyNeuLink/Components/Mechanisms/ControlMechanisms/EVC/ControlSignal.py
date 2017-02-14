@@ -430,8 +430,12 @@ class ControlSignal(OutputState):
 
         """
 
-        # Validate cost functions:
+        # Validate cost functions specified in request_set:
         for cost_function_name in costFunctionNames:
+
+            if not cost_function_name in request_set:
+                continue
+
             cost_function = request_set[cost_function_name]
 
             # cost function assigned None: OK
@@ -486,20 +490,21 @@ class ControlSignal(OutputState):
         # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
-        allocation_samples = request_set[ALLOCATION_SAMPLES]
-        if isinstance(allocation_samples, list):
-            if iscompatible(allocation_samples, **{kwCompatibilityType: list,
-                                                       kwCompatibilityNumeric: True,
-                                                       kwCompatibilityLength: False,
-                                                       }):
-                # Convert to np.array to be compatible with default value
-                request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
-        elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
-            pass
-        else:
-            raise ControlSignalError("allocation_samples argument ({}) in {} must be "
-                                         "a list or 1D np.array of numbers".
-                                     format(allocation_samples, self.name))
+        if ALLOCATION_SAMPLES in request_set:
+            allocation_samples = request_set[ALLOCATION_SAMPLES]
+            if isinstance(allocation_samples, list):
+                if iscompatible(allocation_samples, **{kwCompatibilityType: list,
+                                                           kwCompatibilityNumeric: True,
+                                                           kwCompatibilityLength: False,
+                                                           }):
+                    # Convert to np.array to be compatible with default value
+                    request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
+            elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
+                pass
+            else:
+                raise ControlSignalError("allocation_samples argument ({}) in {} must be "
+                                             "a list or 1D np.array of numbers".
+                                         format(allocation_samples, self.name))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
