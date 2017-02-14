@@ -2,6 +2,26 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 #
+#
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+# FIX:
+# Finish Run:
+#     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
+#
+# System:
+#    Finish implementing SystemStimulusInputs
+
+# ObjectiveMechanism:
+#    Add matrix assignments (and allow None to suppress it)
+#    Add input assignments
+
+# LearningProjection:
+#    Finish implementing Comparator version of ObjectiveMechanmism
+
+# FIX: EVC Gratton Script_Bug5:  Can't assign Linear() directly to intensity_cost_function (had to assign .function)
+# FIX: When running a process with a TERMINAL mechanism that is also in another process, it gets input from that
+#        process even if it is not running
+
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
 # √ System
