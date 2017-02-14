@@ -121,9 +121,15 @@ mySystem.show()
 mySystem.controller.show()
 
 # configure EVC components
-mySystem.controller.controlSignals[0].intensity_cost_function = Linear(slope = 0).function
+# mySystem.controller.controlSignals[0].intensity_cost_function = Linear(slope = 0)
+# mySystem.controller.controlSignals[1].intensity_cost_function = Linear(slope = 0)
+# mySystem.controller.controlSignals[2].intensity_cost_function = Linear(slope = 0)
+#
+# mySystem.controller.controlSignals[0].assign_params(request_set={'intensity_cost_function':Linear})
+mySystem.controller.controlSignals[1].intensity_cost_function = Linear(slope = 0).function
 mySystem.controller.controlSignals[1].intensity_cost_function = Linear(slope = 0).function
 mySystem.controller.controlSignals[2].intensity_cost_function = Linear(slope = 0).function
+
 
 # list(param.name for param in mySystem.mechanismsDict["Flanker 1 Stimulus_PredictionMechanism"].params)
 # mySystem.mechanismsDict["Flanker 1 Stimulus_PredictionMechanism"].rate
