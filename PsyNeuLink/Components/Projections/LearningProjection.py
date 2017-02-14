@@ -952,8 +952,8 @@ FROM TODO:
                     objective_mechanism_input = np.array([output_signal, training_signal])
                     objective_mechanism = DefaultTrainingMechanism(objective_mechanism_input)
 
-                    # FIX: 1) NEED TO ASSIGN AN OutputState TO MONITOR FOR THE TARGET (ProcessInputState?? OR
-                    # SystemInputState?
+                    # FIX: 1) NEED TO ASSIGN AN OutputState TO MONITOR FOR THE TARGET:
+                    #      2  USE TARGET ProcessInputStates / SystemInputStates??
                     # FIX:
                     # FIX: 2) NEED TO AUGMENT OBJECTIVE MECHANISM TO TAKE MATRIX ARGUMENT
                     # FIX:    OR A SET OF INPUT STATE SPECIFICATIONS (WHICH CAN JUST BE VALUES)

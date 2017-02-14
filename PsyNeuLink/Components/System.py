@@ -1682,6 +1682,8 @@ class System_Base(System):
             # p=0
             for i in range(num_inputs):
 
+                # FIX: REPLACE THIS WITH ASSIGNEMENT OF SystemInputState FOR EACH INPUT JUST AS FOR TARGETS
+                #      AND ASSIGN INPUT TO THOSE IN Run
                 origin_mech = self.originMechanisms[i]
                 process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
                 process._assign_input_values(input=input[i], context=context)
