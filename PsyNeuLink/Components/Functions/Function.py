@@ -1695,11 +1695,12 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              Note: self.oldValue stores previous value with which new value is integrated
          + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
          + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
-                CONSTANT -- returns old_value incremented by rate parameter (ignores input)
-                SIMPLE -- returns old_value incremented by rate * new_value
-                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise 
+                SIMPLE -- returns old_value incremented by rate * new_value with optional noise
+                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
+                DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution 
 
     Class attributes:
     - oldValue (value): stores previous value with which value provided in variable is integrated
@@ -1784,6 +1785,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                  context=context)
 
         noise = target_set[NOISE]
+
         drift_rate = target_set[DRIFT_RATE]
         time_step_size = target_set[TIME_STEP_SIZE]
         
@@ -1873,13 +1875,30 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         return value
 
 class DDMIntegrator(Integrator): # --------------------------------------------------------------------------------------
+    """Calculate an accumulated value for input variable using a the DDM accumulation method. The DDMIntegrator only allows for 'DIFFUSION' weighting, and requires the noise parameter to be a float, as it is used to construct the standard DDM Gaussian.  
+
+    Initialization arguments:
+     - params (dict): specifying:
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value
+        + drift_rate (DRIFT_RATE: float)
+        + noise (NOISE: float)
+        + time_step_size (TIME_STEP_SIZE: float)
+
+    Class attributes:
+    - oldValue (value): stores previous value with which value provided in variable is integrated
+
+    Integrator.function returns scalar result
+    """
+
+
     componentName = DDM_INTEGRATOR_FUNCTION
 
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
-                 rate:parameter_spec=1.0,
-                 weighting:tc.enum(DIFFUSION)=DIFFUSION,
+                 weighting=DIFFUSION,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  noise=0.5,
@@ -1891,7 +1910,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
         self.oldValue = self.paramClassDefaults[kwInitializer]
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(rate=rate,
+        params = self._assign_args_to_param_dicts(
                                                  weighting=weighting,
                                                  params=params,
                                                  noise=noise,
@@ -1912,9 +1931,16 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                                  context=context)
 
         noise = target_set[NOISE]
+
         if (isinstance(noise, float) == False):
             raise FunctionError("noise parameter ({}) for {} must be a float.".
                                 format(noise, self.name))
+
+        weighting = target_set[WEIGHTING]
+        if (weighting != "diffusion"):
+            raise FunctionError("weighting parameter ({}) for {} must be diffusion. For alternate methods of accumulation, use the Integrator function".
+                                format(weighting, self.name))
+
 
     
 
