@@ -1220,15 +1220,18 @@ class System_Base(System):
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
                             if self.executionGraph[receiver_tuple]:
-                                self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                                self.executionGraph[receiver_tuple].\
+                                    add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                             # If receiver_tuple set is empty, assign sender_mech to set
                             else:
-                                self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                                self.executionGraph[receiver_tuple] = \
+                                    {self._allMechanisms._get_tuple_for_mech(sender_mech)}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.executionGraph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.executionGraph[receiver_tuple].remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].\
+                                remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
@@ -1241,9 +1244,11 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].\
+                                add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                         except KeyError:
-                            self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                            self.executionGraph[receiver_tuple] = \
+                                {self._allMechanisms._get_tuple_for_mech(sender_mech)}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
@@ -1674,30 +1679,36 @@ class System_Base(System):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            process_num=0
-            for input_num in range(num_inputs):
+            # p=0
+            for i in range(num_inputs):
 
-                # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process)
-                if input[input_num] is None:
-                    process_num +=1
-                    continue
+                origin_mech = self.originMechanisms[i]
+                process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
+                process._assign_input_values(input=input[i], context=context)
 
-                # Insure that if ORIGIN mechanism belongs to more than one process, only the first of these
-                #    is assigned an input, so that the ORIGIN mechanism gets only one input when the system
-                #    is executed, rather than multiple copies (i.e., one from each process to which it belongs).
-                origin_mech = self.originMechanisms[input_num]
-                while orig_mechanism is not the origin of the curren process
-                    proces_num +=1
+                # # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process)
+                # if input[i] is None:
+                #     p +=1
+                #     continue
+                #
+                # # Insure that if ORIGIN mechanism [i] belongs to more than one process, only the first of these
+                # #    is assigned an input, so that the ORIGIN mechanism gets only one input when the system
+                # #    is executed, rather than multiple copies (i.e., one from each process to which it belongs).
+                # origin_mech = self.originMechanisms[i]
+                # while not origin_mech is self.processes[p].originMechanisms[0]:
+                #     p +=1
+                # #
+                # # if origin_mech in list(process.originMechanisms[0] for process in self.processes[0:p]):
+                # #     p += 1
+                # #     continue
+                #
+                # process = self.processes[p]
+                #
+                # # Assign input as value of corresponding Process inputState
+                # process._assign_input_values(input=input[i], context=context)
+                # p += 1
 
-                if origin_mech in list(process.originMechanisms[0] for process in self.processes[0:process_num]):
-                    process_num += 1
-                    continue
 
-                process = self.processes[process_num]
-
-                # Assign input as value of corresponding Process inputState
-                process._assign_input_values(input=input[input_num], context=context)
-                process_num += 1
 
         self.input = input
         #endregion
@@ -2031,8 +2042,10 @@ class System_Base(System):
         print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
         for mech_tuple in self._terminal_mech_tuples:
             if mech_tuple.mechanism.phaseSpec == (clock.time_step % self.numPhases):
-                print("- output for {0}: {1}".format(mech_tuple.mechanism.name,
-                                                 re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
+                print("- output for {0}: {1}".
+                      format(mech_tuple.mechanism.name,
+                             re.sub('[\[,\],\n]','',str(["{:0.3}".
+                                                format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 
 
     # TBI:
