@@ -887,6 +887,7 @@ FROM TODO:
                                                               role=LEARNING,
                                                               name=self.mappingProjection.name + " Weighted_Error")
 
+            # MODIFIED 2/13/17 OLD:
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to a MonitoringMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
@@ -903,7 +904,6 @@ FROM TODO:
                     # IMPLEMENTATION NOTE: training_signal assignment currently assumes training mech is ComparatorMechanism
                     training_signal = output_signal
                     training_mechanism_input = np.array([output_signal, training_signal])
-                    # MODIFIED 2/13/17 OLD:
                     monitoring_mechanism = DefaultTrainingMechanism(training_mechanism_input)
                     # Instantiate a MappingProjection from the errorSource to the DefaultTrainingMechanism
                     try:
@@ -924,9 +924,7 @@ FROM TODO:
                                                               monitoring_mechanism.name+' ' +
                                                               MAPPING_PROJECTION+' Projection',
                                                          matrix=matrix)
-                    # MODIFIED 2/13/17 NEW:
-                    monitoring_mechanism = DefaultTrainingMechanism(monitor=[]training_mechanism_input)
-                    # MODIFIED 2/13/17 END
+                # MODIFIED 2/13/17 END
 
             self.sender = monitoring_mechanism.outputState
 
