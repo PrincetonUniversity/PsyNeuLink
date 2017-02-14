@@ -1673,16 +1673,29 @@ class System_Base(System):
                     raise SystemError("Number of items in input ({0}) to {1} does not match "
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
-            for i in range(num_inputs):
-                input_item = input[i]
-                process = self.processes[i]
 
-                # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
-                if input_item is None:
+            p=0
+            for i in range(num_inputs):
+
+                # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process)
+                if input[i] is None:
+                    p +=1
                     continue
-                else:
-                    # Assign input as value of corresponding Process inputState
-                    process._assign_input_values(input=input_item, context=context)
+
+                # Don't assign input to process if it's ORIGIN mechanism belongs to another process
+                #     that has already been assigned its input (to avoid that ORIGIN mechanism getting
+                #     two copies of the input when they system is executed)
+                origin_mech = self.originMechanisms[i]
+                if origin_mech in list(process.originMechanisms[0] for process in self.processes[0:p]):
+                    p += 1
+                    continue
+
+                process = self.processes[p]
+
+                # Assign input as value of corresponding Process inputState
+                process._assign_input_values(input=input[i], context=context)
+                p += 1
+
         self.input = input
         #endregion
 
