@@ -34,6 +34,8 @@
 #   TimeScale
 #   Registry
 #
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+
 # DOCUMENT: targets argunment in system() and System_Base.__init__()
 
 # DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS

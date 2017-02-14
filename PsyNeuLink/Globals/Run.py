@@ -876,14 +876,14 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
 
-                # MODIFIED 12/19/16 OLD:
-                # for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
-                # MODIFIED 12/19/16 NEW:
                 # Only assign inputs to processes for which there were originMechanisms specified
                 #    (i.e., *not* processes constructed during initialization, such as EVC prediction mechanisms)
                 #    and assign them in the order they appear in object.processes
-                for i in range(len(object.originMechanisms)):
-                    mech, runtime_params, phase_spec = object.processes[i]._mech_tuples[0]
+                # # MODIFIED 12/19/16 OLD:
+                # for i in range(len(object.originMechanisms)):
+                #     mech, runtime_params, phase_spec = object.processes[i]._mech_tuples[0]
+                # MODIFIED 2/13/17: [REVERTED TO originMechanism-BASED ORDER]
+                for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
                 # MODIFIED 12/19/16 END
 
 
