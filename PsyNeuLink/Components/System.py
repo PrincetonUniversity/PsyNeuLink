@@ -1268,7 +1268,7 @@ class System_Base(System):
             first_mech = process.firstMechanism
 
             # MODIFIED 2/13/17 NEW:
-            # Treat as ORIGIN if it has a projectoin from a SystemTargetInputState (which means it was labelled as an
+            # Assign as ORIGIN if it has a projection from a SystemTargetInputState (which means it was labelled as an
             #    origin in a previous pass -- before learning and/or control was implemented) which should not have
             #    changed
             try:
