@@ -1682,32 +1682,11 @@ class System_Base(System):
             # p=0
             for i in range(num_inputs):
 
+                # FIX: REPLACE THIS WITH ASSIGNEMENT OF SystemInputState FOR EACH INPUT JUST AS FOR TARGETS
+                #      AND ASSIGN INPUT TO THOSE IN Run
                 origin_mech = self.originMechanisms[i]
                 process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
                 process._assign_input_values(input=input[i], context=context)
-
-                # # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process)
-                # if input[i] is None:
-                #     p +=1
-                #     continue
-                #
-                # # Insure that if ORIGIN mechanism [i] belongs to more than one process, only the first of these
-                # #    is assigned an input, so that the ORIGIN mechanism gets only one input when the system
-                # #    is executed, rather than multiple copies (i.e., one from each process to which it belongs).
-                # origin_mech = self.originMechanisms[i]
-                # while not origin_mech is self.processes[p].originMechanisms[0]:
-                #     p +=1
-                # #
-                # # if origin_mech in list(process.originMechanisms[0] for process in self.processes[0:p]):
-                # #     p += 1
-                # #     continue
-                #
-                # process = self.processes[p]
-                #
-                # # Assign input as value of corresponding Process inputState
-                # process._assign_input_values(input=input[i], context=context)
-                # p += 1
-
 
 
         self.input = input
