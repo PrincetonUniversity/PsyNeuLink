@@ -637,3 +637,12 @@ def validate_monitored_state(self, state_spec, context=None):
         raise ObjectiveError("Specification of state to be monitored ({0}) by {1} is not "
                              "a Mechanism, OutputState, the name of one, or a MonitoredOutputStatesOption value".
                              format(state_spec, self.name))
+
+def objective_mechanism_role(mech, role):
+    if isinstance(mech, ObjectiveMechanism):
+        if mech.role is role:
+            return True
+        else:
+            return False
+    else:
+        return False
