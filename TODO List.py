@@ -21,6 +21,7 @@
 # FIX: EVC Gratton Script_Bug5:  Can't assign Linear() directly to intensity_cost_function (had to assign .function)
 # FIX: When running a process with a TERMINAL mechanism that is also in another process, it gets input from that
 #        process even if it is not running
+# FIX: Can't specify parameter as ControlProjection (StroopEVCforDST)
 
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
