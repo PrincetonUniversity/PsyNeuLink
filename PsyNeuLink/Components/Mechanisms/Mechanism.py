@@ -1494,11 +1494,21 @@ class Mechanism_Base(Mechanism):
             except KeyError:
                 param_template = self.function_params
 
-            # Get its type
-            param_type = type(param_template[state_name])
+            # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
+            param_spec = param_template[state_name]
+
+            # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
+            #    then its value will be provided by the execution of the parameterState's function
+            #    (which gets and aggregates the values of its projections), so execute function
+            #    to get a sample of its output as the param_spec
+            if isclass(param_spec) and issubclass(param_spec, Projection):
+                param_spec = state.function()
+
+            # Get type of param_spec:
+            param_type = type(param_spec)
             # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
             if param_type is tuple:
-                param_type = type(param_template[state_name][0])
+                param_type = type(param_spec[0])
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
