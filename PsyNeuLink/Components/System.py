@@ -1310,7 +1310,9 @@ class System_Base(System):
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
                             # or from mechanisms in other processes for which it is also an ORIGIN ([a,b,a], [a,c,a])
-                            all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
+                            all(ORIGIN in first_mech.processes[proc]
+                                for proc in projection.sender.owner.processes
+                                if isinstance(projection.sender.owner,Mechanism))
                         # For all the projections to each inputState
                         for projection in input_state.receivesFromProjections)
                     # For all inputStates for the first_mech
@@ -1747,11 +1749,13 @@ class System_Base(System):
 
                 self.stimulusInputStates[i].value = input[i]
 
+                # MODIFIED 2/13/17 NEW:
                 # Nullify inputs to ORIGIN mechanism from any processes
-                for input_state in self.originMechanisms[i].inputStates:
+                for input_state in list(self.originMechanisms[i].inputStates.values()):
                     for projection in input_state.receivesFromProjections:
                         if isinstance(projection.sender, ProcessInputState):
                             projection.sender.value = None
+                # MODIFIED 2/13/17 END
 
         self.input = input
         #endregion
