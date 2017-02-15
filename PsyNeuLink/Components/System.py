@@ -1269,10 +1269,13 @@ class System_Base(System):
 
             # MODIFIED 2/13/17 NEW:
             # Treat as ORIGIN if it has a projectoin from a SystemTargetInputState (which means it was labelled as an
-            #    origin in a previous pass -- before learning and/or control was implemented) which should not have
+            #    ORIGIN in a previous pass -- before learning and/or control was implemented) which should not have
             #    changed
             try:
                 if ORIGIN in first_mech.systems[self]:
+                    mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
+                    self.graph[mech_tuple] = set()
+                    self.executionGraph[mech_tuple] = set()
                     continue
             except KeyError:
                 pass
