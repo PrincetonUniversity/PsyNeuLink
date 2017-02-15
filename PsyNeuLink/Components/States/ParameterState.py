@@ -788,7 +788,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
-        function
+        function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
             (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
@@ -841,8 +841,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     if param_name is FUNCTION_PARAMS:
         for function_param_name, function_param_value in param_value.items():
-            # Assignment of ParameterState for function or method not currently supported
-            if isinstance(function_param_value, (function_type, method_type)):
+            # Assignment of ParameterState for Component objects, function or method are not currently supported
+            if isinstance(function_param_value, (function_type, method_type, Component)):
                 continue
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,

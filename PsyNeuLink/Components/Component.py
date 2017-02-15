@@ -618,6 +618,10 @@ class Component(object):
                     for item in kwargs[arg]:
                         self.paramClassDefaults[FUNCTION_PARAMS][item] = default(item)
                 else:
+                    if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
+                        raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
+                                             "(it can be \'None\') in its constructor or in paramClassDefaults".
+                                             format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default(arg)
 
             # param corresponding to arg IS already in paramClassDefaults, so ignore
@@ -1115,6 +1119,7 @@ class Component(object):
         Instantiate any items in request set that require it (i.e., function or states).
 
         """
+        from PsyNeuLink.Components.Functions.Function import Function
         context=COMMAND_LINE
 
         if not request_set:
@@ -1133,10 +1138,8 @@ class Component(object):
         self.paramInstanceDefaults.update(validated_set)
         self.paramsCurrent = self.paramInstanceDefaults
 
-        # MODIFIED 2/10/17 NEW:
         for param_name, param_value in validated_set.items():
             self.user_params[param_name]=param_value
-        # MODIFIED 2/10/17 END
 
         # FIX: THIS NEEDS TO BE HANDLED BETTER:
         # FIX: DEAL WITH INPUT_STATES AND PARAMETER_STATES DIRECTLY (RATHER THAN VIA instantiate_attributes_before...)
@@ -1151,9 +1154,12 @@ class Component(object):
         if INPUT_STATES in validated_set_param_names:
             self._instantiate_attributes_before_function()
 
-        # # Give owner a chance to process function params (e.g., wrap in UserDefineFunction, as per EVCMechanism)
-        # elif any(isinstance(param_value, function_type) for param_value in validated_set.values()):
-        #     self._instantiate_attributes_before_function()
+        # Give owner a chance to process instantiate functon and/or function params
+        # (e.g., wrap in UserDefineFunction, as per EVCMechanism)
+        elif any(isinstance(param_value, (function_type, Function)) or
+                      (inspect.isclass(param_value) and issubclass(param_value, Function))
+                 for param_value in validated_set.values()):
+            self._instantiate_attributes_before_function()
 
         # NEED TO DO THIS NO MATTER WHAT, SINCE NEED PARAMETER STATES FOR ALL NEW PARAMS
         # AS IT IS NOW, _instantiate_parameter_states ignores existing parameterStates
@@ -1165,17 +1171,14 @@ class Component(object):
                                          param_value=validated_set[param_name],
                                          context=context)
 
-        # # MODIFIED 1/10/17 OLD:
-        # if FUNCTION in validated_set:
-        #     self._instantiate_function(context=COMMAND_LINE)
-        # MODIFIED 1/10/17 NEW:
         # If the objects function is being assigned, and it is a class, instantiate it as a Function object
         if FUNCTION in validated_set and inspect.isclass(self.function):
             self._instantiate_function(context=COMMAND_LINE)
-        # MODIFIED 1/10/17 END
 
         if OUTPUT_STATES in validated_set:
             self._instantiate_attributes_after_function()
+
+
 
     def reset_params(self, mode):
         """Reset current and/or instance defaults
@@ -1326,11 +1329,18 @@ class Component(object):
             # If the value in paramClassDefault is a type, check if param value is an instance of it
             if inspect.isclass(self.paramClassDefaults[param_name]):
                 if isinstance(param_value, self.paramClassDefaults[param_name]):
+                    # MODIFIED 2/14/17 NEW:
+                    target_set[param_name] = param_value
+                    # MODIFIED 2/14/17 END
                     continue
-                # If the value is a Function class, allow any function
+                # If the value is a Function class, allow any instance of Function class
                 from PsyNeuLink.Components.Functions.Function import Function_Base
                 if issubclass(self.paramClassDefaults[param_name], Function_Base):
-                    if isinstance(param_value, function_type):
+                    # if isinstance(param_value, (function_type, Function_Base)):  <- would allow function of any kind
+                    if isinstance(param_value, Function_Base):
+                        # MODIFIED 2/14/17 NEW:
+                        target_set[param_name] = param_value
+                        # MODIFIED 2/14/17 END
                         continue
 
             # If the value in paramClassDefault is an object, check if param value is the corresponding class
@@ -1468,9 +1478,12 @@ class Component(object):
 
             # Parameter is not a valid type
             else:
-                raise ComponentError("Value of {0} param ({1}) must be of type {2} ".
-                                    format(param_name, param_value,
-                                           type(self.paramClassDefaults[param_name]).__name__))
+                if type(self.paramClassDefaults[param_name]) is type:
+                    type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
+                else:
+                    type_name = 'an instance of  ' + self.paramClassDefaults[param_name].__name__
+                raise ComponentError("Value of {0} param ({1}) must be {2} ".
+                                    format(param_name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):
         """Returns param value (first item) of either a ParamValueProjection or an unnamed (value, projection) tuple

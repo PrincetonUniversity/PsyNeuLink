@@ -146,23 +146,39 @@ Execution
 
 Each time an ObjectiveMechanism is executed, it updates its inputStates with the values of outputStates listed in
 its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>` to
-evaluaate these.  The result is assigned as the value of its outputState.
+evaluate these.  The result is assigned as the value of its outputState.
 
 .. _ObjectiveMechanism_Class_Reference:
 
 Class Reference
 ---------------
 
+One inputState is assigned to each of the
+`outputStates <OutputState>` that have been specified to be evaluated. The EVCMechanism's
+`MONITOR_FOR_CONTROL <monitor_for_control>` parameter is used to specify which outputStates are evaluated, and how.
+The contribution of each outputState to the overall evaluation can be specified by an exponent and/or a weight
+(see `ControlMechanism_Monitored_OutputStates` for specifying monitored outputStates; and
+`below <EVCMechanism_Examples>` for examples). By default, the value of the EVCMechanism's `MONITOR_FOR_CONTROL`
+parameter is `MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES`, which specifies monitoring the
+`primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, each of which is assigned an
+exponent and weight of 1.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, an inputState is
+created for each outputState specified in its `MONITOR_FOR_CONTROL` parameter,  and a `MappingProjection` is created
+that projects to that inputState from the outputState to be monitored.  The outputStates of a system being monitored
+by an EVCMechanism are listed in its `monitored_output_states` attribute.
 
 """
 
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 
 OBJECT = 0
 WEIGHT = 1
 EXPONENT = 2
+ROLE = 'role'
+NAMES = 'names'
+MONITOR = 'monitor'
 
 OBJECTIVE_RESULT = "ObjectiveResult"
 
@@ -174,7 +190,8 @@ class ObjectiveError(Exception):
         return repr(self.error_value)
 
 
-class ObjectiveMechanism(MonitoringMechanism_Base):
+# class ObjectiveMechanism(MonitoringMechanism_Base):
+class ObjectiveMechanism(ProcessingMechanism_Base):
     """Implement ObjectiveMechanism subclass
     """
 
@@ -184,7 +201,7 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
     # These will override those specified in TypeDefaultPreferences
     classPreferences = {
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
 
@@ -203,27 +220,173 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  monitor=None,
+                 names:tc.optional(list)=None,
                  function=LinearCombination,
+                 role:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
         """
-        ControlMechanism_Base(     \
-        default_input_value=None,  \
-        monitor=None,  \
-        function=LinearCombination,           \
-        params=None,               \
-        name=None,                 \
+        ObjectiveMechanism(           \
+        default_input_value=None,     \
+        monitor=None,                 \
+        names=None,                   \
+        function=LinearCombination,   \
+        role=None                     \
+        params=None,                  \
+        name=None,                    \
         prefs=None)
+
+    Implements the ObjectiveMechanism subclass of `ProcessingMechanism`.
+
+    COMMENT:
+        Description:
+            ObjectiveMechanism is a subtype of the ProcessingMechanism Type of the Mechanism Category of the
+                Component class
+            It's function uses the LinearCombination Function to compare two input variables
+            COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
+            The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
+                as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array
+
+        Class attributes:
+            + componentType (str): ComparatorMechanism
+            + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
+            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
+            + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
+            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
+                                          FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
+            + paramNames (dict): names as above
+
+        Class methods:
+            None
+
+        MechanismRegistry:
+            All instances of ComparatorMechanism are registered in MechanismRegistry, which maintains an
+              entry for the subclass, a count for all instances of it, and a dictionary of those instances
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_sample_and_target : Optional[List[array, array] or 2d np.array]
+        the input to the ComparatorMechanism to use if none is provided in a call to its
+        `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods.
+        The first item is the `COMPARATOR_SAMPLE` item of the input and the second is the `COMPARATOR_TARGET`
+        item of the input, which must be the same length.  This also serves as a template to specify the length of
+        inputs to the `function <ComparatorMechanism.function>`.
+
+    monitor : [List[OutputState or Mechanism or MonitoredOutputStateOption]
+        specifies the outputStates that will be monitored, and evaluated by `function <ObjectiveMechanism>`
+        (see `monitor <ObjectiveMechanism.monitor>` for details of specification).
+
+    names: List[str]
+        specifies names for the outputStates listed in `monitor <ObjectiveMechanism.monitor>`.  If specified,
+        the number of items in the list must equal the number of items in `monitor <ObjectiveMechanism.monitor>`.
+
+    function: Function, function or method
+        specifies the function used to evaluate the value of the outputStates listed in
+        `monitor <ObjectiveMechanism.monitor>`.
+
+    role: Optional[LEARNING, CONTROL]
+        specifies if the ObjectiveMechanism is being used for learning or control.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        the mechanism, its function, and/or a custom function and its parameters.  The following entries can be
+        included:
+
+        * `COMPARATOR_SAMPLE`:  Mechanism, InputState, or the name of or specification dictionary for one;
+        ..
+        * `COMPARATOR_TARGET`:  Mechanism, InputState, or the name of or specification dictionary for one;
+        ..
+        * `FUNCTION`: Function, function or method;  default is `LinearCombination`.
+
+        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
+
+    COMMENT:
+        [TBI]
+        time_scale :  TimeScale : TimeScale.TRIAL
+            specifies whether the mechanism is executed on the :keyword:`TIME_STEP` or :keyword:`TRIAL` time scale.
+            This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
+    COMMENT
+
+    name : str : default ComparatorMechanism-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 2d np.array
+        the input to `function <ComparatorMechanism.function>`.  The first item is the :keyword:`value` of the
+        `COMPARATOR_SAMPLE` inputState, and the second is the :keyword:`value` of the `COMPARATOR_TARGET` inputState.
+
+    sample : 1d np.array
+        the first item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
+        `COMPARATOR_SAMPLE` inputState.
+
+    target : 1d np.array
+        the second item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
+        `COMPARATOR_TARGET` inputState.
+
+    function : CombinationFunction : default LinearCombination
+        the function used to compare `COMPARATOR_SAMPLE` with `COMPARATOR_TARGET`.
+
+    comparison_operation : SUBTRACTION or DIVISION : default SUBTRACTION
+        determines the operation used by `function <ComparatorMechanism.function>` to compare the `COMPARATOR_SAMPLE`
+        with `_COMPARATOR_TARGET`.
+
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPARATOR_SAMPLE`;
+
+        * `DIVISION`: `COMPARATOR_TARGET` ÷ `COMPARATOR_SAMPLE`.
+
+    value : 2d np.array
+        holds the output of the `comparison_operation` carried out by the ComparatorMechanism's
+        `function <ComparatorMechanism.function>`; its value is  also assigned to the `COMPARISON_RESULT` outputState
+        and the the first item of `outputValue <ComparatorMechanism.outputValue>`.
+
+    outputValue : List[1d np.array, float, float, float, float]
+        a list with the following items:
+
+        * **result** of the `function <ComparatorMechanism.function>` calculation
+          and the :keyword:`value` of the `COMPARISON_RESULT` outputState;
+        * **mean** of the result's elements and the :keyword:`value` of the `COMPARISON_MEAN` outputState;
+        * **sum** of the result's elements and the :keyword:`value` of the `COMPARISON_SUM` outputState;
+        * **sum of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_SSE` outputState;
+        * **mean of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_MSE` outputState.
+
+    name : str : default ComparatorMechanism-<index>
+        the name of the mechanism.
+        Specified in the `name` argument of the constructor for the mechanism;
+        if not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        the `PreferenceSet` for mechanism.
+        Specified in the `prefs` argument of the constructor for the mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+
         """
 
         if default_input_value is None:
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  monitor=monitor,
+        params = self._assign_args_to_param_dicts(monitor=monitor,
+                                                  names=names,
+                                                  function=function,
+                                                  role=role,
                                                   params=params)
 
         super().__init__(variable=default_input_value,
@@ -240,6 +403,21 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+        if target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
+            raise ObjectiveError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
+                                 format(target_set[ROLE], self.name))
+
+        if target_set[NAMES]:
+            if len(target_set[NAMES]) != len(target_set[MONITOR]):
+                raise ObjectiveError("The number of items in \'names\'arg ({}) must equal of the number in the "
+                                     "\`monitor\` arg for {}".
+                                     format(len(target_set[NAMES]), len(target_set[MONITOR]), self.name))
+
+            for name in target_set[NAMES]:
+                if not isinstance(name, str):
+                    raise ObjectiveError("it in \'names\'arg ({}) of {} is not a string".
+                                         format(target_set[NAMES], self.name))
 
         #region VALIDATE MONITORED STATES (for use by ControlMechanism)
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
@@ -279,6 +457,11 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         #endregion
 
     def _instantiate_input_states(self, context=None):
+        """Instantiate input state for each outputState specified in `monitor <Objective.monitor>` arg
+
+          Note:  assumes that `monitor <Objective.monitor>` has been parse into a list of outputStates
+                 in _validate_monitored_state()
+        """
 
         # Clear self.variable, as items will be assigned in call(s) to _instantiate_input_state_for_monitored_state()
         self.variable = None
@@ -301,13 +484,14 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         #         raise ObjectiveError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
         #                              "neither an OutputState nor Mechanism".format(item))
 
-        for item in self.monitor:
-            self._instantiate_input_state_for_monitored_state(item, context=context)
+        names = self.names or [None] * len(self.monitor)
+        for monitored_state, name in zip(self.monitor, names):
+            self._instantiate_input_state_for_monitored_state(monitored_state, name, context=context)
 
         # self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
         self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
 
-    def _instantiate_input_state_for_monitored_state(self,monitored_state, context=None):
+    def _instantiate_input_state_for_monitored_state(self,monitored_state, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
         Validate specification for state to be monitored
@@ -325,9 +509,8 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
             input_state (InputState):
 
         """
-
-        input_state_name = monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
         input_state_value = monitored_state.value
+        input_state_name = name or monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
 
         # First, test for initialization conditions:
 
@@ -389,7 +572,6 @@ class ObjectiveMechanism(MonitoringMechanism_Base):
         # Instantiate MappingProjection from monitored_state to new input_state
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
-
 
     def add_monitored_states(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
