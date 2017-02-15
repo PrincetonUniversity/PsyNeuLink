@@ -1460,6 +1460,11 @@ class System_Base(System):
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
         for i, origin_mech in zip(range(len(self.originMechanisms)), self.originMechanisms):
 
+            # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
+            # (this avoids duplication from multiple passes through _instantiate_graph)
+            if any(self is projection.sender.owner for projection in origin_mech.inputState.receivesFromProjections):
+                continue
+
             # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
             # length of the ORIGIN inputState's variable attribute
             if len(self.variable[i]) != len(origin_mech.inputState.variable):
