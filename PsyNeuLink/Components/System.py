@@ -1750,6 +1750,7 @@ class System_Base(System):
                 self.stimulusInputStates[i].value = input[i]
 
                 # MODIFIED 2/13/17 NEW:
+                # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
                 # Nullify inputs to ORIGIN mechanism from any processes
                 for input_state in list(self.originMechanisms[i].inputStates.values()):
                     for projection in input_state.receivesFromProjections:
