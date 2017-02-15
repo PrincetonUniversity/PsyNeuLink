@@ -430,12 +430,10 @@ class ControlSignal(OutputState):
 
         """
 
-        # Validate cost functions specified in request_set:
-        for cost_function_name in costFunctionNames:
-
-            if not cost_function_name in request_set:
-                continue
-
+        # Validate cost functions in request_set
+        #   This should be all of them if this is an initialization call;
+        #   Otherwise, just those specified in assign_params
+        for cost_function_name in [item for item in request_set if item in costFunctionNames]:
             cost_function = request_set[cost_function_name]
 
             # cost function assigned None: OK
@@ -509,7 +507,8 @@ class ControlSignal(OutputState):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # ControlProjection Cost Functions
-        for cost_function_name in costFunctionNames:
+        # for cost_function_name in costFunctionNames:
+        for cost_function_name in [item for item in target_set if item in costFunctionNames]:
             cost_function = target_set[cost_function_name]
             if not cost_function:
                 continue
