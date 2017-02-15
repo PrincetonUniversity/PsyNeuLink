@@ -7,6 +7,12 @@
 # Finish Run:
 #     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
 #
+#
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+# FIX:
+# Finish Run:
+#     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
+#
 # System:
 #    Finish implementing SystemStimulusInputs
 
@@ -20,7 +26,7 @@
 # FIX: EVC Gratton Script_Bug5:  Can't assign Linear() directly to intensity_cost_function (had to assign .function)
 # FIX: When running a process with a TERMINAL mechanism that is also in another process, it gets input from that
 #        process even if it is not running
-
+# FIX: Can't specify parameter as ControlProjection (StroopEVCforDST)
 
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
@@ -54,6 +60,7 @@
 #   TimeScale
 #   Registry
 #
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
 
 # DOCUMENT: targets argunment in system() and System_Base.__init__()
 
