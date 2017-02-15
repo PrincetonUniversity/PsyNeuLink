@@ -15,7 +15,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #  = 128 combinations!
 
 # INPUTS OUT OF ORDER:
-# inputs=[[0], [2,2]]
+# inputs=[[0], [2,2]]top
 
 # EQUAL INPUT LENGTHS:
 # inputs=[[2,2],[0,0]]
