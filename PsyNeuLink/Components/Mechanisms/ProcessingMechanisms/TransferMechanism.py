@@ -518,6 +518,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         rate = self.rate
         range = self.range
+        noise = self.noise
 
         #endregion
 
@@ -529,7 +530,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
 
-            current_input = self.integrator_function.function(self.inputState.value, context=context)
+            current_input = self.integrator_function.function(self.inputState.value, params = {NOISE: noise, RATE: rate}, context=context)
 
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
