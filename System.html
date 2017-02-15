@@ -309,7 +309,7 @@ execution, as input to mechanisms that close recurrent loops (designated as <a c
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -700,6 +700,21 @@ each execution.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="System.System_Base.show_graph">
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='LR'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows a graph of a system&#8217;s mechanisms and projections.
+Arguments
+output_fmt : output format can be either &#8216;pdf&#8217; or &#8216;jupyter&#8217;</p>
+<blockquote>
+<div>pdf will actually render and open a pdf
+jupyter will just return the graph to the output stream, ideal for working in jupyter notebooks</div></blockquote>
+<dl class="docutils">
+<dt>direction</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">can be used to set rank direction of graph</span><dd>possible inputs are BT, TB, LR, and RL</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
