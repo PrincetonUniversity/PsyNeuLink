@@ -47,7 +47,7 @@ class PreferenceSet(object):
     Description:
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Function hierarchy is assigned a PreferenceLevel:
-            - System:  reserved for the Function class
+            - System:  reserved for the Component class
             - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
             - Type: Category subclasses (e.g., MappingProjection and ControlProjection subclasses of Projection, Function subclasses)
             - Instance: an instance of an object of any class

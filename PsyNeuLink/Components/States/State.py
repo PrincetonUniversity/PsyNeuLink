@@ -1686,11 +1686,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
-            # # MODIFIED 10/28 OLD:
-            # state =  owner._check_state_ownership(state_name, state_spec)
-            # MODIFIED 10/28 NEW:
             state =  _check_state_ownership(owner, state_name, state_spec)
-            # MODIFIED 10/28 END
             if state:
                 return state
             else:
@@ -1952,8 +1948,8 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     """
 
     if mechanism_state.owner != owner:
-        reassign = input("\nState {0}, assigned to {1} in {2}, already belongs to {3}"
-                         " You can choose to reassign it (r), copy it (c), or assign default (d):".
+        reassign = input("\nState for \'{0}\' parameter, assigned to {1} in {2}, already belongs to {3}. "
+                         "You can reassign it (r), copy it (c), or assign default (d):".
                          format(mechanism_state.name, param_name, owner.name,
                                 mechanism_state.owner.name))
         while reassign != 'r' and reassign != 'c' and reassign != 'd':

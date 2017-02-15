@@ -640,7 +640,7 @@ class ParameterState(State_Base):
         #     its parameter_modulation_operation should be SUM (rather than PRODUCT)
         #         so that weight changes (e.g., from a learningSignals) are added rather than multiplied
         if self.name == MATRIX:
-            # IMPLEMENT / TEST: ZZZ 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
+            # IMPLEMENT / TEST: 10/20/16 THIS SHOULD BE ABLE TO REPLACE SPECIFICATION IN LEARNING PROJECTION
             self.params[PARAMETER_MODULATION_OPERATION] = ModulationOperation.ADD
 
         super()._instantiate_function(context=context)
@@ -650,7 +650,7 @@ class ParameterState(State_Base):
             raise StateError("Function {0} for {1} of {2} must be of LinearCombination type".
                                  format(self.function.__self__.componentName, FUNCTION, self.name))
 
-        # # Insure that output of function (self.value) is compatible with relevant parameter value
+        # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
             raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
                                            "the variable ({3}) of its function".
@@ -788,7 +788,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
-        function
+        function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
             (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
@@ -841,6 +841,9 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     if param_name is FUNCTION_PARAMS:
         for function_param_name, function_param_value in param_value.items():
+            # Assignment of ParameterState for Component objects, function or method are not currently supported
+            if isinstance(function_param_value, (function_type, method_type, Component)):
+                continue
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,

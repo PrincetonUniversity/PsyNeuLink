@@ -288,6 +288,7 @@ EVC_MECHANISM = "EVCMechanism"
 # MonitoringMechanisms:
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 WEIGHTED_ERROR_MECHANISM = "WeightedErrorMechanism"
+OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 
 # ProcessingMechanisms:
 DDM_MECHANISM = "DDM"
@@ -299,6 +300,7 @@ CONTRADICTION_FUNCTION = "Contradiction"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination"
+WEIGHTED_ERROR_FUNCTION = "WeighedErrorFunction"
 LINEAR_FUNCTION = "Linear"
 EXPONENTIAL_FUNCTION = "Exponential"
 LOGISTIC_FUNCTION = "Logistic"
@@ -334,6 +336,7 @@ CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
 LEARNING = 'learning'
+CONTROL = 'control'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
@@ -347,7 +350,7 @@ kwMechanism = "MECHANISM"
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-kwDefaultMonitoringMechanism = "DefaultMonitoringMechanism"
+DEFAULT_MONITORING_MECHANISM = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict

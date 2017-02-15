@@ -62,6 +62,7 @@ word_reading_process = process(
     prefs=process_prefs)
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
+                  targets=[0,0],
                   name='Stroop Model',
                   prefs=system_prefs)
 
@@ -111,20 +112,16 @@ mySystem.run(num_executions=2,
 # [[-0.02380258  0.9793176 ]
 #  [ 1.97619742  2.9793176 ]]
 
-
-# correct response & weights after 1st trial:
+# Correct response & weights after 1st trial:
 #
 # response
 #     0.5090    0.5432
-#
 # hidden-output weights
 #     0.0146    1.0135
 #     2.0022    3.0020
-#
 # color-hidden weights
 #     0.0119    1.0103
 #     2.0119    3.0103
-#
 # words-hidden weights
 #    -0.0238    0.9793
 #     1.9762    2.9793
