@@ -294,7 +294,7 @@ class DDM(ProcessingMechanism_Base):
     COMMENT:
         Description
         -----------
-            DDM is a subclass Type of the Mechanism Category of the Function class
+            DDM is a subclass Type of the Mechanism Category of the Component class
             It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
                 two alternative forced choice (2AFC) decision making:
                 - Bogacz et al. (2006) analytic solution (TimeScale.TRIAL mode -- see kwBogaczEtAl option below):
