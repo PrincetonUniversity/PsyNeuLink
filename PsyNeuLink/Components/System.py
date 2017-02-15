@@ -1745,7 +1745,7 @@ class System_Base(System):
 
             except AttributeError as error_msg:
                 if not 'INIT' in context:
-                    raise SystemError("{}; no controller instantiated for {}".format(error_msg, self.name))
+                    raise SystemError("Problem executing controller for {}: {}".format(self.name, error_msg))
         #endregion
 
         # Report completion of system execution and value of designated outputs
