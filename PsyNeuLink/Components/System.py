@@ -1719,10 +1719,10 @@ class System_Base(System):
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
-        #region ASSIGN INPUT ITEMS TO PROCESSES
-        # Assign each item of input to the value of a Process.input_state which, in turn, will be used as
-        #    the input to the MappingProjection to the first (origin) Mechanism in that Process' pathway
+        #region ASSIGN INPUT ITEMS TO SystemInputStates
+        #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
         num_origin_mechs = len(list(self.originMechanisms))
+
         if input is None:
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
@@ -1733,9 +1733,11 @@ class System_Base(System):
 
         else:
             num_inputs = np.size(input,0)
+
+            # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
             if num_inputs != num_origin_mechs:
-                # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
                 num_inputs = np.size(input)
+               # Check that number of inputs matcheds number of ORIGIN mechanisms
                 if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
                     pass
                 else:
@@ -1743,21 +1745,20 @@ class System_Base(System):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            # p=0
-            for i in range(num_inputs):
-
-                # # MODIFIED 2/13/17 NEW:
-                # origin_mech = self.originMechanisms[i]
-                # process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
-                # process._assign_input_values(input=input[i], context=context)
-                # MODIFIED 2/13/17 NEWER:
-
-                self.stimulusInputStates[i].value = input[i]
+            # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
+            for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
+                system_input_state = next(projection.sender for projection in
+                                          origin_mech.inputState.receivesFromProjections
+                                          if isinstance(projection.sender, SystemTargetInputState))
+                if system_input_state:
+                    system_input_state.value = input[i]
+                else:
+                    raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
                 # MODIFIED 2/13/17 NEW:
                 # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
                 # Nullify inputs to ORIGIN mechanism from any processes
-                for input_state in list(self.originMechanisms[i].inputStates.values()):
+                for input_state in list(origin_mech.inputStates.values()):
                     for projection in input_state.receivesFromProjections:
                         if isinstance(projection.sender, ProcessInputState):
                             projection.sender.value = None
