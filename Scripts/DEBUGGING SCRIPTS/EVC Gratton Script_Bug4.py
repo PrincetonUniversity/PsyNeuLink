@@ -28,13 +28,12 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Control Parameters
-# signalSearchRange = np.arange(0, 5.1, 0.1)
-signalSearchRange = np.arange(0, 2, 1)
+signalSearchRange = np.arange(0, 5.1, 0.1)
 
 # Stimulus Mechanisms
-Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope = 0.2995))
-Flanker1_Stim = TransferMechanism(name='Flanker 1 Stimulus', function=Linear(slope = 0.2995))
-Flanker2_Stim = TransferMechanism(name='Flanker 2 Stimulus', function=Linear(slope = 0.2995))
+Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope = 1))
+Flanker1_Stim = TransferMechanism(name='Flanker 1 Stimulus', function=Linear(slope = 1))
+Flanker2_Stim = TransferMechanism(name='Flanker 2 Stimulus', function=Linear(slope = 1))
 
 # Processing Mechanisms (Control)
 Target_Rep = TransferMechanism(name='Target Representation',
@@ -43,6 +42,7 @@ Target_Rep = TransferMechanism(name='Target Representation',
                                                                        control_signal={ALLOCATION_SAMPLES:signalSearchRange}
                                                                        ))),
                                prefs=mechanism_prefs)
+
 Flanker1_Rep = TransferMechanism(name='Flanker 1 Representation',
                                function=Linear(slope=(1.0,
                                                      ControlProjection(function=Linear,
@@ -55,6 +55,7 @@ Flanker2_Rep = TransferMechanism(name='Flanker 2 Representation',
                                                                        control_signal={ALLOCATION_SAMPLES:signalSearchRange}
                                                                        ))),
                                prefs=mechanism_prefs)
+
 # Processing Mechanism (Automatic)
 Automatic_Component = TransferMechanism(name='Automatic Component',
                                function=Linear(slope=(1.0)),
@@ -92,11 +93,23 @@ Flanker2ControlProcess = process(
     prefs = process_prefs,
     name = 'Flanker 1 Control Process')
 
-# TargetAutomaticProcess = process(
-#     default_input_value=[0],
-#     pathway=[Target_Stim, Automatic_Component, Decision],
-#     prefs = process_prefs,
-#     name = 'Target Automatic Process')
+TargetAutomaticProcess = process(
+    default_input_value=[0],
+    pathway=[Target_Stim, Automatic_Component, Decision],
+    prefs = process_prefs,
+    name = 'Target Automatic Process')
+
+Flanker1AutomaticProcess = process(
+    default_input_value=[0],
+    pathway=[Flanker1_Stim, Automatic_Component, Decision],
+    prefs = process_prefs,
+    name = 'Flanker1 Automatic Process')
+
+Flanker2AutomaticProcess = process(
+    default_input_value=[0],
+    pathway=[Flanker2_Stim, Automatic_Component, Decision],
+    prefs = process_prefs,
+    name = 'Flanker2 Automatic Process')
 
 
 RewardProcess = process(
@@ -107,12 +120,11 @@ RewardProcess = process(
 
 # System:
 mySystem = system(processes=[TargetControlProcess, Flanker1ControlProcess, Flanker2ControlProcess,
-                             # TargetAutomaticProcess,
+                             TargetAutomaticProcess, Flanker1AutomaticProcess, Flanker2AutomaticProcess,
                              RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
                   monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD],
-                  # monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   name='EVC Gratton System')
 
 
@@ -120,9 +132,10 @@ mySystem = system(processes=[TargetControlProcess, Flanker1ControlProcess, Flank
 mySystem.show()
 mySystem.controller.show()
 
+
 # generate stimulus environment
 
-nTrials = 3
+nTrials = 1
 targetFeatures = [1]
 flankerFeatures = [-1] # for full simulation: flankerFeatures = [-1,1]
 reward = 100
@@ -161,8 +174,7 @@ def show_results():
 
 # Run system:
 
-mySystem.controller.reportOutputPref = True
-
+mySystem.controller.reportOutputPref = False
 mySystem.run(num_executions=nTrials,
              inputs=stim_list_dict,
              call_before_trial=show_trial_header,
@@ -171,4 +183,5 @@ mySystem.run(num_executions=nTrials,
 
 
 # Bug
-# 1) l. 163: Cannot set mySystem.controller.reportOutputPref to TRUE
+# In the very first trial of system execution, the input to 'Target Stimulus_PredictionMechanism' is 2.0 instead of 1.0
+# (the correct input value for Target_Stim is 1.0 as listed in targetInputList)

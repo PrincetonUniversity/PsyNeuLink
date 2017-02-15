@@ -241,13 +241,14 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism i
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
                                                                                          PROJECTION_TO_NEXT_MECHANISM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Functions.Function import BackPropagation
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
 
 # Params:
 
@@ -834,7 +835,7 @@ FROM TODO:
             elif isinstance(self.mappingProjection.receiver, InputState):
                 self.errorSource = self.mappingProjection.receiver.owner
 
-            next_level_monitoring_mechanism = None
+            next_level_montioring_mech_output = None
 
             # Check if errorSource has a projection to a MonitoringMechanism or a ProcessingMechanism
             for projection in self.errorSource.outputState.sendsToProjections:
@@ -848,7 +849,7 @@ FROM TODO:
                 #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
                 if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
                     try:
-                        next_level_LEARNING_PROJECTION = projection.parameterStates[MATRIX].receivesFromProjections[0]
+                        next_level_learning_projection = projection.parameterStates[MATRIX].receivesFromProjections[0]
                     except (AttributeError, KeyError):
                         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
                         #    => no LearningProjection
@@ -858,7 +859,7 @@ FROM TODO:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
                         # next_level_weight_matrix = projection.matrix
-                        next_level_monitoring_mechanism = next_level_LEARNING_PROJECTION.sender
+                        next_level_montioring_mech_output = next_level_learning_projection.sender
 
             # errorSource does not project to a MonitoringMechanism
             if not monitoring_mechanism:
@@ -868,21 +869,25 @@ FROM TODO:
                 # errorSource at next level projects to a MonitoringMechanism:
                 #    instantiate WeightedErrorMechanism MonitoringMechanism and the back-projection for its error signal:
                 #        (computes contribution of each element in errorSource to error at level to which it projects)
-                if next_level_monitoring_mechanism:
-                    error_signal = np.zeros_like(next_level_monitoring_mechanism.value)
-                    monitoring_mechanism = WeightedErrorMechanism(error_signal=error_signal,
-                                                         params={PROJECTION_TO_NEXT_MECHANISM:projection},
-                                                         name=self.mappingProjection.name + " Weighted_Error")
+                if next_level_montioring_mech_output:
+                    error_signal = np.zeros_like(next_level_montioring_mech_output.value)
+                    next_level_output = projection.receiver.owner.outputState
+                    activity = np.zeros_like(next_level_output.value)
+                    matrix=projection.parameterStates[MATRIX]
+                    derivative = next_level_montioring_mech_output.sendsToProjections[0].\
+                        receiver.owner.receiver.owner.function_object.derivative
+                    from PsyNeuLink.Components.Functions.Function import WeightedError
+                    monitoring_mechanism = ObjectiveMechanism(monitor=[next_level_output,
+                                                                       next_level_montioring_mech_output],
+                                                              names=['ACTIVITY','ERROR_SIGNAL'],
+                                                              function=WeightedError(variable_default=[activity,
+                                                                                                       error_signal],
+                                                                                     matrix=matrix,
+                                                                                     derivative=derivative),
+                                                              role=LEARNING,
+                                                              name=self.mappingProjection.name + " Weighted_Error")
 
-                    # Instantiate MappingProjection to provide monitoring_mechanism with error signal
-                    MappingProjection(sender=next_level_monitoring_mechanism,
-                            receiver=monitoring_mechanism,
-                            # name=monitoring_mechanism.name+'_'+MAPPING_PROJECTION)
-                            matrix=IDENTITY_MATRIX,
-                            name=next_level_monitoring_mechanism.name +
-                                 ' to '+monitoring_mechanism.name +
-                                 ' ' + MAPPING_PROJECTION + ' Projection')
-
+            # MODIFIED 2/13/17 OLD:
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to a MonitoringMechanism:
                 #     instantiate DefaultTrainingMechanism MonitoringMechanism
@@ -919,6 +924,7 @@ FROM TODO:
                                                               monitoring_mechanism.name+' ' +
                                                               MAPPING_PROJECTION+' Projection',
                                                          matrix=matrix)
+                # MODIFIED 2/13/17 END
 
             self.sender = monitoring_mechanism.outputState
 
@@ -984,7 +990,7 @@ FROM TODO:
 
         super()._instantiate_function(context)
 
-        from PsyNeuLink.Components.Functions.Function import ACTIVATION_FUNCTION
+        from PsyNeuLink.Components.Functions.Function import ACTIVATION_FUNCTION, TransferFunction
         # Insure that the learning function is compatible with the activation function of the errorSource
         error_source_activation_function_type = type(self.errorSource.function_object)
         function_spec = self.function_object.paramsCurrent[ACTIVATION_FUNCTION]
