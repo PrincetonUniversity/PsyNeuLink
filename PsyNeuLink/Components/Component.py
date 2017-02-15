@@ -1154,7 +1154,7 @@ class Component(object):
         if INPUT_STATES in validated_set_param_names:
             self._instantiate_attributes_before_function()
 
-        # Give owner a chance to process instantiate functon and/or function params
+        # Give owner a chance to instantiate function and/or function params
         # (e.g., wrap in UserDefineFunction, as per EVCMechanism)
         elif any(isinstance(param_value, (function_type, Function)) or
                       (inspect.isclass(param_value) and issubclass(param_value, Function))
