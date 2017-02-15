@@ -1267,24 +1267,23 @@ class System_Base(System):
         for process in sorted_processes:
             first_mech = process.firstMechanism
 
-            # MODIFIED 2/13/17 NEW:
+            # MODIFIED 2/14/17 NEW:
             # Treat as ORIGIN if it has a projection from a SystemTargetInputState (which means it was labelled as an
             #    ORIGIN in a previous pass -- before learning and/or control was implemented) which should not have
             #    changed
-            try:
-                if ORIGIN in first_mech.systems[self]:
-                    mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
-                    self.graph[mech_tuple] = set()
-                    self.executionGraph[mech_tuple] = set()
-                    continue
-            except KeyError:
-                pass
+            # try:
+            #     if ORIGIN in first_mech.systems[self]:
+            #         mech_tuple = self._allMechanisms._get_tuple_for_mech(first_mech)
+            #         self.graph[mech_tuple] = set()
+            #         self.executionGraph[mech_tuple] = set()
+            # except KeyError:
+            #     pass
             # if any(
             #         any(isinstance(projection, SystemTargetInputState)
             #       for projection in input_state.receivesFromProjections)
             #     for input_state in first_mech.inputStates.values()):
             #     continue
-            # # MODIFIED 2/13/17 END
+            # # MODIFIED 2/14/17 END
 
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState)
