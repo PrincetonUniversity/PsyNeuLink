@@ -17,6 +17,9 @@
 # LearningProjection:
 #    Finish implementing Comparator version of ObjectiveMechanmism
 
+# FIX: EVC Gratton Script_Bug5:  Can't assign Linear() directly to intensity_cost_function (had to assign .function)
+# FIX: When running a process with a TERMINAL mechanism that is also in another process, it gets input from that
+#        process even if it is not running
 
 
 # DOCUMENTATION COMPLETION/CLEAN-UP:
