@@ -125,7 +125,7 @@ mySystem.controller.show()
 # mySystem.controller.controlSignals[1].intensity_cost_function = Linear(slope = 0)
 # mySystem.controller.controlSignals[2].intensity_cost_function = Linear(slope = 0)
 #
-mySystem.controller.controlSignals[0].assign_params(request_set={'intensity_cost_function':Linear})
+mySystem.controller.controlSignals[0].assign_params(request_set={'intensity_cost_function':Linear(slope=0)})
 mySystem.controller.controlSignals[1].intensity_cost_function = Linear(slope = 0).function
 mySystem.controller.controlSignals[2].intensity_cost_function = Linear(slope = 0).function
 
@@ -172,7 +172,7 @@ def show_results():
 
 
 # Plot system:
-mySystem.show_graph()
+# mySystem.show_graph()
 
 # Run system:
 
