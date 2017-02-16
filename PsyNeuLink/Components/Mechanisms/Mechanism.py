@@ -857,7 +857,11 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
-
+    def plot(self):
+        import matplotlib.pyplot as plt
+        x= np.linspace(0,40)
+        plt.plot(x, self.function(x), lw=3.0, c='r')
+        plt.show()
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
