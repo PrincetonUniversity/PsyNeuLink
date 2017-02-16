@@ -731,6 +731,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     num_input_sets = _validate_inputs(object=object,
                                       inputs=inputs,
                                       num_phases=1,
+                                      is_target=is_target,
                                       context=context)
 
     # If inputs are for a mechanism or process, no need to deal with phase so just return
@@ -921,7 +922,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
     return stim_list
 
-def _validate_inputs(object, inputs=None, num_phases=None, context=None):
+def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
@@ -994,7 +995,14 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         # Calcluate total number of executions
         num_mechs = len(object.originMechanisms)
-        mechs = list(object.originMechanisms)
+        # # MODIFIED 2/16/17 OLD:
+        # mechs = list(object.originMechanisms)
+        # MODIFIED 2/16/17 NEW:
+        if is_target:
+            mechs = list(object.targetMechanisms)
+        else:
+            mechs = list(object.originMechanisms)
+        # MODIFIED 2/16/17 END
         num_input_sets = 0
         executions_remain = True
         input_num = 0
