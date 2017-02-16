@@ -1743,7 +1743,8 @@ class System_Base(System):
                 for input_state in list(origin_mech.inputStates.values()):
                     for projection in input_state.receivesFromProjections:
                         if isinstance(projection.sender, ProcessInputState):
-                            projection.sender.value = None
+                            # projection.sender.value = None
+                            projection.sender.value *= 0.0
                 # MODIFIED 2/13/17 END
 
         self.input = input
