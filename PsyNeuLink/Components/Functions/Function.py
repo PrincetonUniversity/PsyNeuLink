@@ -1858,7 +1858,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  drift_rate=drift_rate, 
                                                  time_step_size=time_step_size)
 
-
         super().__init__(variable_default=variable_default,
                                          params=params,
                                          prefs=prefs,

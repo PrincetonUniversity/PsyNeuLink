@@ -6,26 +6,27 @@ from PsyNeuLink.Globals.Keywords import *
 
 print("DDM Test #1: Execute DDM with noise = 0.5")
 print("(Valid)")
+
+# x = -5 to 5 and y = 0 to 1 for logistic
+my_Transfer = TransferMechanism(name='my_Transfer',
+                       default_input_value = [0,0],
+                       function=Exponential(),
+                       noise=0.0,
+                       rate = .1,
+                       time_scale = TimeScale.TRIAL
+                       )
+my_Transfer.plot()
+
+
+
+
 my_DDM = DDM(function=DDMIntegrator(drift_rate=0.01, noise=0.2),
              name='My_DDM',
              time_scale=TimeScale.TIME_STEP
              )
-print(my_DDM.function)
 my_DDM.plot(context="plot")
-print("Passed")
-print("-------------------------------------------------")
 
 
-my_Transfer = TransferMechanism(name='my_Transfer',
-                       default_input_value = [0,0],
-                       function=Logistic(gain=1.0, bias=0),
-                       noise=0.0,
-                       rate = .1,
-                       time_scale=TimeScale.TIME_STEP
-                       # function=Linear(slope=2, intercept=10)
-                       )
-
-my_Transfer.plot()
 
 #
 #

@@ -859,7 +859,12 @@ class Mechanism_Base(Mechanism):
         self.systems = {}
     def plot(self):
         import matplotlib.pyplot as plt
-        x= np.linspace(0,40)
+        if "Logistic" in str(self.function):
+            x= np.linspace(-5,5)
+        elif "Exponential" in str(self.function):
+            x = np.linspace(0.1, 5)
+        else:
+            x = np.linspace(-10, 10)
         plt.plot(x, self.function(x), lw=3.0, c='r')
         plt.show()
     def _validate_variable(self, variable, context=None):

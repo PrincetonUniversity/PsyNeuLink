@@ -504,6 +504,7 @@ class DDM(ProcessingMechanism_Base):
                                                   plot_threshold = plot_threshold,
                                                   params=params
                                                   )
+
         self.get_axes_function = DDMIntegrator(drift_rate=0.01, noise=0.2, context=context).function
         self.plot_function = DDMIntegrator(drift_rate=0.01, noise=0.2, context=context).function
 
@@ -555,10 +556,10 @@ class DDM(ProcessingMechanism_Base):
         while abs(result) < threshold:
             time += 1
             result = self.plot_function(context=context)
-            plt.plot(time, float(result), '-o', color='r', ms=5)
+            plt.plot(time, float(result), '-o', color='r', ms=2.5)
             plt.pause(0.001)
 
-        plt.pause(5)
+        plt.pause(10000)
 
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
@@ -662,8 +663,27 @@ class DDM(ProcessingMechanism_Base):
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
+            if (self.plot_threshold != None) and (INITIALIZING not in context):
+                import matplotlib.pyplot as plt
+                plt.ion()
+                axes = plt.gca()
+                axes.set_ylim([-1.25 * self.plot_threshold, 1.25 * self.plot_threshold])
+                plt.axhline(y=self.plot_threshold, linewidth=1, color='k', linestyle='dashed')
+                plt.axhline(y=-self.plot_threshold, linewidth=1, color='k', linestyle='dashed')
+                plt.plot()
 
-            result = self.function(context=context)
+                result = 0
+                time = 0
+                while abs(result) < self.plot_threshold:
+                    time += 1
+                    result = self.function(context=context)
+                    plt.plot(time, float(result), '-o', color='r', ms=5)
+                    plt.pause(0.05)
+
+                plt.pause(5)
+
+            else:
+                result = self.function(context=context)
 
             return np.array([result,[0.0],[0.0],[0.0]])
 
