@@ -125,7 +125,7 @@ stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 x = system(processes=[z],
            targets=[0, 0, 1])
 
-x.show_graph()
+# x.show_graph()
 
 x.run(num_executions=10,
       # inputs=stim_list,

@@ -8,6 +8,7 @@
 #     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
 #
 #
+# Rename INPUTS -> STIMULI
 # FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
 # FIX:
 # Finish Run:
