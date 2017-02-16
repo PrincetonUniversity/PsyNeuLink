@@ -7,13 +7,10 @@ from matplotlib import pyplot as plt
 threshold = 10
 
 plt.ion()
-times = [0]
-y = [0]
+
 time = 0
 position = 0
 
-
-plt.ion()
 axes = plt.gca()
 axes.set_ylim([-threshold -5, threshold +5])
 plt.axhline(y=threshold, linewidth=1, color = 'k', linestyle= 'dashed')
@@ -28,10 +25,8 @@ my_DDM = DDM(function = DDMIntegrator(drift_rate = 0.05 , noise = 0.1),
 while abs(position) < threshold:
     time += 1
     position = my_DDM.execute()[0][0]
-    plt.plot(time, position, '-o', color='r', ms=3)
+    plt.plot(time, position, '-o', color='r', ms=4)
     plt.pause(0.1)
 
 plt.pause(5)
-
-
 

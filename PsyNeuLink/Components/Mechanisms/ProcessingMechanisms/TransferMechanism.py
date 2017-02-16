@@ -419,7 +419,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate NOISE:
         noise = target_set[NOISE]
         if (isinstance(noise, float) == False) and (callable(noise) == False):
-            print("arrived")
             raise TransferError("noise parameter ({}) for {} must be a float or a function".
                                 format(noise, self.name))
 

@@ -1835,7 +1835,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwInitializer: variableClassDefault})
 
-
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
@@ -1844,7 +1843,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  noise=0.0,
-                 drift_rate = 1.0, 
+                 drift_rate = 1.0,
                  time_step_size = 1.0, 
                  context="Integrator Init"):
 
@@ -1858,6 +1857,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  noise=noise,
                                                  drift_rate=drift_rate, 
                                                  time_step_size=time_step_size)
+
 
         super().__init__(variable_default=variable_default,
                                          params=params,
@@ -2023,7 +2023,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                  prefs:is_pref_set=None,
                  noise=0.5,
                  drift_rate = 1.0, 
-                 time_step_size = 1.0, 
+                 time_step_size = 1.0,
                  context="DDMIntegrator Init"):
 
         # Assign here as default, for use in initialization of function

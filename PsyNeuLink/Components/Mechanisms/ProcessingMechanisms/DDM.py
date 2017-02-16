@@ -492,6 +492,7 @@ class DDM(ProcessingMechanism_Base):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  name=None,
+                 plot_threshold=None,
                  # prefs:tc.optional(ComponentPreferenceSet)=None,
                  prefs:is_pref_set=None,
                  # context=None):
@@ -500,8 +501,11 @@ class DDM(ProcessingMechanism_Base):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
-                                                  params=params,
+                                                  plot_threshold = plot_threshold,
+                                                  params=params
                                                   )
+        self.get_axes_function = DDMIntegrator(drift_rate=0.01, noise=0.2, context=context).function
+        self.plot_function = DDMIntegrator(drift_rate=0.01, noise=0.2, context=context).function
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
@@ -519,6 +523,42 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   # context=context)
                                   context=self)
+    def plot(self, context):
+        import matplotlib.pyplot as plt
+        plt.ion()
+
+        # # Select a random seed to ensure that the test run will be the same as the real run
+        seed_value = np.random.randint(0, 100)
+        np.random.seed(seed_value)
+
+        result_check = 0
+        time_check = 0
+        threshold = 10.0
+
+        while abs(result_check) < threshold:
+            time_check += 1
+            result_check = self.get_axes_function(context=context)
+
+        # Re-set random seed for the real run
+        np.random.seed(seed_value)
+        axes = plt.gca()
+        axes.set_xlim([0, time_check])
+        axes.set_xlabel("Time Step", weight ="heavy", size="large")
+        axes.set_ylim([-1.25 * threshold, 1.25 * threshold])
+        axes.set_ylabel("Position", weight ="heavy", size="large")
+        plt.axhline(y=threshold, linewidth=1, color='k', linestyle='dashed')
+        plt.axhline(y=-threshold, linewidth=1, color='k', linestyle='dashed')
+        plt.plot()
+
+        result = 0
+        time = 0
+        while abs(result) < threshold:
+            time += 1
+            result = self.plot_function(context=context)
+            plt.plot(time, float(result), '-o', color='r', ms=5)
+            plt.pause(0.001)
+
+        plt.pause(5)
 
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
@@ -622,7 +662,9 @@ class DDM(ProcessingMechanism_Base):
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
+
             result = self.function(context=context)
+
             return np.array([result,[0.0],[0.0],[0.0]])
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
