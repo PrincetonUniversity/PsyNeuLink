@@ -649,7 +649,7 @@ class System_Base(System):
             based on _target_mech_tuples)
         COMMENT
 
-    targetInputStates : List[SystemTargetInputState]
+    targetInputStates : List[SystemInputState]
         one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
         :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the `target <ComparatorMechanism.ComparatorMechanism.target>` inputState of each
@@ -1436,7 +1436,7 @@ class System_Base(System):
 
 
 # FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
-# FIX: RENAME SystemTargetInputState -> SystemInputState
+# FIX: RENAME SystemInputState -> SystemInputState
 
         # Create SystemInputState for each ORIGIN mechanism in originMechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
@@ -1457,7 +1457,7 @@ class System_Base(System):
                                           len(origin_mech.inputState.variable),
                                           origin_mech.name))
 
-            stimulus_input_state = SystemTargetInputState(owner=self,
+            stimulus_input_state = SystemInputState(owner=self,
                                                         variable=origin_mech.inputState.variable,
                                                         prefs=self.prefs,
                                                         name="System Input {}".format(i))
@@ -1592,8 +1592,8 @@ class System_Base(System):
 
         self.targets = np.atleast_2d(self.targets)
 
-        # Create SystemTargetInputState for each TARGET mechanism in targetMechanisms and
-        #    assign MappingProjection from the SystemTargetInputState
+        # Create SystemInputState for each TARGET mechanism in targetMechanisms and
+        #    assign MappingProjection from the SystemInputState
         #    to the TARGET mechanism's COMPARATOR_TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
@@ -1611,7 +1611,7 @@ class System_Base(System):
                                           len(comparator_target.variable),
                                           target_mech.name))
 
-            target_input_state = SystemTargetInputState(owner=self,
+            target_input_state = SystemInputState(owner=self,
                                                         variable=comparator_target.variable,
                                                         prefs=self.prefs,
                                                         name="System Target {}".format(i))
@@ -1731,7 +1731,7 @@ class System_Base(System):
             for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
                 system_input_state = next(projection.sender for projection in
                                           origin_mech.inputState.receivesFromProjections
-                                          if isinstance(projection.sender, SystemTargetInputState))
+                                          if isinstance(projection.sender, SystemInputState))
                 if system_input_state:
                     system_input_state.value = input[i]
                 else:
@@ -2459,7 +2459,7 @@ class System_Base(System):
 SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
 
 from PsyNeuLink.Components.States.OutputState import OutputState
-class SystemTargetInputState(OutputState):
+class SystemInputState(OutputState):
     """Encodes target for the system and transmits it to a `TARGET` mechanism in the system
 
     Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
