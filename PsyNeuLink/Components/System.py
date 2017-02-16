@@ -1453,7 +1453,6 @@ class System_Base(System):
     def _instantiate_stimulus_inputs(self, context=None):
 
 
-# FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
 # FIX: RENAME SystemTargetInputState -> SystemInputState
 
         # Create SystemInputState for each ORIGIN mechanism in originMechanisms and

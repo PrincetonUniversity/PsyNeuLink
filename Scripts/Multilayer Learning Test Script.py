@@ -1,6 +1,7 @@
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
@@ -113,10 +114,22 @@ stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 
 # z.execute()
 
-z.run(num_executions=10,
+# z.run(num_executions=10,
+#       # inputs=stim_list,
+#       inputs=[[-1, 30],[2, 10]],
+#       # targets=[[0, 0, 1],[0, 0, 1]],
+#       targets=[[0, 0, 1],[0, 0, 1]],
+#       call_before_trial=print_header,
+#       call_after_trial=show_target)
+
+x = system(processes=[z],
+           targets=[0, 0, 1])
+
+x.show_graph()
+
+x.run(num_executions=10,
       # inputs=stim_list,
-      inputs=[[-1, 30],[2, 10]],
-      # targets=[[0, 0, 1],[0, 0, 1]],
+      inputs=stim_list,
       targets=[[0, 0, 1],[0, 0, 1]],
       call_before_trial=print_header,
       call_after_trial=show_target)
