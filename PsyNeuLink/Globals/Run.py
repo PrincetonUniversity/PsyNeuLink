@@ -961,7 +961,14 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
     elif object_type is SYSTEM:
 
-        num_phases = num_phases or object.numPhases
+        # MODIFIED 2/16/17 OLD:
+        # num_phases = num_phases or object.numPhases
+        # # MODIFIED 2/16/17 NEW:
+        if is_target:
+            num_phases = 1
+        else:
+            num_phases = num_phases or object.numPhases
+        # MODIFIED 2/16/17 END
 
         if isinstance(inputs, np.ndarray):
 
@@ -994,14 +1001,15 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         # Calcluate total number of executions
-        num_mechs = len(object.originMechanisms)
         # # MODIFIED 2/16/17 OLD:
+        # num_mechs = len(object.originMechanisms)
         # mechs = list(object.originMechanisms)
         # MODIFIED 2/16/17 NEW:
         if is_target:
             mechs = list(object.targetMechanisms)
         else:
             mechs = list(object.originMechanisms)
+        num_mechs = len(mechs)
         # MODIFIED 2/16/17 END
         num_input_sets = 0
         executions_remain = True
@@ -1022,7 +1030,12 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                         input_num += 1
                         executions_remain = False
                         continue
-                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    # # MODIFIED 2/16/17 OLD:
+                    # input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    # MODIFIED 2/16/17 NEW:
+                    input = np.take(inputs_array,input_num,0)
+                    # MODIFIED 2/16/17 END
+                    # input = np.take(inputs_array,input_num,0)
                     if np.size(input) != mech_len * num_phases:
                        # If size of input didn't match length of mech variable,
                        #  may be that inputs for each mech are embedded within list/array
@@ -1151,14 +1164,19 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                                   format(object.name, expected_dim))
 
             # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
-            num_target_sets = np.size(targets,PROCESSES_DIM-1)
+            # # MODIFIED 2/16/17 OLD:
+            # num_target_sets = np.size(targets,PROCESSES_DIM-1)
+            # MODIFIED 2/16/17 NEW:
+            num_target_sets = targets.shape[0]
+            num_targets_per_set = np.size(targets,PROCESSES_DIM-1)
+            # MODIFIED 2/16/17 END
             # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if num_target_sets != len(object.targetMechanisms):
+            if num_targets_per_set != len(object.targetMechanisms):
                 raise SystemError("The number of target values for each execution ({}) in the call to {}.run() "
                                   "does not match the number of processes in the system ({})".
                                   format(
                                          # np.size(targets,PROCESSES_DIM),
-                                         num_target_sets,
+                                         num_targets_per_set,
                                          object.name,
                                          len(object.originMechanisms)))
 
@@ -1171,7 +1189,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             for target, targetMechanism in zip(targets, object.targetMechanisms):
                 target_len = np.size(target)
                 if target_len != np.size(targetMechanism.target):
-                    if num_target_sets > 1:
+                    if num_targets_per_set > 1:
                         plural = 's'
                     else:
                         plural = ''

@@ -9,6 +9,8 @@
 #
 #
 # Rename INPUTS -> STIMULI
+# FIX: process.run crashes if stimuli are in dict format and there is more than one execution set
+#                 (see Multilayer Learning Script)
 # FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
 # FIX:
 # Finish Run:
