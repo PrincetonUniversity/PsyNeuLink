@@ -1031,13 +1031,12 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                         executions_remain = False
                         continue
                     # # MODIFIED 2/16/17 OLD:
-                    # input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
                     # MODIFIED 2/16/17 NEW:
-                    input = np.take(inputs_array,input_num,0)
-                    # MODIFIED 2/16/17 END
                     # input = np.take(inputs_array,input_num,0)
+                    # MODIFIED 2/16/17 END
                     if np.size(input) != mech_len * num_phases:
-                       # If size of input didn't match length of mech variable,
+                       # If size of input didn't match length of mech variable (times the number of phases),
                        #  may be that inputs for each mech are embedded within list/array
                         if isinstance(input, Iterable):
                             inner_input_num = 0
