@@ -52,7 +52,7 @@ my_DDM = DDM(function=DDMIntegrator(drift_rate=0.01, noise=0.2),
 # Plot shown uses a drift_rate of 0.01, noise parameter of 0.2 and threshold of 10.0
 my_DDM.plot(context="plot")
 
------------------------------------------
+#-----------------------------------------
 
 # DDM - VARIABLE PARAMETERS
 
