@@ -1010,8 +1010,11 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         while executions_remain:
             try:
                 for mech_num in range(num_mechs):
-                    # input = inputs[input_num]
-                    mech_len = np.size(mechs[mech_num].variable)
+                    if is_target:
+                        # Assume mech is a ComparatorMechanism, and that the second item of the variable is the target
+                        mech_len = np.size(mechs[mech_num].variable[1])
+                    else:
+                        mech_len = np.size(mechs[mech_num].variable)
                     # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
                     # If inputs_array is just a list of numbers and its length equals the input to the mechanism
                     #    then there is just one input and one execution
