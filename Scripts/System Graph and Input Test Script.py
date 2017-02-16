@@ -94,7 +94,6 @@ inputs=[[[2,2],[0,0]],[[2,2],[0,0]]]
 s.run(inputs=inputs)
 
 s.show()
-s.show()
 if show_graph:
     s.show_graph(direction='LR')
 
