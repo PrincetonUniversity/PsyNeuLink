@@ -563,9 +563,22 @@ def run(object,
             input_num = execution%len(inputs)
 
 
+
             # # MODIFIED 2/13/17 NEW:
             # # Assign inputs
             # if object_type == SYSTEM:
+            #     # Note: the following assumes that the order of the items in inputs is alligned with
+            #     #       the oreder of the ORIGIN mechanisms in the sytem's originMechanisms list;
+            #     #       it is tested for dict format in _construct_stimulus_sets,
+            #     #       but can't be insured for list format.
+            #     # For each ORIGIN mechanism in the system's targetMechanismList
+            #     for i, origin_mech in zip(range(len(objectoriginMechanisms)), object.originMechanisms):
+            #     # Assign each item of input to the value of the stimulusInputState for the ORIGIN mechanism
+            #     #    and zero the value of all ProcessInputStates that project to the ORIGIN mechanism
+            #         object.targetInputStates[i].value = targets[input_num][i]
+            #         for process_target_projection in \
+            #                 target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+            #             process_target_projection.sender.value = process_target_projection.sender.value * 0
             # # WHAT ABOUT IF IT IS A PROCESS??
             # # MODIFIED 2/13/17 END
 
