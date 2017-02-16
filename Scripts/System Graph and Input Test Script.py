@@ -43,7 +43,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 # fb3 = MappingProjection(sender=e, receiver=a, name = 'fb3')
 
-show_graph = True
+show_graph = False
 
 print ('*****************************************************************************')
 
