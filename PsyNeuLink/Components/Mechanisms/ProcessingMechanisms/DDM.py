@@ -505,8 +505,8 @@ class DDM(ProcessingMechanism_Base):
                                                   params=params
                                                   )
 
-        self.get_axes_function = DDMIntegrator(drift_rate=0.01, noise=0.2, context=context).function
-        self.plot_function = DDMIntegrator(drift_rate=0.01, noise=0.2, context=context).function
+        self.get_axes_function = DDMIntegrator(rate=0.01, noise=0.2, context=context).function
+        self.plot_function = DDMIntegrator(rate=0.01, noise=0.2, context=context).function
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
