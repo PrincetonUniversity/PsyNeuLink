@@ -7,6 +7,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 my_Transfer_Linear = TransferMechanism(name='my_Transfer_Linear',
                        function=Linear()
                        )
+
 # Plots Linear Function
 # Any parameters specified in above mechanism (line6) will be reflected in plot
 my_Transfer_Linear.plot()
@@ -42,15 +43,14 @@ my_Transfer_Logistic.plot()
 # DDM - FIXED PARAMETERS
 
 # Creating a DDM Mechanism
-my_DDM = DDM(function=DDMIntegrator(drift_rate=0.01, noise=0.2),
+my_DDM = DDM(function=DDMIntegrator(rate=0.5, noise=0.2),
              name='My_DDM',
              time_scale=TimeScale.TIME_STEP
              )
 
 # Plots DDM dynamically over time with a fixed horizontal axis
-# NOTE: parameters specified in above mechanism will NOT be reflected in plot
-# Plot shown uses a drift_rate of 0.01, noise parameter of 0.2 and threshold of 10.0
-my_DDM.plot(context="plot")
+# NOTE: parameters specified in above mechanism will be reflected in plot
+my_DDM.plot()
 
 #-----------------------------------------
 
