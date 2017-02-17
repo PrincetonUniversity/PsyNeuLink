@@ -5,7 +5,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 
 # Creating a Transfer Mechanism with a Linear function
 my_Transfer_Linear = TransferMechanism(name='my_Transfer_Linear',
-                       function=Linear()
+                       function=Logistic()
                        )
 # Plots Linear Function
 # Any parameters specified in above mechanism (line6) will be reflected in plot
