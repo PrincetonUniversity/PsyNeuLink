@@ -502,11 +502,12 @@ class DDM(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(function=function,
                                                   time_scale=time_scale,
                                                   plot_threshold = plot_threshold,
-                                                  params=params
+                                                  params=params,
+                                                  context=context
                                                   )
 
-        self.get_axes_function = DDMIntegrator(rate=0.01, noise=0.2, context=context).function
-        self.plot_function = DDMIntegrator(rate=0.01, noise=0.2, context=context).function
+        self.get_axes_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
+        self.plot_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
@@ -524,7 +525,7 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   # context=context)
                                   context=self)
-    def plot(self, context):
+    def plot(self):
         import matplotlib.pyplot as plt
         plt.ion()
 
@@ -538,7 +539,7 @@ class DDM(ProcessingMechanism_Base):
 
         while abs(result_check) < threshold:
             time_check += 1
-            result_check = self.get_axes_function(context=context)
+            result_check = self.get_axes_function(context='plot')
 
         # Re-set random seed for the real run
         np.random.seed(seed_value)
@@ -555,7 +556,7 @@ class DDM(ProcessingMechanism_Base):
         time = 0
         while abs(result) < threshold:
             time += 1
-            result = self.plot_function(context=context)
+            result = self.plot_function(context='plot')
             plt.plot(time, float(result), '-o', color='r', ms=2.5)
             plt.pause(0.001)
 
