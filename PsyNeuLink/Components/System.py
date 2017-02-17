@@ -1826,7 +1826,7 @@ class System_Base(System):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 for process in process_keys_sorted:
                     if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                        process._report_process_initiation()
+                        process._report_process_initiation(input=mechanism.inputValue)
 
                 # for process, status in mechanism.processes.items():
                 #     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
@@ -2059,7 +2059,9 @@ class System_Base(System):
                   format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
-
+            # MODIFIED 2/17/17 NEW:
+            print("- input: {}".format(self.input))
+            # MODIFIED 2/17/17 END
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".

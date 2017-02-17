@@ -10,9 +10,6 @@ import numpy as np
 import random as rand
 
 
-# Control Parameters
-signalSearchRange = np.arange(0, 5.1, 0.1)
-
 # Stimulus Mechanisms
 Color_Input = TransferMechanism(name='Color Input', function=Linear(slope = 0.2995))
 Word_Input = TransferMechanism(name='Word Input', function=Linear(slope = 0.2995))
@@ -35,7 +32,6 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0),
 # Outcome Mechanisms:
 Reward = TransferMechanism(name='Reward')
 
-
 # Processes:
 ColorNamingProcess = process(
     default_input_value=[0],
@@ -54,14 +50,14 @@ RewardProcess = process(
 
 # System:
 mySystem = system(processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-                  # controller=EVCMechanism,
-                  # enable_controller=True,
-                  monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD],
+                  controller=EVCMechanism,
+                  enable_controller=True,
+                  monitor_for_control=[Reward, (DDM_PROBABILITY_UPPER_THRESHOLD, 1, -1)],
                   name='EVC Gratton System')
 # Show characteristics of system:
-# mySystem.show()
+mySystem.show()
 # mySystem.controller.show()
-# mySystem.show_graph(direction='LR')
+mySystem.show_graph(direction='LR')
 
 
 stim_list_dict = {Color_Input:[1, 1],
@@ -69,7 +65,7 @@ stim_list_dict = {Color_Input:[1, 1],
                   Reward:[36, 29]}
 
 # Run system:
-# Color_Hidden.reportOutputPref = True
+Color_Hidden.reportOutputPref = True
 mySystem.reportOutputPref = True
 mySystem.controller.reportOutputPref = True
 mySystem.run(num_executions=2,
