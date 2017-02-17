@@ -60,7 +60,7 @@ my_DDM.plot(context="plot")
 # Specifying a 'plot_threshold' (line64) causes the mechanism to plot its out put at each time step until the threshold
 # Any changes to paramters (line62) will be reflected on execution and in the plot
 # Plot width updates continuously
-my_DDM2 = DDM(function=DDMIntegrator(drift_rate=0.01, noise=0.2),
+my_DDM2 = DDM(function=DDMIntegrator(drift_rate=-0.1, noise=0.2),
              name='My_DDM2',
              time_scale=TimeScale.TIME_STEP,
              plot_threshold = 10.0
