@@ -1819,19 +1819,6 @@ class System_Base(System):
 
             mechanism, params, phase_spec = self.executionList[i]
 
-            if self._report_system_output and  self._report_process_output:
-                # Report initiation of process(es) for which mechanism is an ORIGIN
-                # Sort for consistency of reporting:
-                processes = list(mechanism.processes.keys())
-                process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                for process in process_keys_sorted:
-                    if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                        process._report_process_initiation(input=mechanism.inputValue)
-
-                # for process, status in mechanism.processes.items():
-                #     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
-                #         process._report_process_initiation()
-
             # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
 # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
             if phase_spec == (clock.time_step % self.numPhases):
@@ -1849,18 +1836,32 @@ class System_Base(System):
                                          "| mechanism: " + mechanism.name +
                                          " [in processes: " + str(process_names) + "]")
 
-                # IMPLEMENTATION NOTE:  ONLY DO THE FOLLOWING IF THERE IS NOT A SIMILAR STATEMENT FOR MECHANISM ITSELF
-                # Report completion of process(es) for which mechanism is a TERMINAL
-                if  self._report_system_output:
-                    if  self._report_process_output:
-                        # Sort for consistency of reporting:
-                        processes = list(mechanism.processes.keys())
-                        process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-                        for process in process_keys_sorted:
-                            if process.learning and process._learning_enabled:
-                                continue
-                            if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
-                                process._report_process_completion()
+
+                if self._report_system_output and  self._report_process_output:
+
+                    # REPORT COMPLETION OF PROCESS IF ORIGIN:
+                    # Report initiation of process(es) for which mechanism is an ORIGIN
+                    # Sort for consistency of reporting:
+                    processes = list(mechanism.processes.keys())
+                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    for process in process_keys_sorted:
+                        if mechanism.processes[process] in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                            process._report_process_initiation(input=mechanism.inputValue)
+
+                    # for process, status in mechanism.processes.items():
+                    #     if status in {ORIGIN, SINGLETON} and process.reportOutputPref:
+                    #         process._report_process_initiation()
+
+                    # REPORT COMPLETION OF PROCESS IF TERMINAL:
+                    # Report completion of process(es) for which mechanism is a TERMINAL
+                    # Sort for consistency of reporting:
+                    processes = list(mechanism.processes.keys())
+                    process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+                    for process in process_keys_sorted:
+                        if process.learning and process._learning_enabled:
+                            continue
+                        if mechanism.processes[process] == TERMINAL and process.reportOutputPref:
+                            process._report_process_completion()
 
             if not i:
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
@@ -2059,9 +2060,11 @@ class System_Base(System):
                   format(self.name, system_string, clock.time_step))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
-            # MODIFIED 2/17/17 NEW:
-            print("- input: {}".format(self.input))
-            # MODIFIED 2/17/17 END
+            if np.size(self.input, 0) == 1:
+                input_string = ''
+            else:
+                input_string = 's'
+            print("- input{}: {}".format(input_string, self.input.tolist()))
 
         else:
             print("\n\'{}\'{} executing ********** (time_step {}) ".
