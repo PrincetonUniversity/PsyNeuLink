@@ -1744,7 +1744,7 @@ class System_Base(System):
                     for projection in input_state.receivesFromProjections:
                         if isinstance(projection.sender, ProcessInputState):
                             # projection.sender.value = None
-                            projection.sender.value *= 0.0
+                            projection.sender.value *= 0
                 # MODIFIED 2/13/17 END
 
         self.input = input

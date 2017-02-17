@@ -176,7 +176,7 @@ mySystem.show_graph()
 
 # Run system:
 
-mySystem.controller.reportOutputPref = False
+mySystem.controller.reportOutputPref = True
 mySystem.run(num_executions=nTrials,
              inputs=stim_list_dict,
              call_before_trial=show_trial_header,
