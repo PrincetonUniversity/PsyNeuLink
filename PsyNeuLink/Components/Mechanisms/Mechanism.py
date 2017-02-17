@@ -857,7 +857,16 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
-
+    def plot(self):
+        import matplotlib.pyplot as plt
+        if "Logistic" in str(self.function):
+            x= np.linspace(-5,5)
+        elif "Exponential" in str(self.function):
+            x = np.linspace(0.1, 5)
+        else:
+            x = np.linspace(-10, 10)
+        plt.plot(x, self.function(x), lw=3.0, c='r')
+        plt.show()
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
