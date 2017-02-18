@@ -870,7 +870,7 @@ class Process_Base(Process):
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.variableClassDefault:
             self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        if variable:
+        if any(variable):
             self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):

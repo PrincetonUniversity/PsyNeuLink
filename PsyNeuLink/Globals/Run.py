@@ -562,8 +562,6 @@ def run(object,
 
             input_num = execution%len(inputs)
 
-
-
             # # MODIFIED 2/13/17 NEW:
             # # Assign inputs
             # if object_type == SYSTEM:

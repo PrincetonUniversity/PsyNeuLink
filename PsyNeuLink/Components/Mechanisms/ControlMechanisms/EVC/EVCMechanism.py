@@ -791,6 +791,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                                                             name=mech.name + "_" + PREDICTION_MECHANISM,
+                                                            default_input_value = mech.outputState.value,
                                                             params = prediction_mechanism_params,
                                                             context=context)
 
@@ -801,12 +802,16 @@ class EVCMechanism(ControlMechanism_Base):
 
             self.prediction_mechanisms.append(prediction_mechanism)
 
-            # Instantiate process with originMechanism projecting to predictionMechanism, and phase = originMechanism
-            prediction_process = Process_Base(default_input_value=None,
+            # Instantiate process with ORIGIN mechanism projecting to predictionMechanism, and phase = ORIGIN mechanism
+            # MODIFIED 2/17/17 OLD:
+            # prediction_process = Process_Base(default_input_value=None,
+            # MODIFIED 2/17/17 NEW:
+            prediction_process = Process_Base(default_input_value=mech.outputState.value,
+            # MODIFIED 2/17/17 END
                                               params={
                                                   PATHWAY:[(mech, mech.phaseSpec),
-                                                                   IDENTITY_MATRIX,
-                                                                   (prediction_mechanism, mech.phaseSpec)]},
+                                                           IDENTITY_MATRIX,
+                                                           (prediction_mechanism, mech.phaseSpec)]},
                                               name=mech.name + "_" + kwPredictionProcess,
                                               context=context
                                               )

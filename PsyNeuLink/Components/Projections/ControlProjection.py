@@ -222,7 +222,9 @@ class ControlProjection(Projection_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function)
+        params = self._assign_args_to_param_dicts(function=function,
+                                                  control_signal=control_signal
+                                                  )
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if not receiver:
@@ -230,7 +232,7 @@ class ControlProjection(Projection_Base):
             self.init_args = locals().copy()
             self.init_args['context'] = self
             self.init_args['name'] = name
-            # Delete thi as it has to be moved to params dict (and so will not be recognized by Projection.__init__)
+            # Delete this as it has breen moved to params dict (so it will not be passed to Projection.__init__)
             del self.init_args[CONTROL_SIGNAL]
 
             # Flag for deferred initialization
