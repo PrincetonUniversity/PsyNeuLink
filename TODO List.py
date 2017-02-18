@@ -1,12 +1,21 @@
 # NEW COMMENT
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+
+# FIX: In State (line 1914):
+#     2/17/17:  ADD setattr for parameter state as well as value (right now, just owner.<state.name>.value is assigned)
 #
-#
-# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
 # FIX:
 # Finish Run:
 #     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
+#
+# Rename INPUTS -> STIMULI
+# FIX: process.run crashes if stimuli are in dict format and there is more than one execution set
+#                 (see Multilayer Learning Script)
+#
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+#
+# FIX:
 #
 # System:
 #    Finish implementing SystemStimulusInputs

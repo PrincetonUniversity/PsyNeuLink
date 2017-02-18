@@ -461,7 +461,7 @@ class Projection_Base(Projection):
 
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
 #      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT controlSignal
-#      WHY IS self.sender IMPLEMENTED BY sender IS NOT??
+#      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??
 
         self.sender = sender
         self.receiver = receiver
