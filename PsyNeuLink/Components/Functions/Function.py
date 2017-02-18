@@ -1843,7 +1843,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  noise=0.0,
-                 drift_rate = 1.0,
                  time_step_size = 1.0, 
                  context="Integrator Init"):
 
@@ -1855,7 +1854,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                                  weighting=weighting,
                                                  params=params,
                                                  noise=noise,
-                                                 drift_rate=drift_rate, 
                                                  time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
@@ -1905,7 +1903,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         noise = target_set[NOISE]
 
-        drift_rate = target_set[DRIFT_RATE]
         time_step_size = target_set[TIME_STEP_SIZE]
         
         # Validate NOISE:
@@ -1956,7 +1953,6 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
 
-        drift_rate = self.paramsCurrent[DRIFT_RATE]
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
         #if noise is a function, execute it 
@@ -1981,7 +1977,7 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         elif weighting is ADAPTIVE:
             value = (1-rate)*old_value + rate*new_value + noise 
         elif weighting is DIFFUSION: 
-            value = old_value + drift_rate*old_value*time_step_size + np.sqrt(time_step_size*noise)*np.random.normal()
+            value = old_value + rate*old_value*time_step_size + np.sqrt(time_step_size*noise)*np.random.normal()
         else:
             value = new_value
  
@@ -2021,7 +2017,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
                  noise=0.5,
-                 drift_rate = 1.0, 
+                 rate = 1.0,
                  time_step_size = 1.0,
                  context="DDMIntegrator Init"):
 
@@ -2033,7 +2029,7 @@ class DDMIntegrator(Integrator): # ---------------------------------------------
                                                  weighting=weighting,
                                                  params=params,
                                                  noise=noise,
-                                                 drift_rate=drift_rate, 
+                                                 rate=rate,
                                                  time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
