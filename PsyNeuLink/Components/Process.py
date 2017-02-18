@@ -870,7 +870,7 @@ class Process_Base(Process):
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.variableClassDefault:
             self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        if any(variable):
+        if variable is not None:
             self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2218,7 +2218,8 @@ class Process_Base(Process):
         #                                          str([[float("{:0.3}".format(float(i)))
         #                                                for i in value] for value in variable]))))
         # MODIFIED 2/17/17 NEW:
-        input = any(self.input) or input
+        if self.input is not None:
+            input = self.input
         print("- input: {}".format(input))
         # MODIFIED 2/17/17 END
 
