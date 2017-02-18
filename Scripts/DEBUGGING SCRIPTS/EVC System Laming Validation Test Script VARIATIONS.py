@@ -22,6 +22,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
+                default_input_value=[0,0]
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
 Reward = TransferMechanism(name='Reward',
@@ -43,8 +44,8 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 
 # Processes:
 TaskExecutionProcess = process(
-    default_input_value=[0],
-    pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    default_input_value=[0,0],
+    pathway=[(Input, 0), FULL_CONNECTIVITY_MATRIX, (Decision, 0)],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
@@ -66,54 +67,56 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-# mySystem.show_graph()
+mySystem.show_graph()
 
-# Specify stimuli for run:
-#   two ways to do so:
+# RUN ******************************************************************************************************************
 
-#   - as a dictionary of stimulus lists; for each entry:
-#     key is name of an origin mechanism in the system
-#     value is a list of its sequence of stimuli (one for each trial)
-inputList = [0.5, 0.123]
-rewardList = [20, 20]
-# stim_list_dict = {Input:[0.5, 0.123],
-#               Reward:[20, 20]}
-
-stim_list_dict = {Input:[[0.5], [0.123]],
-              Reward:[[20], [20]]}
-
-#   - as a list of trials;
-#     each item in the list contains the stimuli for a given trial,
-#     one for each origin mechanism in the system
-trial_list = [[0.5, 20], [0.123, 20]]
-reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
-
-# Create printouts function (to call in run):
-def show_trial_header():
-    print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
-
-def show_results():
-    import re
-    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
-    print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
-    print ('\tDrift rate control signal (from EVC): {}'.
-           # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
-           format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
-    print ('\tThreshold control signal (from EVC): {}'.
-           format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value)))))
-    for result in results:
-        print("\t{}: {}".format(result[0],
-                                re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
-
-# Run system:
-
-mySystem.controller.reportOutputPref = False
-
-# mySystem.show_graph(direction='LR')
-
-# mySystem.run(inputs=trial_list,
-# # mySystem.run(inputs=reversed_trial_list,
-mySystem.run(inputs=stim_list_dict,
-             call_before_trial=show_trial_header,
-             call_after_time_step=show_results
-             )
+# # Specify stimuli for run:
+# #   two ways to do so:
+#
+# #   - as a dictionary of stimulus lists; for each entry:
+# #     key is name of an origin mechanism in the system
+# #     value is a list of its sequence of stimuli (one for each trial)
+# inputList = [0.5, 0.123]
+# rewardList = [20, 20]
+# # stim_list_dict = {Input:[0.5, 0.123],
+# #               Reward:[20, 20]}
+#
+# stim_list_dict = {Input:[[0.5], [0.123]],
+#               Reward:[[20], [20]]}
+#
+# #   - as a list of trials;
+# #     each item in the list contains the stimuli for a given trial,
+# #     one for each origin mechanism in the system
+# trial_list = [[0.5, 20], [0.123, 20]]
+# reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+#
+# # Create printouts function (to call in run):
+# def show_trial_header():
+#     print("\n############################ TRIAL {} ############################".format(CentralClock.trial))
+#
+# def show_results():
+#     import re
+#     results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+#     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
+#     print ('\tDrift rate control signal (from EVC): {}'.
+#            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
+#            format(re.sub('[\[,\],\n]','',str("{:0.3}".format(float(Decision.parameterStates[DRIFT_RATE].value))))))
+#     print ('\tThreshold control signal (from EVC): {}'.
+#            format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[THRESHOLD].value)))))
+#     for result in results:
+#         print("\t{}: {}".format(result[0],
+#                                 re.sub('[\[,\],\n]','',str("{:0.3}".format(float(result[1]))))))
+#
+# # Run system:
+#
+# mySystem.controller.reportOutputPref = False
+#
+# # mySystem.show_graph(direction='LR')
+#
+# # mySystem.run(inputs=trial_list,
+# # # mySystem.run(inputs=reversed_trial_list,
+# mySystem.run(inputs=stim_list_dict,
+#              call_before_trial=show_trial_header,
+#              call_after_time_step=show_results
+#              )
