@@ -1701,7 +1701,8 @@ class System_Base(System):
 
         self.timeScale = time_scale or TimeScale.TRIAL
 
-        #region ASSIGN INPUT ITEMS TO SystemInputStates
+        # FIX: MOVE TO RUN??
+        #region ASSIGN INPUTS TO SystemInputStates
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
         num_origin_mechs = len(list(self.originMechanisms))
 
@@ -1719,7 +1720,7 @@ class System_Base(System):
             # Check if input items are of different lengths (indicated by dtype == np.dtype('O'))
             if num_inputs != num_origin_mechs:
                 num_inputs = np.size(input)
-               # Check that number of inputs matcheds number of ORIGIN mechanisms
+               # Check that number of inputs matches number of ORIGIN mechanisms
                 if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_origin_mechs:
                     pass
                 else:
@@ -1729,13 +1730,16 @@ class System_Base(System):
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
             for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
-                system_input_state = next(projection.sender for projection in
-                                          origin_mech.inputState.receivesFromProjections
-                                          if isinstance(projection.sender, SystemInputState))
-                if system_input_state:
-                    system_input_state.value = input[i]
-                else:
-                    raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
+                # For each inputState of the ORIGIN mechansim
+                input_states = list(origin_mech.inputStates.values())
+                for j, input_state in zip(range(len(origin_mech.inputStates)), input_states):
+                   # Get the input from each projection to that inputState (from the corresponding SystemInputState)
+                    system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
+                                              if isinstance(projection.sender, SystemInputState))
+                    if system_input_state:
+                        system_input_state.value = input[i][j]
+                    else:
+                        raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
                 # MODIFIED 2/13/17 NEW:
                 # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED

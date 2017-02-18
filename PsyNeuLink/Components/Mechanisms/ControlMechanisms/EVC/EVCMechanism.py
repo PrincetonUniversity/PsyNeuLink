@@ -821,14 +821,16 @@ class EVCMechanism(ControlMechanism_Base):
             # Add the process to the controller's list of prediction processes
             self.predictionProcesses.append(prediction_process)
 
-        # MODIFIED 12/27 NEW:
         # Assign predicted_inputs
         self.predictedInput = []
         for i in range(len(self.system.originMechanisms)):
             # self.predictedInput.append(process[0].originMechanisms[0].inputValue)
             self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
-        self.predictedInput = np.array(self.predictedInput)
-        # MODIFIED 12/27 END
+            # # MODIFIED 2/17/17 OLD:
+            # self.predictedInput = np.array(self.predictedInput)
+            # # MODIFIED 2/17/17 NEW:
+            # self.predictedInput = np.array([i.tolist for i in self.predictedInput])
+            # # MODIFIED 2/17/17 END
 
         # # MODIFIED 2/9/17 OLD: [MOVED TO _instantiate_input_states]
         # # Re-instantiate system with predictionMechanism Process(es) added

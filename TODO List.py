@@ -2,9 +2,6 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
-# FIX: In State (line 1914):
-#     2/17/17:  ADD setattr for parameter state as well as value (right now, just owner.<state.name>.value is assigned)
-#
 # FIX:
 # Finish Run:
 #     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
