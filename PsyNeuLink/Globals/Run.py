@@ -950,6 +950,14 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
                        format(object_type))
 
+    # try:
+    #     stim_list = np.array(stim_list)
+    # except ValueError:
+    #     for i in range(len(stim_list[0][0])):
+    #         stim_list[0][0][i][0]
+    #         stim_list[0][0][i] = np.array(stim_list[0][0][i])
+    #     stim_list = np.array(stim_list)
+    #
     return np.array(stim_list)
 
 def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, context=None):
@@ -1084,10 +1092,11 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                         executions_remain = False
                         continue
                     # MODIFIED 2/16/17 OLD:
-                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
-                    # # MODIFIED 2/16/17 NEW:
+                    # input = np.take(inputs_array,input_num,inputs_array.ndim-2)
+                    # # MODIFIED 2/18/17 NEW:
                     # input = np.take(inputs_array,input_num,0)
                     # input = inputs_array[input_num][mech_num]
+                    input = np.take(inputs_array,input_num,MECHANISM_DIM)
                     # MODIFIED 2/16/17 END
                     if np.size(input) != mech_len * num_phases:
                        # If size of input didn't match length of mech variable (times the number of phases),
