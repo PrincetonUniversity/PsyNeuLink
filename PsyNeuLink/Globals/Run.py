@@ -525,7 +525,8 @@ def run(object,
     # num_executions = num_executions or len(inputs)
     # num_executions = num_executions or np.size(inputs,(inputs.ndim-1))
     # num_executions = num_executions or np.size(inputs, 0)
-    num_executions = num_executions or np.size(inputs, inputs.ndim-3)
+    # num_executions = num_executions or np.size(inputs, inputs.ndim-3)
+    num_executions = num_executions or np.size(inputs, EXECUTION_SET_DIM)
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -788,7 +789,6 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
                 # Assign input elements to stimulus if phase is correct one for mech
                 if phase == phase_spec:
                     for stim_elem in range(mech_len):
-                        # stimulus[stim_elem] = inputs_flattened[input_elem]
                         if headers:
                             input_index = headers.index(mech) + execution_offset
                         else:
@@ -834,8 +834,9 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                        projection in target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
-                                      format(target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections[0].sender.owner.name,
-                                             object.name))
+                                   format(target.inputStates[COMPARATOR_SAMPLE].
+                                          receivesFromProjections[0].sender.owner.name,
+                                          object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 
@@ -922,16 +923,13 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
     # Otherwise, for inputs to a system, construct stimulus from dict with phases
     elif object_type is SYSTEM:
         for execution in range(num_input_sets):
-            # stimuli_in_execution = []
             stimuli_in_execution = []
             for phase in range(object.numPhases):
-                # stimuli_in_phase = []
                 stimuli_in_phase = []
-
                 # Only assign inputs to originMechanisms
                 #    and assign them in the order they appear in originMechanisms and fill out each phase
                 for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
-                    # Assign specified stimulus if mech is specified for current phase
+                    # Assign input elements to stimulus if phase is correct one for mech
                     if phase == phase_spec:
                         # Get stimulus for mech for current execution, and enforce 2d to accomodate inputStates per mech
                         stimulus = np.atleast_2d(stimuli[mech][execution])
