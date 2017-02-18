@@ -296,6 +296,7 @@ class ControlProjection(Projection_Base):
                 # MODIFIED 12/23/16 NEW:
                 #   [TRY AND EXCEPT IS NEW, AS IS ADDITION OF param ARG IN CALL TO _instantiate_control_projection]
                 try:
+                    params = params or self.control_signal
                     self.sender._instantiate_control_projection(self, params=params, context=context)
                 except ControlSignalError as error_msg:
                     raise FunctionError("Error in attempt to specify controlSignal for {} of {}".

@@ -1911,6 +1911,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # It must be consistent with value setter method in State
 # FIX LOG: MOVE THIS TO MECHANISM STATE __init__ (WHERE IT CAN BE KEPT CONSISTENT WITH setter METHOD??
 #      OR MAYBE JUST REGISTER THE NAME, WITHOUT SETTING THE
+# FIX: 2/17/17:  ADD setattr for parameter state as well as value (right now, just owner.<state.name>.value is assigned)
     setattr(owner, state.name+'.value', state.value)
 
     #endregion

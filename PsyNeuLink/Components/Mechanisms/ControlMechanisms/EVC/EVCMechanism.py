@@ -1176,7 +1176,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Call super to instantiate outputStates
         super()._instantiate_control_projection(projection=projection,
-                                                params=None,
+                                                params=params,
                                                 context=context)
 
         self.controlSignals = list(self.outputStates.values())
