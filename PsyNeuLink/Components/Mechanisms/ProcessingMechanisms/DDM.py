@@ -505,9 +505,9 @@ class DDM(ProcessingMechanism_Base):
                                                   params=params,
                                                   context=context
                                                   )
-
-        self.get_axes_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
-        self.plot_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
+        if time_scale == TimeScale.TIME_STEP:
+            self.get_axes_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
+            self.plot_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
