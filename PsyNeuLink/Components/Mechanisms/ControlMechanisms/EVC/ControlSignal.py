@@ -366,7 +366,8 @@ class ControlSignal(OutputState):
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
         if params:
             try:
-                allocation_samples = params[ALLOCATION_SAMPLES] or allocation_samples
+                if params[ALLOCATION_SAMPLES] is not None:
+                    allocation_samples =  params[ALLOCATION_SAMPLES]
             except KeyError:
                 pass
 
