@@ -500,12 +500,21 @@ class EVCMechanism(ControlMechanism_Base):
         the `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
         to all instances of `prediction_mechanism_type` created.
 
-    predictedInput : 3d np.array
-        array with the `value <Mechanism.Mechanism_Base.value>` of each
-        `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms`.  Each item of
-        axis 0 corresponds to the `value <Mechanism.Mechanism_Base.value>` of a prediction mechanism,
-        axis 1 an `inputState <InputState>` of that prediction mechanism, and
-        axis 2 the elements of the input for that inputState.
+    COMMENT:
+        OLD
+        predictedInput : 3d np.array
+            array with the `value <Mechanism.Mechanism_Base.value>` of each
+            `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms`.  Each item of
+            axis 0 corresponds to the `value <Mechanism.Mechanism_Base.value>` of a prediction mechanism,
+            axis 1 an `inputState <InputState>` of that prediction mechanism, and
+            axis 2 the elements of the input for that inputState.
+    COMMENT
+
+    predictedInput : dict
+        dictionary with the `value <Mechanism.Mechanism_Base.value>` of each
+        `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding
+        to each ORIGIN mechanism of the system. The key for each entry is the name of an ORIGIN mechanism, and its
+        value the `value <Mechanism.Mechanism_Base.value>` of the corresponding prediction mechanism.
 
     monitoring_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' that monitors the mechanisms and/or outputStates used by the EVCMechanism to evaluate
@@ -762,10 +771,10 @@ class EVCMechanism(ControlMechanism_Base):
             - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction mechanism
             - add the process to self.system.processes
 
-        Instantiate self.predictedInput:
-            - one item of axis 0 for each predictionMechanism
-            - one item of axis 1 for each inputState of a predictionMechanism
-            - one item of axis 2 for each element of the input to an inputState of the predictionMechanism
+        Instantiate self.predictedInput dict:
+            - key for each entry is an ORIGIN mechanism of the system
+            - value of each entry is the value of the corresponding predictionMechanism:
+            -     each value is a 2d array, each item of which is the value of an inputState of the predictionMechanism
 
         Args:
             context:
@@ -822,21 +831,15 @@ class EVCMechanism(ControlMechanism_Base):
             self.predictionProcesses.append(prediction_process)
 
         # Assign predicted_inputs
-        self.predictedInput = []
-        for i in range(len(self.system.originMechanisms)):
-            # self.predictedInput.append(process[0].originMechanisms[0].inputValue)
-            self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
-            # # MODIFIED 2/17/17 OLD:
-            # self.predictedInput = np.array(self.predictedInput)
-            # # MODIFIED 2/17/17 NEW:
-            # self.predictedInput = np.array([i.tolist for i in self.predictedInput])
-            # # MODIFIED 2/17/17 END
+        # # MODIFIED 2/18/17 OLD:
+        self.predictedInput = {}
+        # for i in range(len(self.system.originMechanisms)):
+        #     self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
+        # MODIFIED 2/18/17 NEW:
+        for i, origin_mech in zip(range(len(self.system.originMechanisms)), self.system.originMechanisms):
+            self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].inputValue
+        # MODIFIED 2/18/17 END
 
-        # # MODIFIED 2/9/17 OLD: [MOVED TO _instantiate_input_states]
-        # # Re-instantiate system with predictionMechanism Process(es) added
-        # self.system._instantiate_processes(input=self.system.variable, context=context)
-        # self.system._instantiate_graph(context=context)
-        # MODIFIED 2/9/17 END
 
     def _instantiate_monitoring_mechanism(self, context=None):
         """
@@ -1259,7 +1262,6 @@ class EVCMechanism(ControlMechanism_Base):
         self._update_predicted_input()
         # self.system._cache_state()
 
-
         #region CONSTRUCT SEARCH SPACE
         control_signal_sample_lists = []
         control_signals = self.controlSignals
@@ -1298,8 +1300,18 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Assign predictedInput for each process in system.processes
 
-        # The number of originMechanisms requiring input should = the number of prediction_mechanisms
-        for i in range(len(self.prediction_mechanisms)):
+        # The number of ORIGIN mechanisms requiring input should = the number of prediction_mechanisms
+        # MODIFIED 2/18/17 OLD:
+        # for i in range(len(self.prediction_mechanisms)):
+        # MODIFIED 2/18/17 NEW:
+        num_origin_mechs = len(self.system.originMechanisms)
+        num_prediction_mechs = len(self.prediction_mechanisms)
+        if num_origin_mechs != num_prediction_mechs:
+            raise EVCError("PROGRAM ERROR:  The number of ORIGIN mechanisms ({}) does not equal"
+                           "the number of prediction_predictions mechanisms ({}) for {}".
+                           format(num_origin_mechs, num_prediction_mechs, self.system.name))
+        for i in range(num_origin_mechs):
+        # MODIFIED 2/18/17 END
             # Get origin mechanism for each process
             origin_mech = self.system.processes[i].originMechanisms[0]
             # Get prediction process for which that is the origin mechanism
@@ -1309,8 +1321,13 @@ class EVCMechanism(ControlMechanism_Base):
             prediction_mech = process.terminalMechanisms[0]
             # Assign outputState.value of predictionMechanism to each inputState of the originMechanism
             #  (in case more than one process uses that (and therefore projects to) originMechanism
+            # # MODIFIED 2/18/17 OLD:
+            # for value, j in zip(origin_mech.inputValue, range(len(origin_mech.inputValue))):
+            #     self.predictedInput[i][j] = prediction_mech.outputState.value
+            # MODIFIED 2/18/17 NEW:
             for value, j in zip(origin_mech.inputValue, range(len(origin_mech.inputValue))):
-                self.predictedInput[i][j] = prediction_mech.outputState.value
+                self.predictedInput[origin_mech][j] = prediction_mech.outputState.value
+            # MODIFIED 2/18/17 END
 
     def add_monitored_states(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
