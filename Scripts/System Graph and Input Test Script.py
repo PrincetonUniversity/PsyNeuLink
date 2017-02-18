@@ -65,7 +65,8 @@ s.show()
 if show_graph:
     s.show_graph(direction='LR')
 
-inputs=[2,2]
+# inputs=[2,2]
+inputs={a:[2,2]}
 s.run(inputs)
 
 print ('A: ',a.systems[s])
@@ -90,7 +91,8 @@ s = system(processes=[p1, p2],
            name='Bypass System',
            initial_values={a:[1,1]})
 
-inputs=[[[2,2],[0,0]],[[2,2],[0,0]]]
+# inputs=[[[2,2],[0,0]],[[2,2],[0,0]]]
+inputs={a:[[2,2],[0,0]]}
 s.run(inputs=inputs)
 
 s.show()
@@ -119,7 +121,8 @@ s = system(processes=[p1, p2],
            name='Chain System',
            initial_values={a:[1,1,1]})
 
-inputs=[[[2,2,2],[0,0,0]]]
+# inputs=[[[2,2,2],[0,0,0]]]
+inputs={a:[[2,2,2],[0,0,0]]}
 s.run(inputs=inputs)
 
 s.show()
@@ -151,7 +154,10 @@ s = system(processes=[p1, p2],
            name='Convergent System',
            initial_values={a:[1,1]})
 
-inputs=[[2,2],0]
+# inputs=[[2,2],0]
+# inputs={a:[2,2],
+#         c:[0]}
+inputs=[[[[[2,2],[0]]]]]
 s.run(inputs=inputs)
 
 s.show()
