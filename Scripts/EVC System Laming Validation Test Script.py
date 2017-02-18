@@ -79,8 +79,8 @@ rewardList = [20, 20]
 # stim_list_dict = {Input:[0.5, 0.123],
 #               Reward:[20, 20]}
 
-stim_list_dict = {Input:[[0.5], [0.123]],
-              Reward:[[20], [20]]}
+stim_list_dict = {Input:[0.5, 0.123, 0.7],
+                  Reward:[20, 20, 20]}
 
 #   - as a list of trials;
 #     each item in the list contains the stimuli for a given trial,
