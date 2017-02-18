@@ -2218,7 +2218,7 @@ class Process_Base(Process):
         #                                          str([[float("{:0.3}".format(float(i)))
         #                                                for i in value] for value in variable]))))
         # MODIFIED 2/17/17 NEW:
-        if self.input is not None:
+        if input is None:
             input = self.input
         print("- input: {}".format(input))
         # MODIFIED 2/17/17 END
