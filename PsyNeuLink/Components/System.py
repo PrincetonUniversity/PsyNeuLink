@@ -758,8 +758,9 @@ class System_Base(System):
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.stimulusInputStates = []
-        self.targets = None
+        self.inputs = []
         self.targetInputStates = []
+        self.targets = None
         self.learning = False
 
         register_category(entry=self,
@@ -1434,7 +1435,6 @@ class System_Base(System):
 
     def _instantiate_stimulus_inputs(self, context=None):
 
-
 # FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
 # FIX: RENAME SystemInputState -> SystemInputState
 
@@ -1462,6 +1462,7 @@ class System_Base(System):
                                                         prefs=self.prefs,
                                                         name="System Input {}".format(i))
             self.stimulusInputStates.append(stimulus_input_state)
+            self.inputs.append(stimulus_input_state.value)
 
             # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
