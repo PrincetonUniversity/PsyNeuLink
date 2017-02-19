@@ -1101,63 +1101,55 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             mechs = list(object.originMechanisms)
         num_mechs = len(mechs)
         # MODIFIED 2/16/17 END
-        num_input_sets = 0
-        executions_remain = True
-        input_num = 0
         inputs_array = np.array(inputs)
-        while executions_remain:
-            try:
+        for execution_set_num in range(inputs_array.shape[EXECUTION_SET_DIM]):
+            execution_set = inputs_array[execution_set_num]
+                # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
+                # If inputs_array is just a list of numbers and its length equals the input to the mechanism
+                #    then there is just one input and one execution
+            for phase_num in range(num_phases):
+                inputs_for_phase = execution_set[phase_num]
+                if len(inputs_for_phase) != num_mechs:
+                    raise("PROGRAM ERROR num_phases != num_mechs")
                 for mech_num in range(num_mechs):
+                    input_for_mech = inputs_for_phase[mech_num]
                     if is_target:
                         # Assume mech is a ComparatorMechanism, and that the second item of the variable is the target
                         mech_len = np.size(mechs[mech_num].variable[1])
                     else:
                         mech_len = np.size(mechs[mech_num].variable)
-                    # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
-                    # If inputs_array is just a list of numbers and its length equals the input to the mechanism
-                    #    then there is just one input and one execution
-                    if inputs_array.ndim == 1 and len(inputs) == mech_len:
-                        input_num += 1
-                        executions_remain = False
+                    if mech_len != len(input_for_mech):
                         continue
-                    input = np.take(inputs_array,input_num,EXECUTION_SET_DIM)
-                    # MODIFIED 2/16/17 END
-                    if np.size(input) != mech_len * num_phases:
-                       # If size of input didn't match length of mech variable (times the number of phases),
-                       #  may be that inputs for each mech are embedded within list/array
-                        if isinstance(input, Iterable):
-                            inner_input_num = 0
-                            for inner_input in input:
-                                mech_len = np.size(mechs[inner_input_num].variable)
-                                # Handles assymetric input lengths:
-                                if (isinstance(inner_input, Iterable) and
-                                            np.size(np.concatenate(inner_input)) != mech_len * num_phases):
-                                    for item in inner_input:
-                                        if np.size(item) != mech_len * num_phases:
-                                            raise RunError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                              "of input for {} in execution {}".
-                                                              format(len(inputs[inner_input_num]),
-                                                                     inputs[inner_input_num],
-                                                                     mech_len,
-                                                                     append_type_to_name(mechs[inner_input_num],'mechanism'),
-                                                                     num_input_sets))
-                                        inner_input_num += 1
-                                        mech_len = np.size(mechs[inner_input_num].variable)
-                                elif np.size(inner_input) != mech_len * num_phases:
-                                    raise RunError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                      "of input for {} in execution {}".
-                                                      format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
-                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_input_sets))
-                                else:
+                   # If size of input didn't match length of mech variable (times the number of phases),
+                   #  may be that inputs for each mech are embedded within list/array
+                    if isinstance(input_for_mech, Iterable):
+                        inner_input_num = 0
+                        for inner_input in input_for_mech:
+                            mech_len = np.size(mechs[inner_input_num].variable)
+                            # Handles assymetric input lengths:
+                            if (isinstance(inner_input, Iterable) and
+                                        np.size(np.concatenate(inner_input)) != mech_len * num_phases):
+                                for item in inner_input:
+                                    if np.size(item) != mech_len * num_phases:
+                                        raise RunError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                          "of input for {} in execution {}".
+                                                          format(len(inputs[inner_input_num]),
+                                                                 inputs[inner_input_num],
+                                                                 mech_len,
+                                                                 append_type_to_name(mechs[inner_input_num],'mechanism'),
+                                                                 execution_set_num))
                                     inner_input_num += 1
-                            input_num += 1
-                            break
-                    input_num += 1
-                num_input_sets += 1
-            except IndexError:
-                executions_remain = False
+                                    mech_len = np.size(mechs[inner_input_num].variable)
+                            elif np.size(inner_input) != mech_len * num_phases:
+                                raise RunError("Length ({}) of stimulus ({}) does not match length ({}) "
+                                                  "of input for {} in execution {}".
+                                                  format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
+                                                  append_type_to_name(mechs[inner_input_num],'mechanism'), execution_set_num))
+                            else:
+                                inner_input_num += 1
+                        break
 
-        return num_input_sets
+        return execution_set_num
 
     else:
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
