@@ -309,7 +309,7 @@ execution, as input to mechanisms that close recurrent loops (designated as <a c
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The system will execute learning if it is specified for any process in the system.  The system&#8217;s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the system. Learning is executed for any
 components (individual projections or processes) for which it is specified after all processing mechanisms in the
 system have been executed, but before the controller is executed (see below). The stimuli (both inputs and targets for
@@ -720,8 +720,8 @@ jupyter will just return the graph to the output stream, ideal for working in ju
 </dd></dl>
 
 <dl class="class">
-<dt id="System.SystemTargetInputState">
-<em class="property">class </em><code class="descclassname">System.</code><code class="descname">SystemTargetInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.SystemTargetInputState" title="Permalink to this definition">¶</a></dt>
+<dt id="System.SystemInputState">
+<em class="property">class </em><code class="descclassname">System.</code><code class="descname">SystemInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.SystemInputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encodes target for the system and transmits it to a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the system</p>
 <p>Each instance encodes a <code class="xref any docutils literal"><span class="pre">target</span></code> to the system (also a 1d array in 2d array of
 <code class="xref any docutils literal"><span class="pre">targets</span></code>) and provides it to a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that projects to a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a></p>
