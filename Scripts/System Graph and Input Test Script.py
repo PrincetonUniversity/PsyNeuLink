@@ -191,7 +191,8 @@ s.show()
 if show_graph:
     s.show_graph(direction='LR')
 
-inputs=[[1,1]]
+# inputs=[[1,1]]
+inputs={a:[1,1]}
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -217,7 +218,8 @@ s.show()
 if show_graph:
     s.show_graph(direction='LR')
 
-inputs=[[1,1]]
+# inputs=[[1,1]]
+inputs={a:[1,1]}
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])

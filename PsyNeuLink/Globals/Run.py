@@ -604,24 +604,6 @@ def run(object,
             if object_type == SYSTEM:
                 object.inputs = input
 
-            # # MODIFIED 2/13/17 NEW:
-            # # Assign inputs
-            # if object_type == SYSTEM:
-            #     # Note: the following assumes that the order of the items in inputs is alligned with
-            #     #       the oreder of the ORIGIN mechanisms in the sytem's originMechanisms list;
-            #     #       it is tested for dict format in _construct_stimulus_sets,
-            #     #       but can't be insured for list format.
-            #     # For each ORIGIN mechanism in the system's targetMechanismList
-            #     for i, origin_mech in zip(range(len(objectoriginMechanisms)), object.originMechanisms):
-            #     # Assign each item of input to the value of the stimulusInputState for the ORIGIN mechanism
-            #     #    and zero the value of all ProcessInputStates that project to the ORIGIN mechanism
-            #         object.targetInputStates[i].value = targets[input_num][i]
-            #         for process_target_projection in \
-            #                 target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
-            #             process_target_projection.sender.value = process_target_projection.sender.value * 0
-            # # WHAT ABOUT IF IT IS A PROCESS??
-            # # MODIFIED 2/13/17 END
-
             # Assign targets:
             if targets is not None:
 
@@ -1077,8 +1059,6 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                                      object.name,
                                      len(object.originMechanisms)))
 
-        # FIX ERROR MESSAGES BELOW
-        # MULTILAYER LEARNING TEST SCRIPT VARIATIONS:  INPUTS ARE ZERO
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         if is_target:
             mechs = list(object.targetMechanisms)
@@ -1092,15 +1072,23 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             for phase_num in range(num_phases):
                 inputs_for_phase = execution_set[phase_num]
                 if len(inputs_for_phase) != num_mechs:
-                    raise("PROGRAM ERROR num mechs in phase is bad")
+                    raise RunError("Number of mechanisms ({}) in input for phase {} should be {}".
+                                   format(len(inputs_for_phase), phase_num, num_mechs))
                 for mech_num in range(num_mechs):
                     input_for_mech = inputs_for_phase[mech_num]
                     if len(input_for_mech) != len(mechs[mech_num].inputValue):
-                        raise("PROGRAM ERROR num state inputs is bad for mech")
+                        raise RunError("Number of states ({}) in input for {} should be {}".
+                                       format(len(input_for_mech),
+                                              mechs[mech_num].name,
+                                              len(mechs[mech_num].inputValue)))
                     for state_num in range(len(input_for_mech)):
                         input_for_state = mechs[mech_num].inputValue[state_num]
                         if len(input_for_state) != len(mechs[mech_num].inputValue[state_num]):
-                            raise("PROGRAM ERROR length of state is bad for state")
+                            raise RunError("Length of state {} ({}) in input for {} should be {}".
+                                           format(list(mechs[mech_num].inputStates)[state_num],
+                                                  len(input_for_state),
+                                                  mechs[mech_num].name,
+                                                  len(mechs[mech_num].inputValue[state_num])))
         return num_execution_sets
 
     else:
