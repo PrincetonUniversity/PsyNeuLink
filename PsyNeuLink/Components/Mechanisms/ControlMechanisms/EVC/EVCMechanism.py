@@ -832,14 +832,9 @@ class EVCMechanism(ControlMechanism_Base):
             self.predictionProcesses.append(prediction_process)
 
         # Assign predicted_inputs
-        # # MODIFIED 2/18/17 OLD:
         self.predictedInput = {}
-        # for i in range(len(self.system.originMechanisms)):
-        #     self.predictedInput.append(self.system.processes[i].originMechanisms[0].inputValue)
-        # MODIFIED 2/18/17 NEW:
         for i, origin_mech in zip(range(len(self.system.originMechanisms)), self.system.originMechanisms):
             self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].inputValue
-        # MODIFIED 2/18/17 END
 
 
     def _instantiate_monitoring_mechanism(self, context=None):

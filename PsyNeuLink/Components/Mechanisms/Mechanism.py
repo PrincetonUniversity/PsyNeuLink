@@ -1579,10 +1579,15 @@ class Mechanism_Base(Mechanism):
             mechanism_string = ' '
         else:
             mechanism_string = ' mechanism'
+
+        if not isinstance(input, Iterable):
+            input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        else:
+            input_string = input
         print ("\n\'{}\'{} executed:\n- input:  {}".
                format(self.name,
                       mechanism_string,
-                      [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
+                      input_string))
 
         if params:
             print("- params:")
@@ -1595,11 +1600,7 @@ class Mechanism_Base(Mechanism):
                 param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Component):
-                    # # MODIFIED 2/14/17 OLD:
-                    # param = param_value.__self__.__name__
-                    # MODIFIED 2/14/17 NEW:
                     param = param_value.name
-                    # MODIFIED 2/14/17 END
                     param_is_function = True
                 elif isinstance(param_value, type(Component)):
                     param = param_value.__name__
@@ -1614,29 +1615,28 @@ class Mechanism_Base(Mechanism):
                         print ("\t\t{}: {}".
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
-        # # MODIFIED 12/9/16 OLD:
-        # print("- output: {}".
-        #       format(re.sub('[\[,\],\n]','',str(output))))
-        # MODIFIED 12/9/16 NEW:
-        print("- output: {}".
-              format(re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))))
-        # MODIFIED 12/9/16 END
 
-#     def adjust_function(self, params, context=None):
-#         """Modify control_signal_allocations while process is executing
-#
-#         called by process.adjust()
-#         returns output after either one time_step or full trial (determined by current setting of time_scale)
-#
-#         :param self:
-#         :param params: (dict)
-#         :param context: (optional)
-#         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-#         """
-#
-#         self._assign_defaults(self.inputState, params)
-# # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
-#         return self.outputState.value
+        if not isinstance(output, Iterable):
+            output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        else:
+            output_string = output
+        print("- output: {}".format(output_string))
+
+    # def adjust_function(self, params, context=None):
+    #     """Modify control_signal_allocations while process is executing
+    #
+    #     called by process.adjust()
+    #     returns output after either one time_step or full trial (determined by current setting of time_scale)
+    #
+    #     :param self:
+    #     :param params: (dict)
+    #     :param context: (optional)
+    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+    #     """
+    #
+    #     self._assign_defaults(self.inputState, params)
+    # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
+    #     return self.outputState.value
 
     # def terminate_execute(self, context=None):
     #     """Terminate the process
