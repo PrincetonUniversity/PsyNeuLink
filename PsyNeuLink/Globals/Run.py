@@ -600,6 +600,9 @@ def run(object,
                 call_before_time_step()
 
             input_num = execution%len(inputs)
+            input = inputs[input_num][time_step]
+            if object_type == SYSTEM:
+                object.inputs = input
 
             # # MODIFIED 2/13/17 NEW:
             # # Assign inputs
@@ -644,7 +647,7 @@ def run(object,
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-            result = object.execute(inputs[input_num][time_step],clock=clock, time_scale=time_scale, context=context)
+            result = object.execute(input, clock=clock, time_scale=time_scale, context=context)
 
             if call_after_time_step:
                 call_after_time_step()
@@ -1015,14 +1018,10 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
     elif object_type is SYSTEM:
 
-        # MODIFIED 2/16/17 OLD:
-        # num_phases = num_phases or object.numPhases
-        # # MODIFIED 2/16/17 NEW:
         if is_target:
             num_phases = 1
         else:
             num_phases = num_phases or object.numPhases
-        # MODIFIED 2/16/17 END
 
         if not isinstance(inputs, np.ndarray):
             # raise RunError("PROGRAM ERROR: inputs must an ndarray")
@@ -1046,12 +1045,6 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         else:
             raise RunError("Unknown data type for inputs in {}".format(object.name))
 
-        # # MODIFIED 2/17/17 OLD:
-        # # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
-        # # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
-        # expected_dim = 3 + process_structure
-
-        # MODIFIED 2/17/17 NEW:
         if is_target:   # No phase dimension, so one less than for stimulus inputs
             # If targets are homogeneous, inputs.ndim should be 4:
             # If targets are heterogeneous:
@@ -1073,9 +1066,6 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             else:
                 raise RunError("PROGRAM ERROR: Unexepcted shape of intputs: {}".format(inputs.shape))
 
-
-        # MODIFIED 2/17/17 END
-
         if inputs.ndim != expected_dim:
             raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
                               format(object.name, expected_dim))
@@ -1087,36 +1077,24 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                                      object.name,
                                      len(object.originMechanisms)))
 
-        # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
-
+        # FIX ERROR MESSAGES BELOW
+        # MULTILAYER LEARNING TEST SCRIPT VARIATIONS:  INPUTS ARE ZERO
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
-        # Calcluate total number of executions
-        # # MODIFIED 2/16/17 OLD:
-        # num_mechs = len(object.originMechanisms)
-        # mechs = list(object.originMechanisms)
-        # MODIFIED 2/16/17 NEW:
         if is_target:
             mechs = list(object.targetMechanisms)
         else:
             mechs = list(object.originMechanisms)
         num_mechs = len(mechs)
-        # MODIFIED 2/16/17 END
         inputs_array = np.array(inputs)
         num_execution_sets = inputs_array.shape[EXECUTION_SET_DIM]
         for execution_set_num in range(num_execution_sets):
             execution_set = inputs_array[execution_set_num]
-                # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
-                # If inputs_array is just a list of numbers and its length equals the input to the mechanism
-                #    then there is just one input and one execution
             for phase_num in range(num_phases):
                 inputs_for_phase = execution_set[phase_num]
                 if len(inputs_for_phase) != num_mechs:
                     raise("PROGRAM ERROR num mechs in phase is bad")
                 for mech_num in range(num_mechs):
                     input_for_mech = inputs_for_phase[mech_num]
-                    # if len(input_for_mech) != len(input_states):
-                    #     raise("PROGRAM ERROR num state inputs is bad for mech")
-                    # for input_for_state in input_states:
                     if len(input_for_mech) != len(mechs[mech_num].inputValue):
                         raise("PROGRAM ERROR num state inputs is bad for mech")
                     for state_num in range(len(input_for_mech)):

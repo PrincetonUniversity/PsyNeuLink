@@ -104,7 +104,7 @@ def print_header():
 
 def show_target():
     print ('\n\nInput: {}\nTarget: {}\n'.
-           format(z.input, z.target))
+           format(x.inputs, x.targets))
     print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
