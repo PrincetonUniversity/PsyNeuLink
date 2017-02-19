@@ -150,8 +150,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
         self.allocation_policy = self.inputValue
 
         # Call super to instantiate outputStates
+        # Note: params carries any specified with ControlProjection for the control_signal
         super()._instantiate_control_projection(projection=projection,
-                                             context=context)
+                                                params=params,
+                                                context=context)
 
     def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism

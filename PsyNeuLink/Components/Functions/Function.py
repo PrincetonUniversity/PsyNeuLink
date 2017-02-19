@@ -1494,7 +1494,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             is_not_1D = not self.variable.ndim is 1
 
         except AttributeError:
-            raise FunctionError("PROGRAM ACTIVATION_ERROR: variable ({0}) for {1} should be an np.ndarray".
+            raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be an np.ndarray".
                                format(self.variable, self.__class__.__name__))
         else:
             if is_not_1D:

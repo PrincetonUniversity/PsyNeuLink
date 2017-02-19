@@ -448,7 +448,9 @@ def convert_to_np_array(value, dimension):
         value = np.atleast_1d(value)
     elif dimension is 2:
         from numpy import ndarray
-        if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
+        # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
+        value = np.array(value)
+        if value.dtype==object and len(value) == 2:
             pass
         else:
             value = np.atleast_2d(value)
@@ -510,11 +512,13 @@ def underscore_to_camelCase(item):
 def append_type_to_name(object, type=None):
     name = object.name
     # type = type or object.componentType
-    type = type or object.__class__.__base__.__base__.__base__.__name__
+    # type = type or object.__class__.__base__.__base__.__base__.__name__
+    type = type or object.__class__.__base__.__name__
     if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
         string = name
     else:
         string = "\'" + name +  "\'" + ' ' + type.lower()
+        # string = name + ' ' + type.lower()
     return string
 
 #endregion

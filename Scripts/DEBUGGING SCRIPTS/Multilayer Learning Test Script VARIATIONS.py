@@ -104,7 +104,7 @@ def print_header():
 
 def show_target():
     print ('\n\nInput: {}\nTarget: {}\n'.
-           format(z.input, z.target))
+           format(x.inputs, x.targets))
     print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
@@ -116,24 +116,25 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 
 # z.execute()
 
-# PROCESS VERSION:
-z.run(num_executions=10,
+# # PROCESS VERSION:
+# z.run(num_executions=10,
+#       # inputs=stim_list,
+#       inputs=[[-1, 30],[2, 10]],
+#       targets=[[0, 0, 1],[0, 0, 1]],
+#       # inputs=stim_list,
+#       # targets=target_list,
+#       call_before_trial=print_header,
+#       call_after_trial=show_target)
+
+# SYSTEM VERSION:
+x = system(processes=[z],
+           targets=[0, 0, 1])
+# x.show_graph()
+x.run(num_executions=10,
+      # inputs=stim_list,
       # inputs=[[-1, 30],[2, 10]],
       # targets=[[0, 0, 1],[0, 0, 1]],
       inputs=stim_list,
       targets=target_list,
       call_before_trial=print_header,
       call_after_trial=show_target)
-
-# # SYSTEM VERSION:
-# x = system(processes=[z],
-#            targets=[0, 0, 1])
-# # x.show_graph()
-# x.run(num_executions=10,
-#       # inputs=stim_list,
-#       # inputs=[[-1, 30],[2, 10]],
-#       # targets=[[0, 0, 1],[0, 0, 1]],
-#       inputs=stim_list,
-#       targets=target_list,
-#       call_before_trial=print_header,
-#       call_after_trial=show_target)

@@ -388,7 +388,7 @@ def _compute_EVC(args):
 
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
-    ctlr.run_simulation(inputs=list(ctlr.predictedInput),
+    ctlr.run_simulation(inputs=ctlr.predictedInput,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
                         time_scale=time_scale,
