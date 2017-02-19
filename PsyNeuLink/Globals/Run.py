@@ -362,20 +362,20 @@ STATE_DIM = 3  # Note: only meaningful if mechanisms are homnogenous (i.e., all 
 # Axis 2             |--------mech---------|   |--------mech---------|       |--------mech---------|   |--------mech---------|
 # Axis 3               |-state--|-state--|       |-state--|-state--|           |-state--|-state--|       |-state--|-state--|
 #
-# HOMOGENOUS:
+# HOMOGENOUS: (ndim = 5)
 # a = np.array([ [ [ [ [ 0, 0 ] , [ 1, 1 ] ] , [ [ 2, 2 ] , [ 3, 3 ] ] ] , [ [ [ 4, 4 ] , [ 5, 5 ] ] , [ [ 6, 6 ] , [ 7, 7 ] ] ] ] ,
 #                [ [ [ [ 8, 8 ] , [ 9, 9 ] ] , [ [10, 10] , [11, 11] ] ] , [ [ [12, 12] , [13, 13] ] , [ [14, 14] , [15, 15] ] ] ] ])
 #
 # HETEROGENOUS:
-# State sizes
+# State sizes (ndim = 4)
 # b = np.array([ [ [ [ [    0 ] , [ 1, 1 ] ] , [ [    2 ] , [ 3, 3 ] ] ] , [ [ [    4 ] , [ 5, 5 ] ] , [ [    6 ] , [ 7, 7 ] ] ] ] ,
 #                [ [ [ [    8 ] , [ 9, 9 ] ] , [ [    10] , [    11] ] ] , [ [ [    12] , [    13] ] , [ [    14] , [    15] ] ] ] ])
 #
-# States per mechanism
+# States per mechanism  (ndim = 3)
 # c = np.array([ [ [ [ [ 0, 0 ]            ] , [ [ 2, 2 ] , [ 3, 3 ] ] ] , [ [            [ 5, 5 ] ] , [ [ 6, 6 ] , [ 7, 7 ] ] ] ] ,
 #                [ [ [ [ 8, 8 ]            ] , [ [10, 10] , [11, 11] ] ] , [ [            [13, 13] ] , [ [14, 14] , [15, 15] ] ] ] ])
 #
-# Both
+# Both (ndim = 3)
 # d = np.array([ [ [ [ [    0 ]            ] , [ [ 2, 2 ] , [    3 ] ] ] , [ [ [    4 ]            ] , [ [ 6, 6 ] , [    7 ] ] ] ] ,
 #                [ [ [ [    8 ]            ] , [ [10, 10] , [    11] ] ] , [ [ [    12]            ] , [ [14, 14] , [    15] ] ] ] ])
 
@@ -566,6 +566,14 @@ def run(object,
     num_inputs_sets = _validate_inputs(object=object, inputs=inputs, context=context)
     if targets is not None:
         _validate_targets(object, targets, num_inputs_sets, context=context)
+
+    if object.verbosePref:
+        shape = inputs.shape
+        print('Inputs for run of {}: \n'
+              '- executions: {}\n'
+              '- phases per execution: {}\n'
+              '- mechanisms per execution: {}\n'.
+              format(object.name, shape[EXECUTION_SET_DIM], shape[PHASE_DIM], shape[MECHANISM_DIM]))
 
     # INITIALIZATION
     if reset_clock:
@@ -950,14 +958,22 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
                        format(object_type))
 
-    # try:
-    #     stim_list = np.array(stim_list)
-    # except ValueError:
-    #     for i in range(len(stim_list[0][0])):
-    #         stim_list[0][0][i][0]
-    #         stim_list[0][0][i] = np.array(stim_list[0][0][i])
-    #     stim_list = np.array(stim_list)
-    #
+    try:
+        stim_list = np.array(stim_list)
+    except ValueError:
+        # for i in range(len(stim_list[0][0])):
+        #     stim_list[0][0][i][0]
+        #     stim_list[0][0][i] = np.array(stim_list[0][0][i])
+        # for exec in range(len(stim_list)):
+        #     for phase in range(len(stim_list[exec])):
+        #         for mech in range(len(stim_list[exec][phase])):
+        #             stim_list[exec][phase][mech] = [stim_list[exec][phase][mech].tolist()]
+        for exec in range(len(stim_list)):
+            for phase in range(len(stim_list[exec])):
+                for mech in range(len(stim_list[exec][phase])):
+                    stim_list[exec][phase][mech] = stim_list[exec][phase][mech].tolist()
+        stim_list = np.array(stim_list)
+
     return np.array(stim_list)
 
 def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, context=None):
@@ -1012,18 +1028,21 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             # raise RunError("PROGRAM ERROR: inputs must an ndarray")
             inputs = np.array(inputs)
 
-        # Determine whether the number of states/mech is homogenous (used to determine dim below)
-        num_states_first = len(object.originMechanisms[0].inputStates)
-        if all(len(mech.inputStates) == num_states_first for mech in object.originMechanisms):
-            states_per_mech = HOMOGENOUS
-        else:
-            states_per_mech = HETEROGENOUS
-
-
+        states_per_mech_heterog = False
+        size_of_states_heterog = False
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
             input_homogenity = HOMOGENOUS
         elif inputs.dtype is np.dtype('O'):
             input_homogenity = HETEROGENOUS
+            # Determine whether the number of states/mech is homogenous
+            num_states_in_first_mech = len(object.originMechanisms[0].inputStates)
+            if any(len(mech.inputStates) != num_states_in_first_mech for mech in object.originMechanisms):
+                states_per_mech_heterog = True
+            # Determine whether the size of all states is homogenous
+            size_of_first_state = len(list(object.originMechanisms[0].inputStates.values())[0].value)
+            for origin_mech in object.originMechanisms:
+                if any(len(state.value) != size_of_first_state for state in origin_mech.inputStates.values()):
+                    size_of_states_heterog = True
         else:
             raise RunError("Unknown data type for inputs in {}".format(object.name))
 
@@ -1038,13 +1057,23 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             # If targets are heterogeneous:
             #   if states/mech are homogenous, inputs.ndim should be 3
             #   if states/mech are heterogenous, inputs.ndim should be 2
-            expected_dim = 2 + input_homogenity + states_per_mech
+            expected_dim = 2 + input_homogenity + states_per_mech_heterog
         else: # Stimuli, which have phases, so one extra dimension
             # If inputs are homogeneous, inputs.ndim should be 5;
             # If inputs are heterogeneous:
-            #   if states/mech are homogenous, inputs.ndim should be 4
+            #   if states sizes are heterogenous, inputs.ndim should be 4
             #   if states/mech are heterogenous, inputs.ndim should be 3
-            expected_dim = 3 + input_homogenity + states_per_mech
+            #   if both are heterogenouse, inputs.ndim should be 3
+            if input_homogenity:
+                expected_dim = 5
+            elif states_per_mech_heterog:
+                expected_dim = 3
+            elif size_of_states_heterog:
+                expected_dim = 4
+            else:
+                raise RunError("PROGRAM ERROR: Unexepcted shape of intputs: {}".format(inputs.shape))
+
+
         # MODIFIED 2/17/17 END
 
         if inputs.ndim != expected_dim:
@@ -1091,12 +1120,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                         input_num += 1
                         executions_remain = False
                         continue
-                    # MODIFIED 2/16/17 OLD:
-                    # input = np.take(inputs_array,input_num,inputs_array.ndim-2)
-                    # # MODIFIED 2/18/17 NEW:
-                    # input = np.take(inputs_array,input_num,0)
-                    # input = inputs_array[input_num][mech_num]
-                    input = np.take(inputs_array,input_num,MECHANISM_DIM)
+                    input = np.take(inputs_array,input_num,EXECUTION_SET_DIM)
                     # MODIFIED 2/16/17 END
                     if np.size(input) != mech_len * num_phases:
                        # If size of input didn't match length of mech variable (times the number of phases),
