@@ -611,7 +611,7 @@ def run(object,
                     object.target = targets
 
                 elif object_type == PROCESS:
-                    object.target = targets[input_num]
+                    object.target = targets[input_num][time_step]
 
                 elif object_type == SYSTEM:
                     # Note: the following assumes that the order of the items in targets is alligned with
