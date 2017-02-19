@@ -118,11 +118,10 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 
 # PROCESS VERSION:
 z.run(num_executions=10,
-      # inputs=stim_list,
-      inputs=[[-1, 30],[2, 10]],
-      targets=[[0, 0, 1],[0, 0, 1]],
-      # inputs=stim_list,
-      # targets=target_list,
+      # inputs=[[-1, 30],[2, 10]],
+      # targets=[[0, 0, 1],[0, 0, 1]],
+      inputs=stim_list,
+      targets=target_list,
       call_before_trial=print_header,
       call_after_trial=show_target)
 
