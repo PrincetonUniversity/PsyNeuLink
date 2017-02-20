@@ -181,7 +181,7 @@ class Composition(object):
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        if mech not in init_cycle_mechanisms:
+                        if mech not in self.init_cycle_mechanisms:
                             self.set_init_cycle(mech) # Set the parent as Init_cycle
                         if child not in self.cycle_mechanisms:
                             self.set_cycle(child) # And the child as Cycle
