@@ -1651,6 +1651,7 @@ class System_Base(System):
 
     def execute(self,
                 input=None,
+                execution_token=None,
                 clock=CentralClock,
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL
@@ -1696,6 +1697,9 @@ class System_Base(System):
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
+
+        self._execution_token = execution_token
+
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -1799,7 +1803,8 @@ class System_Base(System):
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (clock.time_step % self.numPhases):
-                    self.controller.execute(clock=clock,
+                    self.controller.execute(execution_token=self._execution_token,
+                                            clock=clock,
                                             time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
                                             context=context)
@@ -1833,13 +1838,14 @@ class System_Base(System):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(time_scale=self.timeScale,
-                                 # time_scale=time_scale,
-                                 runtime_params=params,
-                                 clock=clock,
-                                 context=context +
-                                         "| mechanism: " + mechanism.name +
-                                         " [in processes: " + str(process_names) + "]")
+                mechanism.execute(execution_token=self._execution_token,
+                                  clock=clock,
+                                  time_scale=self.timeScale,
+                                  # time_scale=time_scale,
+                                  runtime_params=params,
+                                  context=context +
+                                          "| mechanism: " + mechanism.name +
+                                          " [in processes: " + str(process_names) + "]")
 
 
                 if self._report_system_output and  self._report_process_output:
@@ -1897,7 +1903,8 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(clock=clock,
+            component.execute(execution_token=self._execution_token,
+                              clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               context=context_str)
@@ -1925,7 +1932,8 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(clock=clock,
+            component.execute(execution_token=self._execution_token,
+                              clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               context=context_str)

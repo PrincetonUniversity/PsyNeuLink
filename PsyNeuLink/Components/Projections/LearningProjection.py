@@ -1033,7 +1033,7 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    def execute(self, input=None, execution_token=None, clock=CentralClock, time_scale=None, params=None, context=None):
     # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
         DOCUMENT:
@@ -1059,14 +1059,12 @@ FROM TODO:
 
         :return: (2D np.array) self.weightChangeMatrix
         """
+
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
-        # # MODIFIED 12/20/16 NEW:
-        # if self.monitoringMechanism.status is UNCHANGED:
-        #     return np.zeros_like(self.value)
-        # # MODIFIED 12/20/16 END
+        self._execution_token = execution_token
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from MappingProjection's sender mechanism's outputState

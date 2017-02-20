@@ -631,7 +631,11 @@ def run(object,
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-            result = object.execute(input, execution_token, clock=clock, time_scale=time_scale, context=context)
+            result = object.execute(input=input,
+                                    execution_token=execution_token,
+                                    clock=clock,
+                                    time_scale=time_scale,
+                                    context=context)
 
             if call_after_time_step:
                 call_after_time_step()

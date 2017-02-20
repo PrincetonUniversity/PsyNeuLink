@@ -275,7 +275,8 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                                            prefs=prefs,
                                            context=context)
 
-    def execute(self, variable=None, params=None, context=None):
+    def execute(self, variable=None, execution_token=None, params=None, context=None):
+        self._execution_token = execution_token
         return self.function(variable=variable, params=params, context=context)
 
     @property

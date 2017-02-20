@@ -1922,6 +1922,7 @@ class Process_Base(Process):
                 input=None,
                 # params=None,
                 target=None,
+                execution_token=None,
                 clock=CentralClock,
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL,
@@ -1972,6 +1973,8 @@ class Process_Base(Process):
 
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
+
+        self._execution_token = execution_token
 
         # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -2028,7 +2031,8 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.execute(clock=clock,
+            mechanism.execute(execution_token=self._execution_token,
+                              clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               runtime_params=params,

@@ -1205,13 +1205,19 @@ class State_Base(State):
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection):
                 if LEARNING in context:
-                    projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                    projection_value = projection.execute(execution_token=self._execution_token,
+                                                          time_scale=time_scale,
+                                                          params=projection_params,
+                                                          context=context)
                 else:
                     projection_value = projection.value
 
             else:
                 # Update all non-LearningProjections and get value
-                projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                projection_value = projection.execute(execution_token=self._execution_token,
+                                                      params=projection_params,
+                                                      time_scale=time_scale,
+                                                      context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
             if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
@@ -1252,7 +1258,8 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, execution_token=None, time_scale=None, params=None, context=None):
+        self._execution_token = execution_token
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
