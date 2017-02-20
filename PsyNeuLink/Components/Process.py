@@ -1974,7 +1974,8 @@ class Process_Base(Process):
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
 
-        self._execution_token = execution_token
+        from PsyNeuLink.Globals.Run import _get_execution_token
+        self._execution_token = execution_token or _get_execution_token()
 
         # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and context and EXECUTING in context

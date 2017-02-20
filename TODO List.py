@@ -2,6 +2,13 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX: execution_token asynchrony:
+#      Since learning and controller execute after processing mechanisms:
+#      - on the first pass, they ignore learning and control projections (since their excxecution_tokens == None
+#      - on subsequent passes, they have the new (current) execution_token, while learning and control mechanisms
+#             still have the last one
+#      Also, which execution_token should be used for simulations (while simulation uses actual system rather than copy)
+#
 # FIX:
 # Finish Run:
 #     assignment of inputs (for both Process and System):  consolidation from process and system execute methods

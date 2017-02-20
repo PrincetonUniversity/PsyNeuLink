@@ -1141,6 +1141,8 @@ class State_Base(State):
 
     """
 
+        self._execution_token = self.owner._execution_token
+
         #region GET STATE-SPECIFIC PARAM_SPECS
         try:
             # Get State params
@@ -1178,14 +1180,20 @@ class State_Base(State):
 
         for projection in self.receivesFromProjections:
 
-            # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
-            # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
             from PsyNeuLink.Components.Process import ProcessInputState
             sender = projection.sender
+
+            # MODIFIED 2/19/17 NEW:
+            # Only update if sender has also executed in this round (i.e., has matching execution_token)
+            if sender.owner._execution_token != self._execution_token:
+                continue
+            # MODIFIED 2/19/17 END
+
+            # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
+            # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
                     continue
-
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
