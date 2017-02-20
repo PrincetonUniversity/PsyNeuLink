@@ -1033,7 +1033,7 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def execute(self, input=None, execution_token=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
     # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
         DOCUMENT:
@@ -1063,8 +1063,6 @@ FROM TODO:
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
-
-        self._execution_token = execution_token
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from MappingProjection's sender mechanism's outputState

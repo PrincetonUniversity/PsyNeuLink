@@ -255,7 +255,6 @@ class Component(object):
         + _variable_not_specified
         + variable (value)
         + variable_np_info (ndArrayInfo)
-        + _execution_token (uuid)
         + function (method)
         + function_object (Function)
         + paramClassDefaults:
@@ -341,8 +340,6 @@ class Component(object):
         self.paramInstanceDefaults = {}
 
         self.componentName = self.componentType
-        self._execution_token = None
-
         #endregion
 
         #region ENFORCE REGISRY
@@ -1828,7 +1825,7 @@ class Component(object):
         # FIX:    AS WELL AS HOW IT HANDLES RETURN VALUES (RE: outputStates AND self.value??
         # ANSWER: MUST BE self.execute AS THE VALUE OF AN OBJECT IS THE OUTPUT OF ITS EXECUTE METHOD, NOT ITS FUNCTION
         # self.value = self.function(context=context+kwSeparator+COMPONENT_INIT)
-        self.value = self.execute(execution_token=None, context=context)
+        self.value = self.execute(context=context)
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         self._value_template = self.value
@@ -1855,7 +1852,7 @@ class Component(object):
     def _update_value(self, context=None):
         """Evaluate execute method
         """
-        self.value = self.execute(execution_token=self._execution_token, context=context)
+        self.value = self.execute(context=context)
 
     @property
     def variable(self):

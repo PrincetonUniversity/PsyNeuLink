@@ -431,7 +431,7 @@ class MappingProjection(Projection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, input=None, execution_token=None, clock=CentralClock, time_scale=None, params=None, context=None):
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
     # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
@@ -446,8 +446,6 @@ class MappingProjection(Projection_Base):
         frequent cases (i.e., *no* learningSignal).
 
         """
-
-        self._execution_token = execution_token
 
         # FIX: NEED TO EXECUTE PROJECTIONS TO PARAMS HERE (PER update_parameter_state FOR A MECHANISM)
 

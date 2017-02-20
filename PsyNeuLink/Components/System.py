@@ -779,6 +779,8 @@ class System_Base(System):
                          prefs=prefs,
                          context=context)
 
+        self._execution_id = None
+
         # Get/assign controller
 
         # Controller is DefaultControlMechanism
@@ -1651,7 +1653,7 @@ class System_Base(System):
 
     def execute(self,
                 input=None,
-                execution_token=None,
+                execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL
@@ -1698,14 +1700,19 @@ class System_Base(System):
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
 
-        # Update execution_tokens for self, learning and control mechanisms
-        from PsyNeuLink.Globals.Run import _get_execution_token
-        self._execution_token = execution_token or _get_execution_token()
+        # Update execution_id for self and all mechanisms in graph (including learning) and controller
+        from PsyNeuLink.Globals.Run import _get_get_execution_id
+        self._execution_id = execution_id or _get_get_execution_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
         # self.learningExecutionList
+        for mech in self.execution_graph_mechs:
+            mech._execution_id = self._execution_id
         for learning_mech in self.learningExecutionList:
-            learning_mech._execution_token = self._execution_token
-        self.controller._execution_token = self._execution_token
+            learning_mech._execution_id = self._execution_id
+        self.controller._execution_id = self._execution_id
+        for state in self.controller.inputStates.values():
+            for projection in state.receivesFromProjections:
+                projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
@@ -1810,8 +1817,7 @@ class System_Base(System):
         if not EVC_SIMULATION in context and self.enable_controller:
             try:
                 if self.controller.phaseSpec == (clock.time_step % self.numPhases):
-                    self.controller.execute(execution_token=self._execution_token,
-                                            clock=clock,
+                    self.controller.execute(clock=clock,
                                             time_scale=TimeScale.TRIAL,
                                             runtime_params=None,
                                             context=context)
@@ -1845,8 +1851,7 @@ class System_Base(System):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(execution_token=self._execution_token,
-                                  clock=clock,
+                mechanism.execute(clock=clock,
                                   time_scale=self.timeScale,
                                   # time_scale=time_scale,
                                   runtime_params=params,
@@ -1910,8 +1915,7 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(execution_token=self._execution_token,
-                              clock=clock,
+            component.execute(clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               context=context_str)
@@ -1939,8 +1943,7 @@ class System_Base(System):
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(execution_token=self._execution_token,
-                              clock=clock,
+            component.execute(clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               context=context_str)

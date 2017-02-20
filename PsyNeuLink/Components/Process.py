@@ -828,6 +828,7 @@ class Process_Base(Process):
                                                  target=target,
                                                  params=params)
 
+        self._execution_id = None
         self.pathway = None
         # # MODIFIED 2/17/17 OLD:
         # self.input = None
@@ -1922,7 +1923,7 @@ class Process_Base(Process):
                 input=None,
                 # params=None,
                 target=None,
-                execution_token=None,
+                execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL,
@@ -1974,8 +1975,10 @@ class Process_Base(Process):
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
 
-        from PsyNeuLink.Globals.Run import _get_execution_token
-        self._execution_token = execution_token or _get_execution_token()
+        from PsyNeuLink.Globals.Run import _get_get_execution_id
+        self._execution_id = execution_id or _get_get_execution_id()
+        for mech in self.mechanisms:
+            mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -2032,8 +2035,7 @@ class Process_Base(Process):
             # CentralClock.time_step = i
 
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            mechanism.execute(execution_token=self._execution_token,
-                              clock=clock,
+            mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               runtime_params=params,

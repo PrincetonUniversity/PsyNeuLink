@@ -2,6 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
+#
+# FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+#                 if EVC == EVC_max: (LINE 289 IN EVCAuxilliary)
+
 # FIX: execution_token asynchrony:
 #    * Since learning and controller execute after processing mechanisms:
 #      - on the first pass, they ignore learning and control projections (since their excxecution_tokens == None
