@@ -3,11 +3,16 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # FIX: execution_token asynchrony:
-#      Since learning and controller execute after processing mechanisms:
+#    * Since learning and controller execute after processing mechanisms:
 #      - on the first pass, they ignore learning and control projections (since their excxecution_tokens == None
 #      - on subsequent passes, they have the new (current) execution_token, while learning and control mechanisms
 #             still have the last one
-#      Also, which execution_token should be used for simulations (while simulation uses actual system rather than copy)
+#      SOLUTION:  HAVE LEARNING AND CONTROL MECHANISMS GET THEIR execution_tokens FROM THEIR SYSTEM?
+#                 OR HAVE SYSTEM ASSIGN ITS LEARNING AND CONTROL MECHANISMS THE CURRENT execution_token??
+#
+#    * Same issue for learning in Process??
+#
+#    * Also, which execution_token should be used for simulations (while simulation uses actual system rather than copy)
 #
 # FIX:
 # Finish Run:

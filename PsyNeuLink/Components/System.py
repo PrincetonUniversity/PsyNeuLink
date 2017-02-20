@@ -1698,8 +1698,14 @@ class System_Base(System):
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
 
+        # Update execution_tokens for self, learning and control mechanisms
         from PsyNeuLink.Globals.Run import _get_execution_token
         self._execution_token = execution_token or _get_execution_token()
+        # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
+        # self.learningExecutionList
+        for learning_mech in self.learningExecutionList:
+            learning_mech._execution_token = self._execution_token
+        self.controller._execution_token = self._execution_token
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
