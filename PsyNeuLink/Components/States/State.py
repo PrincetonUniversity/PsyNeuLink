@@ -1141,8 +1141,6 @@ class State_Base(State):
 
     """
 
-        self._execution_token = self.owner._execution_token
-
         #region GET STATE-SPECIFIC PARAM_SPECS
         try:
             # Get State params
@@ -1181,12 +1179,22 @@ class State_Base(State):
         for projection in self.receivesFromProjections:
 
             from PsyNeuLink.Components.Process import ProcessInputState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             sender = projection.sender
 
             # MODIFIED 2/19/17 NEW:
-            # Only update if sender has also executed in this round (i.e., has matching execution_token)
-            if sender.owner._execution_token != self._execution_token:
-                continue
+            # Only update if sender has also executed in this round (i.e., has matching execution_id)
+            if isinstance(self.owner, (Mechanism, Process)):
+                if sender.owner._execution_id != self.owner._execution_id:
+                    continue
+            elif isinstance(self.owner, MappingProjection):
+                if sender.owner._execution_id != self.owner.sender.owner._execution_id:
+                    continue
+            else:
+                raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
+                                 "Mechanisms and MappingProjections".
+                                 format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
+
             # MODIFIED 2/19/17 END
 
             # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
@@ -1213,8 +1221,7 @@ class State_Base(State):
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection):
                 if LEARNING in context:
-                    projection_value = projection.execute(execution_token=self._execution_token,
-                                                          time_scale=time_scale,
+                    projection_value = projection.execute(time_scale=time_scale,
                                                           params=projection_params,
                                                           context=context)
                 else:
@@ -1222,8 +1229,7 @@ class State_Base(State):
 
             else:
                 # Update all non-LearningProjections and get value
-                projection_value = projection.execute(execution_token=self._execution_token,
-                                                      params=projection_params,
+                projection_value = projection.execute(params=projection_params,
                                                       time_scale=time_scale,
                                                       context=context)
 
@@ -1266,8 +1272,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=None, execution_token=None, time_scale=None, params=None, context=None):
-        self._execution_token = execution_token
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property

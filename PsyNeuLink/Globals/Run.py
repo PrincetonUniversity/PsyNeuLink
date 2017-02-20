@@ -591,7 +591,7 @@ def run(object,
     # EXECUTE
     for execution in range(num_executions):
 
-        execution_token = _get_execution_token()
+        execution_id = _get_get_execution_id()
 
         if call_before_trial:
             call_before_trial()
@@ -632,7 +632,7 @@ def run(object,
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
             result = object.execute(input=input,
-                                    execution_token=execution_token,
+                                    execution_id=execution_id,
                                     clock=clock,
                                     time_scale=time_scale,
                                     context=context)
@@ -1249,5 +1249,5 @@ def _get_obect_type(object):
     
 
 import uuid
-def _get_execution_token():
+def _get_get_execution_id():
     return uuid.uuid4()

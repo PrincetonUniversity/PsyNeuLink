@@ -789,6 +789,8 @@ class Mechanism_Base(Mechanism):
 
 # IMPLEMENT **args (PER State)
 
+        self._execution_id = None
+
         # Register with MechanismRegistry or create one
         if not context is kwValidate:
             register_category(entry=self,
@@ -1181,7 +1183,6 @@ class Mechanism_Base(Mechanism):
     def execute(self,
                 input=None,
                 runtime_params=None,
-                execution_token=None,
                 clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
                 context=None):
@@ -1289,7 +1290,6 @@ class Mechanism_Base(Mechanism):
         """
 
         context = context or NO_CONTEXT
-        self._execution_token = execution_token
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
