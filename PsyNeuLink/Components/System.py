@@ -1698,7 +1698,8 @@ class System_Base(System):
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
 
-        self._execution_token = execution_token
+        from PsyNeuLink.Globals.Run import _get_execution_token
+        self._execution_token = execution_token or _get_execution_token()
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
