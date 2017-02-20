@@ -67,10 +67,20 @@ for i in range(10):
     print(response.inputState.receivesFromProjections[1].matrix)
 
 # Execute system:
-mySystem.execute(input=[[1,1],[1,1]])
+# mySystem.execute(input=[[1,1],[1,1]])
+
+# mySystem.show_graph()
+#
+# stim_dict = {colors:[[1,0],[0,1]],
+#              words:[[0,1],[1,0]]}
+# target_dict= {response:[[1,0],[0,1]]}
+#
+# mySystem.run(num_executions=2,
+#              inputs=stim_dict,
+#              targets=target_dict)
+
 
 # SHOW OPTIONS:
 # mySystem.show()
 # mySystem.controller.show()
 
-# mySystem.show_graph()

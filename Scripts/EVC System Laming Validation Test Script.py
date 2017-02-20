@@ -66,26 +66,27 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
+# mySystem.show_graph()
 
 # Specify stimuli for run:
-#   two ways to do so:
+# #   two ways to do so:
+#
+# #   - as a dictionary of stimulus lists; for each entry:
+# #     key is name of an origin mechanism in the system
+# #     value is a list of its sequence of stimuli (one for each trial)
+# inputList = [0.5, 0.123]
+# rewardList = [20, 20]
+# # stim_list_dict = {Input:[0.5, 0.123],
+# #               Reward:[20, 20]}
 
-#   - as a dictionary of stimulus lists; for each entry:
-#     key is name of an origin mechanism in the system
-#     value is a list of its sequence of stimuli (one for each trial)
-inputList = [0.5, 0.123]
-rewardList = [20, 20]
-# stim_list_dict = {Input:[0.5, 0.123],
-#               Reward:[20, 20]}
+stim_list_dict = {Input:[0.5, 0.123],
+                  Reward:[20, 20]}
 
-stim_list_dict = {Input:[[0.5], [0.123]],
-              Reward:[[20], [20]]}
-
-#   - as a list of trials;
-#     each item in the list contains the stimuli for a given trial,
-#     one for each origin mechanism in the system
-trial_list = [[0.5, 20], [0.123, 20]]
-reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+# #   - as a list of trials;
+# #     each item in the list contains the stimuli for a given trial,
+# #     one for each origin mechanism in the system
+# trial_list = [[0.5, 20], [0.123, 20]]
+# reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
 
 # Create printouts function (to call in run):
 def show_trial_header():
@@ -107,6 +108,8 @@ def show_results():
 # Run system:
 
 mySystem.controller.reportOutputPref = False
+
+# mySystem.show_graph(direction='LR')
 
 # mySystem.run(inputs=trial_list,
 # # mySystem.run(inputs=reversed_trial_list,

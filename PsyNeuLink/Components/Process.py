@@ -540,7 +540,7 @@ class Process_Base(Process):
     COMMENT:
         Description
         -----------
-            Process is a Category of the Function class.
+            Process is a Category of the Component class.
             It implements a Process that is used to execute a sequence of mechanisms connected by projections.
             NOTES:
                 * if no pathway or time_scale is provided:
@@ -829,7 +829,11 @@ class Process_Base(Process):
                                                  params=params)
 
         self.pathway = None
-        self.input = None
+        # # MODIFIED 2/17/17 OLD:
+        # self.input = None
+        # MODIFIED 2/17/17 NEW:
+        self.input = []
+        # MODIFIED 2/17/17 END
         self.processInputStates = []
         self.function = self.execute
         self.targetInputStates = []
@@ -866,7 +870,7 @@ class Process_Base(Process):
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.variableClassDefault:
             self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        if variable:
+        if variable is not None:
             self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1605,7 +1609,9 @@ class Process_Base(Process):
             process_input_state = ProcessInputState(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
+            # MODIFIED 2/17/17 OLD:
             self.processInputStates.append(process_input_state)
+            # MODIFIED 2/17/17 END
 
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -1693,6 +1699,13 @@ class Process_Base(Process):
 
         return input
 
+    # MODIFIED 2/17/17 NEW:
+    def _update_input(self):
+        for s, i in zip(self.processInputStates, range(len(self.processInputStates))):
+            self.input = s.value
+        TEST = True
+    # MODIFIED 2/17/17 END
+
     def _instantiate__deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
 
@@ -1721,9 +1734,6 @@ class Process_Base(Process):
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
                 input_state._deferred_init()
-                # # MODIFIED 12/20/16 OLD:
-                # self._instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
-                # MODIFIED 12/20/16 NEW:
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
                 for projection in input_state.receivesFromProjections:
@@ -1733,7 +1743,6 @@ class Process_Base(Process):
                     except AttributeError:
                         pass
                 self._instantiate__deferred_init_projections(projections, context=context)
-                # MODIFIED 12/20/16 END
 
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
@@ -1797,13 +1806,7 @@ class Process_Base(Process):
                 # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
                 if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
                                                     mech_tuple in self._monitoring_mech_tuples):
-                    # # MODIFIED 10/2/16 OLD:
-                    # monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
-                    # # MODIFIED 10/2/16 NEW:
-                    # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
-                    # MODIFIED 10/16/16 NEWER:
                     monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
-                    # MODIFIED 10/2/16 END
                     self._monitoring_mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
@@ -1816,7 +1819,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        # MODIFIED 12/6/16 NEW:
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_monitoring_mechanism_projections(mech):
             """Recursively trace projections to monitoring mechanisms;
                    return ComparatorMechanism if one is found upstream;
@@ -1825,6 +1828,9 @@ class Process_Base(Process):
             for input_state in mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
+                    # If projection is not from another ObjectiveMechanism, ignore
+                    if not isinstance(sender, (ObjectiveMechanism, ComparatorMechanism)):
+                        continue
                     if isinstance(sender, ComparatorMechanism):
                         return sender
                     if sender.inputStates:
@@ -1835,7 +1841,6 @@ class Process_Base(Process):
                             continue
                     else:
                         continue
-        # MODIFIED 12/6/16 END
 
         if not self.learning:
             raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
@@ -1846,13 +1851,9 @@ class Process_Base(Process):
 
         if not comparators:
 
-            # # MODIFIED 12/6/16 OLD:
-            # raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
-            #                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
-
-            # MODIFIED 12/6/16 NEW:
             # Trace projections to first monitoring_mechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
+            #    in which case, should not assign Comparator, but rather WeightedError ObjectiveMechanism)
             comparator = trace_monitoring_mechanism_projections(self._monitoring_mech_tuples[0][0])
             if comparator:
                 if self.prefs.verbosePref:
@@ -1867,7 +1868,6 @@ class Process_Base(Process):
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
-            # MODIFIED 12/6/16 END
 
         elif len(comparators) > 1:
             comparator_names = list(comparatorMechanism.name for comparatorMechanism in comparators)
@@ -2190,17 +2190,39 @@ class Process_Base(Process):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale)
-    def _report_process_initiation(self, separator=False):
+    def _report_process_initiation(self, input=None, separator=False):
+        """
+        Parameters
+        ----------
+        input : ndarray
+            input to ORIGIN mechanism for current execution.  By default, it is the value specified by the
+            ProcessInputState that projects to the ORIGIN mechanism.  Used by system to specify the input
+            from the SystemInputState when the ORIGIN mechanism is executed as part of that sysetm.
+
+        separator : boolean
+            determines whether separator is printed above output
+
+        Returns
+        -------
+
+        """
         if separator:
             print("\n\n****************************************\n")
 
-        print("\n\'{}' executing with:\n- pathway: [{}]".
+        print("\n{} executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
-        variable = [list(i) for i in self.variable]
-        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',
-                                                 str([[float("{:0.3}".format(float(i)))
-                                                       for i in value] for value in variable]))))
+        # # MODIFIED 2/17/17 OLD:
+        # variable = [list(i) for i in self.variable]
+        # print("- variable: {1}".format(self, re.sub('[\[,\],\n]','',
+        #                                          str([[float("{:0.3}".format(float(i)))
+        #                                                for i in value] for value in variable]))))
+        # MODIFIED 2/17/17 NEW:
+        if input is None:
+            input = self.input
+        print("- input: {}".format(input))
+        # MODIFIED 2/17/17 END
+
 
     def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
@@ -2295,19 +2317,6 @@ class Process_Base(Process):
     def inputValue(self):
         return self.variable
 
-    # @property
-    # def input(self):
-    #     # input = self._input or np.array(list(item.value for item in self.processInputStates))
-    #     # return input
-    #     try:
-    #         return self._input
-    #     except AttributeError:
-    #         return None
-    #
-    # @input.setter
-    # def input(self, value):
-    #     self._input = value
-
     @property
     def outputState(self):
         return self.lastMechanism.outputState
@@ -2353,12 +2362,25 @@ class ProcessInputState(OutputState):
         self.sendsToProjections = []
         self.owner = owner
         self.value = variable
+        # MODIFIED 2/17/17 NEW:
+        # self.owner.input = self.value
+        # MODIFIED 2/17/17 END
         # self.receivesFromProjections = []
         # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
         # from PsyNeuLink.Components.Functions.Function import Linear
         # self.index = PRIMARY_OUTPUT_STATE
         # self.calculate = Linear
 
+    # MODIFIED 2/1717 NEW:
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+        self.owner._update_input()
+    # MODIFIED 2/1717 END
 
 
 ProcessTuple = namedtuple('ProcessTuple', 'process, input')

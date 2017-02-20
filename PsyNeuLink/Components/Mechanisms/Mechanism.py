@@ -505,7 +505,7 @@ class Mechanism_Base(Mechanism):
     COMMENT:
         Description
         -----------
-            Mechanism is a Category of the Function class.
+            Mechanism is a Category of the Component class.
             A mechanism is associated with a name and:
             - one or more inputStates:
                 two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:
@@ -857,7 +857,16 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
-
+    def plot(self):
+        import matplotlib.pyplot as plt
+        if "Logistic" in str(self.function):
+            x= np.linspace(-5,5)
+        elif "Exponential" in str(self.function):
+            x = np.linspace(0.1, 5)
+        else:
+            x = np.linspace(-10, 10)
+        plt.plot(x, self.function(x), lw=3.0, c='r')
+        plt.show()
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
@@ -1129,98 +1138,6 @@ class Mechanism_Base(Mechanism):
                 i += 1
             params[OUTPUT_STATES] = param_value
 
-        # MODIFIED 7/13/16 NEW: [MOVED FROM EVCMechanism]
-        # FIX: MOVE THIS TO FUNCTION, OR ECHO IN SYSTEM
-        #region VALIDATE MONITORED STATES (for use by ControlMechanism)
-        # Note: this must be validated after OUTPUT_STATES as it can reference entries in that param
-        try:
-            # MODIFIED 7/16/16 NEW:
-            if not target_set[MONITOR_FOR_CONTROL] or target_set[MONITOR_FOR_CONTROL] is NotImplemented:
-                pass
-            # MODIFIED END
-            # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-                target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
-            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
-            else:
-                # Validate each item of MONITOR_FOR_CONTROL
-                for item in target_set[MONITOR_FOR_CONTROL]:
-                    self._validate_monitored_state(item, context=context)
-                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
-                # FIX:     INDICATING THAT IT WILL BE IGNORED;
-                # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
-                # # Validate WEIGHTS if it is specified
-                # try:
-                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
-                # except KeyError:
-                #     # WEIGHTS not specified, so ignore
-                #     pass
-                # else:
-                #     # Insure that number of weights specified in WEIGHTS
-                #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
-                #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
-                #     if not num_weights != num_monitored_states:
-                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
-                #                        "does not match the number of monitored states ({1})".
-                #                        format(num_weights, num_monitored_states))
-        except KeyError:
-            pass
-        #endregion
-        # MODIFIED END
-
-# FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
-# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITOR_FOR_CONTROL param
-
-    def _validate_monitored_state(self, state_spec, context=None):
-        """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
-
-        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
-        """
-        state_spec_is_OK = False
-
-        if isinstance(state_spec, MonitoredOutputStatesOption):
-            state_spec_is_OK = True
-
-        if isinstance(state_spec, tuple):
-            if len(state_spec) != 3:
-                raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
-                                     "has {2} items;  it should be 3".
-                                     format(state_spec, self.name, len(state_spec)))
-
-            if not isinstance(state_spec[1], numbers.Number):
-                raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                     "must be a number".
-                                     format(state_spec, self.name, state_spec[0]))
-
-            if not isinstance(state_spec[2], numbers.Number):
-                raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                     "must be a number".
-                                     format(state_spec, self.name, state_spec[0]))
-
-            # Set state_spec to the output_state item for validation below
-            state_spec = state_spec[0]
-
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, (Mechanism, OutputState)):
-            state_spec_is_OK = True
-
-        if isinstance(state_spec, str):
-            if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
-                state_spec_is_OK = True
-        try:
-            self.outputStates[state_spec]
-        except (KeyError, AttributeError):
-            pass
-        else:
-            state_spec_is_OK = True
-
-        if not state_spec_is_OK:
-            raise MechanismError("Specification ({0}) in MONITOR_FOR_CONTROL for {1} is not "
-                                 "a Mechanism or OutputState object or the name of one".
-                                 format(state_spec, self.name))
-#endregion
 
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
@@ -1247,7 +1164,6 @@ class Mechanism_Base(Mechanism):
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
         """
-
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, context=context)
 
@@ -1587,11 +1503,21 @@ class Mechanism_Base(Mechanism):
             except KeyError:
                 param_template = self.function_params
 
-            # Get its type
-            param_type = type(param_template[state_name])
+            # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
+            param_spec = param_template[state_name]
+
+            # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
+            #    then its value will be provided by the execution of the parameterState's function
+            #    (which gets and aggregates the values of its projections), so execute function
+            #    to get a sample of its output as the param_spec
+            if isclass(param_spec) and issubclass(param_spec, Projection):
+                param_spec = state.function()
+
+            # Get type of param_spec:
+            param_type = type(param_spec)
             # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
             if param_type is tuple:
-                param_type = type(param_template[state_name][0])
+                param_type = type(param_spec[0])
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -1653,13 +1579,15 @@ class Mechanism_Base(Mechanism):
             mechanism_string = ' '
         else:
             mechanism_string = ' mechanism'
-        print ("\n\'{}\'{} executed:\n- input:  {}".
-        # MODIFIED 12/9/16 OLD:
-        #        format(self.name, mechanism_string, input.__str__().strip("[]")))
-        # MODIFIED 12/9/16 NEW:
-               format(self.name, mechanism_string, [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
-        # MODIFIED 12/9/16 END
 
+        if not isinstance(input, Iterable):
+            input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        else:
+            input_string = input
+        print ("\n\'{}\'{} executed:\n- input:  {}".
+               format(self.name,
+                      mechanism_string,
+                      input_string))
 
         if params:
             print("- params:")
@@ -1672,7 +1600,7 @@ class Mechanism_Base(Mechanism):
                 param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Component):
-                    param = param_value.__self__.__name__
+                    param = param_value.name
                     param_is_function = True
                 elif isinstance(param_value, type(Component)):
                     param = param_value.__name__
@@ -1687,29 +1615,28 @@ class Mechanism_Base(Mechanism):
                         print ("\t\t{}: {}".
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
-        # # MODIFIED 12/9/16 OLD:
-        # print("- output: {}".
-        #       format(re.sub('[\[,\],\n]','',str(output))))
-        # MODIFIED 12/9/16 NEW:
-        print("- output: {}".
-              format(re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))))
-        # MODIFIED 12/9/16 END
 
-#     def adjust_function(self, params, context=None):
-#         """Modify control_signal_allocations while process is executing
-#
-#         called by process.adjust()
-#         returns output after either one time_step or full trial (determined by current setting of time_scale)
-#
-#         :param self:
-#         :param params: (dict)
-#         :param context: (optional)
-#         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-#         """
-#
-#         self._assign_defaults(self.inputState, params)
-# # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
-#         return self.outputState.value
+        if not isinstance(output, Iterable):
+            output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        else:
+            output_string = output
+        print("- output: {}".format(output_string))
+
+    # def adjust_function(self, params, context=None):
+    #     """Modify control_signal_allocations while process is executing
+    #
+    #     called by process.adjust()
+    #     returns output after either one time_step or full trial (determined by current setting of time_scale)
+    #
+    #     :param self:
+    #     :param params: (dict)
+    #     :param context: (optional)
+    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+    #     """
+    #
+    #     self._assign_defaults(self.inputState, params)
+    # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
+    #     return self.outputState.value
 
     # def terminate_execute(self, context=None):
     #     """Terminate the process

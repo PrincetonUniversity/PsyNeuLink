@@ -27,11 +27,13 @@ Creating A ControlMechanism
 ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
-ControlMechanism are specified in its `monitoredOutputStates` argument, which can take  a number of
-`forms <ControlMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates its
-own `inputState <InputState>` for each of the outputStates it monitors, and assigns a  `MappingProjection` from each
-of those outputStates to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections
-depends on the `subclass <ControlMechanism>`.
+ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
+`forms <ObjectiveMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates
+an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
+`monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
+specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a ControlMechanism creates its
+ControlProjections and determines their value based on the outcome of its evaluation  depends on the
+`subclass <ControlMechanism>`.
 
 .. _ControlMechanism_Specifying_Control:
 
@@ -47,80 +49,11 @@ to which the parameter belongs (see `Mechanism_Parameters`).
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
-list also describes the order of precedence when more than one specification pertains to the same
-outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
-name of one (see :ref:ControlMechanism_Examples' below). The specification of whether an outputState is monitored by
-a ControlMechanism can be done in the following places:
-
-* **OutputState**: an outputState can be *excluded* from being monitored by assigning `None` as the value of the
-  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the outputState's ``params``
-  argument.  This specification takes precedence over any others;  that is, specifying `None` will suppress
-  monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
-  outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
-  based on one of the other specification methods below.
-..
-* **Mechanism**: the outputState of a particular mechanism can be designated to be monitored, by specifying it in the
-  `MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the mechanism's `params` argument.  The value
-  of the entry must be either a list containing the outputState(s) and/or their name(s),
-  a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a `MonitoredOutputStatesOption` value, or `None`.
-  The values of `MonitoredOutputStatesOption` are treated as follows:
-
-    * `PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism is monitored;
-    |
-    * `ALL_OUTPUT_STATES`:  all of the mechanism's outputStates are monitored.
-
-  This specification takes precedence over any of the other types listed below:  if it is `None`, then none of
-  that mechanism's outputStates will be monitored;   if it specifies outputStates to be monitored, those will be
-  monitored even if the mechanism is not a `TERMINAL` mechanism (see below).
-..
-* **ControlMechanism** or **System**: outputStates to be monitored can be specified in the ControlMechanism responsible
-  for the monitoring, or in the system for which that ControlMechanism is the `controller`.  The specification can be
-  in the `monitor_for_control` argument of the ControlMechanism or System's constructor, or in the `MONITOR_FOR_CONTROL`
-  entry of a parameter specification dictionary in the `params` argument of the constructor.  In either case, the value
-  must be a list, each item of which must be one of the following:
-
-  * an existing **outputState** or the name of one.
-  |
-  * a **mechanism** or the name of one -- only the mechanism's primary (first) outputState will be monitored,
-    unless a `MonitoredOutputStatesOption` value is also in the list (see below) or the specification is
-    overridden in a params dictionary for the mechanism (see above);
-  |
-  * a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`;
-  |
-  * a value of `MonitoredOutputStatesOption` --  this applies to any mechanisms that appear in the list
-    (except those that override it with their own `monitor_for_control` specification); if the value of
-    `MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
-
-    * `PRIMARY_OUTPUT_STATES` -- only the primary (first) outputState of the `TERMINAL` mechanism(s)
-      in the system for which the ControlMechanism is the `controller` is monitored;
-    |
-    * `ALL_OUTPUT_STATES` -- all of the outputStates of the `TERMINAL` mechanism(s)
-      in the system for which the ControlMechanism is the `controller` are monitored;
-  * `None`.
-
-  Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
-  in the constructor or params dictionary for an outputState or mechanism.
-
-.. _ControlMechanism_OutputState_Tuple:
-
-**MonitoredOutputState Tuple**
-
-A tuple can be used wherever an outputState can be specified, to determine how its value is combined with others by
-the ControlMechanism to compute the outcome of processing for the system (e.g., the EVCMechanism's
-`outcome_function <EVCMechanism.EVCMechanism.outcome_function>`). Each tuple must have the three following items in the
-order listed:
-
-  * an outputState or mechanism, the name of one, or a specification dictionary for one;
-  ..
-  * a weight (int) - multiplies the value of the outputState.
-  ..
-  * an exponent (int) - exponentiates the value of the outputState;
-
-The set of weights and exponents assigned to each outputState is listed in the ControlMechanism's
-`monitor_for_control_weights_and_exponents` attribute, in the same order as the outputStates are listed in its
-`monitoredOutputStates` attribute.  Each item in the list is a tuple with the weight and exponent for a given
-outputState.
+When an ControlMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in its
+`montioring_mechanism` attribute) that is used to monitor and evaluate the system's performance.  The
+ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism's
+'monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
+This information is used to set the value of the ControlMechanism's ControlProjections.
 
 .. _ControlMechanism_Execution:
 
@@ -129,7 +62,7 @@ Execution
 
 A ControlMechanism that is a system's `controller` is always the last mechanism to be executed (see `System Control
 <System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the values of the
-outputStates in its `monitoredOutputStates` attribute, and uses those to determine the value of its
+outputStates in its `monitored_output_states` attribute, and uses those to determine the value of its
 `ControlProjections <ControlProjection>`. In the subsequent round of execution, each ControlProjection's value is
 used by the `ParameterState` to which it projects to update the parameter being controlled.
 
@@ -340,30 +273,6 @@ class ControlMechanism_Base(Mechanism_Base):
                                                                  target_set=target_set,
                                                                  context=context)
 
-    def _validate_monitored_state_spec(self, state_spec, context=None):
-        """Validate specified outputstate is for a Mechanism in the System
-
-        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
-        """
-        super(ControlMechanism_Base, self)._validate_monitored_state(state_spec=state_spec, context=context)
-
-        # Get outputState's owner
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, OutputState):
-            state_spec = state_spec.owner
-
-        # Confirm it is a mechanism in the system
-        if not state_spec in self.system.mechanisms:
-            raise ControlMechanismError("Request for controller in {0} to monitor the outputState(s) of "
-                                              "a mechanism ({1}) that is not in {2}".
-                                              format(self.system.name, state_spec.name, self.system.name))
-
-        # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminalMechanisms.mechanisms:
-            if self.prefs.verbosePref:
-                print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
-                      " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
-
     def _validate_projection(self, projection, context=None):
         """Insure that projection is to mechanism within the same system as self
         """
@@ -385,81 +294,6 @@ class ControlMechanism_Base(Mechanism_Base):
         raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
-
-    def _instantiate_control_mechanism_input_state(self, input_state_name, input_state_value, context=None):
-        """Instantiate inputState for ControlMechanism
-
-        Extend self.variable by one item to accommodate new inputState
-        Instantiate the inputState using input_state_name and input_state_value
-        Update self.inputState and self.inputStates
-
-        Args:
-            input_state_name (str):
-            input_state_value (2D np.array):
-            context:
-
-        Returns:
-            input_state (InputState):
-
-        """
-
-        # First, test for initialization conditions:
-
-        # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
-        if self.variable is None:
-            self.variable = np.atleast_2d(input_state_value)
-
-        # If there is a single item in self.variable, it could be the one assigned on initialization
-        #     (in order to validate ``function`` and get its return value as a template for self.value);
-        #     in that case, there should be no inputStates yet, so pass
-        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
-        elif len(self.variable) == 1:
-            try:
-                self.inputStates
-            except AttributeError:
-                # If there are no inputStates, this is the usual initialization condition;
-                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
-                pass
-            else:
-                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
-        # Other than on initialization (handled above), it is a PROGRAM ERROR if
-        #    the number of inputStates is not equal to the number of items in self.variable
-        elif len(self.variable) != len(self.inputStates):
-            raise ControlMechanismError("PROGRAM ERROR:  The number of inputStates ({}) does not match "
-                                        "the number of items found for the variable attribute ({}) of {}"
-                                        "when creating {}".
-                                        format(len(self.inputStates),
-                                               len(self.variable),
-                                               self.name,input_state_name))
-
-        # Extend self.variable to accommodate new inputState
-        else:
-            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
-
-        variable_item_index = self.variable.size-1
-
-        # Instantiate inputState
-        from PsyNeuLink.Components.States.State import _instantiate_state
-        from PsyNeuLink.Components.States.InputState import InputState
-        input_state = _instantiate_state(owner=self,
-                                         state_type=InputState,
-                                         state_name=input_state_name,
-                                         state_spec=defaultControlAllocation,
-                                         state_params=None,
-                                         constraint_value=np.array(self.variable[variable_item_index]),
-                                         constraint_value_name='Default control allocation',
-                                         context=context)
-
-        #  Update inputState and inputStates
-        try:
-            self.inputStates[input_state.name] = input_state
-        except AttributeError:
-            self.inputStates = OrderedDict({input_state_name:input_state})
-            self.inputState = list(self.inputStates.values())[0]
-
-        self.inputValue = list(state.value for state in self.inputStates.values())
-
-        return input_state
 
     def _instantiate_attributes_after_function(self, context=None):
         """Take over as default controller (if specified) and implement any specified ControlProjections
@@ -501,7 +335,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 #        which calls Mechanism.sendsToProjections.append(),
                 #        so need to do that in _instantiate_control_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                self._instantiate_control_projection(projection, context=context)
+                params = projection.control_signal
+                self._instantiate_control_projection(projection, params=params, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
@@ -617,11 +452,11 @@ class ControlMechanism_Base(Mechanism_Base):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following mechanism outputStates:")
-        for state_name, state in list(self.inputStates.items()):
+        for state_name, state in list(self.monitoring_mechanism.inputStates.items()):
             for projection in state.receivesFromProjections:
                 monitored_state = projection.sender
                 monitored_state_mech = projection.sender.owner
-                monitored_state_index = self.monitoredOutputStates.index(monitored_state)
+                monitored_state_index = self.monitored_output_states.index(monitored_state)
 
                 # # MODIFIED 1/9/16 OLD:
                 # exponent = \

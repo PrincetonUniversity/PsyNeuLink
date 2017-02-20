@@ -140,16 +140,97 @@ class DefaultControlMechanism(ControlMechanism_Base):
         else:
             pass
 
-
     def _instantiate_control_projection(self, projection, params=None, context=None):
         """Instantiate requested controlProjection and associated inputState
         """
 
         # Instantiate inputStates and allocation_policy attribute for controlSignal allocations
         input_name = 'DefaultControlAllocation for ' + projection.receiver.name + '_ControlSignal'
-        self._instantiate_control_mechanism_input_state(input_name, defaultControlAllocation, context=context)
+        self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
         self.allocation_policy = self.inputValue
 
         # Call super to instantiate outputStates
+        # Note: params carries any specified with ControlProjection for the control_signal
         super()._instantiate_control_projection(projection=projection,
-                                                      context=context)
+                                                params=params,
+                                                context=context)
+
+    def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
+        """Instantiate inputState for ControlMechanism
+
+        NOTE: This parallels ObjectMechanism._instantiate_input_state_for_monitored_state()
+              It is implemented here to spare having to instantiate a "dummy" (and superfluous) ObjectiveMechanism
+              for the sole purpose of creating inputStates for each value of defaultControlAllocation to assign
+              to the ControlProjections.
+
+        Extend self.variable by one item to accommodate new inputState
+        Instantiate the inputState using input_state_name and input_state_value
+        Update self.inputState and self.inputStates
+
+        Args:
+            input_state_name (str):
+            input_state_value (2D np.array):
+            context:
+
+        Returns:
+            input_state (InputState):
+
+        """
+
+        # First, test for initialization conditions:
+
+        # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
+        if self.variable is None:
+            self.variable = np.atleast_2d(input_state_value)
+
+        # If there is a single item in self.variable, it could be the one assigned on initialization
+        #     (in order to validate ``function`` and get its return value as a template for self.value);
+        #     in that case, there should be no inputStates yet, so pass
+        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
+        elif len(self.variable) == 1:
+            try:
+                self.inputStates
+            except AttributeError:
+                # If there are no inputStates, this is the usual initialization condition;
+                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
+                pass
+            else:
+                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+        # Other than on initialization (handled above), it is a PROGRAM ERROR if
+        #    the number of inputStates is not equal to the number of items in self.variable
+        elif len(self.variable) != len(self.inputStates):
+            raise ControlMechanismError("PROGRAM ERROR:  The number of inputStates ({}) does not match "
+                                        "the number of items found for the variable attribute ({}) of {}"
+                                        "when creating {}".
+                                        format(len(self.inputStates),
+                                               len(self.variable),
+                                               self.name,input_state_name))
+
+        # Extend self.variable to accommodate new inputState
+        else:
+            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+
+        variable_item_index = self.variable.size-1
+
+        # Instantiate inputState
+        from PsyNeuLink.Components.States.State import _instantiate_state
+        from PsyNeuLink.Components.States.InputState import InputState
+        input_state = _instantiate_state(owner=self,
+                                         state_type=InputState,
+                                         state_name=input_state_name,
+                                         state_spec=defaultControlAllocation,
+                                         state_params=None,
+                                         constraint_value=np.array(self.variable[variable_item_index]),
+                                         constraint_value_name='Default control allocation',
+                                         context=context)
+
+        #  Update inputState and inputStates
+        try:
+            self.inputStates[input_state.name] = input_state
+        except AttributeError:
+            self.inputStates = OrderedDict({input_state_name:input_state})
+            self.inputState = list(self.inputStates.values())[0]
+
+        self.inputValue = list(state.value for state in self.inputStates.values())
+
+        return input_state
