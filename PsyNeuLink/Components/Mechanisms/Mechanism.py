@@ -1178,7 +1178,13 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Components.Projections.Projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def execute(self, input=None, runtime_params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+    def execute(self,
+                input=None,
+                runtime_params=None,
+                execution_token=None,
+                clock=CentralClock,
+                time_scale=TimeScale.TRIAL,
+                context=None):
         """Carry out a single execution of the mechanism.
 
 
@@ -1283,7 +1289,7 @@ class Mechanism_Base(Mechanism):
         """
 
         context = context or NO_CONTEXT
-
+        self._execution_token = execution_token
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
