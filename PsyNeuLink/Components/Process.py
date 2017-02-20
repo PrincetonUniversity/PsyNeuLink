@@ -2244,11 +2244,7 @@ class Process_Base(Process):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     # # MODIFIED 12/9/16 OLD:
-                     # re.sub('[\[,\],\n]','',str(self.outputState.value))))
-                     # MODIFIED 12/9/16 NEW:
                      re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
-                     # MODIFIED 12/9/16 END
 
         if self.learning:
           print("\n- MSE: {:0.3}".
