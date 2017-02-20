@@ -503,7 +503,6 @@ class DDM(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   plot_threshold = plot_threshold,
                                                   params=params,
-                                                  context=context
                                                   )
         if time_scale == TimeScale.TIME_STEP:
             self.get_axes_function = DDMIntegrator(rate=self.function_params['rate'], noise=self.function_params['noise'], context='plot').function

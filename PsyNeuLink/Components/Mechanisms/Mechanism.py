@@ -1624,6 +1624,7 @@ class Mechanism_Base(Mechanism):
 
         if not isinstance(output, Iterable):
             output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+
         else:
             output_string = output
         print("- output: {}".format(output_string))
