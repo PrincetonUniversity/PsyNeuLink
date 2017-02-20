@@ -165,7 +165,7 @@ if test_analyze_graph:
     assert A not in comp.terminal_mechanisms
     assert B not in comp.terminal_mechanisms
     assert A in comp.cycle_mechanisms
-    assert B in comp.init_cycle_mechanisms
+    assert B in comp.recurrent_init_mechanisms
     print("passed")
 
     print("Test 6: Two origins pointing to recursive pair (A)->(B)<->(C)<-(D)")
@@ -186,5 +186,5 @@ if test_analyze_graph:
     assert A in comp.origin_mechanisms
     assert D in comp.origin_mechanisms
     assert B in comp.cycle_mechanisms
-    assert C in comp.init_cycle_mechanisms
+    assert C in comp.recurrent_init_mechanisms
     print("passed")

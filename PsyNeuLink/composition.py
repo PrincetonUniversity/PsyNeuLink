@@ -94,7 +94,7 @@ class Composition(object):
         self.origin_mechanisms = []
         self.terminal_mechanisms = []
         self.monitored_mechanisms = []
-        self.init_cycle_mechanisms = []
+        self.recurrent_init_mechanisms = []
         self.cycle_mechanisms = []
         # Explicit classes:
         self.explicit_input_mechanisms = [] # Need to track to know which to leave untouched
@@ -132,11 +132,11 @@ class Composition(object):
         # - Terminal: Terminal mechanisms provide the output of the composition. By
         #   default, those which do not send any projections, but they may also be
         #   specified explicitly.
-        # - Init_cycle: Init_cycle mechanisms send projections that close recurrent
+        # - Recurrent_init: Recurrent_init mechanisms send projections that close recurrent
         #   loops in the composition (or projections that are explicitly specified as
         #   recurrent). They need an initial value so that their receiving mechanisms
         #   have input.
-        # - Cycle: Cycle mechanisms receive projections from Init_cycle mechanisms. They
+        # - Cycle: Cycle mechanisms receive projections from Recurrent_init mechanisms. They
         #   can be viewd as the starting points of recurrent loops.
         # The following categories can be explicitly set by the user in which case their
         # values are not changed based on the graph analysis. Additional mechanisms may
@@ -156,8 +156,8 @@ class Composition(object):
             self.remove_origin(mech)
         for mech in self.terminal_mechanisms:
             self.remove_terminal(mech)
-        for mech in self.init_cycle_mechanisms:
-            self.remove_init_cycle(mech)
+        for mech in self.recurrent_init_mechanisms:
+            self.remove_recurrent_init(mech)
         for mech in self.cycle_mechanisms:
             self.remove_cycle(mech)
 
@@ -168,7 +168,7 @@ class Composition(object):
         # Identify Terminal mechanisms
             if self.graph.get_outgoing(mech) == []:
                 self.set_terminal(mech)
-        # Identify Init_cycle and Cycle mechanisms
+        # Identify Recurrent_init and Cycle mechanisms
         visited = [] # Keep track of all mechanisms that have been visited
         for origin_mech in self.origin_mechanisms: # Cycle through origin mechanisms first
             visited_current_path = [] # Track all mechanisms visited from the current origin
@@ -181,8 +181,8 @@ class Composition(object):
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        if mech not in self.init_cycle_mechanisms:
-                            self.set_init_cycle(mech) # Set the parent as Init_cycle
+                        if mech not in self.recurrent_init_mechanisms:
+                            self.set_recurrent_init(mech) # Set the parent as Recurrent_init
                         if child not in self.cycle_mechanisms:
                             self.set_cycle(child) # And the child as Cycle
                     elif child not in visited: # Else if the child has not been explored
@@ -198,8 +198,8 @@ class Composition(object):
                     children = self.graph.get_children(remaining_mech)
                     for child in children:
                         if child in visited_current_path:
-                            if remaining_mech not in self.init_cycle_mechanisms:
-                                self.set_init_cycle(remaining_mech)
+                            if remaining_mech not in self.recurrent_init_mechanisms:
+                                self.set_recurrent_init(remaining_mech)
                             if child not in self.cycle_mechanisms:
                                 self.set_cycle(child)
                         elif child not in visited:
@@ -222,18 +222,18 @@ class Composition(object):
         if mech in self.terminal_mechanisms: # If mechanism is in Terminal list
             self.terminal_mechanisms.remove(mech) # Remove from Terminal list
 
-    def set_init_cycle(self, mech):
-        if mech not in self.init_cycle_mechanisms: # If mechanism isn't in Init_cycle list already
-            self.init_cycle_mechanisms.append(mech) # Add to Init_cycle list
+    def set_recurrent_init(self, mech):
+        if mech not in self.recurrent_init_mechanisms: # If mechanism isn't in Recurrent_init list already
+            self.recurrent_init_mechanisms.append(mech) # Add to Recurrent_init list
 
-    def remove_init_cycle(self, mech):
-        if mech in self.init_cycle_mechanisms: # If mechanism is in Init_cycle list
-            self.init_cycle_mechanisms.remove(mech) # Remove from Init_cycle list
+    def remove_recurrent_init(self, mech):
+        if mech in self.recurrent_init_mechanisms: # If mechanism is in Recurrent_init list
+            self.recurrent_init_mechanisms.remove(mech) # Remove from Recurrent_init list
 
     def set_cycle(self, mech):
-        if mech not in self.init_cycle_mechanisms: # If mechanism isn't in Cycle list already
-            self.cycle_mechanisms.append(mech) # Add to Init_cycle list
+        if mech not in self.cycle_mechanisms: # If mechanism isn't in Cycle list already
+            self.cycle_mechanisms.append(mech) # Add to Cycle list
 
     def remove_cycle(self, mech):
-        if mech in self.init_cycle_mechanisms: # If mechanism is in Cycle list
+        if mech in self.cycle_mechanisms: # If mechanism is in Cycle list
             self.cycle_mechanisms.remove(mech) # Remove from Cycle list
