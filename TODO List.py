@@ -9,6 +9,7 @@
 #             still have the last one
 #      SOLUTION:  HAVE LEARNING AND CONTROL MECHANISMS GET THEIR execution_tokens FROM THEIR SYSTEM?
 #                 OR HAVE SYSTEM ASSIGN ITS LEARNING AND CONTROL MECHANISMS THE CURRENT execution_token??
+#      SOLUTION:  ASSIGN execution_token TO ALL MECHANISMS IN SYSTEM GRAPH AND LEARNING GRAPH AT TIME OF SYSTEM EXEC.
 #
 #    * Same issue for learning in Process??
 #
