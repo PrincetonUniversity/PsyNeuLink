@@ -1811,6 +1811,7 @@ class System_Base(System):
         # if self.learning:
         #     context = context + LEARNING
         # MODIFIED 12/21/16 NEW:
+        # Execute system without learning on projections (that will be taken care of in _execute
         self._execute_processing(clock=clock, context=context)
         #endregion
 
@@ -1907,8 +1908,8 @@ class System_Base(System):
 
     def _execute_learning(self, clock=CentralClock, context=None):
     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-
-        # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
+        # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
+    # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
         # ASSIGNED IN Run
         # # First assign targets to SystemInputStates:
@@ -1928,7 +1929,7 @@ class System_Base(System):
         #             raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
 
-        # Then update all MonitoringMechanisms
+        # Update all MonitoringMechanisms
         for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
@@ -1954,14 +1955,17 @@ class System_Base(System):
                               # time_scale=time_scale,
                               context=context_str)
             # # TEST PRINT:
-            # print ("EXECUTING MONITORING UPDATES: ", component.name)
+            print ("EXECUTING MONITORING UPDATES: ", component.name)
 
-        # MODIFIED 2/21/17 OLD:
         # Then update all MappingProjections
         for component in self.learningExecutionList:
 
             if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
                 continue
+            # MODIFIED 2/21/17 NEW:
+            if not isinstance(component, MappingProjection):
+                raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
+            # MODIFIED 2/21/17 END
 
             component_type = "mappingProjection"
             processes = list(component.sender.owner.processes.keys())
@@ -1977,15 +1981,17 @@ class System_Base(System):
                                      component.name,
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
+            # MODIFIED 2/21/17 OLD:
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(clock=clock,
-                              time_scale=self.timeScale,
-                              # time_scale=time_scale,
-                              context=context_str)
+            # component.execute(clock=clock,
+            #                   time_scale=self.timeScale,
+            #                   # time_scale=time_scale,
+            #                   context=context_str)
+            # MODIFIED 2/21/17 NEW:
+            component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
             # TEST PRINT:
             print ("EXECUTING WEIGHT UPDATES: ", component.name)
-        # MODIFIED 2/21/17 END
 
         if self._report_system_output and self._report_process_output:
             # Report learning for targetMechanisms (and the processes to which they belong)
