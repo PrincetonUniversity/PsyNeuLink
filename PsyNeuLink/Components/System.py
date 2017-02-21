@@ -759,8 +759,10 @@ class System_Base(System):
         self._phaseSpecMax = 0
         self.stimulusInputStates = []
         self.inputs = []
+        self.current_input = None
         self.targetInputStates = []
         self.targets = None
+        self.current_targets = None
         self.learning = False
 
         register_category(entry=self,
@@ -1653,6 +1655,7 @@ class System_Base(System):
 
     def execute(self,
                 input=None,
+                target=None,
                 execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
@@ -1761,15 +1764,34 @@ class System_Base(System):
                     else:
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
-                # MODIFIED 2/13/17 NEW:
-                # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
-                # Nullify inputs to ORIGIN mechanism from any processes
-                for input_state in list(origin_mech.inputStates.values()):
-                    for projection in input_state.receivesFromProjections:
-                        if isinstance(projection.sender, ProcessInputState):
-                            # projection.sender.value = None
-                            projection.sender.value *= 0
-                # MODIFIED 2/13/17 END
+                # # MODIFIED 2/20/17 CHECK:
+                # # MODIFIED 2/13/17 NEW:
+                # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
+                # # Nullify inputs to ORIGIN mechanism from any processes
+                # for input_state in list(origin_mech.inputStates.values()):
+                #     for projection in input_state.receivesFromProjections:
+                #         if isinstance(projection.sender, ProcessInputState):
+                #             # projection.sender.value = None
+                #             projection.sender.value *= 0
+                # # MODIFIED 2/13/17 END
+
+            # Note: the following assumes that the order of the items in targets is aligned with
+            #       the order of the TARGET mechanisms in the sytem's targetMechanisms list;
+            #       it is tested for dict format in run._construct_stimulus_sets,
+            #       but can't be insured for list format.
+            # For each TARGET mechanism in the system's targetMechanismList
+            for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+            # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+            #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+                self.targetInputStates[i].value = self.current_targets[i]
+
+                # # MODIFIED 2/20/17 CHECK:
+                # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
+                # # Nullify inputs to TARGET mechanism from any processes
+                # for process_target_projection in \
+                #         target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+                #     if isinstance(process_target_projection.sender, ProcessInputState):
+                #         process_target_projection.sender.value = process_target_projection.sender.value * 0
 
         self.input = input
         #endregion
@@ -1885,7 +1907,25 @@ class System_Base(System):
 
         # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
-        # First update all MonitoringMechanisms
+        # ASSIGNED IN Run
+        # # First assign targets to SystemInputStates:
+        # num_target_mechs = len(list(self.targetMechanisms))
+        #
+        # # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
+        # for i, targ_mech in zip(range(num_target_mechs), self.targetMechanisms):
+        #     # For each inputState of the ORIGIN mechansim
+        #     input_states = list(origin_mech.inputStates.values())
+        #     for j, input_state in zip(range(len(origin_mech.inputStates)), input_states):
+        #        # Get the input from each projection to that inputState (from the corresponding SystemInputState)
+        #         system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
+        #                                   if isinstance(projection.sender, SystemInputState))
+        #         if system_input_state:
+        #             system_input_state.value = input[i][j]
+        #         else:
+        #             raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
+
+
+        # Then update all MonitoringMechanisms
         for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection

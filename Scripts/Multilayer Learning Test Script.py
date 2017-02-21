@@ -105,8 +105,10 @@ stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 
 
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # COMPOSITION = PROCESS
 COMPOSITION = SYSTEM
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
@@ -118,9 +120,8 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targets
-    print ('\n\nInput: {}\nTarget: {}\n'.
-           format(i, t))
+        t = composition.targetInputStates[0].value
+    print ('\n\nInput: {}\nTarget: {}\n'.format(i, t))
     print ('\nInput Weights: \n', Input_Weights.matrix)
     print ('Middle Weights: \n', Middle_Weights.matrix)
     print ('Output Weights: \n', Output_Weights.matrix)
