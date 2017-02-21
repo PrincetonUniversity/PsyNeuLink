@@ -238,20 +238,26 @@ class Composition(object):
         if mech in self.cycle_mechanisms: # If mechanism is in Cycle list
             self.cycle_mechanisms.remove(mech) # Remove from Cycle list
 
-    def run(self, inputs = None, targets = None, initial_values = None):
-        def validate_feed_dict(feed_dict, mech_type_list, mech_type):
-            for mech in feed_dict.keys(): # For each mechanism given an input
-                if mech not in mech_type_list: # Check that it is the right kind of mechanism in the composition
-                    if mech_type[0] in ['a', 'e', 'i', 'o', 'u']: # Check for grammar
-                        article = "an"
-                    else: article = "a"
-                    # Throw an error informing the user that the mechanism was not found in the mech type list
-                    raise ValueError("The mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
-                for timestep in feed_dict[mech]: # If mechanism is correct type, iterate over timesteps
-                    # Check if there are multiple input states specified
-                    if isinstance(timestep[0], Iterable) and not isinstance(timestep[0], str): # Iterable imported from collections
-                        # If there are, check that each input_state is receiving the right size of input
-                        for i, value in enumerate(timestep):
-                            if len(value) != len(mech.input_states[i].variable):
-                                pass
+    # def run(self, inputs = None, targets = None, initial_values = None):
+    def validate_feed_dict(feed_dict, mech_type_list, mech_type):
+        for mech in feed_dict.keys(): # For each mechanism given an input
+            if mech not in mech_type_list: # Check that it is the right kind of mechanism in the composition
+                if mech_type[0] in ['a', 'e', 'i', 'o', 'u']: # Check for grammar
+                    article = "an"
+                else: article = "a"
+                # Throw an error informing the user that the mechanism was not found in the mech type list
+                raise ValueError("The mechanism \"{}\" is not {} {} of the composition".format(mech.name, article, mech_type))
+            for timestep in feed_dict[mech]: # If mechanism is correct type, iterate over timesteps
+                # Check if there are multiple input states specified
+                if not isinstance(timestep[0], Iterable) or isinstance(timestep[0], str): # Iterable imported from collections
+                    # If not, embellish the formatting to match the verbose case
+                    timestep = [timestep]
+                # Then, check that each input_state is receiving the right size of input
+                for i, value in enumerate(timestep):
+                    val_length = len(value)
+                    state_length = len(mech.input_states[i].variable)
+                    if val_length != state_length:
+                        raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
+                            where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
+
 
