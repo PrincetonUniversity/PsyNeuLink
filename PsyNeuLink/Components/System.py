@@ -1987,8 +1987,8 @@ class System_Base(System):
             #                   time_scale=self.timeScale,
             #                   # time_scale=time_scale,
             #                   context=context_str)
-            # MODIFIED 2/21/17 NEW:
-            component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
+            # # MODIFIED 2/21/17 NEW:
+            # component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
             # TEST PRINT:
             print ("EXECUTING WEIGHT UPDATES: ", component.name)

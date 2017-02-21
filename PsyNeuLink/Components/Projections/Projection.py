@@ -655,10 +655,10 @@ class Projection_Base(Projection):
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
-        # # MODIFIED 2/10/17 OLD:
-        # if not isinstance(self.sender, OutputState):
-        # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
-        if not isinstance(self.sender, (OutputState, ParameterState)):
+        # MODIFIED 2/10/17 OLD: 2/21/17
+        if not isinstance(self.sender, OutputState):
+        # # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
+        # if not isinstance(self.sender, (OutputState, ParameterState)):
         # MODIFIED 2/10/17 END
             raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
 
