@@ -876,7 +876,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         MappingProjection(sender=self.monitoring_mechanism,
                           receiver=self,
-                          matrix=IDENTITY_MATRIX)
+                          matrix=AUTO_ASSIGN_MATRIX)
 
     def _get_monitored_states(self, context=None):
         """

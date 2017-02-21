@@ -1710,9 +1710,10 @@ class System_Base(System):
         for learning_mech in self.learningExecutionList:
             learning_mech._execution_id = self._execution_id
         self.controller._execution_id = self._execution_id
-        for state in self.controller.inputStates.values():
-            for projection in state.receivesFromProjections:
-                projection.sender.owner._execution_id = self._execution_id
+        if self.controller.inputStates:
+            for state in self.controller.inputStates.values():
+                for projection in state.receivesFromProjections:
+                    projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
@@ -1786,30 +1787,20 @@ class System_Base(System):
 
         # MODIFIED 12/21/16 NEW:
         self._execute_processing(clock=clock, context=context)
-        # self._execute_processing(clock=clock, time_scale=time_scale, context=context)
-        # MODIFIED 12/21/16 END
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
-
         # FIX: NEED TO CHECK PHASE HERE
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context:
-
-            # MODIFIED 12/21/16 NEW:
             # IMPLEMENT: EXECUTE self.learningGraph HERE:  EXECUTE MECHANISMS AND PROJECTIONS
             # Execute each Mechanism in self.executionList, in the order listed during its phase
-            # self._execute_learning(context=context)
-            # self._execute_learning(context=context.replace("EXECUTING", "LEARNING"))
             self._execute_learning(clock=clock, context=context + LEARNING)
-            # self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
-            # MODIFIED 12/21/16 END
 
         # endregion
 
 
         #region EXECUTE CONTROLLER
-
 # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
@@ -2107,6 +2098,11 @@ class System_Base(System):
                       format(mech_tuple.mechanism.name,
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
                                                 format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
+        if self.learning:
+            from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARISON_MSE
+            for mech in self.targetMechanisms:
+                print("\n- MSE: {:0.3}".
+                      format(float(mech.outputStates[COMPARISON_MSE].value)))
 
 
     # TBI:
