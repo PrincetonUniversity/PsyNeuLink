@@ -1088,8 +1088,8 @@ FROM TODO:
 
         self.value = self.weightChangeMatrix
 
-        # TEST PRINT
-        print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
+        # # TEST PRINT
+        # print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
 
         return self.value
 
