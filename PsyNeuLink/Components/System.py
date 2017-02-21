@@ -1821,7 +1821,7 @@ class System_Base(System):
             # IMPLEMENT: EXECUTE self.learningGraph HERE:  EXECUTE MECHANISMS AND PROJECTIONS
             # Execute each Mechanism in self.executionList, in the order listed during its phase
             self._execute_learning(clock=clock, context=context + LEARNING)
-
+        TEST = True
         # endregion
 
 
@@ -1956,36 +1956,36 @@ class System_Base(System):
             # # TEST PRINT:
             # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
-        # # MODIFIED 2/21/17 OLD:
-        # # Then update all MappingProjections
-        # for component in self.learningExecutionList:
-        #
-        #     if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
-        #         continue
-        #
-        #     component_type = "mappingProjection"
-        #     processes = list(component.sender.owner.processes.keys())
-        #
-        #
-        #     # Sort for consistency of reporting:
-        #     process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
-        #     process_names = list(p.name for p in process_keys_sorted)
-        #
-        #     context_str = str("{} | {}: {} [in processes: {}]".
-        #                       format(context,
-        #                              component_type,
-        #                              component.name,
-        #                              re.sub('[\[,\],\n]','',str(process_names))))
-        #
-        #     # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-        #     component.execute(clock=clock,
-        #                       time_scale=self.timeScale,
-        #                       # time_scale=time_scale,
-        #                       context=context_str)
-        #
-        #     # TEST PRINT:
-        #     print ("EXECUTING WEIGHT UPDATES: ", component.name)
-        # # MODIFIED 2/21/17 END
+        # MODIFIED 2/21/17 OLD:
+        # Then update all MappingProjections
+        for component in self.learningExecutionList:
+
+            if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
+                continue
+
+            component_type = "mappingProjection"
+            processes = list(component.sender.owner.processes.keys())
+
+
+            # Sort for consistency of reporting:
+            process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
+            process_names = list(p.name for p in process_keys_sorted)
+
+            context_str = str("{} | {}: {} [in processes: {}]".
+                              format(context,
+                                     component_type,
+                                     component.name,
+                                     re.sub('[\[,\],\n]','',str(process_names))))
+
+            # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
+            component.execute(clock=clock,
+                              time_scale=self.timeScale,
+                              # time_scale=time_scale,
+                              context=context_str)
+
+            # TEST PRINT:
+            print ("EXECUTING WEIGHT UPDATES: ", component.name)
+        # MODIFIED 2/21/17 END
 
         if self._report_system_output and self._report_process_output:
             # Report learning for targetMechanisms (and the processes to which they belong)
