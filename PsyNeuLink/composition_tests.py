@@ -6,7 +6,7 @@ import time
 test_constructor = False
 test_add_mechanism = False
 test_add_projection = False
-test_analyze_graph = True
+test_analyze_graph = False
 
 # Unit tests for each function of the Composition class #######################
 # Unit tests for Composition.Composition()
