@@ -753,6 +753,11 @@ class ParameterState(State_Base):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        # # MODIFIED 2/21/17 NEW:
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+
 
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
