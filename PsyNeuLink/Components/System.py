@@ -1807,9 +1807,10 @@ class System_Base(System):
         #     print(self.executionList[i][0].name)
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
+        # # MODIFIED 2/21/17 NEW:
+        # if self.learning:
+        #     context = context + LEARNING
         # MODIFIED 12/21/16 NEW:
-        if self.learning:
-            context = context + LEARNING
         self._execute_processing(clock=clock, context=context)
         #endregion
 
@@ -1955,6 +1956,7 @@ class System_Base(System):
             # # TEST PRINT:
             # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
+        # # MODIFIED 2/21/17 OLD:
         # # Then update all MappingProjections
         # for component in self.learningExecutionList:
         #
@@ -1983,6 +1985,7 @@ class System_Base(System):
         #
         #     # TEST PRINT:
         #     print ("EXECUTING WEIGHT UPDATES: ", component.name)
+        # # MODIFIED 2/21/17 END
 
         if self._report_system_output and self._report_process_output:
             # Report learning for targetMechanisms (and the processes to which they belong)
