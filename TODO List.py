@@ -2,6 +2,11 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# FIX:
+#      1) Failure (see EVC Gratton Bug 5) to assign slope for function to function's param (got assigned to mech)
+#      2) Failure to add LEARNING to context in learning run
+#      3) Add learning rate param (including global default)
+
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
 # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)

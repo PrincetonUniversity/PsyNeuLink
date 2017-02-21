@@ -101,8 +101,8 @@ z = process(default_input_value=[0, 0],
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 
-stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
-target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
+stim_list = {Input_Layer:[[-1, 30]]}
+target_list = {Output_Layer:[[0, 0, 1]]}
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -122,9 +122,14 @@ def show_target():
         i = composition.input
         t = composition.targetInputStates[0].value
     print ('\n\nInput: {}\nTarget: {}\n'.format(i, t))
-    print ('\nInput Weights: \n', Input_Weights.matrix)
-    print ('Middle Weights: \n', Middle_Weights.matrix)
-    print ('Output Weights: \n', Output_Weights.matrix)
+    print ('\nActivity from old weights: \n')
+    print ('- Middle 1: \n', Hidden_Layer_1.value)
+    print ('- Middle 2: \n', Hidden_Layer_2.value)
+    print ('- Output:\n', Output_Layer.value)
+    print ('\nNew weights: \n')
+    print ('\n- Input Weights: \n', Input_Weights.matrix)
+    print ('- Middle Weights: \n', Middle_Weights.matrix)
+    print ('- Output Weights: \n', Output_Weights.matrix)
     # print ('MSE: \n', Output_Layer.outputValue[0])
 
 
