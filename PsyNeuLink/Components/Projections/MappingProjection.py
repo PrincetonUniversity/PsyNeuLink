@@ -470,8 +470,10 @@ class MappingProjection(Projection_Base):
             # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix baseValue
             matrix_parameter_state.update(weight_change_params, context=context)
 
+            # MODIFIED 2/21/17 OLD:
             # Update MATRIX
             self.matrix = matrix_parameter_state.value
+            # MODIFIED 2/21/17 END
 
         return self.function(self.sender.value, params=params, context=context)
 

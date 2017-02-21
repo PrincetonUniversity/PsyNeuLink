@@ -3,11 +3,12 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # FIX:
-#    1) In _update_parameter_state, move of assignment of function params (Lines 714 and 742 in ParameterState)
-#           back into @property value (Line 756) [DEBUG CRASH]
-#    2) Failure to add LEARNING to context in learning run
-#    3) Add learning rate param (including global default)
-#    4) Why does calling update_state for parameter state work, but execute projection not work for learningProjections?
+#    0) Deal with function parameter assignment in update() of ParameterState
+#        - move of assignment of function params (Lines 714 and 742 in ParameterState)
+#               back into @property value (Line 756) [DEBUG CRASH]
+#    1) Failure to add LEARNING to context in learning run
+#    2) Add learning rate param (including global default)
+#    3) Why does calling update_state for parameter state work, but execute projection not work for learningProjections?
 
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
