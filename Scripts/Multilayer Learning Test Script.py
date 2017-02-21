@@ -1,3 +1,4 @@
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
@@ -113,27 +114,34 @@ def show_target():
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 
+YES = True
+NO = False
 
-# z.execute()
+PROCESS = NO
 
-# PROCESS VERSION:
-z.run(num_executions=10,
-      # inputs=[[-1, 30],[2, 10]],
-      # targets=[[0, 0, 1],[0, 0, 1]],
-      inputs=stim_list,
-      targets=target_list,
-      call_before_trial=print_header,
-      call_after_trial=show_target)
+if PROCESS:
+    z.execute()
 
-# # SYSTEM VERSION:
-# x = system(processes=[z],
-#            targets=[0, 0, 1])
-# # x.show_graph()
-# x.run(num_executions=10,
-#       # inputs=stim_list,
-#       # inputs=[[-1, 30],[2, 10]],
-#       # targets=[[0, 0, 1],[0, 0, 1]],
-#       inputs=stim_list,
-#       targets=target_list,
-#       call_before_trial=print_header,
-#       call_after_trial=show_target)
+    # PROCESS VERSION:
+    z.run(num_executions=10,
+          # inputs=[[-1, 30],[2, 10]],
+          # targets=[[0, 0, 1],[0, 0, 1]],
+          inputs=stim_list,
+          targets=target_list,
+          call_before_trial=print_header,
+          call_after_trial=show_target)
+
+else:
+    # SYSTEM VERSION:
+    x = system(processes=[z],
+               targets=[0, 0, 1],
+               controller=EVCMechanism)
+    # x.show_graph()
+    x.run(num_executions=10,
+          # inputs=stim_list,
+          # inputs=[[-1, 30],[2, 10]],
+          # targets=[[0, 0, 1],[0, 0, 1]],
+          inputs=stim_list,
+          targets=target_list,
+          call_before_trial=print_header,
+          call_after_trial=show_target)

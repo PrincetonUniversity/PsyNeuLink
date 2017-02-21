@@ -852,7 +852,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
-            #    make sure there no zeros for an element that is assigned a negative exponent
+            #    make sure there are no zeros for an element that is assigned a negative exponent
             if INITIALIZING in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
                 self.variable = np.ones_like(self.variable)
             else:

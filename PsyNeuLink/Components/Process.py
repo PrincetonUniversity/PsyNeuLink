@@ -2216,7 +2216,7 @@ class Process_Base(Process):
         if separator:
             print("\n\n****************************************\n")
 
-        print("\n{} executing with:\n- pathway: [{}]".
+        print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
         # # MODIFIED 2/17/17 OLD:
