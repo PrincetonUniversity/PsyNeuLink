@@ -711,10 +711,10 @@ class ParameterState(State_Base):
             self.value = self.parameterModulationOperation(self.baseValue, self.value)
         #endregion
 
-        # MODIFIED 2/21/17 NEW:
-        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        if self.name in self.owner.function_params:
-            setattr(self.owner.function.__self__, self.name, self.value)
+        # # MODIFIED 2/21/17 NEW: FOR EVC BUT BREAKS LEARNING
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
 
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
@@ -739,10 +739,10 @@ class ParameterState(State_Base):
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
-        # MODIFIED 2/21/17 NEW:
-        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
-        if self.name in self.owner.function_params:
-            setattr(self.owner.function.__self__, self.name, self.value)
+        # # MODIFIED 2/21/17 NEW: FOR EVC, BUT BREAKS LEARNING
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
 
         #endregion
 

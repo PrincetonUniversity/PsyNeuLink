@@ -101,13 +101,15 @@ z = process(default_input_value=[0, 0],
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
 
+# stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+# target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 stim_list = {Input_Layer:[[-1, 30]]}
 target_list = {Output_Layer:[[0, 0, 1]]}
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# COMPOSITION = PROCESS
-COMPOSITION = SYSTEM
+COMPOSITION = PROCESS
+# COMPOSITION = SYSTEM
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 def print_header():
