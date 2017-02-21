@@ -100,27 +100,37 @@ z = process(default_input_value=[0, 0],
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
-def print_header():
-    print("\n\n**** TRIAL: ", CentralClock.trial)
-
-def show_target():
-    print ('\n\nInput: {}\nTarget: {}\n'.
-           format(z.input, z.target))
-    print ('\nInput Weights: \n', Input_Weights.matrix)
-    print ('Middle Weights: \n', Middle_Weights.matrix)
-    print ('Output Weights: \n', Output_Weights.matrix)
-    # print ('MSE: \n', Output_Layer.outputValue[])
 
 stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
 target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 
-YES = True
-NO = False
 
-PROCESS = NO
+# COMPOSITION = PROCESS
+COMPOSITION = SYSTEM
 
-if PROCESS:
-    z.execute()
+def print_header():
+    print("\n\n**** TRIAL: ", CentralClock.trial)
+
+def show_target():
+
+    if COMPOSITION is PROCESS:
+        i = composition.input
+        t = composition.target
+    elif COMPOSITION is SYSTEM:
+        i = composition.input
+        t = composition.targets
+    print ('\n\nInput: {}\nTarget: {}\n'.
+           format(i, t))
+    print ('\nInput Weights: \n', Input_Weights.matrix)
+    print ('Middle Weights: \n', Middle_Weights.matrix)
+    print ('Output Weights: \n', Output_Weights.matrix)
+    # print ('MSE: \n', Output_Layer.outputValue[0])
+
+
+if COMPOSITION is PROCESS:
+    # z.execute()
+
+    composition = z
 
     # PROCESS VERSION:
     z.run(num_executions=10,
@@ -131,11 +141,16 @@ if PROCESS:
           call_before_trial=print_header,
           call_after_trial=show_target)
 
-else:
+elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
     x = system(processes=[z],
-               targets=[0, 0, 1],
-               controller=EVCMechanism)
+               targets=[0, 0, 1])
+
+    x.reportOutputPref = True
+
+    composition = x
+
+
     # x.show_graph()
     x.run(num_executions=10,
           # inputs=stim_list,
@@ -145,3 +160,8 @@ else:
           targets=target_list,
           call_before_trial=print_header,
           call_after_trial=show_target)
+
+else:
+    print ("Multilayer Learning Network NOT RUN")
+
+

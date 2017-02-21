@@ -853,7 +853,7 @@ class LinearCombination(CombinationFunction): # --------------------------------
                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
+            if INITIALIZING in context and any(not any(i) and j<0 for i,j in zip(self.variable, exponents)):
                 self.variable = np.ones_like(self.variable)
             else:
                 self.variable = self.variable ** exponents
