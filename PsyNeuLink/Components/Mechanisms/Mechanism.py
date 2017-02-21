@@ -1586,10 +1586,15 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
 
-        if not isinstance(input, Iterable):
-            input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
-        else:
-            input_string = input
+        # # MODIFIED 2/20/17 OLD:
+        # if not isinstance(input, Iterable):
+        #     input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        # else:
+        #     input_string = input
+        # MODIFIED 2/20/17 NEW:
+        input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        # MODIFIED 2/20/17 END
+
         print ("\n\'{}\'{} executed:\n- input:  {}".
                format(self.name,
                       mechanism_string,
@@ -1622,11 +1627,15 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
 
-        if not isinstance(output, Iterable):
-            output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # # MODIFIED 2/20/17 OLD:
+        # if not isinstance(output, Iterable):
+        #     output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # else:
+        #     output_string = output
+        # MODIFIED 2/20/17 NEW:
+        output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # MODIFIED 2/20/17 END
 
-        else:
-            output_string = output
         print("- output: {}".format(output_string))
 
     # def adjust_function(self, params, context=None):
