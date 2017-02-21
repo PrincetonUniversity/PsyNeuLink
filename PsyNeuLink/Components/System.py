@@ -1808,6 +1808,8 @@ class System_Base(System):
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
         # MODIFIED 12/21/16 NEW:
+        if self.learning:
+            context = context + LEARNING
         self._execute_processing(clock=clock, context=context)
         #endregion
 
