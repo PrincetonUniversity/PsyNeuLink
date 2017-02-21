@@ -1071,7 +1071,7 @@ FROM TODO:
         # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for MappingProjection's receiver mechanism
         # output = self.mappingProjection.receiver.owner.outputState.value
-# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender, 
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender,
 # FIX:   ASSIGN self.input ACCORDINGLY
         output = self.errorSource.outputState.value
 
@@ -1087,6 +1087,9 @@ FROM TODO:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.weightChangeMatrix
+
+        # TEST PRINT
+        print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
 
         return self.value
 
