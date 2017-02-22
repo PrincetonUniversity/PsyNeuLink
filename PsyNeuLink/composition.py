@@ -266,4 +266,8 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    # def run(self, inputs = None, targets = None, initial_values = None):
+    def run(self, inputs = None, targets = None, recurrent_init = None):
+
+        self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
+        self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
+        self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
