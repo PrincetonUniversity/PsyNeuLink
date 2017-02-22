@@ -1089,7 +1089,7 @@ FROM TODO:
                                          # self.receiver.owner.name))
                                          self.mappingProjection.name))
 
-    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
     # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         """
         DOCUMENT:
@@ -1115,14 +1115,10 @@ FROM TODO:
 
         :return: (2D np.array) self.weightChangeMatrix
         """
+
         # Pass during initialization (since has not yet been fully initialized
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
-
-        # # MODIFIED 12/20/16 NEW:
-        # if self.monitoringMechanism.status is UNCHANGED:
-        #     return np.zeros_like(self.value)
-        # # MODIFIED 12/20/16 END
 
         # GET INPUT TO Projection to Error Source:
         # Array of input values from MappingProjection's sender mechanism's outputState
@@ -1131,7 +1127,7 @@ FROM TODO:
         # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for MappingProjection's receiver mechanism
         # output = self.mappingProjection.receiver.owner.outputState.value
-# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender, 
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender,
 # FIX:   ASSIGN self.input ACCORDINGLY
         output = self.errorSource.outputState.value
 
@@ -1147,6 +1143,9 @@ FROM TODO:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.weightChangeMatrix
+
+        # # TEST PRINT
+        # print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
 
         return self.value
 

@@ -828,8 +828,13 @@ class Process_Base(Process):
                                                  target=target,
                                                  params=params)
 
+        self._execution_id = None
         self.pathway = None
-        self.input = None
+        # # MODIFIED 2/17/17 OLD:
+        # self.input = None
+        # MODIFIED 2/17/17 NEW:
+        self.input = []
+        # MODIFIED 2/17/17 END
         self.processInputStates = []
         self.function = self.execute
         self.targetInputStates = []
@@ -866,7 +871,7 @@ class Process_Base(Process):
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.variableClassDefault:
             self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        if variable:
+        if variable is not None:
             self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1605,7 +1610,9 @@ class Process_Base(Process):
             process_input_state = ProcessInputState(owner=self,
                                                     variable=process_input[i],
                                                     prefs=self.prefs)
+            # MODIFIED 2/17/17 OLD:
             self.processInputStates.append(process_input_state)
+            # MODIFIED 2/17/17 END
 
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
@@ -1692,6 +1699,13 @@ class Process_Base(Process):
             self.processInputStates[i].value = input[i]
 
         return input
+
+    # MODIFIED 2/17/17 NEW:
+    def _update_input(self):
+        for s, i in zip(self.processInputStates, range(len(self.processInputStates))):
+            self.input = s.value
+        TEST = True
+    # MODIFIED 2/17/17 END
 
     def _instantiate__deferred_inits(self, context=None):
         """Instantiate any objects in the Process that have deferred their initialization
@@ -1909,6 +1923,7 @@ class Process_Base(Process):
                 input=None,
                 # params=None,
                 target=None,
+                execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL,
@@ -1959,6 +1974,11 @@ class Process_Base(Process):
 
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
+
+        from PsyNeuLink.Globals.Run import _get_get_execution_id
+        self._execution_id = execution_id or _get_get_execution_id()
+        for mech in self.mechanisms:
+            mech._execution_id = self._execution_id
 
         # Report output if reporting preference is on and this is not an initialization run
         report_output = self.prefs.reportOutputPref and context and EXECUTING in context
@@ -2177,17 +2197,39 @@ class Process_Base(Process):
                    call_before_time_step=call_before_time_step,
                    call_after_time_step=call_after_time_step,
                    time_scale=time_scale)
-    def _report_process_initiation(self, separator=False):
+    def _report_process_initiation(self, input=None, separator=False):
+        """
+        Parameters
+        ----------
+        input : ndarray
+            input to ORIGIN mechanism for current execution.  By default, it is the value specified by the
+            ProcessInputState that projects to the ORIGIN mechanism.  Used by system to specify the input
+            from the SystemInputState when the ORIGIN mechanism is executed as part of that sysetm.
+
+        separator : boolean
+            determines whether separator is printed above output
+
+        Returns
+        -------
+
+        """
         if separator:
             print("\n\n****************************************\n")
 
-        print("\n\'{}' executing with:\n- pathway: [{}]".
+        print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
                      re.sub('[\[,\],\n]','',str(self.mechanismNames))))
-        variable = [list(i) for i in self.variable]
-        print("- input: {1}".format(self, re.sub('[\[,\],\n]','',
-                                                 str([[float("{:0.3}".format(float(i)))
-                                                       for i in value] for value in variable]))))
+        # # MODIFIED 2/17/17 OLD:
+        # variable = [list(i) for i in self.variable]
+        # print("- variable: {1}".format(self, re.sub('[\[,\],\n]','',
+        #                                          str([[float("{:0.3}".format(float(i)))
+        #                                                for i in value] for value in variable]))))
+        # MODIFIED 2/17/17 NEW:
+        if input is None:
+            input = self.input
+        print("- input: {}".format(input))
+        # MODIFIED 2/17/17 END
+
 
     def _report_mechanism_execution(self, mechanism):
         # DEPRECATED: Reporting of mechanism execution relegated to individual mechanism prefs
@@ -2202,11 +2244,7 @@ class Process_Base(Process):
 
         print("\n\'{}' completed:\n- output: {}".
               format(append_type_to_name(self),
-                     # # MODIFIED 12/9/16 OLD:
-                     # re.sub('[\[,\],\n]','',str(self.outputState.value))))
-                     # MODIFIED 12/9/16 NEW:
                      re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
-                     # MODIFIED 12/9/16 END
 
         if self.learning:
           print("\n- MSE: {:0.3}".
@@ -2282,19 +2320,6 @@ class Process_Base(Process):
     def inputValue(self):
         return self.variable
 
-    # @property
-    # def input(self):
-    #     # input = self._input or np.array(list(item.value for item in self.processInputStates))
-    #     # return input
-    #     try:
-    #         return self._input
-    #     except AttributeError:
-    #         return None
-    #
-    # @input.setter
-    # def input(self, value):
-    #     self._input = value
-
     @property
     def outputState(self):
         return self.lastMechanism.outputState
@@ -2340,12 +2365,25 @@ class ProcessInputState(OutputState):
         self.sendsToProjections = []
         self.owner = owner
         self.value = variable
+        # MODIFIED 2/17/17 NEW:
+        # self.owner.input = self.value
+        # MODIFIED 2/17/17 END
         # self.receivesFromProjections = []
         # from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
         # from PsyNeuLink.Components.Functions.Function import Linear
         # self.index = PRIMARY_OUTPUT_STATE
         # self.calculate = Linear
 
+    # MODIFIED 2/1717 NEW:
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, assignment):
+        self._value = assignment
+        self.owner._update_input()
+    # MODIFIED 2/1717 END
 
 
 ProcessTuple = namedtuple('ProcessTuple', 'process, input')

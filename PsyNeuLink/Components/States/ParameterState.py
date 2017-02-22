@@ -711,6 +711,16 @@ class ParameterState(State_Base):
             self.value = self.parameterModulationOperation(self.baseValue, self.value)
         #endregion
 
+        # FIX: STRIP VALUES OUT OF ARRAY OR LIST OF THAT IS WHAT PARAMETER REQUIRES (USE TYPE-MATCH?)
+        # FIX: DEHACK TEST FOR MATRIX
+        # FIX: MOVE TO PROPERTY
+        # MODIFIED 2/21/17 NEW: FOR EVC BUT BREAKS LEARNING
+        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        if self.name in self.owner.function_params and not 'matrix' in self.name:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+            param_type = type(getattr(self.owner.function.__self__, self.name))
+            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
         if (not self.stateParams or self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
@@ -734,6 +744,14 @@ class ParameterState(State_Base):
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
+        # MODIFIED 2/21/17 NEW: FOR EVC, BUT BREAKS LEARNING
+        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        if self.name in self.owner.function_params and not 'matrix' in self.name:
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+            param_type = type(getattr(self.owner.function.__self__, self.name))
+            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+
         #endregion
 
     @property
@@ -743,6 +761,11 @@ class ParameterState(State_Base):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        # # MODIFIED 2/21/17 NEW:
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+
 
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them

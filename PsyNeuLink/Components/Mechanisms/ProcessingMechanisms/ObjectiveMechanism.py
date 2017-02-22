@@ -471,7 +471,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # Instantiate inputState for each monitored state in the list
         # from Components.States.OutputState import OutputState
 
-        # FIX: PARSE LIST HERE, STANDARDINZING FORMAT INTO (ITEM, (WEIGHT, EXPONENT)) TUPLES
+        # FIX: PARSE LIST HERE, STANDARDIZING FORMAT INTO (ITEM, (WEIGHT, EXPONENT)) TUPLES
         # FIX: SHOULD THIS RESPECT SPECIFICATIONS ON THE MECHANISM (OR, IF NOT SPECIFIED THERE, THE SYSTEM)
         # FIX:    FOR WHICH OUTPUT STATES TO INCLUDE?  -- SEE _get_monitored_states IN EVCMechanism
         # FIX:    IF OUTPUTSTATES MONITOR_FOR_CONTROL = NONE, THEN WARN AND IGNORE (DON'T CREATE INPUTSTATE)

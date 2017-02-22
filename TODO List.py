@@ -1,7 +1,66 @@
 # NEW COMMENT
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+
+# FIX:
+#    0) Deal with function parameter assignment in update() of ParameterState
+#        - move assignment of function params (Lines 714 and 742 in ParameterState)
+#               into @property for value (Line 756) [DEBUG CRASH]
+#        - assign params for function to owner in _instantiate_parameter_states (currently in assign_params_to_dicts??)
+#          ?? use user_params from function?
+#    1) Once function param assignment is fixed, add test that it is working to jenkins suite
+#          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
+#                 changes its value for the Function
+#    3) Add learning rate param (including global default)
+#    4) For system vs. process learning:
+#           Figure out why calling update_state for the matrix ParameterState works,
+#                      but executing the LearningProjection to it does not
+
+# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
+# FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+#                 if EVC == EVC_max: (LINE 289 IN EVCAuxilliary)
+
+# FIX: execution_token asynchrony:
+#    * Since learning and controller execute after processing mechanisms:
+#      - on the first pass, they ignore learning and control projections (since their excxecution_tokens == None
+#      - on subsequent passes, they have the new (current) execution_token, while learning and control mechanisms
+#             still have the last one
+#      SOLUTION:  HAVE LEARNING AND CONTROL MECHANISMS GET THEIR execution_tokens FROM THEIR SYSTEM?
+#                 OR HAVE SYSTEM ASSIGN ITS LEARNING AND CONTROL MECHANISMS THE CURRENT execution_token??
+#      SOLUTION:  ASSIGN execution_token TO ALL MECHANISMS IN SYSTEM GRAPH AND LEARNING GRAPH AT TIME OF SYSTEM EXEC.
+#
+#    * Same issue for learning in Process??
+#
+#    * Also, which execution_token should be used for simulations (while simulation uses actual system rather than copy)
+#
+# FIX:
+# Finish Run:
+#     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
+#
+# Rename INPUTS -> STIMULI
+# FIX: process.run crashes if stimuli are in dict format and there is more than one execution set
+#                 (see Multilayer Learning Script)
+#
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+#
+# FIX:
+#
+# System:
+#    Finish implementing SystemStimulusInputs
+
+# ObjectiveMechanism:
+#    Add matrix assignments (and allow None to suppress it)
+#    Add input assignments
+
+# LearningProjection:
+#    Finish implementing Comparator version of ObjectiveMechanmism
+
+# FIX: EVC Gratton Script_Bug5:  Can't assign Linear() directly to intensity_cost_function (had to assign .function)
+# FIX: When running a process with a TERMINAL mechanism that is also in another process, it gets input from that
+#        process even if it is not running
+# FIX: Can't specify parameter as ControlProjection (StroopEVCforDST)
+
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
 # √ System
