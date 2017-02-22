@@ -275,6 +275,8 @@ IMPLEMENTATION NOTE:  ** DESCRIBE VARIABLE HERE AND HOW/WHY IT DIFFERS FROM PARA
                                            context=context)
 
     def execute(self, variable=None, params=None, context=None):
+        # Call Component execute() function for general processing
+        super().execute()
         return self.function(variable=variable, params=params, context=context)
 
     @property

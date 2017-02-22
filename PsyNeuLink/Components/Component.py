@@ -398,6 +398,9 @@ class Component(object):
         self.results = []
         #endregion
 
+        #region INSTATIATE EXECUTION CALL COUNTERS
+        self.reset_call_counts()
+        #endregion
 
         #region ENFORCE REQUIRED CLASS DEFAULTS
 
@@ -484,6 +487,10 @@ class Component(object):
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_outputState in Mechanism)
         self._instantiate_attributes_after_function(context=context)
+        #endregion
+
+        #region RESET CALL COUNTS DUE TO VALIDATION
+        self.reset_call_counts
         #endregion
 
 #endregion
@@ -1841,8 +1848,10 @@ class Component(object):
     def initialize(self):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
-        raise ComponentError("{} class must implement execute".format(self.__class__.__name__))
+    def execute(self):#, input=None, params=None, time_scale=None, context=None):
+        self.calls_since_initialization += 1
+        self.calls_current_run += 1
+        self.calls_current_trial += 1
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -1969,6 +1978,20 @@ class Component(object):
     @runtimeParamStickyAssignmentPref.setter
     def runtimeParamStickyAssignmentPref(self, setting):
         self.prefs.runtimeParamStickyAssignmentPref = setting
+
+    #region EXECUTE CALL COUNTING FUNCTIONS
+    def reset_call_counts(self):
+        self.calls_since_initialization = 0
+        self.calls_current_run = 0
+        self.calls_current_trial = 0
+
+    def new_run(self):
+        self.calls_current_run = 0
+        self.calls_current_trial = 0
+
+    def new_trial(self):
+        self.calls_current_trial = 0
+    #endregion
 
 
 COMPONENT_BASE_CLASS = Component

@@ -1956,6 +1956,8 @@ class Process_Base(Process):
         COMMENT
 
         """
+        # Call Component execute() function for general processing
+        super().execute()
 
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name

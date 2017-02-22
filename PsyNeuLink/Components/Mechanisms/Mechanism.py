@@ -1272,6 +1272,8 @@ class Mechanism_Base(Mechanism):
             either one time_step or a trial.
 
         """
+        # Call Component execute() function for general processing
+        super().execute()
 
         context = context or NO_CONTEXT
 
