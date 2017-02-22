@@ -4,15 +4,17 @@
 
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
-#        - move of assignment of function params (Lines 714 and 742 in ParameterState)
-#               back into @property value (Line 756) [DEBUG CRASH]
-#        - assign params for function to owner in _instantiate_parameter_states (not assign_params_to_dicts)
+#        - move assignment of function params (Lines 714 and 742 in ParameterState)
+#               into @property for value (Line 756) [DEBUG CRASH]
+#        - assign params for function to owner in _instantiate_parameter_states (currently in assign_params_to_dicts??)
 #          ?? use user_params from function?
 #    1) Once function param assignment is fixed, add test that it is working to jenkins suite
-#    2) Failure to add LEARNING to context in learning run
+#          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
+#                 changes its value for the Function
 #    3) Add learning rate param (including global default)
-#    4) Why does calling update_state for parameter state work, but execute projection not work for learningProjections?
-
+#    4) For system vs. process learning:
+#           Figure out why calling update_state for the matrix ParameterState works,
+#                      but executing the LearningProjection to it does not
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
