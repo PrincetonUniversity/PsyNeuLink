@@ -571,7 +571,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # Instantiate MappingProjection from monitored_state to new input_state
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
+        # # MODIFIED 2/22/17 OLD:
+        # MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
+        # MODIFIED 2/22/17 NEW:
+        MappingProjection(sender=monitored_state, receiver=input_state, matrix=AUTO_ASSIGN_MATRIX)
+        # MODIFIED 2/22/17 END
 
     def add_monitored_states(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state

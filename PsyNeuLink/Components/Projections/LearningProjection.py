@@ -273,7 +273,7 @@ kwWeightChangeParams = "weight_change_params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
-DefaultTrainingMechanism = ComparatorMechanism
+DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningProjectionError(Exception):
     def __init__(self, error_value):
@@ -944,13 +944,19 @@ FROM TODO:
                                                   format(self.function.name, self.name))
 
                     # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
-                    # IMPLEMENTATION NOTE: currently assumes this will use a Comparator function, for which
-                    #                      the target must match the sample (output_signal)
 
-
-                    target = output_signal
-                    objective_mechanism_input = np.array([output_signal, training_signal])
-                    objective_mechanism = DefaultTrainingMechanism(objective_mechanism_input)
+                    # FIX: IS THIS GETTING SET SOMEWHERE ELSE?  WHO SETS THIS PROJECTION?
+                    # FIX: IS IT BETTER FOR OBJECTIVE FUNCTION TO ASSIGN PROJECTIONS, OR LET SOMETHING ELSE DO IT?
+                    # target = RELEVANT SystemInputState
+                    target = True
+                    # objective_mechanism_input = np.array([output_signal, (target, -1, 1)])
+                    # objective_mechanism = DefaultTrainingMechanism(objective_mechanism_input)
+                    objective_mechanism = ObjectiveMechanism(monitor=[next_level_montioring_mech_output, target],
+                                                              names=['SAMPLE','TARGET'],
+                                                             # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
+                                                              function=LinearCombination(weights=[1, -1]),
+                                                              role=LEARNING,
+                                                              name=self.mappingProjection.name + " Target_Error")
 
                     # FIX: 1) NEED TO ASSIGN AN OutputState TO MONITOR FOR THE TARGET:
                     #      2  USE TARGET ProcessInputStates / SystemInputStates??
@@ -960,26 +966,27 @@ FROM TODO:
                     # FIX:        AND THEN INFER THE TYPE OF MATRIX, OR BOTH,
                     # FIX:    WITH DEFAULT TO SIMPLY MATCH INPUT STATE TO MONITOR LIST AND USE IDENTITY MATRIX AS NOW
 
+                    # FIX: STILL NEEDED, IF OBJECTIVE MECHANISM IMPLEMENTS ITS OWN MAPPING PROJECTIONS?
                     # Instantiate a MappingProjection from the errorSource to the DefaultTrainingMechanism
-                    try:
-                        monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
-                        monitored_state = self.errorSource.outputStates[monitored_state]
-                    except KeyError:
-                        # No speicific outputState specified so use Mechanism as sender arg
-                        monitored_state = self.errorSource
-
-                    if self.function.componentName is BACKPROPAGATION_FUNCTION:
-                        matrix = IDENTITY_MATRIX
-                    # Force sample and target of ComparatorMechanism to be scalars for RL
-                    elif self.function.componentName is RL_FUNCTION:
-                        matrix = FULL_CONNECTIVITY_MATRIX
-                    self.monitoring_projection = MappingProjection(sender=monitored_state,
-                                                         receiver=objective_mechanism.inputStates[COMPARATOR_SAMPLE],
-                                                         name=self.errorSource.name +
-                                                              ' to '+
-                                                              objective_mechanism.name+' ' +
-                                                              MAPPING_PROJECTION+' Projection',
-                                                         matrix=matrix)
+                    # try:
+                    #     monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
+                    #     monitored_state = self.errorSource.outputStates[monitored_state]
+                    # except KeyError:
+                    #     # No speicific outputState specified so use Mechanism as sender arg
+                    #     monitored_state = self.errorSource
+                    #
+                    # if self.function.componentName is BACKPROPAGATION_FUNCTION:
+                    #     matrix = IDENTITY_MATRIX
+                    # # Force sample and target of ComparatorMechanism to be scalars for RL
+                    # elif self.function.componentName is RL_FUNCTION:
+                    #     matrix = FULL_CONNECTIVITY_MATRIX
+                    # self.monitoring_projection = MappingProjection(sender=monitored_state,
+                    #                                      receiver=objective_mechanism.inputStates[COMPARATOR_SAMPLE],
+                    #                                      name=self.errorSource.name +
+                    #                                           ' to '+
+                    #                                           objective_mechanism.name+' ' +
+                    #                                           MAPPING_PROJECTION+' Projection',
+                    #                                      matrix=matrix)
             # MODIFIED 2/13/17 END
 
             self.sender = objective_mechanism.outputState
