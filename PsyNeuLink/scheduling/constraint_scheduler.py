@@ -5,27 +5,15 @@ class Constraint(object):
             self.dependencies = (dependencies,)
         else:
             self.dependencies = dependencies # Tuple of ScheduleVariables on which this constraint depends
-        self.time_scales = time_scales # Time Scales over which the constraint queries each dependency
-        if self.time_scales is None: # Defaults to 'trial'
-            self.time_scales = ('trial',)*len(self.dependencies)
+
+        # currently lines 10-12 are not used; time_scale is input explicitly, e.g. every_n_calls(1, "trial")
+        # self.time_scales = time_scales # Time Scales over which the constraint queries each dependency
+        # if self.time_scales is None: # Defaults to 'trial'
+        #     self.time_scales = ('trial',)*len(self.dependencies)
         self.condition = condition # Condition to be evaluated
 
     def is_satisfied(self):
-        def resolve_time(var, scale):
-            if scale == 'trial':
-                return var.component.calls_current_trial
-            elif scale == 'run':
-                return var.component.calls_current_run
-            elif scale == 'life':
-                return var.component.calls_since_initialization
-            else:
-                pass
-                ## TODO Throw proper error
-                #throw ValueError()
-        if self.condition(*tuple((resolve_time(var, scale) for var, scale in zip(self.dependencies, self.time_scales)))):
-            return True
-        else:
-            return False
+        return self.condition(self.dependencies)
 
 class ScheduleVariable(object):
     def __init__(self, component, own_constraints = None, dependent_constraints = None, priority = None):
@@ -183,10 +171,10 @@ def main():
     sched.set_clock(Clock)
     sched.set_terminal(Terminal)
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
-    sched.add_constraints([(A, (Clock,), every_n_calls(1)),
-                           (B, (A,), every_n_calls(2)),
-                           (C, (B,), every_n_calls(2)),
-                           (Terminal, (C,), every_n_calls(2))])
+    sched.add_constraints([(A, (Clock,), every_n_calls(1, "trial")),
+                           (B, (A,), every_n_calls(2, "trial")),
+                           (C, (B,), every_n_calls(2, "trial")),
+                           (Terminal, (C,), every_n_calls(2, "trial"))])
     for var in sched.var_list:
         var.component.new_trial()
     for i in range(10):
@@ -207,7 +195,6 @@ def main():
     #         print(mech.name)
     #     print('-----------------')
 
-
-
 if __name__ == '__main__':
     main()
+
