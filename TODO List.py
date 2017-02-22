@@ -5,6 +5,8 @@
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
 #        - move of assignment of function params (Lines 714 and 742 in ParameterState)
+#        - assign params for function to owner in _instantiate_parameter_states (not assign_params_to_dicts)
+#          ?? use user_params from function?
 #               back into @property value (Line 756) [DEBUG CRASH]
 #    1) Failure to add LEARNING to context in learning run
 #    2) Add learning rate param (including global default)
