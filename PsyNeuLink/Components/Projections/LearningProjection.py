@@ -869,8 +869,9 @@ FROM TODO:
                 # FIX:  NEED TO DEAL WITH THIS RE: RL -> DON'T CREATE BACK PROJECTIONS??
                 # NON-TERMINAL Mechanism
                 # errorSource at next level projects to a MonitoringMechanism:
-                #    instantiate WeightedErrorMechanism MonitoringMechanism and the back-projection for its error signal:
-                #        (computes contribution of each element in errorSource to error at level to which it projects)
+                #    instantiate ObjectiveMechanism configured with WeightedError Function
+                #    (computes contribution of each element in errorSource to error at level to which it projects)
+                #    and the back-projection for its error signal:
                 if next_level_montioring_mech_output:
                     error_signal = np.zeros_like(next_level_montioring_mech_output.value)
                     next_level_output = projection.receiver.owner.outputState
@@ -929,8 +930,8 @@ FROM TODO:
             # MODIFIED 2/13/17 NEW: [USE ObjectiveMechanism RATHER THAN ComparatorMechanism]
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to an ObjectiveMechanism:
-                #     instantiate DefaultTrainingMechanism MonitoringMechanism
-                #         (compares errorSource output with external training signal)
+                #     instantiate ObjectiveMechanism configured as a comparator
+                #         that compares errorSource output with external training signal
                 else:
 
                     # Assign output_signal to output of errorSource
