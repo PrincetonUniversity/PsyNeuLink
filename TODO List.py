@@ -2659,7 +2659,7 @@
 #               monitor (in ObjectiveMechanism._validate_monitored_states) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
-#     Make sure add_monitored_state works
+#     Make sure add_monitored_value works
 #     Allow inputStates to be named (so they can be used as ComparatorMechanism)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
@@ -2685,7 +2685,7 @@
 #     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
 #     Allow it to take monitoring_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
-#     Make sure add_monitored_state works:
-#           Needs to call ObjectiveMechanism.add_monitored_state
+#     Make sure add_monitored_value works:
+#           Needs to call ObjectiveMechanism.add_monitored_value
 #           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
