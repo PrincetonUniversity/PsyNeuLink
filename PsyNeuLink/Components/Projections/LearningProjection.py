@@ -242,6 +242,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism i
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
                                                                                          PROJECTION_TO_NEXT_MECHANISM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
@@ -880,7 +881,7 @@ FROM TODO:
                     derivative = next_level_montioring_mech_output.sendsToProjections[0].\
                         receiver.owner.receiver.owner.function_object.derivative
                     from PsyNeuLink.Components.Functions.Function import WeightedError
-                    objective_mechanism = ObjectiveMechanism(monitor=[next_level_output,
+                    objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
                                                                        next_level_montioring_mech_output],
                                                               names=['ACTIVITY','ERROR_SIGNAL'],
                                                               function=WeightedError(variable_default=[activity,
@@ -889,7 +890,6 @@ FROM TODO:
                                                                                      derivative=derivative),
                                                               role=LEARNING,
                                                               name=self.mappingProjection.name + " Weighted_Error")
-
             # # MODIFIED 2/13/17 OLD:
             #     # TERMINAL Mechanism
             #     # errorSource at next level does NOT project to a MonitoringMechanism:
@@ -945,14 +945,19 @@ FROM TODO:
                                                   format(self.function.name, self.name))
 
                     # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
-
-                    # FIX: IS THIS GETTING SET SOMEWHERE ELSE?  WHO SETS THIS PROJECTION?
-                    # FIX: IS IT BETTER FOR OBJECTIVE FUNCTION TO ASSIGN PROJECTIONS, OR LET SOMETHING ELSE DO IT?
-                    # target = RELEVANT SystemInputState
-                    target = True
-                    # objective_mechanism_input = np.array([output_signal, (target, -1, 1)])
-                    # objective_mechanism = DefaultTrainingMechanism(objective_mechanism_input)
-                    objective_mechanism = ObjectiveMechanism(monitor=[next_level_montioring_mech_output, target],
+                    try:
+                        sample = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
+                        sample = self.errorSource.outputStates[sample]
+                    except KeyError:
+                        # No state specified so use Mechanism as sender arg
+                        sample = self.errorSource
+                    # IMPLEMENTATION NOTE: specify target as an InputState (rather than an outputState),
+                    #                      since its projection (from either a ProcessInputState or a SystemInputState)
+                    #                      will be instantiated by the Composition object to which the mechanism belongs
+                    target = InputState
+                    # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
+                    # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
+                    objective_mechanism = ObjectiveMechanism(monitored_values=[sample, target],
                                                               names=['SAMPLE','TARGET'],
                                                              # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
                                                               function=LinearCombination(weights=[1, -1]),

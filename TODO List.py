@@ -15,8 +15,18 @@
 #    3) For system vs. process learning:
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
-#    4) ObjectiveMechanisms:  add ability to take inputStates (in monitor arg), for which no projection is created
-#    5) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights and exponents, but rather assign
+#    4) ObjectiveMechanisms:  MODIFY TO:
+#                                a) TAKE SPECIFICATIONS IN VARIABLE ARG, RATHER THAN IN MONITOR
+#                                b) PARSE OUTPUT STATES SPECIFIED AS ITEMS IN VARIABLE ARG,
+#                                       TO GET FORMAT OF OUTPUTSTATE'S VALUE, AND USE THAT FOR THAT ITEM OF VARIABLE
+#                                c) CALL NEW MODULE METHOD THAT IMPLEMENTS PROJECTIONS FROM OUTPUTSTATES SPECIFIED
+#                                       IN VARIABLE TO CORRESPONDING INPUTSTATES (AS PLACEMARKER FOR COMPOSITION METHOD)
+#                                       SHOULD TAKE OUTPUTSTATE SPECIFIED IN VARIABLE, AND INPUSTATE CREATED FOR IT
+#                                          AS ITS ARGS)
+#                                d) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights
+#                                           and exponents, but rather assign
+#                                e) Document monitored_values
+#                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
