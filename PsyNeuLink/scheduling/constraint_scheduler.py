@@ -130,7 +130,7 @@ class Scheduler(object):
         self.var_dict[terminal].priority = 0
         self.var_list.append(self.var_dict[terminal])
 
-    def generate_time_step(self):
+    def run_time_step(self):
         def update_dependent_vars(variable):
             change_list = []
             for con in variable.dependent_constraints:
@@ -149,7 +149,8 @@ class Scheduler(object):
             var.new_time_step()
         firing_queue = [self.clock]
         for var in firing_queue:
-            yield var
+            var.component.execute()
+            print(var.component.name)
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
 
@@ -188,13 +189,15 @@ def main():
                            (Terminal, (C,), every_n_calls(2))])
     for var in sched.var_list:
         var.component.new_trial()
-    for mech in sched.generate_trial():
-        mech.execute()
-        print(mech.name)
-    print('=================================')
-    for mech in sched.generate_trial():
-        mech.execute()
-        print(mech.name)
+    for i in range(10):
+        sched.run_time_step()
+    # for mech in sched.generate_trial():
+    #     mech.execute()
+    #     print(mech.name)
+        print('=================================')
+    # for mech in sched.generate_trial():
+    #     mech.execute()
+    #     print(mech.name)
 
 
     # for i in range(12):
