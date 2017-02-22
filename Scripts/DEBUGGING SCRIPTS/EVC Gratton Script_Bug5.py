@@ -28,8 +28,8 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Control Parameters
-# signalSearchRange = np.arange(0, 5.1, 0.1)
-signalSearchRange = np.arange(0, 2, 1)
+# signalSearchRange = np.arange(0, 5.1, 0.5)
+signalSearchRange = np.arange(0, 1, 0.5)
 
 # Stimulus Mechanisms
 Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope = 0.2995))
@@ -108,6 +108,7 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TargetControlProcess, Flanker1ControlProcess, Flanker2ControlProcess,
                              # TargetAutomaticProcess,
+                             # TargetAutomaticProcess, Flanker1AutomaticProcess, Flanker2AutomaticProcess,
                              RewardProcess],
                   controller=EVCMechanism,
                   enable_controller=True,
@@ -120,12 +121,27 @@ mySystem = system(processes=[TargetControlProcess, Flanker1ControlProcess, Flank
 mySystem.show()
 mySystem.controller.show()
 
+# configure EVC components
+# mySystem.controller.controlSignals[0].intensity_cost_function = Linear(slope = 0)
+# mySystem.controller.controlSignals[1].intensity_cost_function = Linear(slope = 0)
+# mySystem.controller.controlSignals[2].intensity_cost_function = Linear(slope = 0)
+#
+mySystem.controller.controlSignals[0].assign_params(request_set={'intensity_cost_function':Linear(slope=0)})
+mySystem.controller.controlSignals[0].assign_params(request_set={'intensity_cost_function':Linear})
+mySystem.controller.controlSignals[2].intensity_cost_function = Linear(slope = 0).function
+
+
+# list(param.name for param in mySystem.mechanismsDict["Flanker 1 Stimulus_PredictionMechanism"].params)
+# mySystem.mechanismsDict["Flanker 1 Stimulus_PredictionMechanism"].rate
+# mySystem.mechanismsDict["Flanker 1 Stimulus_PredictionMechanism"].function_params.rate
+
+
 # generate stimulus environment
 
 nTrials = 3
 targetFeatures = [1]
 flankerFeatures = [-1] # for full simulation: flankerFeatures = [-1,1]
-reward = 100
+reward = 10000
 
 targetInputList = np.random.choice(targetFeatures, nTrials).tolist()
 flanker1InputList = np.random.choice(flankerFeatures, nTrials).tolist()
@@ -162,13 +178,11 @@ def show_results():
 # Run system:
 
 mySystem.controller.reportOutputPref = True
-
 mySystem.run(num_executions=nTrials,
              inputs=stim_list_dict,
              call_before_trial=show_trial_header,
              call_after_time_step=show_results
              )
 
-
-# Bug
-# 1) l. 163: Cannot set mySystem.controller.reportOutputPref to TRUE
+# Bugs
+# 1) l. 124-126: TypeError: 'Linear' object is not callable

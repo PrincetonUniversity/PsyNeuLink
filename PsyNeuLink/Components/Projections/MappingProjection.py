@@ -431,7 +431,7 @@ class MappingProjection(Projection_Base):
 
         super()._instantiate_receiver(context=context)
 
-    def execute(self, input=None, params=None, clock=CentralClock, time_scale=None, context=None):
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
     # def execute(self, input=None, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
         # IMPLEMENT: check for flag that it has changed (needs to be implemented, and set by ErrorMonitoringMechanism)
         # DOCUMENT: update, including use of monitoringMechanism.monitoredStateChanged and weightChanged flag
@@ -470,8 +470,10 @@ class MappingProjection(Projection_Base):
             # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix baseValue
             matrix_parameter_state.update(weight_change_params, context=context)
 
+            # MODIFIED 2/21/17 OLD: [REPLACE WITH ASSIGNMENT UNDER @property value IN ParmaterState??]
             # Update MATRIX
             self.matrix = matrix_parameter_state.value
+            # MODIFIED 2/21/17 END
 
         return self.function(self.sender.value, params=params, context=context)
 

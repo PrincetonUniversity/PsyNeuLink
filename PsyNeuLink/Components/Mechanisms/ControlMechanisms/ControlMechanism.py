@@ -335,7 +335,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 #        which calls Mechanism.sendsToProjections.append(),
                 #        so need to do that in _instantiate_control_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                self._instantiate_control_projection(projection, context=context)
+                params = projection.control_signal
+                self._instantiate_control_projection(projection, params=params, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection
