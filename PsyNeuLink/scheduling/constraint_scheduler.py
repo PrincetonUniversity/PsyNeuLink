@@ -21,6 +21,7 @@ class ScheduleVariable(object):
         self.own_constraints = []
         self.unfilled_constraints = []
         self.filled_constraints = []
+        self.once = False
         if own_constraints is not None:
             for con in own_constraints:
                 self.add_own_constraint(con)
@@ -42,6 +43,7 @@ class ScheduleVariable(object):
         if result:
             self.filled_constraints.append(constraint)
             self.unfilled_constraints.remove(constraint)
+            self.once = True
         return result
 
     def new_time_step(self):
@@ -142,17 +144,28 @@ class Scheduler(object):
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
 
-    def generate_trial(self):
+    # def generate_trial(self):
+    #     for var in self.var_list:
+    #         var.new_trial()
+    #     trial_terminated = False
+    #     while(not trial_terminated):
+    #         for var in self.generate_time_step():
+    #             if var is self.terminal:
+    #                 trial_terminated = True
+    #                 break
+    #             else:
+    #                 yield var.component
+
+    def run_trial(self):
         for var in self.var_list:
             var.new_trial()
+            var.once = False
         trial_terminated = False
         while(not trial_terminated):
-            for var in self.generate_time_step():
-                if var is self.terminal:
-                    trial_terminated = True
-                    break
-                else:
-                    yield var.component
+            self.run_time_step()
+            if self.terminal.once == True:
+                trial_terminated = True
+                break
             print('----------------')
 
 
@@ -171,18 +184,25 @@ def main():
     sched.set_clock(Clock)
     sched.set_terminal(Terminal)
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
-    sched.add_constraints([(A, (Clock,), every_n_calls(1, "trial")),
-                           (B, (A,), every_n_calls(2, "trial")),
-                           (C, (B,), every_n_calls(2, "trial")),
-                           (Terminal, (C,), every_n_calls(2, "trial"))])
+    sched.add_constraints([(A, (Clock,), every_n_calls(1)),
+                           (B, (A,), every_n_calls(2)),
+                           (C, (B,), every_n_calls(2)),
+                           (Terminal, (C,), every_n_calls(2))])
     for var in sched.var_list:
         var.component.new_trial()
-    for i in range(10):
-        sched.run_time_step()
+    # for i in range(10):
+    #     sched.run_time_step()
+
+
+    sched.run_trial()
+    print("--- BEGINNING TRIAL 2 ---")
+    sched.run_trial()
+
+
     # for mech in sched.generate_trial():
     #     mech.execute()
     #     print(mech.name)
-        print('=================================')
+    print('=================================')
     # for mech in sched.generate_trial():
     #     mech.execute()
     #     print(mech.name)
