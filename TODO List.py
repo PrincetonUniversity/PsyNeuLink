@@ -11,10 +11,13 @@
 #    1) Once function param assignment is fixed, add test that it is working to jenkins suite
 #          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
 #                 changes its value for the Function
-#    3) Add learning rate param (including global default)
-#    4) For system vs. process learning:
+#    2) Add learning rate param (including global default)
+#    3) For system vs. process learning:
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
+#    4) ObjectiveMechanisms:  add ability to take inputStates (in monitor arg), for which no projection is created
+#    5) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights and exponents, but rather assign
+#          them where the ObjectiveMechanism is created (in its LinearFunction)
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
