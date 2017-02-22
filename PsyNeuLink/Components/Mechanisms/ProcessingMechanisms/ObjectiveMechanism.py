@@ -332,12 +332,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     ----------
 
     monitored_values : [List[value, InputState, OutputState, Mechanism, or MonitoredOutputStateOption]
-        the values monitored, and evaluated by `function <ObjectiveMechanism>`.  An `inputState <InputState>`
-        is created in the ObjectiveMechanism for each item in the list.  It is assumed, for any item that is a
-        value or an inputState that has no projections to it, these will be generated later (possibly automatically,
-        as part of a `Process` or `System`).  For any item that is an `OutputState`, `Mechanism`, or
-        `MonitoredOutputStateOption`, projections will be created automatically by any `systems <System>` and/or
-        `processes <Process>` to which the ObjectiveMechanism belongs.
+        serves as the ObjectiveMechahnism's variable;  determines  the values monitored, and evaluated by
+        `function <ObjectiveMechanism>`.  An `inputState <InputState>` is created in the ObjectiveMechanism for each
+        item in the list.  It is assumed, for any item that is a value or an inputState that has no projections to
+        it, these will be generated later (possibly automatically, as part of a `Process` or `System`).  For any item
+        that is an `OutputState`, `Mechanism`, or `MonitoredOutputStateOption`, projections will be created
+        automatically by any `systems <System>` and/or `processes <Process>` to which the ObjectiveMechanism belongs.
 
     function : CombinationFunction : default LinearCombination
         the function used to compare `COMPARATOR_SAMPLE` with `COMPARATOR_TARGET`.
@@ -376,8 +376,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
-                                                  names=names,
+        params = self._assign_args_to_param_dicts(names=names,
                                                   function=function,
                                                   role=role,
                                                   params=params)
@@ -393,9 +392,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self.learning_role = None
 
 
+    def _validate_variable(self, variable, context=None):
+        pass
+
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate monitored_values argument
         """
+        # FIX: NEED TO VALIDATE FOR VALUES AND/OR INPUT STATES AS WELL AS OUTPUTSTATESS, MECHAINSMS AND OPTIONS
+        # FIX: AND TEST THAT IT ALLOWS THESE
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -416,7 +421,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     raise ObjectiveError("it in \'names\'arg ({}) of {} is not a string".
                                          format(target_set[NAMES], self.name))
 
-        #region VALIDATE MONITORED STATES (for use by ControlMechanism)
+        #region VALIDATE MONITORED STATES
+        # MOVE THIS TO _validate_variable() ABOVE
+        # FIX: IS THE FOLLOWING STILL TRUE:
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
         #       as it can reference entries in that param
         try:
