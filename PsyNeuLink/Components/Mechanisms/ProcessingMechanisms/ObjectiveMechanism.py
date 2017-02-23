@@ -622,25 +622,26 @@ def validate_monitored_value(self, state_spec, context=None):
     if _is_value_spec(state_spec):
         state_spec_is_OK = True
 
-    # MODIFIED 2/22/17: [Deprecated -- weights and exponents should be specified as params of the function]
-    # if isinstance(state_spec, tuple):
-    #     if len(state_spec) != 3:
-    #         raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
-    #                              "has {2} items;  it should be 3".
-    #                              format(state_spec, self.name, len(state_spec)))
-    #
-    #     if not isinstance(state_spec[1], numbers.Number):
-    #         raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
-    #                              "must be a number".
-    #                              format(state_spec, self.name, state_spec[0]))
-    #
-    #     if not isinstance(state_spec[2], numbers.Number):
-    #         raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
-    #                              "must be a number".
-    #                              format(state_spec, self.name, state_spec[0]))
-    # 
-    #     # Set state_spec to the output_state item for validation below
-    #     state_spec = state_spec[0]
+    # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
+    if isinstance(state_spec, tuple):
+        if len(state_spec) != 3:
+            raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+                                 "has {2} items;  it should be 3".
+                                 format(state_spec, self.name, len(state_spec)))
+
+        if not isinstance(state_spec[1], numbers.Number):
+            raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                 "must be a number".
+                                 format(state_spec, self.name, state_spec[0]))
+
+        if not isinstance(state_spec[2], numbers.Number):
+            raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                 "must be a number".
+                                 format(state_spec, self.name, state_spec[0]))
+
+        # Set state_spec to the output_state item for validation below
+        state_spec = state_spec[0]
+    # MODIFIED 2/22/17 END
 
     from PsyNeuLink.Components.States.OutputState import OutputState
     if isinstance(state_spec, (InputState, OutputState, Mechanism)):
