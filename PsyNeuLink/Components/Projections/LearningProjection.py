@@ -242,7 +242,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism i
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanism import WeightedErrorMechanism, \
                                                                                          PROJECTION_TO_NEXT_MECHANISM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import objective_mechanism_role
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
@@ -810,7 +810,7 @@ FROM TODO:
         # OutputState specified (or re-assigned) for sender
         if isinstance(self.sender, OutputState):
             # Validate that it belongs to an ObjectiveMechanism being used for learning
-            if not objective_mechanism_role(self.sender.owner, LEARNING):
+            if not _objective_mechanism_role(self.sender.owner, LEARNING):
                 raise LearningProjectionError("OutputState ({}) specified as sender for {} belongs to a {}"
                                           " rather than an ObjectiveMechanism with role=LEARNING".
                                           format(self.sender.name,
@@ -843,7 +843,7 @@ FROM TODO:
             for projection in self.errorSource.outputState.sendsToProjections:
                 # errorSource has a projection to an ObjectiveMechanism being used for learning, 
                 #  so validate it, assign it, and quit search
-                if objective_mechanism_role(self.sender.owner, LEARNING):
+                if _objective_mechanism_role(self.sender.owner, LEARNING):
                     self._validate_error_signal(projection.receiver.owner.outputState.value)
                     objective_mechanism = projection.receiver.owner
                     break
