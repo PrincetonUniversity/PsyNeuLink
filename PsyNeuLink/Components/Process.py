@@ -877,7 +877,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a comparator (see _check_for_comparator), it will not need a target.
+                 if it doesn't have a comparator (see _check_for_target_error_mechanism), it will not need a target.
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1004,7 +1004,7 @@ class Process_Base(Process):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_comparator()
+            self._check_for_target_error_mechanism()
             if self.comparatorMechanism:
                 self._instantiate_target_input()
             self._learning_enabled = True
@@ -1810,7 +1810,7 @@ class Process_Base(Process):
                     monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
                     self._monitoring_mech_tuples.append(monitoring_mech_tuple)
 
-    def _check_for_comparator(self):
+    def _check_for_target_error_mechanism(self):
         """Check for and assign ComparatorMechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
@@ -1844,7 +1844,7 @@ class Process_Base(Process):
                         continue
 
         if not self.learning:
-            raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
+            raise ProcessError("PROGRAM ERROR: _check_for_target_error_mechanism should only be called"
                                " for a process if it has a learning specification")
 
         comparators = list(mech_tuple.mechanism
