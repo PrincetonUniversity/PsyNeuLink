@@ -477,6 +477,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for i, monitored_value, name in zip(range(len(self.variable)), self.variable, names):
             self.variable[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
 
+        # FIX: self.variable NEEDS TO BE REFORMATTED INTO A 2D ARRAY, AT LEAST IF LINEARCOMBINATION IS THE FUNCTION
         self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
 
     def _instantiate_input_state_for_monitored_value(self,monitored_value, name=None, context=None):
