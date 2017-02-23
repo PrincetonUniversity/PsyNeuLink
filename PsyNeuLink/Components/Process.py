@@ -1831,7 +1831,7 @@ class Process_Base(Process):
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
-            """Recursively trace projections to monitoring mechanisms;
+            """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;
                    return None if no TARGET ObjectiveMechanism is found.
             """

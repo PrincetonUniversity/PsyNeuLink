@@ -925,6 +925,7 @@ FROM TODO:
                                                               function=LinearCombination(weights=[1, -1]),
                                                               role=LEARNING,
                                                               name=self.mappingProjection.name + " Target_Error")
+                    objective_mechanism.learning_role = TARGET
 
                     # FIX: 1) NEED TO ASSIGN AN OutputState TO MONITOR FOR THE TARGET:
                     #      2  USE TARGET ProcessInputStates / SystemInputStates??
