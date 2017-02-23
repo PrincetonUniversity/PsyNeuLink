@@ -376,6 +376,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                   role=role,
                                                   params=params)
 
+        self.learning_role = None
+
         super().__init__(variable=monitored_values,
                          params=params,
                          name=name,
@@ -384,7 +386,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENATION NOTE: THIS IS HERE UNTIL Composition IS IMPLEMENTED,
         # SO THAT SYSTEMS AND PROCESSES CAN FIND THE OBJECTIVE MECHANISSMS SERVING AS TARGETS
-        self.learning_role = None
 
 
     def _validate_variable(self, variable, context=None):
