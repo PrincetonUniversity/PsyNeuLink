@@ -843,12 +843,7 @@ FROM TODO:
             for projection in self.errorSource.outputState.sendsToProjections:
                 # errorSource has a projection to an ObjectiveMechanism being used for learning, 
                 #  so validate it, assign it, and quit search
-                # FIX:
-                # # MODIFIED 2/23/17 OLD:
-                # if _objective_mechanism_role(self.sender.owner, LEARNING):
-                # MODIFIED 2/23/17 NEW:
                 if _objective_mechanism_role(projection.receiver.owner, LEARNING):
-                # MODIFIED 2/23/17 END
                     self._validate_error_signal(projection.receiver.owner.outputState.value)
                     objective_mechanism = projection.receiver.owner
                     break
