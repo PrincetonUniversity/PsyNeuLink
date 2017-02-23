@@ -20,19 +20,15 @@
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:  MODIFY TO:
-#                                a) TAKE SPECIFICATIONS IN VARIABLE ARG, RATHER THAN IN MONITOR
-#                                b) PARSE OUTPUT STATES SPECIFIED AS ITEMS IN VARIABLE ARG,
-#                                       TO GET FORMAT OF OUTPUTSTATE'S VALUE, AND USE THAT FOR THAT ITEM OF VARIABLE
-#                                c) CALL NEW MODULE METHOD THAT IMPLEMENTS PROJECTIONS FROM OUTPUTSTATES SPECIFIED
-#                                       IN VARIABLE TO CORRESPONDING INPUTSTATES (AS PLACEMARKER FOR COMPOSITION METHOD)
-#                                       SHOULD TAKE OUTPUTSTATE SPECIFIED IN VARIABLE, AND INPUSTATE CREATED FOR IT
-#                                          AS ITS ARGS)
 #                                d) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights
 #                                           and exponents, but rather assign
-#                                e) Document monitored_values
+#                                e) Document monitored_values and default_input_value (sets size of inputSTates)
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
-#                                e) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
+#                                g) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
+#                                h) Accomodate WeightedError in OjbectiveMechanism using standard LinearComb function:
+#                                            Matrix - IDENTITY MATRIX
+#                                            Derivative - Linear
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
 #     5) Purge DefaultMonitoringMechanism
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
