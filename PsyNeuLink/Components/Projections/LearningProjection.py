@@ -930,7 +930,7 @@ FROM TODO:
                                                              names=[SAMPLE,TARGET],
                                                              # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
                                                              # FIX: WHY DO THEY EACH HAVE TO BE AN ARRAY HERE??
-                                                             function=LinearCombination(weights=[[1], [-1]]),
+                                                             function=LinearCombination(weights=[[-1], [1]]),
                                                              role=LEARNING,
                                                              params= {OUTPUT_STATES:
                                                                           [{NAME:TARGET_ERROR},
