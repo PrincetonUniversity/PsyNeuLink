@@ -349,19 +349,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the function used to compare `COMPARATOR_SAMPLE` with `COMPARATOR_TARGET`.
 
     value : 2d np.array
-        holds the output of the `comparison_operation` carried out by the ComparatorMechanism's
-        `function <ComparatorMechanism.function>`; its value is  also assigned to the `COMPARISON_RESULT` outputState
-        and the the first item of `outputValue <ComparatorMechanism.outputValue>`.
-
-    outputValue : List[1d np.array, float, float, float, float]
-        a list with the following items:
-
-        * **result** of the `function <ComparatorMechanism.function>` calculation
-          and the :keyword:`value` of the `COMPARISON_RESULT` outputState;
-        * **mean** of the result's elements and the :keyword:`value` of the `COMPARISON_MEAN` outputState;
-        * **sum** of the result's elements and the :keyword:`value` of the `COMPARISON_SUM` outputState;
-        * **sum of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_SSE` outputState;
-        * **mean of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_MSE` outputState.
+        holds the output of the evaluatoin carried out by the ObjectiveMechanism's
+        `function <ObjectiveMechanism.function>`.
 
     name : str : default ComparatorMechanism-<index>
         the name of the mechanism.

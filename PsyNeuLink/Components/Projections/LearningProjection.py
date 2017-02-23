@@ -274,6 +274,13 @@ kwWeightChangeParams = "weight_change_params"
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
 
+TARGET_ERROR = "TARGET_ERROR"
+TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
+TARGET_ERROR_SUM = "TARGET_ERROR_SUM"
+TARGET_SSE = "TARGET_SSE"
+TARGET_MSE = "TARGET_MSE"
+
+
 DefaultTrainingMechanism = ObjectiveMechanism
 
 class LearningProjectionError(Exception):
@@ -920,11 +927,22 @@ FROM TODO:
                     # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
                     # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
                     objective_mechanism = ObjectiveMechanism(monitored_values=[sample, target],
-                                                              names=[SAMPLE,TARGET],
+                                                             names=[SAMPLE,TARGET],
                                                              # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
-                                                              function=LinearCombination(weights=[1, -1]),
-                                                              role=LEARNING,
-                                                              name=self.mappingProjection.name + " Target_Error")
+                                                             # FIX: WHY DO THEY EACH HAVE TO BE AN ARRAY HERE??
+                                                             function=LinearCombination(weights=[[1], [-1]]),
+                                                             role=LEARNING,
+                                                             params= {OUTPUT_STATES:
+                                                                          [{NAME:TARGET_ERROR},
+                                                                           {NAME:TARGET_ERROR_MEAN,
+                                                                            CALCULATE:lambda x: np.mean(x)},
+                                                                           {NAME:TARGET_ERROR_SUM,
+                                                                            CALCULATE:lambda x: np.sum(x)},
+                                                                           {NAME:TARGET_SSE,
+                                                                            CALCULATE:lambda x: np.sum(x*x)},
+                                                                           {NAME:TARGET_MSE,
+                                                                            CALCULATE:lambda x: np.sum(x*x)/len(x)}]},
+                                                             name=self.mappingProjection.name + " Target_Error")
                     objective_mechanism.learning_role = TARGET
 
                     # FIX: 1) NEED TO ASSIGN AN OutputState TO MONITOR FOR THE TARGET:
