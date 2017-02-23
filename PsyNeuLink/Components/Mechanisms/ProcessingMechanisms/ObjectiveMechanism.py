@@ -227,6 +227,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
+                 default_input_value=None,
                  monitored_values=None,
                  names:tc.optional(list)=None,
                  function=LinearCombination,
@@ -367,18 +368,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         """
 
-        if monitored_values is None:
+        if default_input_value is None:
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(names=names,
+        params = self._assign_args_to_param_dicts(monitored_values,
+                                                  names=names,
                                                   function=function,
                                                   role=role,
                                                   params=params)
 
         self.learning_role = None
 
-        super().__init__(variable=monitored_values,
+        super().__init__(variable=default_input_value,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -388,29 +390,26 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # SO THAT SYSTEMS AND PROCESSES CAN FIND THE OBJECTIVE MECHANISSMS SERVING AS TARGETS
 
 
-    def _validate_variable(self, variable, context=None):
-        """Validate monitored_values arg
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate `monitored_values`, `role` and `names <ObjectiveMechanism.names>` arguments
 
-        Note:  monitored_values arg was passed to super as variable
         """
 
-        super()._validate_variable(variable, context)
-
-        # FIX: NEED TO VALIDATE FOR VALUES AND/OR INPUT STATES AS WELL AS OUTPUTSTATESS, MECHAINSMS AND OPTIONS
-        # FIX: AND TEST THAT IT ALLOWS THESE
-
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
 
         # FIX: IS THE FOLLOWING STILL TRUE:
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
         #       as it can reference entries in that param
             # It is a MonitoredOutputStatesOption specification
-        if isinstance(variable, MonitoredOutputStatesOption):
+        if isinstance(target_set[ROLE], MonitoredOutputStatesOption):
             # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-            variable = [variable]
+            target_set[ROLE] = [target_set[ROLE]]
         # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
         else:
             # Validate each item of MONITOR_FOR_CONTROL
-            for item in variable:
+            for item in target_set[ROLE]:
                 validate_monitored_value(self, item, context=context)
             # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
             # FIX:     INDICATING THAT IT WILL BE IGNORED;
@@ -430,17 +429,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
             #                        "does not match the number of monitored states ({1})".
             #                        format(num_weights, num_monitored_states))
-
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate `role` and `names <ObjectiveMechanism.names>` arguments
-
-        Note: _validate_variable is used to validate monitored_values arg
-        """
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
 
         if target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
             raise ObjectiveError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
