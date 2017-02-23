@@ -99,16 +99,7 @@ class ScheduleVariable(object):
 class Scheduler(object):
     ########
     # Constructor for Schedule
-    # Creates a ScheduleVariable which contains a component (typically a mechanism) to be scheduled
-    # - self.own_constraints, self.unfilled_constraints, self.filled_constraints, self.dependent_constraints
-    # are initialized as empty lists
-    # - add_own_constraint appends contents of own_constraints to self.own_constraints and self.unfilled_constraints
-    # - add_dependent_constraint appends contents of dependent_constraints to self.dependent_constraints
-    # - evaluate_constraint appends to filled_constraints and removes from unfilled_constraints when constraints are
-    # satisfied. If component is terminal and constraint is satisfied, self.once is set to True
-    # - new_time_step resets unfilled_constraints and filled_constraints
-    # - new_trial calls new_trial() method on component to reset mechanism for a new trial
-    # If the component is a Terminal, self.once is initialized as False
+    #
     #
     ########
 
@@ -128,6 +119,10 @@ class Scheduler(object):
             self.add_constraints(constraints)
         self.current_step = 0
 
+    # Takes in var_list, a list of tuples of the form (component, priority)
+    # Where component is the component (mechanism) object and priority is an int
+    # Passes each component to ScheduleVariable, which constructs a ScheduleVariable object
+    # Assembles var_dict which contains components as keys and their ScheduleVariables as values
     def add_vars(self, var_list):
         for var in var_list:
             self.var_dict[var[0]] = ScheduleVariable(var[0])
@@ -228,9 +223,9 @@ def main():
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
     sched.add_constraints([
         # (A, (Clock,), every_n_calls(1)),
-                           (A, (Clock,), first_n_calls(3)),
+                           (A, (Clock,), first_n_calls(2)),
                            (B, (A,), every_n_calls(2)),
-                           (C, (B,), every_n_calls(2)),
+                           (C, (A,), every_n_calls(3)),
                            (Terminal, (C,), every_n_calls(2))])
     for var in sched.var_list:
         var.component.new_trial()
