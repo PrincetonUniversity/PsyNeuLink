@@ -1,4 +1,10 @@
 class Constraint(object):
+    ########
+    # Helper class for scheduling
+    # Contains an owner (the ScheduleVariable which owns this constraint), dependencies (list of all ScheduleVariables the
+    # owner depends on with respect to *this* constraint), and the condition (of this constraint)
+    # Contains a method 'is_satisfied' which checks dependencies against the condition and returns a boolean
+    ########
     def __init__(self, owner, dependencies, condition, time_scales = None):
         self.owner = owner # ScheduleVariable that falls under this constraint
         if isinstance(dependencies, ScheduleVariable):
@@ -6,22 +12,41 @@ class Constraint(object):
         else:
             self.dependencies = dependencies # Tuple of ScheduleVariables on which this constraint depends
 
-        # currently lines 10-12 are not used; time_scale is input explicitly, e.g. every_n_calls(1, "trial")
+        # currently, the following 3 lines are not used; time_scale is input explicitly, e.g. every_n_calls(1, "run")
+        # and a default is set within each condition (usually 'trial')
         # self.time_scales = time_scales # Time Scales over which the constraint queries each dependency
         # if self.time_scales is None: # Defaults to 'trial'
         #     self.time_scales = ('trial',)*len(self.dependencies)
+
         self.condition = condition # Condition to be evaluated
 
     def is_satisfied(self):
-        return self.condition(self.dependencies)
+        return self.condition(self.dependencies) #Checks dependencies against condition; returns True if ALL satisfied
 
 class ScheduleVariable(object):
+    ########
+    # Helper class for Scheduler
+    # Creates a ScheduleVariable which contains a component (typically a mechanism) to be scheduled
+    # Initialization ---
+    # - self.own_constraints, self.unfilled_constraints, self.filled_constraints, self.dependent_constraints
+    # are first initialized as empty lists, then immediately adjusted based on own_constraints and dependent_constraints
+    # - add_own_constraint appends contents of own_constraints to self.own_constraints and self.unfilled_constraints
+    # - add_dependent_constraint appends contents of dependent_constraints to self.dependent_constraints
+    # - If the component is a Terminal, self.once is initialized as False
+    # Updates ---
+    # - evaluate_constraint appends to filled_constraints and removes from unfilled_constraints if constraint is
+    # satisfied. If component is terminal and constraint is satisfied, self.once is set to True
+    # - new_time_step resets unfilled_constraints and filled_constraints
+    # - new_trial calls new_trial() method on component to reset mechanism for a new trial
+    ########
     def __init__(self, component, own_constraints = None, dependent_constraints = None, priority = None):
         self.component = component
+        # Possible simplification - set default own_constraints = [] etc to avoid 'is not None' logic
         self.own_constraints = []
         self.unfilled_constraints = []
         self.filled_constraints = []
-        self.once = False
+        if self.component.name == 'Terminal':
+            self.once = False
         if own_constraints is not None:
             for con in own_constraints:
                 self.add_own_constraint(con)
@@ -43,7 +68,8 @@ class ScheduleVariable(object):
         if result:
             self.filled_constraints.append(constraint)
             self.unfilled_constraints.remove(constraint)
-            self.once = True
+            if self.component.name == 'Terminal':
+                self.once = True
         return result
 
     def new_time_step(self):
@@ -54,21 +80,37 @@ class ScheduleVariable(object):
     def new_trial(self):
         self.component.new_trial()
 
-def TerminalScheduleVariable(ScheduleVariable):
-    def __init__(self, own_constraints = None, dependent_constraints = None, priority = None):
-        self.own_constraints = []
-        self.unfilled_constraints = []
-        self.filled_constraints = []
-        if own_constraints is not None:
-            for con in own_constraints:
-                self.add_own_constraint(con)
-        self.dependent_constraints = []
-        if dependent_constraints is not None:
-            for con in dependent_constraints:
-                self.add_dependent_constraint(con)
-        self.priority = priority
+# TerminalScheduleVariable is not currently used
+
+# def TerminalScheduleVariable(ScheduleVariable):
+#     def __init__(self, own_constraints = None, dependent_constraints = None, priority = None):
+#         self.own_constraints = []
+#         self.unfilled_constraints = []
+#         self.filled_constraints = []
+#         if own_constraints is not None:
+#             for con in own_constraints:
+#                 self.add_own_constraint(con)
+#         self.dependent_constraints = []
+#         if dependent_constraints is not None:
+#             for con in dependent_constraints:
+#                 self.add_dependent_constraint(con)
+#         self.priority = priority
 
 class Scheduler(object):
+    ########
+    # Constructor for Schedule
+    # Creates a ScheduleVariable which contains a component (typically a mechanism) to be scheduled
+    # - self.own_constraints, self.unfilled_constraints, self.filled_constraints, self.dependent_constraints
+    # are initialized as empty lists
+    # - add_own_constraint appends contents of own_constraints to self.own_constraints and self.unfilled_constraints
+    # - add_dependent_constraint appends contents of dependent_constraints to self.dependent_constraints
+    # - evaluate_constraint appends to filled_constraints and removes from unfilled_constraints when constraints are
+    # satisfied. If component is terminal and constraint is satisfied, self.once is set to True
+    # - new_time_step resets unfilled_constraints and filled_constraints
+    # - new_trial calls new_trial() method on component to reset mechanism for a new trial
+    # If the component is a Terminal, self.once is initialized as False
+    #
+    ########
 
     def __init__(self, var_dict = None, terminal = None, clock = None, constraints = None):
         self.var_dict = {}
@@ -184,7 +226,9 @@ def main():
     sched.set_clock(Clock)
     sched.set_terminal(Terminal)
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
-    sched.add_constraints([(A, (Clock,), every_n_calls(1)),
+    sched.add_constraints([
+        # (A, (Clock,), every_n_calls(1)),
+                           (A, (Clock,), first_n_calls(3)),
                            (B, (A,), every_n_calls(2)),
                            (C, (B,), every_n_calls(2)),
                            (Terminal, (C,), every_n_calls(2))])
