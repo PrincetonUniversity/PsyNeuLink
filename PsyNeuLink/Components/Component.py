@@ -1854,13 +1854,13 @@ class Component(object):
         """
         self.value = self.execute(context=context)
 
-    @property
-    def variable(self):
-        return self._variable
-
-    @variable.setter
-    def variable(self, value):
-        self._variable = value
+    # @property
+    # def variable(self):
+    #     return self._variable
+    #
+    # @variable.setter
+    # def variable(self, value):
+    #     self._variable = value
 
     @property
     def prefs(self):

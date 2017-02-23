@@ -3,6 +3,10 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # FIX:
+#   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
+#             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
+#             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
+# FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
 #        - move assignment of function params (Lines 714 and 742 in ParameterState)
 #               into @property for value (Line 756) [DEBUG CRASH]
@@ -11,10 +15,29 @@
 #    1) Once function param assignment is fixed, add test that it is working to jenkins suite
 #          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
 #                 changes its value for the Function
-#    3) Add learning rate param (including global default)
-#    4) For system vs. process learning:
+#    2) Add learning rate param (including global default)
+#    3) For system vs. process learning:
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
+#    4) ObjectiveMechanisms:  MODIFY TO:
+#                                a) TAKE SPECIFICATIONS IN VARIABLE ARG, RATHER THAN IN MONITOR
+#                                b) PARSE OUTPUT STATES SPECIFIED AS ITEMS IN VARIABLE ARG,
+#                                       TO GET FORMAT OF OUTPUTSTATE'S VALUE, AND USE THAT FOR THAT ITEM OF VARIABLE
+#                                c) CALL NEW MODULE METHOD THAT IMPLEMENTS PROJECTIONS FROM OUTPUTSTATES SPECIFIED
+#                                       IN VARIABLE TO CORRESPONDING INPUTSTATES (AS PLACEMARKER FOR COMPOSITION METHOD)
+#                                       SHOULD TAKE OUTPUTSTATE SPECIFIED IN VARIABLE, AND INPUSTATE CREATED FOR IT
+#                                          AS ITS ARGS)
+#                                d) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights
+#                                           and exponents, but rather assign
+#                                e) Document monitored_values
+#                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
+#                                f) parse MonitoredOUtputStates specification for monitored_values arg
+#                                e) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
+#          them where the ObjectiveMechanism is created (in its LinearFunction)
+#     5) Purge DefaultMonitoringMechanism
+#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
+#                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
+#     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
@@ -530,7 +553,7 @@
 #           - how to provide reward for outcome of first trial, if it is selected probabilistically
 #           - must process trial, get reward from environment, then execute learning
 #           SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#       Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
+#       Option 2 - Provide Process with reward vector, and let targetMechanism choose reward based on action vector
 #           - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
 #           SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
 #           - system should be take functions that specify values to use as inputs based on outputs
@@ -2410,7 +2433,7 @@
 #                  PROBLEMS:
 #                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - the output (terminal) layer of a process
-#                  in this case, the comparatorMechanism would receive a projection from the output layer,
+#                  in this case, the targetMechanism would receive a projection from the output layer,
 #                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
 #                  ADVANTAGES:
 #                    - keeps the errorSignal exclusively in the ProcessingMechanism
@@ -2419,7 +2442,7 @@
 #                    - need to deal with recurrence in the System graph
 #                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
-#                  two input states (one for processing input, another for training signal, and a comparatorMechanism method)
+#                  two input states (one for processing input, another for training signal, and a targetMechanism method)
 #                  ADVANTAGES:
 #                    - more compact/efficient
 #                    - no recurrence
@@ -2427,7 +2450,7 @@
 #                    - leaves the output layer is the terminal mechanism of the Process
 #                  PROBLEMS:
 #                    - overspecialization (i.e., less modular)
-#                    - needs additional "function" (comparatorMechanism function)
+#                    - needs additional "function" (targetMechanism function)
 #            IMPLEMENTED: MonitoringMechanism
 #
 # IMPLEMENT: LEARNING IN Processes W/IN A System; EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
@@ -2646,7 +2669,7 @@
 #               monitor (in ObjectiveMechanism._validate_monitored_states) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
-#     Make sure add_monitored_state works
+#     Make sure add_monitored_value works
 #     Allow inputStates to be named (so they can be used as ComparatorMechanism)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
@@ -2672,7 +2695,7 @@
 #     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
 #     Allow it to take monitoring_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
-#     Make sure add_monitored_state works:
-#           Needs to call ObjectiveMechanism.add_monitored_state
+#     Make sure add_monitored_value works:
+#           Needs to call ObjectiveMechanism.add_monitored_value
 #           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
