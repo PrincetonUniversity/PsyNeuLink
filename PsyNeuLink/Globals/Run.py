@@ -1204,7 +1204,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.targetMechanisms):
                 target_len = np.size(target)
-                if target_len != np.size(targetMechanism.target):
+                if target_len != np.size(targetMechanism.inputStates[TARGET].value):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
@@ -1212,7 +1212,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(object.targetMechanism.target)))
+                                              np.size(targetMechanism.inputStates[TARGET].value)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".
