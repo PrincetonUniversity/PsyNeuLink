@@ -1603,7 +1603,7 @@ class System_Base(System):
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
 
-            # Create ProcessInputState for each target and assign to comparatorMechanism's target inputState
+            # Create ProcessInputState for each target and assign to targetMechanism's target inputState
             comparator_target = target_mech.inputStates[COMPARATOR_TARGET]
 
             # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length

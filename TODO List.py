@@ -550,7 +550,7 @@
 #           - how to provide reward for outcome of first trial, if it is selected probabilistically
 #           - must process trial, get reward from environment, then execute learning
 #           SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#       Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
+#       Option 2 - Provide Process with reward vector, and let targetMechanism choose reward based on action vector
 #           - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
 #           SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
 #           - system should be take functions that specify values to use as inputs based on outputs
@@ -2430,7 +2430,7 @@
 #                  PROBLEMS:
 #                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - the output (terminal) layer of a process
-#                  in this case, the comparatorMechanism would receive a projection from the output layer,
+#                  in this case, the targetMechanism would receive a projection from the output layer,
 #                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
 #                  ADVANTAGES:
 #                    - keeps the errorSignal exclusively in the ProcessingMechanism
@@ -2439,7 +2439,7 @@
 #                    - need to deal with recurrence in the System graph
 #                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
-#                  two input states (one for processing input, another for training signal, and a comparatorMechanism method)
+#                  two input states (one for processing input, another for training signal, and a targetMechanism method)
 #                  ADVANTAGES:
 #                    - more compact/efficient
 #                    - no recurrence
@@ -2447,7 +2447,7 @@
 #                    - leaves the output layer is the terminal mechanism of the Process
 #                  PROBLEMS:
 #                    - overspecialization (i.e., less modular)
-#                    - needs additional "function" (comparatorMechanism function)
+#                    - needs additional "function" (targetMechanism function)
 #            IMPLEMENTED: MonitoringMechanism
 #
 # IMPLEMENT: LEARNING IN Processes W/IN A System; EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN

@@ -328,13 +328,19 @@ from collections import Iterable
 import PsyNeuLink.Components
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, mechanism, _is_mechanism_spec
+from PsyNeuLink.Components.Mechanisms.Mechanism import *
+    # Mechanism_Base, \
+    # mechanism, \
+    # _is_mechanism_spec, \
+    # MechanismList, \
+    # MechanismTuple
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, _add_projection_to
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 # *****************************************    PROCESS CLASS    ********************************************************
 
@@ -445,9 +451,9 @@ def process(process_spec=None,
         implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
-        the value assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
-        `ComparatorMechanism` to which the `TERMINAL` mechanism of the process projects (used for `learning
-        <Process_Learning>`). It must be the same length as the `TERMINAL` mechanism's output.
+        the value assigned as the target for the `ObjectiveMechanism` to which the `TERMINAL` mechanism of the 
+        process projects (and assigned as it `TARGET` mechanism; used for `learning <Process_Learning>`). 
+        It must be the same length as the `TERMINAL` mechanism's output.
 
     params : Optional[Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -877,7 +883,8 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a comparator (see _check_for_target_error_mechanism), it will not need a target.
+                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism), 
+                 it will not need a target.
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1004,8 +1011,8 @@ class Process_Base(Process):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_error_mechanism()
-            if self.comparatorMechanism:
+            self._check_for_target_mechanism()
+            if self.targetMechanism:
                 self._instantiate_target_input()
             self._learning_enabled = True
         else:
@@ -1017,6 +1024,7 @@ class Process_Base(Process):
 
     def _standardize_config_entries(self, pathway, context=None):
 
+        from PsyNeuLink.Components.Mechanisms.Mechanism import _is_mechanism_spec
 # FIX: SHOULD MOVE VALIDATION COMPONENTS BELOW TO Process._validate_params
         # Convert all entries to (item, params, phaseSpec) tuples, padded with None for absent params and/or phaseSpec
         for i in range(len(pathway)):
@@ -1757,13 +1765,14 @@ class Process_Base(Process):
             for mech_tuple in self._monitoring_mech_tuples:
                 mech = mech_tuple[OBJECT_ITEM]
                 # If
-                # - mech is a ComparatorMechanism, and
+                # - mech is a TARGET ObjectiveMechanism, and
                 # - the mech that projects to mech is a TERMINAL for the current process, and
                 # - current process has learning specified
                 # then designate mech as a TARGET
-                if (isinstance(mech, ComparatorMechanism) and
-                        any(projection.sender.owner.processes[self] == TERMINAL
-                            for projection in mech.inputStates[COMPARATOR_SAMPLE].receivesFromProjections) and
+                if (isinstance(mech, ObjectiveMechanism) and
+                        # any(projection.sender.owner.processes[self] == TERMINAL
+                        #     for projection in mech.inputStates[SAMPLE].receivesFromProjections) and
+                        mech.learning_role is TARGET and
                         self.learning
                             ):
                     mech_tuple[0].processes[self] = TARGET
@@ -1810,107 +1819,108 @@ class Process_Base(Process):
                     monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
                     self._monitoring_mech_tuples.append(monitoring_mech_tuple)
 
-    def _check_for_target_error_mechanism(self):
-        """Check for and assign ComparatorMechanism to use for reporting error during learning.
+    def _check_for_target_mechanism(self):
+        """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
-         Check that there is one and only one ComparatorMechanism for the process
-         Assign comparatorMechanism to self.comparatorMechanism,
-             assign self to comparatorMechanism.processes,
+         Check that there is one and only one TARGET ObjectiveMechanism for the process
+         Assign targetMechanism to self.targetMechanism,
+             assign self to targetMechanism.processes,
              and report assignment if verbose
         """
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        def trace_monitoring_mechanism_projections(mech):
+        def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to monitoring mechanisms;
-                   return ComparatorMechanism if one is found upstream;
-                   return None if no ComparatorMechanism is found.
+                   return TARGET ObjectiveMechanism if one is found upstream;
+                   return None if no TARGET ObjectiveMechanism is found.
             """
             for input_state in mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
                     # If projection is not from another ObjectiveMechanism, ignore
-                    if not isinstance(sender, (ObjectiveMechanism, ComparatorMechanism)):
+                    if not isinstance(sender, (ObjectiveMechanism)):
                         continue
-                    if isinstance(sender, ComparatorMechanism):
+                    if isinstance(sender, ObjectiveMechanism) and sender.learning_role is TARGET:
                         return sender
                     if sender.inputStates:
-                        comparator = trace_monitoring_mechanism_projections(sender)
-                        if comparator:
-                            return comparator
+                        target_mech = trace_learning_objective_mechanism_projections(sender)
+                        if target_mech:
+                            return target_mech
                         else:
                             continue
                     else:
                         continue
 
         if not self.learning:
-            raise ProcessError("PROGRAM ERROR: _check_for_target_error_mechanism should only be called"
+            raise ProcessError("PROGRAM ERROR: _check_for_target_mechanism should only be called"
                                " for a process if it has a learning specification")
 
-        comparators = list(mech_tuple.mechanism
-                           for mech_tuple in self._mech_tuples if isinstance(mech_tuple.mechanism, ComparatorMechanism))
+        target_mechs = list(mech_tuple.mechanism
+                           for mech_tuple in self._mech_tuples
+                            if (isinstance(mech_tuple.mechanism, ObjectiveMechanism) and
+                                mech_tuple.mechanism.learning_role is TARGET))
 
-        if not comparators:
+        if not target_mechs:
 
-            # Trace projections to first monitoring_mechanism (which is for the last mechanism in the process)
+            # Trace projections to first learning ObjectiveMechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
-            #    in which case, should not assign Comparator, but rather WeightedError ObjectiveMechanism)
-            comparator = trace_monitoring_mechanism_projections(self._monitoring_mech_tuples[0][0])
-            if comparator:
+            #    in which case, shouldn't assign target ObjectiveMechanism, but rather WeightedError ObjectiveMechanism)
+            target_mech = trace_learning_objective_mechanism_projections(self._monitoring_mech_tuples[0][0])
+            if target_mech:
                 if self.prefs.verbosePref:
-                    warnings.warn("{} itself has no ComparatorMechanism, but its TERMINAL_MECHANISM ({}) "
+                    warnings.warn("{} itself has no Target Mechanism, but its TERMINAL_MECHANISM ({}) "
                                   "appears to be in one or more pathways ({}) that has one".
                                                       format(self.name,
                                                              # list(self.terminalMechanisms)[0].name,
                                                              self.lastMechanism.name,
-                                                             list(process.name for process in comparator.processes)))
-                self.comparatorMechanism = None
+                                                             list(process.name for process in target_mech.processes)))
+                self.targetMechanism = None
             else:
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
-                                   "but no ComparatorMechanism mechanism".format(self.name, self.learning))
+                                   "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
 
-        elif len(comparators) > 1:
-            comparator_names = list(comparatorMechanism.name for comparatorMechanism in comparators)
-            raise ProcessError("PROGRAM ERROR: {} has more than one comparatorMechanism mechanism: {}".
-                               format(self.name, comparator_names))
+        elif len(target_mechs) > 1:
+            target_mech_names = list(targetMechanism.name for targetMechanism in target_mechs)
+            raise ProcessError("PROGRAM ERROR: {} has more than one targetMechanism mechanism: {}".
+                               format(self.name, target_mech_names))
 
         else:
-            self.comparatorMechanism = comparators[0]
-            self._target_mech_tuples.append(MechanismTuple(comparators[0], None, None))
-            # self.comparatorMechanism.processes[self] = ComparatorMechanism
+            self.targetMechanism = target_mechs[0]
+            self._target_mech_tuples.append(MechanismTuple(target_mechs[0], None, None))
             if self.prefs.verbosePref:
-                print("\'{}\' assigned as ComparatorMechanism for output of \'{}\'".
-                      format(self.comparatorMechanism.name, self.name))
+                print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
+                      format(self.targetMechanism.name, self.name))
 
 
     def _instantiate_target_input(self):
 
         if self.target is None:
-            raise ProcessError("Learning has been specified for {} and it has a ComparatorMechanism, "
+            raise ProcessError("Learning has been specified for {} and it has a TARGET ObjectiveMechanism, "
                                "so it must also have a target.".format(self.name))
 
         target = np.atleast_1d(self.target)
 
-        # Create ProcessInputState for target and assign to comparatorMechanism's target inputState
-        comparator_target = self.comparatorMechanism.inputStates[COMPARATOR_TARGET]
+        # Create ProcessInputState for target and assign to targetMechanism's target inputState
+        target_mech_target = self.targetMechanism.inputStates[TARGET]
 
-        # Check that length of process' target input matches length of comparatorMechanism's target input
-        if len(target) != len(comparator_target.variable):
-            raise ProcessError("Length of target ({}) does not match length of input for comparatorMechanism in {}".
-                               format(len(target), len(comparator_target.variable)))
+        # Check that length of process' target input matches length of targetMechanism's target input
+        if len(target) != len(target_mech_target.variable):
+            raise ProcessError("Length of target ({}) does not match length of input for targetMechanism in {}".
+                               format(len(target), len(target_mech_target.variable)))
 
         target_input_state = ProcessInputState(owner=self,
                                                 variable=target,
                                                 prefs=self.prefs,
-                                                name=COMPARATOR_TARGET)
+                                                name=TARGET)
         self.targetInputStates.append(target_input_state)
 
         # Add MappingProjection from target_input_state to MonitoringMechanism's target inputState
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         MappingProjection(sender=target_input_state,
-                receiver=comparator_target,
-                name=self.name+'_Input Projection to '+comparator_target.name)
+                receiver=target_mech_target,
+                name=self.name+'_Input Projection to '+target_mech_target.name)
 
     def initialize(self):
         """Assign the values specified for each mechanism in the process' `initial_values` attribute.
@@ -2010,14 +2020,6 @@ class Process_Base(Process):
                 self.targetInputStates[0].variable = self.target()
             else:
                 self.targetInputStates[0].value = np.array(self.target)
-        TEST = True
-
-        # for projection in list(self.targetMechanisms)[0].inputStates[COMPARATOR_TARGET].receivesFromProjections:
-        #     if projection.sender.owner != self:
-        #         # projection.sender.value = np.zeros_like(projection.value.sender.value)
-        #         # projection.sender.value[:] = 0
-        #         projection.sender.value *= 0
-
 
         # Generate header and report input
         if report_output:
@@ -2248,7 +2250,7 @@ class Process_Base(Process):
 
         if self.learning:
           print("\n- MSE: {:0.3}".
-                  format(float(self.comparatorMechanism.outputValue[ComparatorOutput.COMPARISON_MSE.value])))
+                  format(float(self.targetMechanism.outputValue[ComparatorOutput.COMPARISON_MSE.value])))
 
         elif separator:
             print("\n\n****************************************\n")

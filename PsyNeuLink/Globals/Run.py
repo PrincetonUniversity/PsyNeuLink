@@ -1123,7 +1123,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
+                                          np.size(object.targetMechanism.target)))
         return
 
     if object_type is PROCESS:
@@ -1134,7 +1134,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.comparatorMechanism.target):
+            if target_len != np.size(object.targetMechanism.target):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1142,7 +1142,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
+                                          np.size(object.targetMechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1212,7 +1212,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(object.comparatorMechanism.target)))
+                                              np.size(object.targetMechanism.target)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".

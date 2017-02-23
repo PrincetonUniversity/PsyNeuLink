@@ -890,44 +890,6 @@ FROM TODO:
                                                                                      derivative=derivative),
                                                               role=LEARNING,
                                                               name=self.mappingProjection.name + " Weighted_Error")
-            # # MODIFIED 2/13/17 OLD:
-            #     # TERMINAL Mechanism
-            #     # errorSource at next level does NOT project to a MonitoringMechanism:
-            #     #     instantiate DefaultTrainingMechanism MonitoringMechanism
-            #     #         (compares errorSource output with external training signal)
-            #     else:
-            #         if self.function.componentName is BACKPROPAGATION_FUNCTION:
-            #             output_signal = np.zeros_like(self.errorSource.outputState.value)
-            #         # Force smaple and target of Comparartor to be scalars for RL
-            #         elif self.function.componentName is RL_FUNCTION:
-            #             output_signal = np.array([0])
-            #         else:
-            #             raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-            #                                       format(self.function.name, self.name))
-            #         # IMPLEMENTATION NOTE: training_signal assignment currently assumes training mech is ComparatorMechanism
-            #         training_signal = output_signal
-            #         training_mechanism_input = np.array([output_signal, training_signal])
-            #         objective_mechanism = DefaultTrainingMechanism(training_mechanism_input)
-            #         # Instantiate a MappingProjection from the errorSource to the DefaultTrainingMechanism
-            #         try:
-            #             monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
-            #             monitored_state = self.errorSource.outputStates[monitored_state]
-            #         except KeyError:
-            #             # No state specified so use Mechanism as sender arg
-            #             monitored_state = self.errorSource
-            #         if self.function.componentName is BACKPROPAGATION_FUNCTION:
-            #             matrix = IDENTITY_MATRIX
-            #         # Force sample and target of ComparatorMechanism to be scalars for RL
-            #         elif self.function.componentName is RL_FUNCTION:
-            #             matrix = FULL_CONNECTIVITY_MATRIX
-            #         self.monitoring_projection = MappingProjection(sender=monitored_state,
-            #                                              receiver=objective_mechanism.inputStates[COMPARATOR_SAMPLE],
-            #                                              name=self.errorSource.name +
-            #                                                   ' to '+
-            #                                                   objective_mechanism.name+' ' +
-            #                                                   MAPPING_PROJECTION+' Projection',
-            #                                              matrix=matrix)
-            # MODIFIED 2/13/17 NEW: [USE ObjectiveMechanism RATHER THAN ComparatorMechanism]
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to an ObjectiveMechanism:
                 #     instantiate ObjectiveMechanism configured as a comparator
@@ -958,7 +920,7 @@ FROM TODO:
                     # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
                     # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
                     objective_mechanism = ObjectiveMechanism(monitored_values=[sample, target],
-                                                              names=['SAMPLE','TARGET'],
+                                                              names=[SAMPLE,TARGET],
                                                              # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
                                                               function=LinearCombination(weights=[1, -1]),
                                                               role=LEARNING,
@@ -993,7 +955,6 @@ FROM TODO:
                     #                                           objective_mechanism.name+' ' +
                     #                                           MAPPING_PROJECTION+' Projection',
                     #                                      matrix=matrix)
-            # MODIFIED 2/13/17 END
 
             self.sender = objective_mechanism.outputState
 

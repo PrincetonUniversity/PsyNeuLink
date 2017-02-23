@@ -476,10 +476,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for i, monitored_value, name in zip(range(len(self.variable)), self.variable, names):
             self.variable[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
 
-        # FIX: self.variable NEEDS TO BE REFORMATTED INTO A 2D ARRAY, AT LEAST IF LINEARCOMBINATION IS THE FUNCTION
+        # If all items of self.variable are numeric and of the same length, convert to ndarray
         dim_axis_0 = len(self.variable)
         dim_axis_1 = len(self.variable[0])
-        if all(len(self.variable[i])==dim_axis_1 for i in range(dim_axis_0)):
+        if all((is_numeric(self.variable[i]) and len(self.variable[i])==dim_axis_1) for i in range(dim_axis_0)):
             self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
 
         self.variableClassDefault = self.variable.copy()
