@@ -469,6 +469,8 @@ def type_match(value, value_type):
         return float(value)
     if value_type is np.ndarray:
         return np.array(value)
+    if value_type is list:
+        return list(value)
     if value_type is None:
         return None
     raise UtilitiesError("Type of {} not recognized".format(value))
