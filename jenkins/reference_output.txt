@@ -1,3 +1,4 @@
+
 RUNNING EVC System Laming Validation Test Script.py
 
 
@@ -181,7 +182,7 @@ RUNNING Multilayer Learning Test Script.py
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -229,7 +230,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -277,7 +278,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -325,7 +326,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -373,7 +374,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -421,7 +422,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -469,7 +470,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -517,7 +518,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -565,7 +566,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -613,7 +614,7 @@ New weights:
 
 
 'Process_Base-1' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
 - input: [-1 30]
 
 'Process_Base-1' completed:
@@ -662,7 +663,7 @@ reward prediction weights:
  [[ 1.  0.  0.]
  [ 0.  1.  0.]
  [ 0.  0.  1.]]
-comparatorMechanism weights: 
+targetMechanism weights: 
  [[ 1.]
  [ 1.]
  [ 1.]]
@@ -841,7 +842,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -858,7 +859,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -875,7 +876,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -892,7 +893,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -909,7 +910,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -926,7 +927,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -943,7 +944,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -960,7 +961,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -977,7 +978,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -994,7 +995,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -1011,7 +1012,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -1028,7 +1029,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -1045,7 +1046,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -1062,7 +1063,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -1079,7 +1080,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -1096,7 +1097,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -1113,7 +1114,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -1130,7 +1131,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -1147,7 +1148,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Color Naming' process' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Color Naming' process' completed:
@@ -1164,7 +1165,7 @@ RUNNING Stroop Model Test Script.py
 
 
 ''Word Reading' process' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
 - input: [1, 1]
 
 ''Word Reading' process' completed:
@@ -1190,7 +1191,7 @@ RUNNING Stroop Model Learning Test Script.py
 - inputs: [[[1, 1]], [[-2, -2]]]
 
 ''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'ComparatorMechanism-4' 'Color-Hidden Weights Weighted_Error']
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights Target_Error' 'Color-Hidden Weights Weighted_Error']
 - input: [ 1.  1.]
 
 ''Word Reading-1' process' executing with:
@@ -1198,7 +1199,7 @@ RUNNING Stroop Model Learning Test Script.py
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'ComparatorMechanism-4' monitoringmechanism_base': 0.491 0.457
+- error for target 'Hidden-Output Weights Target_Error' processingmechanism_base': 0.491 0.457
 
 'Stroop Model-1' system completed ***********(time_step 0)
 - output for Response-1: '0.509' '0.543'
@@ -1230,7 +1231,7 @@ Word-Hidden:
 'Stroop Model-1' system executing ********** (time_step 1) 
 
 ''Color Naming-1' process' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'ComparatorMechanism-4' 'Color-Hidden Weights Weighted_Error']
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights Target_Error' 'Color-Hidden Weights Weighted_Error']
 - input: [ 1.  1.]
 
 ''Word Reading-1' process' executing with:
@@ -1238,7 +1239,7 @@ Word-Hidden:
 - input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target 'ComparatorMechanism-4' monitoringmechanism_base': 0.49 0.452
+- error for target 'Hidden-Output Weights Target_Error' processingmechanism_base': 0.49 0.452
 
 'Stroop Model-1' system completed ***********(time_step 1)
 - output for Response-1: '0.51' '0.548'
