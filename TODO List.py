@@ -37,6 +37,7 @@
 #     5) Purge DefaultMonitoringMechanism
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
+#     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
