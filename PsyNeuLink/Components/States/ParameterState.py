@@ -867,6 +867,18 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             # Assignment of ParameterState for Component objects, function or method are not currently supported
             if isinstance(function_param_value, (function_type, method_type, Component)):
                 continue
+            # MODIFIED 2/22/17 NEW:
+            # IMPLEMENTATION NOTE:
+            # The following is necssary since, if ANY parameters of a function are specified, entries are made
+            #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
+            #    will be set to None (and there may be any relevant paramClassDefaults or way to determine a deafult;
+            #    e.g., the length of the array for the weights or exponents params for LinearCombination).
+            #    Therefore, None will be passed as the cosntraint_value, which will cause validation of the
+            #    ParameterState's function (in _instantiate_function()) to fail.
+            #  Current solution is to simply not instantiate a ParameterState for any function_param that has
+            #    not been expliclity specified
+            if function_param_value is None:
+                continue
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,
