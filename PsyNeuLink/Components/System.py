@@ -2150,10 +2150,10 @@ class System_Base(System):
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
                                                 format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
         if self.learning:
-            from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARISON_MSE
+            from PsyNeuLink.Components.Projections.LearningProjection import TARGET_MSE
             for mech in self.targetMechanisms:
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.outputStates[COMPARISON_MSE].value)))
+                      format(float(mech.outputStates[TARGET_MSE].value)))
 
 
     # TBI:

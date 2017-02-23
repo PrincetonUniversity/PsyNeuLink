@@ -2249,8 +2249,9 @@ class Process_Base(Process):
                      re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.outputState.value]))))
 
         if self.learning:
-          print("\n- MSE: {:0.3}".
-                  format(float(self.targetMechanism.outputValue[ComparatorOutput.COMPARISON_MSE.value])))
+            from PsyNeuLink.Components.Projections.LearningProjection import TARGET_MSE
+            print("\n- MSE: {:0.3}".
+                  format(float(self.targetMechanism.outputStates[TARGET_MSE].value)))
 
         elif separator:
             print("\n\n****************************************\n")
