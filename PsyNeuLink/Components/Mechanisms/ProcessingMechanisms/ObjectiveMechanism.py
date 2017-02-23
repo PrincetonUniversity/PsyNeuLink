@@ -372,7 +372,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_values,
+        params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
                                                   names=names,
                                                   function=function,
                                                   role=role,
@@ -399,37 +399,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                  target_set=target_set,
                                  context=context)
 
-        # FIX: IS THE FOLLOWING STILL TRUE:
-        # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
-        #       as it can reference entries in that param
-            # It is a MonitoredOutputStatesOption specification
-        if isinstance(target_set[ROLE], MonitoredOutputStatesOption):
-            # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-            target_set[ROLE] = [target_set[ROLE]]
-        # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
-        else:
-            # Validate each item of MONITOR_FOR_CONTROL
-            for item in target_set[ROLE]:
-                validate_monitored_value(self, item, context=context)
-            # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
-            # FIX:     INDICATING THAT IT WILL BE IGNORED;
-            # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-            # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
-            # # Validate WEIGHTS if it is specified
-            # try:
-            #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
-            # except KeyError:
-            #     # WEIGHTS not specified, so ignore
-            #     pass
-            # else:
-            #     # Insure that number of weights specified in WEIGHTS
-            #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
-            #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
-            #     if not num_weights != num_monitored_states:
-            #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
-            #                        "does not match the number of monitored states ({1})".
-            #                        format(num_weights, num_monitored_states))
-
         if target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
             raise ObjectiveError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                  format(target_set[ROLE], self.name))
@@ -445,23 +414,81 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     raise ObjectiveError("it in \'names\'arg ({}) of {} is not a string".
                                          format(target_set[NAMES], self.name))
 
+        #region VALIDATE MONITORED VALUES
+        # FIX: IS THE FOLLOWING STILL TRUE:
+        # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
+        #       as it can reference entries in that param
+        try:
+            if not target_set[MONITORED_VALUES] or target_set[MONITORED_VALUES] is NotImplemented:
+                pass
+            # It is a MonitoredOutputStatesOption specification
+            elif isinstance(target_set[MONITORED_VALUES], MonitoredOutputStatesOption):
+                # Put in a list (standard format for processing by _instantiate_monitored_output_states)
+                target_set[MONITORED_VALUES] = [target_set[MONITORED_VALUES]]
+            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
+            else:
+                # Validate each item of MONITOR_FOR_CONTROL
+                for item in target_set[MONITORED_VALUES]:
+                    validate_monitored_value(self, item, context=context)
+                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
+                # FIX:     INDICATING THAT IT WILL BE IGNORED;
+                # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
+                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
+                # # Validate WEIGHTS if it is specified
+                # try:
+                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
+                # except KeyError:
+                #     # WEIGHTS not specified, so ignore
+                #     pass
+                # else:
+                #     # Insure that number of weights specified in WEIGHTS
+                #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
+                #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
+                #     if not num_weights != num_monitored_states:
+                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
+                #                        "does not match the number of monitored states ({1})".
+                #                        format(num_weights, num_monitored_states))
+        except KeyError:
+            pass
+
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate input state for each value specified in `monitored_values` arg
+        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
 
         """
+        # MODIFIED 2/23/17 OLD:
+        # names = self.names or [None] * len(self.variable)
+        # for i, monitored_value, name in zip(range(len(self.variable)), self.variable, names):
+        #     self.variable[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
+        #
+        # # If all items of self.variable are numeric and of the same length, convert to ndarray
+        # dim_axis_0 = len(self.variable)
+        # dim_axis_1 = len(self.variable[0])
+        # if all((is_numeric(self.variable[i]) and len(self.variable[i])==dim_axis_1) for i in range(dim_axis_0)):
+        #     self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+        #
+        # self.variableClassDefault = self.variable.copy()
+        # self.inputValue = list(self.variable)
+        # MODIFIED 2/23/17 NEW:
+
+        values = [None] * len(self.monitored_values)
         names = self.names or [None] * len(self.variable)
-        for i, monitored_value, name in zip(range(len(self.variable)), self.variable, names):
-            self.variable[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
+        for i, monitored_value, name in zip(range(len(self.monitored_values)), self.monitored_values, names):
+            values[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
 
         # If all items of self.variable are numeric and of the same length, convert to ndarray
-        dim_axis_0 = len(self.variable)
-        dim_axis_1 = len(self.variable[0])
-        if all((is_numeric(self.variable[i]) and len(self.variable[i])==dim_axis_1) for i in range(dim_axis_0)):
+        dim_axis_0 = len(values)
+        dim_axis_1 = len(values[0])
+        if all((is_numeric(values[i]) and len(values[i])==dim_axis_1) for i in range(dim_axis_0)):
             self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+        else:
+            self.variable = values.copy()
 
         self.variableClassDefault = self.variable.copy()
         self.inputValue = list(self.variable)
+
+        # MODIFIED 2/23/17 END
+
 
     def _instantiate_input_state_for_monitored_value(self,monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
