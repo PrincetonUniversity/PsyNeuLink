@@ -3,6 +3,10 @@
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
 # FIX:
+#   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
+#             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
+#             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
+# FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
 #        - move assignment of function params (Lines 714 and 742 in ParameterState)
 #               into @property for value (Line 756) [DEBUG CRASH]
@@ -29,6 +33,7 @@
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
+#     5) Purge DefaultMonitoringMechanism
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
