@@ -646,7 +646,7 @@ def validate_monitored_value(self, state_spec, context=None):
                                  format(state_spec, self.name, state_spec[0]))
 
         # Set state_spec to the output_state item for validation below
-        state_spec_is_OK
+        state_spec_is_OK = True
     # MODIFIED 2/22/17 END
 
     from PsyNeuLink.Components.States.OutputState import OutputState
