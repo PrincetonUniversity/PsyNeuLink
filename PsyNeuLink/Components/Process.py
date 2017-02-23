@@ -451,8 +451,8 @@ def process(process_spec=None,
         implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
-        the value assigned as the target for the `ObjectiveMechanism` to which the `TERMINAL` mechanism of the 
-        process projects (and assigned as it `TARGET` mechanism; used for `learning <Process_Learning>`). 
+        the value assigned as the TARGET input for the `ObjectiveMechanism` to which the `TERMINAL` mechanism of the
+        process projects (and assigned as its `TARGET` mechanism; used for `learning <Process_Learning>`).
         It must be the same length as the `TERMINAL` mechanism's output.
 
     params : Optional[Dict[param keyword, param value]
