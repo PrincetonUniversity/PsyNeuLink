@@ -2616,7 +2616,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:parameter_spec=1,
+                 learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2725,7 +2725,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
-                 learning_rate:parameter_spec=1,
+                 learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
