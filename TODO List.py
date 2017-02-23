@@ -32,6 +32,7 @@
 #                                e) Document monitored_values
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
 #                                f) parse MonitoredOUtputStates specification for monitored_values arg
+#                                e) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
 #     5) Purge DefaultMonitoringMechanism
 
