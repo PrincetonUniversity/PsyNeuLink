@@ -951,10 +951,10 @@ FROM TODO:
                     except KeyError:
                         # No state specified so use Mechanism as sender arg
                         sample = self.errorSource
-                    # IMPLEMENTATION NOTE: specify target as an InputState (rather than an outputState),
+                    # IMPLEMENTATION NOTE: specify target as a template value (matching the sample's output value)
                     #                      since its projection (from either a ProcessInputState or a SystemInputState)
                     #                      will be instantiated by the Composition object to which the mechanism belongs
-                    target = InputState
+                    target = sample.outputState.value
                     # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
                     # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
                     objective_mechanism = ObjectiveMechanism(monitored_values=[sample, target],
