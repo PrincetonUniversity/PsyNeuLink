@@ -212,7 +212,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
+    # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
+    variableClassDefault = None
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -368,8 +369,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         """
 
-        if default_input_value is None:
-            default_input_value = self.variableClassDefault
+        # if default_input_value is None:
+        #     default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
@@ -389,6 +390,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # IMPLEMENATION NOTE: THIS IS HERE UNTIL Composition IS IMPLEMENTED,
         # SO THAT SYSTEMS AND PROCESSES CAN FIND THE OBJECTIVE MECHANISSMS SERVING AS TARGETS
 
+    def _validate_variable(self, variable, context=None):
+        """Validate that if default_input_value is specified the number of values matches the number of monitored_values
+
+        """
+        # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
+        #                       since params have not yet been validated and so self.params is not yet available
+        if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
+                raise ObjectiveError("The number of items specified for the default_input_values arg ({}) of {} "
+                                     "must match the number of items specified for its monitored_values arg ({})".
+                                     format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
+
+        super()._validate_variable(variable=variable, context=context)
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate `monitored_values`, `role` and `names <ObjectiveMechanism.names>` arguments
@@ -404,7 +418,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                  format(target_set[ROLE], self.name))
 
         if target_set[NAMES]:
-            if len(target_set[NAMES]) != len(self.variable):
+            if len(target_set[NAMES]) != len(target_set[MONITORED_VALUES]):
                 raise ObjectiveError("The number of items in \'names\'arg ({}) must equal of the number in the "
                                      "\`monitored_values\` arg for {}".
                                      format(len(target_set[NAMES]), len(target_set[MONITORED_VALUES]), self.name))
@@ -456,41 +470,38 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
 
         """
-        # MODIFIED 2/23/17 OLD:
-        # names = self.names or [None] * len(self.variable)
-        # for i, monitored_value, name in zip(range(len(self.variable)), self.variable, names):
-        #     self.variable[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
-        #
-        # # If all items of self.variable are numeric and of the same length, convert to ndarray
-        # dim_axis_0 = len(self.variable)
-        # dim_axis_1 = len(self.variable[0])
-        # if all((is_numeric(self.variable[i]) and len(self.variable[i])==dim_axis_1) for i in range(dim_axis_0)):
-        #     self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
-        #
-        # self.variableClassDefault = self.variable.copy()
-        # self.inputValue = list(self.variable)
-        # MODIFIED 2/23/17 NEW:
+        num_values = len(self.monitored_values)
+        values = [None] * num_values
+        names = self.names or [None] * num_values
 
-        values = [None] * len(self.monitored_values)
-        names = self.names or [None] * len(self.variable)
-        for i, monitored_value, name in zip(range(len(self.monitored_values)), self.monitored_values, names):
-            values[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
-
-        # If all items of self.variable are numeric and of the same length, convert to ndarray
-        dim_axis_0 = len(values)
-        dim_axis_1 = len(values[0])
-        if all((is_numeric(values[i]) and len(values[i])==dim_axis_1) for i in range(dim_axis_0)):
-            self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+        # If default_input_value arg (assigned to variable in __init__) was used to specify the size of inputStates,
+        #   pass those values for use in instantiating inputStates
+        if self.variable is not None:
+            input_state_sizes = self.variable
         else:
-            self.variable = values.copy()
+            input_state_sizes = values
+        for i, monitored_value, name in zip(range(num_values), self.monitored_values, names):
+            values[i] = self._instantiate_input_state_for_monitored_value(input_state_sizes[i],
+                                                                          monitored_value,
+                                                                          name,
+                                                                          context=context)
+
+        # If self.variable was not specified, construct from values of inputStates
+        if self.variable is None:
+            # If all items of self.variable are numeric and of the same length, convert to ndarray
+            dim_axis_0 = len(values)
+            dim_axis_1 = len(values[0])
+            if all((is_numeric(values[i]) and len(values[i])==dim_axis_1) for i in range(dim_axis_0)):
+                self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+            # Otherwise, just use list of values returned from instantiation above
+            else:
+                self.variable = values.copy()
 
         self.variableClassDefault = self.variable.copy()
         self.inputValue = list(self.variable)
 
-        # MODIFIED 2/23/17 END
 
-
-    def _instantiate_input_state_for_monitored_value(self,monitored_value, name=None, context=None):
+    def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
         Validate specification for value to be monitored (using call to validate_monitored_value)
@@ -515,20 +526,20 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.OutputState import OutputState
 
         call_for_projection = False
-        input_state_variable = DEFAULT_MONITORED_VALUE
+        value = DEFAULT_MONITORED_VALUE
         input_state_name = name
         input_state_params = None
 
         # If monitored_value is a value:
         # - create default InputState using monitored_value as its variable specification
         if _is_value_spec(monitored_value):
+            value = monitored_value
             input_state_name = name or self.name + MONITORED_VALUE_NAME_SUFFIX
-            input_state_variable = monitored_value
 
         # If monitored_value is an InputState:
         # - use InputState's variable, params, and name
         elif isinstance(monitored_value, InputState):
-            input_state_variable = monitored_value.variable
+            value = monitored_value.variable
             # Note: name specified in names argument of constructor takes precedence over existing name of inputState
             input_state_name = name or monitored_value.name
             input_state_params = monitored_value.params
@@ -536,19 +547,18 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # If monitored_value is a specification dictionary for an InputState:
         elif isinstance(monitored_value, InputState):
             try:
-                input_state_variable = monitored_value[VARIABLE]
+                value = monitored_value[VARIABLE]
                 # Note: name specified in a specification dictionary takes precedence over names argument in constructor
                 input_state_name = monitored_value[NAME]
                 input_state_params = monitored_value[INPUT_STATE_PARAMS]
             except KeyError:
-                if (input_state_variable == DEFAULT_MONITORED_VALUE and
-                            input_state_name is default_input_state_name and
+                if (value == DEFAULT_MONITORED_VALUE and
+                            input_state_name is name and
                             input_state_params is None):
                     raise ObjectiveError("Specification dictionary in monitored_values arg for {}"
                                          "did not contain any entries relevant to an inputState".format(self.name))
                 else:
                     pass
-
 
         elif isinstance(monitored_value, tuple):
             monitored_value = monitored_value[0]
@@ -559,7 +569,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - match inputState to the value of the outputState's value
         # - and specify the need for a projection from it
         elif isinstance(monitored_value, OutputState):
-            input_state_variable = monitored_value.value
+            value = monitored_value.value
             input_state_name = name or monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             
@@ -567,14 +577,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - match inputState to the value of its primary outputState
         # - and specify the need for a projection from it
         elif isinstance(monitored_value, Mechanism):
-            input_state_variable = monitored_value.outputState.value
+            value = monitored_value.outputState.value
             input_state_name = name or monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             
         # # If monitored_value is a MonitoredOutputStatesOption:
         # # FIX: NOT SURE WHAT TO DO HERE YET
         # elif isinstance(montiored_value, MonitoredOutputStateOption):
-        #     input_state_variable = ???
+        #     value = ???
         #     call_for_projection = True
 
         # If monitored_value is a string:
@@ -583,7 +593,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         elif isinstance(monitored_value, str):
             input_state_name = monitored_value
-            input_state_variable = DEFAULT_MONITORED_VALUE
+            value = DEFAULT_MONITORED_VALUE
+
+        # Give precedence to item specified in self.variable for inputState's variable
+        if variable is not None:
+            input_state_variable = variable
+        # Otherwise, set to value derived from monitored_value above
+        else:
+            input_state_variable = value
 
         from PsyNeuLink.Components.States.State import _instantiate_state
         input_state = _instantiate_state(owner=self,
