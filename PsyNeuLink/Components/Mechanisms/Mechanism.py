@@ -1358,7 +1358,11 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(variable=self.inputValue,
+        # # MODIFIED 2/23/17 OLD:
+        # self.value = self._execute(variable=self.inputValue,
+        # MODIFIED 2/23/17 NEW:
+        self.value = self._execute(variable=self.variable,
+        # MODIFIED 2/23/17 END
                                       runtime_params=runtime_params,
                                       clock=clock,
                                       time_scale=time_scale,

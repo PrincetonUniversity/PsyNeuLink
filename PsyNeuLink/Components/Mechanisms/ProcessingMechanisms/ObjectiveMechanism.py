@@ -517,20 +517,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # If monitored_value is a value:
         # - create default InputState using monitored_value as its variable specification
         if _is_value_spec(monitored_value):
-            input_state_name = self.name + MONITORED_VALUE_NAME_SUFFIX
+            input_state_name = name or self.name + MONITORED_VALUE_NAME_SUFFIX
             input_state_variable = monitored_value
 
         # If monitored_value is an InputState:
         # - use InputState's variable, params, and name
         elif isinstance(monitored_value, InputState):
             input_state_variable = monitored_value.variable
-            input_state_name = monitored_value.name
+            # Note: name specified in names argument of constructor takes precedence over existing name of inputState
+            input_state_name = name or monitored_value.name
             input_state_params = monitored_value.params
 
         # If monitored_value is a specification dictionary for an InputState:
         elif isinstance(monitored_value, InputState):
             try:
                 input_state_variable = monitored_value[VARIABLE]
+                # Note: name specified in a specification dictionary takes precedence over names argument in constructor
                 input_state_name = monitored_value[NAME]
                 input_state_params = monitored_value[INPUT_STATE_PARAMS]
             except KeyError:
@@ -547,7 +549,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - and specify the need for a projection from it
         elif isinstance(monitored_value, OutputState):
             input_state_variable = monitored_value.value
-            input_state_name = monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
+            input_state_name = name or monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             
         # If monitored_value is a Mechanism:
@@ -555,7 +557,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - and specify the need for a projection from it
         elif isinstance(monitored_value, Mechanism):
             input_state_variable = monitored_value.outputState.value
-            input_state_name = monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
+            input_state_name = name or monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
             call_for_projection = True
             
         # # If monitored_value is a MonitoredOutputStatesOption:

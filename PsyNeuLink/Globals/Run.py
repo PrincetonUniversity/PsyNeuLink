@@ -822,7 +822,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections
+                       projection in target.inputStates[SAMPLE].receivesFromProjections
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                    format(target.inputStates[COMPARATOR_SAMPLE].
@@ -851,7 +851,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections if
+                               projection in target.inputStates[TARGET].receivesFromProjections if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
@@ -1134,7 +1134,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.targetMechanism.target):
+            if target_len != np.size(object.targetMechanism.inputStates[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
