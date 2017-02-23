@@ -444,6 +444,9 @@ def convert_to_np_array(value, dimension):
     :param value:
     :return:
     """
+    if value is None:
+        return None
+
     if dimension is 1:
         value = np.atleast_1d(value)
     elif dimension is 2:

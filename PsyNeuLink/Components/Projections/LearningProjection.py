@@ -902,31 +902,34 @@ FROM TODO:
                 #     instantiate ObjectiveMechanism configured as a comparator
                 #         that compares errorSource output with external training signal
                 else:
+                    # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
+                    try:
+                        sample_state_name = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
+                        sample_source = self.errorSource.outputStates[sample_state_name]
+                        sample_size = np.zeros_like(sample_source)
+                    except KeyError:
+                        # No state specified so use Mechanism as sender arg
+                        sample_source = self.errorSource
+                        sample_size = np.zeros_like(self.errorSource.outputState.value)
 
                     # Assign output_signal to output of errorSource
                     if self.function.componentName is BACKPROPAGATION_FUNCTION:
-                        output_signal = np.zeros_like(self.errorSource.outputState.value)
+                        target_size = np.zeros_like(self.errorSource.outputState.value)
                     # Force sample and target of Comparartor to be scalars for RL
                     elif self.function.componentName is RL_FUNCTION:
-                        output_signal = np.array([0])
+                        sample_size = np.array([0])
+                        target_size = np.array([0])
                     else:
                         raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
                                                   format(self.function.name, self.name))
 
-                    # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
-                    try:
-                        sample = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
-                        sample = self.errorSource.outputStates[sample]
-                    except KeyError:
-                        # No state specified so use Mechanism as sender arg
-                        sample = self.errorSource
                     # IMPLEMENTATION NOTE: specify target as a template value (matching the sample's output value)
                     #                      since its projection (from either a ProcessInputState or a SystemInputState)
                     #                      will be instantiated by the Composition object to which the mechanism belongs
-                    target = sample.outputState.value
                     # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
                     # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
-                    objective_mechanism = ObjectiveMechanism(monitored_values=[sample, target],
+                    objective_mechanism = ObjectiveMechanism(default_input_value=[sample_size, target_size],
+                                                             monitored_values=[sample_source, target_size],
                                                              names=[SAMPLE,TARGET],
                                                              # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
                                                              # FIX: WHY DO THEY EACH HAVE TO BE AN ARRAY HERE??
