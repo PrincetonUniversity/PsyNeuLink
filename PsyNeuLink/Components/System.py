@@ -1954,8 +1954,8 @@ class System_Base(System):
                               time_scale=self.timeScale,
                               # time_scale=time_scale,
                               context=context_str)
-            # # TEST PRINT:
-            print ("EXECUTING MONITORING UPDATES: ", component.name)
+            # # # TEST PRINT:
+            # print ("EXECUTING MONITORING UPDATES: ", component.name)
 
         # Then update all MappingProjections
         for component in self.learningExecutionList:
@@ -1990,8 +1990,8 @@ class System_Base(System):
             # MODIFIED 2/21/17 NEW:
             component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
-            # TEST PRINT:
-            print ("EXECUTING WEIGHT UPDATES: ", component.name)
+            # # TEST PRINT:
+            # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
         if self._report_system_output and self._report_process_output:
             # Report learning for targetMechanisms (and the processes to which they belong)
