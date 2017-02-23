@@ -102,7 +102,7 @@ and/or the role they play in a system:
 
     `MONITORING`: monitors the value of another mechanism for use in learning;
 
-    `TARGET`: ComparatorMechanism that monitors a `TERMINAL` mechanism of a process
+    `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` mechanism of a process
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
@@ -187,9 +187,8 @@ input for only a single trial is provided, and only a single trial is executed. 
 can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
 one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned to the
-`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of `ComparatorMechanisms <ComparatorMechanism>`
+of execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
+`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the system's `TARGET` mechanisms
 (see learning below;  also, see `Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
@@ -258,8 +257,8 @@ from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, Proces
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
                                                        OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
-                                                                                      COMPARATOR_TARGET
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
+#                                                                                       target_input_state
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
@@ -401,11 +400,10 @@ def system(default_input_value=None,
     COMMENT
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
-        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of each
-        `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
-        number of items as there are `targetMechanisms`, and each item must have the same format (length and number
-        of elements) as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
-        `TARGET` mechanism.
+        the values assigned to the TARGET input of each `TARGET` mechanism in the system (listed in its
+        `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
+        and each item must have the same format (length and number of elements) as the TARGET input
+        for each of the corresponding `TARGET` mechanism.
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -610,9 +608,9 @@ class System_Base(System):
             Tuples for all MonitoringMechanisms in the system (used for learning).
 
         .. _target_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all ComparatorMechanisms  in the system that are a `TERMINAL` for at least on process
-            to which it belongs and that process has learning enabled --  the criteria for being a target used in
-            learning.
+            Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the system that are a `TERMINAL`
+            for at least on process to which it belongs and that process has learning enabled --  the criteria for
+            being a target used in learning.
 
         .. _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
             Tuples for all LearningMechanisms in the system (used for learning).
@@ -652,8 +650,7 @@ class System_Base(System):
     targetInputStates : List[SystemInputState]
         one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
         :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
-        provide their values to the the `target <ComparatorMechanism.ComparatorMechanism.target>` inputState of each
-        `TARGET` mechanism during execution.
+        provide their values to the the TARGET inputState of each `TARGET` mechanism during execution.
 
     COMMENT:
        IS THIS CORRECT:
@@ -1167,19 +1164,54 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
+            # # MODIFIED 2/23/17 OLD:
+            # # Assign as TERMINAL (or SINGLETON) if it:
+            # #    - has no outgoing projections and
+            # #    - it is not a ComparatorMechanism or
+            # #      it projects only to ComparatorMechanism(s) and/or ObjectiveMechanisms used for learning
+            # # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
+            # #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
+            # if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
+            #         all(all((isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
+            #                                                        ControlMechanism_Base)) or
+            #                      (isinstance(projection.receiver.owner, ObjectiveMechanism) and
+            #                       projection.receiver.owner.role is LEARNING))
+            #                 for projection in output_state.sendsToProjections)
+            #             for output_state in sender_mech.outputStates.values())):
+            # MODIFIED 2/23/17 NEW:
             # Assign as TERMINAL (or SINGLETON) if it:
             #    - has no outgoing projections and
-            #    - it is not a ComparatorMechanism or
-            #      it projects only to ComparatorMechanism(s) and/or ObjectiveMechanisms used for learning
+            #    - it is not an Objective Mechanism used for learning or control
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-                    all(all((isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
-                                                                   ControlMechanism_Base)) or
-                                 (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                  projection.receiver.owner.role is LEARNING))
-                            for projection in output_state.sendsToProjections)
-                        for output_state in sender_mech.outputStates.values())):
+            # if (not isinstance(sender_mech, (ObjectiveMechanism, ControlMechanism_Base)) and
+            #         all(all((isinstance(projection.receiver.owner, (ObjectiveMechanism,
+            #                                                        ControlMechanism_Base)) or
+            #                      (isinstance(projection.receiver.owner, ObjectiveMechanism) and
+            #                       projection.receiver.owner.role in (LEARNING, CONTROL)))
+            #                 for projection in output_state.sendsToProjections)
+            #             for output_state in sender_mech.outputStates.values())):
+            # MODIFIED 2/23/17 NEWER:
+            # Assign as TERMINAL (or SINGLETON) if it:
+            #    - is not an Objective Mechanism used for Learning or Control and
+            #    - has no outgoing projections or
+            #    -     only ones to ObjectiveMechanism(s) used for Learning or Control and
+            # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
+            #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
+            # It is not a ControlMechanism
+            if (not (isinstance(sender_mech, ControlMechanism_Base) or
+                 # It is not an ObjectiveMechanism used for Learning or Control
+                 (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
+                 # All of its projections are to ControlMechanism(s)...
+                 all(all((isinstance(projection.receiver.owner, ControlMechanism_Base)) or
+                          # or ObjectiveMechanism(s)
+                         (isinstance(projection.receiver.owner, ObjectiveMechanism) and
+                                     # used for Learning or Control
+                                     projection.receiver.owner.role in (LEARNING, CONTROL)))
+                        for projection in output_state.sendsToProjections)
+                    for output_state in sender_mech.outputStates.values()):
+
+            # MODIFIED 2/23/17 END
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech.systems[self] = SINGLETON
@@ -1375,13 +1407,10 @@ class System_Base(System):
 
             mech = mech_tuple.mechanism
 
-            if (isinstance(mech, MonitoringMechanism_Base) or
-                    (isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING))):
+            if isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING):
                 if not mech in self._monitoring_mech_tuples:
                     self._monitoring_mech_tuples.append(mech_tuple)
-
-            if isinstance(mech, ComparatorMechanism):
-                if not mech in self._target_mech_tuples:
+                if mech.learning_role is TARGET and not mech in self._target_mech_tuples:
                     self._target_mech_tuples.append(mech_tuple)
 
 
@@ -1599,25 +1628,25 @@ class System_Base(System):
 
         # Create SystemInputState for each TARGET mechanism in targetMechanisms and
         #    assign MappingProjection from the SystemInputState
-        #    to the TARGET mechanism's COMPARATOR_TARGET inputSate
-        #    (i.e., from the SystemInputState to the ComparatorMechanism)
+        #    to the TARGET mechanism's TARGET inputSate
+        #    (i.e., from the SystemInputState to the TARGET ObjectiveMechanism)
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
 
             # Create ProcessInputState for each target and assign to targetMechanism's target inputState
-            comparator_target = target_mech.inputStates[COMPARATOR_TARGET]
+            target_input_state = target_mech.inputStates[TARGET]
 
             # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-            #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
-            if len(self.targets[i]) != len(comparator_target.variable):
+            #    of the TARGET ObjectiveMechanism inputState's variable attribute
+            if len(self.targets[i]) != len(target_input_state.variable):
                 raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                   "expected for its TARGET mechanism {}".
                                    format(len(self.targets[i]),
                                           self.targets[i],
-                                          len(comparator_target.variable),
+                                          len(target_input_state.variable),
                                           target_mech.name))
 
             target_input_state = SystemInputState(owner=self,
-                                                        variable=comparator_target.variable,
+                                                        variable=target_input_state.variable,
                                                         prefs=self.prefs,
                                                         name="System Target {}".format(i))
             self.targetInputStates.append(target_input_state)
@@ -1625,8 +1654,8 @@ class System_Base(System):
             # Add MappingProjection from target_input_state to TARGET mechainsm's target inputState
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             MappingProjection(sender=target_input_state,
-                    receiver=comparator_target,
-                    name=self.name+' Input Projection to '+comparator_target.name)
+                    receiver=target_input_state,
+                    name=self.name+' Input Projection to '+target_input_state.name)
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -1789,7 +1818,7 @@ class System_Base(System):
                 # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
                 # # Nullify inputs to TARGET mechanism from any processes
                 # for process_target_projection in \
-                #         target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+                #         target_mech.inputStates[target_input_state].receivesFromProjections:
                 #     if isinstance(process_target_projection.sender, ProcessInputState):
                 #         process_target_projection.sender.value = process_target_projection.sender.value * 0
 

@@ -108,8 +108,8 @@ target_list = {Output_Layer:[[0, 0, 1]]}
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-COMPOSITION = PROCESS
-# COMPOSITION = SYSTEM
+# COMPOSITION = PROCESS
+COMPOSITION = SYSTEM
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 def print_header():

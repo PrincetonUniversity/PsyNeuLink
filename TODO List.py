@@ -35,6 +35,8 @@
 #                                e) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
 #     5) Purge DefaultMonitoringMechanism
+#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
+#                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
