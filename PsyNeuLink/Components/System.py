@@ -1164,36 +1164,6 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            # # MODIFIED 2/23/17 OLD:
-            # # Assign as TERMINAL (or SINGLETON) if it:
-            # #    - has no outgoing projections and
-            # #    - it is not a ComparatorMechanism or
-            # #      it projects only to ComparatorMechanism(s) and/or ObjectiveMechanisms used for learning
-            # # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
-            # #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            # if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-            #         all(all((isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
-            #                                                        ControlMechanism_Base)) or
-            #                      (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-            #                       projection.receiver.owner.role is LEARNING))
-            #                 for projection in output_state.sendsToProjections)
-            #             for output_state in sender_mech.outputStates.values())):
-
-            # MODIFIED 2/23/17 NEW:
-            # Assign as TERMINAL (or SINGLETON) if it:
-            #    - has no outgoing projections and
-            #    - it is not an Objective Mechanism used for learning or control
-            # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
-            #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            # if (not isinstance(sender_mech, (ObjectiveMechanism, ControlMechanism_Base)) and
-            #         all(all((isinstance(projection.receiver.owner, (ObjectiveMechanism,
-            #                                                        ControlMechanism_Base)) or
-            #                      (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-            #                       projection.receiver.owner.role in (LEARNING, CONTROL)))
-            #                 for projection in output_state.sendsToProjections)
-            #             for output_state in sender_mech.outputStates.values())):
-
-            # MODIFIED 2/23/17 NEWER:
             # Assign as TERMINAL (or SINGLETON) if it:
             #    - is not an Objective Mechanism used for Learning or Control and
             #    - has no outgoing projections or
@@ -1206,18 +1176,16 @@ class System_Base(System):
                 not (isinstance(sender_mech, ControlMechanism_Base) or
                     # It is not an ObjectiveMechanism used for Learning or Control
                     (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
-                    # All of its projections are to ControlMechanism(s)...
+                        # All of its projections
                         all(
                             all(
+                                # are to ControlMechanism(s)...
                                 isinstance(projection.receiver.owner, ControlMechanism_Base) or
-                                 # or ObjectiveMechanism(s)
+                                 # or ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                     # used for Learning or Control
-                                     projection.receiver.owner.role in (LEARNING, CONTROL))
+                                             projection.receiver.owner.role in (LEARNING, CONTROL))
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
-
-            # MODIFIED 2/23/17 END
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech.systems[self] = SINGLETON
