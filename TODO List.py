@@ -27,6 +27,7 @@
 #                                           and exponents, but rather assign
 #                                e) Document monitored_values
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
+#                                f) parse MonitoredOUtputStates specification for monitored_values arg
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
