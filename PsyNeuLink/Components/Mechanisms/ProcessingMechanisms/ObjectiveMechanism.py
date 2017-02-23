@@ -472,13 +472,18 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """Instantiate input state for each value specified in `monitored_values` arg
 
         """
-
         names = self.names or [None] * len(self.variable)
         for i, monitored_value, name in zip(range(len(self.variable)), self.variable, names):
             self.variable[i] = self._instantiate_input_state_for_monitored_value(monitored_value, name, context=context)
 
         # FIX: self.variable NEEDS TO BE REFORMATTED INTO A 2D ARRAY, AT LEAST IF LINEARCOMBINATION IS THE FUNCTION
-        self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
+        dim_axis_0 = len(self.variable)
+        dim_axis_1 = len(self.variable[0])
+        if all(len(self.variable[i])==dim_axis_1 for i in range(dim_axis_0)):
+            self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+
+        self.variableClassDefault = self.variable.copy()
+        self.inputValue = list(self.variable)
 
     def _instantiate_input_state_for_monitored_value(self,monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
@@ -506,7 +511,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         call_for_projection = False
         input_state_variable = DEFAULT_MONITORED_VALUE
-        input_state_name = name or default_input_state_name
+        input_state_name = name
         input_state_params = None
 
         # If monitored_value is a value:
@@ -563,7 +568,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # - use as name of inputState
         # - instantiate InputState with defalut value (1d array with single scalar item??)
 
-        elif isinstance(montiored_value, str):
+        elif isinstance(monitored_value, str):
             input_state_name = monitored_value
             input_state_variable = DEFAULT_MONITORED_VALUE
 
