@@ -652,12 +652,13 @@ class ParameterState(State_Base):
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
-            raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
+            raise ParameterStateError("Value ({0}) of {1} parameterState for {2} mechanism is not compatible with "
                                            "the variable ({3}) of its function".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
-                                                  self.owner.variable))
+                                                  # self.owner.variable))
+                                                  self.reference_value))
 
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
