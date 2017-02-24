@@ -1,8 +1,8 @@
 class Constraint(object):
     ########
     # Helper class for scheduling
-    # Contains an owner (the ScheduleVariable which owns this constraint), dependencies (list of all ScheduleVariables the
-    # owner depends on with respect to *this* constraint), and the condition (of this constraint)
+    # Contains an owner (the ScheduleVariable which owns this constraint), dependencies (list of all ScheduleVariables
+    # the owner depends on with respect to *this* constraint), and the condition (of this constraint)
     # Contains a method 'is_satisfied' which checks dependencies against the condition and returns a boolean
     ########
     def __init__(self, owner, dependencies, condition, time_scales = None):
@@ -11,12 +11,6 @@ class Constraint(object):
             self.dependencies = (dependencies,)
         else:
             self.dependencies = dependencies # Tuple of ScheduleVariables on which this constraint depends
-
-        # currently, the following 3 lines are not used; time_scale is input explicitly, e.g. every_n_calls(1, "run")
-        # and a default is set within each condition (usually 'trial')
-        # self.time_scales = time_scales # Time Scales over which the constraint queries each dependency
-        # if self.time_scales is None: # Defaults to 'trial'
-        #     self.time_scales = ('trial',)*len(self.dependencies)
 
         self.condition = condition # Condition to be evaluated
 
@@ -38,19 +32,17 @@ class ScheduleVariable(object):
     # - new_time_step resets unfilled_constraints and filled_constraints
     # - new_trial calls new_trial() method on component to reset mechanism for a new trial
     ########
-    def __init__(self, component, own_constraints = None, dependent_constraints = None, priority = None):
+    def __init__(self, component, own_constraints = [], dependent_constraints = [], priority = None):
         self.component = component
         # Possible simplification - set default own_constraints = [] etc to avoid 'is not None' logic
         self.own_constraints = []
         self.unfilled_constraints = []
         self.filled_constraints = []
-        if own_constraints is not None:
-            for con in own_constraints:
-                self.add_own_constraint(con)
+        for con in own_constraints:
+            self.add_own_constraint(con)
         self.dependent_constraints = []
-        if dependent_constraints is not None:
-            for con in dependent_constraints:
-                self.add_dependent_constraint(con)
+        for con in dependent_constraints:
+            self.add_dependent_constraint(con)
         self.priority = priority
 
     def add_own_constraint(self, constraint):
@@ -79,22 +71,6 @@ class ScheduleVariable(object):
 
     def new_trial(self):
         self.component.new_trial()
-
-# TerminalScheduleVariable is not currently used
-
-# def TerminalScheduleVariable(ScheduleVariable):
-#     def __init__(self, own_constraints = None, dependent_constraints = None, priority = None):
-#         self.own_constraints = []
-#         self.unfilled_constraints = []
-#         self.filled_constraints = []
-#         if own_constraints is not None:
-#             for con in own_constraints:
-#                 self.add_own_constraint(con)
-#         self.dependent_constraints = []
-#         if dependent_constraints is not None:
-#             for con in dependent_constraints:
-#                 self.add_dependent_constraint(con)
-#         self.priority = priority
 
 class Scheduler(object):
     ########
@@ -178,7 +154,7 @@ class Scheduler(object):
         #######
         # Resets all mechanisms in the Scheduler for this time_step
         # Initializes a firing queue, then continuously executes mechanisms and updates queue according to any
-        # constraints that were satisfied by the previous execution 
+        # constraints that were satisfied by the previous execution
         #######
         def update_dependent_vars(variable):
             #######
@@ -192,8 +168,8 @@ class Scheduler(object):
                 if con in con.owner.unfilled_constraints:
                     if con.owner.evaluate_constraint(con):
                         change_list.append(con.owner)
+                change_list.sort(key=lambda x:x.priority) # sort according to priority
             return change_list
-        ## TODO: implement priority queue
 
         def update_firing_queue(firing_queue, change_list):
             ######
@@ -216,18 +192,6 @@ class Scheduler(object):
             print(var.component.name)
             change_list = update_dependent_vars(var)
             firing_queue = update_firing_queue(firing_queue, change_list)
-
-    # def generate_trial(self):
-    #     for var in self.var_list:
-    #         var.new_trial()
-    #     trial_terminated = False
-    #     while(not trial_terminated):
-    #         for var in self.generate_time_step():
-    #             if var is self.terminal:
-    #                 trial_terminated = True
-    #                 break
-    #             else:
-    #                 yield var.component
 
     def run_trial(self):
         ######
