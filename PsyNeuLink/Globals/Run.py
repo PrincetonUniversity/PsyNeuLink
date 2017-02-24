@@ -542,8 +542,18 @@ def run(object,
         else:
             if learning is True:
                 object._learning_enabled = True
+
             elif learning is False:
                 object._learning_enabled = False
+
+    # SET LEARNING_RATE, if specified, for all learningProjections in process or system
+    if object.learning_rate is not None:
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        for learning_mech in object.monitoringMechanisms.mechanisms:
+            for projection in learning_mech.outputState.sendsToProjections:
+                if isinstance(projection, LearningProjection):
+                    projection.function_object.learning_rate = object.learning_rate
 
     # VALIDATE INPUTS: COMMON TO PROCESS AND SYSTEM
     # Input is empty

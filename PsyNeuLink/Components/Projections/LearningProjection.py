@@ -297,7 +297,6 @@ class LearningProjection(Projection_Base):
                  sender=None,                \
                  receiver=None,              \
                  function=BackPropagation    \
-                 learning_rate=None          \
                  params=None,                \
                  name=None,                  \
                  prefs=None)
