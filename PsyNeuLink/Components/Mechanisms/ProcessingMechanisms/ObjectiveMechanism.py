@@ -191,7 +191,7 @@ DEFAULT_MONITORED_VALUE = [0]
 
 OBJECTIVE_RESULT = "ObjectiveResult"
 
-class ObjectiveError(Exception):
+class ObjectiveMechanismsError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -397,7 +397,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
         #                       since params have not yet been validated and so self.params is not yet available
         if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
-                raise ObjectiveError("The number of items specified for the default_input_values arg ({}) of {} "
+                raise ObjectiveMechanismsError("The number of items specified for the default_input_values arg ({}) of {} "
                                      "must match the number of items specified for its monitored_values arg ({})".
                                      format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
 
@@ -414,18 +414,18 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                  context=context)
 
         if target_set[ROLE] and not target_set[ROLE] in {LEARNING, CONTROL}:
-            raise ObjectiveError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
+            raise ObjectiveMechanismsError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                  format(target_set[ROLE], self.name))
 
         if target_set[NAMES]:
             if len(target_set[NAMES]) != len(target_set[MONITORED_VALUES]):
-                raise ObjectiveError("The number of items in \'names\'arg ({}) must equal of the number in the "
+                raise ObjectiveMechanismsError("The number of items in \'names\'arg ({}) must equal of the number in the "
                                      "\`monitored_values\` arg for {}".
                                      format(len(target_set[NAMES]), len(target_set[MONITORED_VALUES]), self.name))
 
             for name in target_set[NAMES]:
                 if not isinstance(name, str):
-                    raise ObjectiveError("it in \'names\'arg ({}) of {} is not a string".
+                    raise ObjectiveMechanismsError("it in \'names\'arg ({}) of {} is not a string".
                                          format(target_set[NAMES], self.name))
 
         #region VALIDATE MONITORED VALUES
@@ -555,7 +555,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 if (value == DEFAULT_MONITORED_VALUE and
                             input_state_name is name and
                             input_state_params is None):
-                    raise ObjectiveError("Specification dictionary in monitored_values arg for {}"
+                    raise ObjectiveMechanismsError("Specification dictionary in monitored_values arg for {}"
                                          "did not contain any entries relevant to an inputState".format(self.name))
                 else:
                     pass
@@ -703,7 +703,7 @@ def validate_monitored_value(self, state_spec, context=None):
     #     state_spec_is_OK = True
 
     if not state_spec_is_OK:
-        raise ObjectiveError("Specification of state to be monitored ({0}) by {1} is not "
+        raise ObjectiveMechanismsError("Specification of state to be monitored ({0}) by {1} is not "
                              "a value, Mechanism, OutputState, string, dict, or a value of MonitoredOutputStatesOption".
                              format(state_spec, self.name))
 
