@@ -191,6 +191,7 @@ DEFAULT_MONITORED_VALUE = [0]
 
 OBJECTIVE_RESULT = "ObjectiveResult"
 
+
 class ObjectiveMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
