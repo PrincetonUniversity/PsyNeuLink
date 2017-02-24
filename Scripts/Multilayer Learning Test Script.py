@@ -108,8 +108,8 @@ target_list = {Output_Layer:[[0, 0, 1]]}
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-COMPOSITION = PROCESS
-# COMPOSITION = SYSTEM
+# COMPOSITION = PROCESS
+COMPOSITION = SYSTEM
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
@@ -153,7 +153,8 @@ if COMPOSITION is PROCESS:
 elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
     x = system(processes=[z],
-               targets=[0, 0, 1])
+               targets=[0, 0, 1],
+               learning_rate=2.0)
 
     x.reportOutputPref = True
 

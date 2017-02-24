@@ -57,6 +57,10 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
+                  # controller=EVCMechanism(monitor_for_control=[Reward,
+                  #                                              DDM_PROBABILITY_UPPER_THRESHOLD,
+                  #                                              DDM_RESPONSE_TIME],
+                  #                         outcome_function=LinearCombination(exponents=[1, 1, -1])),
                   enable_controller=True,
                   monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],

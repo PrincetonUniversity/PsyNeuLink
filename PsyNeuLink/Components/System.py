@@ -319,6 +319,7 @@ def system(default_input_value=None,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            # learning:tc.optional(_is_learning_spec)=None,
+           learning_rate:tc.optional(parameter_spec)=None,
            targets:tc.optional(tc.any(list, np.ndarray))=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
@@ -332,7 +333,8 @@ def system(default_input_value=None,
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
-    targets=None                              \
+    learning_rate=None,                       \
+    targets=None,                             \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -399,6 +401,10 @@ def system(default_input_value=None,
             implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
     COMMENT
 
+    learning_rate : float : None
+        specifies the default learning rate for all mechanisms in the system (see `learning_rate` attribute for
+        additional information).
+
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` mechanism in the system (listed in its
         `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
@@ -440,6 +446,7 @@ def system(default_input_value=None,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
                        # learning=learning,
+                       learning_rate=learning_rate,
                        targets=targets,
                        params=params,
                        name=name,
@@ -456,6 +463,7 @@ class System_Base(System):
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
+    learning_rate=None,                       \
     targets=None,                             \
     params=None,                              \
     name=None,                                \
@@ -550,6 +558,11 @@ class System_Base(System):
     learning : bool : default False
         indicates whether learning is being used;  is set to True if learning is specified for any processes
         in the system or for the system itself.
+
+    learning_rate : float : default None
+        determines the default learning rate for all mechanisms in the system.  This can be overridden by specifying
+        the learning rate for mechanisms (or their functions) individually (see `LearningProjection` for additional
+        information).
 
     targets : 2d nparray : default zeroes
         used as template for the values of the system's `targetInputStates`, and to represent the targets specified in
@@ -730,6 +743,7 @@ class System_Base(System):
                  enable_controller=False,
                  monitor_for_control=None,
                  # learning=None,
+                 learning_rate=None,
                  targets=None,
                  params=None,
                  name=None,
@@ -741,16 +755,14 @@ class System_Base(System):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
-                                                 initial_values=initial_values,
-                                                 controller=controller,
-                                                 enable_controller=enable_controller,
-                                                 monitor_for_control=monitor_for_control,
-                                                 targets=targets,
-                                                 params=params)
+                                                  initial_values=initial_values,
+                                                  controller=controller,
+                                                  enable_controller=enable_controller,
+                                                  monitor_for_control=monitor_for_control,
+                                                  learning_rate=learning_rate,
+                                                  targets=targets,
+                                                  params=params)
 
-        # MODIFIED 12/15/16 OLD:
-        # self.pathway = None
-        # MODIFIED 12/15/16 END
         self.function = self.execute
         self.outputStates = {}
         self._phaseSpecMax = 0
@@ -839,7 +851,7 @@ class System_Base(System):
         # # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         # self.variable = convert_to_np_array(self.variable, 2)
-# FIX:  THIS CURRENTLY FAILS:
+        # FIX:  THIS CURRENTLY FAILS:
         # # MODIFIED 6/26/16 NEW:
         # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
@@ -1011,6 +1023,8 @@ class System_Base(System):
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
+                # if self.learning_rate and not process.learning_rate:
+                #     process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
 
             # Otherwise, instantiate Process
             else:
@@ -1019,7 +1033,7 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=process_input, context=self)
+                    process = Process(default_input_value=process_input, learning_rate=learning_rate, context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
