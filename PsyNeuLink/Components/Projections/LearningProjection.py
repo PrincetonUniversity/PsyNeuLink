@@ -293,13 +293,13 @@ class LearningProjectionError(Exception):
 
 class LearningProjection(Projection_Base):
     """
-    LearningProjection(                                                     \
-                 sender=None,                                               \
-                 receiver=None,                                             \
-                 function=BackPropagation(learning_rate=1,                  \
-                                          activation_function=Logistic),    \
-                 params=None,                                               \
-                 name=None,                                                 \
+    LearningProjection(                      \
+                 sender=None,                \
+                 receiver=None,              \
+                 function=BackPropagation    \
+                 learning_rate=None          \
+                 params=None,                \
+                 name=None,                  \
                  prefs=None)
 
 

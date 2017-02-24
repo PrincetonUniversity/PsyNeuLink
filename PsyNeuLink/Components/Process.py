@@ -374,6 +374,7 @@ def process(process_spec=None,
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
             default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
             learning:tc.optional(_is_learning_spec)=None,
+            learning_rate:tc.optional(parameter_spec)=None,
             target=None,
             params=None,
             name=None,
@@ -389,6 +390,7 @@ def process(process_spec=None,
     clamp_input=None,                                       \
     default_projection_matrix=None,                         \
     learning=None,                                          \
+    learning_rate=None                                      \
     target=None,                                            \
     params=None,                                            \
     name=None,                                              \
@@ -450,6 +452,10 @@ def process(process_spec=None,
     learning : Optional[LearningProjection spec]
         implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
+    learning_rate : float : None
+        specifies the default learning rate for all mechanisms in the process (see `learning_rate` attribute for
+        additional information).
+
     target : List or ndarray : default ndarray of zeroes
         the value assigned as the TARGET input for the `ObjectiveMechanism` to which the `TERMINAL` mechanism of the
         process projects (and assigned as its `TARGET` mechanism; used for `learning <Process_Learning>`).
@@ -503,6 +509,7 @@ def process(process_spec=None,
                             clamp_input=clamp_input,
                             default_projection_matrix=default_projection_matrix,
                             learning=learning,
+                            learning_rate=learning_rate,
                             target=target,
                             params=params,
                             name=name,
@@ -531,6 +538,7 @@ class Process_Base(Process):
     clamp_input:=None,                                      \
     default_projection_matrix=DEFAULT_PROJECTION_MATRIX,    \
     learning=None,                                          \
+    learning_rate=None                                      \
     target=None,                                            \
     params=None,                                            \
     name=None,                                              \
@@ -766,6 +774,11 @@ class Process_Base(Process):
                       indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
                       has been specified (see above).
 
+    learning_rate : float : default None
+        determines the default learning rate for all mechanisms in the process.  This can be overridden by specifying
+        the learning rate for mechanisms (or their functions) individually (see `LearningProjection` for additional
+        information).
+
     results : List[outputState.value]
         a list of return values from a sequence of executions of the process.
 
@@ -819,6 +832,7 @@ class Process_Base(Process):
                  clamp_input=None,
                  default_projection_matrix=DEFAULT_PROJECTION_MATRIX,
                  learning=None,
+                 learning_rate=None,
                  target=None,
                  params=None,
                  name=None,
@@ -827,12 +841,13 @@ class Process_Base(Process):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(pathway=pathway,
-                                                 initial_values=initial_values,
-                                                 clamp_input=clamp_input,
-                                                 default_projection_matrix=default_projection_matrix,
-                                                 learning=learning,
-                                                 target=target,
-                                                 params=params)
+                                                  initial_values=initial_values,
+                                                  clamp_input=clamp_input,
+                                                  default_projection_matrix=default_projection_matrix,
+                                                  learning=learning,
+                                                  learning_rate=learning_rate,
+                                                  target=target,
+                                                  params=params)
 
         self._execution_id = None
         self.pathway = None

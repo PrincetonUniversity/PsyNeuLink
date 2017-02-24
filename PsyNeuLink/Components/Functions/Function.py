@@ -2579,7 +2579,6 @@ class LearningFunction(Function_Base):
     componentType = LEARNING_FUNCTION_TYPE
 
 
-LEARNING_RATE = "learning_rate"
 ACTIVATION_FUNCTION = 'activation_function'
 MATRIX_INPUT = 0
 ACTIVATION_OUTPUT = 1
