@@ -443,11 +443,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION
 
-        super(AdaptiveMechanism, self).__init__(variable=error_signal,
-                                                params=params,
-                                                name=name,
-                                                prefs=prefs,
-                                                context=self)
+        super().__init__(variable=error_signal,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
     # IMPLEMENTATION NOTE: Redundant with typecheck??
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -461,8 +461,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         except KeyError:
             pass
         else:
-            if objective_mech_spec and not any(m in {ObjectiveMechanism, OutputState, Mechanism} for
-                                               m in {objective_mech_spec,type(objective_mech_spec)}):
+            if objective_mech_spec and not any(m in {None, ObjectiveMechanism, OutputState, Mechanism} for
+                                               m in {objective_mech_spec, type(objective_mech_spec)}):
                 raise LearningMechanismError("Specification for {} arg of {} must ({}) must be "
                                              "a Mechanism, OutputState or \`ObjectiveMechanism\`".
                                              format(OBJECTIVE_MECHANISM, self.name, target_set[OBJECTIVE_MECHANISM]))
