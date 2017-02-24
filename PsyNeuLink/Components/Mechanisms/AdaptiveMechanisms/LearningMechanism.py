@@ -293,14 +293,13 @@ class LearningMechanismError(Exception):
 
 class LearningMechanism(AdaptiveMechanism_Base):
     """
-    LearningProjection(                      \
-                 sender=None,                \
-                 receiver=None,              \
+    LearningMechanism(                       \
+                 error_signal=None,          \
+                 objective_mechanism=None    \
                  function=BackPropagation    \
                  params=None,                \
                  name=None,                  \
                  prefs=None)
-
 
     Implements a projection that modifies the matrix param of a MappingProjection.
 
@@ -422,19 +421,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_SENDER: MonitoringMechanism_Base,
-                               PARAMETER_STATES: None, # This suppresses parameterStates
-                               WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
-                                   {                  # Note:  assumes MappingProjection.function is LinearCombination
-                                       FUNCTION_PARAMS: {OPERATION: SUM},
-                                       PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
-                                       PROJECTION_TYPE: LEARNING_PROJECTION}
-                               })
+    # paramClassDefaults.update({})
 
     @tc.typecheck
     def __init__(self,
-                 sender=None,
-                 receiver=None,
+                 error_signal:is_numeric=None,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic),
                  params=None,
@@ -453,50 +444,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Flag for deferred initialization
         self.value = DEFERRED_INITIALIZATION
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or
-        MappingProjection
-
-        Validate send in params[PROJECTION_SENDER] or, if not specified, sender arg:
-        - must be the outputState of a MonitoringMechanism (e.g., ComparatorMechanism or WeightedErrorMechanism)
-        - must be a list or 1D np.array (i.e., the format of an error_signal)
-
-        Validate receiver in params[PARAMETER_STATES] or, if not specified, receiver arg:
-        - must be either a MappingProjection or parameterStates[MATRIX]
-
-         """
-
-        # Parse params[PROJECTION_SENDER] if specified, and assign self.sender
-        super()._validate_params(request_set, target_set, context)
-
-        # VALIDATE SENDER
-        sender = self.sender
-        self._validate_sender(sender)
-
-        # VALIDATE RECEIVER
-        try:
-            receiver = target_set[PARAMETER_STATES]
-            self._validate_receiver(receiver)
-        except (KeyError, LearningMechanismError):
-            # PARAMETER_STATES not specified:
-            receiver = self.receiver
-            self._validate_receiver(receiver)
-
-        # VALIDATE WEIGHT CHANGE PARAMS
-        try:
-            weight_change_params = target_set[WEIGHT_CHANGE_PARAMS]
-        except KeyError:
-            pass
-        else:
-            # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
-            for param_name, param_value in weight_change_params.items():
-                if param_name is FUNCTION:
-                    raise LearningMechanismError("{} of {} contains a function specification ({}) that would override"
-                                              " the LinearCombination function of the targeted MappingProjection".
-                                              format(WEIGHT_CHANGE_PARAMS,
-                                                     self.name,
-                                                     param_value))
-
     def _validate_sender(self, sender):
         """Make sure sender is a MonitoringMechanism or ProcessingMechanism or the outputState for one;
         """
@@ -514,7 +461,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
                                           format(sender, self.name))
 
-        # If specification is a MonitoringMechanism class, pass (it will be instantiated in _instantiate_sender)
+        # If specification is a MonitoringMechanism class, pass (it will be instantiated in _instantiate_objective_mechanism)
         elif inspect.isclass(sender) and issubclass(sender,  MonitoringMechanism_Base):
             pass
 
@@ -542,9 +489,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # * the value of receiver will be validated in _instantiate_receiver
 
     def _instantiate_attributes_before_function(self, context=None):
-        """Override super to call _instantiate_receiver before calling _instantiate_sender
+        """Override super to call _instantiate_receiver before calling _instantiate_objective_mechanism
 
-        Call _instantiate_receiver first since both _instantiate_sender and _instantiate_function
+        Call _instantiate_receiver first since both _instantiate_objective_mechanism and _instantiate_function
             reference the MappingProjection's weight matrix: self.mappingProjection.matrix
 
         """
@@ -553,22 +500,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self._instantiate_receiver(context)
 
-        # # MODIFIED 8/14/16: COMMENTED OUT SINCE SOLVED BY MOVING add_to TO _instantiate_attributes_after_function
-        # # "Cast" self.value to MappingProjection parameterState's variable to pass validation in _instantiate_sender
-        # # Note: this is because _instantiate_sender calls _add_projection_to
-        # # (since self.value is not assigned until _instantiate_function; it will be reassigned there)
-        # self.value = self.receiver.variable
-
         super()._instantiate_attributes_before_function(context)
-
-    def _instantiate_attributes_after_function(self, context=None):
-        """Override super since it calls _instantiate_receiver which has already been called above
-        """
-        # pass
-        # MODIFIED 8/14/16: MOVED FROM _instantiate_sender
-        # Add LearningProjection to MappingProjection's parameterState
-        # Note: needs to be done after _instantiate_function, since validation requires self.value be assigned
-        self.add_to(receiver=self.mappingProjection, state=self.receiver, context=context)
 
     def _instantiate_receiver(self, context=None):
         """Instantiate and/or assign the parameterState of the projection to be modified by learning
@@ -580,7 +512,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         Re-assign LearningProjection's variable to match the height (number of rows) of the matrix
         
         Notes:
-        * This must be called before _instantiate_sender since that requires access to self.receiver
+        * This must be called before _instantiate_objective_mechanism since that requires access to self.receiver
             to determine whether to use a ComparatorMechanism or <MappingProjection>.receiverError for error signals
         * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
                               and calls _add_projection_to_mechanism
@@ -740,7 +672,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             except KeyError:
                 raise LearningProjection(message)
 
-    def _instantiate_sender(self, context=None):
+    def _instantiate_objective_mechanism(self, context=None):
         # DOCUMENT: SEE UPDATE BELOW
         """Assign self.variable to MonitoringMechanism output or self.receiver.receivererror_signals
 
@@ -760,7 +692,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
            otherwise, raise exception
 
 FROM TODO:
-#    - _instantiate_sender:
+#    - _instantiate_objective_mechanism:
 #        - examine mechanism to which MappingProjection projects:  self.receiver.owner.receiver.owner
 #            - check if it is a terminal mechanism in the system:
 #                - if so, assign:
@@ -810,7 +742,7 @@ FROM TODO:
         objective_mechanism = None
 
         # ObjectiveMechanism specified for sender, so re-assign to its outputState
-        if isinstance(self.sender, ObjectiveMechanism):
+        if isinstance(self.objective_mechanism, ObjectiveMechanism):
             self.sender = self.sender.outputState
 
         # OutputState specified (or re-assigned) for sender
@@ -1120,12 +1052,12 @@ FROM TODO:
         # ASSIGN OUTPUT TO ERROR SOURCE
         # Array of output values for MappingProjection's receiver mechanism
         # output = self.mappingProjection.receiver.owner.outputState.value
-# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_sender,
+# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_objective_mechanism,
 # FIX:   ASSIGN self.input ACCORDINGLY
         output = self.errorSource.outputState.value
 
         # ASSIGN ERROR
-# FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN _instantiate_sender, ASSIGN ACCORDINGLY
+# FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN _instantiate_objective_mechanism, ASSIGN ACCORDINGLY
         error_signal = self.error_signal
 
         # CALL function TO GET WEIGHT CHANGES
