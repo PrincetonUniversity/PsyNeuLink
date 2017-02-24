@@ -20,7 +20,7 @@
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:  MODIFY TO:
-#                                d) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights
+#                                d) Revise EVCMechanism._get_monitored_states() to NOT direclty assign weights
 #                                           and exponents, but rather assign
 #                                e) Document monitored_values and default_input_value (sets size of inputSTates)
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
@@ -30,10 +30,11 @@
 #                                            Matrix - IDENTITY MATRIX
 #                                            Derivative - Linear
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
-#     5) Purge DefaultMonitoringMechanism
-#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
+#     5) Get rid of tuple processing in ObjectiveMechanism (leave that as an EVC contrivance)
+#     6) Purge all MonitoringMechanism components and references (including DefaultMonitoringMechanism)
+#     7) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
-#     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
+#     8) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
