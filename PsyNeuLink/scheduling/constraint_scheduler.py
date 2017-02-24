@@ -215,10 +215,10 @@ class Scheduler(object):
 
 def main():
     from PsyNeuLink.Components.Component import Component
-    from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls
+    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
-    A = TransferMechanism(function = Linear(), name = 'A')
+    A = TransferMechanism(function = Linear(slope=3, intercept=3), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
@@ -228,8 +228,9 @@ def main():
     sched.set_terminal(Terminal)
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
     sched.add_constraints([(A, (Clock,), every_n_calls(1)),
-                           (B, (A,), every_n_calls(2)),
-                           (C, (B,), every_n_calls(2)),
+                           (B, (A,), over_threshold_OR(2)),
+                           # (B, (Clock), every_n_calls(10)),
+                           (C, (A,B), first_n_calls_AND(2)),
                            (Terminal, (C,), every_n_calls(2))])
     for var in sched.var_list:
         var.component.new_trial()
@@ -240,7 +241,9 @@ def main():
     sched.run_trial()
     print("--- BEGINNING TRIAL 2 ---")
     sched.run_trial()
-
+    A.execute()
+    A.execute()
+    print(A.value)
 
     # for mech in sched.generate_trial():
     #     mech.execute()
