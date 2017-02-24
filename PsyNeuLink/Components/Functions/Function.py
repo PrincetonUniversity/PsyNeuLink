@@ -693,8 +693,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
                                                  offset=offset,
-                                                 exponents=exponents,
                                                  weights=weights,
+                                                 exponents=exponents,
                                                  operation=operation,
                                                  params=params)
 
@@ -703,10 +703,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                          prefs=prefs,
                          context=context)
 
-        if self.exponents is not None:
-            self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1,1)
+        if self.exponents is not None:
+            self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -736,9 +736,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                     raise FunctionError("Length of all arrays in variable {0} for {1} must be the same".
                                        format(variable, self.__class__.__name__))
 
-
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
+        """Insure that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
             request_set:
@@ -755,36 +754,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                               target_set=target_set,
                               context=context)
 
-        # exponents = target_set[EXPONENTS]
-        # weights = target_set[WEIGHTS]
-        # operation = target_set[OPERATION]
-
-#         # IMPLEMENTATION NOTE: checking is now taken care of by typecheck;  now only need to convert
-#         # Make sure exponents is a list of numbers or an np.ndarray
-# # FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
-#         if not exponents is None and not exponents is NotImplemented:
-#             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
-#                     isinstance(exponents, np.ndarray)):
-#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-#                 target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-#             else:
-#                 raise FunctionError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
-#                                format(exponents, self.name))
-#
-#         # Make sure weights is a list of numbers or an np.ndarray
-#         if not weights is None and not weights is NotImplemented:
-#             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
-#                     isinstance(weights, np.ndarray)):
-#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-#                 target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
-#             else:
-#                 raise FunctionError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
-#                                format(weights, self.name))
-
-        if target_set[EXPONENTS] is not None:
-            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
         if target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
+        if target_set[EXPONENTS] is not None:
+            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
 
         # if not operation:
         #     raise FunctionError("Operation param missing")
@@ -852,8 +825,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
-            #    make sure there no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
+            #    make sure there are no zeros for an element that is assigned a negative exponent
+            if INITIALIZING in context and any(not any(i) and j<0 for i,j in zip(self.variable, exponents)):
                 self.variable = np.ones_like(self.variable)
             else:
                 self.variable = self.variable ** exponents
@@ -2606,7 +2579,6 @@ class LearningFunction(Function_Base):
     componentType = LEARNING_FUNCTION_TYPE
 
 
-LEARNING_RATE = "learning_rate"
 ACTIVATION_FUNCTION = 'activation_function'
 MATRIX_INPUT = 0
 ACTIVATION_OUTPUT = 1
@@ -2643,7 +2615,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:parameter_spec=1,
+                 learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2752,7 +2724,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
-                 learning_rate:parameter_spec=1,
+                 learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):

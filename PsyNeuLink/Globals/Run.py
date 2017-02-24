@@ -498,7 +498,7 @@ def run(object,
     if targets:
         targets = _construct_stimulus_sets(object, targets, is_target=True)
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     if object_type in {MECHANISM, PROCESS}:
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
@@ -542,8 +542,18 @@ def run(object,
         else:
             if learning is True:
                 object._learning_enabled = True
+
             elif learning is False:
                 object._learning_enabled = False
+
+    # SET LEARNING_RATE, if specified, for all learningProjections in process or system
+    if object.learning_rate is not None:
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        for learning_mech in object.monitoringMechanisms.mechanisms:
+            for projection in learning_mech.outputState.sendsToProjections:
+                if isinstance(projection, LearningProjection):
+                    projection.function_object.learning_rate = object.learning_rate
 
     # VALIDATE INPUTS: COMMON TO PROCESS AND SYSTEM
     # Input is empty
@@ -591,6 +601,8 @@ def run(object,
     # EXECUTE
     for execution in range(num_executions):
 
+        execution_id = _get_get_execution_id()
+
         if call_before_trial:
             call_before_trial()
 
@@ -610,26 +622,22 @@ def run(object,
                 if isinstance(targets, function_type):
                     object.target = targets
 
+                # IMPLEMENTATION NOTE:  USE input_num since it # of inputs must equal # targets,
+                #                       where as targets can be assigned a function (so can't be used to generated #)
                 elif object_type == PROCESS:
+                    # object.target = targets[input_num][time_step]
                     object.target = targets[input_num][time_step]
 
                 elif object_type == SYSTEM:
-                    # Note: the following assumes that the order of the items in targets is alligned with
-                    #       the oreder of the TARGET mechanisms in the sytem's targetMechanisms list;
-                    #       it is tested for dict format in _construct_stimulus_sets,
-                    #       but can't be insured for list format.
-                    # For each TARGET mechanism in the system's targetMechanismList
-                    for i, target_mech in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
-                    # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-                    #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-                        object.targetInputStates[i].value = targets[input_num][i]
-                        for process_target_projection in \
-                                target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
-                            process_target_projection.sender.value = process_target_projection.sender.value * 0
+                    object.current_targets = targets[input_num]
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-            result = object.execute(input, clock=clock, time_scale=time_scale, context=context)
+            result = object.execute(input=input,
+                                    execution_id=execution_id,
+                                    clock=clock,
+                                    time_scale=time_scale,
+                                    context=context)
 
             if call_after_time_step:
                 call_after_time_step()
@@ -696,7 +704,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
     """
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     # Stimuli in sequence format
     if isinstance(stimuli, (list, np.ndarray)):
@@ -722,7 +730,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
 def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     # Check for header
     headers = None
@@ -798,7 +806,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
 
 def _construct_from_stimulus_dict(object, stimuli, is_target):
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     # Stimuli are inputs:
     #    validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
@@ -824,7 +832,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections
+                       projection in target.inputStates[SAMPLE].receivesFromProjections
                        for mech in stimuli.keys()):
                     raise RunError("Entry for {} is missing from specification of targets for run of {}".
                                    format(target.inputStates[COMPARATOR_SAMPLE].
@@ -853,7 +861,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections if
+                               projection in target.inputStates[TARGET].receivesFromProjections if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
@@ -940,7 +948,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stim_list.append(stimuli_in_execution)
 
     else:
-        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
+        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by _get_obect_type ".
                        format(object_type))
 
     try:
@@ -974,7 +982,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
     returns number of input_sets (one per execution)
     """
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     if object_type is PROCESS:
 
@@ -1101,7 +1109,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
     num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
     """
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
     num_target_sets = None
 
     if isinstance(targets, function_type):
@@ -1117,7 +1125,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
         # Check that each target generated is compatible with the targetMechanism for which it is intended
         for target, targetMechanism in zip(generated_targets, object.targetMechanisms):
             target_len = np.size(target)
-            if target_len != np.size(targetMechanism.target):
+            if target_len != np.size(targetMechanism.inputStates[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1125,7 +1133,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
+                                          np.size(object.targetMechanism.target)))
         return
 
     if object_type is PROCESS:
@@ -1136,7 +1144,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.comparatorMechanism.target):
+            if target_len != np.size(object.targetMechanism.inputStates[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1144,7 +1152,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
+                                          np.size(object.targetMechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1206,7 +1214,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.targetMechanisms):
                 target_len = np.size(target)
-                if target_len != np.size(targetMechanism.target):
+                if target_len != np.size(targetMechanism.inputStates[TARGET].variable):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
@@ -1214,7 +1222,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(object.comparatorMechanism.target)))
+                                              np.size(targetMechanism.inputStates[TARGET].variable)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1231,7 +1239,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
     return num_target_sets
 
-def get_object_type(object):
+def _get_obect_type(object):
     if isinstance(object, Mechanism):
         return MECHANISM
     elif isinstance(object, Process):
@@ -1240,4 +1248,8 @@ def get_object_type(object):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
+    
 
+import uuid
+def _get_get_execution_id():
+    return uuid.uuid4()
