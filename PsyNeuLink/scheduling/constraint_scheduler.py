@@ -45,8 +45,6 @@ class ScheduleVariable(object):
         self.own_constraints = []
         self.unfilled_constraints = []
         self.filled_constraints = []
-        if self.component.name == 'Terminal':
-            self.once = False
         if own_constraints is not None:
             for con in own_constraints:
                 self.add_own_constraint(con)
@@ -132,6 +130,7 @@ class Scheduler(object):
     def add_constraints(self, constraints):
         for con in constraints:
             # Turn con into a Constraint object
+            # Get owner[0], dependencies[1] and condition[2] out of each constraint
             owner = self.var_dict[con[0]]
             if con[1] in self.var_dict:
                 dependencies = (self.var_dict[con[1]],)
@@ -150,11 +149,15 @@ class Scheduler(object):
         self.var_dict[clock] = self.clock
         self.var_dict[clock].priority = 0
         self.var_list.append(self.var_dict[clock])
+        print("var_dict[clock]= ", self.var_dict[clock])
+        print("var_dict[clock].priority = ", self.var_dict[clock].priority)
+        print("self.clock = ", self.clock)
 
     def set_terminal(self, terminal):
         self.terminal = ScheduleVariable(terminal)
         self.var_dict[terminal] = self.terminal
         self.var_dict[terminal].priority = 0
+        self.var_dict[terminal].once = False
         self.var_list.append(self.var_dict[terminal])
 
     def run_time_step(self):
@@ -196,11 +199,11 @@ class Scheduler(object):
     def run_trial(self):
         for var in self.var_list:
             var.new_trial()
-            var.once = False
         trial_terminated = False
         while(not trial_terminated):
             self.run_time_step()
-            if self.terminal.once == True:
+            if self.terminal.once:
+                self.terminal.once = False
                 trial_terminated = True
                 break
             print('----------------')
