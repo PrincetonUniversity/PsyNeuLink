@@ -34,7 +34,8 @@
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
 #     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
-#     8) DOCUMENT:
+#     8) Make biases learnable
+#     9) DOCUMENT:
 #           - get rid of mention of tuple and MonitoredOutputStateOptions (they are specific to EVC -- document there)
 #           - explain
 #                  default_input_values: forces format of inputState variables (include example of RL comparator)
