@@ -9,11 +9,11 @@
 # *******************************************  LearningMechanism *******************************************************
 
 # DOCUMENT:
-#    IF objective_mechanism IS NOT SPECIFIED, IT IS LEFT UNSPECIFIED (FOR FURTHER IMPLEMENTATION BY COMPOSITION)
-#    THESE ARE HANDLED BY A MODULE METHOD (AS PER OBJECTIVE MECHANISM):
+#    IF objective_mechanism IS  None, IT IS LEFT UNSPECIFIED (FOR FURTHER IMPLEMENTATION BY COMPOSITION)
+#    THESE ARE HANDLED BY A MODULE METHOD _instantiate_objective_mechanism (AS PER OBJECTIVE MECHANISM):
 #        IF objective_mechanism IS SPECIFIED AS ObjectiveMechanism, AN OBJECTIVE MECHANISM IS CREATED FOR IT
 #        IF objective_mechanism IS SPECIFIED AS A MECHANISM OR OUTPUTSTATE,
-#               an MappingProjection WITH AN IDENTITY MATRIX IS IMPLEMENTED FROM IT TO THE LearningMechanism
+#               a MappingProjection WITH AN IDENTITY MATRIX IS IMPLEMENTED FROM IT TO THE LearningMechanism
 
 """
 .. _LearningMechanism_Overview:
@@ -471,54 +471,66 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_attributes_before_function(self, context=None):
         """Override super to call _instantiate_receiver before calling _instantiate_objective_mechanism
 
-        Parse objective_mechanism specification, call for implementation if necessary, assign its outputState to
-            _objective_mechanism_output, and verify that this is compatible with error_signal.
+        Parse objective_mechanism specification, call for implementation if necessary (including a MappingProjection
+        from it to the LearningMechanism's primary inputState), assign its outputState to _objective_mechanism_output,
+        and verify that this is compatible with error_signal.
 
         FROM LearningProjection:  [STILL NEEDED??]
         Call _instantiate_receiver first since both _instantiate_objective_mechanism and _instantiate_function
             reference the receiver's (i.e., MappingProjection's) weight matrix: self.mappingProjection.matrix
 
         """
-        # FIX: PROBLEM: _instantiate_receiver usually follows _instantiate_function,
-        # FIX:          and uses self.value (output of function) to validate against receiver.variable
+        # IMPLEMENTATION NOTE: _instantiate_receiver usually follows _instantiate_function,
+        #                      and uses self.value (output of function) to validate against receiver.variable.
+        #                      See LearningProjection for more elaborate explanations
         # GET/INSTANTIATE LEARNING PROJECTION AND ITS RECEIVER
         self._instantiate_receiver(context)
 
+        # If objective_mechanism is not specified, defer to Composition for instantiation
         if self.objective_mechanism is None:
+            # FIX: RETURN HERE?  HOW TO HANDLE NON-INSTANTIATED _objective_mechanism_output?
             pass
-
+        # If objective_mechanism is specified by class, call module method to instantiate one
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE HANDLED BY Composition ONCE IT IS IMPLEMENTED
         elif self.objective_mechanism is ObjectiveMechanism:
-            _instantiate_objective_mechanism(self, context=context)
-
-
-        # If objective_mechanism is specified as a Mechanism, reassign to its outputState
-        elif isinstance(self.objective_mechanism, Mechanism):
-            self.objective_mechanism = self.objective_mechanism.outputState
-
-        # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
-        if isinstance(self.objective_mechanism, OutputState):
-            if not isinstance(sender.value, (list, np.ndarray)):
-                raise LearningMechanismError("Sender for {} (outputState of MonitoringMechanism {}) "
-                                          "must be a list or 1D np.array".format(self.name, sender))
-            if not np.array(sender.value).ndim == 1:
-                raise LearningMechanismError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
-                                          format(sender, self.name))
-
-        # If specification is a MonitoringMechanism class, pass (it will be instantiated in _instantiate_objective_mechanism)
-        elif inspect.isclass(sender) and issubclass(sender,  ObjectiveMechanism):
-            pass
+            self.objective_mechanism = _instantiate_objective_mechanism(self, context=context)
 
         else:
-            raise LearningMechanismError("object_mechanism arg for {} must be a Mechanism, "
-                                      "OutputState, or a reference to the ObjectiveMechanism class"
-                                      .format(PROJECTION_SENDER, sender, self.name, ))
+            raise LearningMechanismError("PROGRAM ERROR: invalid type for objective_mechanism pass validation")
 
-        if not iscompatible(self.error_signal, self.objective_mechanism.value):
-            raise LearningMechanismError("The form of the output of the objective_mechanism ({}) "
-                                         "must match the form of the error_signal {} for {}".
-                                         format(self.objective_mechanisms.outputState.value,
-                                                self.error_signal,
-                                                self.name))
+        if self.objective_mechanism:
+            # If _objective_mechanism_output is already an outputState, assign it to _objective_mechanism_output
+            if isinstance(self.objective_mechanism, OutputState):
+                self._objective_mechanism_output = self.objective_mechanism
+
+            # If objective_mechanism is specified as a Mechanism,
+            #    assign _objective_mechanism_output to the mechanism's primary OutputState
+            if isinstance(self.objective_mechanism, Mechanism):
+                self._objective_mechanism_output = self.objective_mechanism.outputState
+
+            # Validate that _objective_mechanism_output is a 1D np.array
+            if not isinstance(self._objective_mechanism_output, (list, np.ndarray)):
+                raise LearningMechanismError("The output of the objective_mechanism for {} must be a list or 1D array".
+                                             format(self.name, sender))
+            if not np.array(self._objective_mechanism_output).ndim == 1:
+                raise LearningMechanismError("The output of the objective_mechanism for {} must be an 1D array".
+                                          format(self.name, self.name))
+
+            # Validate that _objective_mechanism_output matches format of error_signal
+            if not iscompatible(self.error_signal, self._objective_mechanism_output.value):
+                raise LearningMechanismError("The output ({}) of objective_mechanism ({}) must match the "
+                                             "error_signal {} for {} in its length and type of elements".
+                                             format(self._objective_mechanism_output.value,
+                                                    self.objective_mechanism,
+                                                    self.error_signal,
+                                                    self.name))
+
+            # Validate that there is a MappingProjection from objective_mechanism
+            #    to the LearningMechanism's primary inputState
+            if not any(self.objective_mechanism.output is p for p in self.inputState.receivesFromProjections):
+                raise LearningMechanismError("{} does not have a MappingProjection from "
+                                             "its specified objective_mechanism ({})".
+                                             format(self.name, self.objective_mechanism.name))
 
         super()._instantiate_attributes_before_function(context)
 
