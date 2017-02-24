@@ -269,7 +269,7 @@ def _is_learning_spec(spec):
     else:
         return _is_projection_spec(spec)
 
-kwWeightChangeParams = "weight_change_params"
+WEIGHT_CHANGE_PARAMS = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
@@ -291,7 +291,7 @@ class LearningMechanismError(Exception):
         return repr(self.error_value)
 
 
-class LearningMechanism(AdaptiveMechanism_Base:
+class LearningMechanism(AdaptiveMechanism_Base):
     """
     LearningProjection(                      \
                  sender=None,                \
@@ -424,7 +424,7 @@ class LearningMechanism(AdaptiveMechanism_Base:
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: MonitoringMechanism_Base,
                                PARAMETER_STATES: None, # This suppresses parameterStates
-                               kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
+                               WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes MappingProjection.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
                                        PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
@@ -477,23 +477,23 @@ class LearningMechanism(AdaptiveMechanism_Base:
         try:
             receiver = target_set[PARAMETER_STATES]
             self._validate_receiver(receiver)
-        except (KeyError, LearningProjectionError):
+        except (KeyError, LearningMechanismError):
             # PARAMETER_STATES not specified:
             receiver = self.receiver
             self._validate_receiver(receiver)
 
         # VALIDATE WEIGHT CHANGE PARAMS
         try:
-            weight_change_params = target_set[kwWeightChangeParams]
+            weight_change_params = target_set[WEIGHT_CHANGE_PARAMS]
         except KeyError:
             pass
         else:
             # FIX: CHECK THAT EACH ONE INCLUDED IS A PARAM OF A LINEAR COMBINATION FUNCTION
             for param_name, param_value in weight_change_params.items():
                 if param_name is FUNCTION:
-                    raise LearningProjectionError("{} of {} contains a function specification ({}) that would override"
+                    raise LearningMechanismError("{} of {} contains a function specification ({}) that would override"
                                               " the LinearCombination function of the targeted MappingProjection".
-                                              format(kwWeightChangeParams,
+                                              format(WEIGHT_CHANGE_PARAMS,
                                                      self.name,
                                                      param_value))
 
@@ -508,10 +508,10 @@ class LearningMechanism(AdaptiveMechanism_Base:
         # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
         if isinstance(sender, OutputState):
             if not isinstance(sender.value, (list, np.ndarray)):
-                raise LearningProjectionError("Sender for {} (outputState of MonitoringMechanism {}) "
+                raise LearningMechanismError("Sender for {} (outputState of MonitoringMechanism {}) "
                                           "must be a list or 1D np.array".format(self.name, sender))
             if not np.array(sender.value).ndim == 1:
-                raise LearningProjectionError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
+                raise LearningMechanismError("OutputState of MonitoringMechanism ({}) for {} must be an 1D np.array".
                                           format(sender, self.name))
 
         # If specification is a MonitoringMechanism class, pass (it will be instantiated in _instantiate_sender)
@@ -519,7 +519,7 @@ class LearningMechanism(AdaptiveMechanism_Base:
             pass
 
         else:
-            raise LearningProjectionError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
+            raise LearningMechanismError("Sender arg (or {} param ({}) for must be a MonitoringMechanism, "
                                       "the outputState of one, or a reference to the class"
                                       .format(PROJECTION_SENDER, sender, self.name, ))
 
@@ -528,13 +528,13 @@ class LearningMechanism(AdaptiveMechanism_Base:
         """
 
         if not isinstance(receiver, (MappingProjection, ParameterState)):
-            raise LearningProjectionError("Receiver arg ({}) for {} must be a MappingProjection or a parameterState of one"
+            raise LearningMechanismError("Receiver arg ({}) for {} must be a MappingProjection or a parameterState of one"
                                       .format(receiver, self.name))
         # If it is a parameterState and the receiver already has a parameterStates dict
         #     make sure the assignment is to its MATRIX entry
         if isinstance(receiver, ParameterState):
             if receiver.owner.parameterStates and not receiver is receiver.owner.parameterStates[MATRIX]:
-                raise LearningProjectionError("Receiver arg ({}) for {} must be the {} parameterState of a"
+                raise LearningMechanismError("Receiver arg ({}) for {} must be the {} parameterState of a"
                                           "MappingProjection".format(receiver, self.name, MATRIX, ))
 
         # Notes:
@@ -589,7 +589,7 @@ class LearningMechanism(AdaptiveMechanism_Base:
 # FIX: ??REINSTATE CALL TO SUPER AFTER GENERALIZING IT TO USE Projection.add_to
 # FIX: OR, MAKE SURE FUNCTIONALITY IS COMPARABLE
 
-        weight_change_params = self.paramsCurrent[kwWeightChangeParams]
+        weight_change_params = self.paramsCurrent[WEIGHT_CHANGE_PARAMS]
 
         # VALIDATE that self.receiver is a ParameterState or a MappingProjection
 
@@ -602,14 +602,14 @@ class LearningMechanism(AdaptiveMechanism_Base:
             # MODIFIED 10/29/16 OLD:
             # Reciever must be a MappingProjection with a LinearCombination function
             if not isinstance(self.mappingProjection, MappingProjection):
-                raise LearningProjectionError("Receiver arg ({}) for {} must be the parameterStates[{}] "
+                raise LearningMechanismError("Receiver arg ({}) for {} must be the parameterStates[{}] "
                                           "of a MappingProjection (rather than a {})".
                                           format(self.receiver,
                                                  self.name,
                                                  MATRIX,
                                                  self.mappingProjection.__class__.__name__))
             if not isinstance(self.receiver.function.__self__, LinearCombination):
-                raise LearningProjectionError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
+                raise LearningMechanismError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
                                           format(self.receiver,
                                                  self.name,
                                                  LINEAR_COMBINATION_FUNCTION,
@@ -618,14 +618,14 @@ class LearningMechanism(AdaptiveMechanism_Base:
             # # MODIFIED 10/29/16 NEW:
             # # Reciever must be the parameterState for a MappingProjection with a LinearCombination identity function
             # if not isinstance(self.mappingProjection, MappingProjection):
-            #     raise LearningProjectionError("Receiver arg ({}) for {} must be the parameterStates[{}] "
+            #     raise LearningMechanismError("Receiver arg ({}) for {} must be the parameterStates[{}] "
             #                               "of a MappingProjection (rather than a {})".
             #                               format(self.receiver,
             #                                      self.name,
             #                                      MATRIX,
             #                                      self.mappingProjection.__class__.__name__))
             # if not isinstance(self.receiver.function.__self__, LinearCombination):
-            #     raise LearningProjectionError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
+            #     raise LearningMechanismError("Function of receiver arg ({}) for {} must be a {} (rather than {})".
             #                               format(self.receiver,
             #                                      self.name,
             #                                      LINEAR_FUNCTION,
@@ -640,7 +640,7 @@ class LearningMechanism(AdaptiveMechanism_Base:
                 self.receiver.paramsCurrent.update(weight_change_params)
 
             else:
-                raise LearningProjectionError("Receiver arg ({}) for {} must be the "
+                raise LearningMechanismError("Receiver arg ({}) for {} must be the "
                                           "parameterStates[{}] param of the receiver".
                                           format(self.receiver, self.name, MATRIX))
 
@@ -693,7 +693,7 @@ class LearningMechanism(AdaptiveMechanism_Base:
 
         # If it is not a ParameterState or MappingProjection, raise exception
         else:
-            raise LearningProjectionError("Receiver arg ({}) for {} must be a MappingProjection or"
+            raise LearningMechanismError("Receiver arg ({}) for {} must be a MappingProjection or"
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
         if kwDeferredDefaultName in self.name:
@@ -817,7 +817,7 @@ FROM TODO:
         if isinstance(self.sender, OutputState):
             # Validate that it belongs to an ObjectiveMechanism being used for learning
             if not _objective_mechanism_role(self.sender.owner, LEARNING):
-                raise LearningProjectionError("OutputState ({}) specified as sender for {} belongs to a {}"
+                raise LearningMechanismError("OutputState ({}) specified as sender for {} belongs to a {}"
                                           " rather than an ObjectiveMechanism with role=LEARNING".
                                           format(self.sender.name,
                                                  self.name,
@@ -919,7 +919,7 @@ FROM TODO:
                         sample_size = np.array([0])
                         target_size = np.array([0])
                     else:
-                        raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+                        raise LearningMechanismError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
                                                   format(self.function.name, self.name))
 
                     # IMPLEMENTATION NOTE: specify target as a template value (matching the sample's output value)
@@ -1004,14 +1004,14 @@ FROM TODO:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
             #     (since error signal is a scalar for RL)
             if len(error_signal) != 1:
-                raise LearningProjectionError("Length of error signal ({}) received by {} from {}"
+                raise LearningMechanismError("Length of error signal ({}) received by {} from {}"
                                           " must be 1 since {} uses {} as its learning function".
                                           format(len(error_signal), self.name, self.sender.owner.name, self.name, RL_FUNCTION))
         if self.function.componentName is BACKPROPAGATION_FUNCTION:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
             #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
             if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
-                raise LearningProjectionError("Length of error signal ({}) received by {} from {} must match the"
+                raise LearningMechanismError("Length of error signal ({}) received by {} from {} must match the"
                                           "receiver dimension ({}) of the weight matrix for {}".
                                           format(len(error_signal),
                                                  self.name,
@@ -1019,7 +1019,7 @@ FROM TODO:
                                                  len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
                                                  self.mappingProjection))
         else:
-            raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+            raise LearningMechanismError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
                                       format(self.function.name, self.name))
 
     def _instantiate_function(self, context=None):
@@ -1048,10 +1048,10 @@ FROM TODO:
         elif issubclass(function_spec, TransferFunction):
             learning_function_activation_function_type = function_spec
         else:
-            raise LearningProjectionError("PROGRAM ERROR: activation function ({}) for {} is not a TransferFunction".
+            raise LearningMechanismError("PROGRAM ERROR: activation function ({}) for {} is not a TransferFunction".
                                       format(function_spec, self.name))
         if error_source_activation_function_type != learning_function_activation_function_type:
-            raise LearningProjectionError("Activation function ({}) of error source ({}) is not compatible with "
+            raise LearningMechanismError("Activation function ({}) of error source ({}) is not compatible with "
                                       "the activation function ({}) specified for {}'s function ({}) ".
                                       format(error_source_activation_function_type.__name__,
                                              self.errorSource.name,
