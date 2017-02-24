@@ -32,10 +32,9 @@ class ScheduleVariable(object):
     # are first initialized as empty lists, then immediately adjusted based on own_constraints and dependent_constraints
     # - add_own_constraint appends contents of own_constraints to self.own_constraints and self.unfilled_constraints
     # - add_dependent_constraint appends contents of dependent_constraints to self.dependent_constraints
-    # - If the component is a Terminal, self.once is initialized as False
     # Updates ---
     # - evaluate_constraint appends to filled_constraints and removes from unfilled_constraints if constraint is
-    # satisfied. If component is terminal and constraint is satisfied, self.once is set to True
+    # satisfied. If component is terminal and constraint is satisfied, self.ran is set to True
     # - new_time_step resets unfilled_constraints and filled_constraints
     # - new_trial calls new_trial() method on component to reset mechanism for a new trial
     ########
@@ -62,12 +61,15 @@ class ScheduleVariable(object):
         self.dependent_constraints.append(constraint)
 
     def evaluate_constraint(self, constraint):
+        ######
+        # Takes in a constraint and checks whether it's been satisfied
+        #
         result = constraint.is_satisfied()
         if result:
             self.filled_constraints.append(constraint)
             self.unfilled_constraints.remove(constraint)
             if self.component.name == 'Terminal':
-                self.once = True
+                self.ran = True
         return result
 
     def new_time_step(self):
@@ -96,11 +98,10 @@ class ScheduleVariable(object):
 
 class Scheduler(object):
     ########
-    # Constructor for Schedule
-    #
-    #
+    # Constructor for Scheduler
+    # Initializes empty dictionary & empty list for ScheduleVariables, empty list for constraints
+    # add_vars, add_constraints methods add items to
     ########
-
     def __init__(self, var_dict = None, terminal = None, clock = None, constraints = None):
         self.var_dict = {}
         self.constraints = []
@@ -117,20 +118,27 @@ class Scheduler(object):
             self.add_constraints(constraints)
         self.current_step = 0
 
-    # Takes in var_list, a list of tuples of the form (component, priority)
-    # Where component is the component (mechanism) object and priority is an int
-    # Passes each component to ScheduleVariable, which constructs a ScheduleVariable object
-    # Assembles var_dict which contains components as keys and their ScheduleVariables as values
+
     def add_vars(self, var_list):
+        #######
+        # Takes in var_list, list of tuples of the form (component, priority), where component=mechanism, priority=int)
+        # Passes each component to ScheduleVariable, which constructs a ScheduleVariable object
+        # Assembles var_dict which contains components as keys and their ScheduleVariables as values
+        #######
         for var in var_list:
             self.var_dict[var[0]] = ScheduleVariable(var[0])
             self.var_dict[var[0]].priority = var[1]
             self.var_list.append(self.var_dict[var[0]])
 
     def add_constraints(self, constraints):
+        #######
+        # Takes in a list of tuples of constraint parameters
+        # Passes constraint parameters to Constraint to assemble Constraint objects
+        # Adds each Constraint object to it's owner's and dependencies' ScheduleVariables
+        #######
         for con in constraints:
             # Turn con into a Constraint object
-            # Get owner[0], dependencies[1] and condition[2] out of each constraint
+            # Get owner[0], dependencies[1] and condition[2] out of each con
             owner = self.var_dict[con[0]]
             if con[1] in self.var_dict:
                 dependencies = (self.var_dict[con[1]],)
@@ -145,23 +153,40 @@ class Scheduler(object):
                 var.add_dependent_constraint(con)
 
     def set_clock(self, clock):
+        #######
+        # create a ScheduleVariable for clock and give it priority of zero
+        #######
         self.clock = ScheduleVariable(clock)
         self.var_dict[clock] = self.clock
         self.var_dict[clock].priority = 0
         self.var_list.append(self.var_dict[clock])
-        print("var_dict[clock]= ", self.var_dict[clock])
-        print("var_dict[clock].priority = ", self.var_dict[clock].priority)
-        print("self.clock = ", self.clock)
+
 
     def set_terminal(self, terminal):
+        #######
+        # add additional properties to the terminal mechanism
+        # priority is set to zero
+        # ran, when switched to True, signals that the terminal mechanism has run
+        #######
         self.terminal = ScheduleVariable(terminal)
         self.var_dict[terminal] = self.terminal
         self.var_dict[terminal].priority = 0
-        self.var_dict[terminal].once = False
+        self.var_dict[terminal].ran = False
         self.var_list.append(self.var_dict[terminal])
 
     def run_time_step(self):
+        #######
+        # Resets all mechanisms in the Scheduler for this time_step
+        # Initializes a firing queue, then continuously executes mechanisms and updates queue according to any
+        # constraints that were satisfied by the previous execution 
+        #######
         def update_dependent_vars(variable):
+            #######
+            # Takes in the ScheduleVariable of the mechanism that *just* ran
+            # Loops through all of the constraints that depend on this mechanism
+            # Returns a list ('change_list') of all of the ScheduleVariables (mechanisms) that own a constraint which
+            # was satisfied by this mechanism's run
+            #######
             change_list = []
             for con in variable.dependent_constraints:
                 if con in con.owner.unfilled_constraints:
@@ -169,14 +194,22 @@ class Scheduler(object):
                         change_list.append(con.owner)
             return change_list
         ## TODO: implement priority queue
+
         def update_firing_queue(firing_queue, change_list):
+            ######
+            # Takes in the current firing queue & list of schedule variables that own a recently satisfied constraint
+            # Any ScheduleVariable with no remaining constraints is added to the firing queue
+            ######
+
             for var in change_list:
                 if var.unfilled_constraints == []:
                     firing_queue.append(var)
             return firing_queue
 
+        # reset all mechanisms for this time step
         for var in self.var_list:
             var.new_time_step()
+        # initialize firing queue by adding clock
         firing_queue = [self.clock]
         for var in firing_queue:
             var.component.execute()
@@ -197,15 +230,21 @@ class Scheduler(object):
     #                 yield var.component
 
     def run_trial(self):
+        ######
+        # Resets all mechanisms, then calls self.run_time_step() until the terminal mechanism runs
+        ######
+
+        # reset each mechanism for the trial
         for var in self.var_list:
             var.new_trial()
+
+        # run time steps until terminal mechanism is run
         trial_terminated = False
         while(not trial_terminated):
             self.run_time_step()
-            if self.terminal.once:
-                self.terminal.once = False
+            if self.terminal.ran:
+                self.terminal.ran = False   # switch terminal's 'ran' property back to False for the next trial
                 trial_terminated = True
-                break
             print('----------------')
 
 
@@ -224,11 +263,9 @@ def main():
     sched.set_clock(Clock)
     sched.set_terminal(Terminal)
     sched.add_vars([(A, 1), (B, 2), (C, 3)])
-    sched.add_constraints([
-        # (A, (Clock,), every_n_calls(1)),
-                           (A, (Clock,), first_n_calls(2)),
+    sched.add_constraints([(A, (Clock,), every_n_calls(1)),
                            (B, (A,), every_n_calls(2)),
-                           (C, (A,), every_n_calls(3)),
+                           (C, (B,), every_n_calls(2)),
                            (Terminal, (C,), every_n_calls(2))])
     for var in sched.var_list:
         var.component.new_trial()
