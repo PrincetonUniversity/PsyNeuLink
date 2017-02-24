@@ -419,8 +419,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 error_signal:is_numeric=None,
-                 error_source:Mechanism=None,
+                 error_signal:is_numeric,
+                 error_source:Mechanism,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic),
                  params=None,
@@ -450,14 +450,28 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate that error_source has a function with a differential
+        """Validate that error_source has a function, and a derivative if the learning function requires it
 
         """
         super()._validate_params(self, request_set=request_set, target_set=target_set, context=context)
 
         try:
+            transfer_function = target_set[ERROR_SOURCE].function_object
+        except AttributeError:
+            raise LearningMechanismError("The error_source ({}) for {} does not have a Function".
+                                         format(target_set[ERROR_SOURCE].name,self.name))
 
-
+        if DERIVATIVE in target_set[FUNCTION].user_params:
+            try:
+                transfer_function.derivative
+            except AttributeError:
+                raise LearningMechanismError("The function ({}) of the error_source ({}) has no derivative;"
+                                             "this is required by the learning function ({}) for {}".
+                                             format(transfer_function.name,
+                                                    target_set[ERROR_SOURCE].name,
+                                                    target_set[FUNCTION].name,
+                                                    self.name))
+            self.
 
     def _execute(self,
                 variable=None,
