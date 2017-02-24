@@ -269,7 +269,7 @@ def _is_learning_spec(spec):
         return _is_projection_spec(spec)
 
 
-kwWeightChangeParams = "weight_change_params"
+WEIGHT_CHANGE_PARAMS = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
 WT_MATRIX_RECEIVERS_DIM = 1
@@ -424,7 +424,7 @@ class LearningProjection(Projection_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: MonitoringMechanism_Base,
                                PARAMETER_STATES: None, # This suppresses parameterStates
-                               kwWeightChangeParams:  # Determine how weight changes are applied to weight matrix
+                               WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes MappingProjection.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
                                        PARAMETER_MODULATION_OPERATION: ModulationOperation.ADD,
@@ -484,7 +484,7 @@ class LearningProjection(Projection_Base):
 
         # VALIDATE WEIGHT CHANGE PARAMS
         try:
-            weight_change_params = target_set[kwWeightChangeParams]
+            weight_change_params = target_set[WEIGHT_CHANGE_PARAMS]
         except KeyError:
             pass
         else:
@@ -493,7 +493,7 @@ class LearningProjection(Projection_Base):
                 if param_name is FUNCTION:
                     raise LearningProjectionError("{} of {} contains a function specification ({}) that would override"
                                               " the LinearCombination function of the targeted MappingProjection".
-                                              format(kwWeightChangeParams,
+                                              format(WEIGHT_CHANGE_PARAMS,
                                                      self.name,
                                                      param_value))
 
@@ -589,7 +589,7 @@ class LearningProjection(Projection_Base):
 # FIX: ??REINSTATE CALL TO SUPER AFTER GENERALIZING IT TO USE Projection.add_to
 # FIX: OR, MAKE SURE FUNCTIONALITY IS COMPARABLE
 
-        weight_change_params = self.paramsCurrent[kwWeightChangeParams]
+        weight_change_params = self.paramsCurrent[WEIGHT_CHANGE_PARAMS]
 
         # VALIDATE that self.receiver is a ParameterState or a MappingProjection
 
