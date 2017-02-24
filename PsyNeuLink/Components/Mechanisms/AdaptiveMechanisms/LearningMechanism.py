@@ -457,12 +457,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         try:
-            if not isinstance(target_set[OBJECTIVE_MECHANISM],(Mechanism, OutputState)):
-                raise LearningMechanismError("Specification for {} arg of {} must ({}) must be "
-                                             "a Mechanism or OutputState".
-                                             format(OBJECTIVE_MECHANISM, self.name, target_set[OBJECTIVE_MECHANISM]))
+            objective_mech_spec = target_set[OBJECTIVE_MECHANISM]
         except KeyError:
             pass
+        else:
+            if objective_mech_spec and not any(m in {ObjectiveMechanism, OutputState, Mechanism} for
+                                               m in {objective_mech_spec,type(objective_mech_spec)}):
+                raise LearningMechanismError("Specification for {} arg of {} must ({}) must be "
+                                             "a Mechanism, OutputState or \`ObjectiveMechanism\`".
+                                             format(OBJECTIVE_MECHANISM, self.name, target_set[OBJECTIVE_MECHANISM]))
+
 
     def _instantiate_attributes_before_function(self, context=None):
         """Override super to call _instantiate_receiver before calling _instantiate_objective_mechanism
@@ -480,10 +484,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # GET/INSTANTIATE LEARNING PROJECTION AND ITS RECEIVER
         self._instantiate_receiver(context)
 
-
-        if any(i in {None, Mechanism, OutputState, ObjectiveMechanism} for
-               i in {self.objective_mechanism, type(self.objective_mechanism)}):
+        if self.objective_mechanism is None:
             pass
+
+        elif self.objective_mechanism is ObjectiveMechanism:
+            _instantiate_objective_mechanism(self, context=context)
+
 
         # If objective_mechanism is specified as a Mechanism, reassign to its outputState
         elif isinstance(self.objective_mechanism, Mechanism):
