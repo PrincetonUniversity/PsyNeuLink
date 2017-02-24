@@ -402,8 +402,8 @@ def system(default_input_value=None,
     COMMENT
 
     learning_rate : float : None
-        specifies the default learning rate for all mechanisms in the system (see `learning_rate` attribute for
-        additional information).
+        set the learning rate for all mechanisms in the system (see `learning_rate` attribute for additional
+        information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` mechanism in the system (listed in its
@@ -560,9 +560,11 @@ class System_Base(System):
         in the system or for the system itself.
 
     learning_rate : float : default None
-        determines the default learning rate for all mechanisms in the system.  This can be overridden by specifying
-        the learning rate for mechanisms (or their functions) individually (see `LearningProjection` for additional
-        information).
+        determines the learning rate for all mechanisms in the system.  This overrides any values set for the
+        function of individual LearningProjections, and persists for all subsequent runs of the system.  If it is
+        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
+        (either directly, or following a run of any process or system to which the LearningProjection belongs and
+        for which a learning_rate was set).
 
     targets : 2d nparray : default zeroes
         used as template for the values of the system's `targetInputStates`, and to represent the targets specified in

@@ -453,8 +453,8 @@ def process(process_spec=None,
         implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
     learning_rate : float : None
-        specifies the default learning rate for all mechanisms in the process (see `learning_rate` attribute for
-        additional information).
+        set the learning rate for all mechanisms in the process (see `learning_rate` attribute for additional
+        information).
 
     target : List or ndarray : default ndarray of zeroes
         the value assigned as the TARGET input for the `ObjectiveMechanism` to which the `TERMINAL` mechanism of the
@@ -775,9 +775,11 @@ class Process_Base(Process):
                       has been specified (see above).
 
     learning_rate : float : default None
-        determines the default learning rate for all mechanisms in the process.  This can be overridden by specifying
-        the learning rate for mechanisms (or their functions) individually (see `LearningProjection` for additional
-        information).
+        determines the learning rate for all mechanisms in the process.  This overrides any values set for the
+        function of individual LearningProjections, and persists for all subsequent runs of the system.  If it is
+        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
+        (either directly, or following a run of any process or system to which the LearningProjection belongs and
+        for which a learning_rate was set).
 
     results : List[outputState.value]
         a list of return values from a sequence of executions of the process.
