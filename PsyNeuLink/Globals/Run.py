@@ -897,7 +897,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 stimuli[mech] = [stim_list]
             else:
                 raise RunError("Stimuli for {} of {} are not properly formatted ({})".
-                                  format(append_type_to_name(mech),object.name))
+                                  # format(append_type_to_name(mech),object.name, stimuli[mech]))
+                                  format(mech.name, object.name, stimuli[mech]))
 
         for stim in stimuli[mech]:
             if not iscompatible(np.atleast_2d(stim), mech.variable):
