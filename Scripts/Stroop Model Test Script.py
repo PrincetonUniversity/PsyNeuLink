@@ -66,8 +66,14 @@ for i in range(10):
     print(response.inputState.receivesFromProjections[0].matrix)
     print(response.inputState.receivesFromProjections[1].matrix)
 
-# Execute system:
-# mySystem.execute(input=[[1,1],[1,1]])
+# # Execute system:
+# for i in range(10):
+#     mySystem.execute(input=[[1,1],[1,1]],
+#                      target=[[0,1],[1,0]])
+#     print(response.inputState.receivesFromProjections[0].matrix)
+#     print(response.inputState.receivesFromProjections[1].matrix)
+#     print(response.inputState.receivesFromProjections[0].matrix)
+#     print(response.inputState.receivesFromProjections[1].matrix)
 
 # mySystem.show_graph()
 #

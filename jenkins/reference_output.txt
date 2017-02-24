@@ -1,3 +1,4 @@
+
 RUNNING EVC System Laming Validation Test Script.py
 
 
@@ -68,6 +69,7 @@ EVCMechanism-1
 		starting_point: 0
 		t0: 0.45
 		threshold: 1.0
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
 
@@ -75,7 +77,9 @@ EVCMechanism-1
 - input:  0.5
 - params:
 	function: Integrator
+		noise: 0.0
 		rate: 0.5
+		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Input_PredictionMechanismOutput'
@@ -93,7 +97,9 @@ RESULTS (time step 0):
 - input:  20.0
 - params:
 	function: Integrator
+		noise: 0.0
 		rate: 0.5
+		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Reward_PredictionMechanismOutput'
@@ -118,6 +124,7 @@ RESULTS (time step 1):
 		starting_point: 0
 		t0: 0.45
 		threshold: 1.0
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 0.1
 
@@ -125,7 +132,9 @@ RESULTS (time step 1):
 - input:  0.123
 - params:
 	function: Integrator
+		noise: 0.0
 		rate: 0.5
+		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Input_PredictionMechanismOutput'
@@ -143,7 +152,9 @@ RESULTS (time step 2):
 - input:  20.0
 - params:
 	function: Integrator
+		noise: 0.0
 		rate: 0.5
+		time_step_size: 1.0
 		weighting: apaptive
 	monitor_for_control: None
 	output_states: 'Reward_PredictionMechanismOutput'
@@ -170,30 +181,42 @@ RUNNING Multilayer Learning Test Script.py
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: -1.0 30.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
+'Process_Base-1' completed:
 - output: 0.834 0.871 0.9
 
 - MSE: 0.488
 
 
-Input: [array([-1, 30])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65178489  0.68000359  0.70696362  0.73254561  0.75666301]]
+- Middle 2: 
+ [[ 0.83754065  0.86013841  0.88004307  0.89745268]]
+- Output:
+ [[ 0.8344837   0.87072018  0.89997433]]
+
+New weights: 
+
+
+- Input Weights: 
  [[ 0.1  0.2  0.3  0.4  0.5]
  [ 0.6  0.7  0.8  0.9  1. ]]
-Middle Weights: 
+- Middle Weights: 
  [[ 0.05  0.1   0.15  0.2 ]
  [ 0.25  0.3   0.35  0.4 ]
  [ 0.45  0.5   0.55  0.6 ]
  [ 0.65  0.7   0.75  0.8 ]
  [ 0.85  0.9   0.95  1.  ]]
-Output Weights: 
+- Output Weights: 
  [[ 0.08333333  0.16666667  0.25      ]
  [ 0.33333333  0.41666667  0.5       ]
  [ 0.58333333  0.66666667  0.75      ]
@@ -206,30 +229,42 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: 2.0 10.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.783 0.836 0.904
+'Process_Base-1' completed:
+- output: 0.78 0.833 0.902
 
-- MSE: 0.44
+- MSE: 0.437
 
 
-Input: [array([ 2, 10])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65143632  0.67925855  0.70590305  0.73125212  0.75521569]]
+- Middle 2: 
+ [[ 0.8360676   0.85705304  0.87615224  0.89332565]]
+- Output:
+ [[ 0.77970193  0.83263138  0.90159627]]
+
+New weights: 
+
+
+- Input Weights: 
  [[ 0.09961491  0.19914181  0.2987174   0.39834673  0.49803252]
  [ 0.59856814  0.69680899  0.79523094  0.89385268  0.99268437]]
-Middle Weights: 
+- Middle Weights: 
  [[ 0.04789907  0.09413833  0.14134241  0.18938924]
  [ 0.24780811  0.29388455  0.34096758  0.38892985]
  [ 0.44772121  0.49364209  0.54060947  0.58849095]
  [ 0.64763875  0.69341202  0.74026967  0.78807449]
  [ 0.84756101  0.89319513  0.93994932  0.98768187]]
-Output Weights: 
+- Output Weights: 
  [[-0.01320113  0.08457599  0.25754152]
  [ 0.23419427  0.33236109  0.507745  ]
  [ 0.48190007  0.58041016  0.75792423]
@@ -242,34 +277,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: -1.0 30.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
+'Process_Base-1' completed:
 - output: 0.702 0.777 0.903
 
 - MSE: 0.369
 
 
-Input: [array([-1, 30])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09853609  0.1968022   0.29533888  0.39416674  0.49328593]
- [ 0.59734337  0.69415287  0.79139536  0.88910721  0.98729564]]
-Middle Weights: 
- [[ 0.04740298  0.08921905  0.13309657  0.17880055]
- [ 0.24728214  0.28866899  0.33222512  0.37770343]
- [ 0.44716751  0.48815165  0.53140624  0.57667285]
- [ 0.64705969  0.68767005  0.73064481  0.77571496]
- [ 0.84695903  0.8872259   0.92994352  0.97483317]]
-Output Weights: 
- [[-0.12625161 -0.01288403  0.26458803]
- [ 0.11841278  0.23254669  0.51496174]
- [ 0.36365761  0.47847417  0.76529436]
- [ 0.60946072  0.72487957  1.01558764]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65110145  0.67854297  0.70488312  0.7300061   0.75381897]]
+- Middle 2: 
+ [[ 0.83543398  0.85423656  0.8720961   0.88874829]]
+- Output:
+ [[ 0.70218502  0.7773823   0.90307765]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09924512  0.19831854  0.29748649  0.39675889  0.49614127]
+ [ 0.59719314  0.69374786  0.79065408  0.88794864  0.98565214]]
+- Middle Weights: 
+ [[ 0.04738148  0.08891106  0.13248753  0.177898  ]
+ [ 0.24726841  0.28843403  0.33173452  0.37694783]
+ [ 0.44716034  0.48797777  0.53101423  0.57603893]
+ [ 0.64705774  0.6875443   0.73032986  0.77517531]
+ [ 0.84696096  0.88713512  0.92968378  0.97435998]]
+- Output Weights: 
+ [[-0.12517309 -0.01243501  0.26484074]
+ [ 0.11941179  0.2329151   0.51522743]
+ [ 0.36455969  0.47874804  0.76557341]
+ [ 0.61025308  0.72504898  1.0158801 ]]
 
 
 **** TRIAL:  3
@@ -278,34 +325,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: 2.0 10.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.603 0.702 0.907
+'Process_Base-1' completed:
+- output: 0.603 0.7 0.905
 
-- MSE: 0.288
+- MSE: 0.287
 
 
-Input: [array([ 2, 10])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.0982218   0.1961219   0.29432904  0.39286789  0.49174106]
- [ 0.59617477  0.69162334  0.78764049  0.88427771  0.98155138]]
-Middle Weights: 
- [[ 0.04941899  0.08562859  0.12502285  0.16733554]
- [ 0.24938314  0.28492716  0.323811    0.36575505]
- [ 0.44935019  0.48426438  0.52266508  0.56426004]
- [ 0.64932033  0.68364392  0.7215914   0.76285876]
- [ 0.84929362  0.88306806  0.92059394  0.96155639]]
-Output Weights: 
- [[-0.24897214 -0.12531118  0.2716815 ]
- [-0.00708062  0.11757926  0.52221548]
- [ 0.23552939  0.36109292  0.7727004 ]
- [ 0.47887684  0.60524862  1.02313562]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65081725  0.67794995  0.7040424   0.7289806   0.75266956]]
+- Middle 2: 
+ [[ 0.83617904  0.85222415  0.86833289  0.88407255]]
+- Output:
+ [[ 0.60279149  0.69958079  0.90453143]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09893141  0.197637    0.29647373  0.39545552  0.49459031]
+ [ 0.59602669  0.69121372  0.78688833  0.88310233  0.97988523]]
+- Middle Weights: 
+ [[ 0.04937771  0.08530344  0.12439361  0.16640433]
+ [ 0.24934878  0.28467436  0.32329947  0.36496974]
+ [ 0.44932147  0.48407216  0.52225175  0.56359587]
+ [ 0.64929589  0.68349948  0.72125508  0.76228876]
+ [ 0.84927212  0.88295836  0.92031297  0.96105307]]
+- Output Weights: 
+ [[-0.24784971 -0.1248285   0.27192811]
+ [-0.00602584  0.11799205  0.52247432]
+ [ 0.23649954  0.36142229  0.7729718 ]
+ [ 0.4797477   0.60548296  1.02341976]]
 
 
 **** TRIAL:  4
@@ -314,34 +373,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: -1.0 30.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.494 0.599 0.906
+'Process_Base-1' completed:
+- output: 0.497 0.6 0.906
 
-- MSE: 0.204
+- MSE: 0.205
 
 
-Input: [array([-1, 30])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09759807  0.19493016  0.29266881  0.39084614  0.48946436]
- [ 0.59546665  0.69027038  0.78575565  0.88198245  0.97896668]]
-Middle Weights: 
- [[ 0.05422948  0.08468366  0.11935949  0.15802227]
- [ 0.25447773  0.28392642  0.31781319  0.35589177]
- [ 0.45470982  0.48321157  0.51635522  0.55388362]
- [ 0.65492396  0.68254319  0.71499428  0.75200994]
- [ 0.85511905  0.88192376  0.91373572  0.95027818]]
-Output Weights: 
- [[-0.37154382 -0.25000861  0.2783252 ]
- [-0.13192818 -0.00943353  0.52898254]
- [ 0.10841316  0.23177211  0.77959043]
- [ 0.34956357  0.47369269  1.03014474]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65062587  0.67758662  0.70354132  0.72837699  0.7519976 ]]
+- Middle 2: 
+ [[ 0.83860595  0.85157286  0.86552385  0.87995615]]
+- Output:
+ [[ 0.4967927   0.60030321  0.90610082]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09872023  0.19721976  0.2958709   0.39468981  0.49368583]
+ [ 0.59524146  0.6896623   0.78464682  0.88025521  0.97652214]]
+- Middle Weights: 
+ [[ 0.05440291  0.08430585  0.1183739   0.15641064]
+ [ 0.25458348  0.28363519  0.3170288   0.35455942]
+ [ 0.45475764  0.48299299  0.51573974  0.55278488]
+ [ 0.65492462  0.68238209  0.7145124   0.75109483]
+ [ 0.85508376  0.88180465  0.91335119  0.94949538]]
+- Output Weights: 
+ [[-0.36853436 -0.24777119  0.27882168]
+ [-0.12902626 -0.00730975  0.52950016]
+ [ 0.11117416  0.23375204  0.78013044]
+ [ 0.35215064  0.47549852  1.03070816]]
 
 
 **** TRIAL:  5
@@ -350,34 +421,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: 2.0 10.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.402 0.493 0.91
+'Process_Base-1' completed:
+- output: 0.406 0.495 0.908
 
-- MSE: 0.138
+- MSE: 0.139
 
 
-Input: [array([ 2, 10])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09751093  0.19483166  0.2925606   0.39072996  0.489342  ]
- [ 0.59514265  0.68990414  0.7853533   0.88155046  0.97851171]]
-Middle Weights: 
- [[ 0.06163516  0.08648279  0.11629856  0.15096035]
- [ 0.26219048  0.28580015  0.31462534  0.34853703]
- [ 0.46271861  0.48515722  0.51304501  0.54624658]
- [ 0.66321643  0.68455775  0.71156683  0.74410239]
- [ 0.86368159  0.88400393  0.91019663  0.94211309]]
-Output Weights: 
- [[-0.47518882 -0.37063769  0.28503699]
- [-0.23719134 -0.13194594  0.53579912]
- [ 0.0014063   0.10723028  0.78651992]
- [ 0.24075371  0.34705239  1.03719099]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.6505459   0.67749606  0.70344352  0.7282752   0.75189485]]
+- Middle 2: 
+ [[ 0.84233126  0.85238259  0.86410609  0.87702731]]
+- Output:
+ [[ 0.4056202   0.49472391  0.90786617]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09863201  0.19711582  0.2957533   0.39456079  0.49354767]
+ [ 0.59491342  0.68927579  0.78420958  0.87977548  0.97600843]]
+- Middle Weights: 
+ [[ 0.06177218  0.0860581   0.11525064  0.14926369]
+ [ 0.26225812  0.28546004  0.31377611  0.34711631]
+ [ 0.46272625  0.48488774  0.51236246  0.54505667]
+ [ 0.66317453  0.68434373  0.7110159   0.74309381]
+ [ 0.86360121  0.88382991  0.9097413   0.94123489]]
+- Output Weights: 
+ [[-0.47268341 -0.3685609   0.28552142]
+ [-0.2347857  -0.12996716  0.53630349]
+ [ 0.0036821   0.10908518  0.78704524]
+ [ 0.24286618  0.34875288  1.03773826]]
 
 
 **** TRIAL:  6
@@ -386,34 +469,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: -1.0 30.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.336 0.402 0.91
+'Process_Base-1' completed:
+- output: 0.338 0.404 0.91
 
-- MSE: 0.094
+- MSE: 0.0951
 
 
-Input: [array([-1, 30])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09754744  0.19523952  0.29328161  0.39170015  0.49049644]
- [ 0.5951841   0.69036718  0.78617186  0.8826519   0.97982233]]
-Middle Weights: 
- [[ 0.06934907  0.0898271   0.11575226  0.14713296]
- [ 0.27035757  0.28934094  0.31404695  0.34448479]
- [ 0.4713093   0.48888165  0.51243662  0.54198416]
- [ 0.67219782  0.68845157  0.71093076  0.73964612]
- [ 0.87301878  0.88805201  0.90953537  0.93748029]]
-Output Weights: 
- [[ -5.57878882e-01  -4.75968091e-01   2.91284698e-01]
- [ -3.20842232e-01  -2.38500235e-01   5.42119422e-01]
- [ -8.33612905e-02  -7.46475537e-04   7.92924600e-01]
- [  1.54764109e-01   2.37519048e-01   1.04368800e+00]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65055618  0.67761551  0.70365258  0.72855342  0.7522221 ]]
+- Middle 2: 
+ [[ 0.84646666  0.85414176  0.86391576  0.87539647]]
+- Output:
+ [[ 0.33763025  0.40397637  0.90977675]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09864334  0.19725294  0.29600469  0.39491351  0.49398783]
+ [ 0.59495556  0.68978564  0.78514433  0.88108699  0.97764506]]
+- Middle Weights: 
+ [[ 0.06989398  0.08959148  0.11465594  0.14513241]
+ [ 0.27071639  0.2891398   0.31315677  0.34281389]
+ [ 0.47150846  0.48870843  0.5117194   0.54058946]
+ [ 0.67226675  0.68829929  0.71035014  0.73846891]
+ [ 0.87298831  0.88791376  0.90905395  0.93646   ]]
+- Output Weights: 
+ [[-0.55505664 -0.47272965  0.29201289]
+ [-0.31814188 -0.23537893  0.54287242]
+ [-0.08082053  0.00222359  0.79370451]
+ [ 0.15709996  0.24029337  1.04449711]]
 
 
 **** TRIAL:  7
@@ -422,34 +517,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: 2.0 10.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.285 0.332 0.914
+'Process_Base-1' completed:
+- output: 0.289 0.336 0.912
 
-- MSE: 0.0663
+- MSE: 0.0681
 
 
-Input: [array([ 2, 10])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09761586  0.19550067  0.29371733  0.39229006  0.49121873]
- [ 0.59543849  0.69133821  0.78779199  0.88484535  0.982508  ]]
-Middle Weights: 
- [[ 0.07694695  0.09396183  0.1166834   0.14524265]
- [ 0.27827176  0.29364781  0.31501684  0.34251578]
- [ 0.4795282   0.49335434  0.51344386  0.53993935]
- [ 0.68070844  0.69308301  0.71197375  0.73752873]
- [ 0.88180692  0.89283447  0.91061237  0.93529385]]
-Output Weights: 
- [[-0.62122873 -0.55763132  0.29757156]
- [-0.38477974 -0.32092101  0.5484646 ]
- [-0.14804731 -0.08413214  0.79934406]
- [ 0.08920078  0.15300245  1.05019452]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65061768  0.67784104  0.70401176  0.72901464  0.75275442]]
+- Middle 2: 
+ [[ 0.85032251  0.85621552  0.86444353  0.87470705]]
+- Output:
+ [[ 0.28892812  0.33633532  0.9117193 ]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09871119  0.19751191  0.29643685  0.39549873  0.49470464]
+ [ 0.59520785  0.69074859  0.78675119  0.88326302  0.98031036]]
+- Middle Weights: 
+ [[ 0.07750784  0.09371987  0.11555569  0.143181  ]
+ [ 0.27864693  0.29343991  0.31409396  0.3407813 ]
+ [ 0.47974374  0.49317377  0.5126926   0.53847878]
+ [ 0.68079346  0.69292265  0.71135777  0.73628353]
+ [ 0.88179203  0.89268732  0.91009431  0.93420362]]
+- Output Weights: 
+ [[-0.61897021 -0.5550648   0.29828165]
+ [-0.38263496 -0.31846063  0.54919802]
+ [-0.14605161 -0.08180882  0.8001025 ]
+ [ 0.09100201  0.15514424  1.05098012]]
 
 
 **** TRIAL:  8
@@ -458,34 +565,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: -1.0 30.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.252 0.286 0.913
+'Process_Base-1' completed:
+- output: 0.253 0.288 0.914
 
-- MSE: 0.0511
+- MSE: 0.0515
 
 
-Input: [array([-1, 30])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09788538  0.19635289  0.29505632  0.39401141  0.49321751]
- [ 0.59574448  0.69230572  0.78931211  0.88679957  0.98477718]]
-Middle Weights: 
- [[ 0.08317207  0.09772616  0.1181303   0.14461825]
- [ 0.2848657   0.29763516  0.31654947  0.34185439]
- [ 0.48646621  0.49754975  0.51505646  0.53924345]
- [ 0.68796314  0.69746993  0.71365996  0.73680106]
- [ 0.88934938  0.8973954   0.91236546  0.93453732]]
-Output Weights: 
- [[-0.67127029 -0.6212329   0.30338289]
- [-0.43516388 -0.38495801  0.55431572]
- [-0.19890753 -0.14877422  0.80525047]
- [ 0.03775155  0.08761175  1.05616933]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65070104  0.67810064  0.7044144   0.72952588  0.75334066]]
+- Middle 2: 
+ [[ 0.85366832  0.85824373  0.86527874  0.87455785]]
+- Output:
+ [[ 0.25348771  0.28791896  0.9136125 ]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09880317  0.19781013  0.29692165  0.39614816  0.49549527]
+ [ 0.59554986  0.69185744  0.78855383  0.88567776  0.98325015]]
+- Middle Weights: 
+ [[ 0.0841765   0.09776672  0.11711835  0.14249779]
+ [ 0.28559463  0.29765609  0.31572199  0.34006951]
+ [ 0.48695967  0.49755273  0.51438349  0.5377395 ]
+ [ 0.68826567  0.69745713  0.71310872  0.735518  ]
+ [ 0.88950757  0.89736946  0.91190228  0.93341316]]
+- Output Weights: 
+ [[-0.66944526 -0.61890251  0.30432359]
+ [-0.43345982 -0.38274076  0.55528184]
+ [-0.19736489 -0.14670666  0.80624477]
+ [ 0.03907949  0.08947586  1.05719533]]
 
 
 **** TRIAL:  9
@@ -494,34 +613,46 @@ Output Weights:
 ****************************************
 
 
-''Process_Base-1' component' executing with:
-- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'ComparatorMechanism-1' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
-- input: 2.0 10.0
+'Process_Base-1' executing with:
+- pathway: ['Input Layer' 'Hidden Layer_1' 'Hidden Layer_2' 'Output Layer' 'Output Weights Target_Error' 'Middle Weights Weighted_Error' 'Input Weights Weighted_Error']
+- input: [-1 30]
 
-''Process_Base-1' component' completed:
-- output: 0.223 0.249 0.918
+'Process_Base-1' completed:
+- output: 0.227 0.253 0.915
 
-- MSE: 0.0394
+- MSE: 0.0408
 
 
-Input: [array([ 2, 10])]
+Input: [-1 30]
 Target: [0 0 1]
 
 
-Input Weights: 
- [[ 0.09798457  0.19665213  0.29553626  0.39465046  0.49399267]
- [ 0.5961133   0.69341838  0.79109669  0.88917575  0.98765946]]
-Middle Weights: 
- [[ 0.08890347  0.1014516   0.11992458  0.1446399 ]
- [ 0.29083866  0.30151762  0.31841937  0.34187695]
- [ 0.4926713   0.5015831   0.51699903  0.53926688]
- [ 0.6943899   0.70164736  0.71567193  0.73682533]
- [ 0.89598645  0.90170953  0.91444327  0.93456239]]
-Output Weights: 
- [[-0.71193422 -0.67120211  0.30922753]
- [-0.47605664 -0.4352084   0.56019325]
- [-0.24014908 -0.19945322  0.81117813]
- [-0.00394684  0.03637138  1.06216265]]
+Activity from old weights: 
+
+- Middle 1: 
+ [[ 0.65079122  0.67836129  0.70481298  0.73002872  0.75391503]]
+- Middle 2: 
+ [[ 0.85652384  0.86010532  0.86620989  0.87469337]]
+- Output:
+ [[ 0.22686074  0.25270212  0.91542149]]
+
+New weights: 
+
+
+- Input Weights: 
+ [[ 0.09890269  0.19810968  0.29740194  0.39678767  0.49627111]
+ [ 0.5959199   0.69297125  0.79033968  0.88805564  0.98613492]]
+- Middle Weights: 
+ [[ 0.08992499  0.10150104  0.11891032  0.14250149]
+ [ 0.29158517  0.30154765  0.31758943  0.34007336]
+ [ 0.49318268  0.50159531  0.51632339  0.5377435 ]
+ [ 0.69471052  0.70164382  0.71511777  0.73552215]
+ [ 0.8961628   0.90169281  0.91397691  0.93341744]]
+- Output Weights: 
+ [[-0.71039394 -0.66929423  0.31014399]
+ [-0.47462798 -0.43340256  0.56113343]
+ [-0.2388705  -0.19778374  0.81214434]
+ [-0.00287122  0.03785105  1.06315816]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -532,7 +663,7 @@ reward prediction weights:
  [[ 1.  0.  0.]
  [ 0.  1.  0.]
  [ 0.  0.  1.]]
-comparatorMechanism weights: 
+targetMechanism weights: 
  [[ 1.]
  [ 1.]
  [ 1.]]
@@ -544,88 +675,88 @@ reward prediction weights:
  [[ 1.  0.  0.]
  [ 0.  1.  0.]
  [ 0.  0.  1.]]
-action selected:  [ 0.  0.  1.]
+action selected:  [ 0.  1.  0.]
 
 
 **** TRIAL:  1
 
 reward prediction weights: 
  [[ 1.    0.    0.  ]
- [ 0.    1.    0.  ]
- [ 0.    0.    0.95]]
-action selected:  [ 0.    0.    0.19]
+ [ 0.    0.95  0.  ]
+ [ 0.    0.    1.  ]]
+action selected:  [ 0.    0.95  0.  ]
 
 
 **** TRIAL:  2
 
 reward prediction weights: 
  [[ 1.      0.      0.    ]
- [ 0.      1.      0.    ]
- [ 0.      0.      0.9405]]
-action selected:  [ 0.      0.      0.9405]
+ [ 0.      0.9025  0.    ]
+ [ 0.      0.      1.    ]]
+action selected:  [ 0.      0.9025  0.    ]
 
 
 **** TRIAL:  3
 
 reward prediction weights: 
  [[ 1.        0.        0.      ]
- [ 0.        1.        0.      ]
- [ 0.        0.        0.893475]]
-action selected:  [ 0.        0.        0.178695]
+ [ 0.        0.857375  0.      ]
+ [ 0.        0.        1.      ]]
+action selected:  [ 0.        0.857375  0.      ]
 
 
 **** TRIAL:  4
 
 reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          1.          0.        ]
- [ 0.          0.          0.88454025]]
-action selected:  [ 0.          0.          0.88454025]
+ [ 0.          0.81450625  0.        ]
+ [ 0.          0.          1.        ]]
+action selected:  [ 0.  0.  1.]
 
 
 **** TRIAL:  5
 
 reward prediction weights: 
  [[ 1.          0.          0.        ]
- [ 0.          1.          0.        ]
- [ 0.          0.          0.84031324]]
-action selected:  [ 0.2  0.   0. ]
+ [ 0.          0.81450625  0.        ]
+ [ 0.          0.          0.95      ]]
+action selected:  [ 0.    0.    0.19]
 
 
 **** TRIAL:  6
 
 reward prediction weights: 
- [[ 0.99        0.          0.        ]
- [ 0.          1.          0.        ]
- [ 0.          0.          0.84031324]]
-action selected:  [ 0.  1.  0.]
+ [[ 1.          0.          0.        ]
+ [ 0.          0.81450625  0.        ]
+ [ 0.          0.          0.9405    ]]
+action selected:  [ 0.          0.81450625  0.        ]
 
 
 **** TRIAL:  7
 
 reward prediction weights: 
- [[ 0.99        0.          0.        ]
- [ 0.          0.95        0.        ]
- [ 0.          0.          0.84031324]]
-action selected:  [ 0.    0.95  0.  ]
+ [[ 1.          0.          0.        ]
+ [ 0.          0.77378094  0.        ]
+ [ 0.          0.          0.9405    ]]
+action selected:  [ 0.      0.      0.1881]
 
 
 **** TRIAL:  8
 
 reward prediction weights: 
- [[ 0.99        0.          0.        ]
- [ 0.          0.9025      0.        ]
- [ 0.          0.          0.84031324]]
-action selected:  [ 0.      0.9025  0.    ]
+ [[ 1.          0.          0.        ]
+ [ 0.          0.77378094  0.        ]
+ [ 0.          0.          0.931095  ]]
+action selected:  [ 0.          0.77378094  0.        ]
 
 
 **** TRIAL:  9
 
 reward prediction weights: 
- [[ 0.99        0.          0.        ]
- [ 0.          0.857375    0.        ]
- [ 0.          0.          0.84031324]]
-action selected:  [ 0.          0.          0.16806265]
+ [[ 1.          0.          0.        ]
+ [ 0.          0.73509189  0.        ]
+ [ 0.          0.          0.931095  ]]
+action selected:  [ 0.          0.73509189  0.        ]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -666,6 +797,7 @@ Preference:                           Base Value:                         Curren
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 10.0
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 10.0
 
@@ -678,6 +810,7 @@ Preference:                           Base Value:                         Curren
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 20.0
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 20.0
 
@@ -690,6 +823,7 @@ Preference:                           Base Value:                         Curren
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 30.0
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 30.0
 
@@ -707,11 +841,11 @@ RUNNING Stroop Model Test Script.py
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
+''Color Naming' process' completed:
 - output: 0.881 0.881
 
 - MSE: 0.395
@@ -724,14 +858,31 @@ RUNNING Stroop Model Test Script.py
 ****************************************
 
 
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Word Reading' component' completed:
-- output: 0.978 0.982
+''Word Reading' process' completed:
+- output: 0.881 0.881
 
-- MSE: 0.483
+- MSE: 0.395
+[[ 1.  1.]
+ [ 1.  1.]]
+[[ 1.  1.]
+ [ 1.  1.]]
+
+
+****************************************
+
+
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Color Naming' process' completed:
+- output: 0.86 0.883
+
+- MSE: 0.377
 [[ 0.90752196  1.01251554]
  [ 0.90752196  1.01251554]]
 [[ 1.  1.]
@@ -741,323 +892,290 @@ RUNNING Stroop Model Test Script.py
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.974 0.982
+''Word Reading' process' completed:
+- output: 0.883 0.86
 
-- MSE: 0.475
-[[ 0.81504391  1.02503108]
- [ 0.81504391  1.02503108]]
-[[ 1.00045488  0.98306117]
- [ 1.00045488  0.98306117]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.973 0.982
-
-- MSE: 0.482
-[[ 0.7905525   1.02533892]
- [ 0.7905525   1.02533892]]
-[[ 1.00090976  0.96612234]
- [ 1.00090976  0.96612234]]
+- MSE: 0.377
+[[ 0.90752196  1.01251554]
+ [ 0.90752196  1.01251554]]
+[[ 1.01251554  0.90752196]
+ [ 1.01251554  0.90752196]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.972 0.981
+''Color Naming' process' completed:
+- output: 0.833 0.886
 
-- MSE: 0.472
-[[ 0.76606108  1.02564675]
- [ 0.76606108  1.02564675]]
-[[ 1.00162129  0.94849495]
- [ 1.00162129  0.94849495]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.97 0.98
-
-- MSE: 0.481
-[[ 0.73932012  1.02599805]
- [ 0.73932012  1.02599805]]
-[[ 1.00233282  0.93086757]
- [ 1.00233282  0.93086757]]
+- MSE: 0.354
+[[ 0.80396318  1.02452582]
+ [ 0.80396318  1.02452582]]
+[[ 1.01251554  0.90752196]
+ [ 1.01251554  0.90752196]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.969 0.98
+''Word Reading' process' completed:
+- output: 0.886 0.833
 
-- MSE: 0.469
-[[ 0.71257916  1.02634934]
- [ 0.71257916  1.02634934]]
-[[ 1.00319388  0.9120514 ]
- [ 1.00319388  0.9120514 ]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.967 0.979
-
-- MSE: 0.48
-[[ 0.68318683  1.02675293]
- [ 0.68318683  1.02675293]]
-[[ 1.00405494  0.89323523]
- [ 1.00405494  0.89323523]]
+- MSE: 0.354
+[[ 0.80396318  1.02452582]
+ [ 0.80396318  1.02452582]]
+[[ 1.02452582  0.80396318]
+ [ 1.02452582  0.80396318]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.965 0.978
+''Color Naming' process' completed:
+- output: 0.798 0.888
 
-- MSE: 0.466
-[[ 0.65379449  1.02715652]
- [ 0.65379449  1.02715652]]
-[[ 1.00511444  0.8730696 ]
- [ 1.00511444  0.8730696 ]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.963 0.977
-
-- MSE: 0.478
-[[ 0.62123188  1.02762442]
- [ 0.62123188  1.02762442]]
-[[ 1.00617395  0.85290396]
- [ 1.00617395  0.85290396]]
+- MSE: 0.325
+[[ 0.68813499  1.03606831]
+ [ 0.68813499  1.03606831]]
+[[ 1.02452582  0.80396318]
+ [ 1.02452582  0.80396318]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.961 0.976
+''Word Reading' process' completed:
+- output: 0.888 0.798
 
-- MSE: 0.462
-[[ 0.58866926  1.02809233]
- [ 0.58866926  1.02809233]]
-[[ 1.0075031   0.83119511]
- [ 1.0075031   0.83119511]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.958 0.975
-
-- MSE: 0.477
-[[ 0.55226639  1.02864041]
- [ 0.55226639  1.02864041]]
-[[ 1.00883226  0.80948626]
- [ 1.00883226  0.80948626]]
+- MSE: 0.325
+[[ 0.68813499  1.03606831]
+ [ 0.68813499  1.03606831]]
+[[ 1.03606831  0.68813499]
+ [ 1.03606831  0.68813499]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.955 0.974
+''Color Naming' process' completed:
+- output: 0.754 0.89
 
-- MSE: 0.456
-[[ 0.51586351  1.02918849]
- [ 0.51586351  1.02918849]]
-[[ 1.01053802  0.78599814]
- [ 1.01053802  0.78599814]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.951 0.973
-
-- MSE: 0.475
-[[ 0.4747426   1.02983804]
- [ 0.4747426   1.02983804]]
-[[ 1.01224378  0.76251003]
- [ 1.01224378  0.76251003]]
+- MSE: 0.29
+[[ 0.55962381  1.04717658]
+ [ 0.55962381  1.04717658]]
+[[ 1.03606831  0.68813499]
+ [ 1.03606831  0.68813499]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.948 0.972
+''Word Reading' process' completed:
+- output: 0.89 0.754
 
-- MSE: 0.449
-[[ 0.43362168  1.03048759]
- [ 0.43362168  1.03048759]]
-[[ 1.01449236  0.73695184]
- [ 1.01449236  0.73695184]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.943 0.97
-
-- MSE: 0.472
-[[ 0.38661698  1.03126777]
- [ 0.38661698  1.03126777]]
-[[ 1.01674093  0.71139366]
- [ 1.01674093  0.71139366]]
+- MSE: 0.29
+[[ 0.55962381  1.04717658]
+ [ 0.55962381  1.04717658]]
+[[ 1.04717658  0.55962381]
+ [ 1.04717658  0.55962381]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.938 0.969
+''Color Naming' process' completed:
+- output: 0.698 0.892
 
-- MSE: 0.441
-[[ 0.33961227  1.03204794]
- [ 0.33961227  1.03204794]]
-[[ 1.01980082  0.68340271]
- [ 1.01980082  0.68340271]]
-
-
-****************************************
-
-
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
-
-''Word Reading' component' completed:
-- output: 0.932 0.967
-
-- MSE: 0.47
-[[ 0.28516004  1.03299957]
- [ 0.28516004  1.03299957]]
-[[ 1.0228607   0.65541175]
- [ 1.0228607   0.65541175]]
+- MSE: 0.25
+[[ 0.4197391   1.05788079]
+ [ 0.4197391   1.05788079]]
+[[ 1.04717658  0.55962381]
+ [ 1.04717658  0.55962381]]
 
 
 ****************************************
 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Color Naming' component' completed:
-- output: 0.925 0.965
+''Word Reading' process' completed:
+- output: 0.892 0.698
 
-- MSE: 0.429
-[[ 0.23070781  1.03395119]
- [ 0.23070781  1.03395119]]
-[[ 1.02718409  0.62452967]
- [ 1.02718409  0.62452967]]
+- MSE: 0.25
+[[ 0.4197391   1.05788079]
+ [ 0.4197391   1.05788079]]
+[[ 1.05788079  0.4197391 ]
+ [ 1.05788079  0.4197391 ]]
 
 
 ****************************************
 
 
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 1.0 1.0
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-''Word Reading' component' completed:
-- output: 0.917 0.963
+''Color Naming' process' completed:
+- output: 0.633 0.894
 
-- MSE: 0.467
-[[ 0.16670876  1.03513291]
- [ 0.16670876  1.03513291]]
-[[ 1.03150749  0.59364758]
- [ 1.03150749  0.59364758]]
+- MSE: 0.206
+[[ 0.27262695  1.06820815]
+ [ 0.27262695  1.06820815]]
+[[ 1.05788079  0.4197391 ]
+ [ 1.05788079  0.4197391 ]]
 
-'Stroop Model' system executing ********** (time_step 10) 
 
-''Color Naming' component' executing with:
-- pathway: ['Colors' 'Response' 'ComparatorMechanism-3']
-- input: 
+****************************************
 
-''Word Reading' component' executing with:
-- pathway: ['Words' 'Response' 'ComparatorMechanism-3']
-- input: 
 
-'Stroop Model' learning completed:
-- error for target ComparatorMechanism-3': 0.0927 -0.961
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
 
-'Stroop Model' system completed ***********(time_step 10)
-- output for Response: '0.907' '0.961'
+''Word Reading' process' completed:
+- output: 0.894 0.633
+
+- MSE: 0.206
+[[ 0.27262695  1.06820815]
+ [ 0.27262695  1.06820815]]
+[[ 1.06820815  0.27262695]
+ [ 1.06820815  0.27262695]]
+
+
+****************************************
+
+
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Color Naming' process' completed:
+- output: 0.562 0.896
+
+- MSE: 0.164
+[[ 0.12557193  1.07818324]
+ [ 0.12557193  1.07818324]]
+[[ 1.06820815  0.27262695]
+ [ 1.06820815  0.27262695]]
+
+
+****************************************
+
+
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Word Reading' process' completed:
+- output: 0.896 0.562
+
+- MSE: 0.164
+[[ 0.12557193  1.07818324]
+ [ 0.12557193  1.07818324]]
+[[ 1.07818324  0.12557193]
+ [ 1.07818324  0.12557193]]
+
+
+****************************************
+
+
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Color Naming' process' completed:
+- output: 0.494 0.898
+
+- MSE: 0.127
+[[-0.01284843  1.08782839]
+ [-0.01284843  1.08782839]]
+[[ 1.07818324  0.12557193]
+ [ 1.07818324  0.12557193]]
+
+
+****************************************
+
+
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Word Reading' process' completed:
+- output: 0.898 0.494
+
+- MSE: 0.127
+[[-0.01284843  1.08782839]
+ [-0.01284843  1.08782839]]
+[[ 1.08782839 -0.01284843]
+ [ 1.08782839 -0.01284843]]
+
+
+****************************************
+
+
+''Color Naming' process' executing with:
+- pathway: ['Colors' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Color Naming' process' completed:
+- output: 0.432 0.9
+
+- MSE: 0.0985
+[[-0.1362221   1.09716391]
+ [-0.1362221   1.09716391]]
+[[ 1.08782839 -0.01284843]
+ [ 1.08782839 -0.01284843]]
+
+
+****************************************
+
+
+''Word Reading' process' executing with:
+- pathway: ['Words' 'Response' 'MappingProjection-17 Target_Error']
+- input: [1, 1]
+
+''Word Reading' process' completed:
+- output: 0.9 0.432
+
+- MSE: 0.0985
+[[-0.1362221   1.09716391]
+ [-0.1362221   1.09716391]]
+[[ 1.09716391 -0.1362221 ]
+ [ 1.09716391 -0.1362221 ]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1070,77 +1188,82 @@ RUNNING Stroop Model Learning Test Script.py
 
 'Stroop Model-1' system executing with: **** (time_step 0) 
 - processes: ['Color Naming-1', 'Word Reading-1']
+- inputs: [[[1, 1]], [[-2, -2]]]
 
-''Color Naming-1' component' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'ComparatorMechanism-4' 'Color-Hidden Weights Weighted_Error']
-- input: 1.0 2.5
+''Color Naming-1' process' executing with:
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights Target_Error' 'Color-Hidden Weights Weighted_Error']
+- input: [ 1.  1.]
 
-''Word Reading-1' component' executing with:
+''Word Reading-1' process' executing with:
 - pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights Weighted_Error']
-- input: 0.5 3.0
+- input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target ComparatorMechanism-4': -0.509 -0.543
+- error for target 'Hidden-Output Weights Target_Error' processingmechanism_base': 0.491 0.457
 
 'Stroop Model-1' system completed ***********(time_step 0)
 - output for Response-1: '0.509' '0.543'
 
+- MSE: 0.225
+
 Color Naming
-	Input: None
-	Target: [2, 2]
+	Input: [[ 1.  1.]]
+	Target: [[[1 1]]]
 Wording Reading:
-	Input: None
-	Target: [3, 3]
+	Input: [[-2. -2.]]
+	Target: [[[1 1]]]
 
 Response: 
  [ 0.50899214  0.54318254]
 Hidden-Output:
-[[-0.01516343  0.9839335 ]
- [ 1.99771203  2.99757577]]
+[[0 1]
+ [2 3]]
 Color-Hidden:
-[[-0.01415132  0.98836448]
- [ 1.98584868  2.98836448]]
+[[0 1]
+ [2 3]]
 Word-Hidden:
-[[ 0.02830265  1.02327104]
- [ 2.02830265  3.02327104]]
+[[0 1]
+ [2 3]]
 
 
 **** TRIAL:  1
 
 'Stroop Model-1' system executing ********** (time_step 1) 
 
-''Color Naming-1' component' executing with:
-- pathway: ['Colors-1' 'Hidden' 'Response-1' 'ComparatorMechanism-4' 'Color-Hidden Weights Weighted_Error']
-- input: 1.0 2.5
+''Color Naming-1' process' executing with:
+- pathway: ['Colors-1' 'Hidden' 'Response-1' 'Hidden-Output Weights Target_Error' 'Color-Hidden Weights Weighted_Error']
+- input: [ 1.  1.]
 
-''Word Reading-1' component' executing with:
+''Word Reading-1' process' executing with:
 - pathway: ['Words-1' 'Hidden' 'Word-Hidden Weights Weighted_Error']
-- input: 0.5 3.0
+- input: [-2. -2.]
 
 'Stroop Model-1' learning completed:
-- error for target ComparatorMechanism-4': -0.506 -0.533
+- error for target 'Hidden-Output Weights Target_Error' processingmechanism_base': 0.49 0.452
 
 'Stroop Model-1' system completed ***********(time_step 1)
-- output for Response-1: '0.506' '0.533'
+- output for Response-1: '0.51' '0.548'
+
+- MSE: 0.222
 
 Color Naming
-	Input: None
-	Target: [2, 2]
+	Input: [[ 1.  1.]]
+	Target: [[[1 1]]]
 Wording Reading:
-	Input: None
-	Target: [3, 3]
+	Input: [[-2. -2.]]
+	Target: [[[1 1]]]
 
 Response: 
- [ 0.50643437  0.53305466]
+ [ 0.51044657  0.5483048 ]
 Hidden-Output:
-[[-0.04204109  0.95558888]
- [ 1.99361318  2.99325348]]
+[[ 0.01462766  1.01351195]
+ [ 2.00220713  3.00203878]]
 Color-Hidden:
-[[-0.03876417  0.96756353]
- [ 1.96123583  2.96756353]]
+[[ 0.01190129  1.0103412 ]
+ [ 2.01190129  3.0103412 ]]
 Word-Hidden:
-[[ 0.07752833  1.06487294]
- [ 2.07752833  3.06487294]]
+[[-0.02380258  0.9793176 ]
+ [ 1.97619742  2.9793176 ]]
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -1152,9 +1275,9 @@ RUNNING Mixed NN & DDM script.py
 ****************************************
 
 
-''Neural Network DDM Process' component' executing with:
+'Neural Network DDM Process' executing with:
 - pathway: ['Input Layer-2' 'Hidden Layer 1' 'My_DDM-2']
-- input: -1.0 2.0
+- input: [array([-1,  2])]
 
 'Input Layer-2' mechanism executed:
 - input:  -1.0, 2.0
@@ -1168,7 +1291,7 @@ RUNNING Mixed NN & DDM script.py
 - output: -1.0 2.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  -0.463, -0.353, 0.676, 0.156, 0.63
+- input:  -0.512, 1.43, 0.263, 0.711, -0.111
 - params:
 	function: Logistic
 		bias: 0
@@ -1176,10 +1299,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.386 0.413 0.663 0.539 0.652
+- output: 0.375 0.807 0.565 0.671 0.472
 
 'My_DDM-2' mechanism executed:
-- input:  2.65
+- input:  2.89
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1187,10 +1310,11 @@ RUNNING Mixed NN & DDM script.py
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 1
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
 
-''Neural Network DDM Process' component' completed:
+'Neural Network DDM Process' completed:
 - output: 1.0
 
 
@@ -1201,9 +1325,9 @@ RUNNING Mixed NN & DDM script.py
 ****************************************
 
 
-''Neural Network DDM Process' component' executing with:
+'Neural Network DDM Process' executing with:
 - pathway: ['Input Layer-2' 'Hidden Layer 1' 'My_DDM-2']
-- input: 2.0 3.0
+- input: [array([2, 3])]
 
 'Input Layer-2' mechanism executed:
 - input:  2.0, 3.0
@@ -1217,7 +1341,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 2.0 3.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  1.06, 2.82, 3.27, 1.72, 3.07
+- input:  2.03, 3.76, 3.13, 1.48, 2.07
 - params:
 	function: Logistic
 		bias: 0
@@ -1225,10 +1349,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.743 0.944 0.963 0.848 0.956
+- output: 0.884 0.977 0.958 0.815 0.888
 
 'My_DDM-2' mechanism executed:
-- input:  4.45
+- input:  4.52
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1236,10 +1360,11 @@ RUNNING Mixed NN & DDM script.py
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 1
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
 
-''Neural Network DDM Process' component' completed:
+'Neural Network DDM Process' completed:
 - output: 1.0
 
 
@@ -1250,9 +1375,9 @@ RUNNING Mixed NN & DDM script.py
 ****************************************
 
 
-''Neural Network DDM Process' component' executing with:
+'Neural Network DDM Process' executing with:
 - pathway: ['Input Layer-2' 'Hidden Layer 1' 'My_DDM-2']
-- input: 5.0 5.0
+- input: [array([5, 5])]
 
 'Input Layer-2' mechanism executed:
 - input:  5.0, 5.0
@@ -1266,7 +1391,7 @@ RUNNING Mixed NN & DDM script.py
 - output: 5.0 5.0
 
 'Hidden Layer 1' mechanism executed:
-- input:  2.6, 6.29, 6.52, 3.57, 6.12
+- input:  4.71, 7.03, 6.51, 2.66, 4.52
 - params:
 	function: Logistic
 		bias: 0
@@ -1274,10 +1399,10 @@ RUNNING Mixed NN & DDM script.py
 	initial_value: None
 	noise: 0.0
 	time_scale: TimeScale.TRIAL
-- output: 0.931 0.998 0.999 0.973 0.998
+- output: 0.991 0.999 0.999 0.935 0.989
 
 'My_DDM-2' mechanism executed:
-- input:  4.9
+- input:  4.91
 - params:
 	function: BogaczEtAl
 		drift_rate: 0.5
@@ -1285,10 +1410,11 @@ RUNNING Mixed NN & DDM script.py
 		starting_point: 0.0
 		t0: 0.2
 		threshold: 1
+	plot_threshold: None
 	time_scale: TimeScale.TRIAL
 - output: 1.0
 
-''Neural Network DDM Process' component' completed:
+'Neural Network DDM Process' completed:
 - output: 1.0
 
 

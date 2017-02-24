@@ -864,7 +864,7 @@ class EVCMechanism(ControlMechanism_Base):
             self._validate_monitored_state_in_system(state)
 
         # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
-        self.monitoring_mechanism = ObjectiveMechanism(monitor=self.monitored_output_states,
+        self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
                                                        function=self.outcome_function)
 
         if self.prefs.verbosePref:
@@ -876,7 +876,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         MappingProjection(sender=self.monitoring_mechanism,
                           receiver=self,
-                          matrix=IDENTITY_MATRIX)
+                          matrix=AUTO_ASSIGN_MATRIX)
 
     def _get_monitored_states(self, context=None):
         """
@@ -906,7 +906,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_state
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import validate_monitored_value
 
         # PARSE SPECS
 
@@ -935,7 +935,7 @@ class EVCMechanism(ControlMechanism_Base):
         all_specs_extracted_from_tuples = []
         for item in all_specs:
             # Validate specification
-            validate_monitored_state(self, item, context=context)
+            validate_monitored_value(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OBJECT])
@@ -1146,7 +1146,7 @@ class EVCMechanism(ControlMechanism_Base):
     def _validate_monitored_state_in_system(self, state_spec, context=None):
         """Validate specified outputstate is for a mechanism in the controller's system
 
-        Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_state() (in ControlMechanism)
+        Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_value() (in ControlMechanism)
         """
 
         # Get outputState's owner
@@ -1308,7 +1308,7 @@ class EVCMechanism(ControlMechanism_Base):
             # Assign value of predictionMechanism to the entry of predictedInput for the corresponding ORIGIN mechanism
             self.predictedInput[origin_mech] = self.prediction_mechanisms[origin_mech].value
 
-    def add_monitored_states(self, states_spec, context=None):
+    def add_monitored_values(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
 
         Use by other objects to add a state or list of states to be monitored by EVC

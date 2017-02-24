@@ -444,6 +444,9 @@ def convert_to_np_array(value, dimension):
     :param value:
     :return:
     """
+    if value is None:
+        return None
+
     if dimension is 1:
         value = np.atleast_1d(value)
     elif dimension is 2:
@@ -469,6 +472,8 @@ def type_match(value, value_type):
         return float(value)
     if value_type is np.ndarray:
         return np.array(value)
+    if value_type is list:
+        return list(value)
     if value_type is None:
         return None
     raise UtilitiesError("Type of {} not recognized".format(value))

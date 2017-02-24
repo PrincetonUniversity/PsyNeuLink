@@ -53,6 +53,13 @@ ObjectiveMechanism's `monitor <ObjectiveMechanism.monitor>` attribute.
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
+COMMENT:
+     RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
+     VALUES AND INPUTSTATE CAN BE SPECIFIED
+     AUTOMATIC IMPLEMETNATION BY PROCESS AND/OR SYSTEM
+     SPECIFCATION OF WEIGHTS AND EXPONENTS IN LinearCombination FUNCTION, AS SPECIAL CASE / EXAMPLE
+COMMENT
+
 The outputState(s) monitored by an ObjectiveMechanism can be specified in any of the places listed below.  The
 list also describes the order of precedence when more than one specification pertains to the same
 outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
@@ -136,7 +143,7 @@ Structure
 ---------
 
 An ObjectiveMechanism has an `inputState <InputState>` for each of the outputStates listed in its
-`monitor <ObjectiveMechanism.monitor>` attribute. Each inputState receives a projection from the corresponding
+`monitored_values` attribute. Each inputState receives a projection from the corresponding
 outputState.
 
 .. _ObjectiveMechanism_Execution:
@@ -145,7 +152,7 @@ Execution
 ---------
 
 Each time an ObjectiveMechanism is executed, it updates its inputStates with the values of outputStates listed in
-its `monitor <ObjectiveMechanism.monitor>` attribute, and then uses its `function <ObjectiveMechanism.function>` to
+its `monitored_values` attribute, and then uses its `function <ObjectiveMechanism.function>` to
 evaluate these.  The result is assigned as the value of its outputState.
 
 .. _ObjectiveMechanism_Class_Reference:
@@ -178,7 +185,9 @@ WEIGHT = 1
 EXPONENT = 2
 ROLE = 'role'
 NAMES = 'names'
-MONITOR = 'monitor'
+MONITORED_VALUES = 'monitored_values'
+MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
+DEFAULT_MONITORED_VALUE = [0]
 
 OBJECTIVE_RESULT = "ObjectiveResult"
 
@@ -203,7 +212,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
+    # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array inputStates
+    variableClassDefault = None
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -219,7 +229,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 monitor=None,
+                 monitored_values=None,
                  names:tc.optional(list)=None,
                  function=LinearCombination,
                  role:tc.optional(str)=None,
@@ -229,8 +239,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  context=None):
         """
         ObjectiveMechanism(           \
-        default_input_value=None,     \
-        monitor=None,                 \
+        monitored_values=None,        \
         names=None,                   \
         function=LinearCombination,   \
         role=None                     \
@@ -276,17 +285,18 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         item of the input, which must be the same length.  This also serves as a template to specify the length of
         inputs to the `function <ComparatorMechanism.function>`.
 
-    monitor : [List[OutputState or Mechanism or MonitoredOutputStateOption]
-        specifies the outputStates that will be monitored, and evaluated by `function <ObjectiveMechanism>`
-        (see `monitor <ObjectiveMechanism.monitor>` for details of specification).
+    monitored_values : [List[value, InputState, OutputState, Mechanism, string, or MonitoredOutputStateOption]
+        specifies the values that will will be monitored, and evaluated by `function <ObjectiveMechanism>`
+        (see `monitored_values` for details of specification).  If it is a string, it will be used as the name of
+        an 'InputState' (that is assigned the default value for the `variable <InputState.variable>` for an InptState).
 
     names: List[str]
-        specifies names for the outputStates listed in `monitor <ObjectiveMechanism.monitor>`.  If specified,
-        the number of items in the list must equal the number of items in `monitor <ObjectiveMechanism.monitor>`.
+        specifies names for the outputStates listed in `monitored_values <ObjectiveMechanism.monitor>`.  If specified,
+        the number of items in the list must equal the number of items in `monitored_values`.
 
     function: Function, function or method
         specifies the function used to evaluate the value of the outputStates listed in
-        `monitor <ObjectiveMechanism.monitor>`.
+        `monitored_values`.
 
     role: Optional[LEARNING, CONTROL]
         specifies if the ObjectiveMechanism is being used for learning or control.
@@ -326,43 +336,23 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    variable : 2d np.array
-        the input to `function <ComparatorMechanism.function>`.  The first item is the :keyword:`value` of the
-        `COMPARATOR_SAMPLE` inputState, and the second is the :keyword:`value` of the `COMPARATOR_TARGET` inputState.
-
-    sample : 1d np.array
-        the first item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
-        `COMPARATOR_SAMPLE` inputState.
-
-    target : 1d np.array
-        the second item of the `variable <ComparatorMechanism.variable>` and the :keyword:`value` of the
-        `COMPARATOR_TARGET` inputState.
+    monitored_values : [List[value, InputState, OutputState, Mechanism, dict, str, or MonitoredOutputStateOption]
+        serves as the ObjectiveMechahnism's variable;  determines  the values monitored, and evaluated by
+        `function <ObjectiveMechanism>`.  An `inputState <InputState>` is created in the ObjectiveMechanism for each
+        item in the list.  It is assumed, for any item that is a value or an inputState that has no projections to
+        it, these will be generated later (possibly automatically, as part of a `Process` or `System`).  For any item
+        that is a string, a default InputState is created using the string as its name (and a value that is a 1d
+        array with a single scalar item).  A dict must be a specification dict for an
+        `InputState <InputState_Creation>`.  For any item that is an `OutputState`, `Mechanism`,
+        or `MonitoredOutputStateOption`, projections will be created automatically by any `systems <System>` and/or
+        `processes <Process>` to which the ObjectiveMechanism belongs.
 
     function : CombinationFunction : default LinearCombination
         the function used to compare `COMPARATOR_SAMPLE` with `COMPARATOR_TARGET`.
 
-    comparison_operation : SUBTRACTION or DIVISION : default SUBTRACTION
-        determines the operation used by `function <ComparatorMechanism.function>` to compare the `COMPARATOR_SAMPLE`
-        with `_COMPARATOR_TARGET`.
-
-        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPARATOR_SAMPLE`;
-
-        * `DIVISION`: `COMPARATOR_TARGET` ÷ `COMPARATOR_SAMPLE`.
-
     value : 2d np.array
-        holds the output of the `comparison_operation` carried out by the ComparatorMechanism's
-        `function <ComparatorMechanism.function>`; its value is  also assigned to the `COMPARISON_RESULT` outputState
-        and the the first item of `outputValue <ComparatorMechanism.outputValue>`.
-
-    outputValue : List[1d np.array, float, float, float, float]
-        a list with the following items:
-
-        * **result** of the `function <ComparatorMechanism.function>` calculation
-          and the :keyword:`value` of the `COMPARISON_RESULT` outputState;
-        * **mean** of the result's elements and the :keyword:`value` of the `COMPARISON_MEAN` outputState;
-        * **sum** of the result's elements and the :keyword:`value` of the `COMPARISON_SUM` outputState;
-        * **sum of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_SSE` outputState;
-        * **mean of squares** of the result's elements and the :keyword:`value` of the `COMPARISON_MSE` outputState.
+        holds the output of the evaluatoin carried out by the ObjectiveMechanism's
+        `function <ObjectiveMechanism.function>`.
 
     name : str : default ComparatorMechanism-<index>
         the name of the mechanism.
@@ -379,15 +369,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         """
 
-        if default_input_value is None:
-            default_input_value = self.variableClassDefault
+        # if default_input_value is None:
+        #     default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitor=monitor,
+        params = self._assign_args_to_param_dicts(monitored_values=monitored_values,
                                                   names=names,
                                                   function=function,
                                                   role=role,
                                                   params=params)
+
+        self.learning_role = None
 
         super().__init__(variable=default_input_value,
                          params=params,
@@ -395,9 +387,26 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          prefs=prefs,
                          context=self)
 
+        # IMPLEMENATION NOTE: THIS IS HERE UNTIL Composition IS IMPLEMENTED,
+        # SO THAT SYSTEMS AND PROCESSES CAN FIND THE OBJECTIVE MECHANISSMS SERVING AS TARGETS
+
+    def _validate_variable(self, variable, context=None):
+        """Validate that if default_input_value is specified the number of values matches the number of monitored_values
+
+        """
+        # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
+        #                       since params have not yet been validated and so self.params is not yet available
+        if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
+                raise ObjectiveError("The number of items specified for the default_input_values arg ({}) of {} "
+                                     "must match the number of items specified for its monitored_values arg ({})".
+                                     format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
+
+        super()._validate_variable(variable=variable, context=context)
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate monitor argument
+        """Validate `monitored_values`, `role` and `names <ObjectiveMechanism.names>` arguments
+
         """
 
         super()._validate_params(request_set=request_set,
@@ -409,31 +418,32 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                  format(target_set[ROLE], self.name))
 
         if target_set[NAMES]:
-            if len(target_set[NAMES]) != len(target_set[MONITOR]):
+            if len(target_set[NAMES]) != len(target_set[MONITORED_VALUES]):
                 raise ObjectiveError("The number of items in \'names\'arg ({}) must equal of the number in the "
-                                     "\`monitor\` arg for {}".
-                                     format(len(target_set[NAMES]), len(target_set[MONITOR]), self.name))
+                                     "\`monitored_values\` arg for {}".
+                                     format(len(target_set[NAMES]), len(target_set[MONITORED_VALUES]), self.name))
 
             for name in target_set[NAMES]:
                 if not isinstance(name, str):
                     raise ObjectiveError("it in \'names\'arg ({}) of {} is not a string".
                                          format(target_set[NAMES], self.name))
 
-        #region VALIDATE MONITORED STATES (for use by ControlMechanism)
+        #region VALIDATE MONITORED VALUES
+        # FIX: IS THE FOLLOWING STILL TRUE:
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
         #       as it can reference entries in that param
         try:
-            if not target_set[MONITOR_FOR_CONTROL] or target_set[MONITOR_FOR_CONTROL] is NotImplemented:
+            if not target_set[MONITORED_VALUES] or target_set[MONITORED_VALUES] is NotImplemented:
                 pass
             # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
+            elif isinstance(target_set[MONITORED_VALUES], MonitoredOutputStatesOption):
                 # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-                target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
+                target_set[MONITORED_VALUES] = [target_set[MONITORED_VALUES]]
             # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
             else:
                 # Validate each item of MONITOR_FOR_CONTROL
-                for item in target_set[MONITOR_FOR_CONTROL]:
-                    validate_monitored_state(self, item, context=context)
+                for item in target_set[MONITORED_VALUES]:
+                    validate_monitored_value(self, item, context=context)
                 # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
                 # FIX:     INDICATING THAT IT WILL BE IGNORED;
                 # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
@@ -454,110 +464,152 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 #                        format(num_weights, num_monitored_states))
         except KeyError:
             pass
-        #endregion
+
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate input state for each outputState specified in `monitor <Objective.monitor>` arg
+        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
 
-          Note:  assumes that `monitor <Objective.monitor>` has been parse into a list of outputStates
-                 in _validate_monitored_state()
         """
+        num_values = len(self.monitored_values)
+        values = [None] * num_values
+        names = self.names or [None] * num_values
 
-        # Clear self.variable, as items will be assigned in call(s) to _instantiate_input_state_for_monitored_state()
-        self.variable = None
+        # If default_input_value arg (assigned to variable in __init__) was used to specify the size of inputStates,
+        #   pass those values for use in instantiating inputStates
+        if self.variable is not None:
+            input_state_sizes = self.variable
+        else:
+            input_state_sizes = values
+        for i, monitored_value, name in zip(range(num_values), self.monitored_values, names):
+            values[i] = self._instantiate_input_state_for_monitored_value(input_state_sizes[i],
+                                                                          monitored_value,
+                                                                          name,
+                                                                          context=context)
 
-        from PsyNeuLink.Components.States.OutputState import OutputState
+        # If self.variable was not specified, construct from values of inputStates
+        if self.variable is None:
+            # If all items of self.variable are numeric and of the same length, convert to ndarray
+            dim_axis_0 = len(values)
+            dim_axis_1 = len(values[0])
+            if all((is_numeric(values[i]) and len(values[i])==dim_axis_1) for i in range(dim_axis_0)):
+                self.variable = np.zeros((dim_axis_0,dim_axis_1), dtype=float)
+            # Otherwise, just use list of values returned from instantiation above
+            else:
+                self.variable = values.copy()
 
-        # Instantiate inputState for each monitored state in the list
-        # from Components.States.OutputState import OutputState
+        self.variableClassDefault = self.variable.copy()
+        self.inputValue = list(self.variable)
 
-        # FIX: PARSE LIST HERE, STANDARDINZING FORMAT INTO (ITEM, (WEIGHT, EXPONENT)) TUPLES
-        # FIX: SHOULD THIS RESPECT SPECIFICATIONS ON THE MECHANISM (OR, IF NOT SPECIFIED THERE, THE SYSTEM)
-        # FIX:    FOR WHICH OUTPUT STATES TO INCLUDE?  -- SEE _get_monitored_states IN EVCMechanism
-        # FIX:    IF OUTPUTSTATES MONITOR_FOR_CONTROL = NONE, THEN WARN AND IGNORE (DON'T CREATE INPUTSTATE)
-        #     if isinstance(item, OutputState):
-        #         self._instantiate_input_state_for_monitored_state(item, context=context)
-        #     elif isinstance(item, Mechanism):
-        #         for output_state in item.outputStates:
-        #             self._instantiate_input_state_for_monitored_state(output_state, context=context)
-        #     else:
-        #         raise ObjectiveError("PROGRAM ERROR: outputState specification ({0}) slipped through that is "
-        #                              "neither an OutputState nor Mechanism".format(item))
 
-        names = self.names or [None] * len(self.monitor)
-        for monitored_state, name in zip(self.monitor, names):
-            self._instantiate_input_state_for_monitored_state(monitored_state, name, context=context)
-
-        # self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
-        self.inputValue = self.variableClassDefault = self.variable.copy() * 0.0
-
-    def _instantiate_input_state_for_monitored_state(self,monitored_state, name=None, context=None):
+    def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
 
-        Validate specification for state to be monitored
-        Instantiate the inputState (assign name, and value of monitored_state)
-        Extend self.variable by one item to accommodate new inputState
+        Validate specification for value to be monitored (using call to validate_monitored_value)
+        Instantiate the inputState (assign name if specified, and value of monitored_state)
+        Re-specify corresponding item of variable to match the value of the new inputState
         Update self.inputState and self.inputStates
-        Instantiate MappingProjection to inputState from monitored_state
+        Call _instantiate_monitoring_projection() to instantiate MappingProjection to inputState
+            if an outputState has been specified.
 
-        Args:
-            input_state_name (str):
-            input_state_value (2D np.array):
-            context:
+        Parameters
+        ----------
+        monitored_value (value, InputState, OutputState, Mechanisms, str, dict, or MonitoredOutputStateOption)
+        name (str)
+        context (str)
 
-        Returns:
-            input_state (InputState):
+        Returns
+        -------
 
         """
-        input_state_value = monitored_state.value
-        input_state_name = name or monitored_state.owner.name + '_' + monitored_state.name + '_Monitor'
-
-        # First, test for initialization conditions:
-
-        # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
-        if self.variable is None:
-            self.variable = np.atleast_2d(input_state_value)
-
-        # If there is a single item in self.variable, it could be the one assigned on initialization
-        #     (in order to validate ``function`` and get its return value as a template for self.value);
-        #     in that case, there should be no inputStates yet, so pass
-        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
-        elif len(self.variable) == 1:
-            try:
-                self.inputStates
-            except AttributeError:
-                # If there are no inputStates, this is the usual initialization condition;
-                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
-                pass
-            else:
-                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
-        # Other than on initialization (handled above), it is a PROGRAM ERROR if
-        #    the number of inputStates is not equal to the number of items in self.variable
-        elif len(self.variable) != len(self.inputStates):
-            raise ObjectiveError("PROGRAM ERROR:  The number of inputStates ({}) does not match "
-                                 "the number of items found for the variable attribute ({}) of {}"
-                                 "when creating {}".
-                                 format(len(self.inputStates),
-                                        len(self.variable),
-                                        self.name,input_state_name))
-
-        # Extend self.variable to accommodate new inputState
-        else:
-            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
-
-        # variable_item_index = self.variable.size-1
-        variable_item_index = self.variable.shape[0]-1
-
-        # Instantiate inputState
-        from PsyNeuLink.Components.States.State import _instantiate_state
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
         from PsyNeuLink.Components.States.InputState import InputState
+        from PsyNeuLink.Components.States.OutputState import OutputState
+
+        call_for_projection = False
+        value = DEFAULT_MONITORED_VALUE
+        input_state_name = name
+        input_state_params = None
+
+        # If monitored_value is a value:
+        # - create default InputState using monitored_value as its variable specification
+        if _is_value_spec(monitored_value):
+            value = monitored_value
+            input_state_name = name or self.name + MONITORED_VALUE_NAME_SUFFIX
+
+        # If monitored_value is an InputState:
+        # - use InputState's variable, params, and name
+        elif isinstance(monitored_value, InputState):
+            value = monitored_value.variable
+            # Note: name specified in names argument of constructor takes precedence over existing name of inputState
+            input_state_name = name or monitored_value.name
+            input_state_params = monitored_value.params
+
+        # If monitored_value is a specification dictionary for an InputState:
+        elif isinstance(monitored_value, InputState):
+            try:
+                value = monitored_value[VARIABLE]
+                # Note: name specified in a specification dictionary takes precedence over names argument in constructor
+                input_state_name = monitored_value[NAME]
+                input_state_params = monitored_value[INPUT_STATE_PARAMS]
+            except KeyError:
+                if (value == DEFAULT_MONITORED_VALUE and
+                            input_state_name is name and
+                            input_state_params is None):
+                    raise ObjectiveError("Specification dictionary in monitored_values arg for {}"
+                                         "did not contain any entries relevant to an inputState".format(self.name))
+                else:
+                    pass
+
+        elif isinstance(monitored_value, tuple):
+            monitored_value = monitored_value[0]
+            # FIX:
+            # IF IT IS A STRING, LOOK FOR OUTPUTSTATE OR MECHANISM WITH THAT NAME AND REASSIGN??
+
+        # If monitored_value is an OutputState:
+        # - match inputState to the value of the outputState's value
+        # - and specify the need for a projection from it
+        elif isinstance(monitored_value, OutputState):
+            value = monitored_value.value
+            input_state_name = name or monitored_value.owner.name + MONITORED_VALUE_NAME_SUFFIX
+            call_for_projection = True
+            
+        # If monitored_value is a Mechanism:
+        # - match inputState to the value of its primary outputState
+        # - and specify the need for a projection from it
+        elif isinstance(monitored_value, Mechanism):
+            value = monitored_value.outputState.value
+            input_state_name = name or monitored_value.name + MONITORED_VALUE_NAME_SUFFIX
+            call_for_projection = True
+            
+        # # If monitored_value is a MonitoredOutputStatesOption:
+        # # FIX: NOT SURE WHAT TO DO HERE YET
+        # elif isinstance(montiored_value, MonitoredOutputStateOption):
+        #     value = ???
+        #     call_for_projection = True
+
+        # If monitored_value is a string:
+        # - use as name of inputState
+        # - instantiate InputState with defalut value (1d array with single scalar item??)
+
+        elif isinstance(monitored_value, str):
+            input_state_name = monitored_value
+            value = DEFAULT_MONITORED_VALUE
+
+        # Give precedence to item specified in self.variable for inputState's variable
+        if variable is not None:
+            input_state_variable = variable
+        # Otherwise, set to value derived from monitored_value above
+        else:
+            input_state_variable = value
+
+        from PsyNeuLink.Components.States.State import _instantiate_state
         input_state = _instantiate_state(owner=self,
                                          state_type=InputState,
                                          state_name=input_state_name,
-                                         state_spec=defaultControlAllocation,
-                                         state_params=None,
-                                         constraint_value=np.array(self.variable[variable_item_index]),
-                                         constraint_value_name='Default control allocation',
+                                         state_spec=input_state_variable,
+                                         state_params=input_state_params,
+                                         constraint_value=input_state_variable,
+                                         constraint_value_name='ObjectiveMechanism inputState value',
                                          context=context)
 
         #  Update inputState and inputStates
@@ -569,11 +621,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self.inputValue = list(state.value for state in self.inputStates.values())
 
-        # Instantiate MappingProjection from monitored_state to new input_state
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        MappingProjection(sender=monitored_state, receiver=input_state, matrix=IDENTITY_MATRIX)
+# END NEW
+        
+        
+        # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
+        if call_for_projection:
+            _instantiate_monitoring_projection(sender=monitored_value, receiver=input_state, matrix=AUTO_ASSIGN_MATRIX)
 
-    def add_monitored_states(self, states_spec, context=None):
+        return input_state.value
+
+
+    def add_monitored_values(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
 
         Use by other objects to add a state or list of states to be monitored by EVC
@@ -585,19 +643,24 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             context:
         """
         states_spec = list(states_spec)
-        validate_monitored_state(self, states_spec, context=context)
+        validate_monitored_value(self, states_spec, context=context)
         self._instantiate_monitored_output_states(states_spec, context=context)
 
-def validate_monitored_state(self, state_spec, context=None):
-    """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
 
-    Called by both self._validate_params() and self.add_monitored_state()
+def validate_monitored_value(self, state_spec, context=None):
+    """Validate specification for monitored_value arg
+
+    Validate the each item of monitored_value arg is an inputState, OutputState, mechanism, string,
+    or a MonitoredOutpuStatesOption value.
+    
+    Called by both self._validate_variable() and self.add_monitored_value()
     """
     state_spec_is_OK = False
 
-    if isinstance(state_spec, MonitoredOutputStatesOption):
+    if _is_value_spec(state_spec):
         state_spec_is_OK = True
 
+    # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
     if isinstance(state_spec, tuple):
         if len(state_spec) != 3:
             raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
@@ -615,25 +678,54 @@ def validate_monitored_state(self, state_spec, context=None):
                                  format(state_spec, self.name, state_spec[0]))
 
         # Set state_spec to the output_state item for validation below
-        state_spec = state_spec[0]
+        state_spec_is_OK = True
+    # MODIFIED 2/22/17 END
 
     from PsyNeuLink.Components.States.OutputState import OutputState
-    if isinstance(state_spec, (Mechanism, OutputState)):
+    if isinstance(state_spec, (InputState, OutputState, Mechanism)):
+        state_spec_is_OK = True
+
+    if isinstance(state_spec, dict):
         state_spec_is_OK = True
 
     if isinstance(state_spec, str):
-        # FIX: TEST THAT STR IS THE NAME OF AN OUTPUTSTATER OF A MECHANISM IN THE SELF.SYSTEM
-        # if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
-        if any(state_spec in m.outputStates for m in self.system.mechanisms):
-            state_spec_is_OK = True
-    try:
-        self.outputStates[state_spec]
-    except (KeyError, AttributeError):
-        pass
-    else:
+        # Will be used as the name of the inputState
         state_spec_is_OK = True
+
+    if isinstance(state_spec, MonitoredOutputStatesOption):
+        state_spec_is_OK = True
+
+    # try:
+    #     self.outputStates[state_spec]
+    # except (KeyError, AttributeError):
+    #     pass
+    # else:
+    #     state_spec_is_OK = True
 
     if not state_spec_is_OK:
         raise ObjectiveError("Specification of state to be monitored ({0}) by {1} is not "
-                             "a Mechanism, OutputState, the name of one, or a MonitoredOutputStatesOption value".
+                             "a value, Mechanism, OutputState, string, dict, or a value of MonitoredOutputStatesOption".
                              format(state_spec, self.name))
+
+
+def _objective_mechanism_role(mech, role):
+    if isinstance(mech, ObjectiveMechanism):
+        if mech.role is role:
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def _is_value_spec(spec):
+    if isinstance(spec, (int, float, list, np.ndarray)):
+        return True
+    else:
+        return False
+
+
+# IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
+def _instantiate_monitoring_projection(sender, receiver, matrix=DEFAULT_MATRIX):
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    MappingProjection(sender=sender, receiver=receiver, matrix=matrix)

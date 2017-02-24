@@ -28,7 +28,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Control Parameters
-# signalSearchRange = np.arange(0, 5.1, 0.1)
+# signalSearchRange = np.arange(0, 5.1, 0.5)
 signalSearchRange = np.arange(0, 1, 0.5)
 
 # Stimulus Mechanisms
@@ -173,7 +173,7 @@ def show_results():
 
 
 # Plot system:
-mySystem.show_graph()
+# mySystem.show_graph()
 
 # Run system:
 

@@ -102,7 +102,7 @@ and/or the role they play in a system:
 
     `MONITORING`: monitors the value of another mechanism for use in learning;
 
-    `TARGET`: ComparatorMechanism that monitors a `TERMINAL` mechanism of a process
+    `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` mechanism of a process
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
@@ -187,9 +187,8 @@ input for only a single trial is provided, and only a single trial is executed. 
 can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
 one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned to the
-`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of `ComparatorMechanisms <ComparatorMechanism>`
+of execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
+`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the system's `TARGET` mechanisms
 (see learning below;  also, see `Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
@@ -258,8 +257,8 @@ from PsyNeuLink.Components.Process import ProcessInputState, ProcessList, Proces
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismTuple,\
                                                        OBJECT_ITEM, PARAMS_ITEM, PHASE_ITEM
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
-                                                                                      COMPARATOR_TARGET
+# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
+#                                                                                       target_mech_TARGET_input_state
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
@@ -320,6 +319,7 @@ def system(default_input_value=None,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            # learning:tc.optional(_is_learning_spec)=None,
+           learning_rate:tc.optional(parameter_spec)=None,
            targets:tc.optional(tc.any(list, np.ndarray))=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
@@ -333,7 +333,8 @@ def system(default_input_value=None,
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
-    targets=None                              \
+    learning_rate=None,                       \
+    targets=None,                             \
     params=None,                              \
     name=None,                                \
     prefs=None)
@@ -400,12 +401,15 @@ def system(default_input_value=None,
             implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
     COMMENT
 
+    learning_rate : float : None
+        set the learning rate for all mechanisms in the system (see `learning_rate` attribute for additional
+        information).
+
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
-        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of each
-        `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
-        number of items as there are `targetMechanisms`, and each item must have the same format (length and number
-        of elements) as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
-        `TARGET` mechanism.
+        the values assigned to the TARGET input of each `TARGET` mechanism in the system (listed in its
+        `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
+        and each item must have the same format (length and number of elements) as the TARGET input
+        for each of the corresponding `TARGET` mechanism.
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -442,6 +446,7 @@ def system(default_input_value=None,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
                        # learning=learning,
+                       learning_rate=learning_rate,
                        targets=targets,
                        params=params,
                        name=name,
@@ -458,6 +463,7 @@ class System_Base(System):
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
     monitor_for_control=`None`,               \
+    learning_rate=None,                       \
     targets=None,                             \
     params=None,                              \
     name=None,                                \
@@ -553,6 +559,13 @@ class System_Base(System):
         indicates whether learning is being used;  is set to True if learning is specified for any processes
         in the system or for the system itself.
 
+    learning_rate : float : default None
+        determines the learning rate for all mechanisms in the system.  This overrides any values set for the
+        function of individual LearningProjections, and persists for all subsequent runs of the system.  If it is
+        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
+        (either directly, or following a run of any process or system to which the LearningProjection belongs and
+        for which a learning_rate was set).
+
     targets : 2d nparray : default zeroes
         used as template for the values of the system's `targetInputStates`, and to represent the targets specified in
         the :keyword:`targets` argument of system's `execute <System.execute>` and `run <System.run>` methods.
@@ -610,9 +623,9 @@ class System_Base(System):
             Tuples for all MonitoringMechanisms in the system (used for learning).
 
         .. _target_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all ComparatorMechanisms  in the system that are a `TERMINAL` for at least on process
-            to which it belongs and that process has learning enabled --  the criteria for being a target used in
-            learning.
+            Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the system that are a `TERMINAL`
+            for at least on process to which it belongs and that process has learning enabled --  the criteria for
+            being a target used in learning.
 
         .. _learning_mech_tuples : list of (mechanism, runtime_param, phaseSpec) tuples
             Tuples for all LearningMechanisms in the system (used for learning).
@@ -652,8 +665,7 @@ class System_Base(System):
     targetInputStates : List[SystemInputState]
         one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
         :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
-        provide their values to the the `target <ComparatorMechanism.ComparatorMechanism.target>` inputState of each
-        `TARGET` mechanism during execution.
+        provide their values to the the TARGET inputState of each `TARGET` mechanism during execution.
 
     COMMENT:
        IS THIS CORRECT:
@@ -733,6 +745,7 @@ class System_Base(System):
                  enable_controller=False,
                  monitor_for_control=None,
                  # learning=None,
+                 learning_rate=None,
                  targets=None,
                  params=None,
                  name=None,
@@ -744,23 +757,23 @@ class System_Base(System):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
-                                                 initial_values=initial_values,
-                                                 controller=controller,
-                                                 enable_controller=enable_controller,
-                                                 monitor_for_control=monitor_for_control,
-                                                 targets=targets,
-                                                 params=params)
+                                                  initial_values=initial_values,
+                                                  controller=controller,
+                                                  enable_controller=enable_controller,
+                                                  monitor_for_control=monitor_for_control,
+                                                  learning_rate=learning_rate,
+                                                  targets=targets,
+                                                  params=params)
 
-        # MODIFIED 12/15/16 OLD:
-        # self.pathway = None
-        # MODIFIED 12/15/16 END
         self.function = self.execute
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.stimulusInputStates = []
         self.inputs = []
+        self.current_input = None
         self.targetInputStates = []
         self.targets = None
+        self.current_targets = None
         self.learning = False
 
         register_category(entry=self,
@@ -778,6 +791,8 @@ class System_Base(System):
                          name=self.name,
                          prefs=prefs,
                          context=context)
+
+        self._execution_id = None
 
         # Get/assign controller
 
@@ -838,7 +853,7 @@ class System_Base(System):
         # # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
         # self.variable = convert_to_np_array(self.variable, 2)
-# FIX:  THIS CURRENTLY FAILS:
+        # FIX:  THIS CURRENTLY FAILS:
         # # MODIFIED 6/26/16 NEW:
         # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
         # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
@@ -1010,6 +1025,8 @@ class System_Base(System):
             if isinstance(process, Process):
                 if process_input is not None:
                     process._assign_defaults(variable=process_input, context=context)
+                # if self.learning_rate and not process.learning_rate:
+                #     process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
 
             # Otherwise, instantiate Process
             else:
@@ -1018,7 +1035,7 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=process_input, context=self)
+                    process = Process(default_input_value=process_input, learning_rate=learning_rate, context=self)
                 elif isinstance(process, dict):
                     # IMPLEMENT:  HANDLE Process specification dict here;
                     #             include process_input as ??param, and context=self
@@ -1164,16 +1181,25 @@ class System_Base(System):
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
             # Assign as TERMINAL (or SINGLETON) if it:
-            #    - has no outgoing projections and
-            #    - it is not a ComparatorMechanism or
-            #      it projects only to ComparatorMechanism(s) and/or ObjectiveMechanisms used for learning
+            #    - is not an Objective Mechanism used for Learning or Control and
+            #    - has no outgoing projections or
+            #    -     only ones to ObjectiveMechanism(s) used for Learning or Control and
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
-            if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-                    all(all((isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
-                                                                   ControlMechanism_Base)) or
+            # It is not a ControlMechanism
+            if (
+
+                not (isinstance(sender_mech, ControlMechanism_Base) or
+                    # It is not an ObjectiveMechanism used for Learning or Control
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role in (LEARNING,CONTROL))) and
+                        # All of its projections
+                        all(
+                            all(
+                                # are to ControlMechanism(s)...
+                                isinstance(projection.receiver.owner, ControlMechanism_Base) or
+                                 # or ObjectiveMechanism(s) used for Learning or Control
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                  projection.receiver.owner.role is LEARNING))
+                                             projection.receiver.owner.role in (LEARNING, CONTROL))
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
                 try:
@@ -1371,13 +1397,10 @@ class System_Base(System):
 
             mech = mech_tuple.mechanism
 
-            if (isinstance(mech, MonitoringMechanism_Base) or
-                    (isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING))):
+            if isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING):
                 if not mech in self._monitoring_mech_tuples:
                     self._monitoring_mech_tuples.append(mech_tuple)
-
-            if isinstance(mech, ComparatorMechanism):
-                if not mech in self._target_mech_tuples:
+                if mech.learning_role is TARGET and not mech in self._target_mech_tuples:
                     self._target_mech_tuples.append(mech_tuple)
 
 
@@ -1595,34 +1618,34 @@ class System_Base(System):
 
         # Create SystemInputState for each TARGET mechanism in targetMechanisms and
         #    assign MappingProjection from the SystemInputState
-        #    to the TARGET mechanism's COMPARATOR_TARGET inputSate
+        #    to the TARGET mechanism's TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
         for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
 
-            # Create ProcessInputState for each target and assign to comparatorMechanism's target inputState
-            comparator_target = target_mech.inputStates[COMPARATOR_TARGET]
+            # Create ProcessInputState for each target and assign to targetMechanism's target inputState
+            target_mech_TARGET_input_state = target_mech.inputStates[TARGET]
 
             # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
             #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
-            if len(self.targets[i]) != len(comparator_target.variable):
+            if len(self.targets[i]) != len(target_mech_TARGET_input_state.variable):
                 raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                   "expected for its TARGET mechanism {}".
                                    format(len(self.targets[i]),
                                           self.targets[i],
-                                          len(comparator_target.variable),
+                                          len(target_mech_TARGET_input_state.variable),
                                           target_mech.name))
 
-            target_input_state = SystemInputState(owner=self,
-                                                        variable=comparator_target.variable,
+            system_target_input_state = SystemInputState(owner=self,
+                                                        variable=target_mech_TARGET_input_state.variable,
                                                         prefs=self.prefs,
                                                         name="System Target {}".format(i))
-            self.targetInputStates.append(target_input_state)
+            self.targetInputStates.append(system_target_input_state)
 
-            # Add MappingProjection from target_input_state to TARGET mechainsm's target inputState
+            # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-            MappingProjection(sender=target_input_state,
-                    receiver=comparator_target,
-                    name=self.name+' Input Projection to '+comparator_target.name)
+            MappingProjection(sender=system_target_input_state,
+                    receiver=target_mech_TARGET_input_state,
+                    name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -1651,6 +1674,8 @@ class System_Base(System):
 
     def execute(self,
                 input=None,
+                target=None,
+                execution_id=None,
                 clock=CentralClock,
                 time_scale=None,
                 # time_scale=TimeScale.TRIAL
@@ -1696,6 +1721,22 @@ class System_Base(System):
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
+
+        # Update execution_id for self and all mechanisms in graph (including learning) and controller
+        from PsyNeuLink.Globals.Run import _get_get_execution_id
+        self._execution_id = execution_id or _get_get_execution_id()
+        # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
+        # self.learningExecutionList
+        for mech in self.execution_graph_mechs:
+            mech._execution_id = self._execution_id
+        for learning_mech in self.learningExecutionList:
+            learning_mech._execution_id = self._execution_id
+        self.controller._execution_id = self._execution_id
+        if self.controller.inputStates:
+            for state in self.controller.inputStates.values():
+                for projection in state.receivesFromProjections:
+                    projection.sender.owner._execution_id = self._execution_id
+
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
@@ -1742,15 +1783,34 @@ class System_Base(System):
                     else:
                         raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
-                # MODIFIED 2/13/17 NEW:
-                # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
-                # Nullify inputs to ORIGIN mechanism from any processes
-                for input_state in list(origin_mech.inputStates.values()):
-                    for projection in input_state.receivesFromProjections:
-                        if isinstance(projection.sender, ProcessInputState):
-                            # projection.sender.value = None
-                            projection.sender.value *= 0
-                # MODIFIED 2/13/17 END
+                # # MODIFIED 2/20/17 CHECK:
+                # # MODIFIED 2/13/17 NEW:
+                # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
+                # # Nullify inputs to ORIGIN mechanism from any processes
+                # for input_state in list(origin_mech.inputStates.values()):
+                #     for projection in input_state.receivesFromProjections:
+                #         if isinstance(projection.sender, ProcessInputState):
+                #             # projection.sender.value = None
+                #             projection.sender.value *= 0
+                # # MODIFIED 2/13/17 END
+
+            # Note: the following assumes that the order of the items in targets is aligned with
+            #       the order of the TARGET mechanisms in the sytem's targetMechanisms list;
+            #       it is tested for dict format in run._construct_stimulus_sets,
+            #       but can't be insured for list format.
+            # For each TARGET mechanism in the system's targetMechanismList
+            for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+            # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+            #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+                self.targetInputStates[i].value = self.current_targets[i]
+
+                # # MODIFIED 2/20/17 CHECK:
+                # # REMOVE THIS WHEN EXECUTE_ID IS IMPLEMENTED
+                # # Nullify inputs to TARGET mechanism from any processes
+                # for process_target_projection in \
+                #         target_mech.inputStates[target_mech_TARGET_input_state].receivesFromProjections:
+                #     if isinstance(process_target_projection.sender, ProcessInputState):
+                #         process_target_projection.sender.value = process_target_projection.sender.value * 0
 
         self.input = input
         #endregion
@@ -1766,32 +1826,26 @@ class System_Base(System):
         #     print(self.executionList[i][0].name)
         # sorted_list = list(mech_tuple[0].name for mech_tuple in self.executionList)
 
+        # # MODIFIED 2/21/17 NEW:
+        # if self.learning:
+        #     context = context + LEARNING
         # MODIFIED 12/21/16 NEW:
+        # Execute system without learning on projections (that will be taken care of in _execute
         self._execute_processing(clock=clock, context=context)
-        # self._execute_processing(clock=clock, time_scale=time_scale, context=context)
-        # MODIFIED 12/21/16 END
         #endregion
 
         # region EXECUTE LEARNING FOR EACH PROCESS
-
         # FIX: NEED TO CHECK PHASE HERE
         # Don't execute learning for simulation runs
         if not EVC_SIMULATION in context:
-
-            # MODIFIED 12/21/16 NEW:
             # IMPLEMENT: EXECUTE self.learningGraph HERE:  EXECUTE MECHANISMS AND PROJECTIONS
             # Execute each Mechanism in self.executionList, in the order listed during its phase
-            # self._execute_learning(context=context)
-            # self._execute_learning(context=context.replace("EXECUTING", "LEARNING"))
             self._execute_learning(clock=clock, context=context + LEARNING)
-            # self._execute_learning(clock=clock, time_scale=time_scale, context=context + LEARNING)
-            # MODIFIED 12/21/16 END
-
+        TEST = True
         # endregion
 
 
         #region EXECUTE CONTROLLER
-
 # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
 # FIX: 2) REASSIGN INPUT TO SYSTEM FROM ONE DESIGNATED FOR EVC SIMULUS (E.G., StimulusPrediction)
 
@@ -1833,13 +1887,13 @@ class System_Base(System):
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
 
-                mechanism.execute(time_scale=self.timeScale,
-                                 # time_scale=time_scale,
-                                 runtime_params=params,
-                                 clock=clock,
-                                 context=context +
-                                         "| mechanism: " + mechanism.name +
-                                         " [in processes: " + str(process_names) + "]")
+                mechanism.execute(clock=clock,
+                                  time_scale=self.timeScale,
+                                  # time_scale=time_scale,
+                                  runtime_params=params,
+                                  context=context +
+                                          "| mechanism: " + mechanism.name +
+                                          " [in processes: " + str(process_names) + "]")
 
 
                 if self._report_system_output and  self._report_process_output:
@@ -1873,10 +1927,28 @@ class System_Base(System):
 
     def _execute_learning(self, clock=CentralClock, context=None):
     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+        # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
+    # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
 
-        # MODIFIED 12/21/16 NEW: [WORKS FOR BP; PRODUCES ACCURATE BUT DELAYED (BY ONE TRIAL) RESULTS FOR RL]
+        # ASSIGNED IN Run
+        # # First assign targets to SystemInputStates:
+        # num_target_mechs = len(list(self.targetMechanisms))
+        #
+        # # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
+        # for i, targ_mech in zip(range(num_target_mechs), self.targetMechanisms):
+        #     # For each inputState of the ORIGIN mechansim
+        #     input_states = list(origin_mech.inputStates.values())
+        #     for j, input_state in zip(range(len(origin_mech.inputStates)), input_states):
+        #        # Get the input from each projection to that inputState (from the corresponding SystemInputState)
+        #         system_input_state = next(projection.sender for projection in input_state.receivesFromProjections
+        #                                   if isinstance(projection.sender, SystemInputState))
+        #         if system_input_state:
+        #             system_input_state.value = input[i][j]
+        #         else:
+        #             raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
-        # First update all MonitoringMechanisms
+
+        # Update all MonitoringMechanisms
         for component in self.learningExecutionList:
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
@@ -1909,6 +1981,10 @@ class System_Base(System):
 
             if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
                 continue
+            # MODIFIED 2/21/17 NEW:
+            if not isinstance(component, MappingProjection):
+                raise SystemError("PROGRAM ERROR:  Attempted learning on non-MappingProjection")
+            # MODIFIED 2/21/17 END
 
             component_type = "mappingProjection"
             processes = list(component.sender.owner.processes.keys())
@@ -1924,13 +2000,16 @@ class System_Base(System):
                                      component.name,
                                      re.sub('[\[,\],\n]','',str(process_names))))
 
+            # MODIFIED 2/21/17 OLD:
             # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
-            component.execute(clock=clock,
-                              time_scale=self.timeScale,
-                              # time_scale=time_scale,
-                              context=context_str)
+            # component.execute(clock=clock,
+            #                   time_scale=self.timeScale,
+            #                   # time_scale=time_scale,
+            #                   context=context_str)
+            # MODIFIED 2/21/17 NEW:
+            component.parameterStates[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
-            # # TEST PRINT:
+            # TEST PRINT:
             # print ("EXECUTING WEIGHT UPDATES: ", component.name)
 
         if self._report_system_output and self._report_process_output:
@@ -2089,6 +2168,11 @@ class System_Base(System):
                       format(mech_tuple.mechanism.name,
                              re.sub('[\[,\],\n]','',str(["{:0.3}".
                                                 format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
+        if self.learning:
+            from PsyNeuLink.Components.Projections.LearningProjection import TARGET_MSE
+            for mech in self.targetMechanisms:
+                print("\n- MSE: {:0.3}".
+                      format(float(mech.outputStates[TARGET_MSE].value)))
 
 
     # TBI:
