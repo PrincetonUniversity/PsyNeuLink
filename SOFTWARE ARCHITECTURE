@@ -257,9 +257,10 @@ Description: Princeton University licenses this file to You under the Apache Lic
      validate_xxx methods are all called (usually in super.__init__) before any instantiate_xxx methods
          validate_xxx methods perform a (syntactic) check to:
              - determine if required items are present
-             - deterimne if items are of the correct type relative to instance or class default
+             - determine if items are of the correct type relative to instance or class default
              - assign defaults where appropriate for invalid entries, with warning if in VERBOSE mode
              - NOT whether items are compatible with other entities (i.e., it is not a "semantic" check)
+               (this is because often some objects have not yet been instantiated until instantiate_xxx method)
          instantiate_xxx methods perform a (semantic) check to:
              - determine if item is compatible with others
                  (e.g., variable or output of one is compatible with value of another)

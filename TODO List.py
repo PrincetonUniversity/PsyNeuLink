@@ -661,6 +661,11 @@
 # TEST: RUN TIMING TESTS FOR paramValidationPref TURNED OFF
 #
 # TEST warnings.warn
+
+# IMPLEMENT:  Replace class checking (isclass) with:
+#                if any(i in {None, Mechanism, OutputState, ObjectiveMechanism} for
+#                      i in {self.objective_mechanism, type(self.objective_mechanism)}):
+
 #
 # IMPLEMENT:  typecheck name arg in constructors to be a str
 #
