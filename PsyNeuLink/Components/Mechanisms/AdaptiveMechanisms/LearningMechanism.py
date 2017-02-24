@@ -6,10 +6,10 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *******************************************  LearningProjection **********************************************************
+# *******************************************  LearningMechanism *******************************************************
 
 """
-.. _LearningProjection_Overview:
+.. _LearningMechanism_Overview:
 
 Overview
 --------
@@ -244,6 +244,7 @@ from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.WeightedErrorMechanis
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
@@ -283,7 +284,7 @@ TARGET_MSE = "TARGET_MSE"
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
-class LearningProjectionError(Exception):
+class LearningMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
@@ -291,7 +292,7 @@ class LearningProjectionError(Exception):
         return repr(self.error_value)
 
 
-class LearningProjection(Projection_Base):
+class LearningMechanism(AdaptiveMechanism_Base:
     """
     LearningProjection(                      \
                  sender=None,                \
