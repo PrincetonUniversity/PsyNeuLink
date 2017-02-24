@@ -2105,9 +2105,14 @@ class System_Base(System):
         Returns
         -------
 
-        <system>.results : List[outputState.value]
-            list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
-            each execution.
+        COMMMENT:
+            OLD;  CORRECT?
+            <system>.results : List[outputState.value]
+                list of the value of the outputState for each `TERMINAL` mechanism of the system returned for
+                each execution.
+        COMMMENT
+        <system>.results : List[Mechanism.OutputValue]
+            list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
 
         """
         from PsyNeuLink.Globals.Run import run
