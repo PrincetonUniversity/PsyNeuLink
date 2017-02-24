@@ -278,7 +278,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_sample_and_target : Optional[List[array, array] or 2d np.array]
+    default_input_value : Optional[List[array, array] or 2d np.array]
         the input to the ComparatorMechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods.
         The first item is the `COMPARATOR_SAMPLE` item of the input and the second is the `COMPARATOR_TARGET`
