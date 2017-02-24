@@ -305,17 +305,15 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     COMMENT:
         Description:
-            The LearningProjection class is a componentType in the Projection category of Function.
-            It implements a projection to the parameterState of a MappingProjection that modifies its matrix parameter.
-            It's execute method takes the output of a MonitoringMechanism (self.variable), and the input and output of
-                the ProcessingMechanism to which its receiver MappingProjection projects, and generates a matrix of
-                weight changes for the MappingProjection's matrix parameter.
+            LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
+            It implements a mechanism that calculates changes to a projection's parameters.
+            It's function takes the output of an ObjectiveMechanism (self.variable) and generates a
+            learning_signal (2d arry of parameter changes) to be used by the recipient of a LearningProjection
+            that projects from the LearningMechanism to a MappingProjection.
 
         Class attributes:
-            + className = LEARNING_PROJECTION
-            + componentType = PROJECTION
-            # + defaultSender (State)
-            # + defaultReceiver (State)
+            + className = LEARNING_MECHANISM
+            + componentType = ADAPTIVE_MECHANISM
             + paramClassDefaults (dict):
                 + FUNCTION (Function): (default: BP)
                 + FUNCTION_PARAMS:
@@ -325,12 +323,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
         Class methods:
-            function (computes function specified in params[FUNCTION]
+            None
+
+        MechanismRegistry:
+            All instances of LearningMechanism are registered in MechanismRegistry, which maintains an
+              entry for the subclass, a count for all instances of it, and a dictionary of those instances
     COMMENT
 
     Arguments
     ---------
-    sender : Optional[MonitoringMechanism or OutputState of one]
+    error_signal : value
         the source of the `error_signal` for the LearningProjection. If it is not specified, one will be
         `automatically created <LearningProjection_Automatic_Creation>` that is appropriate for the
         LearningProjection's `errorSource <LearningProjection.errorSource>`.
@@ -364,18 +366,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
     sender : OutputState of MonitoringMechanism
         source of `error_signal`.
 
-    receiver : ParameterState of MappingProjection
-        parameterState for the `matrix <MappingProjection.MappingProjection.matrix>` parameter of
-        the `mappingProjection` to be modified by the LearningProjection.
-
-    mappingProjection : MappingProjection
-        the `MappingProjection` that owns the `parameterState <ParameterState>` to which the
-        LearningProjection projects (i.e., that owns its `receiver <LearningProjection.receiver>`).
-
-    mappingWeightMatrix : 2d np.array
-        the `matrix <MappingProjection.MappingProjection.matrix>` parameter to be modified by learning
-        (i.e., that belongs to the `mappingProjection`).
-
     errorSource : ProcessingMechanism
         the mechanism to which `mappingProjection` projects, and that is used to calculate the `error_signal`.
 
@@ -385,20 +375,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `mappingWeightMatrix`.
 
     variable : 1d np.array
-        COMMENT:
-            WRONG?  CORRECTED BELOW
-            same as :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
-        COMMENT
         same as `error_signal`.
 
-    weightChangeMatrix : 2d np.array
-        matrix of changes to be made to the `mappingWeightMatrix` (rows correspond to sender, columns to receiver).
-
     value : 2d np.array
-        same as `weightChangeMatrix`.
+        same as `learning_signal`.
+
+    learning_signal : 2d np.array
+        changes to be used by recipient of `LearningProjection` to adjust its parameters (e.g., matrix weights);
+        same as `variable <LearningMechanism.variable>`.
 
     name : str : default LearningProjection-<index>
-        the name of the LearningProjection.
+        the name of the LearningMechanism.
         Specified in the `name` argument of the constructor for the projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -426,6 +413,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  error_signal:is_numeric=None,
+                 objective_mechanism:ObjectiveMechanism=None,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic),
                  params=None,
