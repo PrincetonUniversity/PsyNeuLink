@@ -74,7 +74,7 @@ a ControlMechanism can be done in the following places:
   based on one of the other specification methods below.
 ..
 * **Mechanism**: the outputState of a particular mechanism can be designated to be monitored, by specifying it in the
-  `MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the mechanism's `params` argument.  The value
+  `MONITORED_VALUES` entry of a parameter specification dictionary in the mechanism's `params` argument.  The value
   of the entry must be either a list containing the outputState(s) and/or their name(s),
   a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a `MonitoredOutputStatesOption` value, or `None`.
   The values of `MonitoredOutputStatesOption` are treated as follows:
@@ -200,7 +200,6 @@ class ObjectiveMechanismError(Exception):
         return repr(self.error_value)
 
 
-# class ObjectiveMechanism(MonitoringMechanism_Base):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """Implement ObjectiveMechanism subclass
     """
@@ -561,10 +560,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 else:
                     pass
 
-        elif isinstance(monitored_value, tuple):
-            monitored_value = monitored_value[0]
-            # FIX:
-            # IF IT IS A STRING, LOOK FOR OUTPUTSTATE OR MECHANISM WITH THAT NAME AND REASSIGN??
+        # elif isinstance(monitored_value, tuple):
+        #     monitored_value = monitored_value[0]
+        #     # FIX:
+        #     # IF IT IS A STRING, LOOK FOR OUTPUTSTATE OR MECHANISM WITH THAT NAME AND REASSIGN??
 
         # If monitored_value is an OutputState:
         # - match inputState to the value of the outputState's value
@@ -648,39 +647,18 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self._instantiate_monitored_output_states(states_spec, context=context)
 
 
-def validate_monitored_value(self, state_spec, context=None):
+def validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg
 
     Validate the each item of monitored_value arg is an inputState, OutputState, mechanism, string,
     or a MonitoredOutpuStatesOption value.
     
-    Called by both self._validate_variable() and self.add_monitored_value()
+    Called by both self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states()
     """
     state_spec_is_OK = False
 
     if _is_value_spec(state_spec):
         state_spec_is_OK = True
-
-    # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
-    if isinstance(state_spec, tuple):
-        if len(state_spec) != 3:
-            raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
-                                 "has {2} items;  it should be 3".
-                                 format(state_spec, self.name, len(state_spec)))
-
-        if not isinstance(state_spec[1], numbers.Number):
-            raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                 "must be a number".
-                                 format(state_spec, self.name, state_spec[0]))
-
-        if not isinstance(state_spec[2], numbers.Number):
-            raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                 "must be a number".
-                                 format(state_spec, self.name, state_spec[0]))
-
-        # Set state_spec to the output_state item for validation below
-        state_spec_is_OK = True
-    # MODIFIED 2/22/17 END
 
     from PsyNeuLink.Components.States.OutputState import OutputState
     if isinstance(state_spec, (InputState, OutputState, Mechanism)):
@@ -696,12 +674,25 @@ def validate_monitored_value(self, state_spec, context=None):
     if isinstance(state_spec, MonitoredOutputStatesOption):
         state_spec_is_OK = True
 
-    # try:
-    #     self.outputStates[state_spec]
-    # except (KeyError, AttributeError):
-    #     pass
-    # else:
+    # # 2/23/17: MOVED TO EVCMechanism
+    # # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
+    # from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+    # if isinstance(objective_mech, EVCMechanism) and isinstance(state_spec, tuple):
+    #     if len(state_spec) != 3:
+    #         raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+    #                              "has {2} items;  it should be 3".
+    #                              format(state_spec, objective_mech.name, len(state_spec)))
+    #     if not isinstance(state_spec[1], numbers.Number):
+    #         raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+    #                              "must be a number".
+    #                              format(state_spec, objective_mech.name, state_spec[0]))
+    #     if not isinstance(state_spec[2], numbers.Number):
+    #         raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+    #                              "must be a number".
+    #                              format(state_spec, objective_mech.name, state_spec[0]))
+    #     # Set state_spec to the output_state item for validation below
     #     state_spec_is_OK = True
+    # # MODIFIED 2/22/17 END
 
     if not state_spec_is_OK:
         raise ObjectiveMechanismError("Specification of state to be monitored ({0}) by {1} is not "
