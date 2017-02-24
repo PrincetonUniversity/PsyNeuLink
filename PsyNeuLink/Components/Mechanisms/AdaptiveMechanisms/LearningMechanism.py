@@ -269,7 +269,6 @@ def _is_learning_spec(spec):
     else:
         return _is_projection_spec(spec)
 
-
 kwWeightChangeParams = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
