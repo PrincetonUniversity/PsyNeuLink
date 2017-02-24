@@ -420,7 +420,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  error_signal:is_numeric=None,
-                 objective_mechanism:tc.optional(Mechanism, OutputState)=None,
+                 error_source:Mechanism=None,
                  function=BackPropagation(learning_rate=1,
                                           activation_function=Logistic),
                  params=None,
@@ -428,10 +428,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
 
-        variable = error_signal
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(objective_mechanism=objective_mechanism,
+        params = self._assign_args_to_param_dicts(error_source=error_source,
                                                   function=function,
                                                   params=params)
 
@@ -439,6 +437,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.init_args = locals().copy()
         # self.init_args['context'] = self
         # self.init_args['name'] = name
+        # delete self.init_args[ERROR_SIGNAL]
+        # delete self.init_args[ERROR_SOURCE]
 
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION
@@ -449,90 +449,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-    # IMPLEMENTATION NOTE: Redundant with typecheck??
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate objective_mechanism
-        """
+        """Validate that error_source has a function with a differential
 
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        """
+        super()._validate_params(self, request_set=request_set, target_set=target_set, context=context)
 
         try:
-            objective_mech_spec = target_set[OBJECTIVE_MECHANISM]
-        except KeyError:
-            pass
-        else:
-            if objective_mech_spec and not any(m in {None, ObjectiveMechanism, OutputState, Mechanism} for
-                                               m in {objective_mech_spec, type(objective_mech_spec)}):
-                raise LearningMechanismError("Specification for {} arg of {} must ({}) must be "
-                                             "a Mechanism, OutputState or \`ObjectiveMechanism\`".
-                                             format(OBJECTIVE_MECHANISM, self.name, target_set[OBJECTIVE_MECHANISM]))
 
-
-    def _instantiate_attributes_before_function(self, context=None):
-        """Override super to call _instantiate_receiver before calling _instantiate_objective_mechanism
-
-        Parse objective_mechanism specification, call for implementation if necessary (including a MappingProjection
-        from it to the LearningMechanism's primary inputState), assign its outputState to _objective_mechanism_output,
-        and verify that this is compatible with error_signal.
-
-        FROM LearningProjection:  [STILL NEEDED??]
-        Call _instantiate_receiver first since both _instantiate_objective_mechanism and _instantiate_function
-            reference the receiver's (i.e., MappingProjection's) weight matrix: self.mappingProjection.matrix
-
-        """
-        # IMPLEMENTATION NOTE: _instantiate_receiver usually follows _instantiate_function,
-        #                      and uses self.value (output of function) to validate against receiver.variable.
-        #                      See LearningProjection for more elaborate explanations
-        # GET/INSTANTIATE LEARNING PROJECTION AND ITS RECEIVER
-        self._instantiate_receiver(context)
-
-        # If objective_mechanism is not specified, defer to Composition for instantiation
-        if self.objective_mechanism is None:
-            # FIX: RETURN HERE?  HOW TO HANDLE NON-INSTANTIATED _objective_mechanism_output?
-            pass
-        # If objective_mechanism is specified by class, call module method to instantiate one
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE HANDLED BY Composition ONCE IT IS IMPLEMENTED
-        elif self.objective_mechanism is ObjectiveMechanism:
-            self.objective_mechanism = _instantiate_objective_mechanism(self, context=context)
-
-        else:
-            raise LearningMechanismError("PROGRAM ERROR: invalid type for objective_mechanism pass validation")
-
-        if self.objective_mechanism:
-            # If _objective_mechanism_output is already an outputState, assign it to _objective_mechanism_output
-            if isinstance(self.objective_mechanism, OutputState):
-                self._objective_mechanism_output = self.objective_mechanism
-
-            # If objective_mechanism is specified as a Mechanism,
-            #    assign _objective_mechanism_output to the mechanism's primary OutputState
-            if isinstance(self.objective_mechanism, Mechanism):
-                self._objective_mechanism_output = self.objective_mechanism.outputState
-
-            # Validate that _objective_mechanism_output is a 1D np.array
-            if not isinstance(self._objective_mechanism_output, (list, np.ndarray)):
-                raise LearningMechanismError("The output of the objective_mechanism for {} must be a list or 1D array".
-                                             format(self.name, sender))
-            if not np.array(self._objective_mechanism_output).ndim == 1:
-                raise LearningMechanismError("The output of the objective_mechanism for {} must be an 1D array".
-                                          format(self.name, self.name))
-
-            # Validate that _objective_mechanism_output matches format of error_signal
-            if not iscompatible(self.error_signal, self._objective_mechanism_output.value):
-                raise LearningMechanismError("The output ({}) of objective_mechanism ({}) must match the "
-                                             "error_signal {} for {} in its length and type of elements".
-                                             format(self._objective_mechanism_output.value,
-                                                    self.objective_mechanism,
-                                                    self.error_signal,
-                                                    self.name))
-
-            # Validate that there is a MappingProjection from objective_mechanism
-            #    to the LearningMechanism's primary inputState
-            if not any(self.objective_mechanism.output is p for p in self.inputState.receivesFromProjections):
-                raise LearningMechanismError("{} does not have a MappingProjection from "
-                                             "its specified objective_mechanism ({})".
-                                             format(self.name, self.objective_mechanism.name))
-
-        super()._instantiate_attributes_before_function(context)
 
 
     def _execute(self,
@@ -548,6 +472,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
             - source:  output of ObjectiveMechanism
             - destination: MappingProjection parameterState by way of LearningProjection
 
+        error_source
+            - mechanism that receives projection being learned
+
         function:
             BackPropagation learning algorithm (Generalized Delta Rule - :ref:`<LINK>`):
                 weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
@@ -555,8 +482,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 for logistic activation function: transferDerivative = sample * (1-sample)
             NEEDS:
             - error_signal (from ObjectiveMechanism or equivalent)
-            - errorDerivative:  get from FUNCTION of ComparatorMechanism??
-            - transferDerivative:  get from FUNCTION of Processing Mechanism
+            - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
+            - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
 
         :return: (2D np.array) self.learning_signal
         """
@@ -592,6 +519,87 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
 
     # WIZZARD METHODS **************************************************************************************************
+
+def object_mechanism_wizzard(recipient:Mechanism,
+                             objective_mechanism_spec:tc.optional(Mechanism, OutputState, ObjectiveMechanism)=None,
+                             output_spec=None
+                             ):
+    """Override super to call _instantiate_receiver before calling _instantiate_objective_mechanism
+
+    Parse `objective_mechanism_spec` specification and call for implementation if necessary, including a
+        `MappingProjection` from it to the recipient's `primary inputState <Mechanism_InputStates>`.
+    Assign its outputState to _objective_mechanism_output.
+    Verify that outputState's value is compatible with `error_signal`.
+
+
+    FROM LearningProjection:  [STILL NEEDED??]
+    Call _instantiate_receiver first since both _instantiate_objective_mechanism and _instantiate_function
+        reference the receiver's (i.e., MappingProjection's) weight matrix: self.mappingProjection.matrix
+
+    """
+
+    # IMPLEMENTION NOTE:  REDUNDANT WITH typecheck?
+    # Validate objective_mechanism_spec
+    if objective_mech_spec and not any(m in {None, ObjectiveMechanism, OutputState, Mechanism} for
+                                       m in {objective_mech_spec, type(objective_mech_spec)}):
+        raise LearningMechanismError("Specification for {} arg of {} must ({}) must be "
+                                     "a Mechanism, OutputState or \`ObjectiveMechanism\`".
+                                     format(OBJECTIVE_MECHANISM, self.name, target_set[OBJECTIVE_MECHANISM]))
+
+    # If objective_mechanism_spec is not specified, defer to Composition for instantiation
+    if objective_mechanism_spec is None:
+        # FIX: RETURN HERE?  HOW TO HANDLE NON-INSTANTIATED _objective_mechanism_output?
+        pass
+    # If objective_mechanism_spec is specified by class, call module method to instantiate one
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE HANDLED BY Composition ONCE IT IS IMPLEMENTED
+    elif objective_mechanism_spec is ObjectiveMechanism:
+        objective_mechanism_spec = _instantiate_objective_mechanism(self, context=context)
+
+    else:
+        raise LearningMechanismError("PROGRAM ERROR: invalid type for objective_mechanism_spec pass validation")
+
+    objective_mechanism_output = None
+
+    if objective_mechanism_spec:
+        # If _objective_mechanism_output is already an outputState, assign it to _objective_mechanism_output
+        if isinstance(objective_mechanism_spec, OutputState):
+            objective_mechanism_output = objective_mechanism_spec
+
+        # If objective_mechanism_spec is specified as a Mechanism,
+        #    assign _objective_mechanism_output to the mechanism's primary OutputState
+        if isinstance(objective_mechanism_spec, Mechanism):
+            objective_mechanism_output = objective_mechanism_spec.outputState
+
+        if not objective_mechanism_output:
+            raise LearningMechanismError("PROGRAMM ERROR: objective_mechanism_spec requested for {} not recognized ".
+                                         format(recipient.name))
+
+        # Validate that _objective_mechanism_output is a 1D np.array
+        if not isinstance(objective_mechanism_output, (list, np.ndarray)):
+            raise LearningMechanismError("The output of the objective_mechanism_spec for {} must be a list or 1D array".
+                                         format(self.name, sender))
+        if not np.array(objective_mechanism_output).ndim == 1:
+            raise LearningMechanismError("The output of the objective_mechanism_spec for {} must be an 1D array".
+                                      format(self.name, self.name))
+
+        # Validate that _objective_mechanism_output matches format of error_signal
+        if not iscompatible(self.error_signal, objective_mechanism_output.value):
+            raise LearningMechanismError("The output ({}) of objective_mechanism_spec ({}) must match the "
+                                         "error_signal {} for {} in its length and type of elements".
+                                         format(objective_mechanism_output.value,
+                                                objective_mechanism_spec,
+                                                self.error_signal,
+                                                self.name))
+
+        # Validate that there is a MappingProjection from objective_mechanism_spec
+        #    to the LearningMechanism's primary inputState
+        if not any(objective_mechanism_spec.output is p for p in self.inputState.receivesFromProjections):
+            raise LearningMechanismError("{} does not have a MappingProjection from "
+                                         "its specified objective_mechanism_spec ({})".
+                                         format(self.name, objective_mechanism_spec.name))
+
+        return objective_mechanism
+
 
 
     def _instantiate_receiver(self, context=None):
