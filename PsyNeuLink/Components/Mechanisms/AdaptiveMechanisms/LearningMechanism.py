@@ -332,14 +332,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     Arguments
     ---------
-    error_signal : value
-        the source of the `error_signal` for the LearningProjection. If it is not specified, one will be
-        `automatically created <LearningProjection_Automatic_Creation>` that is appropriate for the
-        LearningProjection's `errorSource <LearningProjection.errorSource>`.
+    error_signal : Optional[value]
+        the value of the `error_signal` used to compute the `error_signal`.
 
-    receiver : Optional[MappingProjection or ParameterState for ``matrix`` parameter of one]
-        the `parameterState <ParameterState>` (or the `MappingProjection` that owns it) for the
-        `matrix <MappingProjection.MappingProjection.matrix>` to be modified by the LearningProjection.
+    objective_mechanism : Optional[ObjectiveMechanism or OutputState]
+        specifies the `ObjectiveMechanism` or its `outputState <OutputState>` to use as source of the `error_signal`.
+
+    function : LearningFunction or function
+        specifies function to use to compute the `learning_signal` from the `error_signal`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -363,14 +363,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     componentType : LEARNING_PROJECTION
 
-    sender : OutputState of MonitoringMechanism
-        source of `error_signal`.
-
     errorSource : ProcessingMechanism
         the mechanism to which `mappingProjection` projects, and that is used to calculate the `error_signal`.
 
     error_signal : 1d np.array
-        output of `errorSource <LearningProjection.errorSource>` (`sender <LearningProjection.sender>`) used as the
+        output of `objective_mechanism` used
+        as the
         input for the LearningProjection's `function <LearningProjection.function>`, to determine changes to the
         `mappingWeightMatrix`.
 
@@ -379,6 +377,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     value : 2d np.array
         same as `learning_signal`.
+
+    objective_mechanism : Optional[ObjectiveMechanism or OutputState]
+        the `ObjectiveMechanism` or its `outputState <OutputState>` that provides the `error_signal` used to compute
+        the `learning_signal`.
 
     learning_signal : 2d np.array
         changes to be used by recipient of `LearningProjection` to adjust its parameters (e.g., matrix weights);
