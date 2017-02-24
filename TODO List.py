@@ -30,11 +30,10 @@
 #                                            Matrix - IDENTITY MATRIX
 #                                            Derivative - Linear
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
-#     5) Get rid of tuple processing in ObjectiveMechanism (leave that as an EVC contrivance)
-#     6) Purge all MonitoringMechanism components and references (including DefaultMonitoringMechanism)
-#     7) ??Bother to make Comparator sublcass of ObjectiveMechanism
+#     5) Purge all MonitoringMechanism components and references (including DefaultMonitoringMechanism)
+#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
-#     8) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
+#     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
