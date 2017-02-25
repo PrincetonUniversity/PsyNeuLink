@@ -258,6 +258,7 @@ kwComponentCategory = "Function_Base"
 PROCESSING_MECHANISM = "ProcessingMechanism"
 MONITORING_MECHANISM = "MonitoringMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
+LEARNING_MECHANISM = "LearningMechanism"
 
 # States:
 INPUT_STATE = "InputState"
@@ -400,6 +401,7 @@ kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
 kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
 # TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
 #endregion
+
 
 #region ------------------------------------------    CONTROL MECHANISM   ----------------------------------------------
 

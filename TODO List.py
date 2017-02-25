@@ -56,7 +56,6 @@
 #                       mapping_projection.sender -> inputStates[INPUT] of LearningMechanism
 #                       error_source.outputState -> inputStates[OUTPUT] of LearningMechanism
 #
-#
 #             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
 #             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
 #
