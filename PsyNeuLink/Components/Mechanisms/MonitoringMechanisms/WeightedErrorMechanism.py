@@ -317,7 +317,11 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
         # Compute derivative of error with respect to current output of next mechanism
         output_derivative = derivative_fct(output=next_level_output)
-        error_derivative = error * output_derivative
+
+        #         dE/dW   =  dE/dA  *  dA/dW
+        # OUTPUT:             t-a   *  a(1-a) [for logistic]
+        # HIDDEN:            wt_err *  a(1-a) [for logistic]
+        error_derivative  =  error  * output_derivative
 
         # Compute error terms for each unit of current mechanism weighted by contribution to error in the next one
         self.weighted_error_signal = np.dot(next_level_matrix, error_derivative)

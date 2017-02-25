@@ -850,136 +850,6 @@ class LinearCombination(CombinationFunction): # --------------------------------
 # FIX: CONFIRM THAT RETURNS LIST IF GIVEN A LIST
         return result
 
-class WeightedError(CombinationFunction):
-    """Calculate the contribution of each sender to the error signal based on the weight matrix
-
-    Description:
-
-    Initialization arguments:
-     - variable (1d np.array or list, 1d np.rarray or list): activity vector and error vector, respectively
-     - matrix (2d np.array or List(list))
-     - derivative (function or method)
-    WeightedError.function returns dot product of matrix and error * derivative of activity
-    Returns 1d np.array (error_signal)
-    """
-
-    componentName = WEIGHTED_ERROR_FUNCTION
-
-    classPreferences = {
-        kwPreferenceSetName: 'WeightedErrorCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
-        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
-    }
-
-    variableClassDefault = [[0], [0]]
-    # variableClassDefault_locked = True
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
-    @tc.typecheck
-    def __init__(self,
-                 variable_default,
-                 matrix=None,
-                 # derivative:is_function_type,
-                 derivative=None,
-                 params=None,
-                 prefs:is_pref_set=None,
-                 context=componentName+INITIALIZING):
-
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  derivative=derivative,
-                                                  params=params)
-
-        super().__init__(variable_default=variable_default,
-                         params=params,
-                         prefs=prefs,
-                         context=context)
-
-    def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
-
-        Args:
-            variable:
-            context:
-        """
-        super()._validate_variable(variable=variable, context=context)
-
-        # FIX: MAKE SURE VARIABLE ndim = 2
-        variable = np.array(variable)
-        # self.variable = np.atleast_2d(variable)
-
-        # variable must have two 1d items
-        if variable.shape[0] != 2:
-            raise FunctionError("variable for {} ({0}) must have two arrays (activity and error vectors)".
-                               format(self.__class__.__name__, variable))
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that dimensions of matrix are compatible with activity and error vectors in variable
-        """
-        super()._validate_params(request_set=request_set,
-                              target_set=target_set,
-                              context=context)
-
-        matrix = target_set[MATRIX].value
-
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not isinstance(target_set[MATRIX], ParameterState):
-            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-                                format(matrix, self.__class__.__name__))
-
-        try:
-            activity_len = len(self.variable[0])
-        except TypeError:
-            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        try:
-            error_len = len(self.variable[1])
-        except TypeError:
-            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        if activity_len != error_len:
-            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-                format(activity_len, error_len, self.__class__.__name__))
-
-        if not isinstance(matrix, (np.ndarray, np.matrix)):
-            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-        if matrix.ndim != 2:
-            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-                               format(self.__class__.__name__, matrix.ndim))
-
-        cols = matrix.shape[1]
-        if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-                                     " must equal length of error vector ({})".
-                                     format(cols,self.__class__.__name__,error_len))
-
-        if not isinstance(target_set['derivative'],(function_type, method_type)):
-            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-
-    def function(self,
-                variable=None,
-                params=None,
-                time_scale=TimeScale.TRIAL,
-                context=None):
-
-        self._check_args(variable, params, context)
-
-        activity = self.variable[0]
-        error = self.variable[1]
-        matrix = self.matrix.value
-
-        activity_derivative = self.derivative(output=activity)
-        error_derivative = error * activity_derivative
-
-        return np.dot(matrix, error_derivative)
-
-
 #region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 #endregion
 
@@ -2584,6 +2454,136 @@ MATRIX_INPUT = 0
 ACTIVATION_OUTPUT = 1
 ACTIVATION_ERROR = 2
 
+class ErrorDerivative(LearningFunction):
+    """Calculate the contribution of each sender to the error signal based on the weight matrix
+
+    Description:
+
+    Initialization arguments:
+     - variable (1d np.array or list, 1d np.rarray or list): activity vector and error vector, respectively
+     - matrix (2d np.array or List(list))
+     - derivative (function or method)
+    WeightedError.function returns dot product of matrix and error * derivative of activity
+    Returns 1d np.array (error_signal)
+    """
+
+    componentName = ERROR_DERIVATIVE_FUNCTION
+
+    classPreferences = {
+        kwPreferenceSetName: 'ErrorDerivativeCustomClassPreferences',
+        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+    }
+
+    variableClassDefault = [[0], [0]]
+    # variableClassDefault_locked = True
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
+    @tc.typecheck
+    def __init__(self,
+                 variable_default,
+                 # matrix=None,
+                 # derivative:is_function_type,
+                 derivative=None,
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(derivative=derivative,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+    def _validate_variable(self, variable, context=None):
+        """Insure that all items of list or np.ndarray in variable are of the same length
+
+        Args:
+            variable:
+            context:
+        """
+        super()._validate_variable(variable=variable, context=context)
+
+        # FIX: MAKE SURE VARIABLE ndim = 2
+        variable = np.array(variable)
+        # self.variable = np.atleast_2d(variable)
+
+        # variable must have two 1d items
+        if variable.shape[0] != 2:
+            raise FunctionError("variable for {} ({0}) must have two arrays (activity and error vectors)".
+                               format(self.__class__.__name__, variable))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Insure that dimensions of matrix are compatible with activity and error vectors in variable
+        """
+        super()._validate_params(request_set=request_set,
+                              target_set=target_set,
+                              context=context)
+
+        # # matrix = target_set[MATRIX].value
+
+        # from PsyNeuLink.Components.States.ParameterState import ParameterState
+        # if not isinstance(target_set[MATRIX], ParameterState):
+        #     raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
+        #                         format(matrix, self.__class__.__name__))
+        #
+        # try:
+        #     activity_len = len(self.variable[0])
+        # except TypeError:
+        #     raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
+        #
+        # try:
+        #     error_len = len(self.variable[1])
+        # except TypeError:
+        #     raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
+        #
+        # if activity_len != error_len:
+        #     raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
+        #         format(activity_len, error_len, self.__class__.__name__))
+        #
+        # if not isinstance(matrix, (np.ndarray, np.matrix)):
+        #     raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
+        #                         format(matrix, self.__class__.__name__))
+        #
+        # if matrix.ndim != 2:
+        #     raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
+        #                        format(self.__class__.__name__, matrix.ndim))
+        #
+        # cols = matrix.shape[1]
+        # if  cols != error_len:
+        #     raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
+        #                              " must equal length of error vector ({})".
+        #                              format(cols,self.__class__.__name__,error_len))
+
+        if not isinstance(target_set['derivative'],(function_type, method_type)):
+            raise FunctionError("\'derivative\' arg ({}) for {} must be an ndarray or matrix".
+                                format(target_set[DERIVATIVE], self.__class__.__name__))
+
+
+    def function(self,
+                variable=None,
+                params=None,
+                time_scale=TimeScale.TRIAL,
+                context=None):
+
+        self._check_args(variable, params, context)
+
+        activity = self.variable[0]
+        error = self.variable[1]
+        matrix = self.matrix.value
+
+        activity_derivative = self.derivative(output=activity)
+        #     dE/dW          dE/dA  *       dA/dW
+        error_derivative  =  error  *  activity_derivative
+
+        return error_derivative
+
+
 
 class Reinforcement(LearningFunction): # -------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the reinforcement (delta) learning rule
@@ -2724,6 +2724,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
+                 matrix=None,
                  learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
@@ -2731,6 +2732,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_function=activation_function,
+                                                  matrix=matrix,
                                                  learning_rate=learning_rate,
                                                  params=params)
 
@@ -2758,6 +2760,44 @@ class BackPropagation(LearningFunction): # -------------------------------------
         self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
         super()._instantiate_function(context=context)
 
+        # # matrix = target_set[MATRIX].value
+
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        if not isinstance(target_set[MATRIX], ParameterState):
+            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
+                                format(matrix, self.__class__.__name__))
+
+        try:
+            activity_len = len(self.variable[0])
+        except TypeError:
+            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
+        try:
+            error_len = len(self.variable[1])
+        except TypeError:
+            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
+
+        if activity_len != error_len:
+            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
+                format(activity_len, error_len, self.__class__.__name__))
+
+        if not isinstance(matrix, (np.ndarray, np.matrix)):
+            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
+                                format(matrix, self.__class__.__name__))
+
+        if matrix.ndim != 2:
+            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
+                               format(self.__class__.__name__, matrix.ndim))
+
+        cols = matrix.shape[1]
+        if  cols != error_len:
+            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
+                                     " must equal length of error vector ({})".
+                                     format(cols,self.__class__.__name__,error_len))
+
+
+
+
     def function(self,
                 variable=None,
                 params=None,
@@ -2775,13 +2815,15 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
+        matrix = self.paramsCurrent[MATRIX]
         input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
         output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
         error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
-        weight_change_matrix = learning_rate * input * derivative * error
+        weighted_error =  np.dot(matrix, error)
+        weight_change_matrix = learning_rate * input * derivative * weighted_error
 
         return weight_change_matrix
 
