@@ -890,12 +890,11 @@ FROM TODO:
                     objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
                                                                        next_level_objective_mech_output],
                                                               names=['ACTIVITY','ERROR_SIGNAL'],
-                                                              function=WeightedError(variable_default=[activity,
+                                                              function=ErrorDerivative(variable_default=[activity,
                                                                                                        error_signal],
-                                                                                     matrix=matrix,
-                                                                                     derivative=derivative),
+                                                                                       derivative=derivative),
                                                               role=LEARNING,
-                                                              name=self.mappingProjection.name + " Weighted_Error")
+                                                              name=self.mappingProjection.name + " Error_Derivative")
                 # TERMINAL Mechanism
                 # errorSource at next level does NOT project to an ObjectiveMechanism:
                 #     instantiate ObjectiveMechanism configured as a comparator
@@ -930,8 +929,7 @@ FROM TODO:
                     objective_mechanism = ObjectiveMechanism(default_input_value=[sample_size, target_size],
                                                              monitored_values=[sample_source, target_size],
                                                              names=[SAMPLE,TARGET],
-                                                             # FIX: WILL THESE BE SUPERCEDED BY ASSIGNMENT IN OBJMECH?
-                                                             # FIX: WHY DO THEY EACH HAVE TO BE AN ARRAY HERE??
+                                                             # FIX: WHY DO WEIGHTS HAVE TO BE AN ARRAY HERE??
                                                              function=LinearCombination(weights=[[-1], [1]]),
                                                              role=LEARNING,
                                                              params= {OUTPUT_STATES:
@@ -946,36 +944,6 @@ FROM TODO:
                                                                             CALCULATE:lambda x: np.sum(x*x)/len(x)}]},
                                                              name=self.mappingProjection.name + " Target_Error")
                     objective_mechanism.learning_role = TARGET
-
-                    # FIX: 1) NEED TO ASSIGN AN OutputState TO MONITOR FOR THE TARGET:
-                    #      2  USE TARGET ProcessInputStates / SystemInputStates??
-                    # FIX:
-                    # FIX: 2) NEED TO AUGMENT OBJECTIVE MECHANISM TO TAKE MATRIX ARGUMENT
-                    # FIX:    OR A SET OF INPUT STATE SPECIFICATIONS (WHICH CAN JUST BE VALUES)
-                    # FIX:        AND THEN INFER THE TYPE OF MATRIX, OR BOTH,
-                    # FIX:    WITH DEFAULT TO SIMPLY MATCH INPUT STATE TO MONITOR LIST AND USE IDENTITY MATRIX AS NOW
-
-                    # FIX: STILL NEEDED, IF OBJECTIVE MECHANISM IMPLEMENTS ITS OWN MAPPING PROJECTIONS?
-                    # Instantiate a MappingProjection from the errorSource to the DefaultTrainingMechanism
-                    # try:
-                    #     monitored_state = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
-                    #     monitored_state = self.errorSource.outputStates[monitored_state]
-                    # except KeyError:
-                    #     # No speicific outputState specified so use Mechanism as sender arg
-                    #     monitored_state = self.errorSource
-                    #
-                    # if self.function.componentName is BACKPROPAGATION_FUNCTION:
-                    #     matrix = IDENTITY_MATRIX
-                    # # Force sample and target of ComparatorMechanism to be scalars for RL
-                    # elif self.function.componentName is RL_FUNCTION:
-                    #     matrix = FULL_CONNECTIVITY_MATRIX
-                    # self.monitoring_projection = MappingProjection(sender=monitored_state,
-                    #                                      receiver=objective_mechanism.inputStates[COMPARATOR_SAMPLE],
-                    #                                      name=self.errorSource.name +
-                    #                                           ' to '+
-                    #                                           objective_mechanism.name+' ' +
-                    #                                           MAPPING_PROJECTION+' Projection',
-                    #                                      matrix=matrix)
 
             self.sender = objective_mechanism.outputState
 

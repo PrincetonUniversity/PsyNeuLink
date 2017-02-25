@@ -436,14 +436,29 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 error_signal:is_numeric,
-                 error_source:Mechanism,
-                 function=BackPropagation(learning_rate=1,
-                                          activation_function=Logistic),
+                 input:(list, np.ndarray),
+                 activation_derivative:function_type,
+                 error_derivative:function_type,
+                 error_matrix:np.ndarray,
+                 function:function_type=BackPropagation,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
+        """
+        WIZZARD:
+            Assign activation_derivative
+            Assign error_derivative
+            Assign error_matrix
+            Assign mapping projections from:
+                  mapping projection (one being learned) sender -> input
+                  error_source output -> output
+
+            For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
+            For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
+        """
+
+
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(error_source=error_source,
