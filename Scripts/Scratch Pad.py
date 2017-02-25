@@ -22,14 +22,17 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETE
 from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
+from PsyNeuLink.Components.Functions.Function import ErrorDerivative
+
+derivative = lambda x:1
+
+wef = ErrorDerivative(variable=[[0,0],[0,0]],derivative=derivative)
 
 #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
-               name='Decision')
-
-Decision.execute()
-
+# Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
+#                name='Decision')
+#
+# Decision.execute()
 
 #endregion
 
