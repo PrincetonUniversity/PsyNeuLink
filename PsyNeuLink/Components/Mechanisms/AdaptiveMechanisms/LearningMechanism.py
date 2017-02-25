@@ -350,6 +350,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     function : LearningFunction or function
         specifies function to use to compute the `learning_signal` from the `error_signal`.
 
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
         projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
