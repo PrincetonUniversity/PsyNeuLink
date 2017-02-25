@@ -15,6 +15,61 @@
 #        IF objective_mechanism IS SPECIFIED AS A MECHANISM OR OUTPUTSTATE,
 #               a MappingProjection WITH AN IDENTITY MATRIX IS IMPLEMENTED FROM IT TO THE LearningMechanism
 
+
+# IMPLEMENT: LearningMechanism:
+#         PROCESS & SYSTEM:
+#           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
+#           • Use only one ObjectiveMechanism for all levels with the following args:
+#                 default_input_value[[ACTIVITY][ERROR]]
+#                 monitored_values: [[next_level_mech.OutputState][next_level_mech.objective_mechanism.OutputState]]
+#                 names: [[ACTIVITY][ERROR]]
+#                 function:  ErrorDerivative(variable, derivative)
+#                                variable[0] = activity
+#                                variable[1] = error_signal from next_level_mech ObjectiveMechanism (target for TERMINAL)
+#                                derivative = error_derivative (1 for TERMINAL)
+#                 role:LEARNING
+#           • Use only one Learning mechanism with the following args:
+#                 variable[[ACTIVATION_INPUT_INDEX][ACTIVATION_SAMPLE_INDEX][ERROR_SIGNAL_INDEX]
+#                 activation_derivative
+#                 error_matrix
+#                 function
+#             Initialize and assign args with the following WIZZARD:
+#         WIZZARD:
+#             Needs to know
+#                 activation_sample_mech (Mechanism)
+#                     activation_derivative (function)
+#                 next_level_mech (Mechanism)
+#                     error_derivative (function)
+#                     error_matrix (ndarray) - for MappingProjection from activation_sample_mech to next_level_mech
+#             ObjectiveMechanism:
+#                 Initialize variable:
+#                       use next_level_mech.outputState.valuee to initialize variable[ACTIVITY]
+#                       use outputState.value of next_level_mech's objective_mechanism to initialize variable[ERROR]
+#                 Assign mapping projections:
+#                       nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
+#                       nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
+#                 NOTE: For TERMINAL mechanism:
+#                           next_level_mech is Process or System InputState (function=Linear, so derivative =1), so that
+#                              next_level_mech.outputState.value is the target, and
+#                              error_derivative = 1
+#                              error_matrix = IDENTITY_MATRIX (this should be imposed)
+#             LearningMechanism:
+#                 Initialize variable:
+#                       use mapping_projection.sender.value to initialize variable[ACTIVATION_INPUT_INDEX]
+#                       use activation_sample_mech_outputState.value to initialize variable[ACTIVATION_SAMPLE_INDEX]
+#                       use next_level_mech.objecdtive_mechanism.OutputState.value to initialize variable[ERROR_SIGNAL_INDEX]
+#                 Assign activation_derivative using function of activation_sample_mech of mapping_projection (one being learned)
+#                 Assign error_derivative using function of next_level_mech
+#                 Assign error_matrix as runtime_param using projection to next_level_mech [ALT: ADD TO VARIABLE]
+#                 Assign mapping projections:
+#                       mapping_projection.sender -> inputStates[ACTIVATION_INPUT_INDEX] of LearningMechanism
+#                       activation_sample_mech.outputState -> inputStates[ACTIVATION_SAMPLE_INDEX] of LearningMechanism
+#                       next_level_mech.objective_mechanism.OutputState.value -> inputStates[ERROR_SIGNAL_INDEX]
+#
+#             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
+#             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
+#
+
 """
 .. _LearningMechanism_Overview:
 
@@ -278,6 +333,20 @@ def _is_learning_spec(spec):
     else:
         return _is_projection_spec(spec)
 
+# Used to index variable:
+ACTIVATION_INPUT_INDEX = 0
+ACTIVATION_SAMPLE_INDEX = 1
+ERROR_SIGNAL_INDEX = 2
+
+# Used to name inputStates:
+ACTIVATION_INPUT = 'activation_input'
+ACTIVATION_SAMPLE = 'activation_sample'
+ERROR_SIGNAL = 'error_signal'
+
+# Argument names:
+ACTIVATION_DERIVATIVE = 'activation_derivative'
+ERROR_MATRIX = 'error_matrix'
+
 WEIGHT_CHANGE_PARAMS = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
@@ -303,8 +372,10 @@ class LearningMechanismError(Exception):
 class LearningMechanism(AdaptiveMechanism_Base):
     """
     LearningMechanism(                       \
-                 error_signal=None,          \
-                 error_source=None           \
+                 variable,                   \
+                 activation_derivative       \
+                 error_derivative            \
+                 error_matrix                \
                  function=BackPropagation    \
                  learning_rate=None          \
                  params=None,                \
@@ -438,9 +509,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  variable:(list, np.ndarray),
                  activation_derivative:function_type,
-                 error_derivative:function_type,
                  error_matrix:np.ndarray,
                  function:function_type=BackPropagation,
+                 learning_rate:float=1.0,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -451,49 +522,40 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(error_source=error_source,
+        params = self._assign_args_to_param_dicts(activation_derivative=activation_derivative,
+                                                  error_matrix=error_matrix,
                                                   function=function,
+                                                  learning_rate=learning_rate,
                                                   params=params)
 
+        # # USE FOR IMPLEMENTATION OF deferred_init()
         # # Store args for deferred initialization
         # self.init_args = locals().copy()
         # self.init_args['context'] = self
         # self.init_args['name'] = name
-        # delete self.init_args[ERROR_SIGNAL]
-        # delete self.init_args[ERROR_SOURCE]
+        # delete self.init_args[ACTIVATION_DERIVATIVE]
+        # delete self.init_args[ERROR_DERIVATIVE]
+        # delete self.init_args[ERROR_MATRIX]
+        # delete self.init_args[LEARNING_RATE]
 
         # # Flag for deferred initialization
         # self.value = DEFERRED_INITIALIZATION
 
-        super().__init__(variable=error_signal,
+        super().__init__(variable=variable,
                          params=params,
                          name=name,
                          prefs=prefs,
                          context=self)
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate that error_source has a function, and a derivative if the learning function requires it
-
+    def _instantiate_input_states(self, context=None):
+        """Insure that inputState values are compatible with derivative functions and error_matrix
         """
-        super()._validate_params(self, request_set=request_set, target_set=target_set, context=context)
+        super()._instantiate_input_states(context=context)
 
-        try:
-            transfer_function = target_set[ERROR_SOURCE].function_object
-        except AttributeError:
-            raise LearningMechanismError("The error_source ({}) for {} does not have a Function".
-                                         format(target_set[ERROR_SOURCE].name,self.name))
+        # FIX: TBI
+        # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
+        #     weighted_error_signal = np.dot(error.matrix, error_signal)
 
-        if DERIVATIVE in target_set[FUNCTION].user_params:
-            try:
-                transfer_function.derivative
-            except AttributeError:
-                raise LearningMechanismError("The function ({}) of the error_source ({}) has no derivative;"
-                                             "this is required by the learning function ({}) for {}".
-                                             format(transfer_function.name,
-                                                    target_set[ERROR_SOURCE].name,
-                                                    target_set[FUNCTION].name,
-                                                    self.name))
-            self.
 
     def _execute(self,
                 variable=None,
@@ -528,28 +590,49 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # if self.value is DEFERRED_INITIALIZATION:
         #     return self.value
 
-        #Input of error_source
-        output = self.errorSource.variable
+        # OLD ********************************************************************************************************
+        # #Input of error_source
+        # output = self.errorSource.variable
+        #
+        # # Output of error_source
+        # output = self.errorSource.outputState.value
+        #
+        # error_signal = self.error_signal
+        #
+        # # CALL function TO GET WEIGHT CHANGES
+        # # rows:  sender errors;  columns:  receiver errors
+        # self.learning_signal = self.function([input, matrix, output, error_signal], params=params, context=context)
+        #
+        # if not INITIALIZING in context and self.reportOutputPref:
+        #     print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
+        #
+        # self.value = self.learning_signal
+        #
+        # # # TEST PRINT
+        # # print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
+        #
+        # return self.value
+        # OLD END *****************************************************************************************************
 
-        # Output of error_source
-        output = self.errorSource.outputState.value
+        # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
+        error_signal = self.variable[ERROR_SIGNAL_INDEX]
+        error_matrix = self.error_matrix
+        weighted_error_signal = np.dot(error.matrix, error_signal)
 
-        error_signal = self.error_signal
-
-        # CALL function TO GET WEIGHT CHANGES
-        # rows:  sender errors;  columns:  receiver errors
-        self.learning_signal = self.function([input, matrix, output, error_signal], params=params, context=context)
+        # COMPUTE LEARNING SIGNAL (dE/dW):
+        activation_input = self.variable[ACTIVATION_INPUT_INDEX]
+        activation_sample = self.variable[ACTIVATION_SAMPLE_INDEX]
+        activation_derivative = self.activation_derivative # (dA/dW)
+        self.learning_signal = self.function(input=activation_input,
+                                             output=activation_sample,
+                                             derivative=activation_derivative,
+                                             error=weighted_error_signal)
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
         self.value = self.learning_signal
-
-        # # TEST PRINT
-        # print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
-
         return self.value
-
 
     # WIZZARD METHODS **************************************************************************************************
 
