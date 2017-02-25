@@ -304,8 +304,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     """
     LearningMechanism(                       \
                  error_signal=None,          \
-                 objective_mechanism=None    \
+                 error_source=None           \
                  function=BackPropagation    \
+                 learning_rate=None          \
                  params=None,                \
                  name=None,                  \
                  prefs=None)
@@ -319,6 +320,21 @@ class LearningMechanism(AdaptiveMechanism_Base):
             It's function takes the output of an ObjectiveMechanism (self.variable) and generates a
             learning_signal (2d arry of parameter changes) to be used by the recipient of a LearningProjection
             that projects from the LearningMechanism to a MappingProjection.
+
+        Learning function:
+            Generalized delta rule:
+            dE/dW  =          learning_rate   *    dE/dA         *       dA/dW             *    I
+            weight = weight + (learning_rate  * errorDerivative  *  transferDerivative     *  input)
+            for sumSquared error fct =        (target - output)
+            for logistic activation fct =                           output * (1-output)
+            where:
+                output = activity of output (target) units (higher layer)
+                input = activity of sending units (lower layer)
+
+        NEEDS:
+        - errorDerivative:  get from FUNCTION of ComparatorMechanism
+        - transferDerivative:  get from FUNCTION of Processing Mechanism
+
 
         Class attributes:
             + className = LEARNING_MECHANISM
@@ -507,25 +523,22 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # if self.value is DEFERRED_INITIALIZATION:
         #     return self.value
 
-        # ASSIGN OUTPUT TO ERROR SOURCE
-        # Array of output values for MappingProjection's receiver mechanism
-        # output = self.mappingProjection.receiver.owner.outputState.value
-# FIX: IMPLEMENT self.unconvertedOutput AND self.convertedOutput, VALIDATE QUANTITY BELOW IN _instantiate_objective_mechanism,
-# FIX:   ASSIGN self.input ACCORDINGLY
+        #Input of error_source
+        output = self.errorSource.variable
+
+        # Output of error_source
         output = self.errorSource.outputState.value
 
-        # ASSIGN ERROR
-# FIX: IMPLEMENT self.input AND self.convertedInput, VALIDATE QUANTITY BELOW IN _instantiate_objective_mechanism, ASSIGN ACCORDINGLY
         error_signal = self.error_signal
 
         # CALL function TO GET WEIGHT CHANGES
         # rows:  sender errors;  columns:  receiver errors
-        self.weightChangeMatrix = self.function([input, output, error_signal], params=params, context=context)
+        self.learning_signal = self.function([input, matrix, output, error_signal], params=params, context=context)
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
 
-        self.value = self.weightChangeMatrix
+        self.value = self.learning_signal
 
         # # TEST PRINT
         # print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
@@ -890,7 +903,7 @@ FROM TODO:
             elif isinstance(self.mappingProjection.receiver, InputState):
                 self.errorSource = self.mappingProjection.receiver.owner
 
-            next_level_montioring_mech_output = None
+            next_level_objective_mech_output = None
 
             # Check if errorSource has a projection to an ObjectiveMechanism or some other type of ProcessingMechanism
             for projection in self.errorSource.outputState.sendsToProjections:
@@ -915,7 +928,7 @@ FROM TODO:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
                         # next_level_weight_matrix = projection.matrix
-                        next_level_montioring_mech_output = next_level_learning_projection.sender
+                        next_level_objective_mech_output = next_level_learning_projection.sender
 
             # errorSource does not project to an ObjectiveMechanism used for learning
             if not objective_mechanism:
@@ -926,16 +939,16 @@ FROM TODO:
                 #    instantiate ObjectiveMechanism configured with WeightedError Function
                 #    (computes contribution of each element in errorSource to error at level to which it projects)
                 #    and the back-projection for its error signal:
-                if next_level_montioring_mech_output:
-                    error_signal = np.zeros_like(next_level_montioring_mech_output.value)
+                if next_level_objective_mech_output:
                     next_level_output = projection.receiver.owner.outputState
                     activity = np.zeros_like(next_level_output.value)
+                    error_signal = np.zeros_like(next_level_objective_mech_output.value)
                     matrix=projection.parameterStates[MATRIX]
-                    derivative = next_level_montioring_mech_output.sendsToProjections[0].\
+                    derivative = next_level_objective_mech_output.sendsToProjections[0].\
                         receiver.owner.receiver.owner.function_object.derivative
                     from PsyNeuLink.Components.Functions.Function import WeightedError
                     objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
-                                                                       next_level_montioring_mech_output],
+                                                                       next_level_objective_mech_output],
                                                               names=['ACTIVITY','ERROR_SIGNAL'],
                                                               function=WeightedError(variable_default=[activity,
                                                                                                        error_signal],

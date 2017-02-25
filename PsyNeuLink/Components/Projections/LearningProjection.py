@@ -419,7 +419,7 @@ class LearningProjection(Projection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # variableClassDefault = [[0],[0],[0]]
+    # variableClassDefault = [[0],[0],[0]]x
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: MonitoringMechanism_Base,
@@ -843,7 +843,7 @@ FROM TODO:
             elif isinstance(self.mappingProjection.receiver, InputState):
                 self.errorSource = self.mappingProjection.receiver.owner
 
-            next_level_montioring_mech_output = None
+            next_level_objective_mech_output = None
 
             # Check if errorSource has a projection to an ObjectiveMechanism or some other type of ProcessingMechanism
             for projection in self.errorSource.outputState.sendsToProjections:
@@ -868,7 +868,7 @@ FROM TODO:
                         #     the weight matrix for the next level's projection
                         #     the MonitoringMechanism that provides error_signal
                         # next_level_weight_matrix = projection.matrix
-                        next_level_montioring_mech_output = next_level_learning_projection.sender
+                        next_level_objective_mech_output = next_level_learning_projection.sender
 
             # errorSource does not project to an ObjectiveMechanism used for learning
             if not objective_mechanism:
@@ -879,16 +879,16 @@ FROM TODO:
                 #    instantiate ObjectiveMechanism configured with WeightedError Function
                 #    (computes contribution of each element in errorSource to error at level to which it projects)
                 #    and the back-projection for its error signal:
-                if next_level_montioring_mech_output:
-                    error_signal = np.zeros_like(next_level_montioring_mech_output.value)
+                if next_level_objective_mech_output:
+                    error_signal = np.zeros_like(next_level_objective_mech_output.value)
                     next_level_output = projection.receiver.owner.outputState
                     activity = np.zeros_like(next_level_output.value)
                     matrix=projection.parameterStates[MATRIX]
-                    derivative = next_level_montioring_mech_output.sendsToProjections[0].\
+                    derivative = next_level_objective_mech_output.sendsToProjections[0].\
                         receiver.owner.receiver.owner.function_object.derivative
                     from PsyNeuLink.Components.Functions.Function import WeightedError
                     objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
-                                                                       next_level_montioring_mech_output],
+                                                                       next_level_objective_mech_output],
                                                               names=['ACTIVITY','ERROR_SIGNAL'],
                                                               function=WeightedError(variable_default=[activity,
                                                                                                        error_signal],
@@ -1097,14 +1097,6 @@ FROM TODO:
            - defaults to BP
         ?? - uses self.outputStates.sendsToProjections.<MonitoringMechanism> if specified
 
-        LearningProjection function:
-            Generalized delta rule:
-            weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
-            for sumSquared error function:  errorDerivative = (target - sample)
-            for logistic activation function: transferDerivative = sample * (1-sample)
-        NEEDS:
-        - errorDerivative:  get from FUNCTION of ComparatorMechanism
-        - transferDerivative:  get from FUNCTION of Processing Mechanism
 
         :return: (2D np.array) self.weightChangeMatrix
         """
