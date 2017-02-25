@@ -23,14 +23,26 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
+
+#region TEST WeightedError Function @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Components.Functions.Function import WeightedError
+
+derivative = lambda x:1
+
+wef = WeightedError(variable_default=[[0,0],[0,0]],derivative=derivative)
+
+print(wef.function(variable=[[1,1],[1,1]]))
+
+
 #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
-               name='Decision')
-
-Decision.execute()
-
-
+# Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
+#                name='Decision')
+#
+# Decision.execute()
+#
+#
 #endregion
 
 # for i, j in zip(range(5), range(5)):
