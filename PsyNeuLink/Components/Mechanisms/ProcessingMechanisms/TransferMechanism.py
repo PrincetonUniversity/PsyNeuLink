@@ -440,14 +440,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _instantiate_parameter_states(self, context=None):
 
-        # MODIFIED 12/22/16 NEW:
         from PsyNeuLink.Components.Functions.Function import Logistic
         # If function is a logistic, and range has not been specified, bound it between 0 and 1
         if ((isinstance(self.function, Logistic) or
                  (inspect.isclass(self.function) and issubclass(self.function,Logistic))) and
                 not list(self.range)):
             self.user_params[RANGE] = np.array([0,1])
-        # MODIFIED 12/22/16 END
 
         super()._instantiate_parameter_states(context=context)
 
