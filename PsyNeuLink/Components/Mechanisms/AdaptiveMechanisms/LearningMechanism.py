@@ -287,6 +287,7 @@ ERROR_SIGNAL_INDEX = 2
 ACTIVATION_INPUT = 'activation_input'
 ACTIVATION_SAMPLE = 'activation_sample'
 ERROR_SIGNAL = 'error_signal'
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_SAMPLE, ERROR_SIGNAL]
 
 # Argument names:
 ACTIVATION_DERIVATIVE = 'activation_derivative'
@@ -533,7 +534,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Validate that activation_input, activation_sample, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(self.variable)):
             item_num_string = ['first', 'second', 'third'][i]
-            item_name = [ACTIVATION_INPUT, ACTIVATION_SAMPLE, ERROR_SIGNAL][i]
+            item_name = input_state_names[i]
             if not np.array(self.variable[i]).ndim == 1:
                 raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
                                               format(item_num, self.name, item_name, self.variable[i]))
@@ -613,11 +614,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Insure that inputState values are compatible with derivative functions and error_matrix
         """
-        super()._instantiate_input_states(context=context)
-
         # TBI
-        # NAME the INPUTSTATES
-        # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
+        # NAME the INPUTSTATES USING input__state_names
+        # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING: ?? DONE ABOVE IN _validate_params??
         #     weighted_error_signal = np.dot(error.matrix, error_signal)
         #     error_matrix rows:  sender errors;  columns:  receiver errors
         #     BackPropagation learning algorithm (Generalized Delta Rule - :ref:`<LINK>`):
@@ -628,8 +627,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #     - error_signal (from ObjectiveMechanism or equivalent)
         #     - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
         #     - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
-
-
 
     def _execute(self,
                 variable=None,

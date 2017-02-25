@@ -83,6 +83,8 @@
 #                                            Matrix - IDENTITY MATRIX
 #                                            Derivative - Linear
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
+#     4.5): LearningMechanism:
+#              Name inputStates using input_state_names (or create them explicity using the values of variable?)
 #     5) Purge DefaultMonitoringMechanism
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
