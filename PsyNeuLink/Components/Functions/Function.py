@@ -2541,7 +2541,6 @@ class ErrorDerivative(LearningFunction):
 
         activity = self.variable[0]
         error = self.variable[1]
-        matrix = self.matrix.value
 
         activity_derivative = self.derivative(output=activity)
         #     dE/dW          dE/dA  *       dA/dW

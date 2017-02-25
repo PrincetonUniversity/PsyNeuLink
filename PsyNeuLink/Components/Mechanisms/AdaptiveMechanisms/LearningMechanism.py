@@ -436,7 +436,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 input:(list, np.ndarray),
+                 variable:(list, np.ndarray),
                  activation_derivative:function_type,
                  error_derivative:function_type,
                  error_matrix:np.ndarray,
@@ -446,16 +446,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  prefs:is_pref_set=None,
                  context=None):
         """
-        WIZZARD:
-            Assign activation_derivative
-            Assign error_derivative
-            Assign error_matrix
-            Assign mapping projections from:
-                  mapping projection (one being learned) sender -> input
-                  error_source output -> output
-
-            For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
-            For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
         """
 
 
