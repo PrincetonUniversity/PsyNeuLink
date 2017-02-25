@@ -451,7 +451,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_parameter_states(context=context)
 
-
     def _instantiate_attributes_before_function(self, context=None):
 
         self.initial_value = self.initial_value or self.variableInstanceDefault

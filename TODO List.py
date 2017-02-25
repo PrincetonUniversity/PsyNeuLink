@@ -85,6 +85,11 @@
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
 #     4.5): LearningMechanism:
 #              Name inputStates using input_state_names (or create them explicity using the values of variable?)
+#              Instantiate the MappingProjection from its ObjectiveMechanism
+#                            (as ObjectiveMechanism does, by calling modul function if not None)
+#              Need to change how learning function is specified, since no longer belongs in LearningProjection
+#                    use new keyword or tuple type for specification of Learning (instead of using LearningProjection)
+#
 #     5) Purge DefaultMonitoringMechanism
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)

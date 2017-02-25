@@ -1809,6 +1809,7 @@ class Process_Base(Process):
         for projection in projection_list:
             projection._deferred_init()
 
+            # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS?
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
