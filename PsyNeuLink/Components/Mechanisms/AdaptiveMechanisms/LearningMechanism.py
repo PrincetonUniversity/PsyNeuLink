@@ -290,6 +290,8 @@ ERROR_SIGNAL = 'error_signal'
 
 # Argument names:
 ACTIVATION_DERIVATIVE = 'activation_derivative'
+            raise LearningMechanismsError("\'matrix\' arg ({}) for {} must be a ParameterState".
+                                format(matrix, self.__class__.__name__))
 ERROR_MATRIX = 'error_matrix'
 
 WEIGHT_CHANGE_PARAMS = "weight_change_params"
@@ -380,9 +382,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         specifies the derivative of the function of the mechanism that receives the `MappingProjection` being learned
         (see `activation_derivative` for details).
 
-    error_matrix : List or 2d np.array
-        specifies the matrix for the `MappingProjection` used to generate the `error_signal` (see `error_matrix` for
-        details).
+    error_matrix : List, 2d np.array, ParameterState or MappingProjection
+        specifies the matrix used to generate the `error_signal` (see `error_matrix` for details).
 
     function : LearningFunction or function
         specifies the function used to compute the `learning_signal` (see `function <LearningMechanism.function>` for
@@ -433,7 +434,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     error_matrix : List or 2d np.array
         the matrix for the `MappingProjection` that projects *from* the mechanism that receives the MappingProjection
-        being learned, *to* the next mechanism in the process or system (i.e., the source of the `error_signal`.
+        being learned, *to* the next mechanism in the process or system, from which the `error_signal` was generated.
 
     function : LearningFunction or function : default BackPropagation
         specifies function used to compute the `learning_signal`.  Must take the following arguments:
@@ -486,7 +487,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  variable:(list, np.ndarray),
                  activation_derivative:function_type,
-                 error_matrix:np.ndarray,
+                 error_matrix:tc.any(list, np.ndarray, ParameterState, MappingProjection),
                  function:function_type=BackPropagation,
                  learning_rate:float=1.0,
                  params=None,
@@ -520,95 +521,94 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          prefs=prefs,
                          context=self)
 
-# FROM BACKPROP WITH MATRIX;  USE SOME OF THIS HERE??
+    def _validate_variable(self, variable, context=None):
 
-    # def _validate_variable(self, variable, context=None):
-    #
-    #     super()._validate_variable(variable, context)
-    #
-    #     if len(self.variable) != 3:
-    #         raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
-    #                             format(self.name, self.variable))
-    #     if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
-    #         raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
-    #                             format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
-    #
-    #     matrix = self.variable[MATRIX].value
-    #
-    #     from PsyNeuLink.Components.States.ParameterState import ParameterState
-    #     if not isinstance(self.variable[MATRIX], ParameterState):
-    #         raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-    #                             format(matrix, self.__class__.__name__))
-    #
-    #     try:
-    #         activity_len = len(self.variable[0])
-    #     except TypeError:
-    #         raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-    #
-    #     try:
-    #         error_len = len(self.variable[1])
-    #     except TypeError:
-    #         raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-    #
-    #     if activity_len != error_len:
-    #         raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-    #             format(activity_len, error_len, self.__class__.__name__))
-    #
-    #     if not isinstance(matrix, (np.ndarray, np.matrix)):
-    #         raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-    #                             format(matrix, self.__class__.__name__))
-    #
-    #     if matrix.ndim != 2:
-    #         raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-    #                            format(self.__class__.__name__, matrix.ndim))
-    #
-    #     cols = matrix.shape[1]
-    #     if  cols != error_len:
-    #         raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-    #                                  " must equal length of error vector ({})".
-    #                                  format(cols,self.__class__.__name__,error_len))
-    #
-    # def _instantiate_function(self, context=None):
-    #     """Get derivative of activation function being used
-    #     """
-    #     self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
-    #     super()._instantiate_function(context=context)
-    #
-    #     # # matrix = target_set[MATRIX].value
-    #
-    #     from PsyNeuLink.Components.States.ParameterState import ParameterState
-    #     if not isinstance(target_set[MATRIX], ParameterState):
-    #         raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-    #                             format(matrix, self.__class__.__name__))
-    #
-    #     try:
-    #         activity_len = len(self.variable[0])
-    #     except TypeError:
-    #         raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-    #
-    #     try:
-    #         error_len = len(self.variable[1])
-    #     except TypeError:
-    #         raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-    #
-    #     if activity_len != error_len:
-    #         raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-    #             format(activity_len, error_len, self.__class__.__name__))
-    #
-    #     if not isinstance(matrix, (np.ndarray, np.matrix)):
-    #         raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-    #                             format(matrix, self.__class__.__name__))
-    #
-    #     if matrix.ndim != 2:
-    #         raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-    #                            format(self.__class__.__name__, matrix.ndim))
-    #
-    #     cols = matrix.shape[1]
-    #     if  cols != error_len:
-    #         raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-    #                                  " must equal length of error vector ({})".
-    #                                  format(cols,self.__class__.__name__,error_len))
-    #
+        super()._validate_variable(variable, context)
+
+        # Validate that variable has exactly three items:  activation_input, activation_sample, and error_signal
+        if len(self.variable) != 3:
+            raise LearningMechanismsError("Variable for {} ({}) must have three items ({}, {}, and {})".
+                                format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_SAMPLE and ERROR_SIGNAL))
+
+        # Validate that activation_input, activation_sample, and error_signal are numeric and lists or 1d np.ndarrays
+        for i in range(len(self.variable)):
+            item_num_string = ['first', 'second', 'third'][i]
+            item_name = [ACTIVATION_INPUT, ACTIVATION_SAMPLE, ERROR_SIGNAL][i]
+            if not np.array(self.variable[i]).ndim == 1:
+                raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
+                                              format(item_num, self.name, item_name, self.variable[i]))
+            if not (is_numeric(self.variable[i]):
+                raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not numeric".
+                                              format(item_num, self.name, item_name, self.variable[i]))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate error_matrix specification
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # IMPLEMENTATION NOTE:  REDUNDANT WITH typecheck?
+        try:
+            error_matrix = target_set[ERROR_MATRIX]
+        except KeyError:
+            raise LearningMechanismsError("PROGRAM ERROR:  No specification for {} in {}".
+                                format(ERROR_MATRIX, self.name))
+
+        if not error_matrix in {list, np.darray, ParameterState, MappingProjection}:
+            raise LearningMechanismsError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                          "MappingProjection".format(ERROR_MATRIX, self.name))
+
+        if instance(error_matrix, MappingProjection):
+            try:
+                error_matrix = error_matrix.parameterStates[MATRIX]
+            except KeyError:
+                raise LearningMechanismsError("The MappingProjection specified for the {} arg of {} ({})"
+                                              "must have a {} paramaterState".
+                                              format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
+
+        if isinstance(error_matrix, ParameterState):
+            if not is_numeric(error_marix.value):
+                raise LearningMechanismsError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                              "is not numeric".
+                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
+
+    def _instantiate_attributes_before_function(self, context=None):
+        """Parse error_matrix specification and insure it is compatible with error_signal and actiation_sample
+        """
+        super()._instantiate_attributes_before_function(context=context)
+
+
+        activity_len = len(self.activation_sample)
+        error_len = len(self.error_signal)
+
+        # Validate that activation_sample and error_signal are the same length
+        if activity_len != error_len:
+            raise LearningMechanismsError("Items {} ({}: {}) and {} ({}: {}) of variable for {} "
+                                          "must be the same length".
+                                          format(ACTIVATION_SAMPLE_INDEX,
+                                                 ACTIVATION_SAMPLE,
+                                                 self.variable[ACTIVATION_SAMPLE_INDEX],
+                                                 ERROR_SIGNAL_INDEX,
+                                                 ERROR_SIGNAL,
+                                                 self.variable[ERROR_SIGNAL_INDEX],
+                                                 self.name))
+
+        if isinstance(self.error_matrix, MappingProjection):
+            self.error_matrix = self.error_matrix.parameterStates[MATRIX]
+
+        if isinstance(self.error_matix, ParameterState):
+            self.error_matrix = np.array(self.error_matrix.value)
+
+        if self.error_matrix.ndim != 2:
+            raise LearningMechanismsError("\'matrix\' arg for {} must be 2d (it is {})".
+                               format(self.__class__.__name__, matrix.ndim))
+
+        cols = self.error_matrix.shape[1]
+        if  cols != error_len:
+            raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
+                                     " must equal length of {} ({})".
+                                     # format(cols,MATRIX, self.__class__.__name__,error_len))
+                                     format(cols,MATRIX, self.name, ERROR_SIGNAL, error_len))
 
     def _instantiate_input_states(self, context=None):
         """Insure that inputState values are compatible with derivative functions and error_matrix
