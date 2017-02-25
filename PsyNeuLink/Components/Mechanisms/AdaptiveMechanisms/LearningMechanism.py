@@ -15,61 +15,6 @@
 #        IF objective_mechanism IS SPECIFIED AS A MECHANISM OR OUTPUTSTATE,
 #               a MappingProjection WITH AN IDENTITY MATRIX IS IMPLEMENTED FROM IT TO THE LearningMechanism
 
-
-# IMPLEMENT: LearningMechanism:
-#         PROCESS & SYSTEM:
-#           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
-#           • Use only one ObjectiveMechanism for all levels with the following args:
-#                 default_input_value[[ACTIVITY][ERROR]]
-#                 monitored_values: [[next_level_mech.OutputState][next_level_mech.objective_mechanism.OutputState]]
-#                 names: [[ACTIVITY][ERROR]]
-#                 function:  ErrorDerivative(variable, derivative)
-#                                variable[0] = activity
-#                                variable[1] = error_signal from next_level_mech ObjectiveMechanism (target for TERMINAL)
-#                                derivative = error_derivative (1 for TERMINAL)
-#                 role:LEARNING
-#           • Use only one Learning mechanism with the following args:
-#                 variable[[ACTIVATION_INPUT_INDEX][ACTIVATION_SAMPLE_INDEX][ERROR_SIGNAL_INDEX]
-#                 activation_derivative
-#                 error_matrix
-#                 function
-#             Initialize and assign args with the following WIZZARD:
-#         WIZZARD:
-#             Needs to know
-#                 activation_sample_mech (Mechanism)
-#                     activation_derivative (function)
-#                 next_level_mech (Mechanism)
-#                     error_derivative (function)
-#                     error_matrix (ndarray) - for MappingProjection from activation_sample_mech to next_level_mech
-#             ObjectiveMechanism:
-#                 Initialize variable:
-#                       use next_level_mech.outputState.valuee to initialize variable[ACTIVITY]
-#                       use outputState.value of next_level_mech's objective_mechanism to initialize variable[ERROR]
-#                 Assign mapping projections:
-#                       nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
-#                       nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
-#                 NOTE: For TERMINAL mechanism:
-#                           next_level_mech is Process or System InputState (function=Linear, so derivative =1), so that
-#                              next_level_mech.outputState.value is the target, and
-#                              error_derivative = 1
-#                              error_matrix = IDENTITY_MATRIX (this should be imposed)
-#             LearningMechanism:
-#                 Initialize variable:
-#                       use mapping_projection.sender.value to initialize variable[ACTIVATION_INPUT_INDEX]
-#                       use activation_sample_mech_outputState.value to initialize variable[ACTIVATION_SAMPLE_INDEX]
-#                       use next_level_mech.objecdtive_mechanism.OutputState.value to initialize variable[ERROR_SIGNAL_INDEX]
-#                 Assign activation_derivative using function of activation_sample_mech of mapping_projection (one being learned)
-#                 Assign error_derivative using function of next_level_mech
-#                 Assign error_matrix as runtime_param using projection to next_level_mech [ALT: ADD TO VARIABLE]
-#                 Assign mapping projections:
-#                       mapping_projection.sender -> inputStates[ACTIVATION_INPUT_INDEX] of LearningMechanism
-#                       activation_sample_mech.outputState -> inputStates[ACTIVATION_SAMPLE_INDEX] of LearningMechanism
-#                       next_level_mech.objective_mechanism.OutputState.value -> inputStates[ERROR_SIGNAL_INDEX]
-#
-#             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
-#             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
-#
-
 """
 .. _LearningMechanism_Overview:
 
@@ -406,6 +351,58 @@ class LearningMechanism(AdaptiveMechanism_Base):
         - errorDerivative:  get from FUNCTION of ComparatorMechanism
         - transferDerivative:  get from FUNCTION of Processing Mechanism
 
+        IMPLEMENT: LearningMechanism:
+            PROCESS & SYSTEM:
+              • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
+              • Use only one ObjectiveMechanism for all levels with the following args:
+                    default_input_value[[ACTIVITY][ERROR]]
+                    monitored_values: [[next_level_mech.OutputState][next_level_mech.objective_mechanism.OutputState]]
+                    names: [[ACTIVITY][ERROR]]
+                    function:  ErrorDerivative(variable, derivative)
+                                   variable[0] = activity
+                                   variable[1] = error_signal from next_level_mech ObjectiveMechanism (target for TERMINAL)
+                                   derivative = error_derivative (1 for TERMINAL)
+                    role:LEARNING
+              • Use only one Learning mechanism with the following args:
+                    variable[[ACTIVATION_INPUT_INDEX][ACTIVATION_SAMPLE_INDEX][ERROR_SIGNAL_INDEX]
+                    activation_derivative
+                    error_matrix
+                    function
+                Initialize and assign args with the following WIZZARD:
+            WIZZARD:
+                Needs to know
+                    activation_sample_mech (Mechanism)
+                        activation_derivative (function)
+                    next_level_mech (Mechanism)
+                        error_derivative (function)
+                        error_matrix (ndarray) - for MappingProjection from activation_sample_mech to next_level_mech
+                ObjectiveMechanism:
+                    Initialize variable:
+                          use next_level_mech.outputState.valuee to initialize variable[ACTIVITY]
+                          use outputState.value of next_level_mech's objective_mechanism to initialize variable[ERROR]
+                    Assign mapping projections:
+                          nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
+                          nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
+                    NOTE: For TERMINAL mechanism:
+                              next_level_mech is Process or System InputState (function=Linear, so derivative =1), so that
+                                 next_level_mech.outputState.value is the target, and
+                                 error_derivative = 1
+                                 error_matrix = IDENTITY_MATRIX (this should be imposed)
+                LearningMechanism:
+                    Initialize variable:
+                          use mapping_projection.sender.value to initialize variable[ACTIVATION_INPUT_INDEX]
+                          use activation_sample_mech_outputState.value to initialize variable[ACTIVATION_SAMPLE_INDEX]
+                          use next_level_mech.objecdtive_mechanism.OutputState.value to initialize variable[ERROR_SIGNAL_INDEX]
+                    Assign activation_derivative using function of activation_sample_mech of mapping_projection (one being learned)
+                    Assign error_derivative using function of next_level_mech
+                    Assign error_matrix as runtime_param using projection to next_level_mech [ALT: ADD TO VARIABLE]
+                    Assign mapping projections:
+                          mapping_projection.sender -> inputStates[ACTIVATION_INPUT_INDEX] of LearningMechanism
+                          activation_sample_mech.outputState -> inputStates[ACTIVATION_SAMPLE_INDEX] of LearningMechanism
+                          next_level_mech.objective_mechanism.OutputState.value -> inputStates[ERROR_SIGNAL_INDEX]
+
+                For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
+                For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
 
         Class attributes:
             + className = LEARNING_MECHANISM
@@ -552,10 +549,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
-        """
-        """
-
-
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_derivative=activation_derivative,
@@ -682,6 +675,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
         #     weighted_error_signal = np.dot(error.matrix, error_signal)
         #     error_matrix rows:  sender errors;  columns:  receiver errors
+        #     BackPropagation learning algorithm (Generalized Delta Rule - :ref:`<LINK>`):
+        #         weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
+        #         for sumSquared error function:  errorDerivative = (target - sample)
+        #         for logistic activation function: transferDerivative = sample * (1-sample)
+        #     NEEDS:
+        #     - error_signal (from ObjectiveMechanism or equivalent)
+        #     - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
+        #     - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
+
+
 
     def _execute(self,
                 variable=None,
@@ -690,24 +693,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 time_scale = TimeScale.TRIAL,
                 context=None):
         """Execute LearningMechanism function and return learning_signal
-
-        DOCUMENT:
-        error_signal
-            - source:  output of ObjectiveMechanism
-            - destination: MappingProjection parameterState by way of LearningProjection
-
-        error_source
-            - mechanism that receives projection being learned
-
-        function:
-            BackPropagation learning algorithm (Generalized Delta Rule - :ref:`<LINK>`):
-                weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
-                for sumSquared error function:  errorDerivative = (target - sample)
-                for logistic activation function: transferDerivative = sample * (1-sample)
-            NEEDS:
-            - error_signal (from ObjectiveMechanism or equivalent)
-            - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
-            - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
 
         :return: (2D np.array) self.learning_signal
         """
