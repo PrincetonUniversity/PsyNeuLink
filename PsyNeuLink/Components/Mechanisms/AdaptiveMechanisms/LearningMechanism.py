@@ -681,6 +681,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # FIX: TBI
         # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
         #     weighted_error_signal = np.dot(error.matrix, error_signal)
+        #     error_matrix rows:  sender errors;  columns:  receiver errors
 
     def _execute(self,
                 variable=None,
@@ -711,33 +712,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # # Pass during initialization (since has not yet been fully initialized
-        # if self.value is DEFERRED_INITIALIZATION:
-        #     return self.value
-
-        # OLD ********************************************************************************************************
-        # #Input of error_source
-        # output = self.errorSource.variable
-        #
-        # # Output of error_source
-        # output = self.errorSource.outputState.value
-        #
-        # error_signal = self.error_signal
-        #
-        # # CALL function TO GET WEIGHT CHANGES
-        # # rows:  sender errors;  columns:  receiver errors
-        # self.learning_signal = self.function([input, matrix, output, error_signal], params=params, context=context)
-        #
-        # if not INITIALIZING in context and self.reportOutputPref:
-        #     print("\n{} weight change matrix: \n{}\n".format(self.name, self.weightChangeMatrix))
-        #
-        # self.value = self.learning_signal
-        #
-        # # # TEST PRINT
-        # # print("\nr### WEIGHT CHANGES FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.value))
-        #
-        # return self.value
-        # OLD END *****************************************************************************************************
+        # Pass during initialization (since has not yet been fully initialized
+        if self.value is DEFERRED_INITIALIZATION:
+            return self.value
 
         # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
         weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
