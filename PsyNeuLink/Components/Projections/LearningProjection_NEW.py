@@ -209,24 +209,16 @@ class LearningProjection(Projection_Base):
         the `MappingProjection` that owns the `parameterState <ParameterState>` to which the
         LearningProjection projects (i.e., that owns its `receiver <LearningProjection.receiver>`).
 
-    mappingWeightMatrix : 2d np.array
-        the `matrix <MappingProjection.MappingProjection.matrix>` parameter to be modified by learning
-        (i.e., that belongs to the `mappingProjection`).
-
-    errorSource : ProcessingMechanism
-        the mechanism to which `mappingProjection` projects, and that is used to calculate the `error_signal`.
-
-    error_signal : 1d np.array
-        output of `errorSource <LearningProjection.errorSource>` (`sender <LearningProjection.sender>`) used as the
-        input for the LearningProjection's `function <LearningProjection.function>`, to determine changes to the
-        `mappingWeightMatrix`.
-
-    variable : 1d np.array
+    variable : 2d np.array
         COMMENT:
             WRONG?  CORRECTED BELOW
             same as :py:data:`mappingProjection <LearningProjection.mappingProjection>`.
         COMMENT
-        same as `error_signal`.
+        same as `learning_signal`.
+
+    learning_signal : 2d np.array
+        matrix of parameter (weight) changes to convey to the matrix parameter of the LearningProjection's
+        `receiver <LearningProject.receiver>` (rows correspond to sender, columns to receiver).
 
     function : Function : default Linear
         assigns the learning_signal received from `LearningMechanism` as the value of the projection.
@@ -245,7 +237,8 @@ class LearningProjection(Projection_Base):
         `LearningMechanism` will be used. 
 
     weight_change_matrix : 2d np.array
-        matrix of changes to be made to the `mappingWeightMatrix` (rows correspond to sender, columns to receiver).
+        matrix of changes to be made to the `mappingWeightMatrix` (rows correspond to sender, columns to receiver);
+        same as `value <LearningProjection.value>`.
 
     value : 2d np.array
         same as `weight_change_matrix`.
@@ -271,7 +264,7 @@ class LearningProjection(Projection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # variableClassDefault = [[0],[0],[0]]x
+    variableClassDefault = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: None, # This suppresses parameterStates
@@ -308,13 +301,17 @@ class LearningProjection(Projection_Base):
         # Flag for deferred initialization
         self.value = DEFERRED_INITIALIZATION
 
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable=variable, context=context)
+        
+        if len(variable) != 3:
+            raise <ClassTypeError>("<message>".format(<args>))
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Insure sender is a MonitoringMechanism or ProcessingMechanism and receiver is a ParameterState or
         MappingProjection
 
-        Validate sender in params[PROJECTION_SENDER] or, if not specified, sender arg:
-        - must be the outputState of a MonitoringMechanism (e.g., ComparatorMechanism or WeightedErrorMechanism)
-        - must be a list or 1D np.array (i.e., the format of an error_signal)
+        Validate that sender 
 
         Validate receiver in params[PARAMETER_STATES] or, if not specified, receiver arg:
         - must be either a MappingProjection or parameterStates[MATRIX]

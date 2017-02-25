@@ -1110,7 +1110,8 @@ class Component(object):
             # Variable passed validation, so assign as instance_default
 
 
-    def assign_params(self, request_set:dict=None):
+    @tc.typecheck
+    def assign_params(self, request_set:tc.optional(dict)=None):
         """Validates specified params, adds them TO paramsInstanceDefaults, and instantiates any if necessary
 
         Call _assign_defaults with context = COMMAND_LINE, and "validated_set" as target_set.
