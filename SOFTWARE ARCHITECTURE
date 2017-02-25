@@ -217,6 +217,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
 
 ## DESIGN PATTERNS / PRINCIPLES
 
+Keep components simple; put any necessary complexity (to make it easier for the user) in "wizzard" methods
+
 ### Components:
      Everything is a Component
      Every call (for both initialization and execution) has five standard arguments

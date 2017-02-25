@@ -2686,10 +2686,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
+
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
-                 matrix=None,
                  learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
@@ -2697,7 +2697,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(activation_function=activation_function,
-                                                  matrix=matrix,
                                                  learning_rate=learning_rate,
                                                  params=params)
 
@@ -2710,7 +2709,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
 
     def _validate_variable(self, variable, context=None):
-
         super()._validate_variable(variable, context)
 
         if len(self.variable) != 3:
@@ -2720,87 +2718,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
             raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
                                 format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
 
-        matrix = self.variable[MATRIX].value
-
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not isinstance(self.variable[MATRIX], ParameterState):
-            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-                                format(matrix, self.__class__.__name__))
-
-        try:
-            activity_len = len(self.variable[0])
-        except TypeError:
-            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        try:
-            error_len = len(self.variable[1])
-        except TypeError:
-            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        if activity_len != error_len:
-            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-                format(activity_len, error_len, self.__class__.__name__))
-
-        if not isinstance(matrix, (np.ndarray, np.matrix)):
-            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-        if matrix.ndim != 2:
-            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-                               format(self.__class__.__name__, matrix.ndim))
-
-        cols = matrix.shape[1]
-        if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-                                     " must equal length of error vector ({})".
-                                     format(cols,self.__class__.__name__,error_len))
-
-
-
-
     def _instantiate_function(self, context=None):
         """Get derivative of activation function being used
         """
         self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
         super()._instantiate_function(context=context)
-
-        # # matrix = target_set[MATRIX].value
-
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not isinstance(target_set[MATRIX], ParameterState):
-            raise FunctionError("\'matrix\' arg ({}) for {} must be a ParameterState".
-                                format(matrix, self.__class__.__name__))
-
-        try:
-            activity_len = len(self.variable[0])
-        except TypeError:
-            raise FunctionError("activity vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        try:
-            error_len = len(self.variable[1])
-        except TypeError:
-            raise FunctionError("error vector in variable for {} is \'None\'".format(self.__class__.__name__))
-
-        if activity_len != error_len:
-            raise FunctionError("length of activity vector ({}) and error vector ({}) in variable for {} must be equal".
-                format(activity_len, error_len, self.__class__.__name__))
-
-        if not isinstance(matrix, (np.ndarray, np.matrix)):
-            raise FunctionError("value of \'matrix\' arg ({}) for {} must be an ndarray nor matrix".
-                                format(matrix, self.__class__.__name__))
-
-        if matrix.ndim != 2:
-            raise FunctionError("\'matrix\' arg for {} must be 2d (it is {})".
-                               format(self.__class__.__name__, matrix.ndim))
-
-        cols = matrix.shape[1]
-        if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of \'matrix\' arg for {}"
-                                     " must equal length of error vector ({})".
-                                     format(cols,self.__class__.__name__,error_len))
-
-
-
 
     def function(self,
                 variable=None,
@@ -2819,17 +2741,16 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
-        matrix = self.paramsCurrent[MATRIX]
         input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
         output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
         error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
-        weighted_error =  np.dot(matrix, error)
-        weight_change_matrix = learning_rate * input * derivative * weighted_error
+        weight_change_matrix = learning_rate * input * derivative * error
 
         return weight_change_matrix
+
 
 #region *****************************************   OBJECTIVE FUNCTIONS ************************************************
 #endregion
