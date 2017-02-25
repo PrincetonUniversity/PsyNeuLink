@@ -615,7 +615,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
         super()._instantiate_input_states(context=context)
 
-        # FIX: TBI
+        # TBI
+        # NAME the INPUTSTATES
         # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
         #     weighted_error_signal = np.dot(error.matrix, error_signal)
         #     error_matrix rows:  sender errors;  columns:  receiver errors
