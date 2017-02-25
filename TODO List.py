@@ -88,6 +88,12 @@
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
 #     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
 #     8) EVCMechanism:  add objective_mechanism arg (as per LearningMechanism)
+#     9) Reorganize:
+#          Move ControlMechanism, DefaultControlMechanism and EVCMechanism to AdaptiveMechanism (or ModulatoryMechanism)
+#          LearningProjection and ControlProjection under AdapativeProjection (or ModulatoryProjection)
+#            Add to _validate_params that their receivers are parameterStates
+#          MappingProjection under ProcessingProjection
+#            Add to _validate_params that receiver must be an inputState
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #

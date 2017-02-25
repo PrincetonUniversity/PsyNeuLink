@@ -313,6 +313,7 @@ DDM_INTEGRATOR_FUNCTION = "DDMIntegrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
+ERROR_DERIVATIVE_FUNCTION = 'Error Derivative'
 
 #Distribution functions 
 

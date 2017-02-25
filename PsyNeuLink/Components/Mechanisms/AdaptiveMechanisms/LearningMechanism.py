@@ -507,8 +507,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
     #     Typically this is an `ObjectiveMechanism`.
 
     learning_signal : 2d np.array
-        changes to be used by recipient of `LearningProjection` to adjust its parameters (e.g., matrix weights);
-        same as `variable <LearningMechanism.variable>`.
+        matrix of changes to be used by recipient of `LearningProjection` to adjust its parameters (e.g.,
+        matrix weights, in rows correspond to sender, columns to receiver); same as `value <LearningMechanism.value>`.
 
     value : 2d np.array
         same as `learning_signal`.
