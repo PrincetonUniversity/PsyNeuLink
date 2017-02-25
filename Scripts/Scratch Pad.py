@@ -30,7 +30,6 @@ Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
 
 Decision.execute()
 
-
 #endregion
 
 # for i, j in zip(range(5), range(5)):

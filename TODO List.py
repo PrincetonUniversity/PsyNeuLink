@@ -6,6 +6,60 @@
 #   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
 #             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
 #             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
+#
+# IMPLEMENT: LearningMechanism:
+#         PROCESS & SYSTEM:
+#           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
+#           • Use only one ObjectiveMechanism for all levels with the following args:
+#                 default_input_value[[ACTIVITY][ERROR]]
+#                 monitored_values: [[next_level.OutputState][next_level.objective_mechanism.OutputState]]
+#                 names: [[ACTIVITY][ERROR]]
+#                 function:  ErrorDerivative(variable, derivative)
+#                                variable[0] = activity
+#                                variable[1] = error_signal from next_level ObjectiveMechanism (target for TERMINAL)
+#                                derivative = next_level_derivative (1 for TERMINAL)
+#                 role:LEARNING
+#           • Use only one Learning mechanism with the following args:
+#                 variable[[INPUT][OUTPUT]]
+#                 error_source_derivative
+#                 next_level_derivative
+#                 next_level_matrix
+#                 function
+#             Initialize and assign args with the following WIZZARD:
+#         WIZZARD:
+#             Needs to know
+#                 error_source (Mechanism)
+#                     error_source_derivative (function)
+#                 next_level (Mechanism)
+#                     next_level_derivative (function)
+#                     next_level_matrix (ndarray) - for MappingProjection from error_source to next_level
+#             ObjectiveMechanism:
+#                 Initialize variable:
+#                       use next_level.outputState.valuee to initialize variable[ACTIVITY]
+#                       use outputState.value of next_level's objective_mechanism to initialize variable[ERROR]
+#                 Assign mapping projections:
+#                       nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
+#                       nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
+#                 NOTE: For TERMINAL mechanism:
+#                           next_level is Process or System InputState (function=Linear, so derivative =1), so that
+#                              next_level.outputState.value is the target, and
+#                              next_level's derivative = 1
+#                              next_level_matrix = IDENTITY_MATRIX (this should be imposed)
+#             LearningMechanism:
+#                 Initialize variable:
+#                       use mapping_projection.sender.value to initialize variable[INPUT]
+#                       use error_source_outputState.value to initialize variable[OUTPUT]
+#                 Assign error_source_derivative using function of error_source of mapping_projection (one being learned)
+#                 Assign error_derivative using function of next_level
+#                 Assign error_matrix as runtime_param using projection to next_level [ALT: ADD TO VARIABLE]
+#                 Assign mapping projections:
+#                       mapping_projection.sender -> inputStates[INPUT] of LearningMechanism
+#                       error_source.outputState -> inputStates[OUTPUT] of LearningMechanism
+#
+#
+#             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
+#             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
+#
 # FIX:
 #    0) Deal with function parameter assignment in update() of ParameterState
 #        - move assignment of function params (Lines 714 and 742 in ParameterState)
