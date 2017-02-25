@@ -101,12 +101,55 @@ def _is_learning_spec(spec):
     #     the mechanism to which `mappingProjection` projects, and that is used to calculate the `error_signal`.
 
 
-# def _instantiate_attributes_before_function(self, context=None):
-def object_mechanism_wizzard(recipient:Mechanism,
-                             objective_mechanism_spec:tc.optional(Mechanism, OutputState, ObjectiveMechanism)=None,
-                             output_spec=None
-                             ):
-    """Override super to call _instantiate_receiver before calling _instantiate_sender
+# def objective_mechanism_wizzard(recipient:Mechanism,
+#                              objective_mechanism_spec:tc.optional(Mechanism, OutputState, ObjectiveMechanism)=None,
+#                              output_spec=None
+#                              ):
+def instantiate_learning(learning_projection:LearningProjection):
+    """
+    Call in _instantiate_attributes_before_function() of LearningProjection
+    Do the following:
+        Get:
+            activation_projection (one being learned) (MappingProjection)
+            activation_mech (ProcessingMechanism)
+            activation_input (OutputState)
+            activation_sample (OutputState)
+            activation_derivative (function)
+            error_matrix (ParameterState)
+            error_derivative (function)
+            next_level_mech (error_source_mech) (ProcessingMechanism)
+            next_level_objective_mech (error_source_objective_mech) (ObjectiveMechanism)
+        Instantiate:
+            ObjectiveMechanism:
+                Construct with:
+                   monitor_values: [next_level_mech.outputState.value, next_level_mech.objective_mech.outputState.value]
+                   names = [ACTIVITY/SAMPLE, ERROR/TARGET]
+                   function = ErrorDerivative(derivative=error_derivative)
+                NOTE: For TERMINAL mechanism:
+                          next_level_mech is Process or System InputState (function=Linear, so derivative =1), so that
+                             next_level_mech.outputState.value is the target, and
+                             error_derivative = 1
+                             error_matrix = IDENTITY_MATRIX (this should be imposed)
+            LearningMechanism:
+                Construct with:
+                    variable=[[activation_input],[activation_sample],[ObjectiveMechanism.outputState.value]]
+                    error_matrix = error_matrix
+                    function = one specified with Learning specification
+                               NOTE: can no longer be specified as function for LearningProjection
+                    names = [ACTIVATION_INPUT, ACTIVATION_SAMPLE, ERROR_SIGNAL]
+                        NOTE:  this needs to be implemented for LearningMechanism as it is for ObjectiveMechanism
+                Check that, if learning function expects a derivative (in user_params), that the one specified
+                    is compatible with the function of the activation_mech
+                Assign:
+                    NOTE:  should do these in their own Learning module function, called by LearningMechanaism directly
+                        as is done for ObjectiveMechanism
+                    MappingProjection: activation_projection.sender -> LearningMechanism.inputState[ACTIVATION_INPUT]
+                    MappingProjection: activation_mech.outputState -> LearningMechanism.inputState[ACTIVATION_SAMPLE]
+                    MappingProjection: ObjectiveMechanism -> LearningMechanism.inputState[ERROR_SIGNAL]
+
+    ----------------------------------------------------------------------
+
+
 
     Parse `objective_mechanism_spec` specification and call for implementation if necessary, including a
         `MappingProjection` from it to the recipient's `primary inputState <Mechanism_InputStates>`.
@@ -120,11 +163,33 @@ def object_mechanism_wizzard(recipient:Mechanism,
 
     """
 
+    # Get:
+    #     activation_projection (one being learned) (MappingProjection)
+    #     activation_mech (ProcessingMechanism)
+    #     activation_input (OutputState)
+    #     activation_sample (OutputState)
+    #     activation_derivative (function)
+    #     error_matrix (ParameterState)
+    #     error_derivative (function)
+    #     next_level_mech (error_source_mech) (ProcessingMechanism)
+    #     next_level_objective_mech (error_source_objective_mech) (ObjectiveMechanism)
+
+    # Get projection being learned:
+    activation_projection = learning_projection
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
     # FIX: PROBLEM: _instantiate_receiver usually follows _instantiate_function,
     # FIX:          and uses self.value (output of function) to validate against receiver.variable
-
     self._instantiate_receiver(context)
+
     super()._instantiate_attributes_before_function(context)
+
+
+    # Do stuff in instantiate_receiver of LearningProjection:  instantiate LearningMechanism
+    #
+    # Override super to call _instantiate_receiver before calling _instantiate_sender
 
     # ----------------------------------------------------------------------------------------------------------
     # NEW STUFF ------------------------------------------------------------------------------------------------
