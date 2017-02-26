@@ -366,7 +366,8 @@ def _instantiate_objective_mechanism_for_learning(learning_projection, context=N
 
 #region Learning Components
 class learning_components(object):
-    """
+    """Gets components required to instantiate LearningMechanism and its Objective Function for a LearningProjection
+
     Has attributes for the following learning components relevant to a `LearningProjection`,
     each of which is found and/or validated if necessary before assignment:
 
@@ -382,7 +383,9 @@ class learning_components(object):
     * `next_level_mech` (ProcessingMechanism):  mechanism to which error_projection projects
     * `next_level_objective_mech` (`ObjectiveMechanism`):  objective mechanism for error_projection
     """
-    def __init__(self):
+
+    def __init__(self, learning_projection, context=None):
+        self.learning_projection = learning_projection
         self._activation_projection = None
         self._activation_input = None
         self._activation_mech = None
@@ -395,14 +398,15 @@ class learning_components(object):
         self._next_level_mech = None
         self._next_level_objective_mech = None
 
+    # FIX: NOT SURE SETTERS BELOW ARE NECESSARY, OR THEY SHOULD BE CALLED BY GETTERS IF _<attrib> IS STILL NONE?
 
-    def _get_activation_components(self, learning_projection, context=None):
+    def _get_activation_components(self, context=None):
         """Assign components required to implement the `LearningMechanism`
         """
 
         # FIX:  MOVE THESE TO SETTER PROPERTIES, AS PER error_projection:
-        _validate_learning_projection(learning_projection)
-        self.activation_projection = learning_projection.receiver.owner
+        _validate_learning_projection(self.learning_projection)
+        self.activation_projection = self.learning_projection.receiver.owner
         self.activation_input = self.activation_projection.sender
         self.activation_mech = self.activation_projection.receiver.owner
         self.activation_sample = self.activation_mech.outputState
@@ -410,35 +414,11 @@ class learning_components(object):
 
         return self
 
-    def _get_error_components(self, learning_projection, context=None):
-        """Assign components required to implement the `ObjectiveMechanism`
-
-        Note:  requires that error_matrix has already been identified which, in turn, generally requires that
-               the learning_projection's LearningMechanism has already been instantiated
-        """
-
-        # FIX:  MOVE THESE TO SETTER PROPERTIES, AS PER error_projection:
-        _validate_learning_projection(learning_projection)
-        self.error_matrix = learning_projection.error_matrix
-        self.error_projection = learning_projection.error_matrix.owner
-        self.next_level_mech = self.error_matrix.receiver.owner
-        try:
-            self.error_derivative = self.next_level_mech.function_object.derivative
-        except AttributeError:
-            raise LearningAuxilliaryError("Can't set error_derivative for {} because the function ({}) "
-                                          "for next_level_mech ({}) does not have a derivative attribute".
-                                          format(self.name,
-                                                 self.next_level_mech.function_object.__class__.__name__,
-                                                 self.next_level_mech.name))
-            # (error_source_objective_mech) (ObjectiveMechanism)
-        self.next_level_objective_mech = self.next_level_mech
-
 
     def _validate_learning_projection(self, learning_projection):
 
-        if not isinstance(learning_projection, LearningProjection):
-            raise LearningAuxilliaryError("{} is not a LearningProjection".format(self.name))
-
+        if not isinstance(self.learning_projection, LearningProjection):
+            raise LearningAuxilliaryError("{} is not a LearningProjection".format(self.learning_projection.name))
 
     # activation_projection:  one being learned) (MappingProjection)
     @property
@@ -521,18 +501,25 @@ class learning_components(object):
     # error_projection:  one that has the error_matrix (MappingProjection)
     @property
     def error_projection(self):
-        # Find error_matrix from activation_mech
-        def _get_error_projection():
+        # Find from activation_mech:
+        def _get_error_proj():
             if not self.activation_sample:
-                raise LearningAuxilliaryError("Identification of error_projection requires that "
+                raise LearningAuxilliaryError("error_projection not identified: requires that "
                                               "activation_sample has already been assigned to the {}".
                                               format(self.__class__.name__))
             projections = self.activation_sample.sendsToProjections
-            return next(projection for projection in projections if projection.parameterStates[MATRIX])
-        return self._error_projection or _get_error_projection()
+            error_proj = next(projection for projection in projections if
+                              (isinstance(projection, MappingProjection) and projection.has_learning_projection))
+            if not error_proj:
+                raise LearningAuxilliaryError("error_matrix not identified:  "
+                                              "no projection was found from activation_sample ({}) "
+                                              "that receives a LearningProjection".
+                                              format(self.activation_sample.name))
+            self.error_pjection = error_proj
+            return error_proj
+        return self._error_projection or _get_error_proj()
 
-
-    @error_matrix.setter
+    @error_projection.setter
     def error_projection(self, assignment):
         if isinstance(assignment, (MappingProjection)):
             self._error_projection = assignment
@@ -544,33 +531,60 @@ class learning_components(object):
     # This must be found
     @property
     def error_matrix(self):
-        return self._error_matrix
+
+        # Find from error_projection
+        def _get_err_matrix():
+            if not self.error_projection:
+                raise LearningAuxilliaryError("error_matrix not identified: requires that "
+                                              "error_projection has already been assigned to the {}".
+                                              format(self.__class__.name__))
+            try:
+                err_matrix = self.error_projection.parameterState[MATRIX]
+            except AttributeError:
+                raise LearningAuxilliaryError("error_matrix not identified: error_projection ({})"
+                                              "not not have a {} parameterState".
+                                              format(self.error_projection))
+            self.error_matrix = err_matrix
+            return err_matrix
+        return self._error_matrix or _get_err_matrix()
 
     @error_matrix.setter
     def error_matrix(self, assignment):
         if isinstance(assignment, (ParameterState)):
-            self._error_matrix = self.error
+            self._error_matrix = assignment
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_matrix; "
                                           "it must be a ParameterState.")
-
-    # error_derivative:  deriviative of function of next_level_mech (function)
-    @property
-    def error_derivative(self):
-        return self._error_derivative
-
-    @error_derivative.setter
-    def error_derivative(self, assignment):
-        if isinstance(assignment, (function)):
-            self._error_derivative = assignment
-        else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "
-                                          "it must be a function.")
 
     # next_level_mech:  mechanism to which error_projection projects (ProcessingMechanism)
     @property
     def next_level_mech(self):
         return self._next_level_mech
+
+
+    @property
+    def next_level_mech(self):
+
+        # Find from error_projection
+        def _get_next_lev_mech():
+            if not self.error_projection:
+                raise LearningAuxilliaryError("next_level_mech not identified: requires that "
+                                              "error_projection has already been assigned to the {}".
+                                              format(self.__class__.name__))
+            try:
+                next_lev_mech = self.error_projection.receiver.owner
+            except AttributeError:
+                raise LearningAuxilliaryError("next_level_mech not identified: error_projection ({})"
+                                              "does not appear to have a receiver or owner".
+                                              format(self.error_projection))
+            if not isinstance(next_lev_mech, ProcessingMechanism_Base):
+                raise LearningAuxilliaryError("next_level_mech found ({}) but it does not "
+                                              "appear to be a ProcessingMechanism".
+                                              format(next_lev_mech.name))
+
+            self.next_level_mech = next_lev_mech
+            return next_lev_mech
+        return self._next_level_mech or get_next_lev_mech()
 
     @next_level_mech.setter
     def next_level_mech(self, assignment):
@@ -580,10 +594,73 @@ class learning_components(object):
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to next_level_mech; "
                                           "it must be a ProcessingMechanism.")
 
+    # error_derivative:  deriviative of function of next_level_mech (function)
+    @property
+    def error_derivative(self):
+        # Find from next_level_mech:
+        def _get_error_deriv():
+            if not self.next_level_mech:
+                raise LearningAuxilliaryError("error_derivative not identified: requires that "
+                                              "next_level_mech has already been assigned to the {}".
+                                              format(self.__class__.name__))
+            try:
+                error_deriv = self.next_level_mech.function_object.derivative
+            except AttributeError:
+                raise LearningAuxilliaryError("error_derivative not identified: the function ({}) "
+                                              "for next_level_mech ({}) does not have a derivative attribute".
+                                              format(self.name,
+                                                     self.next_level_mech.function_object.__class__.__name__,
+                                                     self.next_level_mech.name))
+            self.error_derivative = error_deriv
+            return error_deriv
+        return self._error_derivative or _get_error_deriv()
+
+    @error_derivative.setter
+    def error_derivative(self, assignment):
+        if isinstance(assignment, (function)):
+            self._error_derivative = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "
+                                          "it must be a function.")
+
     # next_level_objective_mech:  objective mechanism for error_projection (ObjectiveMechanism)
     @property
     def next_level_objective_mech(self):
-        return self._next_level_objective_mech
+        # Find from error_matrix:
+        def _get_obj_mech():
+            if not self.error_matrix:
+                raise LearningAuxilliaryError("next_level_objective_mech not identified: requires that "
+                                              "error_matrix has already been assigned to the {}".
+                                              format(self.__class__.name__))
+            learning_proj = next(proj for proj in self.error_matrix.receivesFromProjections
+                                 if isinstance(proj, LearningProjection))
+            if not learning_proj:
+                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                                              "error_matrix does not have a LearningProjection")
+            try:
+                learning_mech = learning_proj.sender.owner
+            except AttributeError:
+                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                                              "the LearningProjection to error_matrix does not have a sender")
+            if not isinstance(learning_mech, LearningMechansim):
+                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                                              "the LearningProjection to error_matrix does not come from a "
+                                              "LearningMechanism")
+            try:
+                obj_mech = next(proj.sender.owner for proj in learning_mech.inputState.receivesFromProjections
+                                if isinstance(proj.sender.owner, ObjectiveMechanism))
+            except AttributeError:
+                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                                              "could not find any projections to the LearningMechanism ({})".
+                                              format(learning_mech))
+            if not obj_mech:
+                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                                              "the LearningMechanism ({}) does not receive a projection "
+                                              "from an ObjectiveMechanism".
+                                              format(learning_mech))
+            self.next_level_objective_mech = obj_mech
+            return obj_mech
+        return self._next_level_objective_mech or _get_obj_mech()
 
     @next_level_objective_mech.setter
     def next_level_objective_mech(self, assignment):

@@ -277,6 +277,10 @@ class MappingProjection(Projection_Base):
         matrix used by `function <MappingProjection.function>` to transform input from the
         `sender <MappingProjection.sender>` to the value provided to the `receiver <MappingProjection.receiver>`.
 
+    has_learning_projection : bool : False
+        identifies whether the MappingProjection's `MATRIX` `parameterState <ParameterState>` has been assigned a
+        `LearningProjection`.
+
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
         Specified in the `name` argument of the constructor for the projection;
@@ -344,6 +348,8 @@ class MappingProjection(Projection_Base):
                                       name=name,
                                       prefs=prefs,
                                       context=self)
+
+        self.has_learning_projection = False
 
     def _instantiate_receiver(self, context=None):
         """Handle situation in which self.receiver was specified as a Mechanism (rather than State)
