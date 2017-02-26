@@ -363,11 +363,21 @@ class LearningProjection(Projection_Base):
                                                   "the LinearCombination function of the targeted MappingProjection".
                                                   format(WEIGHT_CHANGE_PARAMS,self.name,param_value))
 
-    def _instantiate_attributes_before_function(self, context=None):
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
-            import instantiate_learning_components
-        instantiate_learning_components(self, context=context)
-        super()._instantiate_attributes_before_function(context=context)
+    # def _instantiate_attributes_before_function(self, context=None):
+    #     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
+    #         import instantiate_learning_components
+    #     instantiate_learning_components(self, context=context)
+    #     super()._instantiate_attributes_before_function(context=context)
+
+    def _instantiate_sender(self, context=None):
+
+        if isinstance(self.sender, (OutputState, ObjectiveMechanism)):
+            super()._instantiate_sender(context=context)
+        else:
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
+                import _instantiate_objective_mechanism_for_learning
+            _instantiate_objective_mechanism_for_learning(self)
+
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
