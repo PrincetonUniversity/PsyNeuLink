@@ -89,7 +89,8 @@
 #                            (as ObjectiveMechanism does, by calling modul function if not None)
 #              Need to change how learning function is specified, since no longer belongs in LearningProjection
 #                    use new keyword or tuple type for specification of Learning (instead of using LearningProjection)
-#
+#              Re-implement instantiation of receiver and sender for LearningProjection (in case they are created
+#                    on their own)
 #     5) Purge DefaultMonitoringMechanism
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)

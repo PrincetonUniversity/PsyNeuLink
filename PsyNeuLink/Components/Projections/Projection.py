@@ -640,8 +640,8 @@ class Projection_Base(Projection):
                 # MODIFIED 9/12/16 END
                 self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
             else:
-                raise ProjectionError("Sender ({0}, for {1}) must be a OutputState".
-                                      format(self.sender.__class__.__name__, self.name))
+                raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
+                                      format(self.sender.__name__, self.name))
 
         # # If sender is a Mechanism (rather than a State), get relevant outputState and assign it to self.sender
         if isinstance(self.sender, Mechanism):
@@ -655,11 +655,7 @@ class Projection_Base(Projection):
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
-        # MODIFIED 2/10/17 OLD: 2/21/17
         if not isinstance(self.sender, OutputState):
-        # # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
-        # if not isinstance(self.sender, (OutputState, ParameterState)):
-        # MODIFIED 2/10/17 END
             raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
@@ -722,7 +718,6 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    # MODIFIED 12/21/16 NEW:
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
         for state_name, state in self.parameterStates.items():
 
@@ -750,13 +745,10 @@ class Projection_Base(Projection):
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
             param[state_name] = type_match(state.value, param_type)
-    # MODIFIED 12/21/16 END
 
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
-# from PsyNeuLink.Components.Projections.ControlProjection import is_control_projection
-# from PsyNeuLink.Components.Projections.LearningProjection import is_learning_signal
 
 def _is_projection_spec(spec):
     """Evaluate whether spec is a valid Projection specification

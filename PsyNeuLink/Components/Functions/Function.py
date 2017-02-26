@@ -899,8 +899,8 @@ class Linear(TransferFunction): # ----------------------------------------------
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(slope=slope,
-                                                 intercept=intercept,
-                                                 params=params)
+                                                  intercept=intercept,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                                      params=params,
@@ -2451,9 +2451,9 @@ class LearningFunction(Function_Base):
 
 ACTIVATION_FUNCTION = 'activation_function'
 MATRIX_INPUT = 0       # a(j)
-MATRIX = 1             # w
-ACTIVATION_OUTPUT = 2  # a(i)
-ACTIVATION_ERROR = 3   # e
+# MATRIX = 1             # w
+ACTIVATION_OUTPUT = 1  # a(i)
+ACTIVATION_ERROR = 2   # e
 
 class ErrorDerivative(LearningFunction):
     """Calculate the contribution of each sender to the error signal based on the weight matrix
@@ -2481,7 +2481,6 @@ class ErrorDerivative(LearningFunction):
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    from PsyNeuLink.Components.States.ParameterState import ParameterState
     @tc.typecheck
     def __init__(self,
                  variable_default,

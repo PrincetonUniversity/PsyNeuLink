@@ -80,6 +80,23 @@ Class Reference
 
 """
 
+import numpy as np
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Functions.Function import Function
+
+
+class LearningAuxilliaryError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+
 def _is_learning_spec(spec):
     """Evaluate whether spec is a valid learning specification
 
@@ -92,20 +109,147 @@ def _is_learning_spec(spec):
     else:
         return _is_projection_spec(spec)
 
+class learning_components(object):
 
-    # mappingProjection : MappingProjection
-    #     the `MappingProjection` that owns the `parameterState <ParameterState>` to which the
-    #     LearningProjection projects (i.e., that owns its `receiver <LearningProjection.receiver>`).
-    #
-    # errorSource : ProcessingMechanism
-    #     the mechanism to which `mappingProjection` projects, and that is used to calculate the `error_signal`.
+    def __init__(self):
+        return
 
+    # activation_projection:  one being learned) (MappingProjection)
+    @property
+    def activation_projection(self):
+        return self._activation_projection
+
+    @activation_projection.setter
+    def activation_projection(self, assignment):
+        if isinstance(assignment, (MappingProjection)):
+            self._activation_projection = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_projection; "
+                                          "it must be a MappingProjection.")
+
+    # activation_input:  one being learned) (OutputState)
+    @property
+    def activation_input(self):
+        return self._activation_input
+
+    @activation_input.setter
+    def activation_input(self, assignment):
+        if isinstance(assignment, (OutputState)):
+            self._activation_input = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_input; "
+                                          "it must be a OutputState.")
+
+    # activation_mech:  one being learned) (ProcessingMechanism)
+    @property
+    def activation_mech(self):
+        return self._activation_mech
+
+    @activation_mech.setter
+    def activation_mech(self, assignment):
+        if isinstance(assignment, (ProcessingMechanism_Base)):
+            self._activation_mech = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech; "
+                                          "it must be a ProcessingMechanism.")
+
+    # activation_sample:  one being learned) (OutputState)
+    @property
+    def activation_sample(self):
+        return self._activation_sample
+
+    @activation_sample.setter
+    def activation_sample(self, assignment):
+        if isinstance(assignment, (OutputState)):
+            self._activation_sample =assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_sample; "
+                                          "it must be a OutputState.")
+
+    # activation_derivative:  one being learned) (function)
+    @property
+    def activation_derivative(self):
+        return self._activation_derivative
+
+    @activation_derivative.setter
+    def activation_derivative(self, assignment):
+        if isinstance(assignment, (function)):
+            self._activation_derivative = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_derivative; "
+                                          "it must be a function.")
+
+    # activation_mech_fct:  one being learned) (Function)
+    @property
+    def activation_mech_fct(self):
+        return self._activation_mech_fct
+
+    @activation_mech_fct.setter
+    def activation_mech_fct(self, assignment):
+        if isinstance(assignment, (Function)):
+            self._activation_mech_fct = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_fct; "
+                                          "it must be a Function.")
+
+    # error_matrix:  one being learned) (ParameterState)
+    @property
+    def error_matrix(self):
+        return self._error_matrix
+
+    @error_matrix.setter
+    def error_matrix(self, assignment):
+        if isinstance(assignment, (ParameterState)):
+            self._error_matrix = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_matrix; "
+                                          "it must be a ParameterState.")
+
+    # error_derivative:  one being learned) (function)
+    @property
+    def error_derivative(self):
+        return self._error_derivative
+
+    @error_derivative.setter
+    def error_derivative(self, assignment):
+        if isinstance(assignment, (function)):
+            self._error_derivative = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_derivative; "
+                                          "it must be a function.")
+
+    # next_level_mech:  one being learned) (ProcessingMechanism)
+    @property
+    def next_level_mech(self):
+        return self._next_level_mech
+
+    @next_level_mech.setter
+    def next_level_mech(self, assignment):
+        if isinstance(assignment, (ProcessingMechanism)):
+            self._next_level_mech = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to next_level_mech; "
+                                          "it must be a ProcessingMechanism.")
+
+    # next_level_objective_mech:  one being learned) (ObjectiveMechanism)
+    @property
+    def next_level_objective_mech(self):
+        return self._next_level_objective_mech
+
+    @next_level_objective_mech.setter
+    def next_level_objective_mech(self, assignment):
+        if isinstance(assignment, (ObjectiveMechanism)):
+            self._next_level_objective_mech = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to next_level_objective_mech; "
+                                          "it must be a ObjectiveMechanism.")
 
 # def objective_mechanism_wizzard(recipient:Mechanism,
 #                              objective_mechanism_spec:tc.optional(Mechanism, OutputState, ObjectiveMechanism)=None,
 #                              output_spec=None
-#                              ):
-def instantiate_learning(learning_projection:LearningProjection):
+#                              ):    
+def instantiate_learning_components(learning_projection:LearningProjection,
+                         context=None):
     """
     Call in _instantiate_attributes_before_function() of LearningProjection
     Do the following:
@@ -148,8 +292,7 @@ def instantiate_learning(learning_projection:LearningProjection):
                     MappingProjection: ObjectiveMechanism -> LearningMechanism.inputState[ERROR_SIGNAL]
 
     ----------------------------------------------------------------------
-
-
+    
 
     Parse `objective_mechanism_spec` specification and call for implementation if necessary, including a
         `MappingProjection` from it to the recipient's `primary inputState <Mechanism_InputStates>`.
@@ -164,24 +307,281 @@ def instantiate_learning(learning_projection:LearningProjection):
     """
 
     # Get:
-    #     activation_projection (one being learned) (MappingProjection)
-    #     activation_mech (ProcessingMechanism)
-    #     activation_input (OutputState)
-    #     activation_sample (OutputState)
-    #     activation_derivative (function)
+    #  √  activation_projection (one being learned) (MappingProjection)
+    #  √  activation_mech (ProcessingMechanism)
+    #  √  activation_input (OutputState)
+    #  √  activation_sample (OutputState)
+    #  √  activation_derivative (function)
     #     error_matrix (ParameterState)
     #     error_derivative (function)
     #     next_level_mech (error_source_mech) (ProcessingMechanism)
     #     next_level_objective_mech (error_source_objective_mech) (ObjectiveMechanism)
 
-    # Get projection being learned:
-    activation_projection = learning_projection
+    components = learning_components()
+
+    components.activation_projection = learning_projection.receiver.owner
+    components.activation_input = components.activation_projection.sender
+    components.activation_mech = components.activation_projection.receiver.owner
+    components.activation_sample = components.activation_mech.outputState
+    components.activation_mech_fct = components.activation_projection.function_object
+    # FIX:  WHAT IF THERE IS MORE THAN ONE PROJECTION FROM activation_mech
+        
+    _instantiate_learning_objective_mechanism(learning_projection=learning_projection,
+                                             components=components, 
+                                             context=context)
+
+
+def _instantiate_learning_objective_mechanism(learning_projection:LearningProjection,
+                                              components:learning_components,
+                                              context=None):
+    # DOCUMENT: SEE UPDATE BELOW
+    """Assign self.variable to MonitoringMechanism output or self.receiver.receivererror_signals
+
+    Call this after _instantiate_receiver, as that is needed to determine the sender (i.e., source of error_signal)
+
+    If sender arg or PROJECTION_SENDER was specified, it has been assigned to self.sender
+        and has been validated as a MonitoringMechanism, so:
+        - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
+        - assign its outputState.value as self.variable
+    If sender was not specified (i.e., passed as MonitoringMechanism_Base specified in paramClassDefaults):
+       if the owner of the MappingProjection projects to a MonitoringMechanism, then
+           - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
+           - assign its outputState.value as self.variable
+       UPDATE: otherwise, if MappingProjection's receiver has an error_signal attribute, use that as self.variable
+           (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
+       [TBI: otherwise, implement default MonitoringMechanism]
+       otherwise, raise exception
+
+FROM TODO:
+#    - _instantiate_sender:
+#        - examine mechanism to which MappingProjection projects:  self.receiver.owner.receiver.owner
+#            - check if it is a terminal mechanism in the system:
+#                - if so, assign:
+#                    - ComparatorMechanism MonitoringMechanism
+#                        - ProcessInputState for ComparatorMechanism (name it??) with projection to target inputState
+#                        - MappingProjection from terminal ProcessingMechanism to LinearCompator sample inputState
+#                - if not, assign:
+#                    - WeightedSum MonitoringMechanism
+#                        - MappingProjection from preceding MonitoringMechanism:
+#                            preceding processing mechanism (ppm):
+#                                ppm = self.receiver.owner.receiver.owner
+#                            preceding processing mechanism's output projection (pop)
+#                                pop = ppm.outputState.projections[0]
+#                            preceding processing mechanism's output projection learning signal (popls):
+#                                popls = pop.parameterState.receivesFromProjections[0]
+#                            preceding MonitoringMechanism (pem):
+#                                pem = popls.sender.owner
+#                            assign MappingProjection from pem.outputState to self.inputState
+#                        - Get weight matrix for pop (pwm):
+#                                pwm = pop.parameterState.params[MATRIX]
+
+# HAS SENDER:
+    # VALIDATE
+# HAS NO SENDER:
+    # self.errorSource PROJECTS TO A MONITORING MECHANISM
+    #         assign it as sender
+    # self.errorSource DOESN'T PROJECT TO A MONITORING MECHANISM
+        # self.errorSource PROJECTS TO A PROCESSING MECHANISM:
+            # INSTANTIATE WeightedSum MonitoringMechanism
+        # self.errorSource PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
+            # INSTANTIATE DefaultTrainingMechanism
+
+    """
+# IMPLEMENT: rename .monitoringMechanism -> .objective_mechanism
+#            rename .errorSource -> .error_source
+
+    mapping_projection = components.activation_projection
+
+    # FIX: 8/7/16
+    # FIX: NEED TO DEAL HERE WITH CLASS SPECIFICATION OF MonitoringMechanism AS DEFAULT
+    # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
+    # FIX: EMULATE HANDLING OF DefaultMechanism (for MappingProjection) AND DefaultController (for ControlProjection)
+
+    # FIX: 8/18/16
+    # FIX: ****************
+    # FIX: ASSIGN monitoring_source IN ifS, NOT JUST else
+    # FIX: SAME FOR learning_projection.errorSource??
+
+    objective_mechanism = None
+
+    # ObjectiveMechanism specified for sender, so re-assign to its outputState
+    if isinstance(learning_projection.sender, ObjectiveMechanism):
+        learning_projection.sender = learning_projection.sender.outputState
+
+    # OutputState specified (or re-assigned) for sender
+    if isinstance(learning_projection.sender, OutputState):
+        # Validate that it belongs to an ObjectiveMechanism being used for learning
+        if not _objective_mechanism_role(learning_projection.sender.owner, LEARNING):
+            raise LearningProjectionError("OutputState ({}) specified as sender for {} belongs to a {}"
+                                      " rather than an ObjectiveMechanism with role=LEARNING".
+                                      format(learning_projection.sender.name,
+                                             learning_projection.name,
+                                             learning_projection.sender.owner.__class__.__name__))
+        learning_projection._validate_error_signal(learning_projection.sender.value)
+
+        # - assign ObjectiveMechanism's outputState.value as learning_projection.variable
+        # FIX: THIS DOESN"T SEEM TO HAPPEN HERE.  DOES IT HAPPEN LATER??
+
+        # Add reference to ObjectiveMechanism to MappingProjection
+        objective_mechanism = learning_projection.sender
+
+    # ObjectiveMechanism class (i.e., not an instantiated object) specified for sender, so instantiate it:
+    # - for terminal mechanism of Process, instantiate with Comparator function
+    # - for preceding mechanisms, instantiate with WeightedError function
+    else:
+        # Get errorSource:  ProcessingMechanism for which error is being monitored
+        #    (i.e., the mechanism to which the MappingProjection projects)
+        # Note: MappingProjection._instantiate_receiver has not yet been called, so need to do parse below
+        from PsyNeuLink.Components.States.InputState import InputState
+        if isinstance(components.activation_projection.receiver, Mechanism):
+            learning_projection.errorSource = mapping_projection.receiver
+        elif isinstance(mapping_projection.receiver, InputState):
+            learning_projection.errorSource = mapping_projection.receiver.owner
+
+        next_level_objective_mech_output = None
+
+        # Check if errorSource has a projection to an ObjectiveMechanism or some other type of ProcessingMechanism
+        for projection in learning_projection.errorSource.outputState.sendsToProjections:
+            # errorSource has a projection to an ObjectiveMechanism being used for learning,
+            #  so validate it, assign it, and quit search
+            if _objective_mechanism_role(projection.receiver.owner, LEARNING):
+                learning_projection._validate_error_signal(projection.receiver.owner.outputState.value)
+                objective_mechanism = projection.receiver.owner
+                break
+            # errorSource has a projection to a ProcessingMechanism, so:
+            #   - determine whether that has a LearningProjection
+            #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
+            if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
+                try:
+                    next_level_learning_projection = projection.parameterStates[MATRIX].receivesFromProjections[0]
+                except (AttributeError, KeyError):
+                    # Next level's projection has no parameterStates, Matrix parameterState or projections to it
+                    #    => no LearningProjection
+                    pass # FIX: xxx ?? ADD LearningProjection here if requested?? or intercept error message to do so?
+                else:
+                    # Next level's projection has a LearningProjection so get:
+                    #     the weight matrix for the next level's projection
+                    #     the MonitoringMechanism that provides error_signal
+                    # next_level_weight_matrix = projection.matrix
+                    next_level_objective_mech_output = next_level_learning_projection.sender
+
+        # errorSource does not project to an ObjectiveMechanism used for learning
+        if not objective_mechanism:
+
+            # FIX:  NEED TO DEAL WITH THIS RE: RL -> DON'T CREATE BACK PROJECTIONS??
+            # NON-TERMINAL Mechanism
+            # errorSource at next level projects to a MonitoringMechanism:
+            #    instantiate ObjectiveMechanism configured with WeightedError Function
+            #    (computes contribution of each element in errorSource to error at level to which it projects)
+            #    and the back-projection for its error signal:
+            if next_level_objective_mech_output:
+                error_signal = np.zeros_like(next_level_objective_mech_output.value)
+                next_level_output = projection.receiver.owner.outputState
+                activity = np.zeros_like(next_level_output.value)
+                matrix=projection.parameterStates[MATRIX]
+                derivative = next_level_objective_mech_output.sendsToProjections[0].\
+                    receiver.owner.receiver.owner.function_object.derivative
+                from PsyNeuLink.Components.Functions.Function import WeightedError
+                objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
+                                                                   next_level_objective_mech_output],
+                                                          names=['ACTIVITY','ERROR_SIGNAL'],
+                                                          function=ErrorDerivative(variable_default=[activity,
+                                                                                                   error_signal],
+                                                                                   derivative=derivative),
+                                                          role=LEARNING,
+                                                          name=mapping_projection.name + " Error_Derivative")
+            # TERMINAL Mechanism
+            # errorSource at next level does NOT project to an ObjectiveMechanism:
+            #     instantiate ObjectiveMechanism configured as a comparator
+            #         that compares errorSource output with external training signal
+            else:
+                # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
+                try:
+                    sample_state_name = learning_projection.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
+                    sample_source = learning_projection.errorSource.outputStates[sample_state_name]
+                    sample_size = np.zeros_like(sample_source)
+                except KeyError:
+                    # No state specified so use Mechanism as sender arg
+                    sample_source = learning_projection.errorSource
+                    sample_size = np.zeros_like(learning_projection.errorSource.outputState.value)
+
+                # Assign output_signal to output of errorSource
+                if learning_projection.function.componentName is BACKPROPAGATION_FUNCTION:
+                    target_size = np.zeros_like(learning_projection.errorSource.outputState.value)
+                # Force sample and target of Comparartor to be scalars for RL
+                elif learning_projection.function.componentName is RL_FUNCTION:
+                    sample_size = np.array([0])
+                    target_size = np.array([0])
+                else:
+                    raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+                                              format(learning_projection.function.name, learning_projection.name))
+
+                # IMPLEMENTATION NOTE: specify target as a template value (matching the sample's output value)
+                #                      since its projection (from either a ProcessInputState or a SystemInputState)
+                #                      will be instantiated by the Composition object to which the mechanism belongs
+                # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
+                # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
+                objective_mechanism = ObjectiveMechanism(default_input_value=[sample_size, target_size],
+                                                         monitored_values=[sample_source, target_size],
+                                                         names=[SAMPLE,TARGET],
+                                                         # FIX: WHY DO WEIGHTS HAVE TO BE AN ARRAY HERE??
+                                                         function=LinearCombination(weights=[[-1], [1]]),
+                                                         role=LEARNING,
+                                                         params= {OUTPUT_STATES:
+                                                                      [{NAME:TARGET_ERROR},
+                                                                       {NAME:TARGET_ERROR_MEAN,
+                                                                        CALCULATE:lambda x: np.mean(x)},
+                                                                       {NAME:TARGET_ERROR_SUM,
+                                                                        CALCULATE:lambda x: np.sum(x)},
+                                                                       {NAME:TARGET_SSE,
+                                                                        CALCULATE:lambda x: np.sum(x*x)},
+                                                                       {NAME:TARGET_MSE,
+                                                                        CALCULATE:lambda x: np.sum(x*x)/len(x)}]},
+                                                         name=mapping_projection.name + " Target_Error")
+                objective_mechanism.learning_role = TARGET
+
+        learning_projection.sender = objective_mechanism.outputState
+
+        # "Cast" learning_projection.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
+        # Note: learning_projection.variable will be re-assigned in _instantiate_function()
+        learning_projection.variable = learning_projection.error_signal
+
+        # Add learning_projection as outgoing projection from MonitoringMechanism
+        from PsyNeuLink.Components.Projections.Projection import _add_projection_from
+        _add_projection_from(sender=objective_mechanism,
+                            state=objective_mechanism.outputState,
+                            projection_spec=learning_projection,
+                            receiver=learning_projection.receiver,
+                            context=context)
+
+    # VALIDATE THAT OUTPUT OF SENDER IS SAME LENGTH AS THIRD ITEM (ERROR SIGNAL) OF SEL.FFUNCTION.VARIABLE
+
+    # Add reference to MonitoringMechanism to MappingProjection
+    mapping_projection.monitoringMechanism = objective_mechanism
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     # FIX: PROBLEM: _instantiate_receiver usually follows _instantiate_function,
     # FIX:          and uses self.value (output of function) to validate against receiver.variable
+    # FIX: HOWEVER, NEED TO DO BEFORE FUNCTION, 
+    # FIX:          SINCE instantiate_sender USES RECEIVER TO KNOW WHERE SENDER IS COMING FROM 
     self._instantiate_receiver(context)
 
     super()._instantiate_attributes_before_function(context)
@@ -442,229 +842,6 @@ def instantiate_learning(learning_projection:LearningProjection):
             except KeyError:
                 raise LearningProjection(message)
 
-    def _instantiate_sender(self, context=None):
-        # DOCUMENT: SEE UPDATE BELOW
-        """Assign self.variable to MonitoringMechanism output or self.receiver.receivererror_signals
-
-        Call this after _instantiate_receiver, as that is needed to determine the sender (i.e., source of error_signal)
-
-        If sender arg or PROJECTION_SENDER was specified, it has been assigned to self.sender
-            and has been validated as a MonitoringMechanism, so:
-            - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
-            - assign its outputState.value as self.variable
-        If sender was not specified (i.e., passed as MonitoringMechanism_Base specified in paramClassDefaults):
-           if the owner of the MappingProjection projects to a MonitoringMechanism, then
-               - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
-               - assign its outputState.value as self.variable
-           UPDATE: otherwise, if MappingProjection's receiver has an error_signal attribute, use that as self.variable
-               (e.g., "hidden units in a multilayered neural network, using BackPropagation Function)
-           [TBI: otherwise, implement default MonitoringMechanism]
-           otherwise, raise exception
-
-FROM TODO:
-#    - _instantiate_sender:
-#        - examine mechanism to which MappingProjection projects:  self.receiver.owner.receiver.owner
-#            - check if it is a terminal mechanism in the system:
-#                - if so, assign:
-#                    - ComparatorMechanism MonitoringMechanism
-#                        - ProcessInputState for ComparatorMechanism (name it??) with projection to target inputState
-#                        - MappingProjection from terminal ProcessingMechanism to LinearCompator sample inputState
-#                - if not, assign:
-#                    - WeightedSum MonitoringMechanism
-#                        - MappingProjection from preceding MonitoringMechanism:
-#                            preceding processing mechanism (ppm):
-#                                ppm = self.receiver.owner.receiver.owner
-#                            preceding processing mechanism's output projection (pop)
-#                                pop = ppm.outputState.projections[0]
-#                            preceding processing mechanism's output projection learning signal (popls):
-#                                popls = pop.parameterState.receivesFromProjections[0]
-#                            preceding MonitoringMechanism (pem):
-#                                pem = popls.sender.owner
-#                            assign MappingProjection from pem.outputState to self.inputState
-#                        - Get weight matrix for pop (pwm):
-#                                pwm = pop.parameterState.params[MATRIX]
-
-# HAS SENDER:
-    # VALIDATE
-# HAS NO SENDER:
-    # self.errorSource PROJECTS TO A MONITORING MECHANISM
-    #         assign it as sender
-    # self.errorSource DOESN'T PROJECT TO A MONITORING MECHANISM
-        # self.errorSource PROJECTS TO A PROCESSING MECHANISM:
-            # INSTANTIATE WeightedSum MonitoringMechanism
-        # self.errorSource PROJECTS DOESN'T PROJECT TO A PROCESSING MECHANISM:
-            # INSTANTIATE DefaultTrainingMechanism
-
-        """
-# IMPLEMENT: rename .monitoringMechanism -> .objective_mechanism
-#            rename .errorSource -> .error_source
-
-        # FIX: 8/7/16
-        # FIX: NEED TO DEAL HERE WITH CLASS SPECIFICATION OF MonitoringMechanism AS DEFAULT
-        # FIX: OR HAVE ALREADY INSTANTIATED DEFAULT MONITORING MECHANISM BEFORE REACHING HERE
-        # FIX: EMULATE HANDLING OF DefaultMechanism (for MappingProjection) AND DefaultController (for ControlProjection)
-
-        # FIX: 8/18/16
-        # FIX: ****************
-        # FIX: ASSIGN monitoring_source IN ifS, NOT JUST else
-        # FIX: SAME FOR self.errorSource??
-
-        objective_mechanism = None
-
-        # ObjectiveMechanism specified for sender, so re-assign to its outputState
-        if isinstance(self.sender, ObjectiveMechanism):
-            self.sender = self.sender.outputState
-
-        # OutputState specified (or re-assigned) for sender
-        if isinstance(self.sender, OutputState):
-            # Validate that it belongs to an ObjectiveMechanism being used for learning
-            if not _objective_mechanism_role(self.sender.owner, LEARNING):
-                raise LearningProjectionError("OutputState ({}) specified as sender for {} belongs to a {}"
-                                          " rather than an ObjectiveMechanism with role=LEARNING".
-                                          format(self.sender.name,
-                                                 self.name,
-                                                 self.sender.owner.__class__.__name__))
-            self._validate_error_signal(self.sender.value)
-
-            # - assign ObjectiveMechanism's outputState.value as self.variable
-            # FIX: THIS DOESN"T SEEM TO HAPPEN HERE.  DOES IT HAPPEN LATER??
-
-            # Add reference to ObjectiveMechanism to MappingProjection
-            objective_mechanism = self.sender
-
-        # ObjectiveMechanism class (i.e., not an instantiated object) specified for sender, so instantiate it:
-        # - for terminal mechanism of Process, instantiate with Comparator function
-        # - for preceding mechanisms, instantiate with WeightedError function
-        else:
-            # Get errorSource:  ProcessingMechanism for which error is being monitored
-            #    (i.e., the mechanism to which the MappingProjection projects)
-            # Note: MappingProjection._instantiate_receiver has not yet been called, so need to do parse below
-            from PsyNeuLink.Components.States.InputState import InputState
-            if isinstance(self.mappingProjection.receiver, Mechanism):
-                self.errorSource = self.mappingProjection.receiver
-            elif isinstance(self.mappingProjection.receiver, InputState):
-                self.errorSource = self.mappingProjection.receiver.owner
-
-            next_level_objective_mech_output = None
-
-            # Check if errorSource has a projection to an ObjectiveMechanism or some other type of ProcessingMechanism
-            for projection in self.errorSource.outputState.sendsToProjections:
-                # errorSource has a projection to an ObjectiveMechanism being used for learning,
-                #  so validate it, assign it, and quit search
-                if _objective_mechanism_role(projection.receiver.owner, LEARNING):
-                    self._validate_error_signal(projection.receiver.owner.outputState.value)
-                    objective_mechanism = projection.receiver.owner
-                    break
-                # errorSource has a projection to a ProcessingMechanism, so:
-                #   - determine whether that has a LearningProjection
-                #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
-                if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
-                    try:
-                        next_level_learning_projection = projection.parameterStates[MATRIX].receivesFromProjections[0]
-                    except (AttributeError, KeyError):
-                        # Next level's projection has no parameterStates, Matrix parameterState or projections to it
-                        #    => no LearningProjection
-                        pass # FIX: xxx ?? ADD LearningProjection here if requested?? or intercept error message to do so?
-                    else:
-                        # Next level's projection has a LearningProjection so get:
-                        #     the weight matrix for the next level's projection
-                        #     the MonitoringMechanism that provides error_signal
-                        # next_level_weight_matrix = projection.matrix
-                        next_level_objective_mech_output = next_level_learning_projection.sender
-
-            # errorSource does not project to an ObjectiveMechanism used for learning
-            if not objective_mechanism:
-
-                # FIX:  NEED TO DEAL WITH THIS RE: RL -> DON'T CREATE BACK PROJECTIONS??
-                # NON-TERMINAL Mechanism
-                # errorSource at next level projects to a MonitoringMechanism:
-                #    instantiate ObjectiveMechanism configured with WeightedError Function
-                #    (computes contribution of each element in errorSource to error at level to which it projects)
-                #    and the back-projection for its error signal:
-                if next_level_objective_mech_output:
-                    error_signal = np.zeros_like(next_level_objective_mech_output.value)
-                    next_level_output = projection.receiver.owner.outputState
-                    activity = np.zeros_like(next_level_output.value)
-                    matrix=projection.parameterStates[MATRIX]
-                    derivative = next_level_objective_mech_output.sendsToProjections[0].\
-                        receiver.owner.receiver.owner.function_object.derivative
-                    from PsyNeuLink.Components.Functions.Function import WeightedError
-                    objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
-                                                                       next_level_objective_mech_output],
-                                                              names=['ACTIVITY','ERROR_SIGNAL'],
-                                                              function=ErrorDerivative(variable_default=[activity,
-                                                                                                       error_signal],
-                                                                                       derivative=derivative),
-                                                              role=LEARNING,
-                                                              name=self.mappingProjection.name + " Error_Derivative")
-                # TERMINAL Mechanism
-                # errorSource at next level does NOT project to an ObjectiveMechanism:
-                #     instantiate ObjectiveMechanism configured as a comparator
-                #         that compares errorSource output with external training signal
-                else:
-                    # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
-                    try:
-                        sample_state_name = self.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
-                        sample_source = self.errorSource.outputStates[sample_state_name]
-                        sample_size = np.zeros_like(sample_source)
-                    except KeyError:
-                        # No state specified so use Mechanism as sender arg
-                        sample_source = self.errorSource
-                        sample_size = np.zeros_like(self.errorSource.outputState.value)
-
-                    # Assign output_signal to output of errorSource
-                    if self.function.componentName is BACKPROPAGATION_FUNCTION:
-                        target_size = np.zeros_like(self.errorSource.outputState.value)
-                    # Force sample and target of Comparartor to be scalars for RL
-                    elif self.function.componentName is RL_FUNCTION:
-                        sample_size = np.array([0])
-                        target_size = np.array([0])
-                    else:
-                        raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-                                                  format(self.function.name, self.name))
-
-                    # IMPLEMENTATION NOTE: specify target as a template value (matching the sample's output value)
-                    #                      since its projection (from either a ProcessInputState or a SystemInputState)
-                    #                      will be instantiated by the Composition object to which the mechanism belongs
-                    # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
-                    # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
-                    objective_mechanism = ObjectiveMechanism(default_input_value=[sample_size, target_size],
-                                                             monitored_values=[sample_source, target_size],
-                                                             names=[SAMPLE,TARGET],
-                                                             # FIX: WHY DO WEIGHTS HAVE TO BE AN ARRAY HERE??
-                                                             function=LinearCombination(weights=[[-1], [1]]),
-                                                             role=LEARNING,
-                                                             params= {OUTPUT_STATES:
-                                                                          [{NAME:TARGET_ERROR},
-                                                                           {NAME:TARGET_ERROR_MEAN,
-                                                                            CALCULATE:lambda x: np.mean(x)},
-                                                                           {NAME:TARGET_ERROR_SUM,
-                                                                            CALCULATE:lambda x: np.sum(x)},
-                                                                           {NAME:TARGET_SSE,
-                                                                            CALCULATE:lambda x: np.sum(x*x)},
-                                                                           {NAME:TARGET_MSE,
-                                                                            CALCULATE:lambda x: np.sum(x*x)/len(x)}]},
-                                                             name=self.mappingProjection.name + " Target_Error")
-                    objective_mechanism.learning_role = TARGET
-
-            self.sender = objective_mechanism.outputState
-
-            # "Cast" self.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
-            # Note: self.variable will be re-assigned in _instantiate_function()
-            self.variable = self.error_signal
-
-            # Add self as outgoing projection from MonitoringMechanism
-            from PsyNeuLink.Components.Projections.Projection import _add_projection_from
-            _add_projection_from(sender=objective_mechanism,
-                                state=objective_mechanism.outputState,
-                                projection_spec=self,
-                                receiver=self.receiver,
-                                context=context)
-
-        # VALIDATE THAT OUTPUT OF SENDER IS SAME LENGTH AS THIRD ITEM (ERROR SIGNAL) OF SEL.FFUNCTION.VARIABLE
-
-        # Add reference to MonitoringMechanism to MappingProjection
-        self.mappingProjection.monitoringMechanism = objective_mechanism
 
     def _validate_error_signal(self, error_signal):
         """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
@@ -760,3 +937,4 @@ FROM TODO:
     @property
     def monitoringMechanism(self):
         return self.sender.owner
+
