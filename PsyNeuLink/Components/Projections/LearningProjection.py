@@ -379,18 +379,18 @@ class LearningProjection(Projection_Base):
         """Instantiate LearningMechanism
         """
 
-        # If LearningMechanism or its outputState were specified, allow super() to handle final assignments
+        # If LearningMechanism or its outputState was specified, allow super() to handle final assignments
         if isinstance(self.sender, (OutputState, LearningMechanism)):
             super()._instantiate_sender(context=context)
 
             # Sender should now be outputState (assigned by super() if it was necessary)
             # Validate that it belongs to an ObjectiveMechanism being used for learning
 
-        # ObjectiveMechanism was not specified or specified by class, so call composition to instantiate
+        # LearningMechanism was not specified or specified by class, so call composition for "automatic" instantiation
         else:
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
-                import _instantiate_objective_mechanism_for_learning
-            _instantiate_objective_mechanism_for_learning(self)
+                import _instantiate_learning_mechanism
+            _instantiate_learning_mechanism(self)
 
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
