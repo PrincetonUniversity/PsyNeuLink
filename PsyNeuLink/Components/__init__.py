@@ -262,7 +262,8 @@ for projection_type in ProjectionRegistry:
     try:
         projection_sender = projection_params[PROJECTION_SENDER]
     except KeyError:
-        raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type.__name__))
+        # raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type.__name__))
+        raise InitError("{0} must define paramClassDefaults[PROJECTION_SENDER]".format(projection_type))
 
     # If it is a subclass of Mechanism or State, leave it alone
     if (inspect.isclass(projection_sender) and

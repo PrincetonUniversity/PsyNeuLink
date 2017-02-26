@@ -267,11 +267,12 @@ class LearningProjection(Projection_Base):
     variableClassDefault = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_STATES: None, # This suppresses parameterStates
+    paramClassDefaults.update({PROJECTION_SENDER: ObjectiveMechanism,
+                               PARAMETER_STATES: None, # This suppresses parameterStates
                                FUNCTION: Linear,
-                               # FUNCTION_PARAMS:
-                               #     {SLOPE: 1,
-                               #      INTERCEPT: 0},
+                               FUNCTION_PARAMS:
+                                   {SLOPE: 1,
+                                    INTERCEPT: 0},
                                WEIGHT_CHANGE_PARAMS:  # Determine how weight changes are applied to weight matrix
                                    {                  # Note:  assumes MappingProjection.function is LinearCombination
                                        FUNCTION_PARAMS: {OPERATION: SUM},
@@ -281,7 +282,6 @@ class LearningProjection(Projection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 variable:tc.any(list, np.ndarray),
                  sender:tc.optional(tc.any(OutputState, ObjectiveMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  params:tc.optional(dict)=None,
@@ -301,21 +301,6 @@ class LearningProjection(Projection_Base):
 
         # Flag for deferred initialization
         self.value = DEFERRED_INITIALIZATION
-
-    def _validate_variable(self, variable, context=None):
-
-        super()._validate_variable(variable=variable, context=context)
-
-        if len(variable) != 3:
-            raise LearningProjectionError("The number of items ({}) in the variable arg for {} must be 3".
-                                          format(len(variable), self.name))
-        if not all(is_numeric(i) for i in variable):
-            offender = next(i for i in variable if not is_numeric(i))
-            item_num = variable.index(offender)
-            item_num_string = ['first', 'second', 'third'][item_num]
-            raise LearningProjectionError("The {} item of the variable arg of has a non-numeric item ({})".
-                                          format(item_num_str, len(variable), self.name, offender))
-
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
@@ -360,7 +345,7 @@ class LearningProjection(Projection_Base):
             except KeyError:
                 raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
                                               "has no MATRIX parameter state".format(receiver.name, self.name))
-        if not any(s in {ParameterState, MappingProjection} for s in {receier, type(receiver)}):
+        if not any(s in {ParameterState, MappingProjection} for s in {receiver, type(receiver)}):
             raise LearningProjectionError("The sender arg for {} must be an ObjectiveMechanism, "
                                           "the outputState of one, or a reference to the class"
                                           .format(PROJECTION_SENDER, sender, self.name, ))
@@ -377,6 +362,12 @@ class LearningProjection(Projection_Base):
                     raise LearningProjectionError("{} of {} contains a function specification ({}) that would override "
                                                   "the LinearCombination function of the targeted MappingProjection".
                                                   format(WEIGHT_CHANGE_PARAMS,self.name,param_value))
+
+    def _instantiate_attributes_before_function(self, context=None):
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
+            import instantiate_learning_components
+        instantiate_learning_components(self, context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
@@ -409,6 +400,6 @@ class LearningProjection(Projection_Base):
     def weight_change_matrix(self):
         return self.value
 
-    @weight_change_natrix.setter
+    @weight_change_matrix.setter
     def weight_change_matrix(self,assignment):
         self.value = assignment
