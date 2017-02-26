@@ -136,6 +136,7 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import Function
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 
 
 class LearningAuxilliaryError(Exception):
@@ -193,18 +194,19 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
     # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
     #                       will need to be dealt with in the Composition (by examining its learning graph??)
 
-    if any(isinstance(projection, LearningProjection) for projection in
-            learning_projection.receiver.receivesFromProjections):
+    # FIX: HAVE TO DISCOUNT learning_projection WHICH APPARENTLY CAN ALREDY HAVE BEEN ASSIGNED
+    if any((isinstance(projection, LearningProjection)  and not projection is learning_projection) for projection in
+           learning_projection.receiver.receivesFromProjections):
         raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
-                                      format(self.name, learning_projection.receiver.owner.name))
+                                      format(learning_projection.name, learning_projection.receiver.owner.name))
 
     # Now that activation_projection has been identified and validated, get its components (lc)
-    lc = learning_components()._get_for_activation_components(learning_projection)
+    lc = learning_components(learning_projection=learning_projection)
 
     # Next, get error_matrix and then the remaining learning (error-related) components:
     lc_projs = lc.activation_sample.sendsToProjections
 
-    learning_proj_for_error_proj = next(lc_projs
+    learning_proj_for_error_proj = next(lc_projs)
 
 
 
