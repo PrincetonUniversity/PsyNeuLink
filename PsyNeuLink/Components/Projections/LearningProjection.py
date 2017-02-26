@@ -76,6 +76,7 @@ from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 
 # Params:
 
@@ -284,19 +285,23 @@ class LearningProjection(Projection_Base):
     def __init__(self,
                  sender:tc.optional(tc.any(OutputState, ObjectiveMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
-                 params:tc.optional(dict)=None,
                  learning_rate:tc.optional(float)=None,
+                 learning_function:tc.optional(is_function_type)=BackPropagation,
+                 params:tc.optional(dict)=None,
                  name=None,
                  prefs:is_pref_set=None,
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(learning_rate=learning_rate, params=params)
+        params = self._assign_args_to_param_dicts(learning_function=learning_function,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
 
         # Store args for deferred initialization
         self.init_args = locals().copy()
         self.init_args['context'] = self
         self.init_args['name'] = name
+        del self.init_args['learning_function']
         del self.init_args['learning_rate']
 
         # Flag for deferred initialization
