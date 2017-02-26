@@ -23,11 +23,11 @@ COMMENT:
           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
           • Use only one ObjectiveMechanism for all levels with the following args:
                 default_input_value[[ACTIVITY][ERROR]]
-                monitored_values: [[next_level_mech.OutputState][next_level_mech.objective_mechanism.OutputState]]
+                monitored_values: [[error_mech.OutputState][error_mech.objective_mechanism.OutputState]]
                 names: [[ACTIVITY][ERROR]]
                 function:  ErrorDerivative(variable, derivative)
                                variable[0] = activity
-                               variable[1] = error_signal from next_level_mech ObjectiveMechanism (target for TERMINAL)
+                               variable[1] = error_signal from error_mech ObjectiveMechanism (target for TERMINAL)
                                derivative = error_derivative (1 for TERMINAL)
                 role:LEARNING
           • Use only one Learning mechanism with the following args:
@@ -40,33 +40,33 @@ COMMENT:
             Needs to know
                 activation_sample_mech (Mechanism)
                     activation_derivative (function)
-                next_level_mech (Mechanism)
+                error_mech (Mechanism)
                     error_derivative (function)
-                    error_matrix (ndarray) - for MappingProjection from activation_sample_mech to next_level_mech
+                    error_matrix (ndarray) - for MappingProjection from activation_sample_mech to error_mech
             ObjectiveMechanism:
                 Initialize variable:
-                      use next_level_mech.outputState.valuee to initialize variable[ACTIVITY]
-                      use outputState.value of next_level_mech's objective_mechanism to initialize variable[ERROR]
+                      use error_mech.outputState.valuee to initialize variable[ACTIVITY]
+                      use outputState.value of error_mech's objective_mechanism to initialize variable[ERROR]
                 Assign mapping projections:
                       nextLevel.outputState.value -> inputStates[ACTIVITY] of ObjectiveMechanism
                       nextLevel.objective_mechanism.outputState.value  -> inputStates[ERROR] of ObjectiveMechanism
                 NOTE: For TERMINAL mechanism:
-                          next_level_mech is Process or System InputState (function=Linear, so derivative =1), so that
-                             next_level_mech.outputState.value is the target, and
+                          error_mech is Process or System InputState (function=Linear, so derivative =1), so that
+                             error_mech.outputState.value is the target, and
                              error_derivative = 1
                              error_matrix = IDENTITY_MATRIX (this should be imposed)
             LearningMechanism:
                 Initialize variable:
                       use mapping_projection.sender.value to initialize variable[ACTIVATION_INPUT_INDEX]
                       use activation_sample_mech_outputState.value to initialize variable[ACTIVATION_SAMPLE_INDEX]
-                      use next_level_mech.objecdtive_mechanism.OutputState.value to initialize variable[ERROR_SIGNAL_INDEX]
+                      use error_mech.objecdtive_mechanism.OutputState.value to initialize variable[ERROR_SIGNAL_INDEX]
                 Assign activation_derivative using function of activation_sample_mech of mapping_projection (one being learned)
-                Assign error_derivative using function of next_level_mech
-                Assign error_matrix as runtime_param using projection to next_level_mech [ALT: ADD TO VARIABLE]
+                Assign error_derivative using function of error_mech
+                Assign error_matrix as runtime_param using projection to error_mech [ALT: ADD TO VARIABLE]
                 Assign mapping projections:
                       mapping_projection.sender -> inputStates[ACTIVATION_INPUT_INDEX] of LearningMechanism
                       activation_sample_mech.outputState -> inputStates[ACTIVATION_SAMPLE_INDEX] of LearningMechanism
-                      next_level_mech.objective_mechanism.OutputState.value -> inputStates[ERROR_SIGNAL_INDEX]
+                      error_mech.objective_mechanism.OutputState.value -> inputStates[ERROR_SIGNAL_INDEX]
 
             For TARGET MECHANISM:  Matrix is IDENTITY MATRIX??
             For TARGET MECHANISM:  derivative for ObjectiveMechanism IDENTITY FUNCTION
@@ -85,18 +85,18 @@ COMMENT:
             activation_derivative (function)
             error_matrix (ParameterState)
             error_derivative (function)
-            next_level_mech (error_source_mech) (ProcessingMechanism)
-            next_level_objective_mech (error_source_objective_mech) (ObjectiveMechanism)
+            error_mech (error_source_mech) (ProcessingMechanism)
+            error_objective_mech (error_source_objective_mech) (ObjectiveMechanism)
 
         Instantiate:
             ObjectiveMechanism:
                 Construct with:
-                   monitor_values: [next_level_mech.outputState.value, next_level_mech.objective_mech.outputState.value]
+                   monitor_values: [error_mech.outputState.value, error_mech.objective_mech.outputState.value]
                    names = [ACTIVITY/SAMPLE, ERROR/TARGET]
                    function = ErrorDerivative(derivative=error_derivative)
                 NOTE: For TERMINAL mechanism:
-                          next_level_mech is Process or System InputState (function=Linear, so derivative =1), so that
-                             next_level_mech.outputState.value is the target, and
+                          error_mech is Process or System InputState (function=Linear, so derivative =1), so that
+                             error_mech.outputState.value is the target, and
                              error_derivative = 1
                              error_matrix = IDENTITY_MATRIX (this should be imposed)
             LearningMechanism:
@@ -177,7 +177,7 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
       When searching downstream for projections that are being learned (to identify the next objective mechanism as a
       source for the LearningMechanism's error_signal), the method uses the first projection that it finds, beginning
       in `primary outputState <OutputState_Primary>` of the activation_sample_mech, and continuing similarly
-      in the next_level_mech.  If any conflicting implementations of learning components are encountered,
+      in the error_mech.  If any conflicting implementations of learning components are encountered,
       an exception is raised.
 
     """
@@ -201,6 +201,7 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
                                       format(learning_projection.name, learning_projection.receiver.owner.name))
 
     # Now that activation_projection has been identified and validated, get its components (lc)
+    # Note: error-related components won't get be defined
     lc = learning_components(learning_projection=learning_projection)
 
     # TEST:
@@ -210,14 +211,13 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
     x = lc.activation_sample
     x = lc.activation_mech_fct
     x = lc.activation_derivative
-    x = lc.error_projection
-    x = lc.error_matrix
-    x = lc.error_derivative
-    x = lc.next_level_mech
-    x = lc.next_level_objective_mech
+    # x = lc.error_projection
+    # x = lc.error_matrix
+    # x = lc.error_derivative
+    # x = lc.error_mech
+    # x = lc.error_objective_mech
 
     # Next, get error_matrix and then the remaining learning (error-related) components:
-    lc_projs = lc.activation_sample.sendsToProjections
 
     learning_proj_for_error_proj = next(lc_projs)
 
@@ -247,7 +247,7 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
                 #     the weight matrix for the next level's projection
                 #     the MonitoringMechanism that provides error_signal
                 # next_level_weight_matrix = projection.matrix
-                next_level_objective_mech_output = next_level_learning_projection.sender
+                error_objective_mech_output = next_level_learning_projection.sender
 
     # errorSource does not project to an ObjectiveMechanism used for learning
     if not objective_mechanism:
@@ -258,16 +258,16 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
         #    instantiate ObjectiveMechanism configured with WeightedError Function
         #    (computes contribution of each element in errorSource to error at level to which it projects)
         #    and the back-projection for its error signal:
-        if next_level_objective_mech_output:
-            error_signal = np.zeros_like(next_level_objective_mech_output.value)
+        if error_objective_mech_output:
+            error_signal = np.zeros_like(error_objective_mech_output.value)
             next_level_output = projection.receiver.owner.outputState
             activity = np.zeros_like(next_level_output.value)
             matrix=projection.parameterStates[MATRIX]
-            derivative = next_level_objective_mech_output.sendsToProjections[0].\
+            derivative = error_objective_mech_output.sendsToProjections[0].\
                 receiver.owner.receiver.owner.function_object.derivative
             from PsyNeuLink.Components.Functions.Function import WeightedError
             objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
-                                                               next_level_objective_mech_output],
+                                                               error_objective_mech_output],
                                                       names=['ACTIVITY','ERROR_SIGNAL'],
                                                       function=ErrorDerivative(variable_default=[activity,
                                                                                                error_signal],
@@ -394,9 +394,9 @@ class learning_components(object):
     * `activation_derivative` (function):  derivative of function for activation_mech
     * `error_projection` (`MappingProjection`):  one that has the error_matrix
     * `error_matrix` (`ParameterState`):  parameterState for error_matrix
-    * `error_derivative` (function):  deriviative of function of next_level_mech
-    * `next_level_mech` (ProcessingMechanism):  mechanism to which error_projection projects
-    * `next_level_objective_mech` (`ObjectiveMechanism`):  objective mechanism for error_projection
+    * `error_derivative` (function):  deriviative of function of error_mech
+    * `error_mech` (ProcessingMechanism):  mechanism to which error_projection projects
+    * `error_objective_mech` (`ObjectiveMechanism`):  objective mechanism for error_projection
     """
 
     def __init__(self, learning_projection, context=None):
@@ -413,8 +413,8 @@ class learning_components(object):
         self._error_projection = None
         self._error_matrix = None
         self._error_derivative = None
-        self._next_level_mech = None
-        self._next_level_objective_mech = None
+        self._error_mech = None
+        self._error_objective_mech = None
 
     # def _get_activation_components(self, context=None):
     #     """Assign components required to implement the `LearningMechanism`
@@ -649,55 +649,55 @@ class learning_components(object):
 
 
     # ---------------------------------------------------------------------------------------------------------------
-    # next_level_mech:  mechanism to which error_projection projects (ProcessingMechanism)
+    # error_mech:  mechanism to which error_projection projects (ProcessingMechanism)
     @property
-    def next_level_mech(self):
+    def error_mech(self):
 
         # Find from error_projection
         def _get_next_lev_mech():
             if not self.error_projection:
-                raise LearningAuxilliaryError("next_level_mech not identified: requires that "
+                raise LearningAuxilliaryError("error_mech not identified: requires that "
                                               "error_projection has already been assigned to the {}".
                                               format(self.__class__.name__))
             try:
-                self.next_level_mech = self.error_projection.receiver.owner
+                self.error_mech = self.error_projection.receiver.owner
             except AttributeError:
-                raise LearningAuxilliaryError("next_level_mech not identified: error_projection ({})"
+                raise LearningAuxilliaryError("error_mech not identified: error_projection ({})"
                                               "does not appear to have a receiver or owner".
                                               format(self.error_projection))
             if not isinstance(next_lev_mech, ProcessingMechanism_Base):
-                raise LearningAuxilliaryError("next_level_mech found ({}) but it does not "
+                raise LearningAuxilliaryError("error_mech found ({}) but it does not "
                                               "appear to be a ProcessingMechanism".
                                               format(next_lev_mech.name))
-        return self._next_level_mech or get_next_lev_mech()
+        return self._error_mech or get_next_lev_mech()
 
-    @next_level_mech.setter
-    def next_level_mech(self, assignment):
+    @error_mech.setter
+    def error_mech(self, assignment):
         if isinstance(assignment, (ProcessingMechanism)):
-            self._next_level_mech = assignment
+            self._error_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to next_level_mech; "
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_mech; "
                                           "it must be a ProcessingMechanism.")
 
 
     # -----------------------------------------------------------------------------------------------------------
-    # error_derivative:  deriviative of function of next_level_mech (function)
+    # error_derivative:  deriviative of function of error_mech (function)
     @property
     def error_derivative(self):
-        # Find from next_level_mech:
+        # Find from error_mech:
         def _get_error_deriv():
-            if not self.next_level_mech:
+            if not self.error_mech:
                 raise LearningAuxilliaryError("error_derivative not identified: requires that "
-                                              "next_level_mech has already been assigned to the {}".
+                                              "error_mech has already been assigned to the {}".
                                               format(self.__class__.name__))
             try:
-                self.error_derivative = self.next_level_mech.function_object.derivative
+                self.error_derivative = self.error_mech.function_object.derivative
             except AttributeError:
                 raise LearningAuxilliaryError("error_derivative not identified: the function ({}) "
-                                              "for next_level_mech ({}) does not have a derivative attribute".
+                                              "for error_mech ({}) does not have a derivative attribute".
                                               format(self.name,
-                                                     self.next_level_mech.function_object.__class__.__name__,
-                                                     self.next_level_mech.name))
+                                                     self.error_mech.function_object.__class__.__name__,
+                                                     self.error_mech.name))
         return self._error_derivative or _get_error_deriv()
 
     @error_derivative.setter
@@ -710,50 +710,50 @@ class learning_components(object):
 
 
     # ---------------------------------------------------------------------------------------------------------------
-    # next_level_objective_mech:  objective mechanism for error_projection (ObjectiveMechanism)
+    # error_objective_mech:  objective mechanism for error_projection (ObjectiveMechanism)
     @property
-    def next_level_objective_mech(self):
+    def error_objective_mech(self):
         # Find from error_matrix:
         def _get_obj_mech():
             if not self.error_matrix:
-                raise LearningAuxilliaryError("next_level_objective_mech not identified: requires that "
+                raise LearningAuxilliaryError("error_objective_mech not identified: requires that "
                                               "error_matrix has already been assigned to the {}".
                                               format(self.__class__.name__))
             learning_proj = next((proj for proj in self.error_matrix.receivesFromProjections
                                  if isinstance(proj, LearningProjection)),None)
             if not learning_proj:
-                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "error_matrix does not have a LearningProjection")
             try:
                 learning_mech = learning_proj.sender.owner
             except AttributeError:
-                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "the LearningProjection to error_matrix does not have a sender")
             if not isinstance(learning_mech, LearningMechansim):
-                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "the LearningProjection to error_matrix does not come from a "
                                               "LearningMechanism")
             try:
-                self.next_level_objective_mech = next((proj.sender.owner
+                self.error_objective_mech = next((proj.sender.owner
                                                  for proj in learning_mech.inputState.receivesFromProjections
                                                  if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
             except AttributeError:
-                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+                raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "could not find any projections to the LearningMechanism ({})".
                                               format(learning_mech))
-            if not self.next_level_objective_mech:
-                raise LearningAuxilliaryError("next_level_objective_mech not identified: "
+            if not self.error_objective_mech:
+                raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "the LearningMechanism ({}) does not receive a projection "
                                               "from an ObjectiveMechanism".
                                               format(learning_mech))
-        return self._next_level_objective_mech or _get_obj_mech()
+        return self._error_objective_mech or _get_obj_mech()
 
-    @next_level_objective_mech.setter
-    def next_level_objective_mech(self, assignment):
+    @error_objective_mech.setter
+    def error_objective_mech(self, assignment):
         if isinstance(assignment, (ObjectiveMechanism)):
-            self._next_level_objective_mech = assignment
+            self._error_objective_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to next_level_objective_mech; "
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
                                           "it must be a ObjectiveMechanism.")
 
 
