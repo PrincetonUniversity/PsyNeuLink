@@ -488,7 +488,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  variable:(list, np.ndarray),
                  error_matrix:tc.any(list, np.ndarray, ParameterState, MappingProjection),
-                 function:function_type=BackPropagation,
+                 function:is_function_type=BackPropagation,
                  learning_rate:float=1.0,
                  params=None,
                  name=None,
@@ -534,7 +534,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if not np.array(self.variable[i]).ndim == 1:
                 raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
                                               format(item_num, self.name, item_name, self.variable[i]))
-            if not (is_numeric(self.variable[i]):
+            if not (is_numeric(self.variable[i])):
                 raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num, self.name, item_name, self.variable[i]))
 
@@ -677,7 +677,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal = self.function(variable=[self.activation_input,
                                                        self.activation_sample,
-                                                       weighted_error_signal)
+                                                       weighted_error_signal])
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))

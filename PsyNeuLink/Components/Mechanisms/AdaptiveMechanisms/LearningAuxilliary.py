@@ -157,60 +157,55 @@ def _is_learning_spec(spec):
 
 
 def _instantiate_learning_mechanism(learning_projection, context=None):
+    """Instantiate a LearningMechanism, its projection from an Objective Mechanism, and instantiate latter if necessary
 
-    # Determine whether receiver for LearningProjection has been instantiated, and instantiate it if not,
-    #    as it is required here to assign projection, activation_derivative and error_matrix to LearningMechanism
+    * Terminology:
 
+    Notes:
+
+    * Once the `receiver` for the learning_projection has been identified, or instantiated,
+          it is thereafter referred to (by reference to it owner) as the `activation_projection`,
+          and the mechanism to which it projects as the `activation_mech`.
+
+    * This method only supports a single pathway for learning.  This is consistent with its implementation at the
+      process level (convergent and divergent pathways for learning can be accomplished through compostion in a
+      system).  Accordingly:
+
+      - each LearningMechanism can have only one LearningProjection
+
+      - each ProcessingMechanism can have only one MappingProjection that is subject to learning
+
+      When searching downstream for projections that are being learned (to identify the next objective mechanism as a
+      source for the LearningMechanism's error_signal), the method uses the first projection that it finds, beginning
+      in `primary outputState <OutputState_Primary>` of the activation_sample_mech, and continuing similarly
+      in the next_level_mech.  If any conflicting implementations of learning components are encountered,
+      an exception is raised.
+
+    """
+
+    # First determine whether receiver for LearningProjection has been instantiated and, if not, instantiate it:
+    #    this is required to instantiate the LearningMechanism, as well as an ObjectiveMechanism if necessary.
     try:
         isinstance(learning_projection.receiver.owner, MappingProjection)
     except AttributeError:
         _instantiate_receiver_for_learning_projection(learning_projection, context=context)
 
-    # Now that the receiver has been identifed (henceforth referred to by its owner mechanism as activation_mech)
-    # get its components
-    components = learning_components()._get_for_projection(learning_projection)
 
-    # INSTANTIATE LEARNING MECHANISMS HERE, AND NECESSARY MAPPING PROJECTIONS
-    learning_mech = 
+    # Next, validate that the receiver does not receive any other LearningProjections
+    # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
+    #                       will need to be dealt with in the Composition (by examining its learning graph??)
 
+    if any(isinstance(projection, LearningProjection) for projection in
+            learning_projection.receiver.receivesFromProjections):
+        raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since it already has one.".
+                                      format(self.name, learning_projection.receiver.owner.name))
 
-# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-# def _instantiate_objective_mechanism_for_learning(learning_projection:LearningProjection,
-def _instantiate_objective_mechanism_for_learning(learning_projection, context=None):
-    """Instantiate ObjectiveMechanism
-    FORMERLY _instantiate_sender
-    Parse `objective_mechanism_spec` specification and call for implementation if necessary, including a
-        `MappingProjection` from it to the recipient's `primary inputState <Mechanism_InputStates>`.
-    Assign its outputState to _objective_mechanism_output.
-    Verify that outputState's value is compatible with `error_signal`.
-
-    # ObjectiveMechanism:
-    # - for terminal mechanism of Process, instantiate with Comparator function
-    # - for preceding mechanisms, instantiate with WeightedError function
-
-    FROM LearningProjection:  [STILL NEEDED??]
-    Call _instantiate_receiver first since both _instantiate_objective_mechanism and _instantiate_function
-    reference the receiver's (i.e., MappingProjection's) weight matrix: self.mappingProjection.matrix
-
-    """
+    # Now that activation_projection has been identified and validated, get its components (lc)
+    lc = learning_components()._get_for_projection(learning_projection)
 
 
-    # MOVED TO instantiate_learning_mechanism ABOVE;  REINSTATE?
-    # # Determine whether receiver has been instantiated, and instantiate it if not, as it is required here to identify
-    # #    next_level_mech (for its output, function, and objective mechanism)
-    # try:
-    #     isinstance(learning_projection.receiver.owner, MappingProjection)
-    # except AttributeError:
-    #     _instantiate_receiver_for_learning_projection(learning_projection, context=context)
-    #
-    # # Now that receiver has been identified, get its components
-    # components = learning_components()._get_for_projection(learning_projection)
-    #
-    # objective_mechanism = None
-    # next_level_objective_mech_output = None
-    #
     # Check if activation_mech has a projection to an ObjectiveMechanism or some other type of ProcessingMechanism
-    # IMPLEMENTATION NOTE: this assumes that the only relevant outgoing projections are from its primary outputState
+    # IMPLEMENTATION NOTE: this uses the first projection found (staring with the primary outputState
     for projection in components.activation_sample.sendsToProjections:
         # activation_mech has a projection to an ObjectiveMechanism being used for learning,
         #  so validate it, assign it, and quit search
@@ -329,6 +324,41 @@ def _instantiate_objective_mechanism_for_learning(learning_projection, context=N
     # Add reference to MonitoringMechanism to MappingProjection
     components.activation_projection.monitoringMechanism = objective_mechanism
 
+
+
+    # INSTANTIATE LEARNING MECHANISMS HERE, AND NECESSARY MAPPING PROJECTIONS
+    # Needs:
+    # variable:
+    #    activation_input
+    #    activation_sample
+    #    error_signal from objective_mechanism
+    # error_matrix
+    # function(derivative=activation_derivative):
+    #     learning_projection.learning_function
+
+    learning_mech  = LearningMechanism()
+
+
+# from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+# def _instantiate_objective_mechanism_for_learning(learning_projection:LearningProjection,
+def _instantiate_objective_mechanism_for_learning(learning_projection, context=None):
+    """Instantiate ObjectiveMechanism
+    FORMERLY _instantiate_sender
+    Parse `objective_mechanism_spec` specification and call for implementation if necessary, including a
+        `MappingProjection` from it to the recipient's `primary inputState <Mechanism_InputStates>`.
+    Assign its outputState to _objective_mechanism_output.
+    Verify that outputState's value is compatible with `error_signal`.
+
+    # ObjectiveMechanism:
+    # - for terminal mechanism of Process, instantiate with Comparator function
+    # - for preceding mechanisms, instantiate with WeightedError function
+
+    FROM LearningProjection:  [STILL NEEDED??]
+    Call _instantiate_receiver first since both _instantiate_objective_mechanism and _instantiate_function
+    reference the receiver's (i.e., MappingProjection's) weight matrix: self.mappingProjection.matrix
+
+    """
+    pass
 
 #region Learning Components
 class learning_components(object):
