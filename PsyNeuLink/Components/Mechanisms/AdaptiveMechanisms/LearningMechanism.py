@@ -624,6 +624,38 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #     - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
         #     - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
 
+    # MOVED FROM LearningProjection
+    def _instantiate_sender(self, context=None):
+        """Instantiate ObjectiveMechanism
+        """
+
+        # If ObjectiveMechanism or its outputState were specified, allow super() to handle final assignments
+        if isinstance(self.sender, (OutputState, ObjectiveMechanism)):
+            super()._instantiate_sender(context=context)
+
+            # # SHOULD HAVE BEEN HANDLED BY super()
+            # # ObjectiveMechanism specified for sender, so re-assign to its outputState
+            # if isinstance(learning_projection.sender, ObjectiveMechanism):
+            #     learning_projection.sender = learning_projection.sender.outputState
+
+            # Sender should now be outputState (assigned by super(), if necessary)
+            # Validate that it belongs to an ObjectiveMechanism being used for learning
+            if not _objective_mechanism_role(learning_projection.sender.owner, LEARNING):
+                raise LearningProjectionError("OutputState ({}) specified as sender for {} belongs to a {}"
+                                          " rather than an ObjectiveMechanism with role=LEARNING".
+                                          format(learning_projection.sender.name,
+                                                 learning_projection.name,
+                                                 learning_projection.sender.owner.__class__.__name__))
+
+        # LearningMechanism was not specified, or was specified by class, so call Composition to instantiate
+        else:
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
+                import _instantiate_learning_mechanism
+            _instantiate_learning_mechanism(self)
+
+        # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection)
+
+
     def _execute(self,
                 variable=None,
                 runtime_params=None,

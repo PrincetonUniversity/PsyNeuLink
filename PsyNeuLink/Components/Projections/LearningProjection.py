@@ -369,10 +369,19 @@ class LearningProjection(Projection_Base):
     #     instantiate_learning_components(self, context=context)
     #     super()._instantiate_attributes_before_function(context=context)
 
-    def _instantiate_sender(self, context=None):
 
-        if isinstance(self.sender, (OutputState, ObjectiveMechanism)):
+    def _instantiate_sender(self, context=None):
+        """Instantiate LearningMechanism
+        """
+
+        # If LearningMechanism or its outputState were specified, allow super() to handle final assignments
+        if isinstance(self.sender, (OutputState, LearningMechanism)):
             super()._instantiate_sender(context=context)
+
+            # Sender should now be outputState (assigned by super() if it was necessary)
+            # Validate that it belongs to an ObjectiveMechanism being used for learning
+
+        # ObjectiveMechanism was not specified or specified by class, so call composition to instantiate
         else:
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
                 import _instantiate_objective_mechanism_for_learning
