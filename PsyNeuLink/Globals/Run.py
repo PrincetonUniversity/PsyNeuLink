@@ -372,9 +372,7 @@ def run(object,
         clock=CentralClock,
         time_scale:tc.optional(tc.enum(TimeScale.TRIAL, TimeScale.TIME_STEP))=None,
         context=None):
-    """
-    COMMENT:
-    run(                         \
+    """run(                         \
     inputs,                      \
     num_executions=None,         \
     reset_clock=True,            \
@@ -388,7 +386,6 @@ def run(object,
     call_after_time_step=None,   \
     clock=CentralClock,          \
     time_scale=None)
-    COMMENT
 
     Run a sequence of executions for a `process <Process>` or `system <System>`.
 
@@ -575,13 +572,18 @@ def run(object,
                     object.target = targets[input_num]
 
                 elif object_type == SYSTEM:
-                    # This assumes that target order is aligned with order of targets in targetMechanisms list;
-                    # it is tested for dict format in _construct_stimulus_sets, but can't be insured for list format.
-                    for i, target in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
-                        # Assign current target to value attribute of ProcessInputState of each process
-                        # to which the targetMechanism belongs (i.e., that project to it's COMPARATOR_TARGET inputState)
-                        for process_target_projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections:
-                            process_target_projection.sender.value = targets[input_num][i]
+                    # Note: the following assumes that the order of the items in targets is alligned with
+                    #       the oreder of the TARGET mechanisms in the sytem's targetMechanisms list;
+                    #       it is tested for dict format in _construct_stimulus_sets,
+                    #       but can't be insured for list format.
+                    # For each TARGET mechanism in the system's targetMechanismList
+                    for i, target_mech in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
+                    # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
+                    #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
+                        object.targetInputStates[i].value = targets[input_num][i]
+                        for process_target_projection in \
+                                target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
+                            process_target_projection.sender.value = process_target_projection.sender.value * 0
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
@@ -874,30 +876,22 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
 
-                # MODIFIED 12/19/16 OLD:
-                # for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
-                # MODIFIED 12/19/16 NEW:
                 # Only assign inputs to processes for which there were originMechanisms specified
                 #    (i.e., *not* processes constructed during initialization, such as EVC prediction mechanisms)
                 #    and assign them in the order they appear in object.processes
-                for i in range(len(object.originMechanisms)):
-                    mech, runtime_params, phase_spec = object.processes[i]._mech_tuples[0]
-                # MODIFIED 12/19/16 END
+                for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
 
-                    for process, status in mech.processes.items():
-                        if process._isControllerProcess:
-                            continue
-                        if mech.systems[object] in {ORIGIN, SINGLETON}:
-                            if phase == phase_spec:
-                                stimulus = np.array(stimuli[mech][execution])
-                                if not isinstance(stimulus, Iterable):
-                                    stimulus = np.array([stimulus])
-                            else:
-                                if not isinstance(stimuli[mech][execution], Iterable):
-                                    stimulus = np.zeros(1)
-                                else:
-                                    stimulus = np.zeros(len(stimuli[mech][execution]))
-                        stimuli_in_phase.append(stimulus)
+                    if phase == phase_spec:
+                        stimulus = np.array(stimuli[mech][execution])
+                        if not isinstance(stimulus, Iterable):
+                            stimulus = np.array([stimulus])
+                    else:
+                        if not isinstance(stimuli[mech][execution], Iterable):
+                            stimulus = np.zeros(1)
+                        else:
+                            stimulus = np.zeros(len(stimuli[mech][execution]))
+                    stimuli_in_phase.append(stimulus)
+
                 stimuli_in_execution.append(stimuli_in_phase)
             stim_list.append(stimuli_in_execution)
 

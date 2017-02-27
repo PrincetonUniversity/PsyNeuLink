@@ -430,8 +430,10 @@ class ControlSignal(OutputState):
 
         """
 
-        # Validate cost functions:
-        for cost_function_name in costFunctionNames:
+        # Validate cost functions in request_set
+        #   This should be all of them if this is an initialization call;
+        #   Otherwise, just those specified in assign_params
+        for cost_function_name in [item for item in request_set if item in costFunctionNames]:
             cost_function = request_set[cost_function_name]
 
             # cost function assigned None: OK
@@ -486,25 +488,27 @@ class ControlSignal(OutputState):
         # - default is 1D np.array (defined by DEFAULT_ALLOCATION_SAMPLES)
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
-        allocation_samples = request_set[ALLOCATION_SAMPLES]
-        if isinstance(allocation_samples, list):
-            if iscompatible(allocation_samples, **{kwCompatibilityType: list,
-                                                       kwCompatibilityNumeric: True,
-                                                       kwCompatibilityLength: False,
-                                                       }):
-                # Convert to np.array to be compatible with default value
-                request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
-        elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
-            pass
-        else:
-            raise ControlSignalError("allocation_samples argument ({}) in {} must be "
-                                         "a list or 1D np.array of numbers".
-                                     format(allocation_samples, self.name))
+        if ALLOCATION_SAMPLES in request_set:
+            allocation_samples = request_set[ALLOCATION_SAMPLES]
+            if isinstance(allocation_samples, list):
+                if iscompatible(allocation_samples, **{kwCompatibilityType: list,
+                                                           kwCompatibilityNumeric: True,
+                                                           kwCompatibilityLength: False,
+                                                           }):
+                    # Convert to np.array to be compatible with default value
+                    request_set[ALLOCATION_SAMPLES] = np.array(allocation_samples)
+            elif isinstance(allocation_samples, np.ndarray) and allocation_samples.ndim == 1:
+                pass
+            else:
+                raise ControlSignalError("allocation_samples argument ({}) in {} must be "
+                                             "a list or 1D np.array of numbers".
+                                         format(allocation_samples, self.name))
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # ControlProjection Cost Functions
-        for cost_function_name in costFunctionNames:
+        # for cost_function_name in costFunctionNames:
+        for cost_function_name in [item for item in target_set if item in costFunctionNames]:
             cost_function = target_set[cost_function_name]
             if not cost_function:
                 continue
@@ -712,16 +716,21 @@ class ControlSignal(OutputState):
             controller.log.entries[self.name + " " +
                                       kpIntensity] = LogEntry(CurrentTime(), context, float(self.intensity))
             if not self.ignoreIntensityFunction:
-                controller.log.entries[self.name + " " + kpAllocation] =     \
-                    LogEntry(CurrentTime(), context, float(self.allocation))
-                controller.log.entries[self.name + " " + kpIntensityCost] =  \
-                    LogEntry(CurrentTime(), context, float(self.intensity_cost))
-                controller.log.entries[self.name + " " + kpAdjustmentCost] = \
-                    LogEntry(CurrentTime(), context, float(self.adjustment_cost))
-                controller.log.entries[self.name + " " + kpDurationCost] =   \
-                    LogEntry(CurrentTime(), context, float(self.duration_cost))
-                controller.log.entries[self.name + " " + kpCost] =           \
-                    LogEntry(CurrentTime(), context, float(self.cost))
+                controller.log.entries[self.name + " " + kpAllocation] = LogEntry(CurrentTime(),
+                                                                                  context,
+                                                                                  float(self.allocation))
+                controller.log.entries[self.name + " " + kpIntensityCost] =  LogEntry(CurrentTime(),
+                                                                                      context,
+                                                                                      float(self.intensity_cost))
+                controller.log.entries[self.name + " " + kpAdjustmentCost] = LogEntry(CurrentTime(),
+                                                                                      context,
+                                                                                      float(self.adjustment_cost))
+                controller.log.entries[self.name + " " + kpDurationCost] = LogEntry(CurrentTime(),
+                                                                                    context,
+                                                                                    float(self.duration_cost))
+                controller.log.entries[self.name + " " + kpCost] = LogEntry(CurrentTime(),
+                                                                            context,
+                                                                            float(self.cost))
     #endregion
 
         self.value = self.intensity

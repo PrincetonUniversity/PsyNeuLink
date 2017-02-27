@@ -442,8 +442,7 @@ def process(process_spec=None,
         the type of matrix used for default projections (see `matrix` parameter for `MappingProjection`).
 
     learning : Optional[LearningProjection spec]
-        implements :ref:`learning <LearningProjection_CreationLearningSignal>` for all
-        eligible projections in the process.
+        implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the process.
 
     target : List or ndarray : default ndarray of zeroes
         the value assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the
@@ -541,7 +540,7 @@ class Process_Base(Process):
     COMMENT:
         Description
         -----------
-            Process is a Category of the Function class.
+            Process is a Category of the Component class.
             It implements a Process that is used to execute a sequence of mechanisms connected by projections.
             NOTES:
                 * if no pathway or time_scale is provided:
@@ -1722,9 +1721,6 @@ class Process_Base(Process):
             # For each inputState of the mechanism
             for input_state in mech.inputStates.values():
                 input_state._deferred_init()
-                # # MODIFIED 12/20/16 OLD:
-                # self._instantiate__deferred_init_projections(input_state.receivesFromProjections, context=context)
-                # MODIFIED 12/20/16 NEW:
                 # Restrict projections to those from mechanisms in the current process
                 projections = []
                 for projection in input_state.receivesFromProjections:
@@ -1734,7 +1730,6 @@ class Process_Base(Process):
                     except AttributeError:
                         pass
                 self._instantiate__deferred_init_projections(projections, context=context)
-                # MODIFIED 12/20/16 END
 
             # For each parameterState of the mechanism
             for parameter_state in mech.parameterStates.values():
@@ -1798,13 +1793,7 @@ class Process_Base(Process):
                 # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
                 if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
                                                     mech_tuple in self._monitoring_mech_tuples):
-                    # # MODIFIED 10/2/16 OLD:
-                    # monitoring_mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax+1)
-                    # # MODIFIED 10/2/16 NEW:
-                    # mech_tuple = (monitoring_mechanism, None, self._phaseSpecMax)
-                    # MODIFIED 10/16/16 NEWER:
                     monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
-                    # MODIFIED 10/2/16 END
                     self._monitoring_mech_tuples.append(monitoring_mech_tuple)
 
     def _check_for_comparator(self):
@@ -1817,7 +1806,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        # MODIFIED 12/6/16 NEW:
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         def trace_monitoring_mechanism_projections(mech):
             """Recursively trace projections to monitoring mechanisms;
                    return ComparatorMechanism if one is found upstream;
@@ -1826,6 +1815,9 @@ class Process_Base(Process):
             for input_state in mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
                     sender = projection.sender.owner
+                    # If projection is not from another ObjectiveMechanism, ignore
+                    if not isinstance(sender, (ObjectiveMechanism, ComparatorMechanism)):
+                        continue
                     if isinstance(sender, ComparatorMechanism):
                         return sender
                     if sender.inputStates:
@@ -1836,7 +1828,6 @@ class Process_Base(Process):
                             continue
                     else:
                         continue
-        # MODIFIED 12/6/16 END
 
         if not self.learning:
             raise ProcessError("PROGRAM ERROR: _check_for_comparator should only be called"
@@ -1847,13 +1838,9 @@ class Process_Base(Process):
 
         if not comparators:
 
-            # # MODIFIED 12/6/16 OLD:
-            # raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
-            #                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
-
-            # MODIFIED 12/6/16 NEW:
             # Trace projections to first monitoring_mechanism (which is for the last mechanism in the process)
             #   (in case terminal mechanism of process is part of another process that has learning implemented)
+            #    in which case, should not assign Comparator, but rather WeightedError ObjectiveMechanism)
             comparator = trace_monitoring_mechanism_projections(self._monitoring_mech_tuples[0][0])
             if comparator:
                 if self.prefs.verbosePref:
@@ -1868,7 +1855,6 @@ class Process_Base(Process):
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no ComparatorMechanism mechanism".format(self.name, self.learning))
-            # MODIFIED 12/6/16 END
 
         elif len(comparators) > 1:
             comparator_names = list(comparatorMechanism.name for comparatorMechanism in comparators)
@@ -2325,10 +2311,14 @@ class Process_Base(Process):
         return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
-    """Encodes input to the process and transmits it to the `ORIGIN` mechanism in the process
+    """Encodes either an input to or target for the process and transmits it to the corresponding mechanism
 
-    Each instance encodes an item of the input to the process (a 1d array in the 2d input array) and provides it to a
-    MappingProjection that projects to one or more inputStates of the `ORIGIN` mechanism in the process.
+    Each instance encodes one of the following:
+    - an item of the `input <Process.input>` to the process (a 1d array in the 2d input array) and provides it to a
+        `MappingProjection` that projects to one or more `inputStates <Mechanism.Mechanism_Base.inputStates>` of the
+        `ORIGIN` mechanism in the process.
+    - a `target <Process.target>` to the process (also a 1d array) and provides it to a `MappingProjection` that
+         projects to the `TARGET` mechanism of the process.
 
     (See :ref:`Process_Input_And_OuputProcess` for an explanation of the mapping from processInputStates to
     `ORIGIN` mechanism inputStates when there is more than one process input value and/or mechanism inputState)
@@ -2336,7 +2326,7 @@ class ProcessInputState(OutputState):
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()
 
-       self.value is used to represent the corresponding element of the input arg to process.execute or run(process)
+       self.value is used to represent the corresponding item of the input arg to process.execute or process.run
 
     """
     def __init__(self, owner=None, variable=None, name=None, prefs=None):

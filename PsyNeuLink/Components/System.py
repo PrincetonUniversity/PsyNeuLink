@@ -217,7 +217,7 @@ in sequence or mechanism format, one target must be provided for each `TARGET` m
 Control
 ~~~~~~~
 Every system is associated with a single `controller`.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its `monitoredOutputStates` attribute), and uses that information to set the
+mechanisms in the system (listed in its `monitored_output_states` attribute), and uses that information to set the
 value of parameters for those or other mechanisms in the system, or their functions
 (see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
 monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled). The controller is
@@ -260,6 +260,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MechanismT
 from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import ComparatorMechanism, \
                                                                                       COMPARATOR_TARGET
+from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 
@@ -305,8 +306,9 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components import SystemDefaultControlMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 
 # System factory method:
@@ -317,6 +319,8 @@ def system(default_input_value=None,
            controller=SystemDefaultControlMechanism,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
+           # learning:tc.optional(_is_learning_spec)=None,
+           targets:tc.optional(tc.any(list, np.ndarray))=None,
            params:tc.optional(dict)=None,
            name:tc.optional(str)=None,
            prefs:is_pref_set=None,
@@ -328,10 +332,27 @@ def system(default_input_value=None,
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=`None`,  \
+    monitor_for_control=`None`,               \
+    targets=None                              \
     params=None,                              \
     name=None,                                \
     prefs=None)
+
+    COMMENT:
+       VERSION WITH learning
+        system(                                   \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=`None`,               \
+        learning=None,                            \
+        targets=None                              \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
+    COMMENT
 
     Factory method for System: returns instance of System.
 
@@ -374,6 +395,18 @@ def system(default_input_value=None,
         specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its `controller`
         (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
 
+    COMMENT:
+        learning : Optional[LearningProjection spec]
+            implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
+    COMMENT
+
+    targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
+        the values assigned to the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of each
+        `TARGET` mechanism in the system (listed in its `targetMechanisms` attribute).  There must be the same
+        number of items as there are `targetMechanisms`, and each item must have the same format (length and number
+        of elements) as the `target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the corresponding
+        `TARGET` mechanism.
+
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
         the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
@@ -408,6 +441,8 @@ def system(default_input_value=None,
                        initial_values=initial_values,
                        enable_controller=enable_controller,
                        monitor_for_control=monitor_for_control,
+                       # learning=learning,
+                       targets=targets,
                        params=params,
                        name=name,
                        prefs=prefs,
@@ -422,10 +457,27 @@ class System_Base(System):
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
     enable_controller=:keyword:`False`,       \
-    monitor_for_control=`None`,      \
+    monitor_for_control=`None`,               \
+    targets=None,                             \
     params=None,                              \
     name=None,                                \
     prefs=None)
+
+    COMMENT:
+        VERSION WITH learning
+        System_Base(                              \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=`None`,               \
+        learning=None,                            \
+        targets=None,                             \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
+    COMMENT
 
     Abstract class for System.
 
@@ -498,11 +550,12 @@ class System_Base(System):
         determines whether the `controller` is executed during system execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any process in the system
-        COMMENT:
-            or for the system itself.
-        COMMENT
-        .
+        indicates whether learning is being used;  is set to True if learning is specified for any processes
+        in the system or for the system itself.
+
+    targets : 2d nparray : default zeroes
+        used as template for the values of the system's `targetInputStates`, and to represent the targets specified in
+        the :keyword:`targets` argument of system's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
         contains a graph of all of the mechanisms in the system.
@@ -596,6 +649,12 @@ class System_Base(System):
             based on _target_mech_tuples)
         COMMENT
 
+    targetInputStates : List[SystemTargetInputState]
+        one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
+        :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
+        provide their values to the the `target <ComparatorMechanism.ComparatorMechanism.target>` inputState of each
+        `TARGET` mechanism during execution.
+
     COMMENT:
        IS THIS CORRECT:
     COMMENT
@@ -673,6 +732,8 @@ class System_Base(System):
                  controller=SystemDefaultControlMechanism,
                  enable_controller=False,
                  monitor_for_control=None,
+                 # learning=None,
+                 targets=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -687,6 +748,7 @@ class System_Base(System):
                                                  controller=controller,
                                                  enable_controller=enable_controller,
                                                  monitor_for_control=monitor_for_control,
+                                                 targets=targets,
                                                  params=params)
 
         # MODIFIED 12/15/16 OLD:
@@ -696,6 +758,7 @@ class System_Base(System):
         self.outputStates = {}
         self._phaseSpecMax = 0
         self.targets = None
+        self.targetInputStates = []
         self.learning = False
 
         register_category(entry=self,
@@ -812,11 +875,7 @@ class System_Base(System):
         """
         self._instantiate_processes(input=self.variable, context=context)
         self._instantiate_graph(context=context)
-
-        # MODIFIED 12/20/16 NEW:
-
         self._instantiate_learning_graph(context=context)
-        # MODIFIED 12/20/16 END
 
     def _instantiate_function(self, context=None):
         """Suppress validation of function
@@ -857,12 +916,14 @@ class System_Base(System):
             - add each pair as an entry in self.executionGraph
         """
 
-        self.variable = []
+        # # MODIFIED 2/8/17 OLD:  [SEE BELOW]
+        # self.variable = []
+        # MODIFIED 2/8/17 END
         self.mechanismsDict = {}
         self._all_mech_tuples = []
         self._allMechanisms = MechanismList(self, self._all_mech_tuples)
 
-        # Get list of processes specified in arg to init, possiblly appended by EVCMechanism (with prediction processes)
+        # Get list of processes specified in arg to init, possibly appended by EVCMechanism (with prediction processes)
         processes_spec = self.processes
 
         # Assign default Process if PROCESS is empty, or invalid
@@ -878,7 +939,15 @@ class System_Base(System):
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
         # Convert all entries to (process, input) tuples, with None as filler for absent input
+        input_index = input_index_curr = 0
         for i in range(len(processes_spec)):
+
+            # MODIFIED 2/8/17 NEW:
+            # Get list of origin mechanisms for processes that have already been converted
+            #   (for use below in assigning input)
+            orig_mechs_already_processed = list(p[0].originMechanisms[0] for
+                                                p in processes_spec if isinstance(p,ProcessTuple))
+            # MODIFIED 2/8/17 END
 
             # Entry is not a tuple
             #    presumably it is a process spec, so enter it as first item of ProcessTuple
@@ -889,22 +958,32 @@ class System_Base(System):
             if isinstance(processes_spec[i], tuple) and not isinstance(processes_spec[i], ProcessTuple):
                 processes_spec[i] = ProcessTuple(processes_spec[i][0], processes_spec[i][1])
 
+            # Input was NOT provided on command line, so get it from the process
             if input is None:
-                # FIX: ASSIGN PROCESS INPUT TO SYSTEM INPUT
                 process = processes_spec[i].process
                 process_input = []
                 for process_input_state in process.processInputStates:
                     process_input.extend(process_input_state.value)
                 processes_spec[i] = ProcessTuple(process, process_input)
-            # If input was provided on command line, assign that to input item of tuple
+            # Input was provided on command line, so assign that to input item of tuple
             else:
                 # Assign None as input to processes implemented by controller (controller provides their input)
                 #    (e.g., prediction processes implemented by EVCMechanism)
                 if processes_spec[i].process._isControllerProcess:
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
-                    # Replace input item in tuple with one from variable
-                    processes_spec[i] = ProcessTuple(processes_spec[i].process, input[i])
+                    # MODIFIED 2/8/17 NEW:
+                    # Replace input item in tuple with one from command line
+                    # Note:  check if origin mechanism for current process is same as any previous one;
+                    #        if it is, use that one (and don't increment index for input
+                    #        otherwise, assign input and increment input_index
+                    try:
+                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].originMechanisms[0])
+                    except ValueError:
+                        input_index += 1
+                    processes_spec[i] = ProcessTuple(processes_spec[i].process, input[input_index_curr])
+                    input_index_curr = input_index
+                    # MODIFIED 2/8/17 END
 
             # Validate input
             if (processes_spec[i].input is not None and
@@ -914,7 +993,16 @@ class System_Base(System):
 
             process = processes_spec[i].process
             process_input = processes_spec[i].input
-            self.variable.append(process_input)
+
+            # # MODIFIED 2/8/17 OLD: [MOVED ASSIGNMENT OF self.variable TO _instantiate_graph()
+            # #                       SINCE THAT IS WHERE SYSTEM'S ORIGIN MECHANISMS ARE IDENTIFIED]
+            # self.variable.append(process_input)
+            # # MODIFIED 2/8/17 END
+
+            # IMPLEMENT: THIS IS WHERE LEARNING SPECIFIED FOR A SYSTEM SHOULD BE IMPLEMENTED FOR EACH PROCESS IN THE
+            #            SYSTEM;  NOTE:  IF THE PROCESS IS ALREADY INSTANTIATED WITHOUT LEARNING
+            #            (FIRST CONDITIONAL BELOW), MAY NEED TO BE RE-INSTANTIATED WITH LEARNING
+            #            (QUESTION:  WHERE TO GET SPECS FOR PROCESS FOR RE-INSTANTIATION??)
 
             # If process item is a Process object, assign process_input as default
             if isinstance(process, Process):
@@ -922,15 +1010,16 @@ class System_Base(System):
                     process._assign_defaults(variable=process_input, context=context)
 
             # Otherwise, instantiate Process
-            if not isinstance(process, Process):
+            else:
                 if inspect.isclass(process) and issubclass(process, Process):
                     # FIX: MAKE SURE THIS IS CORRECT
-                    # Provide self as context, so that Process knows it is part of a Sysetm (and which one)
+                    # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
                     process = Process(default_input_value=process_input, context=self)
                 elif isinstance(process, dict):
-                    # IMPLEMENT:  HANDLE Process specification dict here; include process_input as ??param, and context=self
+                    # IMPLEMENT:  HANDLE Process specification dict here;
+                    #             include process_input as ??param, and context=self
                     raise SystemError("Attempt to instantiate process {0} in kwProcesses of {1} "
                                       "using a Process specification dict: not currently supported".
                                       format(process.name, self.name))
@@ -948,11 +1037,6 @@ class System_Base(System):
 
             # Get max of Process phaseSpecs
             self._phaseSpecMax = int(max(math.floor(process._phaseSpecMax), self._phaseSpecMax))
-
-            # FIX: SHOULD BE ABLE TO PASS PROCESS_INPUT HERE, NO?  PASSED IN VIA VARIABLE, ONE FOR EACH PROCESS
-            # FIX: MODIFY _instantiate_pathway TO ACCEPT input AS ARG
-            # NEEDED?? WASN"T IT INSTANTIATED ABOVE WHEN PROCESS WAS INSTANTIATED??
-            # process._instantiate_pathway(self.variable[i], context=context)
 
             # Iterate through mechanism tuples in Process' mech_tuples
             #     to construct self._all_mech_tuples and mechanismsDict
@@ -1003,10 +1087,12 @@ class System_Base(System):
 
             process._allMechanisms = MechanismList(process, tuples_list=process._mech_tuples)
 
-        self.variable = convert_to_np_array(self.variable, 2)
-
-        # Instantiate processList using process_tuples, and point self.processes to it
-        # Note: this also points self.params[kwProcesses] to self.processes
+        # # MODIFIED 2/8/17 OLD: [SEE ABOVE]
+        # self.variable = convert_to_np_array(self.variable, 2)
+        # # MODIFIED 2/8/17 END
+        #
+        # # Instantiate processList using process_tuples, and point self.processes to it
+        # # Note: this also points self.params[kwProcesses] to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
@@ -1052,6 +1138,12 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
+            # If sender is an ObjectiveMechanism being used for learning or control,
+            # Assign as MONITORING and move on
+            if isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role:
+                sender_mech.systems[self] = MONITORING
+                return
+
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
                 for projection in input_state.receivesFromProjections:
@@ -1069,12 +1161,17 @@ class System_Base(System):
                 raise SystemError("{} only receives projections from other processes or mechanisms not"
                                   " in the current system ({})".format(sender_mech.name, self.name))
 
-            # Assign as TERMINAL (or SINGLETON) if it has no outgoing projections and is not a ComparatorMechanism or
-            #     it projects only to ComparatorMechanism(s)
+            # Assign as TERMINAL (or SINGLETON) if it:
+            #    - has no outgoing projections and
+            #    - it is not a ComparatorMechanism or
+            #      it projects only to ComparatorMechanism(s) and/or ObjectiveMechanisms used for learning
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (not isinstance(sender_mech, (MonitoringMechanism_Base, ControlMechanism_Base)) and
-                    all(all(isinstance(projection.receiver.owner, (MonitoringMechanism_Base, ControlMechanism_Base))
+                    all(all((isinstance(projection.receiver.owner, (MonitoringMechanism_Base,
+                                                                   ControlMechanism_Base)) or
+                                 (isinstance(projection.receiver.owner, ObjectiveMechanism) and
+                                  projection.receiver.owner.role is LEARNING))
                             for projection in output_state.sendsToProjections)
                         for output_state in sender_mech.outputStates.values())):
                 try:
@@ -1091,6 +1188,13 @@ class System_Base(System):
                 for projection in outputState.sendsToProjections:
                     receiver = projection.receiver.owner
                     receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
+
+                    # MODIFIED 2/8/17 NEW:
+                    # If receiver is not in system's list of mechanisms, must belong to a process that has
+                    #    not been included in the system, so ignore it
+                    if not receiver_tuple:
+                        continue
+                    # MODIFIED 2/8/17 END
 
                     try:
                         self.graph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
@@ -1116,15 +1220,18 @@ class System_Base(System):
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
                             if self.executionGraph[receiver_tuple]:
-                                self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                                self.executionGraph[receiver_tuple].\
+                                    add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                             # If receiver_tuple set is empty, assign sender_mech to set
                             else:
-                                self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                                self.executionGraph[receiver_tuple] = \
+                                    {self._allMechanisms._get_tuple_for_mech(sender_mech)}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
                             list(toposort(self.executionGraph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.executionGraph[receiver_tuple].remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].\
+                                remove(self._allMechanisms._get_tuple_for_mech(sender_mech))
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
                                 sender_mech.systems[self] = INITIALIZE_CYCLE
@@ -1137,9 +1244,11 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.executionGraph[receiver_tuple].add(self._allMechanisms._get_tuple_for_mech(sender_mech))
+                            self.executionGraph[receiver_tuple].\
+                                add(self._allMechanisms._get_tuple_for_mech(sender_mech))
                         except KeyError:
-                            self.executionGraph[receiver_tuple] = {self._allMechanisms._get_tuple_for_mech(sender_mech)}
+                            self.executionGraph[receiver_tuple] = \
+                                {self._allMechanisms._get_tuple_for_mech(sender_mech)}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = INTERNAL
@@ -1168,10 +1277,19 @@ class System_Base(System):
             if all(
                     all(
                             # All projections must be from a process (i.e., ProcessInputState) to which it belongs
-                            projection.sender.owner in sorted_processes or
+                            # # MODIFIED 2/8/17 OLD:
+                            # #          [THIS CHECKED FOR PROCESS IN SYSTEM'S LIST OF PROCESSES
+                            # #           IT CRASHED IF first_mech WAS ASSIGNED TO ANY PROCESS THAT WAS NOT ALSO
+                            # #           ASSIGNED TO THE SYSTEM TO WHICH THE first_mech BELONGS
+                            #  projection.sender.owner in sorted_processes or
+                            # MODIFIED 2/8/17 NEW:
+                            #          [THIS CHECKS THAT PROJECTION IS FROM A PROCESS IN first_mech's LIST OF PROCESSES]
+                            #           PROBABLY ISN"T NECESSARY, AS IT SHOULD BE COVERED BY INITIAL ASSIGNMENT OF PROJ]
+                            projection.sender.owner in first_mech.processes or
+                            # MODIFIED 2/8/17 END
                             # or from mechanisms within its own process (e.g., [a, b, a])
                             projection.sender.owner in list(process.mechanisms) or
-                            # or from mechanisms in oher processes for which it is also an ORIGIN ([a, b, a], [a, c, a])
+                            # or from mechanisms in other processes for which it is also an ORIGIN ([a,b,a], [a,c,a])
                             all(ORIGIN in first_mech.processes[proc] for proc in projection.sender.owner.processes)
                         for projection in input_state.receivesFromProjections)
                     for input_state in first_mech.inputStates.values()):
@@ -1244,12 +1362,15 @@ class System_Base(System):
 
         for mech_tuple in self._all_mech_tuples:
 
-            if isinstance(mech_tuple.mechanism, MonitoringMechanism_Base):
-                if not mech_tuple.mechanism in self._monitoring_mech_tuples:
+            mech = mech_tuple.mechanism
+
+            if (isinstance(mech, MonitoringMechanism_Base) or
+                    (isinstance(mech, ObjectiveMechanism) and (mech.role is LEARNING))):
+                if not mech in self._monitoring_mech_tuples:
                     self._monitoring_mech_tuples.append(mech_tuple)
 
-            if isinstance(mech_tuple.mechanism, ComparatorMechanism):
-                if not mech_tuple.mechanism in self._target_mech_tuples:
+            if isinstance(mech, ComparatorMechanism):
+                if not mech in self._target_mech_tuples:
                     self._target_mech_tuples.append(mech_tuple)
 
 
@@ -1278,8 +1399,19 @@ class System_Base(System):
         self.executionList = self._toposort_with_ordered_mech_tuples(self.executionGraph)
         # MODIFIED 10/31/16 END
 
+        # MODIFIED 2/8/17 NEW:
+        # Construct self.variable from inputs to ORIGIN mechanisms
+        self.variable = []
+        for mech in self.originMechanisms:
+            orig_mech_input = []
+            for input_state in mech.inputStates.values():
+                orig_mech_input.extend(input_state.value)
+            self.variable.append(orig_mech_input)
+        self.variable = convert_to_np_array(self.variable, 2)
+        # MODIFIED 2/8/17 END
+
         # Validate initial values
-        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
+        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         for mech, value in self.initial_values.items():
@@ -1306,10 +1438,12 @@ class System_Base(System):
             if isinstance(sender_mech, MappingProjection):
                 return
 
-            # All other sender_mechs should be MonitoringMechanisms
-            elif not isinstance(sender_mech, MonitoringMechanism_Base):
+            # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
+            elif not (isinstance(sender_mech, MonitoringMechanism_Base) or
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
-                                  "must be a MonitoringMechanism or a MappingProjection".format(sender_mech))
+                                  "must be a MonitoringMechanism, ObjectiveMechanism, or a MappingProjection".
+                                  format(sender_mech))
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.inputStates.values():
@@ -1393,6 +1527,55 @@ class System_Base(System):
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
         # self.learningExecutionList = self._toposort_with_ordered_mech_tuples(self.learningExecutionGraph)
+
+        # Instantiate TargetInputStates
+        self._instantiate_target_inputs()
+
+    def _instantiate_target_inputs(self, context=None):
+
+        if self.learning and self.targets is None:
+            if not self.targetMechanisms:
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
+                                  format(self.name))
+            elif len(self.targetMechanisms)==1:
+                error_msg = "Learning has been specified for {} so a target must also be specified"
+            else:
+                error_msg = "Learning has been specified for {} but no targets have been specified."
+            raise SystemError(error_msg.format(self.name))
+
+        self.targets = np.atleast_2d(self.targets)
+
+        # Create SystemTargetInputState for each TARGET mechanism in targetMechanisms and
+        #    assign MappingProjection from the SystemTargetInputState
+        #    to the TARGET mechanism's COMPARATOR_TARGET inputSate
+        #    (i.e., from the SystemInputState to the ComparatorMechanism)
+        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+
+            # Create ProcessInputState for each target and assign to comparatorMechanism's target inputState
+            comparator_target = target_mech.inputStates[COMPARATOR_TARGET]
+
+            # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
+            #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
+            if len(self.targets[i]) != len(comparator_target.variable):
+                raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
+                                  "expected for its TARGET mechanism {}".
+                                   format(len(self.targets[i]),
+                                          self.targets[i],
+                                          len(comparator_target.variable),
+                                          target_mech.name))
+
+            target_input_state = SystemTargetInputState(owner=self,
+                                                        variable=comparator_target.variable,
+                                                        prefs=self.prefs,
+                                                        name="System Target {}".format(i))
+            self.targetInputStates.append(target_input_state)
+
+            # Add MappingProjection from target_input_state to TARGET mechainsm's target inputState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            MappingProjection(sender=target_input_state,
+                    receiver=comparator_target,
+                    name=self.name+'_Input Projection to '+comparator_target.name)
+
 
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
@@ -1497,16 +1680,17 @@ class System_Base(System):
                     raise SystemError("Number of items in input ({0}) to {1} does not match "
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
-            for i in range(num_inputs):
-                input_item = input[i]
-                process = self.processes[i]
 
-                # Make sure there is an input, and if so convert it to 2D np.ndarray (required by Process
-                if input_item is None:
-                    continue
-                else:
-                    # Assign input as value of corresponding Process inputState
-                    process._assign_input_values(input=input_item, context=context)
+            # p=0
+            for i in range(num_inputs):
+
+                # FIX: REPLACE THIS WITH ASSIGNEMENT OF SystemInputState FOR EACH INPUT JUST AS FOR TARGETS
+                #      AND ASSIGN INPUT TO THOSE IN Run
+                origin_mech = self.originMechanisms[i]
+                process = next(process for process in self.processes if origin_mech is process.originMechanisms[0])
+                process._assign_input_values(input=input[i], context=context)
+
+
         self.input = input
         #endregion
 
@@ -1563,7 +1747,7 @@ class System_Base(System):
 
             except AttributeError as error_msg:
                 if not 'INIT' in context:
-                    raise SystemError("{}; no controller instantiated for {}".format(error_msg, self.name))
+                    raise SystemError("Problem executing controller for {}: {}".format(self.name, error_msg))
         #endregion
 
         # Report completion of system execution and value of designated outputs
@@ -1665,7 +1849,7 @@ class System_Base(System):
         # Then update all MappingProjections
         for component in self.learningExecutionList:
 
-            if isinstance(component, MonitoringMechanism_Base):
+            if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
                 continue
 
             component_type = "mappingProjection"
@@ -1839,52 +2023,41 @@ class System_Base(System):
         print("\n\'{}\'{} completed ***********(time_step {})".format(self.name, system_string, clock.time_step))
         for mech_tuple in self._terminal_mech_tuples:
             if mech_tuple.mechanism.phaseSpec == (clock.time_step % self.numPhases):
-                print("- output for {0}: {1}".format(mech_tuple.mechanism.name,
-                                                 re.sub('[\[,\],\n]','',str(["{:0.3}".format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
+                print("- output for {0}: {1}".
+                      format(mech_tuple.mechanism.name,
+                             re.sub('[\[,\],\n]','',str(["{:0.3}".
+                                                format(float(i)) for i in mech_tuple.mechanism.outputState.value]))))
 
 
-    class InspectOptions(AutoNumber):
-        """Option value keywords for inspect() and show() methods
-
-        Values:
-
-            :keyword:`ALL`
-
-            :keyword:`EXECUTION_SETS`
-
-            :keyword:`ExecutionList`
-
-            :keyword:`ATTRIBUTES`
-
-            :keyword:`ALL_OUTPUTS`
-
-            :keyword:`ALL_OUTPUT_LABELS`
-
-            :keyword:`PRIMARY_OUTPUTS`
-
-            :keyword:`PRIMARY_OUTPUT_LABELS`
-
-            :keyword:`MONITORED_OUTPUTS`
-
-            :keyword:`MONITORED_OUTPUT_LABELS`
-
-            :keyword:`FLAT_OUTPUT`
-
-            :keyword:`DICT_OUTPUT`
-
-        """
-        ALL = ()
-        EXECUTION_SETS = ()
-        ExecutionList = ()
-        ATTRIBUTES = ()
-        ALL_OUTPUTS = ()
-        ALL_OUTPUT_LABELS = ()
-        PRIMARY_OUTPUTS = ()
-        PRIMARY_OUTPUT_LABELS = ()
-        MONITORED_OUTPUTS = ()
-        MONITORED_OUTPUT_LABELS = ()
-        FLAT_OUTPUT = ()
-        DICT_OUTPUT = ()
+    # TBI:
+    # class InspectOptions(AutoNumber):
+    #     """Option value keywords for `inspect` and `show` methods.
+    #     """
+    #     ALL = ()
+    #     """Show all values.
+    #     """
+    #     EXECUTION_SETS = ()
+    #     """Show `execution_sets` attribute."""
+    #     ExecutionList = ()
+    #     """Show `executionList` attribute."""
+    #     ATTRIBUTES = ()
+    #     """Show system's attributes."""
+    #     ALL_OUTPUTS = ()
+    #     """"""
+    #     ALL_OUTPUT_LABELS = ()
+    #     """"""
+    #     PRIMARY_OUTPUTS = ()
+    #     """"""
+    #     PRIMARY_OUTPUT_LABELS = ()
+    #     """"""
+    #     MONITORED_OUTPUTS = ()
+    #     """"""
+    #     MONITORED_OUTPUT_LABELS = ()
+    #     """"""
+    #     FLAT_OUTPUT = ()
+    #     """"""
+    #     DICT_OUTPUT = ()
+    #     """"""
 
     def show(self, options=None):
         """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` mechanisms,
@@ -2166,45 +2339,57 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self):
+    def show_graph(self, output_fmt='pdf', direction = 'LR'):
+        """Shows a graph of a system's mechanisms and projections.
+        Arguments
+        output_fmt : output format can be either 'pdf' or 'jupyter'
+            pdf will actually render and open a pdf
+            jupyter will just return the graph to the output stream, ideal for working in jupyter notebooks
+        direction : can be used to set rank direction of graph
+            possible inputs are BT, TB, LR, and RL
+        """
 
-	    import graphviz as gv
-	        
-	    system_graph = self.graph
-	    # build graph and configure visualisation settings
+        import graphviz as gv
+            
+        system_graph = self.graph
+        # build graph and configure visualisation settings
 
-	    # is there a way to take in *args so  
-	    # people can change these settings?
-	    G = gv.Digraph(engine = "dot", 
-	    			   # format = "svg", 
-	                   node_attr = {'fontsize':'12', 
-	                   				'fontname': 'arial', 
-	                   				'shape':'oval'}, 
-	                   edge_attr = {'arrowhead':'halfopen', 
-	                   				'fontsize': '10', 
-	                   				'fontname': 'arial'},
-	                   graph_attr = {"rankdir" : "BT"})
+        # is there a way to take in *args so  
+        # people can change these settings?
 
-	    # build list of receivers
-	    receivers = list(system_graph.keys())
-	    
-	    # loop through each reciever
-	    for receiver in receivers:
-	        receiver_name = receiver[0].name
-	        G.node(receiver_name)
-	        senders = system_graph[receiver]
-	        # loop through each sender
-	        for sender in senders:
-	            sender_name = sender[0].name
-	            G.node(sender_name)
-	            # find the right edge (projection)
-	            for projection in sender[0].outputState.sendsToProjections:
-	                if projection.receiver.owner == receiver[0]:
-	                    edge_name = projection.name
-	            # add the edge
-	            G.edge(sender_name, receiver_name, label = " {0} ".format(edge_name))
+        G = gv.Digraph(engine = "dot", 
+                       # format = "svg", 
+                       node_attr = {'fontsize':'12', 
+                                    'fontname': 'arial', 
+                                    'shape':'oval'}, 
+                       edge_attr = {'arrowhead':'halfopen', 
+                                    'fontsize': '10', 
+                                    'fontname': 'arial'},
+                       graph_attr = {"rankdir" : direction})
 
-	    G.view(self.name.replace(" ", "-"), cleanup=True)
+        # build list of receivers
+        receivers = list(system_graph.keys())
+        
+        # loop through each reciever
+        for receiver in receivers:
+            receiver_name = receiver[0].name
+            G.node(receiver_name)
+            senders = system_graph[receiver]
+            # loop through each sender
+            for sender in senders:
+                sender_name = sender[0].name
+                G.node(sender_name)
+                # find the right edge (projection)
+                for projection in sender[0].outputState.sendsToProjections:
+                    if projection.receiver.owner == receiver[0]:
+                        edge_name = projection.name
+                # add the edge
+                G.edge(sender_name, receiver_name, label = " {0} ".format(edge_name))
+
+        if output_fmt == 'pdf':
+            G.view(self.name.replace(" ", "-"), cleanup=True)
+        elif output_fmt == 'jupyter':
+            return G
 
 
     # @property
@@ -2214,3 +2399,35 @@ class System_Base(System):
     #     :rtype: list of Mechanism objects
     #     """
     #     return list(mech_tuple[0] for mech_tuple in self.learningExecutionGraph)
+
+
+SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
+
+from PsyNeuLink.Components.States.OutputState import OutputState
+class SystemTargetInputState(OutputState):
+    """Encodes target for the system and transmits it to a `TARGET` mechanism in the system
+
+    Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
+    `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+     mechanism of the system.
+
+    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+       in Projection._instantiate_sender()
+
+       self.value is used to represent the item of the targets arg to system.execute or system.run
+
+    """
+    def __init__(self, owner=None, variable=None, name=None, prefs=None):
+        """Pass variable to MappingProjection from Process to first Mechanism in Pathway
+
+        :param variable:
+        """
+        if not name:
+            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
+        else:
+            self.name = owner.name + "_" + name
+        self.prefs = prefs
+        self.sendsToProjections = []
+        self.owner = owner
+        self.value = variable
+

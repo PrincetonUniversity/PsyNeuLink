@@ -21,14 +21,17 @@ the process or system to which it belongs. The comparison can be done using subt
 Creating a ComparatorMechanism
 ------------------------------
 
-A ComparatorMechanism can be created directly by calling its constructor, or using the
-`mechanism` function and specifying keyword:`ComparatorMechanism` as its :keyword:`mech_spec` argument.  The type of
-comparison is specified in the `comparison_operation` argument, which can be `SUBTRACTION` or `DIVISION`.  It can also
-be created by `in context specification of a LearningProjection <Projection_Creation>` for a projection to the
-`TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically when learning is
-specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`; each is assigned a
-projection from the outputState of a `TERMINAL` mechanism that receives a MappingProjection being learned,
-and a LearningProjection to that MappingProjection  (see `learning in a process <Process_Learning>`,
+A ComparatorMechanism can be created directly by calling its constructor
+COMMENT:
+    , or using the
+    `mechanism` function and specifying keyword:`ComparatorMechanism` as its :keyword:`mech_spec` argument.
+COMMENT
+. The type of comparison is specified in the `comparison_operation` argument, which can be `SUBTRACTION` or
+`DIVISION`.  It can also be created by `in-context specification <Projection_Creation>` of a LearningProjection for a
+projection to the `TERMINAL` mechanism of a process.  One or more ComparatorMechanisms are also created automatically
+when learning is specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`. Each
+ComparatorMechanism is assigned a projection from a `TERMINAL` mechanism that receives a MappingProjection being
+learned. A LearningProjection to that MappingProjection is also created (see `learning in a process <Process_Learning>`,
 and `automatic creation of LearningSignals  <LearningProjection_Automatic_Creation>` for details).
 
 .. _Comparator_Structure:
@@ -38,7 +41,7 @@ Structure
 
 A ComparatorMechanism has two `inputStates <InputState>`:
 
-    * :keyword:`SAMPLE` inputState receives a MappingProjection
+    * :keyword:`COMPARATOR_SAMPLE` inputState receives a MappingProjection
       from the `primary outputState <OutputState_Primary>` of a `TERMINAL` mechanism in a process;
     ..
     * `COMPARATOR_TARGET` inputState is assigned its value from the :keyword:`target` argument of a call to the
@@ -54,7 +57,8 @@ Execution
 A ComparatorMechanism always executes after the mechanism it is monitoring.  The :keyword:`value` of the
 `primary outputState <OutputState_Primary>` of the mechanism being monitored is assigned as the :keyword:`value` of the
 ComparatorMechanism's :keyword:`COMPARATOR_SAMPLE` inputState;  the value of the :keyword:`COMPARATOR_TARGET`
-inputState is received from the process (or system to which it belongs) when it is run. When the ComparatorMechanism
+inputState is received from the process (or system to which it belongs) when it is run (i.e., the input provided
+ in the process' or system's :keyword:`execute` method or :keyword:`run` method). When the ComparatorMechanism
 is executed, if `comparison_operation` is:
 
     * `SUBTRACTION`, its `function <ComparatorMechanism.function>` subtracts the  `COMPARATOR_SAMPLE` from the
@@ -102,6 +106,36 @@ from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 
 
+ComparatorMechanism = 'ComparatorMechanism'
+
+# ComparatorMechanism parameter keywords:
+COMPARATOR_SAMPLE = "comparatorSampleSource"
+COMPARATOR_TARGET = "comparatorTargetSource"
+COMPARISON_OPERATION = "comparison_operation"
+
+# ComparatorMechanism outputs (used to create and name outputStates):
+COMPARISON_RESULT = 'ComparisonArray'
+COMPARISON_MEAN = 'ComparisonMean'
+COMPARISON_SUM = 'ComparisonSum'
+COMPARISON_SSE = 'ComparisonSumSquares'
+COMPARISON_MSE = 'ComparisonMSE'
+
+# ComparatorMechanism output indices (used to index output values):
+class ComparatorOutput(AutoNumber):
+    """Indices of the `outputValue <Comparator.outputValue>` attribute of the ComparatorMechanism containing the
+    values described below."""
+    COMPARISON_RESULT = ()
+    """Result of the ComparatorMechanism's `function <ComparatorMechanism.function>`."""
+    COMPARISON_MEAN = ()
+    """Mean of the elements in the :keyword`value` of the COMPARISON_RESULT outputState."""
+    COMPARISON_SUM = ()
+    """Sum of the elements in :keyword`value` of the COMPARISON_RESULT outputState."""
+    COMPARISON_SSE = ()
+    """Sum squares of the elements in :keyword`value` of the COMPARISON_RESULT outputState."""
+    COMPARISON_MSE = ()
+    """Mean of the squares of the elements in :keyword`value` of the COMPARISON_RESULT outputState."""
+
+
 class ComparatorError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
@@ -124,7 +158,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     COMMENT:
         Description:
             ComparatorMechanism is a subtype of the MonitoringMechanism Type of the Mechanism Category of the
-                Function class
+                Component class
             It's function uses the LinearCombination Function to compare two input variables
             COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
             The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
@@ -160,7 +194,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     comparison_operation : keyword[SUBTRACTION or DIVISION] : default SUBTRACTION
         specifies how the `COMPARATOR_SAMPLE` and `COMPARATOR_TARGET` will be compared:
 
-        * `SUBTRACTION`: `COMPARATOR_TARGET` - `SAMPLE`
+        * `SUBTRACTION`: `COMPARATOR_TARGET` - `COMPASAMPLE`
 
         * `DIVISION`: `COMPARATOR_TARGET` ÷ `SAMPLE`
 

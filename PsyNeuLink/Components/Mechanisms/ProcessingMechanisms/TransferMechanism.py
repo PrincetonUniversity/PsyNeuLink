@@ -68,7 +68,7 @@ parameters (in addition to those specified for the function):
     ..
     * `rate <TransferMechanism.rate>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`, the input is exponentially
       time-averaged before transforming it (higher value specifies faster rate); if `time_scale` is
-      :keyword:`TimeScale.TIME_STEP`, `rate <TransferMechanism.rate>` is ignored.
+      :keyword:`TimeScale.TRIAL`, `rate <TransferMechanism.rate>` is ignored.
     ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
@@ -111,9 +111,14 @@ TRANSFER_VARIANCE = "transfer_variance"
 
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
+    """Indices of the `outputValue <TransferMechanism.outputValue>` attribute of the TransferMechanism containing the
+    values described below."""
     RESULT = ()
+    """Result of the TransferMechanism's `function <TransferMechanism.function>`."""
     MEAN = ()
+    """Mean of the elements in the :keyword`value` of the RESULT outputState."""
     VARIANCE = ()
+    """Variance of the elements in the :keyword`value` of the RESULT outputState."""
 
 # TransferMechanism default parameter values:
 Transfer_DEFAULT_LENGTH= 1
@@ -151,7 +156,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         Description
         -----------
             TransferMechanism is a Subtype of the ProcessingMechanism Type of the Mechanism Category of the
-                Function class
+                Component class
             It implements a Mechanism that transforms its input variable based on FUNCTION (default: Linear)
 
         Class attributes

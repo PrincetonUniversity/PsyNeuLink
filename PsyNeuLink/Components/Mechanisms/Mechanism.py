@@ -398,9 +398,14 @@ from PsyNeuLink.Globals.Registry import register_category
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
+    """Specifies outputStates to be monitored by a `ControlMechanism` (see `ControlMechanism_Monitored_OutputStates
+    for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
+    """Only monitor explicitly specified outputstates."""
     PRIMARY_OUTPUT_STATES = ()
+    """Monitor only the `primary outputState <OutputState_Primary>` of a mechanism."""
     ALL_OUTPUT_STATES = ()
+    """Monitor all outputStates <Mechanism.Mechanism_Base.outputStates>` of a mechanism."""
     NUM_MONITOR_STATES_OPTIONS = ()
 
 
@@ -500,7 +505,7 @@ class Mechanism_Base(Mechanism):
     COMMENT:
         Description
         -----------
-            Mechanism is a Category of the Function class.
+            Mechanism is a Category of the Component class.
             A mechanism is associated with a name and:
             - one or more inputStates:
                 two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:
@@ -1124,98 +1129,6 @@ class Mechanism_Base(Mechanism):
                 i += 1
             params[OUTPUT_STATES] = param_value
 
-        # MODIFIED 7/13/16 NEW: [MOVED FROM EVCMechanism]
-        # FIX: MOVE THIS TO FUNCTION, OR ECHO IN SYSTEM
-        #region VALIDATE MONITORED STATES (for use by ControlMechanism)
-        # Note: this must be validated after OUTPUT_STATES as it can reference entries in that param
-        try:
-            # MODIFIED 7/16/16 NEW:
-            if not target_set[MONITOR_FOR_CONTROL] or target_set[MONITOR_FOR_CONTROL] is NotImplemented:
-                pass
-            # MODIFIED END
-            # It is a MonitoredOutputStatesOption specification
-            elif isinstance(target_set[MONITOR_FOR_CONTROL], MonitoredOutputStatesOption):
-                # Put in a list (standard format for processing by _instantiate_monitored_output_states)
-                target_set[MONITOR_FOR_CONTROL] = [target_set[MONITOR_FOR_CONTROL]]
-            # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
-            else:
-                # Validate each item of MONITOR_FOR_CONTROL
-                for item in target_set[MONITOR_FOR_CONTROL]:
-                    self._validate_monitored_state(item, context=context)
-                # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
-                # FIX:     INDICATING THAT IT WILL BE IGNORED;
-                # FIX:     weights AND exponents ARE SPECIFIED IN TUPLES
-                # FIX:     WEIGHTS and EXPONENTS ARE VALIDATED IN SystemContro.Mechanism_instantiate_monitored_output_states
-                # # Validate WEIGHTS if it is specified
-                # try:
-                #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
-                # except KeyError:
-                #     # WEIGHTS not specified, so ignore
-                #     pass
-                # else:
-                #     # Insure that number of weights specified in WEIGHTS
-                #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
-                #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
-                #     if not num_weights != num_monitored_states:
-                #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
-                #                        "does not match the number of monitored states ({1})".
-                #                        format(num_weights, num_monitored_states))
-        except KeyError:
-            pass
-        #endregion
-        # MODIFIED END
-
-# FIX: MAKE THIS A CLASS METHOD OR MODULE FUNCTION
-# FIX:     SO THAT IT CAN BE CALLED BY System TO VALIDATE IT'S MONITOR_FOR_CONTROL param
-
-    def _validate_monitored_state(self, state_spec, context=None):
-        """Validate specification is a Mechanism or OutputState, the name of one, or a MonitoredOutpuStatesOption value
-
-        Called by both self._validate_params() and self.add_monitored_state() (in ControlMechanism)
-        """
-        state_spec_is_OK = False
-
-        if isinstance(state_spec, MonitoredOutputStatesOption):
-            state_spec_is_OK = True
-
-        if isinstance(state_spec, tuple):
-            if len(state_spec) != 3:
-                raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
-                                     "has {2} items;  it should be 3".
-                                     format(state_spec, self.name, len(state_spec)))
-
-            if not isinstance(state_spec[1], numbers.Number):
-                raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                     "must be a number".
-                                     format(state_spec, self.name, state_spec[0]))
-
-            if not isinstance(state_spec[2], numbers.Number):
-                raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                     "must be a number".
-                                     format(state_spec, self.name, state_spec[0]))
-
-            # Set state_spec to the output_state item for validation below
-            state_spec = state_spec[0]
-
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, (Mechanism, OutputState)):
-            state_spec_is_OK = True
-
-        if isinstance(state_spec, str):
-            if state_spec in self.paramInstanceDefaults[OUTPUT_STATES]:
-                state_spec_is_OK = True
-        try:
-            self.outputStates[state_spec]
-        except (KeyError, AttributeError):
-            pass
-        else:
-            state_spec_is_OK = True
-
-        if not state_spec_is_OK:
-            raise MechanismError("Specification ({0}) in MONITOR_FOR_CONTROL for {1} is not "
-                                 "a Mechanism or OutputState object or the name of one".
-                                 format(state_spec, self.name))
-#endregion
 
     def _validate_inputs(self, inputs=None):
         # Only ProcessingMechanism supports run() method of Function;  ControlMechanism and MonitoringMechanism do not
@@ -1242,7 +1155,6 @@ class Mechanism_Base(Mechanism):
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
         """
-
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, context=context)
 
@@ -1363,7 +1275,6 @@ class Mechanism_Base(Mechanism):
         # Call Component execute() function for general processing
         super().execute()
 
-        # context = context or  EXECUTING + ' ' + append_type_to_name(self)
         context = context or NO_CONTEXT
 
 
@@ -1377,19 +1288,6 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call mechanism's _execute method for init
-            # # MODIFIED 12/8/16 OLD:
-            # elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-            #     return self._execute(variable=self.variable,
-            #                          params=runtime_params,
-            #                          time_scale=time_scale,
-            #                          context=context)
-            # # Only call mechanism's function method for init
-            # elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-            #     return self.function(variable=self.variable,
-            #                          params=runtime_params,
-            #                          time_scale=time_scale,
-            #                          context=context)
-            # MODIFIED 12/8/16 NEW:
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
                 return_value =  self._execute(variable=self.variable,
                                                  runtime_params=runtime_params,
@@ -1405,7 +1303,6 @@ class Mechanism_Base(Mechanism):
                                              time_scale=time_scale,
                                              context=context)
                 return np.atleast_2d(return_value)
-            # MODIFIED 12/8/16 END
 
         #region VALIDATE RUNTIME PARAMETER SETS
         # Insure that param set is for a States:
@@ -1443,31 +1340,10 @@ class Mechanism_Base(Mechanism):
         #endregion
 
         #region UPDATE PARAMETER STATE(S)
-        # #TEST:
-        # print ("BEFORE param update:  DDM Drift Rate {}".
-        #        format(self.parameterStates[DRIFT_RATE].value))
         self._update_parameter_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
         #endregion
 
-        # MODIFIED 11/27/16 NEW:
-        # FIX ASSIGN PARAMETERSTATE PARAMETER VALUES TO PARAMS HERE AND PASS TO __EXECUTE__()
-        # # If any runtime_params were assigned, assign values to params used to call mechanism's _execute method
-        # if runtime_params:
-        # Assign current paramameterState values to params used to call mechanism's _execute method
-        # FIX: UPDATE THIS TO USE user_params ONCE THOSE HAVE ALL BEEN ASSIGNED parameterStates IN
-        # _instantiate_parameter_states
-        # FIX: MOVED TO _update_parameter_states BUT NOW ScratchPad doesn't work
-        # runtime_params = {}
-        # for param in self.function_params:
-        #     try:
-        #         runtime_params[param] = self.parameterStates[param].value
-        #     except KeyError:
-        #         runtime_params[param] = self.paramsCurrent[FUNCTION_PARAMS][param]
-        # MODIFIED 11/27/16 END
-
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
-# CONFIRM: VALIDATION METHODS CHECK THE FOLLOWING CONSTRAINT: (AND ADD TO CONSTRAINT DOCUMENTATION):
-# DOCUMENT: #OF OUTPUTSTATES MUST MATCH #ITEMS IN OUTPUT OF EXECUTE METHOD **
 
         self.value = self._execute(variable=self.inputValue,
                                       runtime_params=runtime_params,
@@ -1475,14 +1351,14 @@ class Mechanism_Base(Mechanism):
                                       time_scale=time_scale,
                                       context=context)
 
-        # MODIFIED 12/8/16 NEW:
-        self.value = np.atleast_2d(self.value)
-        # MODIFIED 12/8/16 END
+        # MODIFIED 1/28/17 NEW:
+        # # context = context + ' ' + ASSIGN_VALUE
+        # context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
+        # MODIFIED 1/28/17 END
 
-        # MODIFIED 12/20/16 NEW:
+        self.value = np.atleast_2d(self.value)
         # Set status based on whether self.value has changed
         self.status = self.value
-        # MODIFIED 12/20/16 END
 
         #endregion
 
@@ -1620,11 +1496,21 @@ class Mechanism_Base(Mechanism):
             except KeyError:
                 param_template = self.function_params
 
-            # Get its type
-            param_type = type(param_template[state_name])
+            # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
+            param_spec = param_template[state_name]
+
+            # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
+            #    then its value will be provided by the execution of the parameterState's function
+            #    (which gets and aggregates the values of its projections), so execute function
+            #    to get a sample of its output as the param_spec
+            if isclass(param_spec) and issubclass(param_spec, Projection):
+                param_spec = state.function()
+
+            # Get type of param_spec:
+            param_type = type(param_spec)
             # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
             if param_type is tuple:
-                param_type = type(param_template[state_name][0])
+                param_type = type(param_spec[0])
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -1687,12 +1573,9 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
         print ("\n\'{}\'{} executed:\n- input:  {}".
-        # MODIFIED 12/9/16 OLD:
-        #        format(self.name, mechanism_string, input.__str__().strip("[]")))
-        # MODIFIED 12/9/16 NEW:
-               format(self.name, mechanism_string, [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
-        # MODIFIED 12/9/16 END
-
+               format(self.name,
+                      mechanism_string,
+                      [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
 
         if params:
             print("- params:")
@@ -1705,7 +1588,11 @@ class Mechanism_Base(Mechanism):
                 param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Component):
-                    param = param_value.__self__.__name__
+                    # # MODIFIED 2/14/17 OLD:
+                    # param = param_value.__self__.__name__
+                    # MODIFIED 2/14/17 NEW:
+                    param = param_value.name
+                    # MODIFIED 2/14/17 END
                     param_is_function = True
                 elif isinstance(param_value, type(Component)):
                     param = param_value.__name__
@@ -1771,7 +1658,28 @@ class Mechanism_Base(Mechanism):
     def value(self, assignment):
         self._value = assignment
 
-    # MODIFIED 12/20/16 NEW:
+        # # MODIFIED 1/28/17 NEW: [COPIED FROM State]
+        # # Store value in log if specified
+        # # Get logPref
+        # if self.prefs:
+        #     log_pref = self.prefs.logPref
+        #
+        # # Get context
+        # try:
+        #     curr_frame = inspect.currentframe()
+        #     prev_frame = inspect.getouterframes(curr_frame, 2)
+        #     context = inspect.getargvalues(prev_frame[1][0]).locals['context']
+        # except KeyError:
+        #     context = ""
+        #
+        # # If context is consistent with log_pref, record value to log
+        # if (log_pref is LogLevel.ALL_ASSIGNMENTS or
+        #         (log_pref is LogLevel.EXECUTION and EXECUTING in context) or
+        #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
+        #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
+        # # MODIFIED 1/28/17 END
+
+
     @property
     def status(self):
         return self._status
@@ -1784,7 +1692,6 @@ class Mechanism_Base(Mechanism):
         else:
             self._status = CHANGED
             self._old_value = current_value
-    # MODIFIED 12/20/16 END
 
 
     @property

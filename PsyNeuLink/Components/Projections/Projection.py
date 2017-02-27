@@ -627,6 +627,7 @@ class Projection_Base(Projection):
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
 
         # If sender is a class, instantiate it:
         # - assume it is Mechanism or State (as validated in _validate_params)
@@ -654,7 +655,11 @@ class Projection_Base(Projection):
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
-        if not isinstance(self.sender, OutputState):
+        # # MODIFIED 2/10/17 OLD:
+        # if not isinstance(self.sender, OutputState):
+        # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
+        if not isinstance(self.sender, (OutputState, ParameterState)):
+        # MODIFIED 2/10/17 END
             raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
