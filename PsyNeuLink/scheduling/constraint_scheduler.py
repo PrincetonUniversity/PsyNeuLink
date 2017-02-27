@@ -65,6 +65,7 @@ class ScheduleVariable(object):
         return result
 
     def new_time_step(self):
+        self.component.new_time_step()
         for con in self.filled_constraints:
             self.unfilled_constraints.append(con)
             self.filled_constraints.remove(con)
