@@ -56,34 +56,28 @@ mySystem = system(processes=[color_naming_process, word_reading_process],
 
 # mySystem.reportOutputPref = True
 
-# Execute processes:
-for i in range(10):
-    color_naming_process.execute(input=[1, 1],target=[0,1])
-    print(response.inputState.receivesFromProjections[0].matrix)
-    print(response.inputState.receivesFromProjections[1].matrix)
-
-    word_reading_process.execute(input=[1, 1], target=[1,0])
-    print(response.inputState.receivesFromProjections[0].matrix)
-    print(response.inputState.receivesFromProjections[1].matrix)
-
-# # Execute system:
+# # Execute processes:
 # for i in range(10):
-#     mySystem.execute(input=[[1,1],[1,1]],
-#                      target=[[0,1],[1,0]])
+#     color_naming_process.execute(input=[1, 1],target=[0,1])
 #     print(response.inputState.receivesFromProjections[0].matrix)
 #     print(response.inputState.receivesFromProjections[1].matrix)
+#
+#     word_reading_process.execute(input=[1, 1], target=[1,0])
 #     print(response.inputState.receivesFromProjections[0].matrix)
 #     print(response.inputState.receivesFromProjections[1].matrix)
+
+# Execute system:
+# mySystem.execute(input=[[1,1],[1,1]])
 
 # mySystem.show_graph()
-#
-# stim_dict = {colors:[[1,0],[0,1]],
-#              words:[[0,1],[1,0]]}
-# target_dict= {response:[[1,0],[0,1]]}
-#
-# mySystem.run(num_executions=2,
-#              inputs=stim_dict,
-#              targets=target_dict)
+
+stim_dict = {colors:[[1,0],[0,1]],
+             words:[[0,1],[1,0]]}
+target_dict= {response:[[1,0],[0,1]]}
+
+mySystem.run(num_executions=2,
+             inputs=stim_dict,
+             targets=target_dict)
 
 
 # SHOW OPTIONS:

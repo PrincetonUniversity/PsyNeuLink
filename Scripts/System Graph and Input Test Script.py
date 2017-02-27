@@ -43,6 +43,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # fb2 = MappingProjection(sender=d, receiver=e, name = 'fb2')
 # fb3 = MappingProjection(sender=e, receiver=a, name = 'fb3')
 
+show_graph = False
+
 print ('*****************************************************************************')
 
 # A) BRANCH -----------------------------------------------------------------------------
@@ -60,8 +62,11 @@ s = system(processes=[p1, p2],
            initial_values={a:[1,1]})
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
-inputs=[2,2]
+# inputs=[2,2]
+inputs={a:[2,2]}
 s.run(inputs)
 
 print ('A: ',a.systems[s])
@@ -86,10 +91,13 @@ s = system(processes=[p1, p2],
            name='Bypass System',
            initial_values={a:[1,1]})
 
-inputs=[[[2,2],[0,0]],[[2,2],[0,0]]]
+# inputs=[[[2,2],[0,0]],[[2,2],[0,0]]]
+inputs={a:[[2,2],[0,0]]}
 s.run(inputs=inputs)
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
@@ -113,10 +121,13 @@ s = system(processes=[p1, p2],
            name='Chain System',
            initial_values={a:[1,1,1]})
 
-inputs=[[[2,2,2],[0,0,0]]]
+# inputs=[[[2,2,2],[0,0,0]]]
+inputs={a:[[2,2,2],[0,0,0]]}
 s.run(inputs=inputs)
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
 print ('A: ',a.systems[s])
 print ('B: ',b.systems[s])
@@ -143,10 +154,15 @@ s = system(processes=[p1, p2],
            name='Convergent System',
            initial_values={a:[1,1]})
 
-inputs=[[2,2],0]
+# inputs=[[2,2],0]
+# inputs=[[[[[2,2],[0]]]]]
+inputs={a:[2,2],
+        c:[0]}
 s.run(inputs=inputs)
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
 inputs={a:[[2,2]], c:[[0]]}
 s.run(inputs=inputs)
@@ -172,8 +188,11 @@ s = system(processes=[p1],
            initial_values={a:[1,1]})
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
-inputs=[[1,1]]
+# inputs=[[1,1]]
+inputs={a:[1,1]}
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -196,8 +215,11 @@ s = system(processes=[p1, p2],
            initial_values={a:[1,1]})
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
-inputs=[[1,1]]
+# inputs=[[1,1]]
+inputs={a:[1,1]}
 s.run(inputs=inputs)
 
 print ('A: ',a.systems[s])
@@ -222,6 +244,8 @@ s = system(processes=[p1, p2],
            initial_values={a:[1,1]})
 
 s.show()
+if show_graph:
+    s.show_graph(direction='LR')
 
 inputs={a:[2,2], e:[0]}
 s.run(inputs=inputs)

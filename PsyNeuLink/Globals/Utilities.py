@@ -444,11 +444,16 @@ def convert_to_np_array(value, dimension):
     :param value:
     :return:
     """
+    if value is None:
+        return None
+
     if dimension is 1:
         value = np.atleast_1d(value)
     elif dimension is 2:
         from numpy import ndarray
-        if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
+        # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
+        value = np.array(value)
+        if value.dtype==object and len(value) == 2:
             pass
         else:
             value = np.atleast_2d(value)
@@ -467,6 +472,8 @@ def type_match(value, value_type):
         return float(value)
     if value_type is np.ndarray:
         return np.array(value)
+    if value_type is list:
+        return list(value)
     if value_type is None:
         return None
     raise UtilitiesError("Type of {} not recognized".format(value))
@@ -510,11 +517,13 @@ def underscore_to_camelCase(item):
 def append_type_to_name(object, type=None):
     name = object.name
     # type = type or object.componentType
-    type = type or object.__class__.__base__.__base__.__base__.__name__
+    # type = type or object.__class__.__base__.__base__.__base__.__name__
+    type = type or object.__class__.__base__.__name__
     if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
         string = name
     else:
         string = "\'" + name +  "\'" + ' ' + type.lower()
+        # string = name + ' ' + type.lower()
     return string
 
 #endregion

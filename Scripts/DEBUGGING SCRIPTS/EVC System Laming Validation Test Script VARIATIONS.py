@@ -22,6 +22,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
+                default_input_value=[0,0]
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
 Reward = TransferMechanism(name='Reward',
@@ -43,8 +44,8 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 
 # Processes:
 TaskExecutionProcess = process(
-    default_input_value=[0],
-    pathway=[(Input, 0), IDENTITY_MATRIX, (Decision, 0)],
+    default_input_value=[0,0],
+    pathway=[(Input, 0), FULL_CONNECTIVITY_MATRIX, (Decision, 0)],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
@@ -57,10 +58,6 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism,
-                  # controller=EVCMechanism(monitor_for_control=[Reward,
-                  #                                              DDM_PROBABILITY_UPPER_THRESHOLD,
-                  #                                              DDM_RESPONSE_TIME],
-                  #                         outcome_function=LinearCombination(exponents=[1, 1, -1])),
                   enable_controller=True,
                   monitor_for_control=[Reward, DDM_PROBABILITY_UPPER_THRESHOLD, (DDM_RESPONSE_TIME, -1, 1)],
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
@@ -70,27 +67,29 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 # Show characteristics of system:
 mySystem.show()
 mySystem.controller.show()
-# mySystem.show_graph()
+mySystem.show_graph()
+
+# RUN ******************************************************************************************************************
 
 # Specify stimuli for run:
-# #   two ways to do so:
-#
-# #   - as a dictionary of stimulus lists; for each entry:
-# #     key is name of an origin mechanism in the system
-# #     value is a list of its sequence of stimuli (one for each trial)
-# inputList = [0.5, 0.123]
-# rewardList = [20, 20]
-# # stim_list_dict = {Input:[0.5, 0.123],
-# #               Reward:[20, 20]}
+#   two ways to do so:
 
-stim_list_dict = {Input:[0.5, 0.123],
-                  Reward:[20, 20]}
+#   - as a dictionary of stimulus lists; for each entry:
+#     key is name of an origin mechanism in the system
+#     value is a list of its sequence of stimuli (one for each trial)
+inputList = [0.5, 0.123]
+rewardList = [20, 20]
+# stim_list_dict = {Input:[0.5, 0.123],
+#               Reward:[20, 20]}
 
-# #   - as a list of trials;
-# #     each item in the list contains the stimuli for a given trial,
-# #     one for each origin mechanism in the system
-# trial_list = [[0.5, 20], [0.123, 20]]
-# reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
+stim_list_dict = {Input:[[0.5, 0.5], [0.123, 0.123]],
+              Reward:[[20], [20]]}
+
+#   - as a list of trials;
+#     each item in the list contains the stimuli for a given trial,
+#     one for each origin mechanism in the system
+trial_list = [[0.5, 20], [0.123, 20]]
+reversed_trial_list = [[Reward, Input], [20, 0.5], [20, 0.123]]
 
 # Create printouts function (to call in run):
 def show_trial_header():

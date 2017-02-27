@@ -286,6 +286,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
                 # - store the current set of monitored state value in EVC_max_state_values
                 # - store the current set of controlSignals in EVC_max_policy
                 # if EVC_max > EVC:
+                # FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
                 if EVC == EVC_max:
                     # Keep track of state values and allocation policy associated with EVC max
                     # EVC_max_state_values = controller.inputValue.copy()
@@ -388,7 +389,7 @@ def _compute_EVC(args):
 
     ctlr, allocation_vector, runtime_params, time_scale, context = args
 
-    ctlr.run_simulation(inputs=list(ctlr.predictedInput),
+    ctlr.run_simulation(inputs=ctlr.predictedInput,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
                         time_scale=time_scale,
