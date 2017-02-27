@@ -2,6 +2,15 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+# COMPOSITION IMPLEMENTATION NOTE:
+#   add_projection_to and add_projection_from methods
+#   methods in LearningAuxilliary
+#   search for "Composition" in LearningProjection, LearningMechanism and LearningAuxlliary
+#   specification of ProcessingMechanism that should be associated with TARGET ObjectiveMechanism:
+#         one that either has either no outgoing projections, or none that receive LearningProjections
+#   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
+#   added attribute to Projections:  has_learning_projection
+
 # FIX:
 #   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
 #             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
@@ -46,6 +55,8 @@
 #                              next_level's derivative = 1
 #                              next_level_matrix = IDENTITY_MATRIX (this should be imposed)
 #             LearningMechanism:
+#                 FIX: MAKE SURE, WHEN PROCESS OR SYSTEM ASSIGN PROJECTION TO TARGET OBJECTIVE MECHANISM,
+#                                 THEY ALSO UPDATE ITS derivative PARAM/ATTRIBUTE (GENERALLY THIS SHOULD BE LINEAR)
 #                 Initialize variable:
 #                       use mapping_projection.sender.value to initialize variable[INPUT]
 #                       use error_source_outputState.value to initialize variable[OUTPUT]

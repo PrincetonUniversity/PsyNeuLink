@@ -389,8 +389,8 @@ class LearningProjection(Projection_Base):
         # LearningMechanism was not specified or specified by class, so call composition for "automatic" instantiation
         else:
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
-                import _instantiate_learning_mechanism
-            _instantiate_learning_mechanism(self)
+                import _instantiate_learning_components
+            _instantiate_learning_components(self)
 
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
