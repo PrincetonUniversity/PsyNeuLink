@@ -2337,7 +2337,7 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, output_fmt='pdf', direction = 'LR'):
+    def show_graph(self, output_fmt='pdf', direction = 'LR', projections='edges'):
         """Shows a graph of a system's mechanisms and projections.
         Arguments
         output_fmt : output format can be either 'pdf' or 'jupyter'
@@ -2364,33 +2364,64 @@ class System_Base(System):
                                     'fontsize': '10', 
                                     'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction})
+        if projections == 'edges':
+            # build list of receivers
+            receivers = list(system_graph.keys())
+            
+            # loop through each reciever
+            for receiver in receivers:
+                # filter out objective mechanism
+                if isinstance(receiver[0], ObjectiveMechanism):
+                    continue
+                receiver_name = receiver[0].name
+                G.node(receiver_name)
+                senders = system_graph[receiver]
+                # loop through each sender
+                for sender in senders:
+                    sender_name = sender[0].name
+                    G.node(sender_name)
+                    # find the right edge (projection)
+                    for projection in sender[0].outputState.sendsToProjections:
+                        if projection.receiver.owner == receiver[0]:
+                            edge_name = projection.name
+                    # add the edge
+                    G.edge(sender_name, receiver_name, label = " {0} ".format(edge_name))
 
-        # build list of receivers
-        receivers = list(system_graph.keys())
-        
-        # loop through each reciever
-        for receiver in receivers:
-            # filter out objective mechanism
-            if isinstance(receiver[0], ObjectiveMechanism):
-                continue
-            receiver_name = receiver[0].name
-            G.node(receiver_name)
-            senders = system_graph[receiver]
-            # loop through each sender
-            for sender in senders:
-                sender_name = sender[0].name
-                G.node(sender_name)
-                # find the right edge (projection)
-                for projection in sender[0].outputState.sendsToProjections:
-                    if projection.receiver.owner == receiver[0]:
-                        edge_name = projection.name
-                # add the edge
-                G.edge(sender_name, receiver_name, label = " {0} ".format(edge_name))
+            if output_fmt == 'pdf':
+                G.view(self.name.replace(" ", "-"), cleanup=True)
+            elif output_fmt == 'jupyter':
+                return G
 
-        if output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
-        elif output_fmt == 'jupyter':
-            return G
+        elif projections == 'nodes':
+                        # build list of receivers
+            receivers = list(system_graph.keys())
+            
+            # loop through each reciever
+            for receiver in receivers:
+                # filter out objective mechanism
+                if isinstance(receiver[0], ObjectiveMechanism):
+                    continue
+                receiver_name = receiver[0].name
+                G.node(receiver_name)
+                senders = system_graph[receiver]
+                # loop through each sender
+                for sender in senders:
+                    sender_name = sender[0].name
+                    # find the right edge (projection)
+                    for projection in sender[0].outputState.sendsToProjections:
+                        if projection.receiver.owner == receiver[0]:
+                            edge_name = projection.name
+                    # add the edge
+                    G.node(edge_name, shape='diamond')
+                    G.edge(sender_name, edge_name)
+                    G.edge(edge_name, receiver_name)
+
+            if output_fmt == 'pdf':
+                G.view(self.name.replace(" ", "-"), cleanup=True)
+            elif output_fmt == 'jupyter':
+                return G
+
+
 
 
     # @property
