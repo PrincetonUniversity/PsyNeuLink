@@ -619,7 +619,7 @@ class Component(object):
                 else:
                     if inspect.isclass(default(arg)) and issubclass(default(arg),inspect._empty):
                         raise ComponentError("PROGRAM ERROR: \'{}\' parameter of {} must be assigned a default value "
-                                             "(it can be \'None\') in its constructor or in paramClassDefaults".
+                                             "in its constructor or in paramClassDefaults (it can be \'None\')".
                                              format(arg, self.__class__.__name__))
                     self.paramClassDefaults[arg] = default(arg)
 

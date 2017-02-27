@@ -486,8 +486,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 variable:(list, np.ndarray),
-                 error_matrix:tc.any(list, np.ndarray, ParameterState, MappingProjection),
+                 variable:tc.any(list, np.ndarray),
+                 error_matrix:tc.optional(tc.any(list, np.ndarray, ParameterState, MappingProjection))=None,
                  function:is_function_type=BackPropagation,
                  learning_rate:float=1.0,
                  params=None,
@@ -520,23 +520,26 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _validate_variable(self, variable, context=None):
 
-        super()._validate_variable(variable, context)
+        locally_validated_variable = np.zeros((3,1))
 
         # Validate that variable has exactly three items:  activation_input, activation_output, and error_signal
-        if len(self.variable) != 3:
-            raise LearningMechanismsError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT and ERROR_SIGNAL))
+        if len(variable) != 3:
+            raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
+                                format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
-        for i in range(len(self.variable)):
+        for i in range(len(variable)):
             item_num_string = ['first', 'second', 'third'][i]
             item_name = input_state_names[i]
-            if not np.array(self.variable[i]).ndim == 1:
-                raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
-                                              format(item_num, self.name, item_name, self.variable[i]))
-            if not (is_numeric(self.variable[i])):
-                raise LearningMechanismsError("The {} item of variable for {} ({}:{}) is not numeric".
-                                              format(item_num, self.name, item_name, self.variable[i]))
+            if not np.array(variable[i]).ndim == 1:
+                raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
+                                              format(item_num_string, self.name, item_name, variable[i]))
+            if not (is_numeric(variable[i])):
+                raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
+                                              format(item_num_string, self.name, item_name, variable[i]))
+            locally_validated_variable[i] = variable[i]
+
+        super()._validate_variable(variable, context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_matrix specification
@@ -548,24 +551,24 @@ class LearningMechanism(AdaptiveMechanism_Base):
         try:
             error_matrix = target_set[ERROR_MATRIX]
         except KeyError:
-            raise LearningMechanismsError("PROGRAM ERROR:  No specification for {} in {}".
+            raise LearningMechanismError("PROGRAM ERROR:  No specification for {} in {}".
                                 format(ERROR_MATRIX, self.name))
 
         if not error_matrix in {list, np.darray, ParameterState, MappingProjection}:
-            raise LearningMechanismsError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+            raise LearningMechanismError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                           "MappingProjection".format(ERROR_MATRIX, self.name))
 
         if instance(error_matrix, MappingProjection):
             try:
                 error_matrix = error_matrix.parameterStates[MATRIX]
             except KeyError:
-                raise LearningMechanismsError("The MappingProjection specified for the {} arg of {} ({})"
+                raise LearningMechanismError("The MappingProjection specified for the {} arg of {} ({})"
                                               "must have a {} paramaterState".
                                               format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
 
         if isinstance(error_matrix, ParameterState):
             if not is_numeric(error_marix.value):
-                raise LearningMechanismsError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                raise LearningMechanismError("The value of the {} parameterState specified for the {} arg of {} ({}) "
                                               "is not numeric".
                                               format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
 
@@ -580,7 +583,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Validate that activation_output and error_signal are the same length
         if activity_len != error_len:
-            raise LearningMechanismsError("Items {} ({}: {}) and {} ({}: {}) of variable for {} "
+            raise LearningMechanismError("Items {} ({}: {}) and {} ({}: {}) of variable for {} "
                                           "must be the same length".
                                           format(ACTIVATION_OUTPUT_INDEX,
                                                  ACTIVATION_OUTPUT,
@@ -597,7 +600,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             self.error_matrix = np.array(self.error_matrix.value)
 
         if self.error_matrix.ndim != 2:
-            raise LearningMechanismsError("\'matrix\' arg for {} must be 2d (it is {})".
+            raise LearningMechanismError("\'matrix\' arg for {} must be 2d (it is {})".
                                format(self.__class__.__name__, matrix.ndim))
 
         cols = self.error_matrix.shape[1]
