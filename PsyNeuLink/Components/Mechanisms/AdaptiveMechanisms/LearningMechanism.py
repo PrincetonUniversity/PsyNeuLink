@@ -520,26 +520,24 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _validate_variable(self, variable, context=None):
 
-        locally_validated_variable = np.zeros((3,1))
+        super()._validate_variable(variable, context)
 
         # Validate that variable has exactly three items:  activation_input, activation_output, and error_signal
-        if len(variable) != 3:
+        if len(self.variable) != 3:
             raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
                                 format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
-        for i in range(len(variable)):
+        for i in range(len(self.variable)):
             item_num_string = ['first', 'second', 'third'][i]
             item_name = input_state_names[i]
-            if not np.array(variable[i]).ndim == 1:
+            if not np.array(self.variable[i]).ndim == 1:
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
-                                              format(item_num_string, self.name, item_name, variable[i]))
-            if not (is_numeric(variable[i])):
+                                              format(item_num_string, self.name, item_name, self.variable[i]))
+            if not (is_numeric(self.variable[i])):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
-                                              format(item_num_string, self.name, item_name, variable[i]))
-            locally_validated_variable[i] = variable[i]
+                                              format(item_num_string, self.name, item_name, self.variable[i]))
 
-        super()._validate_variable(variable, context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_matrix specification
