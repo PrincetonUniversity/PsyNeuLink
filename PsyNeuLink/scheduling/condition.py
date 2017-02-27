@@ -107,7 +107,7 @@ def over_threshold_OR(threshold, time_scale = 'trial'):
         return False
     return check
 
-def terminal_AND(dependencies):
+def terminal_AND():
     def check(dependencies):
         for var in dependencies:
             if var.component.calls_current_trial == 0:
@@ -115,7 +115,7 @@ def terminal_AND(dependencies):
         return True
     return check
 
-def terminal_OR(dependencies):
+def terminal_OR():
     def check(dependencies):
         for var in dependencies:
             if var.component.calls_current_trial > 0:

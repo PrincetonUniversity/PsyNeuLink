@@ -237,7 +237,7 @@ def main():
                            (B, (A,), every_n_calls(2)),
                            (C, (B,), every_n_calls(2)),
                            (T, (C,), every_n_calls(2)),
-                           (sched, (T), terminal_AND(1))])
+                           (sched, (T), terminal_AND())])
     for var in sched.var_list:
         var.component.new_trial()
     # for i in range(10):
