@@ -131,17 +131,20 @@ import numpy as np
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, _objective_mechanism_role
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, \
+    _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import ACTIVATION_INPUT,\
+    ACTIVATION_OUTPUT, ERROR_SIGNAL
+
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import Function
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _add_projection_from, _add_projection_to
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Functions.Function import Linear, ErrorDerivative, BackPropagation, function_type, \
-    method_type
+from PsyNeuLink.Components.Functions.Function import Function, function_type, method_type
+from PsyNeuLink.Components.Functions.Function import Linear, ErrorDerivative, BackPropagation
 
 TARGET_ERROR = "TARGET_ERROR"
 TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
@@ -361,19 +364,27 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      objective_mechanism.outputState.value],
                                            error_matrix=lc.error_matrix,
                                            function=learning_projection.learning_function)
+
     # Assign MappingProjection from activation_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_input,
-                      receiver=learning_mechanism.inputState[ACTIVATION_INPUT],
+                      receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX)
     # Assign MappingProjection from activation_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_output,
-                      receiver=learning_mechanism.inputState[ACTIVATION_OUTPUT],
+                      receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX)
     # Assign MappingProjection from ObjectiveMechanism to LearningMechanism's ERROR_SIGNAL inputState
     MappingProjection(sender=lc.error_objective_mech_output,
-                      receiver=learning_mechanism.inputState[ERROR_SIGNAL],
+                      receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
                       matrix=IDENTITY_MATRIX)
+    _add_projection_from(sender=learning_mechanism,
+                         state=learning_mechanism.outputState,
+                         projection_spec=learning_projection,
+                         receiver=lc.activation_projection.parameterStates[MATRIX])
 
+    TEST = True
+
+# FIX: GOT TO HERE !!!!!
     #     assign outputState to learning_projection.sender (use add_projection_from??)
 
 
