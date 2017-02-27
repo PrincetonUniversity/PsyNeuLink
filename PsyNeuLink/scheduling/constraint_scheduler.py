@@ -141,19 +141,6 @@ class Scheduler(object):
         self.var_dict[clock].priority = 0
         self.var_list.append(self.var_dict[clock])
 
-
-    # def set_terminal(self, terminal):
-    #     #######
-    #     # add additional properties to the terminal mechanism
-    #     # priority is set to zero
-    #     # ran, when switched to True, signals that the terminal mechanism has run
-    #     #######
-    #     self.terminal = ScheduleVariable(terminal)
-    #     self.var_dict[terminal] = self.terminal
-    #     self.var_dict[terminal].priority = 0
-    #     self.var_dict[terminal].ran = False
-    #     self.var_list.append(self.var_dict[terminal])
-
     def run_time_step(self):
         #######
         # Resets all mechanisms in the Scheduler for this time_step
@@ -213,16 +200,13 @@ class Scheduler(object):
         self.trial_terminated = False
         while(not self.trial_terminated):
             self.run_time_step()
-            # if self.terminal.ran:
-            #     self.terminal.ran = False   # switch terminal's 'ran' property back to False for the next trial
-            #     trial_terminated = True
             print('----------------')
 
 
 
 def main():
     from PsyNeuLink.Components.Component import Component
-    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR, terminal_AND, terminal_OR
+    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR, terminal_AND, terminal_OR, num_time_steps
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
     A = TransferMechanism(function = Linear(slope=3, intercept=3), name = 'A')
@@ -237,11 +221,9 @@ def main():
                            (B, (A,), every_n_calls(2)),
                            (C, (B,), every_n_calls(2)),
                            (T, (C,), every_n_calls(2)),
-                           (sched, (T), terminal_AND())])
+                           (sched, (Clock,), num_time_steps(2))])
     for var in sched.var_list:
         var.component.new_trial()
-    # for i in range(10):
-    #     sched.run_time_step()
 
 
     sched.run_trial()
