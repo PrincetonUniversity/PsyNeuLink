@@ -192,46 +192,26 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
 
     # Next, validate that the receiver does not receive any other LearningProjections
     # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
-    #                       will need to be dealt with in the Composition (by examining its learning graph??)
-
-    # FIX: HAVE TO DISCOUNT learning_projection WHICH APPARENTLY CAN ALREDY HAVE BEEN ASSIGNED
-    if any((isinstance(projection, LearningProjection)  and not projection is learning_projection) for projection in
+    #                       will need to be dealt with in Composition implementatoin (by examining its learning graph??)
+    if any((isinstance(projection, LearningProjection) and not projection is learning_projection) for projection in
            learning_projection.receiver.receivesFromProjections):
         raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
                                       format(learning_projection.name, learning_projection.receiver.owner.name))
 
-    # Now that activation_projection has been identified and validated, get its components (lc)
-    # Note: error-related components won't get be defined
-    lc = learning_components(learning_projection=learning_projection)
 
-    # TEST:
-    x = lc.activation_projection
-    x = lc.activation_input
-    x = lc.activation_mech
-    x = lc.activation_sample
-    x = lc.activation_mech_fct
-    x = lc.activation_derivative
-    # x = lc.error_projection
-    # x = lc.error_matrix
-    # x = lc.error_derivative
-    # x = lc.error_mech
-    # x = lc.error_objective_mech
-
-    # Next, get error_matrix and then the remaining learning (error-related) components:
-
-    learning_proj_for_error_proj = next(lc_projs)
-
-
-
-    # Check if activation_mech has a projection to an ObjectiveMechanism or some other type of ProcessingMechanism
+    # FIX: HAS THIS ALREADY BEEN TESTED (EVEN IMPLICLITY) IN FORGOING??
+    # Check if activation_mech has a projection to a LearningMechanism or some other type of ProcessingMechanism
     # IMPLEMENTATION NOTE: this uses the first projection found (staring with the primary outputState
-    for projection in lc.activation_sample.sendsToProjections:
+    for projection.receiver.owner in next((projection in lc.activation_sample.sendsToProjections
+                                           if isinstance(projection.receiver.owner, LearningMechanism)), None):
         # activation_mech has a projection to an ObjectiveMechanism being used for learning,
         #  so validate it, assign it, and quit search
         if _objective_mechanism_role(projection.receiver.owner, LEARNING):
             learning_projection._validate_error_signal(projection.receiver.owner.outputState.value)
             objective_mechanism = projection.receiver.owner
-            break
+            return
+
+        # FIX: SHOULD THIS STILL BE HERE OR IS IT HANDLED BY lc?
         # errorSource has a projection to a ProcessingMechanism, so:
         #   - determine whether that has a LearningProjection
         #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
@@ -248,6 +228,36 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
                 #     the MonitoringMechanism that provides error_signal
                 # next_level_weight_matrix = projection.matrix
                 error_objective_mech_output = next_level_learning_projection.sender
+
+
+
+    # Now that activation_projection has been identified and validated, get its components (lc)
+    # Note: error-related components won't get be defined
+    lc = learning_components(learning_projection=learning_projection)
+
+    # TEST:
+    x = lc.activation_projection
+    x = lc.activation_input
+    x = lc.activation_mech
+    x = lc.activation_sample
+    x = lc.activation_mech_fct
+    x = lc.activation_derivative
+    x = lc.error_projection
+    # x = lc.error_matrix
+    # x = lc.error_derivative
+    # x = lc.error_mech
+    # x = lc.error_objective_mech
+
+    # Next, check whether ObjectiveMechanism should be a TARGET or not:
+    #   It SHOULD be a TARGET if it has no outgoing projections at all or that receive a LearningProjection;
+    #   in that case, error_projection returns None
+    if not lc.error_projection:
+        pass
+
+
+
+    # Next, get error_matrix and then the remaining learning (error-related) components:
+
 
     # errorSource does not project to an ObjectiveMechanism used for learning
     if not objective_mechanism:
@@ -602,10 +612,12 @@ class learning_components(object):
             error_proj = next((projection for projection in projections if
                               (isinstance(projection, MappingProjection) and projection.has_learning_projection)),None)
             if not error_proj:
-                raise LearningAuxilliaryError("error_matrix not identified:  "
-                                              "no projection was found from activation_sample ({}) "
-                                              "that receives a LearningProjection".
-                                              format(self.activation_sample.name))
+                # raise LearningAuxilliaryError("error_matrix not identified:  "
+                #                               "no projection was found from activation_sample ({}) "
+                #                               "that receives a LearningProjection".
+                #                               format(self.activation_sample.name))
+                # Use failure here to identify mechanism for which a TARGET ObjectiveMechanism should be assigned
+                return None
             self.error_pjection = error_proj
             return error_proj
         return self._error_projection or _get_error_proj()
