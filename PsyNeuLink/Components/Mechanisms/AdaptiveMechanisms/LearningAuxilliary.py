@@ -202,8 +202,9 @@ def _instantiate_learning_mechanism(learning_projection, context=None):
     # FIX: HAS THIS ALREADY BEEN TESTED (EVEN IMPLICLITY) IN FORGOING??
     # Check if activation_mech has a projection to a LearningMechanism or some other type of ProcessingMechanism
     # IMPLEMENTATION NOTE: this uses the first projection found (staring with the primary outputState
-    for projection.receiver.owner in next((projection in lc.activation_sample.sendsToProjections
-                                           if isinstance(projection.receiver.owner, LearningMechanism)), None):
+    p.iter = next((projection in lc.activation_sample.sendsToProjections
+                                           if isinstance(projection.receiver.owner, LearningMechanism)), None)
+    for projection.receiver.owner in p.iter:
         # activation_mech has a projection to an ObjectiveMechanism being used for learning,
         #  so validate it, assign it, and quit search
         if _objective_mechanism_role(projection.receiver.owner, LEARNING):
