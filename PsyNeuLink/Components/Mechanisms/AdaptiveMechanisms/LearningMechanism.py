@@ -280,14 +280,14 @@ def _is_learning_spec(spec):
 
 # Used to index variable:
 ACTIVATION_INPUT_INDEX = 0
-ACTIVATION_SAMPLE_INDEX = 1
+ACTIVATION_OUTPUT_INDEX = 1
 ERROR_SIGNAL_INDEX = 2
 
 # Used to name inputStates:
 ACTIVATION_INPUT = 'activation_input'
-ACTIVATION_SAMPLE = 'activation_sample'
+ACTIVATION_OUTPUT = 'activation_output'
 ERROR_SIGNAL = 'error_signal'
-input_state_names = [ACTIVATION_INPUT, ACTIVATION_SAMPLE, ERROR_SIGNAL]
+input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 
 # Argument names:
 ERROR_MATRIX = 'error_matrix'
@@ -415,12 +415,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
     componentType : LEARNING_PROJECTION
 
     variable : 2d np.array
-        has three items, each of which is a 1d np.array: `activation_input`, `activation_sample`, and `error_signal`.
+        has three items, each of which is a 1d np.array: `activation_input`, `activation_output`, and `error_signal`.
 
     activation_input : 1d np.array
         the input to the `MappingProjection` being learned.
 
-    activation_sample : 1d np.array
+    activation_output : 1d np.array
         the output of the mechanism that receives the `MappingProjection` being learned.
 
     COMMENT:
@@ -522,12 +522,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._validate_variable(variable, context)
 
-        # Validate that variable has exactly three items:  activation_input, activation_sample, and error_signal
+        # Validate that variable has exactly three items:  activation_input, activation_output, and error_signal
         if len(self.variable) != 3:
             raise LearningMechanismsError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_SAMPLE and ERROR_SIGNAL))
+                                format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT and ERROR_SIGNAL))
 
-        # Validate that activation_input, activation_sample, and error_signal are numeric and lists or 1d np.ndarrays
+        # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(self.variable)):
             item_num_string = ['first', 'second', 'third'][i]
             item_name = input_state_names[i]
@@ -575,16 +575,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
 
-        activity_len = len(self.activation_sample)
+        activity_len = len(self.activation_output)
         error_len = len(self.error_signal)
 
-        # Validate that activation_sample and error_signal are the same length
+        # Validate that activation_output and error_signal are the same length
         if activity_len != error_len:
             raise LearningMechanismsError("Items {} ({}: {}) and {} ({}: {}) of variable for {} "
                                           "must be the same length".
-                                          format(ACTIVATION_SAMPLE_INDEX,
-                                                 ACTIVATION_SAMPLE,
-                                                 self.variable[ACTIVATION_SAMPLE_INDEX],
+                                          format(ACTIVATION_OUTPUT_INDEX,
+                                                 ACTIVATION_OUTPUT,
+                                                 self.variable[ACTIVATION_OUTPUT_INDEX],
                                                  ERROR_SIGNAL_INDEX,
                                                  ERROR_SIGNAL,
                                                  self.variable[ERROR_SIGNAL_INDEX],
@@ -676,7 +676,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal = self.function(variable=[self.activation_input,
-                                                       self.activation_sample,
+                                                       self.activation_output,
                                                        weighted_error_signal])
 
         if not INITIALIZING in context and self.reportOutputPref:
@@ -694,12 +694,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self.variable[ACTIVATION_INPUT_INDEX] = value
 
     @property
-    def activation_sample(self):
-        return self.variable[ACTIVATION_SAMPLE_INDEX]
+    def activation_output(self):
+        return self.variable[ACTIVATION_OUTPUT_INDEX]
 
-    @activation_sample.setter
-    def activation_sample(self, value):
-        self.variable[ACTIVATION_SAMPLE_INDEX] = value
+    @activation_output.setter
+    def activation_output(self, value):
+        self.variable[ACTIVATION_OUTPUT_INDEX] = value
 
     @property
     def error_signal(self):
