@@ -2449,11 +2449,11 @@ class LearningFunction(Function_Base):
     componentType = LEARNING_FUNCTION_TYPE
 
 
-ACTIVATION_FUNCTION = 'activation_function'
-MATRIX_INPUT = 0       # a(j)
+LEARNING_ACTIVATION_FUNCTION = 'activation_function'
+LEARNING_ACTIVATION_INPUT = 0       # a(j)
 # MATRIX = 1             # w
-ACTIVATION_OUTPUT = 1  # a(i)
-ACTIVATION_ERROR = 2   # e
+LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
+LEARNING_ACTIVATION_ERROR = 2   # e
 
 class ErrorDerivative(LearningFunction):
     """Calculate the contribution of each sender to the error signal based on the weight matrix
@@ -2515,7 +2515,7 @@ class ErrorDerivative(LearningFunction):
 
         # variable must have two 1d items
         if variable.shape[0] != 2:
-            raise FunctionError("variable for {} ({0}) must have two arrays (activity and error vectors)".
+            raise FunctionError("variable for {} ({}) must have two arrays (activity and error vectors)".
                                format(self.__class__.__name__, variable))
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2558,7 +2558,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
       return     =  LEARNING_RATE  *  self.variable
 
     Reinforcement.function:
-        variable must be a 1D np.array of error terms
+        variable must be a 1D np.array with three items (standard for learning functions)
+            note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ACTIVATION_ERROR items are used by RL
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
         LEARNING_RATE param must be a float
@@ -2606,15 +2607,15 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         # FIX: GETS CALLED BY _check_args W/O KWINIT IN CONTEXT
         if not INITIALIZING in context:
-            if np.count_nonzero(self.variable[ACTIVATION_OUTPUT]) != 1:
+            if np.count_nonzero(self.variable[LEARNING_ACTIVATION_OUTPUT]) != 1:
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
-                                    format(self.variable[ACTIVATION_OUTPUT], self.componentName))
-            if len(self.variable[ACTIVATION_ERROR]) != 1:
+                                    format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
+            if len(self.variable[LEARNING_ACTIVATION_ERROR]) != 1:
                 raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
                                     "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[ACTIVATION_ERROR]))
+                                    format(self.name, self.variable[LEARNING_ACTIVATION_ERROR]))
 
 
     def function(self,
@@ -2641,8 +2642,8 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         self._check_args(variable=variable, params=params, context=context)
 
-        output = self.variable[ACTIVATION_OUTPUT]
-        error = self.variable[ACTIVATION_ERROR]
+        output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        error = self.variable[LEARNING_ACTIVATION_ERROR]
         learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
@@ -2713,14 +2714,14 @@ class BackPropagation(LearningFunction): # -------------------------------------
         if len(self.variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
-        if len(self.variable[ACTIVATION_ERROR]) != len(self.variable[ACTIVATION_OUTPUT]):
+        if len(self.variable[LEARNING_ACTIVATION_ERROR]) != len(self.variable[LEARNING_ACTIVATION_OUTPUT]):
             raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[ACTIVATION_ERROR], self.name, self.variable[ACTIVATION_OUTPUT]))
+                                format(self.variable[LEARNING_ACTIVATION_ERROR], self.name, self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
     def _instantiate_function(self, context=None):
         """Get derivative of activation function being used
         """
-        self.derivativeFunction = self.paramsCurrent[ACTIVATION_FUNCTION].derivative
+        self.derivativeFunction = self.paramsCurrent[LEARNING_ACTIVATION_FUNCTION].derivative
         super()._instantiate_function(context=context)
 
     def function(self,
@@ -2740,9 +2741,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
-        input = np.array(self.variable[MATRIX_INPUT]).reshape(len(self.variable[MATRIX_INPUT]),1)  # make input a 1D row array
-        output = np.array(self.variable[ACTIVATION_OUTPUT]).reshape(1,len(self.variable[ACTIVATION_OUTPUT])) # make output a 1D column array
-        error = np.array(self.variable[ACTIVATION_ERROR]).reshape(1,len(self.variable[ACTIVATION_ERROR]))  # make error a 1D column array
+        input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)  # make input a 1D row array
+        output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT])) # make output a 1D column array
+        error = np.array(self.variable[LEARNING_ACTIVATION_ERROR]).reshape(1,len(self.variable[LEARNING_ACTIVATION_ERROR]))  # make error a 1D column array
         learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
