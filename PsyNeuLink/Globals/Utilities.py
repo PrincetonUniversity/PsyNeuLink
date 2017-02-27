@@ -453,7 +453,9 @@ def convert_to_np_array(value, dimension):
         from numpy import ndarray
         # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
         value = np.array(value)
-        if value.dtype==object and len(value) == 2:
+        # if value.dtype==object and len(value) == 2:
+        # Array is made up of non-uniform elements, so treat as 2d array and pass
+        if value.dtype==object:
             pass
         else:
             value = np.atleast_2d(value)
