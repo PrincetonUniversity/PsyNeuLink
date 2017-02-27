@@ -206,10 +206,10 @@ class Scheduler(object):
 
 def main():
     from PsyNeuLink.Components.Component import Component
-    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR, terminal_AND, terminal_OR, num_time_steps
+    from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, over_threshold, terminal, num_time_steps
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
-    A = TransferMechanism(function = Linear(slope=3, intercept=3), name = 'A')
+    A = TransferMechanism(function = Linear(), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
@@ -217,11 +217,42 @@ def main():
     sched = Scheduler()
     sched.set_clock(Clock)
     sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
-    sched.add_constraints([(A, (Clock,), every_n_calls(1)),
-                           (B, (A,), every_n_calls(2)),
-                           (C, (B,), every_n_calls(2)),
-                           (T, (C,), every_n_calls(2)),
-                           (sched, (Clock,), num_time_steps(2))])
+
+    test_constraints_dict = {"Test 1":[(A, (Clock,), every_n_calls(2)),
+                               (B, (A), every_n_calls(2)),
+                               (C, (B,A), first_n_calls(2, op = "OR")),
+                               (T, (C,), every_n_calls(2)),
+                               (sched, (Clock,), num_time_steps(12))],
+
+                             "Test 2": [(A, (Clock,), every_n_calls(1)),
+                                        (B, (A), over_threshold(0)),
+                                        (C, (B), first_n_calls(5)),
+                                        (T, (C,), every_n_calls(2)),
+                                        (sched, (T,), terminal())],
+
+                             "Test 3": [(A, (Clock,), every_n_calls(2)),
+                                        (B, (A), over_threshold(0)),
+                                        (C, (B), first_n_calls(5)),
+                                        (T, (C,), every_n_calls(2)),
+                                        (sched, (T,), terminal())],
+
+                             "Test 4": [(A, (Clock,), every_n_calls(1)),
+                                        (B, (A), every_n_calls(2)),
+                                        (C, (B), over_threshold(0)),
+                                        (T, (C,), every_n_calls(2)),
+                                        (sched, (T,), terminal())],
+
+                             "Test 5": [(A, (Clock,), every_n_calls(2)),
+                                        (B, (A), every_n_calls(2)),
+                                        (C, (B, A), first_n_calls(2, op="OR")),
+                                        (T, (C,), every_n_calls(2)),
+                                        (sched, (Clock,), num_time_steps(12))]
+
+                              }
+
+    test = "Test 4"
+    sched.add_constraints(test_constraints_dict[test])
+
     for var in sched.var_list:
         var.component.new_trial()
 
