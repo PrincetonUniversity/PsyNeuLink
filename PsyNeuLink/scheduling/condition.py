@@ -106,3 +106,11 @@ def over_threshold_OR(threshold, time_scale = 'trial'):
                 return True
         return False
     return check
+
+def terminal_AND(dependencies):
+    def check(dependencies):
+        return True
+    return check
+
+def terminal_OR():
+    return True

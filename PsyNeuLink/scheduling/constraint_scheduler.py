@@ -60,8 +60,8 @@ class ScheduleVariable(object):
         if result:
             self.filled_constraints.append(constraint)
             self.unfilled_constraints.remove(constraint)
-            if self.component.name == 'Terminal':
-                self.ran = True
+            # if self.component.name == 'Terminal':
+            #     self.ran = True
         return result
 
     def new_time_step(self):
@@ -77,20 +77,20 @@ class Scheduler(object):
     ########
     # Constructor for Scheduler
     # Initializes empty dictionary & empty list for ScheduleVariables, empty list for constraints
-    # add_vars, add_constraints methods add items to
     ########
-    def __init__(self, var_dict = None, terminal = None, clock = None, constraints = None):
+    def __init__(self, var_dict = None, clock = None, constraints = None):
         self.var_dict = {}
         self.constraints = []
         self.var_list = []
+        self.trial_terminated = False
         if var_dict is not None:
             self.add_vars(var_dict)
         if clock is not None:
             self.clock = self.set_clock(clock)
         else:
             self.clock = None
-        if terminal is not None:
-            self.terminal = self.set_terminal(terminal)
+        # if terminal is not None:
+        #     self.terminal = self.set_terminal(terminal)
         if constraints is not None:
             self.add_constraints(constraints)
         self.current_step = 0
@@ -98,7 +98,7 @@ class Scheduler(object):
 
     def add_vars(self, var_list):
         #######
-        # Takes in var_list, list of tuples of the form (component, priority), where component=mechanism, priority=int)
+        # Takes in var_list, list of tuples of the form (component, priority), where component=mechanism, priority=int
         # Passes each component to ScheduleVariable, which constructs a ScheduleVariable object
         # Assembles var_dict which contains components as keys and their ScheduleVariables as values
         #######
@@ -111,21 +111,24 @@ class Scheduler(object):
         #######
         # Takes in a list of tuples of constraint parameters
         # Passes constraint parameters to Constraint to assemble Constraint objects
-        # Adds each Constraint object to it's owner's and dependencies' ScheduleVariables
+        # Adds each Constraint object to its owner's and dependencies' ScheduleVariables
         #######
         for con in constraints:
             # Turn con into a Constraint object
             # Get owner[0], dependencies[1] and condition[2] out of each con
-            owner = self.var_dict[con[0]]
+            if isinstance(con[0], Scheduler):
+                owner = con[0]
+            else:
+                owner = self.var_dict[con[0]]
             if con[1] in self.var_dict:
                 dependencies = (self.var_dict[con[1]],)
             else:
                 dependencies = tuple((self.var_dict[mech] for mech in con[1]))
             con = Constraint(owner, dependencies, condition = con[2])
-
+            if isinstance(owner, ScheduleVariable):
+                con.owner.add_own_constraint(con)
             # Add constraint to Scheduler?, owner, and dependencies
             self.constraints.append(con)
-            con.owner.add_own_constraint(con)
             for var in con.dependencies:
                 var.add_dependent_constraint(con)
 
@@ -139,17 +142,17 @@ class Scheduler(object):
         self.var_list.append(self.var_dict[clock])
 
 
-    def set_terminal(self, terminal):
-        #######
-        # add additional properties to the terminal mechanism
-        # priority is set to zero
-        # ran, when switched to True, signals that the terminal mechanism has run
-        #######
-        self.terminal = ScheduleVariable(terminal)
-        self.var_dict[terminal] = self.terminal
-        self.var_dict[terminal].priority = 0
-        self.var_dict[terminal].ran = False
-        self.var_list.append(self.var_dict[terminal])
+    # def set_terminal(self, terminal):
+    #     #######
+    #     # add additional properties to the terminal mechanism
+    #     # priority is set to zero
+    #     # ran, when switched to True, signals that the terminal mechanism has run
+    #     #######
+    #     self.terminal = ScheduleVariable(terminal)
+    #     self.var_dict[terminal] = self.terminal
+    #     self.var_dict[terminal].priority = 0
+    #     self.var_dict[terminal].ran = False
+    #     self.var_list.append(self.var_dict[terminal])
 
     def run_time_step(self):
         #######
@@ -166,7 +169,10 @@ class Scheduler(object):
             #######
             change_list = []
             for con in variable.dependent_constraints:
-                if con in con.owner.unfilled_constraints:
+                if isinstance(con.owner, Scheduler):
+                    if con.is_satisfied():
+                        self.trial_terminated = True
+                elif con in con.owner.unfilled_constraints:
                     if con.owner.evaluate_constraint(con):
                         change_list.append(con.owner)
                 change_list.sort(key=lambda x:x.priority) # sort according to priority
@@ -204,35 +210,34 @@ class Scheduler(object):
             var.new_trial()
 
         # run time steps until terminal mechanism is run
-        trial_terminated = False
-        while(not trial_terminated):
+        self.trial_terminated = False
+        while(not self.trial_terminated):
             self.run_time_step()
-            if self.terminal.ran:
-                self.terminal.ran = False   # switch terminal's 'ran' property back to False for the next trial
-                trial_terminated = True
+            # if self.terminal.ran:
+            #     self.terminal.ran = False   # switch terminal's 'ran' property back to False for the next trial
+            #     trial_terminated = True
             print('----------------')
 
 
 
 def main():
     from PsyNeuLink.Components.Component import Component
-    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR
+    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR, terminal_AND
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
     A = TransferMechanism(function = Linear(slope=3, intercept=3), name = 'A')
     B = TransferMechanism(function = Linear(), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
-    Terminal = TransferMechanism(function = Linear(), name = 'Terminal')
+    T = TransferMechanism(function = Linear(), name = 'Terminal')
     sched = Scheduler()
     sched.set_clock(Clock)
-    sched.set_terminal(Terminal)
-    sched.add_vars([(A, 1), (B, 2), (C, 3)])
+    sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
     sched.add_constraints([(A, (Clock,), every_n_calls(1)),
-                           (B, (A,), over_threshold_OR(2)),
-                           # (B, (Clock), every_n_calls(10)),
-                           (C, (A,B), first_n_calls_AND(2)),
-                           (Terminal, (C,), every_n_calls(2))])
+                           (B, (A,), every_n_calls(2)),
+                           (C, (B,), every_n_calls(2)),
+                           (T, (C,), every_n_calls(2)),
+                           (sched, (T), terminal_AND(1))])
     for var in sched.var_list:
         var.component.new_trial()
     # for i in range(10):
