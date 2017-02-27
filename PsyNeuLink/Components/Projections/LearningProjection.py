@@ -268,7 +268,7 @@ class LearningProjection(Projection_Base):
     variableClassDefault = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTION_SENDER: ObjectiveMechanism,
+    paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
                                PARAMETER_STATES: None, # This suppresses parameterStates
                                FUNCTION: Linear,
                                FUNCTION_PARAMS:
@@ -283,7 +283,7 @@ class LearningProjection(Projection_Base):
 
     @tc.typecheck
     def __init__(self,
-                 sender:tc.optional(tc.any(OutputState, ObjectiveMechanism))=None,
+                 sender:tc.optional(tc.any(OutputState, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterState, MappingProjection))=None,
                  learning_rate:tc.optional(float)=None,
                  learning_function:tc.optional(is_function_type)=BackPropagation,
@@ -320,26 +320,26 @@ class LearningProjection(Projection_Base):
 
         # VALIDATE SENDER
         sender = self.sender
-        if isinstance(sender, ObjectiveMechanism):
+        if isinstance(sender, LearningMechanism):
             sender = self.sender = sender.outputState
 
-        if any(s in {OutputState, ObjectiveMechanism} for s in {sender, type(sender)}):
+        if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
             # If it is the outputState of a MonitoringMechanism, check that it is a list or 1D np.array
             if isinstance(sender, OutputState):
                 if not isinstance(sender.value, (list, np.ndarray)):
-                    raise LearningProjectionError("Sender for {} (outputState of ObjectiveMechanism {}) "
+                    raise LearningProjectionError("Sender for {} (outputState of LearningMechanism {}) "
                                                   "must be a list or 1D np.array".format(self.name, sender.name))
                 if not np.array(sender.value).ndim == 1:
-                    raise LearningProjectionError("OutputState of {} (ObjectiveMechanism for {})"
+                    raise LearningProjectionError("OutputState of {} (LearningMechanism for {})"
                                                   " must be an 1D np.array".format(sender.name, self.name))
-            # If specification is a ObjectiveMechanism class, pass (it will be instantiated in _instantiate_sender)
-            elif inspect.isclass(sender) and issubclass(sender,  ObjectiveMechanism):
+            # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
+            elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
                 pass
 
         else:
-            raise LearningProjectionError("The sender arg for {} ({}) must be an ObjectiveMechanism, "
+            raise LearningProjectionError("The sender arg for {} ({}) must be an LearningMechanism, "
                                           "the outputState of one, or a reference to the class"
-                                          .format(sender.name, self.name, ))
+                                          .format(self.name, sender.name))
 
 
         # VALIDATE RECEIVER
@@ -351,8 +351,8 @@ class LearningProjection(Projection_Base):
                 raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
                                               "has no MATRIX parameter state".format(receiver.name, self.name))
         if not any(s in {ParameterState, MappingProjection} for s in {receiver, type(receiver)}):
-            raise LearningProjectionError("The sender arg for {} must be an ObjectiveMechanism, "
-                                          "the outputState of one, or a reference to the class"
+            raise LearningProjectionError("The receiver arg for {} must be a MappingProjection "
+                                          "or the MATRIX parameterState of one."
                                           .format(PROJECTION_SENDER, sender, self.name, ))
 
         # VALIDATE WEIGHT CHANGE PARAMS

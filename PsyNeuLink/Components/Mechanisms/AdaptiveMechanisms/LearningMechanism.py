@@ -611,7 +611,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Insure that inputState values are compatible with derivative functions and error_matrix
         """
-        pass
+        # Specify states by assigning names
+        self.paramsCurrent[INPUT_STATES] = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+        super()._instantiate_input_states(context=context)
         # TBI
         # NAME the INPUTSTATES USING input__state_names
         # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING: ?? DONE ABOVE IN _validate_params??
