@@ -520,7 +520,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
             # Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.function(variable=self.variable, params=runtime_params)
+            comparison_array = self.function(variable=self.variable, params=runtime_params, context=context)
 
             self.summed_error_signal = sum
 

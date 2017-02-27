@@ -28,7 +28,8 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Control Parameters
-signalSearchRange = np.arange(0, 5.1, 0.1)
+# signalSearchRange = np.arange(0, 5.1, 0.5)
+signalSearchRange = np.arange(0, 1, 0.5)
 
 # Stimulus Mechanisms
 Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope = 0.2995))
@@ -172,11 +173,11 @@ def show_results():
 
 
 # Plot system:
-mySystem.show_graph()
+# mySystem.show_graph()
 
 # Run system:
 
-mySystem.controller.reportOutputPref = False
+mySystem.controller.reportOutputPref = True
 mySystem.run(num_executions=nTrials,
              inputs=stim_list_dict,
              call_before_trial=show_trial_header,

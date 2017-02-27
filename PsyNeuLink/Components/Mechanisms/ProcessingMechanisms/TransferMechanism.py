@@ -98,7 +98,7 @@ Class Reference
 
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction
+from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, Integrator, NormalDist
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -108,6 +108,7 @@ INITIAL_VALUE = 'initial_value'
 TRANSFER_RESULT = "transfer_result"
 TRANSFER_MEAN = "transfer_mean "
 TRANSFER_VARIANCE = "transfer_variance"
+TRANSFER_DIFFERENTIAL = "transfer_differential"
 
 # TransferMechanism output indices (used to index output values):
 class Transfer_Output(AutoNumber):
@@ -328,6 +329,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
                                                  #  to be compatible with Transfer_DEFAULT_BIAS
 
+
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -365,7 +367,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
                                                  initial_value=initial_value,
@@ -374,6 +375,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                  time_scale=time_scale,
                                                  range=range,
                                                  params=params)
+
+        # self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.rate, noise = self.noise)
+        self.integrator_function = Integrator(weighting=ADAPTIVE, rate=self.rate, noise = self.noise)
 
         if default_input_value is None:
             default_input_value = Transfer_DEFAULT_BIAS
@@ -414,12 +418,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Validate NOISE:
         noise = target_set[NOISE]
-        if isinstance(noise, float) and noise>=0 and noise<=1:
-            self.noise_function = False
-        elif isinstance(noise, function_type):
-            self.noise_function = True
-        else:
-            raise TransferError("noise parameter ({}) for {} must be a numeric value between 0 and 1 or a function".
+        if (isinstance(noise, float) == False) and (callable(noise) == False):
+            raise TransferError("noise parameter ({}) for {} must be a float or a function".
                                 format(noise, self.name))
 
         # Validate RATE:
@@ -503,6 +503,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
+
+
         if INITIALIZING in context:
             self.previous_input = self.variable
 
@@ -512,13 +514,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         #region ASSIGN PARAMETER VALUES
         # - convolve inputState.value (signal) w/ driftRate param value (attentional contribution to the process)
 
-        # Scale noise to be between +noise and -noise
-        if self.noise_function:
-            noise = self.noise()
-        else:
-            noise = self.noise * ((2 * np.random.normal()) - 1)
+
         rate = self.rate
         range = self.range
+        noise = self.noise
+
         #endregion
 
 
@@ -528,7 +528,10 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # Update according to time-scale of integration
         if time_scale is TimeScale.TIME_STEP:
-            current_input = (rate * self.inputState.value) + ((1-rate) * self.previous_input) + noise
+            current_input = self.integrator_function.function(self.inputState.value,
+                                                              params = {NOISE: noise, RATE: rate},
+                                                              context=context)
+
         elif time_scale is TimeScale.TRIAL:
             current_input = self.inputState.value + noise
         else:

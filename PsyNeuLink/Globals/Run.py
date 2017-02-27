@@ -349,6 +349,36 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_SAMPLE, \
                                                                                       COMPARATOR_TARGET
 
+HOMOGENOUS = 1
+HETEROGENOUS = 0
+
+EXECUTION_SET_DIM = 0
+PHASE_DIM = 1
+MECHANISM_DIM = 2
+STATE_DIM = 3  # Note: only meaningful if mechanisms are homnogenous (i.e., all have the same number of states -- see chart below):
+
+# Axis 0         |---------------------------------------------------exec set----------------------------------------------------|
+# Axis 1           |-----------------------phase-----------------------|   |-----------------------phase-----------------------|
+# Axis 2             |--------mech---------|   |--------mech---------|       |--------mech---------|   |--------mech---------|
+# Axis 3               |-state--|-state--|       |-state--|-state--|           |-state--|-state--|       |-state--|-state--|
+#
+# HOMOGENOUS: (ndim = 5)
+# a = np.array([ [ [ [ [ 0, 0 ] , [ 1, 1 ] ] , [ [ 2, 2 ] , [ 3, 3 ] ] ] , [ [ [ 4, 4 ] , [ 5, 5 ] ] , [ [ 6, 6 ] , [ 7, 7 ] ] ] ] ,
+#                [ [ [ [ 8, 8 ] , [ 9, 9 ] ] , [ [10, 10] , [11, 11] ] ] , [ [ [12, 12] , [13, 13] ] , [ [14, 14] , [15, 15] ] ] ] ])
+#
+# HETEROGENOUS:
+# State sizes (ndim = 4)
+# b = np.array([ [ [ [ [    0 ] , [ 1, 1 ] ] , [ [    2 ] , [ 3, 3 ] ] ] , [ [ [    4 ] , [ 5, 5 ] ] , [ [    6 ] , [ 7, 7 ] ] ] ] ,
+#                [ [ [ [    8 ] , [ 9, 9 ] ] , [ [    10] , [    11] ] ] , [ [ [    12] , [    13] ] , [ [    14] , [    15] ] ] ] ])
+#
+# States per mechanism  (ndim = 3)
+# c = np.array([ [ [ [ [ 0, 0 ]            ] , [ [ 2, 2 ] , [ 3, 3 ] ] ] , [ [            [ 5, 5 ] ] , [ [ 6, 6 ] , [ 7, 7 ] ] ] ] ,
+#                [ [ [ [ 8, 8 ]            ] , [ [10, 10] , [11, 11] ] ] , [ [            [13, 13] ] , [ [14, 14] , [15, 15] ] ] ] ])
+#
+# Both (ndim = 3)
+# d = np.array([ [ [ [ [    0 ]            ] , [ [ 2, 2 ] , [    3 ] ] ] , [ [ [    4 ]            ] , [ [ 6, 6 ] , [    7 ] ] ] ] ,
+#                [ [ [ [    8 ]            ] , [ [10, 10] , [    11] ] ] , [ [ [    12]            ] , [ [14, 14] , [    15] ] ] ] ])
+
 class RunError(Exception):
      def __init__(object, error_value):
          object.error_value = error_value
@@ -358,7 +388,7 @@ class RunError(Exception):
 
 @tc.typecheck
 def run(object,
-        inputs:tc.any(list, dict, np.ndarray),
+        inputs,
         num_executions:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
@@ -468,7 +498,7 @@ def run(object,
     if targets:
         targets = _construct_stimulus_sets(object, targets, is_target=True)
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     if object_type in {MECHANISM, PROCESS}:
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
@@ -495,7 +525,8 @@ def run(object,
     # num_executions = num_executions or len(inputs)
     # num_executions = num_executions or np.size(inputs,(inputs.ndim-1))
     # num_executions = num_executions or np.size(inputs, 0)
-    num_executions = num_executions or np.size(inputs, inputs.ndim-3)
+    # num_executions = num_executions or np.size(inputs, inputs.ndim-3)
+    num_executions = num_executions or np.size(inputs, EXECUTION_SET_DIM)
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -511,13 +542,23 @@ def run(object,
         else:
             if learning is True:
                 object._learning_enabled = True
+
             elif learning is False:
                 object._learning_enabled = False
+
+    # SET LEARNING_RATE, if specified, for all learningProjections in process or system
+    if object.learning_rate is not None:
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
+        for learning_mech in object.monitoringMechanisms.mechanisms:
+            for projection in learning_mech.outputState.sendsToProjections:
+                if isinstance(projection, LearningProjection):
+                    projection.function_object.learning_rate = object.learning_rate
 
     # VALIDATE INPUTS: COMMON TO PROCESS AND SYSTEM
     # Input is empty
     if inputs is None or isinstance(inputs, np.ndarray) and not np.size(inputs):
-        raise SystemError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(object.name))
+        raise RunError("No inputs arg for \'{}\'.run(): must be a list or np.array of stimuli)".format(object.name))
 
     # Input must be a list or np.array
     if not isinstance(inputs, (list, np.ndarray)):
@@ -536,6 +577,14 @@ def run(object,
     if targets is not None:
         _validate_targets(object, targets, num_inputs_sets, context=context)
 
+    if object.verbosePref:
+        shape = inputs.shape
+        print('Inputs for run of {}: \n'
+              '- executions: {}\n'
+              '- phases per execution: {}\n'
+              '- mechanisms per execution: {}\n'.
+              format(object.name, shape[EXECUTION_SET_DIM], shape[PHASE_DIM], shape[MECHANISM_DIM]))
+
     # INITIALIZATION
     if reset_clock:
         clock.trial = 0
@@ -552,6 +601,8 @@ def run(object,
     # EXECUTE
     for execution in range(num_executions):
 
+        execution_id = _get_get_execution_id()
+
         if call_before_trial:
             call_before_trial()
 
@@ -561,6 +612,9 @@ def run(object,
                 call_before_time_step()
 
             input_num = execution%len(inputs)
+            input = inputs[input_num][time_step]
+            if object_type == SYSTEM:
+                object.inputs = input
 
             # Assign targets:
             if targets is not None:
@@ -568,26 +622,22 @@ def run(object,
                 if isinstance(targets, function_type):
                     object.target = targets
 
+                # IMPLEMENTATION NOTE:  USE input_num since it # of inputs must equal # targets,
+                #                       where as targets can be assigned a function (so can't be used to generated #)
                 elif object_type == PROCESS:
-                    object.target = targets[input_num]
+                    # object.target = targets[input_num][time_step]
+                    object.target = targets[input_num][time_step]
 
                 elif object_type == SYSTEM:
-                    # Note: the following assumes that the order of the items in targets is alligned with
-                    #       the oreder of the TARGET mechanisms in the sytem's targetMechanisms list;
-                    #       it is tested for dict format in _construct_stimulus_sets,
-                    #       but can't be insured for list format.
-                    # For each TARGET mechanism in the system's targetMechanismList
-                    for i, target_mech in zip(range(len(object.targetMechanisms)), object.targetMechanisms):
-                    # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
-                    #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-                        object.targetInputStates[i].value = targets[input_num][i]
-                        for process_target_projection in \
-                                target_mech.inputStates[COMPARATOR_TARGET].receivesFromProjections:
-                            process_target_projection.sender.value = process_target_projection.sender.value * 0
+                    object.current_targets = targets[input_num]
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
-            result = object.execute(inputs[input_num][time_step],clock=clock, time_scale=time_scale, context=context)
+            result = object.execute(input=input,
+                                    execution_id=execution_id,
+                                    clock=clock,
+                                    time_scale=time_scale,
+                                    context=context)
 
             if call_after_time_step:
                 call_after_time_step()
@@ -645,6 +695,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
        axis 1: object._phaseSpecMax
        axis 2: len(object.originMechanisms)
        axis 3: len(mech.inputStates)
+       axis 4: items of inputStates
 
     Notes:
     * Construct as lists and then convert to np.array, since size of inputs can be different for different mechs
@@ -653,7 +704,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
     """
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     # Stimuli in sequence format
     if isinstance(stimuli, (list, np.ndarray)):
@@ -671,7 +722,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
             stim_type = 'targets'
         else:
             stim_type = 'inputs'
-        raise SystemError("{} arg for {}._construct_stimulus_sets() must be a dict or list".
+        raise RunError("{} arg for {}._construct_stimulus_sets() must be a dict or list".
                           format(stim_type, object.name))
 
     stim_list_array = np.array(stim_list)
@@ -679,7 +730,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
 def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     # Check for header
     headers = None
@@ -688,11 +739,11 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
         del stimuli[0]
         for mech in object.originMechanisms:
             if not mech in headers:
-                raise SystemError("Header is missing for origin mechanism {} in stimulus list".
+                raise RunError("Header is missing for origin mechanism {} in stimulus list".
                                   format(mech.name, object.name))
         for mech in headers:
             if not mech in object.originMechanisms.mechanisms:
-                raise SystemError("{} in header for stimulus list is not an origin mechanism in {}".
+                raise RunError("{} in header for stimulus list is not an origin mechanism in {}".
                                   format(mech.name, object.name))
 
     inputs_array = np.array(stimuli)
@@ -701,7 +752,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     elif inputs_array.dtype is np.dtype('O'):
         max_dim = 1
     else:
-        raise SystemError("Unknown data type for inputs in {}".format(object.name))
+        raise RunError("Unknown data type for inputs in {}".format(object.name))
     while inputs_array.ndim > max_dim:
         # inputs_array = np.hstack(inputs_array)
         inputs_array = np.concatenate(inputs_array)
@@ -711,6 +762,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     num_input_sets = _validate_inputs(object=object,
                                       inputs=inputs,
                                       num_phases=1,
+                                      is_target=is_target,
                                       context=context)
 
     # If inputs are for a mechanism or process, no need to deal with phase so just return
@@ -738,7 +790,6 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
                 # Assign input elements to stimulus if phase is correct one for mech
                 if phase == phase_spec:
                     for stim_elem in range(mech_len):
-                        # stimulus[stim_elem] = inputs_flattened[input_elem]
                         if headers:
                             input_index = headers.index(mech) + execution_offset
                         else:
@@ -755,17 +806,17 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
 
 def _construct_from_stimulus_dict(object, stimuli, is_target):
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     # Stimuli are inputs:
     #    validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
     if not is_target:
         for mech in object.originMechanisms:
             if not mech in stimuli:
-                raise SystemError("Stimulus list is missing for origin mechanism {}".format(mech.name, object.name))
+                raise RunError("Stimulus list is missing for origin mechanism {}".format(mech.name, object.name))
         for mech in stimuli.keys():
             if not mech in object.originMechanisms.mechanisms:
-                raise SystemError("{} is not an origin mechanism in {}".format(mech.name, object.name))
+                raise RunError("{} is not an origin mechanism in {}".format(mech.name, object.name))
 
     # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
     #       and is handled where stimuli for a system are assigned to phases below
@@ -781,11 +832,12 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         for target in object.targetMechanisms:
             # If any projection to a target does not have a sender in the stimulus dict, raise an exception
             if not any(mech is projection.sender.owner for
-                       projection in target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections
+                       projection in target.inputStates[SAMPLE].receivesFromProjections
                        for mech in stimuli.keys()):
-                    raise SystemError("Entry for {} is missing from specification of targets for run of {}".
-                                      format(target.inputStates[COMPARATOR_SAMPLE].receivesFromProjections[0].sender.owner.name,
-                                             object.name))
+                    raise RunError("Entry for {} is missing from specification of targets for run of {}".
+                                   format(target.inputStates[COMPARATOR_SAMPLE].
+                                          receivesFromProjections[0].sender.owner.name,
+                                          object.name))
 
         # FIX: COULD JUST IGNORE THOSE, OR WARN ABOUT THEM IF VERBOSE?
 
@@ -809,7 +861,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             # Get the process to which the TARGET mechanism belongs:
             try:
                 process = next(projection.sender.owner for
-                               projection in target.inputStates[COMPARATOR_TARGET].receivesFromProjections if
+                               projection in target.inputStates[TARGET].receivesFromProjections if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
@@ -844,20 +896,20 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 # Assume that the list consists of a single stimulus, so wrap it in list
                 stimuli[mech] = [stim_list]
             else:
-                raise SystemError("Stimuli for {} of {} are not properly formatted ({})".
+                raise RunError("Stimuli for {} of {} are not properly formatted ({})".
                                   format(append_type_to_name(mech),object.name))
 
         for stim in stimuli[mech]:
             if not iscompatible(np.atleast_2d(stim), mech.variable):
-                raise SystemError("Incompatible stimuli ({}) for {} ({})".
+                raise RunError("Incompatible stimuli ({}) for {} ({})".
                                   format(stim, append_type_to_name(mech), mech.variable))
 
     stim_lists = list(stimuli.values())
-    num_input_sets = len(stim_lists[0])
+    num_input_sets = len(stim_lists[EXECUTION_SET_DIM])
 
     # Check that all lists have the same number of stimuli
     if not all(len(np.array(stim_list)) == num_input_sets for stim_list in stim_lists):
-        raise SystemError("The length of all the stimulus lists must be the same")
+        raise RunError("The length of all the stimulus lists must be the same")
 
     stim_list = []
 
@@ -875,33 +927,49 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stimuli_in_execution = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
-
-                # Only assign inputs to processes for which there were originMechanisms specified
-                #    (i.e., *not* processes constructed during initialization, such as EVC prediction mechanisms)
-                #    and assign them in the order they appear in object.processes
+                # Only assign inputs to originMechanisms
+                #    and assign them in the order they appear in originMechanisms and fill out each phase
                 for mech, runtime_params, phase_spec in object.originMechanisms.mech_tuples:
-
+                    # Assign input elements to stimulus if phase is correct one for mech
                     if phase == phase_spec:
-                        stimulus = np.array(stimuli[mech][execution])
+                        # Get stimulus for mech for current execution, and enforce 2d to accomodate inputStates per mech
+                        stimulus = np.atleast_2d(stimuli[mech][execution])
                         if not isinstance(stimulus, Iterable):
-                            stimulus = np.array([stimulus])
+                            stimulus = np.atleast_2d([stimulus])
+                    # Otherwise, pad stimulus for this phase with zeros
                     else:
                         if not isinstance(stimuli[mech][execution], Iterable):
-                            stimulus = np.zeros(1)
+                            stimulus = np.atleast_2d(np.zeros(1))
                         else:
-                            stimulus = np.zeros(len(stimuli[mech][execution]))
+                            stimulus = np.atleast_2d(np.zeros(len(stimuli[mech][execution])))
                     stimuli_in_phase.append(stimulus)
 
                 stimuli_in_execution.append(stimuli_in_phase)
             stim_list.append(stimuli_in_execution)
 
     else:
-        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by get_object_type ".
+        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by _get_obect_type ".
                        format(object_type))
 
-    return stim_list
+    try:
+        stim_list = np.array(stim_list)
+    except ValueError:
+        # for i in range(len(stim_list[0][0])):
+        #     stim_list[0][0][i][0]
+        #     stim_list[0][0][i] = np.array(stim_list[0][0][i])
+        # for exec in range(len(stim_list)):
+        #     for phase in range(len(stim_list[exec])):
+        #         for mech in range(len(stim_list[exec][phase])):
+        #             stim_list[exec][phase][mech] = [stim_list[exec][phase][mech].tolist()]
+        for exec in range(len(stim_list)):
+            for phase in range(len(stim_list[exec])):
+                for mech in range(len(stim_list[exec][phase])):
+                    stim_list[exec][phase][mech] = stim_list[exec][phase][mech].tolist()
+        stim_list = np.array(stim_list)
 
-def _validate_inputs(object, inputs=None, num_phases=None, context=None):
+    return np.array(stim_list)
+
+def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, context=None):
     """Validate inputs for _construct_inputs() and object.run()
 
     If inputs is an np.ndarray:
@@ -914,7 +982,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
     returns number of input_sets (one per execution)
     """
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
 
     if object_type is PROCESS:
 
@@ -923,7 +991,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
 
         # If inputs to process are heterogeneous, inputs.ndim should be 2:
         if inputs.dtype is np.dtype('O') and inputs.ndim != 2:
-            raise SystemError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
+            raise RunError("inputs arg in call to {}.run() must be a 2D np.array or comparable list".
                               format(object.name))
 
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
@@ -931,7 +999,7 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
             # Get a sample length (use first, since it is convenient and all are the same)
             mech_len = len(object.firstMechanism.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
-                raise SystemError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
+                raise RunError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))
 
         num_input_sets = np.size(inputs, inputs.ndim-3)
@@ -940,94 +1008,96 @@ def _validate_inputs(object, inputs=None, num_phases=None, context=None):
 
     elif object_type is SYSTEM:
 
-        num_phases = num_phases or object.numPhases
+        if is_target:
+            num_phases = 1
+        else:
+            num_phases = num_phases or object.numPhases
 
-        if isinstance(inputs, np.ndarray):
+        if not isinstance(inputs, np.ndarray):
+            # raise RunError("PROGRAM ERROR: inputs must an ndarray")
+            inputs = np.array(inputs)
 
-            HOMOGENOUS_INPUTS = 1
-            HETEROGENOUS_INPUTS = 0
+        states_per_mech_heterog = False
+        size_of_states_heterog = False
+        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+            input_homogenity = HOMOGENOUS
+        elif inputs.dtype is np.dtype('O'):
+            input_homogenity = HETEROGENOUS
+            # Determine whether the number of states/mech is homogenous
+            num_states_in_first_mech = len(object.originMechanisms[0].inputStates)
+            if any(len(mech.inputStates) != num_states_in_first_mech for mech in object.originMechanisms):
+                states_per_mech_heterog = True
+            # Determine whether the size of all states is homogenous
+            size_of_first_state = len(list(object.originMechanisms[0].inputStates.values())[0].value)
+            for origin_mech in object.originMechanisms:
+                if any(len(state.value) != size_of_first_state for state in origin_mech.inputStates.values()):
+                    size_of_states_heterog = True
+        else:
+            raise RunError("Unknown data type for inputs in {}".format(object.name))
 
-            if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
-                process_structure = HOMOGENOUS_INPUTS
-            elif inputs.dtype is np.dtype('O'):
-                process_structure = HETEROGENOUS_INPUTS
+        if is_target:   # No phase dimension, so one less than for stimulus inputs
+            # If targets are homogeneous, inputs.ndim should be 4:
+            # If targets are heterogeneous:
+            #   if states/mech are homogenous, inputs.ndim should be 3
+            #   if states/mech are heterogenous, inputs.ndim should be 2
+            expected_dim = 2 + input_homogenity + states_per_mech_heterog
+        else: # Stimuli, which have phases, so one extra dimension
+            # If inputs are homogeneous, inputs.ndim should be 5;
+            # If inputs are heterogeneous:
+            #   if states sizes are heterogenous, inputs.ndim should be 4
+            #   if states/mech are heterogenous, inputs.ndim should be 3
+            #   if both are heterogenouse, inputs.ndim should be 3
+            if input_homogenity:
+                expected_dim = 5
+            elif states_per_mech_heterog:
+                expected_dim = 3
+            elif size_of_states_heterog:
+                expected_dim = 4
             else:
-                raise SystemError("Unknown data type for inputs in {}".format(object.name))
+                raise RunError("PROGRAM ERROR: Unexepcted shape of intputs: {}".format(inputs.shape))
 
-            # If inputs to processes of system are heterogeneous, inputs.ndim should be 3:
-            # If inputs to processes of system are homogeneous, inputs.ndim should be 4:
-            expected_dim = 3 + process_structure
+        if inputs.ndim != expected_dim:
+            raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
+                              format(object.name, expected_dim))
 
-            if inputs.ndim != expected_dim:
-                raise SystemError("inputs arg in call to {}.run() must be a {}D np.array or comparable list".
-                                  format(object.name, expected_dim))
-
-            if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
-                raise SystemError("The number of inputs for each execution ({}) in the call to {}.run() "
-                                  "does not match the number of processes in the system ({})".
-                                  format(np.size(inputs,PROCESSES_DIM),
-                                         object.name,
-                                         len(object.originMechanisms)))
-
-        # FIX: STANDARDIZE DIMENSIONALITY SO THAT np.take CAN BE USED
+        if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
+            raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
+                              "does not match the number of processes in the system ({})".
+                              format(np.size(inputs,PROCESSES_DIM),
+                                     object.name,
+                                     len(object.originMechanisms)))
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
-        # Calcluate total number of executions
-        num_mechs = len(object.originMechanisms)
-        mechs = list(object.originMechanisms)
-        num_input_sets = 0
-        executions_remain = True
-        input_num = 0
+        if is_target:
+            mechs = list(object.targetMechanisms)
+        else:
+            mechs = list(object.originMechanisms)
+        num_mechs = len(mechs)
         inputs_array = np.array(inputs)
-        while executions_remain:
-            try:
+        num_execution_sets = inputs_array.shape[EXECUTION_SET_DIM]
+        for execution_set_num in range(num_execution_sets):
+            execution_set = inputs_array[execution_set_num]
+            for phase_num in range(num_phases):
+                inputs_for_phase = execution_set[phase_num]
+                if len(inputs_for_phase) != num_mechs:
+                    raise RunError("Number of mechanisms ({}) in input for phase {} should be {}".
+                                   format(len(inputs_for_phase), phase_num, num_mechs))
                 for mech_num in range(num_mechs):
-                    # input = inputs[input_num]
-                    mech_len = np.size(mechs[mech_num].variable)
-                    # FIX: WORRIED ABOUT THIS AND THE MAGIC NUMBER -2 BELOW:
-                    # If inputs_array is just a list of numbers and its length equals the input to the mechanism
-                    #    then there is just one input and one execution
-                    if inputs_array.ndim == 1 and len(inputs) == mech_len:
-                        input_num += 1
-                        executions_remain = False
-                        continue
-                    input = np.take(inputs_array,input_num,inputs_array.ndim-2)
-                    if np.size(input) != mech_len * num_phases:
-                       # If size of input didn't match length of mech variable,
-                       #  may be that inputs for each mech are embedded within list/array
-                        if isinstance(input, Iterable):
-                            inner_input_num = 0
-                            for inner_input in input:
-                                mech_len = np.size(mechs[inner_input_num].variable)
-                                # Handles assymetric input lengths:
-                                if (isinstance(inner_input, Iterable) and
-                                            np.size(np.concatenate(inner_input)) != mech_len * num_phases):
-                                    for item in inner_input:
-                                        if np.size(item) != mech_len * num_phases:
-                                            raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                              "of input for {} in execution {}".
-                                                              format(len(inputs[inner_input_num]),
-                                                                     inputs[inner_input_num],
-                                                                     mech_len,
-                                                                     append_type_to_name(mechs[inner_input_num],'mechanism'),
-                                                                     num_input_sets))
-                                        inner_input_num += 1
-                                        mech_len = np.size(mechs[inner_input_num].variable)
-                                elif np.size(inner_input) != mech_len * num_phases:
-                                    raise SystemError("Length ({}) of stimulus ({}) does not match length ({}) "
-                                                      "of input for {} in execution {}".
-                                                      format(len(inputs[inner_input_num]), inputs[inner_input_num], mech_len,
-                                                      append_type_to_name(mechs[inner_input_num],'mechanism'), num_input_sets))
-                                else:
-                                    inner_input_num += 1
-                            input_num += 1
-                            break
-                    input_num += 1
-                num_input_sets += 1
-            except IndexError:
-                executions_remain = False
-
-        return num_input_sets
+                    input_for_mech = inputs_for_phase[mech_num]
+                    if len(input_for_mech) != len(mechs[mech_num].inputValue):
+                        raise RunError("Number of states ({}) in input for {} should be {}".
+                                       format(len(input_for_mech),
+                                              mechs[mech_num].name,
+                                              len(mechs[mech_num].inputValue)))
+                    for state_num in range(len(input_for_mech)):
+                        input_for_state = mechs[mech_num].inputValue[state_num]
+                        if len(input_for_state) != len(mechs[mech_num].inputValue[state_num]):
+                            raise RunError("Length of state {} ({}) in input for {} should be {}".
+                                           format(list(mechs[mech_num].inputStates)[state_num],
+                                                  len(input_for_state),
+                                                  mechs[mech_num].name,
+                                                  len(mechs[mech_num].inputValue[state_num])))
+        return num_execution_sets
 
     else:
         raise RunError("PROGRAM ERRROR: {} type not currently supported by _validate_inputs in Run module for ".
@@ -1039,7 +1109,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
     num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
     """
 
-    object_type = get_object_type(object)
+    object_type = _get_obect_type(object)
     num_target_sets = None
 
     if isinstance(targets, function_type):
@@ -1055,7 +1125,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
         # Check that each target generated is compatible with the targetMechanism for which it is intended
         for target, targetMechanism in zip(generated_targets, object.targetMechanisms):
             target_len = np.size(target)
-            if target_len != np.size(targetMechanism.target):
+            if target_len != np.size(targetMechanism.inputStates[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1063,7 +1133,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
+                                          np.size(object.targetMechanism.target)))
         return
 
     if object_type is PROCESS:
@@ -1074,7 +1144,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.comparatorMechanism.target):
+            if target_len != np.size(object.targetMechanism.inputStates[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1082,7 +1152,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.comparatorMechanism.target)))
+                                          np.size(object.targetMechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1108,7 +1178,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             elif targets.dtype is np.dtype('O'):
                 process_structure = HETEROGENOUS_TARGETS
             else:
-                raise SystemError("Unknown data type for inputs in {}".format(object.name))
+                raise RunError("Unknown data type for inputs in {}".format(object.name))
 
             # Processed targets for a system should be 1 dim less than inputs (since don't include phase)
             # If inputs to processes of system are heterogeneous, inputs.ndim should be 2:
@@ -1116,18 +1186,23 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             expected_dim = 2 + process_structure
 
             if targets.ndim != expected_dim:
-                raise SystemError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
+                raise RunError("targets arg in call to {}.run() must be a {}D np.array or comparable list".
                                   format(object.name, expected_dim))
 
             # FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
-            num_target_sets = np.size(targets,PROCESSES_DIM-1)
+            # # MODIFIED 2/16/17 OLD:
+            # num_target_sets = np.size(targets,PROCESSES_DIM-1)
+            # MODIFIED 2/16/17 NEW:
+            num_target_sets = targets.shape[0]
+            num_targets_per_set = np.size(targets,PROCESSES_DIM-1)
+            # MODIFIED 2/16/17 END
             # Check that number of target values in each execution equals the number of target mechanisms in the system
-            if num_target_sets != len(object.targetMechanisms):
-                raise SystemError("The number of target values for each execution ({}) in the call to {}.run() "
+            if num_targets_per_set != len(object.targetMechanisms):
+                raise RunError("The number of target values for each execution ({}) in the call to {}.run() "
                                   "does not match the number of processes in the system ({})".
                                   format(
                                          # np.size(targets,PROCESSES_DIM),
-                                         num_target_sets,
+                                         num_targets_per_set,
                                          object.name,
                                          len(object.originMechanisms)))
 
@@ -1139,15 +1214,15 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.targetMechanisms):
                 target_len = np.size(target)
-                if target_len != np.size(targetMechanism.target):
-                    if num_target_sets > 1:
+                if target_len != np.size(targetMechanism.inputStates[TARGET].variable):
+                    if num_targets_per_set > 1:
                         plural = 's'
                     else:
                         plural = ''
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(object.comparatorMechanism.target)))
+                                              np.size(targetMechanism.inputStates[TARGET].variable)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1164,7 +1239,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
     return num_target_sets
 
-def get_object_type(object):
+def _get_obect_type(object):
     if isinstance(object, Mechanism):
         return MECHANISM
     elif isinstance(object, Process):
@@ -1173,4 +1248,8 @@ def get_object_type(object):
         return SYSTEM
     else:
         raise RunError("{} type not supported by Run module".format(object.__class__.__name__))
+    
 
+import uuid
+def _get_get_execution_id():
+    return uuid.uuid4()
