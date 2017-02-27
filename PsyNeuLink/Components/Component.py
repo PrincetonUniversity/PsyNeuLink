@@ -1852,6 +1852,7 @@ class Component(object):
         self.calls_since_initialization += 1
         self.calls_current_run += 1
         self.calls_current_trial += 1
+        self.calls_current_time_step += 1
 
     def _update_value(self, context=None):
         """Evaluate execute method
@@ -1984,13 +1985,19 @@ class Component(object):
         self.calls_since_initialization = 0
         self.calls_current_run = 0
         self.calls_current_trial = 0
+        self.calls_current_time_step = 0
 
     def new_run(self):
         self.calls_current_run = 0
         self.calls_current_trial = 0
+        self.calls_current_time_step = 0
 
     def new_trial(self):
         self.calls_current_trial = 0
+        self.calls_current_time_step = 0
+
+    def new_time_step(self):
+        self.calls_current_time_step = 0
     #endregion
 
 
