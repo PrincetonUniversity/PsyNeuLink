@@ -222,7 +222,7 @@ class Scheduler(object):
 
 def main():
     from PsyNeuLink.Components.Component import Component
-    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR, terminal_AND
+    from PsyNeuLink.scheduling.condition import first_n_calls_AND, every_n_calls, first_n_calls_OR, over_threshold_OR, terminal_AND, terminal_OR
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
     A = TransferMechanism(function = Linear(slope=3, intercept=3), name = 'A')
@@ -249,7 +249,6 @@ def main():
     sched.run_trial()
     A.execute()
     A.execute()
-    print(A.value)
 
     # for mech in sched.generate_trial():
     #     mech.execute()
