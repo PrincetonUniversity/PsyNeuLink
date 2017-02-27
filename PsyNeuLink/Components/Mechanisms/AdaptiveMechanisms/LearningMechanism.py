@@ -552,11 +552,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
             raise LearningMechanismError("PROGRAM ERROR:  No specification for {} in {}".
                                 format(ERROR_MATRIX, self.name))
 
-        if not error_matrix in {list, np.darray, ParameterState, MappingProjection}:
+        if not isinstance(error_matrix, (list, np.ndarray, ParameterState, MappingProjection)):
             raise LearningMechanismError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                           "MappingProjection".format(ERROR_MATRIX, self.name))
 
-        if instance(error_matrix, MappingProjection):
+        if isinstance(error_matrix, MappingProjection):
             try:
                 error_matrix = error_matrix.parameterStates[MATRIX]
             except KeyError:
@@ -565,9 +565,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                               format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
 
         if isinstance(error_matrix, ParameterState):
-            if not is_numeric(error_marix.value):
+            if np.array(error_matrix.value).ndim != 2:
                 raise LearningMechanismError("The value of the {} parameterState specified for the {} arg of {} ({}) "
-                                              "is not numeric".
+                                              "is not a 2d array (matrix)".
                                               format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
 
     def _instantiate_attributes_before_function(self, context=None):
@@ -594,7 +594,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if isinstance(self.error_matrix, MappingProjection):
             self.error_matrix = self.error_matrix.parameterStates[MATRIX]
 
-        if isinstance(self.error_matix, ParameterState):
+        if isinstance(self.error_matrix, ParameterState):
             self.error_matrix = np.array(self.error_matrix.value)
 
         if self.error_matrix.ndim != 2:
@@ -611,6 +611,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Insure that inputState values are compatible with derivative functions and error_matrix
         """
+        pass
         # TBI
         # NAME the INPUTSTATES USING input__state_names
         # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING: ?? DONE ABOVE IN _validate_params??
@@ -668,9 +669,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # Pass during initialization (since has not yet been fully initialized
-        if self.value is DEFERRED_INITIALIZATION:
-            return self.value
+        # # Pass during initialization (since has not yet been fully initialized
+        # if self.value is DEFERRED_INITIALIZATION:
+        #     return self.value
 
         # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
         weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
@@ -688,7 +689,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def activation_input(self):
-        return self.varible[ACTIVATION_INPUT_INDEX]
+        return self.variable[ACTIVATION_INPUT_INDEX]
 
     @activation_input.setter
     def activation_input(self, value):
