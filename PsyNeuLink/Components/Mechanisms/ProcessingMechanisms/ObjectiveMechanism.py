@@ -278,7 +278,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_sample_and_target : Optional[List[array, array] or 2d np.array]
+    default_input_value : Optional[List[array, array] or 2d np.array]
         the input to the ComparatorMechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods.
         The first item is the `COMPARATOR_SAMPLE` item of the input and the second is the `COMPARATOR_TARGET`
@@ -397,7 +397,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
         #                       since params have not yet been validated and so self.params is not yet available
         if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
-                raise ObjectiveMechanismError("The number of items specified for the default_input_values arg ({}) of {} "
+                raise ObjectiveMechanismError("The number of items specified for the default_input_value arg ({}) of {} "
                                      "must match the number of items specified for its monitored_values arg ({})".
                                      format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
 
