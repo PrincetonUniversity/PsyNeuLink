@@ -158,7 +158,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
     COMMENT:
         Description:
             ComparatorMechanism is a subtype of the MonitoringMechanism Type of the Mechanism Category of the
-                Function class
+                Component class
             It's function uses the LinearCombination Function to compare two input variables
             COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
             The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
@@ -520,7 +520,7 @@ class ComparatorMechanism(MonitoringMechanism_Base):
 
             # Calculate comparision and stats
             # FIX: MAKE SURE VARIABLE HAS BEEN SET TO self.inputValue SOMEWHERE
-            comparison_array = self.function(variable=self.variable, params=runtime_params)
+            comparison_array = self.function(variable=self.variable, params=runtime_params, context=context)
 
             self.summed_error_signal = sum
 

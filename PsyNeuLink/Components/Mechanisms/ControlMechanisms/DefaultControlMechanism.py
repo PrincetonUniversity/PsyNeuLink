@@ -129,14 +129,17 @@ class DefaultControlMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate inputValue attribute
 
+        Instantiate inputValue, inputState and inputStates attributes (in case they are referenced).
         Otherwise, no need to do anything, as DefaultControllerMechanism only adds inputStates
-        when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state
+        when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state to do so.
+
         """
 
         try:
             self.inputStates
         except AttributeError:
             self.inputValue = None
+            self.inputStates = None
         else:
             pass
 
@@ -150,8 +153,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
         self.allocation_policy = self.inputValue
 
         # Call super to instantiate outputStates
+        # Note: params carries any specified with ControlProjection for the control_signal
         super()._instantiate_control_projection(projection=projection,
-                                             context=context)
+                                                params=params,
+                                                context=context)
 
     def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism
@@ -186,14 +191,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
         #     in that case, there should be no inputStates yet, so pass
         #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
         elif len(self.variable) == 1:
-            try:
-                self.inputStates
-            except AttributeError:
+            if self.inputStates:
+                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+            else:
                 # If there are no inputStates, this is the usual initialization condition;
                 # Pass to create a new inputState that will be assigned to existing the first item of self.variable
                 pass
-            else:
-                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
         # Other than on initialization (handled above), it is a PROGRAM ERROR if
         #    the number of inputStates is not equal to the number of items in self.variable
         elif len(self.variable) != len(self.inputStates):
@@ -223,9 +226,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                          context=context)
 
         #  Update inputState and inputStates
-        try:
+        if self.inputStates:
             self.inputStates[input_state.name] = input_state
-        except AttributeError:
+        else:
             self.inputStates = OrderedDict({input_state_name:input_state})
             self.inputState = list(self.inputStates.values())[0]
 

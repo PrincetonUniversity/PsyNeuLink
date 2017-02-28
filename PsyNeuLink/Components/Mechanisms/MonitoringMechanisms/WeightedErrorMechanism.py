@@ -94,8 +94,6 @@ Class Reference
 
 """
 
-
-
 # from numpy import sqrt, random, abs, tanh, exp
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import *
 # from PsyNeuLink.Components.States.InputState import InputState
@@ -132,7 +130,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
     COMMENT:
         Description:
             WeightedErrorMechanism is a Subtype of the MonitoringMechanism Type of the Mechanism Category of the
-            Function class
+            Component class
             It's function computes the contribution of each sender element (rows of PROJECTION_TO_NEXT_MECHANISM param)
                to the error values of the receivers
                  (elements of the error_signal array, columns of the matrix of the PROJECTION_TO_NEXT_MECHANISM param),
@@ -315,6 +313,7 @@ class WeightedErrorMechanism(MonitoringMechanism_Base):
 
         # Get derivative for next mechanism's function
         derivative_fct = self.next_mechanism.function_object.derivative
+
 
         # Compute derivative of error with respect to current output of next mechanism
         output_derivative = derivative_fct(output=next_level_output)

@@ -652,12 +652,12 @@ class ParameterState(State_Base):
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
-            raise ParameterStateError("Value ({0}) of {1} for {2} mechanism is not compatible with "
-                                           "the variable ({3}) of its function".
+            raise ParameterStateError("Value ({0}) of the {1} parameterState for the {2} mechanism is not compatible "
+                                      "the type of value expected for that parameter ({3})".
                                            format(self.value,
                                                   self.name,
                                                   self.owner.name,
-                                                  self.owner.variable))
+                                                  self.reference_value))
 
 
     def update(self, params=None, time_scale=TimeScale.TRIAL, context=None):
@@ -711,6 +711,16 @@ class ParameterState(State_Base):
             self.value = self.parameterModulationOperation(self.baseValue, self.value)
         #endregion
 
+        # FIX: STRIP VALUES OUT OF ARRAY OR LIST OF THAT IS WHAT PARAMETER REQUIRES (USE TYPE-MATCH?)
+        # FIX: DEHACK TEST FOR MATRIX
+        # FIX: MOVE TO PROPERTY
+        # MODIFIED 2/21/17 NEW: FOR EVC BUT BREAKS LEARNING
+        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        if self.name in self.owner.function_params and not 'matrix' in self.name:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+            param_type = type(getattr(self.owner.function.__self__, self.name))
+            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+
         #region APPLY RUNTIME PARAM VALUES
         # If there are not any runtime params, or runtimeParamModulationPref is disabled, return
         if (not self.stateParams or self.prefs.runtimeParamModulationPref is ModulationOperation.DISABLED):
@@ -734,6 +744,14 @@ class ParameterState(State_Base):
             # If tuple, use param-specific ModulationOperation as operation
             self.value = operation(value, self.value)
 
+        # MODIFIED 2/21/17 NEW: FOR EVC, BUT BREAKS LEARNING
+        # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        if self.name in self.owner.function_params and not 'matrix' in self.name:
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+            param_type = type(getattr(self.owner.function.__self__, self.name))
+            setattr(self.owner.function.__self__, self.name, type_match(self.value, param_type))
+
         #endregion
 
     @property
@@ -743,6 +761,11 @@ class ParameterState(State_Base):
     @value.setter
     def value(self, assignment):
         self._value = assignment
+        # # MODIFIED 2/21/17 NEW:
+        # # If this parameterState is for a parameter of its owner's function, then assign the value there as well
+        # if self.name in self.owner.function_params:
+        #     setattr(self.owner.function.__self__, self.name, self.value)
+
 
 def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
@@ -788,7 +811,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or ModulationOperation)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
-        function
+        function or method
             IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
             (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
@@ -841,6 +864,21 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     if param_name is FUNCTION_PARAMS:
         for function_param_name, function_param_value in param_value.items():
+            # Assignment of ParameterState for Component objects, function or method are not currently supported
+            if isinstance(function_param_value, (function_type, method_type, Component)):
+                continue
+            # MODIFIED 2/22/17 NEW:
+            # IMPLEMENTATION NOTE:
+            # The following is necssary since, if ANY parameters of a function are specified, entries are made
+            #    in the FUNCTION_PARAMS dict of its owner for ALL of the function's params;  however, their values
+            #    will be set to None (and there may be any relevant paramClassDefaults or way to determine a deafult;
+            #    e.g., the length of the array for the weights or exponents params for LinearCombination).
+            #    Therefore, None will be passed as the cosntraint_value, which will cause validation of the
+            #    ParameterState's function (in _instantiate_function()) to fail.
+            #  Current solution is to simply not instantiate a ParameterState for any function_param that has
+            #    not been expliclity specified
+            if function_param_value is None:
+                continue
             state = _instantiate_state(owner=owner,
                                       state_type=ParameterState,
                                       state_name=function_param_name,

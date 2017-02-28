@@ -461,7 +461,7 @@ class Projection_Base(Projection):
 
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
 #      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT controlSignal
-#      WHY IS self.sender IMPLEMENTED BY sender IS NOT??
+#      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??
 
         self.sender = sender
         self.receiver = receiver
@@ -627,6 +627,7 @@ class Projection_Base(Projection):
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
 
         # If sender is a class, instantiate it:
         # - assume it is Mechanism or State (as validated in _validate_params)
@@ -654,7 +655,11 @@ class Projection_Base(Projection):
             self.sender = self.sender.outputState
 
         # At this point, self.sender should be a OutputState
+        # MODIFIED 2/10/17 OLD: 2/21/17
         if not isinstance(self.sender, OutputState):
+        # # MODIFIED 2/10/17 NEW: [ADDED ParameterState TO ACCOMODATE LEARNING PROJECTION FOR BACKPROPAGATION]
+        # if not isinstance(self.sender, (OutputState, ParameterState)):
+        # MODIFIED 2/10/17 END
             raise ProjectionError("Sender for MappingProjection must be a Mechanism or State")
 
         # Assign projection to sender's sendsToProjections list attribute
@@ -821,18 +826,21 @@ def _is_projection_subclass(spec, keyword):
 def _add_projection_to(receiver, state, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
-    receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
-    state must be a specification of an InputState or ParameterState
-    Specification of InputState can be any of the following:
-            - INPUT_STATE - assigns projection_spec to (primary) inputState
-            - InputState object
-            - index for Mechanism.inputStates OrderedDict
-            - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
-            - the keyword kwAddInputState or the name for an inputState to be added
-    Specification of ParameterState must be a ParameterState object
-    projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
-    IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
-                          CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
+    Verify that projection has not already been assigned to receiver;
+        if it has, issue a warning and ignore the assignment request.
+
+    Requirements:
+       * receiver must be an appropriate Function object (currently, a Mechanism or a Projection);
+       * state must be a specification of an InputState or ParameterState;
+       * specification of InputState can be any of the following:
+                - INPUT_STATE - assigns projection_spec to (primary) inputState;
+                - InputState object;
+                - index for Mechanism.inputStates OrderedDict;
+                - name of inputState (i.e., key for Mechanism.inputStates OrderedDict));
+                - the keyword kwAddInputState or the name for an inputState to be added;
+       * specification of ParameterState must be a ParameterState object
+       * projection_spec can be any valid specification of a projection_spec
+           (see `State._instantiate_projections_to_state`).
 
     Args:
         receiver (Mechanism or Projection):
@@ -841,6 +849,9 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         context:
 
     """
+    # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
+    #                       CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
+
     from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.InputState import InputState
@@ -896,6 +907,11 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
             if reassign == 'n':
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
+
+    if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
+        if projection_spec in receiver.receivesFromProjections:
+            warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
+                          format(projection_spec.name, receiver.owner.name))
 
     input_state = _instantiate_state(owner=receiver,
                                     state_type=InputState,

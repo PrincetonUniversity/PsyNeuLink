@@ -71,9 +71,11 @@ def print_header():
 
 def show_target():
     print ('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-           format(color_naming_process.input, color_naming_process.target))
+           # format(color_naming_process.input, color_naming_process.target))
+           format(colors.inputValue, mySystem.targets))
     print ('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
-           format(word_reading_process.input, word_reading_process.target))
+           # format(word_reading_process.input, word_reading_process.target))
+           format(words.inputValue, mySystem.targets))
     print ('Response: \n', response.outputValue[0])
     print ('Hidden-Output:')
     print (HO_Weights.matrix)
@@ -83,10 +85,10 @@ def show_target():
     print (WH_Weights.matrix)
 
 
-stim_list_dict = {colors:[1, 1],
-                  words:[-2, -2]}
+stim_list_dict = {colors:[[1, 1]],
+                  words:[[-2, -2]]}
 
-target_list_dict = {response:[1, 1]}
+target_list_dict = {response:[[1, 1]]}
 
 mySystem.run(num_executions=2,
             inputs=stim_list_dict,

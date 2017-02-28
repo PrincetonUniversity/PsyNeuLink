@@ -1178,14 +1178,30 @@ class State_Base(State):
 
         for projection in self.receivesFromProjections:
 
+            from PsyNeuLink.Components.Process import ProcessInputState
+            from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+            sender = projection.sender
+
+            # MODIFIED 2/19/17 NEW:
+            # Only update if sender has also executed in this round (i.e., has matching execution_id)
+            if isinstance(self.owner, (Mechanism, Process)):
+                if sender.owner._execution_id != self.owner._execution_id:
+                    continue
+            elif isinstance(self.owner, MappingProjection):
+                if sender.owner._execution_id != self.owner.sender.owner._execution_id:
+                    continue
+            else:
+                raise StateError("PROGRAM ERROR: Object ({}) of type {} has a {}, but this is only allowed for "
+                                 "Mechanisms and MappingProjections".
+                                 format(self.owner.name, self.owner.__class__.__name__, self.__class__.__name__,))
+
+            # MODIFIED 2/19/17 END
+
             # FIX: FOR EACH PROJECTION TO INPUT_STATE, CHECK IF SENDER IS FROM PROCESS INPUT OR TARGET INPUT
             # FIX: IF SO, ONLY INCLUDE IF THEY BELONG TO CURRENT PROCESS;
-            from PsyNeuLink.Components.Process import ProcessInputState
-            sender = projection.sender
             if isinstance(sender, ProcessInputState):
                 if not sender.owner in self.owner.processes.keys():
                     continue
-
 
             from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
             from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection
@@ -1201,17 +1217,34 @@ class State_Base(State):
             if not projection_params:
                 projection_params = None
 
+            # MODIFIED 2/21/17 OLD:
             # Update LearningSignals only if context == LEARNING;  otherwise, just get current value
             # Note: done here rather than in its own method in order to exploit parsing of params above
             if isinstance(projection, LearningProjection):
                 if LEARNING in context:
-                    projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                    projection_value = projection.execute(time_scale=time_scale,
+                                                          params=projection_params,
+                                                          context=context)
                 else:
                     projection_value = projection.value
 
             else:
                 # Update all non-LearningProjections and get value
-                projection_value = projection.execute(params=projection_params, time_scale=time_scale, context=context)
+                projection_value = projection.execute(params=projection_params,
+                                                      time_scale=time_scale,
+                                                      context=context)
+            # # MODIFIED 2/21/17 NEW:
+            # # projection_value = projection.execute(params=projection_params,
+            # #                                       time_scale=time_scale,
+            # #                                       context=context)
+            # if isinstance(projection, LearningProjection):
+            #     projection_value = projection.value
+            # else:
+            #     # Update all non-LearningProjections and get value
+            #     projection_value = projection.execute(params=projection_params,
+            #                                           time_scale=time_scale,
+            #                                           context=context)
+            # MODIFIED 2/21/17 END
 
             # If this is initialization run and projection initialization has been deferred, pass
             if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
@@ -1252,7 +1285,7 @@ class State_Base(State):
         self.value = combined_values
         #endregion
 
-    def execute(self, input=None, params=None, time_scale=None, context=None):
+    def execute(self, input=None, time_scale=None, params=None, context=None):
         return self.function(variable=input, params=params, time_scale=time_scale, context=context)
 
     @property
@@ -1686,11 +1719,7 @@ def _instantiate_state(owner,                   # Object to which state will bel
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options
-            # # MODIFIED 10/28 OLD:
-            # state =  owner._check_state_ownership(state_name, state_spec)
-            # MODIFIED 10/28 NEW:
             state =  _check_state_ownership(owner, state_name, state_spec)
-            # MODIFIED 10/28 END
             if state:
                 return state
             else:
@@ -1915,7 +1944,9 @@ def _instantiate_state(owner,                   # Object to which state will bel
     # It must be consistent with value setter method in State
 # FIX LOG: MOVE THIS TO MECHANISM STATE __init__ (WHERE IT CAN BE KEPT CONSISTENT WITH setter METHOD??
 #      OR MAYBE JUST REGISTER THE NAME, WITHOUT SETTING THE
-    setattr(owner, state.name+'.value', state.value)
+# FIX: 2/17/17:  COMMENTED THIS OUT SINCE IT CREATES AN ATTRIBUTE ON OWNER THAT IS NAMED <state.name.value>
+#                NOT SURE WHAT THE PURPOSE IS
+#     setattr(owner, state.name+'.value', state.value)
 
     #endregion
 
@@ -1952,8 +1983,8 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     """
 
     if mechanism_state.owner != owner:
-        reassign = input("\nState {0}, assigned to {1} in {2}, already belongs to {3}"
-                         " You can choose to reassign it (r), copy it (c), or assign default (d):".
+        reassign = input("\nState for \'{0}\' parameter, assigned to {1} in {2}, already belongs to {3}. "
+                         "You can reassign it (r), copy it (c), or assign default (d):".
                          format(mechanism_state.name, param_name, owner.name,
                                 mechanism_state.owner.name))
         while reassign != 'r' and reassign != 'c' and reassign != 'd':

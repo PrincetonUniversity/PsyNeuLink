@@ -505,7 +505,7 @@ class Mechanism_Base(Mechanism):
     COMMENT:
         Description
         -----------
-            Mechanism is a Category of the Function class.
+            Mechanism is a Category of the Component class.
             A mechanism is associated with a name and:
             - one or more inputStates:
                 two ways to get multiple inputStates, if supported by mechanism subclass being instantiated:
@@ -789,6 +789,8 @@ class Mechanism_Base(Mechanism):
 
 # IMPLEMENT **args (PER State)
 
+        self._execution_id = None
+
         # Register with MechanismRegistry or create one
         if not context is kwValidate:
             register_category(entry=self,
@@ -857,7 +859,16 @@ class Mechanism_Base(Mechanism):
         self.phaseSpec = None
         self.processes = {}
         self.systems = {}
-
+    def plot(self):
+        import matplotlib.pyplot as plt
+        if "Logistic" in str(self.function):
+            x= np.linspace(-5,5)
+        elif "Exponential" in str(self.function):
+            x = np.linspace(0.1, 5)
+        else:
+            x = np.linspace(-10, 10)
+        plt.plot(x, self.function(x), lw=3.0, c='r')
+        plt.show()
     def _validate_variable(self, variable, context=None):
         """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
 
@@ -1140,15 +1151,10 @@ class Mechanism_Base(Mechanism):
         self._instantiate_parameter_states(context=context)
         super()._instantiate_attributes_before_function(context=context)
 
-    def _instantiate_parameter_states(self, context=None):
-
-        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
-        _instantiate_parameter_states(owner=self, context=context)
-
-
     def _instantiate_attributes_after_function(self, context=None):
-        from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
-        _instantiate_output_states(owner=self, context=context)
+
+        self._instantiate_output_states(context=context)
+        super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_states(self, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of inputState(s)
@@ -1157,6 +1163,23 @@ class Mechanism_Base(Mechanism):
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, context=context)
+
+    def _instantiate_parameter_states(self, context=None):
+        """Call State._instantiate_parameter_states to instantiate a parameterStates for each parameter in user_params
+
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
+        """
+
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        _instantiate_parameter_states(owner=self, context=context)
+
+    def _instantiate_output_states(self, context=None):
+        """Call State._instantiate_output_states to instantiate orderedDict of outputState(s)
+
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_states
+        """
+        from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
+        _instantiate_output_states(owner=self, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
 
@@ -1169,7 +1192,12 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Components.Projections.Projection import _add_projection_from
         _add_projection_from(sender=self, state=state, projection_spec=projection, receiver=receiver, context=context)
 
-    def execute(self, input=None, runtime_params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
+    def execute(self,
+                input=None,
+                runtime_params=None,
+                clock=CentralClock,
+                time_scale=TimeScale.TRIAL,
+                context=None):
         """Carry out a single execution of the mechanism.
 
 
@@ -1275,7 +1303,6 @@ class Mechanism_Base(Mechanism):
 
         context = context or NO_CONTEXT
 
-
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
@@ -1343,7 +1370,11 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(variable=self.inputValue,
+        # # MODIFIED 2/23/17 OLD:
+        # self.value = self._execute(variable=self.inputValue,
+        # MODIFIED 2/23/17 NEW:
+        self.value = self._execute(variable=self.variable,
+        # MODIFIED 2/23/17 END
                                       runtime_params=runtime_params,
                                       clock=clock,
                                       time_scale=time_scale,
@@ -1494,11 +1525,21 @@ class Mechanism_Base(Mechanism):
             except KeyError:
                 param_template = self.function_params
 
-            # Get its type
-            param_type = type(param_template[state_name])
+            # param_spec is the existing specification for the parameter in paramsCurrent or runtime_params
+            param_spec = param_template[state_name]
+
+            # If param_spec is a projection (i.e., ControlProjection or LearningProjection)
+            #    then its value will be provided by the execution of the parameterState's function
+            #    (which gets and aggregates the values of its projections), so execute function
+            #    to get a sample of its output as the param_spec
+            if isclass(param_spec) and issubclass(param_spec, Projection):
+                param_spec = state.function()
+
+            # Get type of param_spec:
+            param_type = type(param_spec)
             # If param is a tuple, get type of parameter itself (= 1st item;  2nd is projection or ModulationOperation)
             if param_type is tuple:
-                param_type = type(param_template[state_name][0])
+                param_type = type(param_spec[0])
 
             # Assign version of parameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
@@ -1560,13 +1601,20 @@ class Mechanism_Base(Mechanism):
             mechanism_string = ' '
         else:
             mechanism_string = ' mechanism'
-        print ("\n\'{}\'{} executed:\n- input:  {}".
-        # MODIFIED 12/9/16 OLD:
-        #        format(self.name, mechanism_string, input.__str__().strip("[]")))
-        # MODIFIED 12/9/16 NEW:
-               format(self.name, mechanism_string, [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")))
-        # MODIFIED 12/9/16 END
 
+        # # MODIFIED 2/20/17 OLD:
+        # if not isinstance(input, Iterable):
+        #     input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        # else:
+        #     input_string = input
+        # MODIFIED 2/20/17 NEW:
+        input_string = [float("{:0.3}".format(float(i))) for i in input].__str__().strip("[]")
+        # MODIFIED 2/20/17 END
+
+        print ("\n\'{}\'{} executed:\n- input:  {}".
+               format(self.name,
+                      mechanism_string,
+                      input_string))
 
         if params:
             print("- params:")
@@ -1579,7 +1627,7 @@ class Mechanism_Base(Mechanism):
                 param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Component):
-                    param = param_value.__self__.__name__
+                    param = param_value.name
                     param_is_function = True
                 elif isinstance(param_value, type(Component)):
                     param = param_value.__name__
@@ -1594,29 +1642,33 @@ class Mechanism_Base(Mechanism):
                         print ("\t\t{}: {}".
                                format(fct_param_name,
                                       str(self.function_object.user_params[fct_param_name]).__str__().strip("[]")))
-        # # MODIFIED 12/9/16 OLD:
-        # print("- output: {}".
-        #       format(re.sub('[\[,\],\n]','',str(output))))
-        # MODIFIED 12/9/16 NEW:
-        print("- output: {}".
-              format(re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))))
-        # MODIFIED 12/9/16 END
 
-#     def adjust_function(self, params, context=None):
-#         """Modify control_signal_allocations while process is executing
-#
-#         called by process.adjust()
-#         returns output after either one time_step or full trial (determined by current setting of time_scale)
-#
-#         :param self:
-#         :param params: (dict)
-#         :param context: (optional)
-#         :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
-#         """
-#
-#         self._assign_defaults(self.inputState, params)
-# # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
-#         return self.outputState.value
+        # # MODIFIED 2/20/17 OLD:
+        # if not isinstance(output, Iterable):
+        #     output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # else:
+        #     output_string = output
+        # MODIFIED 2/20/17 NEW:
+        output_string = re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in output]))
+        # MODIFIED 2/20/17 END
+
+        print("- output: {}".format(output_string))
+
+    # def adjust_function(self, params, context=None):
+    #     """Modify control_signal_allocations while process is executing
+    #
+    #     called by process.adjust()
+    #     returns output after either one time_step or full trial (determined by current setting of time_scale)
+    #
+    #     :param self:
+    #     :param params: (dict)
+    #     :param context: (optional)
+    #     :rtype CurrentStateTuple(state, confidence, duration, controlModulatedParamValues)
+    #     """
+    #
+    #     self._assign_defaults(self.inputState, params)
+    # # IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING self._update_parameter_states??
+    #     return self.outputState.value
 
     # def terminate_execute(self, context=None):
     #     """Terminate the process
