@@ -230,26 +230,8 @@ def _instantiate_learning_components(learning_projection, context=None):
             objective_mechanism = projection.receiver.owner
             return
 
-        # # FIX: SHOULD BE COVERED BY lc?
-        # # activation_mech has a projection to a ProcessingMechanism, so:
-        # #   - determine whether that has a LearningProjection
-        # #   - if so, get its weight matrix, LearningMechanism, and ObjectiveMechanism (needed by BackProp)
-        # if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
-        #     try:
-        #         next_level_learning_projection = projection.parameterStates[MATRIX].receivesFromProjections[0]
-        #     except (AttributeError, KeyError):
-        #         # Next level's projection has no parameterStates, Matrix parameterState or projections to it
-        #         #    => no LearningProjection
-        #         pass # FIX: xxx ?? ADD LearningProjection here if requested?? or intercept error message to do so?
-        #     else:
-        #         # Next level's projection has a LearningProjection so get:
-        #         #     the weight matrix for the next level's projection
-        #         #     the MonitoringMechanism that provides error_signal
-        #         # next_level_weight_matrix = projection.matrix
-        #         error_objective_mech_output = next_level_learning_projection.sender
-
     # FIX: ADD CODE HERE FOR CASE IN WHICH LEARNING AND/OR OBJECTIVE MECHANISM IS FOUND
-    # (GET FROM LearningProjection_OLD),
+    # FIX: (GET FROM LearningProjection_OLD),
 
     # Next, check whether ObjectiveMechanism and LearningMechanism should be assigned as TARGET:
     #   It SHOULD be a TARGET if it has either no outgoing projections or none that receive a LearningProjection;
@@ -377,132 +359,13 @@ def _instantiate_learning_components(learning_projection, context=None):
     MappingProjection(sender=lc.error_objective_mech_output,
                       receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
                       matrix=IDENTITY_MATRIX)
-    _add_projection_from(sender=learning_mechanism,
-                         state=learning_mechanism.outputState,
-                         projection_spec=learning_projection,
-                         receiver=lc.activation_projection.parameterStates[MATRIX])
 
-    TEST = True
-
-# FIX: GOT TO HERE !!!!!
-    #     assign outputState to learning_projection.sender (use add_projection_from??)
-
-
-
-#
-# # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-#
-#
-#     # errorSource does not project to an ObjectiveMechanism used for learning
-#     if not objective_mechanism:
-#
-#         # FIX:  NEED TO DEAL WITH THIS RE: RL -> DON'T CREATE BACK PROJECTIONS??
-#         # NON-TERMINAL Mechanism
-#         # errorSource at next level projects to a MonitoringMechanism:
-#         #    instantiate ObjectiveMechanism configured with WeightedError Function
-#         #    (computes contribution of each element in errorSource to error at level to which it projects)
-#         #    and the back-projection for its error signal:
-#         if error_objective_mech_output:
-#             error_signal = np.zeros_like(error_objective_mech_output.value)
-#             next_level_output = projection.receiver.owner.outputState
-#             activity = np.zeros_like(next_level_output.value)
-#             matrix=projection.parameterStates[MATRIX]
-#             derivative = error_objective_mech_output.sendsToProjections[0].\
-#                 receiver.owner.receiver.owner.function_object.derivative
-#             from PsyNeuLink.Components.Functions.Function import WeightedError
-#             objective_mechanism = ObjectiveMechanism(monitored_values=[next_level_output,
-#                                                                error_objective_mech_output],
-#                                                       names=['ACTIVITY','ERROR_SIGNAL'],
-#                                                       function=ErrorDerivative(variable_default=[activity,
-#                                                                                                error_signal],
-#                                                                                derivative=derivative),
-#                                                       role=LEARNING,
-#                                                       name=lc.activation_projection.name + " Error_Derivative")
-#         # TERMINAL Mechanism
-#         # errorSource at next level does NOT project to an ObjectiveMechanism:
-#         #     instantiate ObjectiveMechanism configured as a comparator
-#         #         that compares errorSource output with external training signal
-#         else:
-#             # Instantiate ObjectiveMechanism to receive the (externally provided) target for training
-#             try:
-#                 sample_state_name = learning_projection.errorSource.paramsCurrent[MONITOR_FOR_LEARNING]
-#                 sample_source = learning_projection.errorSource.outputStates[sample_state_name]
-#                 sample_size = np.zeros_like(sample_source)
-#             except KeyError:
-#                 # No state specified so use Mechanism as sender arg
-#                 sample_source = learning_projection.errorSource
-#                 sample_size = np.zeros_like(learning_projection.errorSource.outputState.value)
-#
-#             # Assign output_signal to output of errorSource
-#             if learning_projection.function.componentName is BACKPROPAGATION_FUNCTION:
-#                 target_size = np.zeros_like(learning_projection.errorSource.outputState.value)
-#             # Force sample and target of Comparartor to be scalars for RL
-#             elif learning_projection.function.componentName is RL_FUNCTION:
-#                 sample_size = np.array([0])
-#                 target_size = np.array([0])
-#             else:
-#                 raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-#                                           format(learning_projection.function.name, learning_projection.name))
-#
-#             # IMPLEMENTATION NOTE: specify target as a template value (matching the sample's output value)
-#             #                      since its projection (from either a ProcessInputState or a SystemInputState)
-#             #                      will be instantiated by the Composition object to which the mechanism belongs
-#             # FIX: FOR RL, NEED TO BE ABLE TO CONFIGURE OBJECTIVE MECHANISM WITH SCALAR INPUTSTATES
-#             # FIX:         AND FULL CONNECTIVITY MATRICES FROM THE MONITORED OUTPUTSTATES
-#             objective_mechanism = ObjectiveMechanism(default_input_value=[sample_size, target_size],
-#                                                      monitored_values=[sample_source, target_size],
-#                                                      names=[SAMPLE,TARGET],
-#                                                      # FIX: WHY DO WEIGHTS HAVE TO BE AN ARRAY HERE??
-#                                                      function=LinearCombination(weights=[[-1], [1]]),
-#                                                      role=LEARNING,
-#                                                      params= {OUTPUT_STATES:
-#                                                                   [{NAME:TARGET_ERROR},
-#                                                                    {NAME:TARGET_ERROR_MEAN,
-#                                                                     CALCULATE:lambda x: np.mean(x)},
-#                                                                    {NAME:TARGET_ERROR_SUM,
-#                                                                     CALCULATE:lambda x: np.sum(x)},
-#                                                                    {NAME:TARGET_SSE,
-#                                                                     CALCULATE:lambda x: np.sum(x*x)},
-#                                                                    {NAME:TARGET_MSE,
-#                                                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}]},
-#                                                      name=lc.activation_projection.name + " Target_Error")
-#             objective_mechanism.learning_role = TARGET
-#
-#         learning_projection.sender = objective_mechanism.outputState
-#
-#         # "Cast" learning_projection.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
-#         # Note: learning_projection.variable will be re-assigned in _instantiate_function()
-#         learning_projection.variable = learning_projection.error_signal
-#
-#         # Add learning_projection as outgoing projection from MonitoringMechanism
-#         from PsyNeuLink.Components.Projections.Projection import _add_projection_from
-#         _add_projection_from(sender=objective_mechanism,
-#                             state=objective_mechanism.outputState,
-#                             projection_spec=learning_projection,
-#                             receiver=learning_projection.receiver,
-#                             context=context)
-#
-#     # VALIDATE THAT OUTPUT OF SENDER IS SAME LENGTH AS THIRD ITEM (ERROR SIGNAL) OF SEL.FFUNCTION.VARIABLE
-#
-#     # Add reference to MonitoringMechanism to MappingProjection
-#     lc.activation_projection.monitoringMechanism = objective_mechanism
-#
-#
-#
-#     # INSTANTIATE LEARNING MECHANISMS HERE, AND NECESSARY MAPPING PROJECTIONS
-#     # Needs:
-#     # variable:
-#     #    activation_input
-#     #    activation_output
-#     #    error_signal from objective_mechanism
-#     # error_matrix
-#     # function(derivative=activation_derivative):
-#     #     learning_projection.learning_function
-#
-#     learning_mech  = LearningMechanism()
-#
-# # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+    # Assign learning_mechanism as sender of learning_projection and return
+    # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
+    #       however, this requires that it's variable be assigned (which occurs in the rest of its
+    #       _instantiate_sender method, from which this was called) and that its value be assigned
+    #       (which occurs in its _instantiate_function method).
+    learning_projection.sender = learning_mechanism.outputState
 
 #region Learning Components
 class learning_components(object):

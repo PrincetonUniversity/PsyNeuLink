@@ -2279,6 +2279,9 @@
 # FIX: MAKE CONSISTENT HOW PROJECTIONS HANDLE VARIABLE, VALUE AND WHAT THEY RETURN
 #           ??IMPLEMENT A STANDARD FUNCTION ON SUPER THAT EXECUTES FUNCTION, SETS SELF.VALUE, AND RETURNS IT?
 #
+# - IMPLEMENT:  augment _add_projection_from and augment _add_projection_to methods to assign sender, receiver
+#                         and not just add to outputState/inputState
+#
 # - IMPLEMENT:  WHEN ABC IS IMPLEMENTED, IT SHOULD INSIST THAT SUBCLASSES IMPLEMENT _instantiate_receiver
 #               (AS ControlProjection AND MappingProjection BOTH DO) TO HANDLE SITUATION IN WHICH MECHANISM IS SPECIFIED AS RECEIVER
 # FIX: clean up _instantiate_sender -- better integrate versions for MappingProjection, ControlProjection, and LearningProjection

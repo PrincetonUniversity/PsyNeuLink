@@ -383,14 +383,66 @@ class LearningProjection(Projection_Base):
         if isinstance(self.sender, (OutputState, LearningMechanism)):
             super()._instantiate_sender(context=context)
 
+            # FIX:
             # Sender should now be outputState (assigned by super() if it was necessary)
-            # Validate that it belongs to an ObjectiveMechanism being used for learning
+            # Validate that it belongs to an LearningMechanism being used for learning
 
         # LearningMechanism was not specified or specified by class, so call composition for "automatic" instantiation
+        # Note: this also instantiates ObjectiveMechanism if necessary
         else:
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(self)
+
+            # FIX: CONSOLIDATE THESE INTO A SINGLE MECHANISM?
+            # Assign learning_projection to learning_mechanism outputState
+            _add_projection_from(sender=learning_mechanism,
+                                 state=learning_mechanism.outputState,
+                                 projection_spec=learning_projection,
+                                 receiver=lc.activation_projection.parameterStates[MATRIX])
+
+#
+#         # "Cast" learning_projection.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
+#         # Note: learning_projection.variable will be re-assigned in _instantiate_function()
+#         learning_projection.variable = learning_projection.error_signal
+#
+#         # Add learning_projection as outgoing projection from MonitoringMechanism
+#         from PsyNeuLink.Components.Projections.Projection import _add_projection_from
+#         _add_projection_from(sender=objective_mechanism,
+#                             state=objective_mechanism.outputState,
+#                             projection_spec=learning_projection,
+#                             receiver=learning_projection.receiver,
+#                             context=context)
+#
+#     # VALIDATE THAT OUTPUT OF SENDER IS SAME LENGTH AS THIRD ITEM (ERROR SIGNAL) OF SEL.FFUNCTION.VARIABLE
+#
+#     # Add reference to MonitoringMechanism to MappingProjection
+#     lc.activation_projection.monitoringMechanism = objective_mechanism
+
+
+        # # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
+        # # IMPLEMENTATION NOTE:  MOVED FROM _instantiate_receiver
+        # # Insure that LearningProjection output (error signal) and receiver's weight matrix are same shape
+        # try:
+        #     receiver_weight_matrix_shape = self.mappingWeightMatrix.shape
+        # except TypeError:
+        #     # self.mappingWeightMatrix = 1
+        #     receiver_weight_matrix_shape = 1
+        # try:
+        #     LEARNING_PROJECTION_shape = self.value.shape
+        # except TypeError:
+        #     LEARNING_PROJECTION_shape = 1
+        #
+        # if receiver_weight_matrix_shape != LEARNING_PROJECTION_shape:
+        #     raise ProjectionError("Shape ({0}) of matrix for {1} learning signal from {2}"
+        #                           " must match shape of receiver weight matrix ({3}) for {4}".
+        #                           format(LEARNING_PROJECTION_shape,
+        #                                  self.name,
+        #                                  self.sender.name,
+        #                                  receiver_weight_matrix_shape,
+        #                                  # self.receiver.owner.name))
+        #                                  self.mappingProjection.name))
+
 
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
