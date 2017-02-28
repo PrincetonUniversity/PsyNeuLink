@@ -1,3 +1,4 @@
+#
 # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -523,6 +524,7 @@ class UserDefinedFunction(Function_Base):
 #region **********************************  COMBINATION FUNCTIONS  *****************************************************
 #endregion
 
+
 class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
@@ -693,8 +695,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(scale=scale,
                                                  offset=offset,
-                                                 exponents=exponents,
                                                  weights=weights,
+                                                 exponents=exponents,
                                                  operation=operation,
                                                  params=params)
 
@@ -703,10 +705,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                          prefs=prefs,
                          context=context)
 
-        if self.exponents is not None:
-            self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1,1)
+        if self.exponents is not None:
+            self.exponents = np.atleast_2d(self.exponents).reshape(-1,1)
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -736,9 +738,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                     raise FunctionError("Length of all arrays in variable {0} for {1} must be the same".
                                        format(variable, self.__class__.__name__))
 
-
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that EXPONENTS and WEIGHTS are lists or np.arrays of numbers with length equal to variable
+        """Insure that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
 
         Args:
             request_set:
@@ -755,36 +756,10 @@ class LinearCombination(CombinationFunction): # --------------------------------
                               target_set=target_set,
                               context=context)
 
-        # exponents = target_set[EXPONENTS]
-        # weights = target_set[WEIGHTS]
-        # operation = target_set[OPERATION]
-
-#         # IMPLEMENTATION NOTE: checking is now taken care of by typecheck;  now only need to convert
-#         # Make sure exponents is a list of numbers or an np.ndarray
-# # FIX: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT
-#         if not exponents is None and not exponents is NotImplemented:
-#             if ((isinstance(exponents, list) and all(isinstance(elem, numbers.Number) for elem in exponents)) or
-#                     isinstance(exponents, np.ndarray)):
-#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-#                 target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
-#             else:
-#                 raise FunctionError("EXPONENTS param ({0}) for {1} must be a list of numbers or an np.array".
-#                                format(exponents, self.name))
-#
-#         # Make sure weights is a list of numbers or an np.ndarray
-#         if not weights is None and not weights is NotImplemented:
-#             if ((isinstance(weights, list) and all(isinstance(elem, numbers.Number) for elem in weights)) or
-#                     isinstance(weights, np.ndarray)):
-#                 # convert to 2D np.ndarrray (to distribute over 2D self.variable array)
-#                 target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
-#             else:
-#                 raise FunctionError("WEIGHTS param ({0}) for {1} must be a list of numbers or an np.array".
-#                                format(weights, self.name))
-
-        if target_set[EXPONENTS] is not None:
-            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
         if target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1,1)
+        if target_set[EXPONENTS] is not None:
+            target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1,1)
 
         # if not operation:
         #     raise FunctionError("Operation param missing")
@@ -852,8 +827,8 @@ class LinearCombination(CombinationFunction): # --------------------------------
                 raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
                                    format(len(exponents), len(self.variable.shape)))
             # Avoid divide by zero warning:
-            #    make sure there no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not i and j<0 for i,j in zip(self.variable, exponents)):
+            #    make sure there are no zeros for an element that is assigned a negative exponent
+            if INITIALIZING in context and any(not any(i) and j<0 for i,j in zip(self.variable, exponents)):
                 self.variable = np.ones_like(self.variable)
             else:
                 self.variable = self.variable ** exponents
@@ -1081,7 +1056,6 @@ class Linear(TransferFunction): # ----------------------------------------------
         """
 
         self._check_args(variable, params, context)
-
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
@@ -1141,7 +1115,6 @@ class Linear(TransferFunction): # ----------------------------------------------
         # FIX: ??CORRECT:
         return self.slope
         # raise FunctionError("Derivative not yet implemented for {}".format(self.componentName))
-
 
 class Exponential(TransferFunction): # ---------------------------------------------------------------------------------
     """Calculate an exponential transform of input variable  (RATE, SCALE)
@@ -1496,7 +1469,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             is_not_1D = not self.variable.ndim is 1
 
         except AttributeError:
-            raise FunctionError("PROGRAM ACTIVATION_ERROR: variable ({0}) for {1} should be an np.ndarray".
+            raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be an np.ndarray".
                                format(self.variable, self.__class__.__name__))
         else:
             if is_not_1D:
@@ -1817,11 +1790,12 @@ class Integrator(IntegratorFunction): # ----------------------------------------
              Note: self.oldValue stores previous value with which new value is integrated
          + RATE (value): rate of accumulation based on weighting of new vs. old value (default: 1)
          + WEIGHTING (Weightings Enum): method of accumulation (default: CONSTANT):
-                CONSTANT -- returns old_value incremented by rate parameter (ignores input)
-                SIMPLE -- returns old_value incremented by rate * new_value
-                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter)
+                CONSTANT -- returns old_value incremented by rate parameter (ignores input) with optional noise 
+                SIMPLE -- returns old_value incremented by rate * new_value with optional noise
+                ADAPTIVE -- returns rate-weighted average of old and new values  (Delta rule, Wiener filter) with optional noise
                                 rate = 0:  no change (returns old_value)
                                 rate 1:    instantaneous change (returns new_value)
+                DIFFUSION -- returns old_value incremented by drift_rate * old_value * time_step_size and the standard DDM noise distribution 
 
     Class attributes:
     - oldValue (value): stores previous value with which value provided in variable is integrated
@@ -1836,15 +1810,16 @@ class Integrator(IntegratorFunction): # ----------------------------------------
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({kwInitializer: variableClassDefault})
 
-
     @tc.typecheck
     def __init__(self,
                  variable_default=None,
                  rate:parameter_spec=1.0,
-                 weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE)=CONSTANT,
+                 weighting:tc.enum(CONSTANT, SIMPLE, ADAPTIVE, DIFFUSION)=CONSTANT,
                  params:tc.optional(dict)=None,
                  prefs:is_pref_set=None,
-                 context='Integrator Init'):
+                 noise=0.0,
+                 time_step_size = 1.0, 
+                 context="Integrator Init"):
 
         # Assign here as default, for use in initialization of function
         self.oldValue = self.paramClassDefaults[kwInitializer]
@@ -1852,7 +1827,9 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                  weighting=weighting,
-                                                 params=params)
+                                                 params=params,
+                                                 noise=noise,
+                                                 time_step_size=time_step_size)
 
         super().__init__(variable_default=variable_default,
                                          params=params,
@@ -1860,7 +1837,10 @@ class Integrator(IntegratorFunction): # ----------------------------------------
                                          context=context)
 
         # Reassign to kWInitializer in case default value was overridden
-        self.oldValue = self.paramsCurrent[kwInitializer]
+        self.oldValue = [self.paramsCurrent[kwInitializer]]
+
+
+        # self.noise = self.paramsCurrent[NOISE]
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1895,6 +1875,23 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+        noise = target_set[NOISE]
+
+        time_step_size = target_set[TIME_STEP_SIZE]
+        
+        # Validate NOISE:
+        # If the noise is a float, continue; if it is function, set self.noise_function to True 
+        # (flags noise to be executed before passing it to integrator )
+        # Otherwise, error 
+        if isinstance(noise, float):
+            self.noise_function = False
+        elif callable(noise):
+            self.noise_function = True
+        else:
+            raise FunctionError("noise parameter ({}) for {} must be a float or a function".
+                                format(noise, self.name))
+
 
         # Make sure initializer is compatible with variable
         try:
@@ -1931,6 +1928,14 @@ class Integrator(IntegratorFunction): # ----------------------------------------
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         weighting = self.paramsCurrent[WEIGHTING]
 
+        time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
+
+        #if noise is a function, execute it 
+        if self.noise_function:
+            noise = self.noise()
+        else:
+            noise = self.noise
+
         try:
             old_value = params[kwInitializer]
         except (TypeError, KeyError):
@@ -1941,18 +1946,16 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         # Compute function based on weighting param
         if weighting is CONSTANT:
-            value = old_value + rate
-            # return value
+            value = old_value + rate + noise 
         elif weighting is SIMPLE:
-            value = old_value + (new_value * rate)
-            # return value
+            value = old_value + (new_value * rate) + noise 
         elif weighting is ADAPTIVE:
-            # return (1-rate)*old_value + rate*new_value
-            value = (1-rate)*old_value + rate*new_value
+            value = (1-rate)*old_value + rate*new_value + noise 
+        elif weighting is DIFFUSION: 
+            value = old_value + rate*old_value*time_step_size + np.sqrt(time_step_size*noise)*np.random.normal()
         else:
-            # return new_value
             value = new_value
-
+ 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
@@ -1961,8 +1964,78 @@ class Integrator(IntegratorFunction): # ----------------------------------------
 
         return value
 
-    # def keyword(self, keyword):
-    #     return keyword
+class DDMIntegrator(Integrator): # --------------------------------------------------------------------------------------
+    """Calculate an accumulated value for input variable using a the DDM accumulation method. The DDMIntegrator only allows for 'DIFFUSION' weighting, and requires the noise parameter to be a float, as it is used to construct the standard DDM Gaussian.  
+
+    Initialization arguments:
+     - params (dict): specifying:
+         + kwInitializer (value): initial value to which to set self.oldValue (default: variableClassDefault)
+             - can be specified as a runtime parameter, which resets oldValue to one specified
+             Note: self.oldValue stores previous value
+        + drift_rate (DRIFT_RATE: float)
+        + noise (NOISE: float)
+        + time_step_size (TIME_STEP_SIZE: float)
+
+    Class attributes:
+    - oldValue (value): stores previous value with which value provided in variable is integrated
+
+    Integrator.function returns scalar result
+    """
+
+
+    componentName = DDM_INTEGRATOR_FUNCTION
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=None,
+                 weighting=DIFFUSION,
+                 params:tc.optional(dict)=None,
+                 prefs:is_pref_set=None,
+                 noise=0.5,
+                 rate = 1.0,
+                 time_step_size = 1.0,
+                 context="DDMIntegrator Init"):
+
+        # Assign here as default, for use in initialization of function
+        self.oldValue = self.paramClassDefaults[kwInitializer]
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(
+                                                 weighting=weighting,
+                                                 params=params,
+                                                 noise=noise,
+                                                 rate=rate,
+                                                 time_step_size=time_step_size)
+
+        super().__init__(variable_default=variable_default,
+                                         params=params,
+                                         prefs=prefs,
+                                         context=context)
+
+        # Reassign to kWInitializer in case default value was overridden
+        self.oldValue = [self.paramsCurrent[kwInitializer]]
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        noise = target_set[NOISE]
+
+        if (isinstance(noise, float) == False):
+            raise FunctionError("noise parameter ({}) for {} must be a float.".
+                                format(noise, self.name))
+
+        weighting = target_set[WEIGHTING]
+        if (weighting != "diffusion"):
+            raise FunctionError("weighting parameter ({}) for {} must be diffusion. For alternate methods of accumulation, use the Integrator function".
+                                format(weighting, self.name))
+
+
+    
+
+#     # def keyword(self, keyword):
+#     #     return keyword
 
 # region DDM
 #
@@ -2226,8 +2299,280 @@ class NavarroAndFuss(IntegratorFunction): # ------------------------------------
 
 
 #region ************************************   DISTRIBUTION FUNCTIONS   ************************************************
-#endregion
-# TBI
+
+class DistributionFunction(Function_Base):
+    componentType = DIST_FUNCTION_TYPE
+
+class NormalDist(DistributionFunction):
+
+    """Return a random sample from a normal distribution.
+
+    Description:
+        Draws samples from a normal distribution of the specified mean and variance using numpy.random.normal
+
+    Initialization arguments:
+        - mean (float)
+        - standard_dev (float)
+
+    """
+    componentName = NORMAL_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 mean = 0.0,
+                 standard_dev = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(mean=mean,
+                                                  standard_dev = standard_dev,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        mean = self.paramsCurrent[MEAN]
+        standard_dev = self.paramsCurrent[STANDARD_DEV]
+
+        result = standard_dev*np.random.normal() + mean 
+
+        return result
+
+class ExponentialDist(DistributionFunction):
+    """Return a random sample from an exponential distribution.
+
+    Description:
+        Draws samples from an exponential distribution of the specified beta using numpy.random.exponential 
+
+    Initialization arguments:
+        - beta (float)
+
+    """
+    componentName = EXPONENTIAL_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 beta = 1.0,  
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(beta = beta, 
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        beta = self.paramsCurrent[BETA]
+
+        result = np.random.exponential(beta)
+
+        return result
+
+class UniformDist(DistributionFunction):
+    """Return a random sample from a uniform distribution.
+
+    Description:
+        Draws samples from a uniform distribution of the specified low and high values using numpy.random.uniform
+
+    Initialization arguments:
+        - low (float)
+        - high (float)
+
+    """
+    componentName = UNIFORM_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 low = 0.0,
+                 high = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(low=low,
+                                                  high=high,
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        low = self.paramsCurrent[LOW]
+        high = self.paramsCurrent[HIGH]
+
+        result = np.random.uniform(low,high)
+
+        return result
+
+class GammaDist(DistributionFunction):
+    """Return a random sample from a gamma distribution.
+
+    Description:
+        Draws samples from a gamma distribution of the specified mean and variance using numpy.random.gamma
+
+    Initialization arguments:
+        - scale (float)
+        - shape (float)
+
+    """
+    componentName = GAMMA_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 scale = 1.0,  
+                 shape = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(scale = scale,
+                                                  shape = shape,  
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        scale = self.paramsCurrent[SCALE]
+        shape = self.paramsCurrent[SHAPE]
+
+        result = np.random.gamma(shape, scale)
+
+        return result
+
+class WaldDist(DistributionFunction):
+    """Return a random sample from a wald distribution.
+
+    Description:
+        Draws samples from a wald distribution of the specified mean and variance using numpy.random.wald
+
+    Initialization arguments:
+        - mean (float)
+        - scale (float)
+
+    """
+    componentName = GAMMA_DIST_FUNCTION
+
+    variableClassDefault = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 variable_default=variableClassDefault,
+                 scale = 1.0,  
+                 mean = 1.0, 
+                 params=None,
+                 prefs:is_pref_set=None,
+                 context=componentName+INITIALIZING):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(scale = scale,
+                                                  mean = mean,   
+                                                  params=params)
+
+        super().__init__(variable_default=variable_default,
+                         params=params,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+
+    def function(self,
+            variable=None,
+            params=None,
+            time_scale=TimeScale.TRIAL,
+            context=None):
+
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        scale = self.paramsCurrent[SCALE]
+        mean = self.paramsCurrent[MEAN]
+
+        result = np.random.wald(mean, scale)
+
+        return result
+
+#endregion 
 
 #region **************************************   LEARNING FUNCTIONS ****************************************************
 
@@ -2236,7 +2581,6 @@ class LearningFunction(Function_Base):
     componentType = LEARNING_FUNCTION_TYPE
 
 
-LEARNING_RATE = "learning_rate"
 ACTIVATION_FUNCTION = 'activation_function'
 MATRIX_INPUT = 0
 ACTIVATION_OUTPUT = 1
@@ -2273,7 +2617,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:parameter_spec=1,
+                 learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2382,7 +2726,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
-                 learning_rate:parameter_spec=1,
+                 learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
