@@ -641,6 +641,7 @@ class learning_components(object):
                 return None
             try:
                 self.error_matrix = self.error_projection.parameterStates[MATRIX]
+                return self.error_projection.parameterStates[MATRIX]
             except AttributeError:
                 raise LearningAuxilliaryError("error_matrix not identified: error_projection ({})"
                                               "not not have a {} parameterState".
@@ -753,11 +754,14 @@ class learning_components(object):
             learning_proj = next((proj for proj in self.error_matrix.receivesFromProjections
                                  if isinstance(proj, LearningProjection)),None)
             if not learning_proj:
-                # # MODIFIED 2/27/17 OLD:
-                # raise LearningAuxilliaryError("error_objective_mech not identified: "
-                #                               "error_matrix does not have a LearningProjection")
-                # MODIFIED 2/27/17 NEW:
-                return None
+                # error_matrix is for a MappingProjection that projects to the TARGET ObjectiveMechanism, so return that
+                if isinstance(self.error_matrix.owner.receiver.owner, ObjectiveMechanism):
+                    self.error_objective_mech = self.error_matrix.owner.receiver.owner
+                    return self.error_matrix.owner.receiver.owner
+                else:
+                    raise LearningAuxilliaryError("error_objective_mech not identified: error_matrix does not have a "
+                                                  "LearningProjection and is not for a TARGET ObjectiveMechanism")
+                    return None
                 # MODIFIED 2/27/17 END
             try:
                 learning_mech = learning_proj.sender.owner
@@ -801,6 +805,7 @@ class learning_components(object):
                 return None
             try:
                 self.error_objective_mech_output = self.error_objective_mech.outputState
+                return self.error_objective_mech.outputState
             except AttributeError:
                 raise LearningAuxilliaryError("error_objective_mech_output not identified: error_objective_mech ({})"
                                               "does not appear to have an outputState".
