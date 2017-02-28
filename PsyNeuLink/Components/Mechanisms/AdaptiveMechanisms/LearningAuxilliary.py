@@ -226,6 +226,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         if isinstance(projection.receiver.owner, LearningMechanism):
             # activation_mech has a projection to an ObjectiveMechanism being used for learning,
             #  so validate it, assign it, and quit search
+            # FIX: IMPLEMENT _validate_error_signal
             learning_projection._validate_error_signal(projection.receiver.owner.outputState.value)
             objective_mechanism = projection.receiver.owner
             return
@@ -303,8 +304,8 @@ def _instantiate_learning_components(learning_projection, context=None):
         learning_fct_error = error_for_obj_fct
 
     else:
-        raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-                                  format(self.function.name, self.name))
+        raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+                                  format(learning_projection.learning_function.componentName, learning_projection.name))
 
     # Instantiate ObjectiveMechanism
     # Notes:
@@ -367,7 +368,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #       (which occurs in its _instantiate_function method).
     learning_projection.sender = learning_mechanism.outputState
 
-#region Learning Components
+
 class learning_components(object):
     """Gets components required to instantiate LearningMechanism and its Objective Function for a LearningProjection
 
@@ -789,5 +790,3 @@ class learning_components(object):
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech_output; "
                                           "it must be an OutputState.")
-
-#endregion

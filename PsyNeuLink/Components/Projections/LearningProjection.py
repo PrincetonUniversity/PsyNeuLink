@@ -417,8 +417,15 @@ class LearningProjection(Projection_Base):
         #                                  self.mappingProjection.name))
 
 
+    def _instantiate_receiver(self, context=None):
 
-    def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
+        # IMPLEMENT: verify that receiver spec is parameterState, and if it isn't
+        #               try to make it one (e.g, if it is for a MappingProjectoin rather than its matrix param)
+        #            verify that receiver's matrix param is compatible with the output of the function
+
+        super()._instantiate_receiver(context=context)
+
+    def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
         """
@@ -427,9 +434,12 @@ class LearningProjection(Projection_Base):
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
-        slope= self.learning_rate or None
+        # FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
+        # FIX: HANDLE THIS AS runtime_param??
+        if self.learning_rate:
+            params.update({SLOPE:self.learning_rate})
+
         self.weight_change_matrix = self.function(variable=self.learning_signal,
-                                                  slope=self.learning_rate,
                                                   params=params,
                                                   context=context)
 

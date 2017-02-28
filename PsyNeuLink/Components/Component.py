@@ -1351,7 +1351,7 @@ class Component(object):
 
             # If the value is a projection, projection class, or a keyword for one, for anything other than
             #    the FUNCTION param (which is not allowed to be specified as a projection)
-            #    then simply assign value to paramClassDefault (implicaton of not specifying it explicitly);
+            #    then simply assign value to paramClassDefault (implication of not specifying it explicitly);
             #    this also allows it to pass the test below and function execution to occur for initialization;
             from PsyNeuLink.Components.Projections.Projection import Projection, ProjectionRegistry
             # from PsyNeuLink.Components.Projections.ControlProjection import ControlProjection

@@ -480,7 +480,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
          4) Assign prefs
          5) Assign log
          6) super.__init__:
-             a) _validate_variable (for execute method)
+             a) _validate_variable (for function)
                  insure that it is a value, consistent with variableClassDefault if variableClassDefault_locked is set
              b) _validate_params:
                  kwTimeScale: must be TimeScale
@@ -495,23 +495,23 @@ Keep components simple; put any necessary complexity (to make it easier for the 
              [super: _validate_function]
              c) _instantiate_attributes_before_function
                  i) instantiate_inputStates
-                     - inputState.value must be compatible with mechanism's variable
+                     - inputState.value must be compatible with mechanism's variable (input to its function)
                      - State.instantiate_states_list:
                          - assigns self.inputState (first/only state) and self.inputStates (OrderedDict of states)
                          - if number of inputStates > 1, must equal length of mechanism's variable
                              each state is assigned to an item of the mechanism's variable
                              if there is only one state, it is assigned to the full variable
                  ii) _instantiate_parameter_states
-                     - assigns parameter state for each param in FUNCTION_PARAMS
+                     - assigns parameter state for each param in user_params (including ones in function_params)
              [super: _instantiate_function]
              d) _instantiate_attributes_after_function
                  i) instantiate_outputStates - implement using kwOutputStates
-                     - outputState.value must be compatible with output of mechanism's execute method
+                     - outputState.value must be compatible with output of mechanism's function
                      - State.instantiate_states_list:
                          - assigns self.outputState (first/only state) and self.outputStates (OrderedDict of states)
-                         - if number of outputStates > 1, must equal length of output of mechanism's execute method
-                             each state is assigned an item of the output of the mechanism's execute method
-                             if there is only one state, full output of mechanism's execute method is assigned to it
+                         - if number of outputStates > 1, must equal length of output of mechanism's function
+                             each state is assigned an item of the output of the mechanism's function
+                             if there is only one state, full output of mechanism's function is assigned to it
          7) Enforce class methods
 
      D) State:
@@ -532,10 +532,10 @@ Keep components simple; put any necessary complexity (to make it easier for the 
                          PROJECTION_TYPE:<Projection class>
                          kwProjectionParams:<dict> - params for PROJECTION_TYPE
              c) _instantiate_function:
-                 insures that output of execute method is compatible with state's value
+                 insures that output of function is compatible with state's value
          8) instantiate_projections_to_state:
              - each must be a Projection class or object or a specification dict for one
-             - insures output of projection execute method is compatible with state.value
+             - insures output of projection function is compatible with state.value
              - insures receiver for each projection is state
              - if spec is not valid, default is created of type determined by paramsCurrent[PROJECTION_TYPE]
              - adds each to state.receivesFromProjections
@@ -559,13 +559,13 @@ Keep components simple; put any necessary complexity (to make it easier for the 
              b) _instantiate_attributes_before_function:
                  - calls _instantiate_sender and _instantiate_receiver (which both must be done before _validate_function)
                  i) _instantiate_sender:
-                     insures that projection's variable is compabitible with the output of the sender's execute method
+                     insures that projection's variable is compabitible with the output of the sender's function
                      if it is not, reassigns self.variable
                  ii) _instantiate_receiver:
                      assigns (reference to) receiver's inputState to projection's receiver attribute
              c) _instantiate_function:
-                 insures that output of projection's execute method is compatible with receiver's value
-                 (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
+                 insures that output of projection's function is compatible with receiver's value
+                 (it if it is a number of len=1, it tries modifying the output of function to match receiver)
                  checks if FUNCTION is specified, then if self.execute implemented; raises exception if neither
              [super: _instantiate_attributes_after_function]
 
@@ -610,7 +610,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
 
                      ii) _instantiate_sender:
 
-                         insures that projection's variable is compabitible with the output of the sender's execute method
+                         insures that projection's variable is compabitible with the output of the sender's function
                          if it is not, reassigns self.variable
 
         """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals
@@ -633,8 +633,8 @@ Keep components simple; put any necessary complexity (to make it easier for the 
 
 
                  e) _instantiate_function:
-                     insures that output of projection's execute method is compatible with receiver's value
-                     (it if it is a number of len=1, it tries modifying the output of execute method to match receiver)
+                     insures that output of projection's function is compatible with receiver's value
+                     (it if it is a number of len=1, it tries modifying the output of function to match receiver)
                      checks if FUNCTION is specified, then if self.execute implemented; raises exception if neither
                  [super: _instantiate_attributes_after_function]
 
@@ -649,7 +649,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
              * the same mechanism can be listed more than once in a pathway, inducing recurrent processing
              * if it is the first mechanism, it will receive its input from the Process only once (first execution)
      - Mechanism.update_states_and_execute:
-         [TBI: calls each of the execute methods in its executionSequence (see Mechanism.execute):
+         [TBI: calls each of the functions in its executionSequence (see Mechanism.execute):
          - calls self.inputState.() for each entry in self.inputStates, which:
              + executes every self.inputState.receivesFromProjections.[<Projection>.execute()...]
                  note:  for the first mechanism in the pathway, this includes a projection with Process input
@@ -666,8 +666,8 @@ Keep components simple; put any necessary complexity (to make it easier for the 
                  using self.params[<ParameterState>].paramsCurrent[PARAMETER_MODULATION_OPERATION] or runtime spec
          - calls subclass' self.update, which:
              + uses for each item of its variable the value of the corresponding state in mechanism's self.inputStates
-             + uses self.params[<ParameterState>].value for each corresponding param of subclass' execute method
-             + calls mechanism.execute method that carries out mechanism-specific computations
+             + uses self.params[<ParameterState>].value for each corresponding param of subclass' function
+             + calls mechanism.function that carries out mechanism-specific computations
              + assigns each item of its output as the value of the corresponding state in mechanisms's self.outputStates
          - [TBI: calls self.outputState.execute() (output gating) to update self.outputState.value]
 
@@ -690,7 +690,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
              determines whether non-execute-related actions (e.g., initialization) and non-fatal warnings are reported
 
          + paramValidation_pref (bool):  [Component]
-             determines whether the parameters of an object's execute method are validated prior to execution
+             determines whether the parameters of an object's function are validated prior to execution
 
          + reportOutput_pref (bool):  [Component]
              determines whether output of execute-related actions is reported to the console (see Process and Mechanism)
