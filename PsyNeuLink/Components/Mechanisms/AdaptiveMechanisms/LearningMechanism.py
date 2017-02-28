@@ -659,9 +659,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection)
 
-    def _instantiate_output_states(self):
-        pass
-
 
 
     def _execute(self,
