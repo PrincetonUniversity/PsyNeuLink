@@ -22,10 +22,18 @@ a `MappingProjection` to modify its  `matrix <MappingProjection.matrix>` paramet
 be assigned different `functions <LearningProjection_Function>` to implement different learning algorithms,
 which are associated with corresponding types of `MonitoringMechanisms <MonitoringMechanism>`.
 
+
 .. _LearningProjection_Creation:
 
 Creating a LearningProjection
 ------------------------------------
+
+COMMENT:
+    NOTE HERE THAT EITHER SENDER OR RECEIVER HAS TO BE SPECIFIED FOR FINAL IMPLEMENTATION
+    IF IT IS A RECEIVER, THEN APPRPRIATE SENDER COMPONENTS (LearningMechanism and, if necessary ObjectiveMechanism)
+        WILL BE INSTANTIATED
+    IF IT IS A SENDER, THEN ?? HOW IS RECEIVER IDENTIFIED??
+COMMENT
 
 .. _LearningProjection_Automatic_Creation:
 
@@ -367,12 +375,6 @@ class LearningProjection(Projection_Base):
                     raise LearningProjectionError("{} of {} contains a function specification ({}) that would override "
                                                   "the LinearCombination function of the targeted MappingProjection".
                                                   format(WEIGHT_CHANGE_PARAMS,self.name,param_value))
-
-    # def _instantiate_attributes_before_function(self, context=None):
-    #     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
-    #         import instantiate_learning_components
-    #     instantiate_learning_components(self, context=context)
-    #     super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_sender(self, context=None):
         """Instantiate LearningMechanism
