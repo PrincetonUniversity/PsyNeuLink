@@ -397,8 +397,6 @@ class LearningProjection(Projection_Base):
         #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 
-        # FIX: 2/28/17 FROM LearningProjection_OLD
-        self.mappingProjection.monitoringMechanism = objective_mechanism
 
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatiable with the output of function
@@ -438,6 +436,9 @@ class LearningProjection(Projection_Base):
                                          self.sender.name,
                                          receiver_weight_matrix_shape,
                                          self.receiver.owner.name))
+
+        self.receiver.owner.monitoringMechanism = objective_mechanism
+
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
         """
