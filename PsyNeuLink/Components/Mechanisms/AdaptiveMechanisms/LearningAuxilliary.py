@@ -296,7 +296,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                                     CALCULATE:lambda x: np.sum(x*x)},
                                    {NAME:TARGET_MSE,
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
-
     else:
         object_mech_params = None
 
@@ -350,6 +349,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                              role=LEARNING,
                                              params=object_mech_params,
                                              name=lc.activation_projection.name + " Error_Derivative")
+
+    objective_mechanism.learning_role = not is_target or TARGET
 
 
     # If lc.error_projection is not assigned (i.e., if ObjectiveMechanism is a TARGET),
