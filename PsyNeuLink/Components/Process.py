@@ -1821,7 +1821,7 @@ class Process_Base(Process):
                 if 'parameterStates' in e.args[0]:
                     pass
                 else:
-                    error_msg = 'Error in attempt to initialize learningSignal ({}) for {}: \"{}\"'.\
+                    error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
                         format(LEARNING_PROJECTION.name, projection.name, e.args[0])
                     raise ProcessError(error_msg)
 
