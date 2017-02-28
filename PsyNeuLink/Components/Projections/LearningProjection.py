@@ -390,40 +390,47 @@ class LearningProjection(Projection_Base):
         # and formats self.variable to be compatible with that outputState's value
         super()._instantiate_sender(context=context)
 
-        # Validate the variable is compatible with function input (should be, if Function is Linear)
-        # Then validate that output of function is compatible with receiver's weight matrix param (same shape)
-
-        # # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
-        # # IMPLEMENTATION NOTE:  MOVED FROM _instantiate_receiver
-        # # Insure that LearningProjection output (error signal) and receiver's weight matrix are same shape
-        # try:
-        #     receiver_weight_matrix_shape = self.mappingWeightMatrix.shape
-        # except TypeError:
-        #     # self.mappingWeightMatrix = 1
-        #     receiver_weight_matrix_shape = 1
-        # try:
-        #     LEARNING_PROJECTION_shape = self.value.shape
-        # except TypeError:
-        #     LEARNING_PROJECTION_shape = 1
-        #
-        # if receiver_weight_matrix_shape != LEARNING_PROJECTION_shape:
-        #     raise ProjectionError("Shape ({0}) of matrix for {1} learning signal from {2}"
-        #                           " must match shape of receiver weight matrix ({3}) for {4}".
-        #                           format(LEARNING_PROJECTION_shape,
-        #                                  self.name,
-        #                                  self.sender.name,
-        #                                  receiver_weight_matrix_shape,
-        #                                  # self.receiver.owner.name))
-        #                                  self.mappingProjection.name))
-
 
     def _instantiate_receiver(self, context=None):
+        """Validate that receiver has been assigned and is compatiable with the output of function
 
-        # IMPLEMENT: verify that receiver spec is parameterState, and if it isn't
-        #               try to make it one (e.g, if it is for a MappingProjectoin rather than its matrix param)
-        #            verify that receiver's matrix param is compatible with the output of the function
+        Notes:
+        * _validate_params verifies that receiver is a parameterState for the matrix parameter of a MappingProjection.
+        * _super()._instantiate_receiver verifies that the projection has not already been assigned to the receiver.
+
+        """
 
         super()._instantiate_receiver(context=context)
+
+
+        # Insure that the learning_signal is compatible format with the receiver's weight matrix
+        if not iscompatible(self.value, self.receiver.variable):
+            raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
+                                          "the MappingProjection ({}) to which it is being assigned ({})".
+                                          format(self.name,
+                                                 self.value,
+                                                 self.receiver.value,
+                                                 self.receiver.owner.name))
+
+        # Insure that learning_signal has the same shape as the receiver's weight matrix
+        try:
+            receiver_weight_matrix_shape = np.array(self.receiver.value).shape
+        except TypeError:
+            receiver_weight_matrix_shape = 1
+        try:
+            learning_signal_shape = np.array(self.value).shape
+        except TypeError:
+            learning_signal_shape = 1
+
+        if receiver_weight_matrix_shape != learning_signal_shape:
+            raise ProjectionError("Shape ({}) of learing_signal matrix for {} from {}"
+                                  " must match shape of the weight matrix ({}) for the receiver {}".
+                                  format(learning_signal_shape,
+                                         self.name,
+                                         self.sender.name,
+                                         receiver_weight_matrix_shape,
+                                         self.receiver.owner.name))
+
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
         """

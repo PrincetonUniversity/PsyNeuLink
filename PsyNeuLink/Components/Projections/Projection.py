@@ -858,11 +858,6 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                              " or an index (for inputStates)".
                              format(receiver.name, projection_spec.name))
 
-    if receiver.owner.verbosePref or projection_spec.sender.owner.verbosePref:
-        if projection_spec in receiver.receivesFromProjections:
-            warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
-                          format(projection_spec.name, receiver.owner.name))
-
     # state is State object, so use that
     if isinstance(state, State_Base):
         state._instantiate_projections_to_state(projections=projection_spec, context=context)
@@ -907,6 +902,12 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
             if reassign == 'n':
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
+
+    # validate that projection has not already been assigned to receiver
+    if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
+        if projection_spec in receiver.receivesFromProjections:
+            warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
+                          format(projection_spec.name, receiver.owner.name))
 
     input_state = _instantiate_state(owner=receiver,
                                     state_type=InputState,
