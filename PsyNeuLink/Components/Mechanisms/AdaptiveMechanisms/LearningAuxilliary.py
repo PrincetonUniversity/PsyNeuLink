@@ -190,11 +190,13 @@ def _instantiate_learning_components(learning_projection, context=None):
 
       When searching downstream for projections that are being learned (to identify the next objective mechanism as a
       source for the LearningMechanism's error_signal), the method uses the first projection that it finds, beginning
-      in `primary outputState <OutputState_Primary>` of the activation_output_mech, and continuing similarly
+      in `primary outputState <OutputState_Primary>` of the activation_output_mech, and continues similarly
       in the error_mech.  If any conflicting implementations of learning components are encountered,
       an exception is raised.
 
     """
+    # IMPLEMENTATION NOTE:  SHOULD CHECK UP FRONT WHETHER SENDER OR RECEIVER IS SPECIFIED, AND BRANCH ACCORDINGLY
+    #                       FAILURE TO SPECIFY BOTH SHOULD RAISE AN EXCEPTION (OR FURTHER DEFER INSTANTIATION?)
 
     # First determine whether receiver for LearningProjection has been instantiated and, if not, instantiate it:
     #    this is required to instantiate the LearningMechanism, as well as an ObjectiveMechanism if necessary.
@@ -202,7 +204,8 @@ def _instantiate_learning_components(learning_projection, context=None):
         isinstance(learning_projection.receiver.owner, MappingProjection)
     except AttributeError:
         _instantiate_receiver_for_learning_projection(learning_projection, context=context)
-
+        # IMPLEMENTATION NOTE: THIS SHOULD IDENTIFY/CONFIRM RECEIVER BASED ON PROJECTIONS TO THE OBJECTIVE MECHANISM
+        #                      OF THE learning_projection's LearningMechanism;  IF THERE ARE NONE, THEN RAISE EXCEPTION
 
     # Next, validate that the receiver does not receive any other LearningProjections
     # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
@@ -218,7 +221,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     lc = learning_components(learning_projection=learning_projection)
 
     # FIX: HAS THIS ALREADY BEEN TESTED (EVEN IMPLICLITY) IN FORGOING??
-    # Check if activation_mech has a projection to a LearningMechanism or some other type of ProcessingMechanism
+    # Check if activation_mech has a projection to a LearningMechanism
     # IMPLEMENTATION NOTE: this uses the first projection found (staring with the primary outputState
 
     for projection in lc.activation_output.sendsToProjections:
@@ -226,13 +229,18 @@ def _instantiate_learning_components(learning_projection, context=None):
         if isinstance(projection.receiver.owner, LearningMechanism):
             # activation_mech has a projection to an ObjectiveMechanism being used for learning,
             #  so validate it, assign it, and quit search
-            # FIX: IMPLEMENT _validate_error_signal
+            # FIX: IMPLEMENT _validate_error_signal:  IS IN LearningMechanism, NOT LearningProjection
             learning_projection._validate_error_signal(projection.receiver.owner.outputState.value)
             objective_mechanism = projection.receiver.owner
             return
 
-    # FIX: ADD CODE HERE FOR CASE IN WHICH LEARNING AND/OR OBJECTIVE MECHANISM IS FOUND
-    # FIX: (GET FROM LearningProjection_OLD),
+        # IMPLEMENTATON NOTE: THE FOLLOWING WAS IN LearningProjection_OLD;  ADD SOMETHING SIMILAR HERE??
+        # # errorSource has a projection to a ProcessingMechanism, so:
+        # #   - determine whether that has a LearningProjection
+        # #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
+        # if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
+        #     try:
+        #         ...
 
     # Next, check whether ObjectiveMechanism and LearningMechanism should be assigned as TARGET:
     #   It SHOULD be a TARGET if it has either no outgoing projections or none that receive a LearningProjection;
