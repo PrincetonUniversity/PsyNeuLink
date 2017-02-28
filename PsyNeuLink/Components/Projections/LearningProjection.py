@@ -84,7 +84,8 @@ from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism, \
+    ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 
 # Params:
 
@@ -437,7 +438,10 @@ class LearningProjection(Projection_Base):
                                          receiver_weight_matrix_shape,
                                          self.receiver.owner.name))
 
+        learning_mechanism = self.sender.owner
+        objective_mechanism = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
         self.receiver.owner.monitoringMechanism = objective_mechanism
+
 
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):

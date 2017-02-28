@@ -2,6 +2,7 @@
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
 
+
 # COMPOSITION IMPLEMENTATION NOTE:
 #   add_projection_to and add_projection_from methods
 #   methods in LearningAuxilliary
@@ -120,6 +121,11 @@
 #            Add to _validate_params that their receivers are parameterStates
 #          MappingProjection under ProcessingProjection
 #            Add to _validate_params that receiver must be an inputState
+#     10) Get .status == CHANGED straight
+#     11) Change monitoringMechanism attribute of Projection to objectiveMechanism or something else?
+#                             or change assignment to LearningMechanism??
+#     12) Return values immediately in lc.component helper methods (see error_matrix and error_mech for examples)
+#             then get rid of x = lc.error_matrix
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
