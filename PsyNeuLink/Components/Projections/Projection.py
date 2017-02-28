@@ -824,9 +824,9 @@ def _is_projection_subclass(spec, keyword):
     return False
 
 def _add_projection_to(receiver, state, projection_spec, context=None):
-    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
+    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Component object
 
-    receiver must be an appropriate Function object (currently, a Mechanism or a Projection)
+    receiver must be an appropriate Component object (currently, a Mechanism or a Projection)
     state must be a specification of an InputState or ParameterState
     Specification of InputState can be any of the following:
             - INPUT_STATE - assigns projection_spec to (primary) inputState
@@ -901,6 +901,11 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
             if reassign == 'n':
                 raise ProjectionError("Unable to assign projection {0} to receiver {1}".
                                       format(projection_spec.name, receiver.name))
+
+    if receiver.verbosePref or projection_spec.sender.owner.verbosePref:
+        if projection_spec in receiver.receivesFromProjections:
+            warnings.warn("Request to assign {} as projection to {} was ignored; it was already assigned".
+                          format(projection_spec.name, receiver.owner.name))
 
     input_state = _instantiate_state(owner=receiver,
                                     state_type=InputState,
