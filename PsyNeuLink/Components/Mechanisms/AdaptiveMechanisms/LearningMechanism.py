@@ -292,6 +292,9 @@ input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 # Argument names:
 ERROR_MATRIX = 'error_matrix'
 
+# Name of outputState:
+LEARNING_SIGNAL = 'learning_signal'
+
 WEIGHT_CHANGE_PARAMS = "weight_change_params"
 
 WT_MATRIX_SENDER_DIM = 0
@@ -482,7 +485,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
     # variableClassDefault = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({})
+    paramClassDefaults.update({
+        INPUT_STATES:input_state_names,
+        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL}]
+    })
 
     @tc.typecheck
     def __init__(self,
@@ -611,55 +617,34 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Insure that inputState values are compatible with derivative functions and error_matrix
         """
-        # Specify states by assigning names
-        self.paramsCurrent[INPUT_STATES] = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
         super()._instantiate_input_states(context=context)
-        # TBI
-        # NAME the INPUTSTATES USING input__state_names
-        # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING: ?? DONE ABOVE IN _validate_params??
-        #     weighted_error_signal = np.dot(error.matrix, error_signal)
+
+    def _instantiate_attributes_after_function(self, context=None):
+
+        super()._instantiate_attributes_after_function(context=context)
+
+        # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
+        #     ACTIVATION_INPUT ≌ 1st item of function variable
+        #     ACTIVATION_OUTPUT ≌ 2nd item of function variable
+        #     ERROR_INPUT ≌ 3rd item of function variable (error_signal (= np.dot(error.matrix, error_signal))
+
+
         #     error_matrix rows:  sender errors;  columns:  receiver errors
         #     BackPropagation learning algorithm (Generalized Delta Rule - :ref:`<LINK>`):
-        #         weight = weight + (learningRate * errorDerivative * transferDerivative * sampleSender)
-        #         for sumSquared error function:  errorDerivative = (target - sample)
-        #         for logistic activation function: transferDerivative = sample * (1-sample)
+        #         weight = weight + (learningRate * error_derivative * activation_derivative * activation_output)
+        #         for sumSquared error function:  error_derivative = (target - sample)
+        #         for logistic activation function: activation_derivative = activation_output * (1-activation_output)
         #     NEEDS:
         #     - error_signal (from ObjectiveMechanism or equivalent)
         #     - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
         #     - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
-
-    # MOVED FROM LearningProjection
-    def _instantiate_sender(self, context=None):
-        """Instantiate ObjectiveMechanism
-        """
-
-        # If ObjectiveMechanism or its outputState were specified, allow super() to handle final assignments
-        if isinstance(self.sender, (OutputState, ObjectiveMechanism)):
-            super()._instantiate_sender(context=context)
-
-            # # SHOULD HAVE BEEN HANDLED BY super()
-            # # ObjectiveMechanism specified for sender, so re-assign to its outputState
-            # if isinstance(learning_projection.sender, ObjectiveMechanism):
-            #     learning_projection.sender = learning_projection.sender.outputState
-
-            # Sender should now be outputState (assigned by super(), if necessary)
-            # Validate that it belongs to an ObjectiveMechanism being used for learning
-            if not _objective_mechanism_role(learning_projection.sender.owner, LEARNING):
-                raise LearningProjectionError("OutputState ({}) specified as sender for {} belongs to a {}"
-                                          " rather than an ObjectiveMechanism with role=LEARNING".
-                                          format(learning_projection.sender.name,
-                                                 learning_projection.name,
-                                                 learning_projection.sender.owner.__class__.__name__))
-
-        # LearningMechanism was not specified, or was specified by class, so call Composition to instantiate
-        else:
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
-                import _instantiate_learning_mechanism
-            _instantiate_learning_mechanism(self)
-
         # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection)
 
+    def _instantiate_output_states(self, context=None):
+        super()._instantiate_output_states(context=context)
 
+        # OVERRIDE TO INSTANTIATE OUTPUTSTATE THAT TAKES FULL OUTPUT OF FUNCTION (MATRIX) AS ITS VALUE
+        #     function output ≌ error_matrix
 
     def _execute(self,
                 variable=None,
@@ -687,10 +672,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        self.value = self.learning_signal
+        # Assign value inside a list so that the result (a matrix represented as a 2d array) is treated as a single
+        # item and thereby assigned to a single outputState, rather than as (the usual) 2d array of items (one
+        # for each outputState).
+        self.value = [self.learning_signal]
         return self.value
-
-
 
     @property
     def activation_input(self):

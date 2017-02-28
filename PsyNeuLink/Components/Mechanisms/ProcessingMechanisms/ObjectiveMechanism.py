@@ -403,7 +403,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         super()._validate_variable(variable=variable, context=context)
 
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate `monitored_values`, `role` and `names <ObjectiveMechanism.names>` arguments
 
@@ -465,7 +464,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         except KeyError:
             pass
 
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
 
@@ -499,7 +497,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         self.variableClassDefault = self.variable.copy()
         self.inputValue = list(self.variable)
-
 
     def _instantiate_input_state_for_monitored_value(self, variable, monitored_value, name=None, context=None):
         """Instantiate inputState with projection from monitoredOutputState
@@ -629,7 +626,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             _instantiate_monitoring_projection(sender=monitored_value, receiver=input_state, matrix=AUTO_ASSIGN_MATRIX)
 
         return input_state.value
-
 
     def add_monitored_values(self, states_spec, context=None):
         """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
