@@ -392,7 +392,7 @@ class LearningProjection(Projection_Base):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
                                           format(self.name, self.sender.owner.name))
 
-        # This assigns self as an outgoing projection from the sender LearningMechanism's outputState
+        # This assigns self as an outgoing projection from the sender (LearningMechanism) outputState
         #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 

@@ -641,7 +641,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection):  ?? _validate_error_signal
 
     def _validate_error_signal(self, error_signal):
-        """Check that error_signal (received from ObjectiveMechanism) conforms to what is needed by self.function
+        """Validate that error_signal (received from ObjectiveMechanism) is compatible with the error_matrix
+
+        Insure that length of error_signal equals the WT_MATRIX_RECEIVERS_DIM (width, number of cols) of the
+        error_matrix
+
         """
 
         if self.function.componentName is RL_FUNCTION:
