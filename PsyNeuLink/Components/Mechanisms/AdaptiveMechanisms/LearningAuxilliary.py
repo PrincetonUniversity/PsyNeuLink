@@ -238,13 +238,19 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Note: error-related components may not yet be defined (if LearningProjection is for a TERMINAL mechanism)
     lc = learning_components(learning_projection=learning_projection)
 
-    # Check if activation_mech has a projection to another ProcessingMechanism
-    # IMPLEMENTATION NOTE: this uses the first projection found (staring with the primary outputState
+    # Check if activation_mech already has a projection to a LearningMechanism
+    # IMPLEMENTATION NOTE: this uses the first projection found (starting with the primary outputState
 
     for projection in lc.activation_output.sendsToProjections:
 
         # Check for existing LearningMechanism
         if isinstance(projection.receiver.owner, LearningMechanism):
+
+            # Projection must be to the ACTIVATION_OUTPUT inputState of the LearningMechanism;
+            # (a projection to the ACTIVATION_INPUT inputState is the one used for learning in the layer above)
+            if projection.receiver.name is ACTIVATION_INPUT:
+                continue
+
             # activation_mech has a projection to a LearningMechanism, so assign that as sender and return;
             # This assumes that:
             #    the LearningMechanism will be validated by learning_projection
