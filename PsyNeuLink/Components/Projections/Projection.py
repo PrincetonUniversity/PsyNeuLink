@@ -824,20 +824,23 @@ def _is_projection_subclass(spec, keyword):
     return False
 
 def _add_projection_to(receiver, state, projection_spec, context=None):
-    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Component object
+    """Assign an "incoming" Projection to a receiver InputState or ParameterState of a Function object
 
-    receiver must be an appropriate Component object (currently, a Mechanism or a Projection)
-    state must be a specification of an InputState or ParameterState
-    Specification of InputState can be any of the following:
-            - INPUT_STATE - assigns projection_spec to (primary) inputState
-            - InputState object
-            - index for Mechanism.inputStates OrderedDict
-            - name of inputState (i.e., key for Mechanism.inputStates OrderedDict))
-            - the keyword kwAddInputState or the name for an inputState to be added
-    Specification of ParameterState must be a ParameterState object
-    projection_spec can be any valid specification of a projection_spec (see State._instantiate_projections_to_state)
-    IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
-                          CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
+    Verify that projection has not already been assigned to receiver;
+        if it has, issue a warning and ignore the assignment request.
+
+    Requirements:
+       * receiver must be an appropriate Function object (currently, a Mechanism or a Projection);
+       * state must be a specification of an InputState or ParameterState;
+       * specification of InputState can be any of the following:
+                - INPUT_STATE - assigns projection_spec to (primary) inputState;
+                - InputState object;
+                - index for Mechanism.inputStates OrderedDict;
+                - name of inputState (i.e., key for Mechanism.inputStates OrderedDict));
+                - the keyword kwAddInputState or the name for an inputState to be added;
+       * specification of ParameterState must be a ParameterState object
+       * projection_spec can be any valid specification of a projection_spec
+           (see `State._instantiate_projections_to_state`).
 
     Args:
         receiver (Mechanism or Projection):
@@ -846,6 +849,9 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
         context:
 
     """
+    # IMPLEMENTATION NOTE:  ADD FULL SET OF ParameterState SPECIFICATIONS
+    #                       CURRENTLY, ASSUMES projection_spec IS AN ALREADY INSTANTIATED PROJECTION
+
     from PsyNeuLink.Components.States.State import _instantiate_state
     from PsyNeuLink.Components.States.State import State_Base
     from PsyNeuLink.Components.States.InputState import InputState
