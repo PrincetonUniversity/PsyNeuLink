@@ -329,7 +329,7 @@ in sequence or mechanism format, one target must be provided for each <a class="
 <div class="section" id="control">
 <span id="system-execution-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
 <p>Every system is associated with a single <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The controller monitors the outputState(s) of one or more
-mechanisms in the system (listed in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute), and uses that information to set the
+mechanisms in the system (listed in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute), and uses that information to set the
 value of parameters for those or other mechanisms in the system, or their functions
 (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">Monitored OutputStates</span></a> for a description of how to specify which outputStates are
 monitored, and <a class="reference internal" href="ControlProjection.html#controlprojection-creation"><span class="std std-ref">Creating a ControlProjection</span></a> for specifying parameters to be controlled). The controller is
@@ -702,11 +702,26 @@ each execution.</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="System.System_Base.show_graph">
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>output_fmt='pdf'</em>, <em>direction='LR'</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base.show_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows a graph of a system&#8217;s mechanisms and projections.
+Arguments
+output_fmt : output format can be either &#8216;pdf&#8217; or &#8216;jupyter&#8217;</p>
+<blockquote>
+<div>pdf will actually render and open a pdf
+jupyter will just return the graph to the output stream, ideal for working in jupyter notebooks</div></blockquote>
+<dl class="docutils">
+<dt>direction</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">can be used to set rank direction of graph</span><dd>possible inputs are BT, TB, LR, and RL</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
-<dt id="System.SystemTargetInputState">
-<em class="property">class </em><code class="descclassname">System.</code><code class="descname">SystemTargetInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.SystemTargetInputState" title="Permalink to this definition">¶</a></dt>
+<dt id="System.SystemInputState">
+<em class="property">class </em><code class="descclassname">System.</code><code class="descname">SystemInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.SystemInputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Encodes target for the system and transmits it to a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the system</p>
 <p>Each instance encodes a <code class="xref any docutils literal"><span class="pre">target</span></code> to the system (also a 1d array in 2d array of
 <code class="xref any docutils literal"><span class="pre">targets</span></code>) and provides it to a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that projects to a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a></p>

@@ -1,6 +1,8 @@
+from PsyNeuLink.Components.Mechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 # from PsyNeuLink.Components.Functions.Function import Logistic, random_matrix
@@ -90,6 +92,7 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
             learning=LEARNING,
+            learning_rate=1.0,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OPUTPUT_PREF: True})
@@ -98,25 +101,76 @@ z = process(default_input_value=[0, 0],
 # Middle_Weights.matrix = (np.arange(5*4).reshape((5, 4)) + 1)/(5*4)
 # Output_Weights.matrix = (np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
 
+
+# stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+# target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
+stim_list = {Input_Layer:[[-1, 30]]}
+target_list = {Output_Layer:[[0, 0, 1]]}
+
+
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+COMPOSITION = PROCESS
+# COMPOSITION = SYSTEM
+# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
 def print_header():
     print("\n\n**** TRIAL: ", CentralClock.trial)
 
 def show_target():
-    print ('\n\nInput: {}\nTarget: {}\n'.
-           format(z.input, z.target))
-    print ('\nInput Weights: \n', Input_Weights.matrix)
-    print ('Middle Weights: \n', Middle_Weights.matrix)
-    print ('Output Weights: \n', Output_Weights.matrix)
-    # print ('MSE: \n', Output_Layer.outputValue[])
 
-stim_list = {Input_Layer:[[-1, 30],[2, 10]]}
+    if COMPOSITION is PROCESS:
+        i = composition.input
+        t = composition.target
+    elif COMPOSITION is SYSTEM:
+        i = composition.input
+        t = composition.targetInputStates[0].value
+    print ('\n\nInput: {}\nTarget: {}\n'.format(i, t))
+    print ('\nActivity from old weights: \n')
+    print ('- Middle 1: \n', Hidden_Layer_1.value)
+    print ('- Middle 2: \n', Hidden_Layer_2.value)
+    print ('- Output:\n', Output_Layer.value)
+    print ('\nNew weights: \n')
+    print ('\n- Input Weights: \n', Input_Weights.matrix)
+    print ('- Middle Weights: \n', Middle_Weights.matrix)
+    print ('- Output Weights: \n', Output_Weights.matrix)
+    # print ('MSE: \n', Output_Layer.outputValue[0])
 
-# z.execute()
 
-z.run(num_executions=10,
-      # inputs=stim_list,
-      inputs=[[-1, 30],[2, 10]],
-      # targets=[[0, 0, 1],[0, 0, 1]],
-      targets=[[0, 0, 1],[0, 0, 1]],
-      call_before_trial=print_header,
-      call_after_trial=show_target)
+if COMPOSITION is PROCESS:
+    # z.execute()
+
+    composition = z
+
+    # PROCESS VERSION:
+    z.run(num_executions=10,
+          # inputs=[[-1, 30],[2, 10]],
+          # targets=[[0, 0, 1],[0, 0, 1]],
+          inputs=stim_list,
+          targets=target_list,
+          call_before_trial=print_header,
+          call_after_trial=show_target)
+
+elif COMPOSITION is SYSTEM:
+    # SYSTEM VERSION:
+    x = system(processes=[z],
+               targets=[0, 0, 1],
+               learning_rate=1.0)
+
+    x.reportOutputPref = True
+    composition = x
+
+    # x.show_graph()
+    x.run(num_executions=10,
+          # inputs=stim_list,
+          # inputs=[[-1, 30],[2, 10]],
+          # targets=[[0, 0, 1],[0, 0, 1]],
+          inputs=stim_list,
+          targets=target_list,
+          call_before_trial=print_header,
+          call_after_trial=show_target)
+
+else:
+    print ("Multilayer Learning Network NOT RUN")
+
+

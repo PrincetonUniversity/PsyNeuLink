@@ -28,7 +28,8 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
                                       verbose_pref=PreferenceEntry(True,PreferenceLevel.INSTANCE))
 
 # Control Parameters
-signalSearchRange = np.arange(0, 5.1, 0.1)
+# signalSearchRange = np.arange(0, 5.1, 0.1)
+signalSearchRange = np.arange(0, 2, 1)
 
 # Stimulus Mechanisms
 Target_Stim = TransferMechanism(name='Target Stimulus', function=Linear(slope = 0.2995))

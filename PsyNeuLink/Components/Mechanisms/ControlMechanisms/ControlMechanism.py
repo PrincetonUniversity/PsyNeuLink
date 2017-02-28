@@ -28,10 +28,12 @@ ControlMechanisms can be created by using the standard Python method of calling 
 A ControlMechanism is also created automatically whenever a `system is created <System_Creation>`, and assigned as
 the `controller <System_Execution_Control>` for that system. The `outputStates <OutputState>` to be monitored by a
 ControlMechanism are specified in its `monitored_output_states` argument, which can take  a number of
-`forms <ControlMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates its
-own `inputState <InputState>` for each of the outputStates it monitors, and assigns a  `MappingProjection` from each
-of those outputStates to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections
-depends on the `subclass <ControlMechanism>`.
+`forms <ObjectiveMechanism_Monitored_OutputStates>`.  When the ControlMechanism is created, it automatically creates
+an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
+`monitor_for_control <ControlMechanism.monitor_for_control>` attribute.  The result of the evaluation is used to
+specify the value of the ControlMechanism's `ControlProjections <ControlProjection>`. How a ControlMechanism creates its
+ControlProjections and determines their value based on the outcome of its evaluation  depends on the
+`subclass <ControlMechanism>`.
 
 .. _ControlMechanism_Specifying_Control:
 
@@ -47,80 +49,11 @@ to which the parameter belongs (see `Mechanism_Parameters`).
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
-list also describes the order of precedence when more than one specification pertains to the same
-outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
-name of one (see :ref:ControlMechanism_Examples' below). The specification of whether an outputState is monitored by
-a ControlMechanism can be done in the following places:
-
-* **OutputState**: an outputState can be *excluded* from being monitored by assigning `None` as the value of the
-  :keyword:`MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the outputState's ``params``
-  argument.  This specification takes precedence over any others;  that is, specifying `None` will suppress
-  monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
-  outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
-  based on one of the other specification methods below.
-..
-* **Mechanism**: the outputState of a particular mechanism can be designated to be monitored, by specifying it in the
-  `MONITOR_FOR_CONTROL` entry of a parameter specification dictionary in the mechanism's `params` argument.  The value
-  of the entry must be either a list containing the outputState(s) and/or their name(s),
-  a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`, a `MonitoredOutputStatesOption` value, or `None`.
-  The values of `MonitoredOutputStatesOption` are treated as follows:
-
-    * `PRIMARY_OUTPUT_STATES`: only the primary (first) outputState of the mechanism is monitored;
-    |
-    * `ALL_OUTPUT_STATES`:  all of the mechanism's outputStates are monitored.
-
-  This specification takes precedence over any of the other types listed below:  if it is `None`, then none of
-  that mechanism's outputStates will be monitored;   if it specifies outputStates to be monitored, those will be
-  monitored even if the mechanism is not a `TERMINAL` mechanism (see below).
-..
-* **ControlMechanism** or **System**: outputStates to be monitored can be specified in the ControlMechanism responsible
-  for the monitoring, or in the system for which that ControlMechanism is the `controller`.  The specification can be
-  in the `monitor_for_control` argument of the ControlMechanism or System's constructor, or in the `MONITOR_FOR_CONTROL`
-  entry of a parameter specification dictionary in the `params` argument of the constructor.  In either case, the value
-  must be a list, each item of which must be one of the following:
-
-  * an existing **outputState** or the name of one.
-  |
-  * a **mechanism** or the name of one -- only the mechanism's primary (first) outputState will be monitored,
-    unless a `MonitoredOutputStatesOption` value is also in the list (see below) or the specification is
-    overridden in a params dictionary for the mechanism (see above);
-  |
-  * a `monitoredOutputState tuple <ControlMechanism_OutputState_Tuple>`;
-  |
-  * a value of `MonitoredOutputStatesOption` --  this applies to any mechanisms that appear in the list
-    (except those that override it with their own `monitor_for_control` specification); if the value of
-    `MonitoredOutputStatesOption` appears alone in the list, it is treated as follows:
-
-    * `PRIMARY_OUTPUT_STATES` -- only the primary (first) outputState of the `TERMINAL` mechanism(s)
-      in the system for which the ControlMechanism is the `controller` is monitored;
-    |
-    * `ALL_OUTPUT_STATES` -- all of the outputStates of the `TERMINAL` mechanism(s)
-      in the system for which the ControlMechanism is the `controller` are monitored;
-  * `None`.
-
-  Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
-  in the constructor or params dictionary for an outputState or mechanism.
-
-.. _ControlMechanism_OutputState_Tuple:
-
-**MonitoredOutputState Tuple**
-
-A tuple can be used wherever an outputState can be specified, to determine how its value is combined with others by
-the ControlMechanism to compute the outcome of processing for the system (e.g., the EVCMechanism's
-`outcome_function <EVCMechanism.EVCMechanism.outcome_function>`). Each tuple must have the three following items in the
-order listed:
-
-  * an outputState or mechanism, the name of one, or a specification dictionary for one;
-  ..
-  * a weight (int) - multiplies the value of the outputState.
-  ..
-  * an exponent (int) - exponentiates the value of the outputState;
-
-The set of weights and exponents assigned to each outputState is listed in the ControlMechanism's
-`monitor_for_control_weights_and_exponents` attribute, in the same order as the outputStates are listed in its
-`monitored_output_states` attribute.  Each item in the list is a tuple with the weight and exponent for a given
-outputState.
+When an ControlMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in its
+`montioring_mechanism` attribute) that is used to monitor and evaluate the system's performance.  The
+ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism's
+'monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
+This information is used to set the value of the ControlMechanism's ControlProjections.
 
 .. _ControlMechanism_Execution:
 
@@ -402,7 +335,8 @@ class ControlMechanism_Base(Mechanism_Base):
                 #        which calls Mechanism.sendsToProjections.append(),
                 #        so need to do that in _instantiate_control_projection
                 #    - this is OK, as it is case of a Mechanism managing its *own* projections list (vs. "outsider")
-                self._instantiate_control_projection(projection, context=context)
+                params = projection.control_signal
+                self._instantiate_control_projection(projection, params=params, context=context)
 
                 # # IMPLEMENTATION NOTE: Method 2 - Instantiate new ControlProjection
                 # #    Cleaner, but less efficient and ?? may lose original params/settings for ControlProjection

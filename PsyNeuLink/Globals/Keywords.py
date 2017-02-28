@@ -273,10 +273,12 @@ LEARNING_PROJECTION = "LearningProjection"
 EXAMPLE_FUNCTION_TYPE = "EXAMPLE FUNCTION"
 USER_DEFINED_FUNCTION_TYPE = "USER DEFINED FUNCTION TYPE"
 COMBINATION_FUNCTION_TYPE = "COMBINATION FUNCTION TYPE"
+DIST_FUNCTION_TYPE = "DIST FUNCTION TYPE"
 INTEGRATOR_FUNCTION_TYPE = "INTEGRATOR FUNCTION TYPE"
 TRANFER_FUNCTION_TYPE = "TRANSFER FUNCTION TYPE"
 LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 DISTRIBUTION_FUNCTION_TYPE = "DISTRIBUTION FUNCTION TYPE"
+
 
 
 # Component SUBTYPES -----------------
@@ -300,14 +302,24 @@ CONTRADICTION_FUNCTION = "Contradiction"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination"
+WEIGHTED_ERROR_FUNCTION = "WeighedErrorFunction"
 LINEAR_FUNCTION = "Linear"
 EXPONENTIAL_FUNCTION = "Exponential"
 LOGISTIC_FUNCTION = "Logistic"
 SOFTMAX_FUNCTION = 'SoftMax'
 INTEGRATOR_FUNCTION = "Integrator"
+DDM_INTEGRATOR_FUNCTION = "DDMIntegrator"
 LINEAR_MATRIX_FUNCTION = "Linear Matrix"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Algorithm'
 RL_FUNCTION = 'Reinforcement Learning Algorithm'
+
+#Distribution functions 
+
+NORMAL_DIST_FUNCTION = "Normal Distribution"
+UNIFORM_DIST_FUNCTION = "Uniform Distribution"
+EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution"
+GAMMA_DIST_FUNCTION = "Gamma Distribution"
+WALD_DIST_FUNCTION = "Wald Distribution"
 
 
 #endregion
@@ -335,6 +347,8 @@ CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
 LEARNING = 'learning'
+LEARNING_RATE = "learning_rate"
+CONTROL = 'control'
 kwProjections = "projections"
 kwProcessDefaultProjectionFunction = "Default Projection Function"
 kwProcessExecute = "ProcessExecute"
@@ -362,6 +376,7 @@ INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
 MONITORING = 'MONITORING'
+SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 
 kwStateValue = "State value"   # Used in State specification dict
@@ -470,6 +485,19 @@ RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
 
+DRIFT_RATE = 'drift_rate'
+TIME_STEP_SIZE = 'time_step_size'
+
+MEAN = 'mean'
+STANDARD_DEV = 'standard_dev'
+
+LOW = 'low'
+HIGH = 'high'
+
+BETA = 'beta'
+
+SHAPE = 'shape'
+
 WEIGHTING = "weighting"
 
 OUTPUT_TYPE = 'output'
@@ -488,6 +516,7 @@ LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
 ADAPTIVE = 'apaptive'
+DIFFUSION = 'diffusion'
 
 
 MATRIX = "matrix"

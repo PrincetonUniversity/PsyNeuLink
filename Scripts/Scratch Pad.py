@@ -23,11 +23,25 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
+# #region TEST Linear WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-for i, j in zip(range(5), range(5)):
-    print(i, j)
-    j = 3
-    print(j)
+print (Linear([[1,1],[2,2]], slope=2).function([[1,1],[2,2]]))
+
+#endregion
+
+# #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
+# Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
+#                name='Decision')
+#
+# Decision.execute()
+
+#endregion
+
+# for i, j in zip(range(5), range(5)):
+#     print(i, j)
+#     j = 3
+#     print(j)
 
 # # ORIGINAL:
 # # transfer_mechanism_1 = TransferMechanism()

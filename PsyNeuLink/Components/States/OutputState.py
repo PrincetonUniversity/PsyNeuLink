@@ -478,33 +478,35 @@ class OutputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        try:
-            self.owner.value[target_set[INDEX]]
-        except IndexError:
-            raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
-                                   "the outputValue ({}) for its owner mechanism ({})".
-                                   format(INDEX, self.name, self.owner.outputValue, self.owner.name))
+        if INDEX in target_set:
+            try:
+                self.owner.value[target_set[INDEX]]
+            except IndexError:
+                raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
+                                       "the outputValue ({}) for its owner mechanism ({})".
+                                       format(INDEX, self.name, self.owner.outputValue, self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
-        try:
-            if isinstance(target_set[CALCULATE], type):
-                function = target_set[CALCULATE]().function
-            else:
-                function = target_set[CALCULATE]
+        if CALCULATE in target_set:
             try:
-                function(self.owner.value[target_set[INDEX]])
-            except:
-                raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function specified for "
-                                       "the {} parameter of {} ({})"
-                                       "".format(target_set[INDEX],
-                                                 self.owner.name,
-                                                 self.owner.value[target_set[INDEX]],
-                                                 CALCULATE,
-                                                 self.name,
-                                                 target_set[CALCULATE]))
-        except KeyError:
-            pass
+                if isinstance(target_set[CALCULATE], type):
+                    function = target_set[CALCULATE]().function
+                else:
+                    function = target_set[CALCULATE]
+                try:
+                    function(self.owner.value[target_set[INDEX]])
+                except:
+                    raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
+                                           "specified for the {} parameter of {} ({})".
+                                           format(target_set[INDEX],
+                                                  self.owner.name,
+                                                  self.owner.value[target_set[INDEX]],
+                                                  CALCULATE,
+                                                  self.name,
+                                                  target_set[CALCULATE]))
+            except KeyError:
+                pass
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate calculate function

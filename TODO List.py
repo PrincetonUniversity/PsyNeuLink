@@ -1,7 +1,94 @@
 # NEW COMMENT
 # **************************************************  ToDo *************************************************************
 #region CURRENT: -------------------------------------------------------------------------------------------------------
+
+# FIX:
+#   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
+#             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
+#             FOR EXAMPLE, IN assign_params_to_dicts, WHERE A DEFAULT IS SPECIFIED IN THE ARG RATHER THAN classDefaults
+# FIX:
+#    0) Deal with function parameter assignment in update() of ParameterState
+#        - move assignment of function params (Lines 714 and 742 in ParameterState)
+#               into @property for value (Line 756) [DEBUG CRASH]
+#        - assign params for function to owner in _instantiate_parameter_states (currently in assign_params_to_dicts??)
+#          ?? use user_params from function?
+#    1) Once function param assignment is fixed, add test that it is working to jenkins suite
+#          (i.e., that assigning a value to the attribute for the parameter on the object (e.g., mechanism)
+#                 changes its value for the Function
+#    2) Add learning rate param (including global default)
+#    3) For system vs. process learning:
+#           Figure out why calling update_state for the matrix ParameterState works,
+#                      but executing the LearningProjection to it does not
+#    4) ObjectiveMechanisms:  MODIFY TO:
+#                                d) Revise EVCMechanism._get_monitored_states() to NOT direclty assign weights
+#                                           and exponents, but rather assign
+#                                e) Document monitored_values and default_input_value (sets size of inputSTates)
+#                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
+#                                f) parse MonitoredOUtputStates specification for monitored_values arg
+#                                g) Fix EVC use of OBjectiveMechanism (needs to now call for Mapping Projection
+#                                h) Accomodate WeightedError in OjbectiveMechanism using standard LinearComb function:
+#                                            Matrix - IDENTITY MATRIX
+#                                            Derivative - Linear
+#          them where the ObjectiveMechanism is created (in its LinearFunction)
+#     5) Purge all MonitoringMechanism components and references (including DefaultMonitoringMechanism)
+#     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
+#                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
+#     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
+#     8) Make biases learnable
+#     9) DOCUMENT:
+#           - get rid of mention of tuple and MonitoredOutputStateOptions (they are specific to EVC -- document there)
+#           - explain
+#                  default_input_values: forces format of inputState variables (include example of RL comparator)
+#                  monitored_values:  specifies states or mechanisms to monitor, or creates "stubs"
+#                                     to be filled by LearningProjections or ControlProjections
+#                                     and uses value of specifiied outputState as template for inputState variable
+#                  can assign weights via function (include example using LinearCombination for Comparator)
+
+# DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
+# FIX: PUT ERROR HERE IF EVC AND/OR EVC_MAX ARE EMPTY (E.G., WHEN EXECUTION_ID IS WRONG)
+#                 if EVC == EVC_max: (LINE 289 IN EVCAuxilliary)
+
+# FIX: execution_token asynchrony:
+#    * Since learning and controller execute after processing mechanisms:
+#      - on the first pass, they ignore learning and control projections (since their excxecution_tokens == None
+#      - on subsequent passes, they have the new (current) execution_token, while learning and control mechanisms
+#             still have the last one
+#      SOLUTION:  HAVE LEARNING AND CONTROL MECHANISMS GET THEIR execution_tokens FROM THEIR SYSTEM?
+#                 OR HAVE SYSTEM ASSIGN ITS LEARNING AND CONTROL MECHANISMS THE CURRENT execution_token??
+#      SOLUTION:  ASSIGN execution_token TO ALL MECHANISMS IN SYSTEM GRAPH AND LEARNING GRAPH AT TIME OF SYSTEM EXEC.
+#
+#    * Same issue for learning in Process??
+#
+#    * Also, which execution_token should be used for simulations (while simulation uses actual system rather than copy)
+#
+# FIX:
+# Finish Run:
+#     assignment of inputs (for both Process and System):  consolidation from process and system execute methods
+#
+# Rename INPUTS -> STIMULI
+# FIX: process.run crashes if stimuli are in dict format and there is more than one execution set
+#                 (see Multilayer Learning Script)
+#
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+#
+# FIX:
+#
+# System:
+#    Finish implementing SystemStimulusInputs
+
+# ObjectiveMechanism:
+#    Add matrix assignments (and allow None to suppress it)
+#    Add input assignments
+
+# LearningProjection:
+#    Finish implementing Comparator version of ObjectiveMechanmism
+
+# FIX: EVC Gratton Script_Bug5:  Can't assign Linear() directly to intensity_cost_function (had to assign .function)
+# FIX: When running a process with a TERMINAL mechanism that is also in another process, it gets input from that
+#        process even if it is not running
+# FIX: Can't specify parameter as ControlProjection (StroopEVCforDST)
+
 # DOCUMENTATION COMPLETION/CLEAN-UP:
 #   Function
 # √ System
@@ -34,6 +121,8 @@
 #   TimeScale
 #   Registry
 #
+# FIX: MAKE SURE SAME ORIGIN FOR DIFFERENT PROCESSES IS NOT ASSIGNED DIFFERENT PHASES
+
 # DOCUMENT: targets argunment in system() and System_Base.__init__()
 
 # DOCUMENT: ADD CHAIN EXAMPLE TO System AND Mechanism DOCSTRINGS
@@ -69,8 +158,8 @@
 #
 #             Following attributes are available:
 #             controller.run: executes a specified number of trials with the simulation inputs
-#             controller.predictedInputs: ndarray of current value of outputState
-#                                          for each predictionMechanism in self.system.predictionMechanisms
+#             controller.predicted_inputs: ndarray of current value of outputState
+#                                          for each predictionMechanism in self.system.prediction_mechanisms
 #             controller.monitored_states: list of the mechanism outputStates being monitored for outcomes
 #             controller.inputValue: list of current outcome values for monitored_states
 #             controller.controlSignals: list of controlSignal objects
@@ -469,7 +558,7 @@
 #           - how to provide reward for outcome of first trial, if it is selected probabilistically
 #           - must process trial, get reward from environment, then execute learning
 #           SOLUTION: use lambda function to assign reward to outputState of terminal mechanism
-#       Option 2 - Provide Process with reward vector, and let comparatorMechanism choose reward based on action vector
+#       Option 2 - Provide Process with reward vector, and let targetMechanism choose reward based on action vector
 #           - softamx should pass vector with one non-zero element, that is the one rewarded by comoparator
 #           SOLUTION:  use this for Process, and implement Option 1 at System level (which can control timing):
 #           - system should be take functions that specify values to use as inputs based on outputs
@@ -985,11 +1074,11 @@
 # DOCUMENT: .params (= params[Current])
 # DOCUMENT: requiredParamClassDefaultTypes:  used for paramClassDefaults for which there is no default value to assign
 # DOCUMENT: CHANGE MADE TO FUNCTION SUCH THAT paramClassDefault[param:NotImplemented] -> NO TYPE CHECKING
-# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED predictionMechanisms USURP terminalMechanism STATUS
+# DOCUMENT: EVC'S AUTOMATICALLY INSTANTIATED prediction_mechanisms USURP terminalMechanism STATUS
 #           FROM THEIR ASSOCIATED INPUT MECHANISMS (E.G., Reward Mechanism)
 # DOCUMENT:  PREDICTION_MECHANISM_TYPE IS A TYPE SPECIFICATION BECAUSE INSTANCES ARE
 #                 AUTOMTICALLY INSTANTIATED BY EVMechanism AND THERE MAY BE MORE THAN ONE
-# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL predictionMechanisms
+# DOCUMENT:  PREDICTION_MECHANISM_PARAMS, AND THUS MONITOR_FOR_CONTROL APPLIES TO ALL prediction_mechanisms
 # DOCUMENT: System.mechanisms:  DICT:
 #                KEY FOR EACH ENTRY IS A MECHANIMS IN THE SYSTEM
 #                VALUE IS A LIST OF THE PROCESSES TO WHICH THE MECHANISM BELONGS
@@ -1982,6 +2071,8 @@
 #
 # FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
 #                    rename reference_value??
+# IMPLEMENT: full _instantiate_input_states capability per _instantiate_output_states (see ObjectiveMechanism):
+#                 ??include `senders` arg (and use version of _get_monitored_states in EVC)
 # IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
 # FIX: ``value`` should not be used as the name of the variable arg for states
@@ -2347,7 +2438,7 @@
 #                  PROBLEMS:
 #                    - the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - the output (terminal) layer of a process
-#                  in this case, the comparatorMechanism would receive a projection from the output layer,
+#                  in this case, the targetMechanism would receive a projection from the output layer,
 #                     and project the errorSignal back to it, which would then be assigned to outputLayer.errorSignal
 #                  ADVANTAGES:
 #                    - keeps the errorSignal exclusively in the ProcessingMechanism
@@ -2356,7 +2447,7 @@
 #                    - need to deal with recurrence in the System graph
 #                    - as above, the MonitoringMechanism masks the output layer as the terminal mechanism of the Process
 #             - output layer itself (i.e., make a special combined Processing/MonitoringMechanism subclass) that has
-#                  two input states (one for processing input, another for training signal, and a comparatorMechanism method)
+#                  two input states (one for processing input, another for training signal, and a targetMechanism method)
 #                  ADVANTAGES:
 #                    - more compact/efficient
 #                    - no recurrence
@@ -2364,7 +2455,7 @@
 #                    - leaves the output layer is the terminal mechanism of the Process
 #                  PROBLEMS:
 #                    - overspecialization (i.e., less modular)
-#                    - needs additional "function" (comparatorMechanism function)
+#                    - needs additional "function" (targetMechanism function)
 #            IMPLEMENTED: MonitoringMechanism
 #
 # IMPLEMENT: LEARNING IN Processes W/IN A System; EVC SHOULD SUSPEND LEARNING DURING ITS SIMULATION RUN
@@ -2583,19 +2674,16 @@
 #               monitor (in ObjectiveMechanism._validate_monitored_states) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
-#     Make sure add_monitored_state works
+#     Make sure add_monitored_value works
 #     Allow inputStates to be named (so they can be used as ComparatorMechanism)
-#     Augment to take a function for each inputState (as well as its weight and exponent)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
 #   using a particular function and named inputStates
-#  Replace WeightedErrorMechanism with ObjectiveMechanism
-#   with three inputStates:
-#     1) output of ObjectiveMechanism for next processingMechanism in the process
-#     2) derivative of activation function of next processingMechanism in the process
-#         assign the derivate to the function of this inputState
-#     3) matrix parameter of the MappingProjection to the next processingMechanism in the process
-#         asterix this as a violoatin of PsyNeuLink imposed by the implausibility of BP (reference Leabra/CHL??)
+#   FIX: typechecking
+#   FIX: rename `monitor` and `names` args
+#   - IMPLEMENT call to _instantiate_input_states (not plural) once that is implemented (see State above):
+#                    - parse `monitor` arg into inputState specifications and pass to _instantiate_input_states()
+#   - IMPLEMENT TransferMechanism.outputStates[DERIVATIVE] (per Kristin)
 #    Make sure it checks for multiple MappingProjections from its error_source, and that only uses those projections
 #         that go to another ProcessingMechanism that itself projects to an ObjectiveMechanism (i.e., to avoid
 #         ones that go to mechanisms that are not part of learning (e.g., other Processing or Control mechanisms)
@@ -2612,7 +2700,7 @@
 #     Validate that EVCMechanism.inputState matches outputState from EVCMechanism.monitoring_mechanism
 #     Allow it to take monitoring_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
-#     Make sure add_monitored_state works:
-#           Needs to call ObjectiveMechanism.add_monitored_state
+#     Make sure add_monitored_value works:
+#           Needs to call ObjectiveMechanism.add_monitored_value
 #           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
