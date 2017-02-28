@@ -638,7 +638,37 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #     - error_signal (from ObjectiveMechanism or equivalent)
         #     - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
         #     - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
-        # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection)
+        # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection):  ?? _validate_error_signal
+
+        def _validate_error_signal(self, error_signal):
+            """Check that error signal (MonitoringMechanism.outputState.value) conforms to what is needed by self.function
+            """
+
+            if self.function.componentName is RL_FUNCTION:
+                # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
+                #     (since error signal is a scalar for RL)
+                if len(error_signal) != 1:
+                    raise LearningProjectionError("Length of error signal ({}) received by {} from {}"
+                                              " must be 1 since {} uses {} as its learning function".
+                                              format(len(error_signal), self.name, self.sender.owner.name, self.name, RL_FUNCTION))
+            if self.function.componentName is BACKPROPAGATION_FUNCTION:
+                # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
+                #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
+                if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
+                    raise LearningProjectionError("Length of error signal ({}) received by {} from {} must match the"
+                                              "receiver dimension ({}) of the weight matrix for {}".
+                                              format(len(error_signal),
+                                                     self.name,
+                                                     self.sender.owner.name,
+                                                     len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
+                                                     self.mappingProjection))
+            else:
+                raise LearningProjectionError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
+                                          format(self.function.name, self.name))
+
+
+
+
 
     def _instantiate_output_states(self, context=None):
         super()._instantiate_output_states(context=context)

@@ -374,22 +374,25 @@ class LearningProjection(Projection_Base):
     #     instantiate_learning_components(self, context=context)
     #     super()._instantiate_attributes_before_function(context=context)
 
-
     def _instantiate_sender(self, context=None):
         """Instantiate LearningMechanism
         """
 
-        # LearningMechanism was not specified or specified by class, so call composition for "automatic" instantiation
-        # Note: this also instantiates ObjectiveMechanism if necessary
+        # LearningMechanism was not specified or it was specified by class,
+        #    so call composition for "automatic" instantiation of a LearningMechanism
+        # Note: this also instantiates an ObjectiveMechanism if necessary and assigns it the necessary projections
         if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(self)
 
-        # This assigns self as an outgoing projection from outputState of sender (LearningMechanism)
-        # and formats self.variable to be compatible with that outputState's value
-        super()._instantiate_sender(context=context)
+        if isinstance(self.sender, OutputState) and not isinstance(self.sender.owner, LearningMechanism):
+            raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
+                                          format(self.name, self.sender.owner.name))
 
+        # This assigns self as an outgoing projection from the sender LearningMechanism's outputState
+        #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
+        super()._instantiate_sender(context=context)
 
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatiable with the output of function
@@ -401,7 +404,6 @@ class LearningProjection(Projection_Base):
         """
 
         super()._instantiate_receiver(context=context)
-
 
         # Insure that the learning_signal is compatible format with the receiver's weight matrix
         if not iscompatible(self.value, self.receiver.variable):
@@ -431,7 +433,6 @@ class LearningProjection(Projection_Base):
                                          receiver_weight_matrix_shape,
                                          self.receiver.owner.name))
 
-
     def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
         """
         :return: (2D np.array) self.weight_change_matrix
@@ -441,10 +442,12 @@ class LearningProjection(Projection_Base):
         if self.value is DEFERRED_INITIALIZATION:
             return self.value
 
-        # FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
-        # FIX: HANDLE THIS AS runtime_param??
+        # # FIX: WHY DOESN"T THIS WORK: [ASSIGNMENT OF LEARNING_RATE TO SLOPE OF LEARNING FUNCTION]
+        # # FIX: HANDLE THIS AS runtime_param?? OR JUST USE learning_rate TO MODULATE WEIGHT CHANGE MATRIX DIRECTLY?
+        # if self.learning_rate:
+        #     params.update({SLOPE:self.learning_rate})
         if self.learning_rate:
-            params.update({SLOPE:self.learning_rate})
+            self.learning_signal *= self.learning_rate
 
         self.weight_change_matrix = self.function(variable=self.learning_signal,
                                                   params=params,
