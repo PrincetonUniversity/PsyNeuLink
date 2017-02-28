@@ -1151,15 +1151,10 @@ class Mechanism_Base(Mechanism):
         self._instantiate_parameter_states(context=context)
         super()._instantiate_attributes_before_function(context=context)
 
-    def _instantiate_parameter_states(self, context=None):
-
-        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
-        _instantiate_parameter_states(owner=self, context=context)
-
-
     def _instantiate_attributes_after_function(self, context=None):
-        from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
-        _instantiate_output_states(owner=self, context=context)
+
+        self._instantiate_output_states(context=context)
+        super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_input_states(self, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of inputState(s)
@@ -1168,6 +1163,23 @@ class Mechanism_Base(Mechanism):
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, context=context)
+
+    def _instantiate_parameter_states(self, context=None):
+        """Call State._instantiate_parameter_states to instantiate a parameterStates for each parameter in user_params
+
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
+        """
+
+        from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
+        _instantiate_parameter_states(owner=self, context=context)
+
+    def _instantiate_output_states(self, context=None):
+        """Call State._instantiate_output_states to instantiate orderedDict of outputState(s)
+
+        This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_states
+        """
+        from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
+        _instantiate_output_states(owner=self, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
 
