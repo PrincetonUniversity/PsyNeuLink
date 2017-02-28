@@ -205,8 +205,16 @@ def _instantiate_learning_components(learning_projection, context=None):
       an exception is raised.
 
     """
-    # IMPLEMENTATION NOTE:  SHOULD CHECK UP FRONT WHETHER SENDER OR RECEIVER IS SPECIFIED, AND BRANCH ACCORDINGLY
-    #                       FAILURE TO SPECIFY BOTH SHOULD RAISE AN EXCEPTION (OR FURTHER DEFER INSTANTIATION?)
+    # IMPLEMENTATION NOTE: CURRENT IMPLEMENTATION ONLY SUPPORTS CALL FROM LearningProjection._instantiate_sender();
+    #                      IMPLEMENTATION OF SUPPORT FOR EXTERNAL CALLS:
+    #                      - SHOULD CHECK UP FRONT WHETHER SENDER OR RECEIVER IS SPECIFIED, AND BRANCH ACCORDINGLY
+    #                            FAILURE TO SPECIFY BOTH SHOULD RAISE AN EXCEPTION (OR FURTHER DEFER INSTANTIATION?)
+    #                      - WILL REQUIRE MORE EXTENSIVE CHECKING AND VALIDATION
+    #                              (E.G., OF WHETHER ANY LearningMechanisms IDENTIFIED HAVE A PROJECTION FROM AN
+    #                               APPROPRIATE ObjectiveMechanism, etc.
+    if not learning_projection.name in context:
+        raise LearningAuxilliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "
+                                                             "calls from a LearningProjection._instantiate_sender()"))
 
     # First determine whether receiver for LearningProjection has been instantiated and, if not, instantiate it:
     #    this is required to instantiate the LearningMechanism, as well as an ObjectiveMechanism if necessary.
@@ -230,30 +238,22 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Note: error-related components may not yet be defined (if LearningProjection is for a TERMINAL mechanism)
     lc = learning_components(learning_projection=learning_projection)
 
-    # FIX: HAS THIS ALREADY BEEN TESTED (EVEN IMPLICLITY) IN FORGOING??
-    # Check if activation_mech has a projection to a LearningMechanism
+    # Check if activation_mech has a projection to another ProcessingMechanism
     # IMPLEMENTATION NOTE: this uses the first projection found (staring with the primary outputState
 
     for projection in lc.activation_output.sendsToProjections:
 
         # Check for existing LearningMechanism
-        # Note: this should not be the case if called from the learning_projection's _instantiate_sender() method;
-        #       check is done in case it is called from outside of that.
         if isinstance(projection.receiver.owner, LearningMechanism):
-            # activation_mech has a projection to a LearningMechanism,
-            #   so assign it and call learning_projection to validate it
+            # activation_mech has a projection to a LearningMechanism, so assign that as sender and return;
+            # This assumes that:
+            #    the LearningMechanism will be validated by learning_projection
+            #        in its call to super()._instantiate_sender()
+            #        (which is the case if this method is called from learning_projection._instantiate_sender()
+            #    the LearningMechanism has an appropriate ObjectiveMechanism,
+            #       which should have been validated when the LearningMechanism was instantiated
             learning_projection.sender = projection.receiver.owner.outputState
-            learning_projection._instantiate_sender(learning_projection)
-
-            break
-
-        # IMPLEMENTATON NOTE: THE FOLLOWING WAS IN LearningProjection_OLD;  ADD SOMETHING SIMILAR HERE??
-        # # errorSource has a projection to a ProcessingMechanism, so:
-        # #   - determine whether that has a LearningProjection
-        # #   - if so, get its MonitoringMechanism and weight matrix (needed by BackProp)
-        # if isinstance(projection.receiver.owner, ProcessingMechanism_Base):
-        #     try:
-        #         ...
+            return
 
     # Next, check whether ObjectiveMechanism and LearningMechanism should be assigned as TARGET:
     #   It SHOULD be a TARGET if it has either no outgoing projections or none that receive a LearningProjection;
