@@ -379,46 +379,19 @@ class LearningProjection(Projection_Base):
         """Instantiate LearningMechanism
         """
 
-        # If LearningMechanism or its outputState was specified, allow super() to handle final assignments
-        if isinstance(self.sender, (OutputState, LearningMechanism)):
-            super()._instantiate_sender(context=context)
-
-            # FIX:
-            # Sender should now be outputState (assigned by super() if it was necessary)
-            # Validate that it belongs to an LearningMechanism being used for learning
-
         # LearningMechanism was not specified or specified by class, so call composition for "automatic" instantiation
         # Note: this also instantiates ObjectiveMechanism if necessary
-        else:
+        if not isinstance(self.sender, (OutputState, LearningMechanism)):
             from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningAuxilliary \
                 import _instantiate_learning_components
             _instantiate_learning_components(self)
 
-            # FIX: CONSOLIDATE THESE INTO A SINGLE MECHANISM?
-            # Assign learning_projection to learning_mechanism outputState
-            _add_projection_from(sender=learning_mechanism,
-                                 state=learning_mechanism.outputState,
-                                 projection_spec=learning_projection,
-                                 receiver=lc.activation_projection.parameterStates[MATRIX])
+        # This assigns self as an outgoing projection from outputState of sender (LearningMechanism)
+        # and formats self.variable to be compatible with that outputState's value
+        super()._instantiate_sender(context=context)
 
-#
-#         # "Cast" learning_projection.variable to match value of sender (MonitoringMechanism) to pass validation in add_to()
-#         # Note: learning_projection.variable will be re-assigned in _instantiate_function()
-#         learning_projection.variable = learning_projection.error_signal
-#
-#         # Add learning_projection as outgoing projection from MonitoringMechanism
-#         from PsyNeuLink.Components.Projections.Projection import _add_projection_from
-#         _add_projection_from(sender=objective_mechanism,
-#                             state=objective_mechanism.outputState,
-#                             projection_spec=learning_projection,
-#                             receiver=learning_projection.receiver,
-#                             context=context)
-#
-#     # VALIDATE THAT OUTPUT OF SENDER IS SAME LENGTH AS THIRD ITEM (ERROR SIGNAL) OF SEL.FFUNCTION.VARIABLE
-#
-#     # Add reference to MonitoringMechanism to MappingProjection
-#     lc.activation_projection.monitoringMechanism = objective_mechanism
-
+        # Validate the variable is compatible with function input (should be, if Function is Linear)
+        # Then validate that output of function is compatible with receiver's weight matrix param (same shape)
 
         # # FIX: MOVE TO AFTER INSTANTIATE FUNCTION??
         # # IMPLEMENTATION NOTE:  MOVED FROM _instantiate_receiver

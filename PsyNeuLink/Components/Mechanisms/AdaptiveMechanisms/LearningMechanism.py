@@ -659,6 +659,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection)
 
+    def _instantiate_output_states(self):
+        pass
+
+
 
     def _execute(self,
                 variable=None,
@@ -688,6 +692,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.value = self.learning_signal
         return self.value
+
+
 
     @property
     def activation_input(self):
