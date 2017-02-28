@@ -23,26 +23,19 @@ from PsyNeuLink.Components.Projections.ControlProjection import ControlProjectio
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TRANSFER_MEAN
 
+# #region TEST Linear WITH MATRIX @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#region TEST WeightedError Function @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print (Linear([[1,1],[2,2]], slope=2).function([[1,1],[2,2]]))
 
-from PsyNeuLink.Components.Functions.Function import WeightedError
+#endregion
 
-derivative = lambda x:1
-
-wef = WeightedError(variable_default=[[0,0],[0,0]],derivative=derivative)
-
-print(wef.function(variable=[[1,1],[1,1]]))
-
-
-#region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+# #region TEST ASSIGNMENT OF PROJECTION TO PARAMETER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#
 # Decision = DDM(function=BogaczEtAl(drift_rate=ControlProjection),
 #                name='Decision')
 #
 # Decision.execute()
-#
-#
+
 #endregion
 
 # for i, j in zip(range(5), range(5)):
