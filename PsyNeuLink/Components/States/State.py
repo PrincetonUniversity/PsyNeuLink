@@ -744,14 +744,13 @@ class State_Base(State):
 
             # Projection specification is not valid
             else:
-                raise StateError("{0}Output ({1}) of function for {2}{3} "
-                                          "is not compatible with value ({4}) of {5}".
-                      format(item_prefix_string,
-                             projection_spec.value,
-                             default_string,
-                             projection_spec.name,
-                             self.value,
-                             item_suffix_string))
+                raise StateError("{}Output of function for {}{} ( ({})) is not compatible with value of {} ({})".
+                                 format(item_prefix_string,
+                                        default_string,
+                                        projection_spec.name,
+                                        projection_spec.value,
+                                        item_suffix_string,
+                                        self.value))
 
     def _instantiate_projection_from_state(self, projection_spec, receiver, context=None):
         """Instantiate projection from a state and assign it to self.sendsToProjections
