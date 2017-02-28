@@ -1153,7 +1153,7 @@ class Mechanism_Base(Mechanism):
     def _instantiate_attributes_after_function(self, context=None):
 
         self._instantiate_output_states(context=context)
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_states(self, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of inputState(s)
