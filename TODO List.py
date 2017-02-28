@@ -20,7 +20,7 @@
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
 #    4) ObjectiveMechanisms:  MODIFY TO:
-#                                d) Revise EVCMechainism._get_monitored_states() to NOT direclty assign weights
+#                                d) Revise EVCMechanism._get_monitored_states() to NOT direclty assign weights
 #                                           and exponents, but rather assign
 #                                e) Document monitored_values and default_input_value (sets size of inputSTates)
 #                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
@@ -30,10 +30,19 @@
 #                                            Matrix - IDENTITY MATRIX
 #                                            Derivative - Linear
 #          them where the ObjectiveMechanism is created (in its LinearFunction)
-#     5) Purge DefaultMonitoringMechanism
+#     5) Purge all MonitoringMechanism components and references (including DefaultMonitoringMechanism)
 #     6) ??Bother to make Comparator sublcass of ObjectiveMechanism
 #                (that names its inputStates and creates the relevant set of outputStates -- see LearningProjection)
 #     7) DDM weights for EVC mechanism:  Handle better in ObjectiveMechanism
+#     8) Make biases learnable
+#     9) DOCUMENT:
+#           - get rid of mention of tuple and MonitoredOutputStateOptions (they are specific to EVC -- document there)
+#           - explain
+#                  default_input_values: forces format of inputState variables (include example of RL comparator)
+#                  monitored_values:  specifies states or mechanisms to monitor, or creates "stubs"
+#                                     to be filled by LearningProjections or ControlProjections
+#                                     and uses value of specifiied outputState as template for inputState variable
+#                  can assign weights via function (include example using LinearCombination for Comparator)
 
 # DOCUMENT:  Projection (vs. Mechanism):  single input/oputput, and single parameter;  no execution_id
 #
