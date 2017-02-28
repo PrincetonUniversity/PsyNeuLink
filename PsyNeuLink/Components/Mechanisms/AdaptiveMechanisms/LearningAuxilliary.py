@@ -172,7 +172,17 @@ def _is_learning_spec(spec):
 
 
 def _instantiate_learning_components(learning_projection, context=None):
-    """Instantiate a LearningMechanism, its projection from an Objective Mechanism, and instantiate latter if necessary
+    """Instantiate learning components for a LearningProjection
+
+    Instantiate:
+    - a LearningMechanism
+    - its projection from an Objective Mechanism,
+    - the ObjectiveMechanism itself, if necessary
+
+    Assumes that learning_projection's variable and parameters have been specified and validated,
+       which is the case when this method is called from the learning_projection itself in _instantiate_sender().
+
+    Notes:
 
     * See learning_components class for names used for components of learning used here.
 
@@ -226,13 +236,16 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     for projection in lc.activation_output.sendsToProjections:
 
+        # Check for existing LearningMechanism
+        # Note: this should not be the case if called from the learning_projection's _instantiate_sender() method;
+        #       check is done in case it is called from outside of that.
         if isinstance(projection.receiver.owner, LearningMechanism):
-            # activation_mech has a projection to an ObjectiveMechanism being used for learning,
-            #  so validate it, assign it, and quit search
-            # FIX: IMPLEMENT _validate_error_signal:  IS IN LearningMechanism, NOT LearningProjection
-            learning_projection._validate_error_signal(projection.receiver.owner.outputState.value)
-            objective_mechanism = projection.receiver.owner
-            return
+            # activation_mech has a projection to a LearningMechanism,
+            #   so assign it and call learning_projection to validate it
+            learning_projection.sender = projection.receiver.owner.outputState
+            learning_projection._instantiate_sender(learning_projection)
+
+            break
 
         # IMPLEMENTATON NOTE: THE FOLLOWING WAS IN LearningProjection_OLD;  ADD SOMETHING SIMILAR HERE??
         # # errorSource has a projection to a ProcessingMechanism, so:
