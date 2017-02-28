@@ -203,14 +203,12 @@ class Scheduler(object):
             print('----------------')
 
 
-
 def main():
-    from PsyNeuLink.Components.Component import Component
     from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, over_threshold, terminal, num_time_steps
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
-    A = TransferMechanism(function = Linear(), name = 'A')
-    B = TransferMechanism(function = Linear(), name = 'B')
+    A = TransferMechanism(function = Linear(intercept=3.0), name = 'A')
+    B = TransferMechanism(function = Linear(intercept=2.0), name = 'B')
     C = TransferMechanism(function = Linear(), name = 'C')
     Clock = TransferMechanism(function = Linear(), name = 'Clock')
     T = TransferMechanism(function = Linear(), name = 'Terminal')
@@ -218,39 +216,63 @@ def main():
     sched.set_clock(Clock)
     sched.add_vars([(A, 1), (B, 2), (C, 3), (T, 0)])
 
-    test_constraints_dict = {"Test 1":[(A, (Clock,), every_n_calls(2)),
-                               (B, (A), every_n_calls(2)),
+    test_constraints_dict = {
+                            # first_n with or
+                            "Test 1":[(A, (Clock,), every_n_calls(1)),
+                               (B, (A,), every_n_calls(2)),
                                (C, (B,A), first_n_calls(2, op = "OR")),
-                               (T, (C,), every_n_calls(2)),
-                               (sched, (Clock,), num_time_steps(12))],
+                               (T, (C,), every_n_calls(5)),
+                               (sched, (T,), terminal())],
 
+                            # first_n with and
                              "Test 2": [(A, (Clock,), every_n_calls(1)),
-                                        (B, (A), over_threshold(0)),
-                                        (C, (B), first_n_calls(5)),
-                                        (T, (C,), every_n_calls(2)),
-                                        (sched, (T,), terminal())],
+                               (B, (A,), every_n_calls(2)),
+                               (C, (B,A), first_n_calls(2, op = "AND")),
+                               (T, (C,), every_n_calls(2)),
+                               (sched, (T,), terminal())],
 
+                            # over_threshold, num_time_steps
                              "Test 3": [(A, (Clock,), every_n_calls(2)),
-                                        (B, (A), over_threshold(0)),
-                                        (C, (B), first_n_calls(5)),
+                                        (B, (A,), over_threshold(2.0)),
+                                        (C, (B,), first_n_calls(5)),
                                         (T, (C,), every_n_calls(2)),
-                                        (sched, (T,), terminal())],
+                                        (sched, (Clock,), num_time_steps(10))],
 
+                            # over_threshold with and
                              "Test 4": [(A, (Clock,), every_n_calls(1)),
-                                        (B, (A), every_n_calls(2)),
-                                        (C, (B), over_threshold(0)),
-                                        (T, (C,), every_n_calls(2)),
+                                        (B, (A,), every_n_calls(2)),
+                                        (C, (A,B), over_threshold(2.0)),
+                                        (T, (C,), every_n_calls(5)),
                                         (sched, (T,), terminal())],
 
-                             "Test 5": [(A, (Clock,), every_n_calls(2)),
-                                        (B, (A), every_n_calls(2)),
-                                        (C, (B, A), first_n_calls(2, op="OR")),
-                                        (T, (C,), every_n_calls(2)),
-                                        (sched, (Clock,), num_time_steps(12))]
+                            # over_threshold with or
+                             "Test 5": [(A, (Clock,), every_n_calls(1)),
+                                        (B, (A,), every_n_calls(2)),
+                                        (C, (A,B), over_threshold(2.0, op="OR")),
+                                        (T, (C,), every_n_calls(5)),
+                                        (sched, (T,), terminal())],
+
+                            # every n with A and B depending on clock, running together
+                             "Test 6": [(A, (Clock,), every_n_calls(2)),
+                                        (B, (Clock,), every_n_calls(2)),
+                                        (C, (B), every_n_calls(2)),
+                                        (sched, (Clock,), num_time_steps(8))],
+
+                            # every n with B depending on A, running together
+                             "Test 7": [(A, (Clock,), every_n_calls(2)),
+                                        (B, (A,), every_n_calls(1)),
+                                        (C, (B), every_n_calls(2)),
+                                        (sched, (Clock,), num_time_steps(8))],
+
+                            # every n with B depending on A, running together
+                            "Test 8": [(A, (Clock,), every_n_calls(2)),
+                                       (B, (A,), every_n_calls(1)),
+                                       (C, (B), every_n_calls(2)),
+                                       (sched, (Clock,), num_time_steps(8))]
 
                               }
 
-    test = "Test 4"
+    test = "Test 8"
     sched.add_constraints(test_constraints_dict[test])
 
     for var in sched.var_list:
@@ -260,8 +282,7 @@ def main():
     sched.run_trial()
     print("--- BEGINNING TRIAL 2 ---")
     sched.run_trial()
-    A.execute()
-    A.execute()
+
 
     # for mech in sched.generate_trial():
     #     mech.execute()
