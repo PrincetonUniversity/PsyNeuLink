@@ -2749,6 +2749,13 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         weight_change_matrix = learning_rate * input * derivative * error
 
+        if "BackProp" in self.name:
+            print("\n{} ({}): ".format('Backpropagation Function', self.name))
+            print("- ACTIVATION_INPUT ({}): {}".format(len(self.variable[MATRIX_INPUT]),self.variable[MATRIX_INPUT]))
+            print("- ACTIVATION_OUTPUT ({}): {}".format(len(self.variable[ACTIVATION_OUTPUT]),self.variable[ACTIVATION_OUTPUT]))
+            print("- ACTIVATION_ERROR ({}): {}".format(len(self.variable[ACTIVATION_ERROR]), self.variable[ACTIVATION_ERROR]))
+            print("- calculated derivative ({}): {}".format(len(derivative), derivative))
+
         return weight_change_matrix
 
 
