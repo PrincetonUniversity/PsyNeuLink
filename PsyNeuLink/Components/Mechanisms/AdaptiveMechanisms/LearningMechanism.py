@@ -585,32 +585,30 @@ class LearningMechanism(AdaptiveMechanism_Base):
         activity_len = len(self.activation_output)
         error_len = len(self.error_signal)
 
-        # Validate that activation_output and error_signal are the same length
-        if activity_len != error_len:
-            raise LearningMechanismError("The length of the {} ({}) and {} ({}) for the variable of \'{}\' "
-                                         "must be equal".
-                                          format(ACTIVATION_OUTPUT,
-                                                 len(self.variable[ACTIVATION_OUTPUT_INDEX]),
-                                                 ERROR_SIGNAL,
-                                                 len(self.variable[ERROR_SIGNAL_INDEX]),
-                                                 self.name))
-
+        # Get and validate error_matrix
         if isinstance(self.error_matrix, MappingProjection):
             self.error_matrix = self.error_matrix.parameterStates[MATRIX]
-
         if isinstance(self.error_matrix, ParameterState):
             self.error_matrix = np.array(self.error_matrix.value)
-
         if self.error_matrix.ndim != 2:
             raise LearningMechanismError("\'matrix\' arg for {} must be 2d (it is {})".
                                format(self.__class__.__name__, matrix.ndim))
-
+        rows = self.error_matrix.shape[0]
         cols = self.error_matrix.shape[1]
+
+        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+        #    since it is the dot product of the error_signal with the error_matrix [==rows of error_matrix]
+        #    that will be compared with activity_output by the function (learning algorithm) called in _execute()
+        if rows!= activity_len:
+            raise FunctionError("Number of rows ({}) of \'{}\' arg for {}"
+                                     " must equal length of {} ({})".
+                                     format(rows, MATRIX, self.name, ACTIVATION_OUTPUT, activity_len))
+
+        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
         if  cols != error_len:
             raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
                                      " must equal length of {} ({})".
-                                     # format(cols,MATRIX, self.__class__.__name__,error_len))
-                                     format(cols,MATRIX, self.name, ERROR_SIGNAL, error_len))
+                                     format(cols, MATRIX, self.name, ERROR_SIGNAL, error_len))
 
     def _instantiate_input_states(self, context=None):
         """Insure that inputState values are compatible with derivative functions and error_matrix
