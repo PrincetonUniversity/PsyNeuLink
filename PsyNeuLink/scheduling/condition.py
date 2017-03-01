@@ -15,6 +15,7 @@ def every_n_calls(n, time_scale = 'trial'):
     Boolean (True if condition is met)
 
     """
+
     def check(dependencies):
 
         #every_n should only depend on one mechanism
@@ -58,44 +59,31 @@ def every_n_calls(n, time_scale = 'trial'):
 #     return check
 #
 
-def first_n_calls(n, time_scale = 'trial', op = "AND"):
+def first_n_calls(n, time_scale = 'trial'):
     """
     Condition function to be applied to a constraint
-    Enforces condition that dependencies must run n times on the given time scale before the owner's first run
+    Enforces condition that owner runs the first n times its dependency runs
 
     Parameters
     ----------
     n -- number of times that dependencies must run before owner can run
     time_scale -- time_scale on which to count (trial, run or life)
-    op -- "AND": condition must be true of all dependencies; "OR": condition must be true of at least one dependency
-
 
     Returns
     -------
-    Boolean (True if condition is met for the number of dependencies required by op)
+    Boolean (True if dependency has run <= n times
 
     """
-    if op == "AND":
-        def check(dependencies):
-            for var in dependencies:
-                # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
-                num_calls = {"trial": var.component.calls_current_trial,
-                             "run": var.component.calls_current_run - 1,
-                             "life": var.component.calls_since_initialization - 1}
-                if num_calls[time_scale] < n:
-                    return False
-            return True
-
-    elif op == "OR":
-        def check(dependencies):
-            for var in dependencies:
-                # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
-                num_calls = {"trial": var.component.calls_current_trial,
-                             "run": var.component.calls_current_run - 1,
-                             "life": var.component.calls_since_initialization - 1}
-                if (num_calls[time_scale] >= n):
-                    return True
+    def check(dependencies):
+        # This condition should only depend on one mechanism
+        var = dependencies[0]
+        # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
+        num_calls = {"trial": var.component.calls_current_trial,
+                     "run": var.component.calls_current_run - 1,
+                     "life": var.component.calls_since_initialization - 1}
+        if num_calls[time_scale] >= n:
             return False
+        return True
     return check
 
 #
@@ -170,6 +158,7 @@ def over_threshold(threshold,  time_scale = 'trial', op = "AND"):
     Boolean (True if the number of dependencies required by op satisfy the threshold)
 
     """
+
     if op == "AND":
         def check(dependencies, time_scale = 'trial'):
             for var in dependencies:
@@ -319,4 +308,45 @@ def num_time_steps(num):
         if Clock[0].component.calls_current_trial < num:
             return False
         return True
+    return check
+
+def after_n_calls(n, time_scale = 'trial', op = "AND"):
+    """
+    Condition function to be applied to a constraint
+    Enforces condition that dependencies must run n times on the given time scale before the owner's first run
+
+    Parameters
+    ----------
+    n -- number of times that dependencies must run before owner can run
+    time_scale -- time_scale on which to count (trial, run or life)
+    op -- "AND": condition must be true of all dependencies; "OR": condition must be true of at least one dependency
+
+
+    Returns
+    -------
+    Boolean (True if condition is met for the number of dependencies required by op)
+
+    """
+
+    if op == "AND":
+        def check(dependencies):
+            for var in dependencies:
+                # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
+                num_calls = {"trial": var.component.calls_current_trial,
+                             "run": var.component.calls_current_run - 1,
+                             "life": var.component.calls_since_initialization - 1}
+                if num_calls[time_scale] < n:
+                    return False
+            return True
+
+    elif op == "OR":
+        def check(dependencies):
+            for var in dependencies:
+                # calls_current_run and calls_since_initialization currently have an offset of 1 due to initialization run
+                num_calls = {"trial": var.component.calls_current_trial,
+                             "run": var.component.calls_current_run - 1,
+                             "life": var.component.calls_since_initialization - 1}
+                if (num_calls[time_scale] >= n):
+                    return True
+            return False
     return check

@@ -154,8 +154,12 @@ class Scheduler(object):
             # Returns a list ('change_list') of all of the ScheduleVariables (mechanisms) that own a constraint which
             # was satisfied by this mechanism's run
             #######
+
             change_list = []
-            for con in variable.dependent_constraints:
+
+            for con in self.constraints:
+                # ** possible improvement: give conditions 'types'
+                # e.g. scheduler-level, check every-time step, check when dependent just ran
                 if isinstance(con.owner, Scheduler):
                     if con.is_satisfied():
                         self.trial_terminated = True
@@ -204,7 +208,7 @@ class Scheduler(object):
 
 
 def main():
-    from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, over_threshold, terminal, num_time_steps
+    from PsyNeuLink.scheduling.condition import first_n_calls, every_n_calls, over_threshold, terminal, num_time_steps, after_n_calls
     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
     from PsyNeuLink.Components.Functions.Function import Linear
     A = TransferMechanism(function = Linear(intercept=3.0), name = 'A')
@@ -218,23 +222,23 @@ def main():
 
     test_constraints_dict = {
                             # first_n with or
-                            "Test 1":[(A, (Clock,), every_n_calls(1)),
-                               (B, (A,), every_n_calls(2)),
-                               (C, (B,A), first_n_calls(2, op = "OR")),
+                            "Test 1":[(A, (Clock,), after_n_calls(5)),
+                               (B, (A,), after_n_calls(5)),
+                               (C, (B,), every_n_calls(5)),
                                (T, (C,), every_n_calls(5)),
                                (sched, (T,), terminal())],
 
-                            # first_n with and
+                            # after_n with and
                              "Test 2": [(A, (Clock,), every_n_calls(1)),
                                (B, (A,), every_n_calls(2)),
-                               (C, (B,A), first_n_calls(2, op = "AND")),
+                               (C, (B,A), after_n_calls(2, op = "AND")),
                                (T, (C,), every_n_calls(2)),
                                (sched, (T,), terminal())],
 
                             # over_threshold, num_time_steps
                              "Test 3": [(A, (Clock,), every_n_calls(2)),
                                         (B, (A,), over_threshold(2.0)),
-                                        (C, (B,), first_n_calls(5)),
+                                        (C, (B,), after_n_calls(5)),
                                         (T, (C,), every_n_calls(2)),
                                         (sched, (Clock,), num_time_steps(10))],
 
@@ -268,11 +272,17 @@ def main():
                             "Test 8": [(A, (Clock,), every_n_calls(2)),
                                        (B, (A,), every_n_calls(1)),
                                        (C, (B), every_n_calls(2)),
-                                       (sched, (Clock,), num_time_steps(8))]
+                                       (sched, (Clock,), num_time_steps(8))],
+
+                            # first n with B depending on A
+                            "Test 9": [(A, (Clock,), every_n_calls(1)),
+                                       (B, (A,), first_n_calls(3)),
+                                       (C, (A,), after_n_calls(5)),
+                                       (sched, (Clock,), num_time_steps(8))],
 
                               }
 
-    test = "Test 8"
+    test = "Test 2"
     sched.add_constraints(test_constraints_dict[test])
 
     for var in sched.var_list:
