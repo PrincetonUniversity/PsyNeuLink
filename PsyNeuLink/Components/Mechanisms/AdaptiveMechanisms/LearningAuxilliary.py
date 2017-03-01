@@ -321,13 +321,30 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Format ObjectiveMechanism target input to match activation_mech's output
             #    (since it will function as a Comparator)
             objective_mech_target_input = np.zeros_like(lc.error_mech_output.value)
+            # MODIFIED 2/28/17 NEWER:
+            activity_for_obj_fct = np.zeros_like(lc.error_mech_output.value)
+            error_for_obj_fct = activity_for_obj_fct
+            # MODIFIED 2/28/17 END
         else:
             # Format ObjectiveMechanism target input to match the output of the error_mech's ObjectiveMechanism
             objective_mech_target_input = np.zeros_like(lc.error_objective_mech_output.value)
+            # MODIFIED 2/28/17 NEWER:
+            activity_for_obj_fct = np.zeros_like(lc.error_mech_output.value)
+            error_for_obj_fct = np.zeros_like(error_objective_mech_output.value)
+            # MODIFIED 2/28/17 END
+
         # Format the items for the input, output and error items
         #    for the variable of the ObjectiveMechanism's learning function
-        activity_for_obj_fct = np.zeros_like(lc.activation_input.value)
-        error_for_obj_fct = np.zeros_like(lc.activation_output.value)
+        # MODIFIED 2/28/17 OLD:
+        # activity_for_obj_fct = np.zeros_like(lc.activation_input.value)
+        # activity_for_obj_fct = np.zeros_like(lc.activation_output.value)
+        # error_for_obj_fct = np.zeros_like(lc.activation_output.value)
+        # # MODIFIED 2/28/17 NEW:
+        # activity_for_obj_fct = np.zeros_like(lc.error_mech_output.value)
+        # error_for_obj_fct = np.zeros_like(error_objective_mech_output.value)
+        # # MODIFIED 2/28/17 END
+
+
         learning_fct_error = error_for_obj_fct
 
     else:
@@ -782,8 +799,8 @@ class learning_components(object):
                                               "LearningMechanism")
             try:
                 error_obj_mech = next((proj.sender.owner
-                                                 for proj in learning_mech.inputState.receivesFromProjections
-                                                 if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
+                                       for proj in learning_mech.inputStates[ERROR_SIGNAL].receivesFromProjections
+                                       if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
             except AttributeError:
                 # return None
                 raise LearningAuxilliaryError("error_objective_mech not identified: "
