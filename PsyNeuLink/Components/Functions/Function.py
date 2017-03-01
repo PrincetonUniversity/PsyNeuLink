@@ -2545,6 +2545,14 @@ class ErrorDerivative(LearningFunction):
         #     dE/dW          dE/dA  *       dA/dW
         error_derivative  =  error  *  activity_derivative
 
+
+        if ('WeightedError' in self.name):
+            print("\n{} ({}): ".format('WeightedError', self.name))
+            print("- activity ({}): {}".format(len(activity), activity))
+            print("- error ({}): {}".format(len(error), error))
+            print("- calculated activity_derivative ({}): {}".format(len(activity_derivative), activity_derivative))
+            print("- calculated error_derivative ({}): {}".format(len(error_derivative), error_derivative))
+
         return error_derivative
 
 
