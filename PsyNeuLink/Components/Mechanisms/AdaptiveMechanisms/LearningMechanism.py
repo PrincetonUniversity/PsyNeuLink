@@ -699,6 +699,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
         weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
 
+
+        print("\n{} ({}): ".format('LearningMechanism', self.name))
+        print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
+        print("- error_matrix shape: {}".format(self.error_matrix.shape))
+
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal = self.function(variable=[self.activation_input,
                                                        self.activation_output,
