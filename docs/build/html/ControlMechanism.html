@@ -192,11 +192,13 @@ which it is the <a class="reference internal" href="System.html#system-execution
 <p>ControlMechanisms can be created by using the standard Python method of calling the constructor for the desired type.
 A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">system is created</span></a>, and assigned as
 the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a> for that system. The <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a> to be monitored by a
-ControlMechanism are specified in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> argument, which can take  a number of
-<a class="reference internal" href="#controlmechanism-monitored-outputstates"><span class="std std-ref">forms</span></a>.  When the ControlMechanism is created, it automatically creates its
-own <a class="reference internal" href="InputState.html"><span class="doc">inputState</span></a> for each of the outputStates it monitors, and assigns a  <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from each
-of those outputStates to the inputState of the ControlMechanism. How a ControlMechanism creates its ControlProjections
-depends on the <a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
+ControlMechanism are specified in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> argument, which can take  a number of
+<code class="xref any docutils literal"><span class="pre">forms</span></code>.  When the ControlMechanism is created, it automatically creates
+an ObjectiveMechanism that is used to monitor and evaluate the mechanisms and/or outputStates specified in its
+<code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> attribute.  The result of the evaluation is used to
+specify the value of the ControlMechanism&#8217;s <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>. How a ControlMechanism creates its
+ControlProjections and determines their value based on the outcome of its evaluation  depends on the
+<a class="reference internal" href="#"><span class="doc">subclass</span></a>.</p>
 <div class="section" id="specifying-control-for-a-parameter">
 <span id="controlmechanism-specifying-control"></span><h3>Specifying control for a parameter<a class="headerlink" href="#specifying-control-for-a-parameter" title="Permalink to this headline">¶</a></h3>
 <p>ControlMechanisms are used to control the parameter values of mechanisms and/or their functions.  A parameter can be
@@ -205,116 +207,17 @@ to which the parameter belongs (see <a class="reference internal" href="Mechanis
 </div>
 <div class="section" id="monitored-outputstates">
 <span id="controlmechanism-monitored-outputstates"></span><h3>Monitored OutputStates<a class="headerlink" href="#monitored-outputstates" title="Permalink to this headline">¶</a></h3>
-<p>The outputState(s) monitored by a ControlMechanism can be specified in any of the places listed below.  The
-list also describes the order of precedence when more than one specification pertains to the same
-outputState(s). In all cases, specifications can be a references to an outputState object, or a string that is the
-name of one (see :ref:ControlMechanism_Examples&#8217; below). The specification of whether an outputState is monitored by
-a ControlMechanism can be done in the following places:</p>
-<ul class="simple">
-<li><strong>OutputState</strong>: an outputState can be <em>excluded</em> from being monitored by assigning <code class="xref any docutils literal"><span class="pre">None</span></code> as the value of the
-<code class="xref std std-keyword docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in the outputState&#8217;s <code class="docutils literal"><span class="pre">params</span></code>
-argument.  This specification takes precedence over any others;  that is, specifying <code class="xref any docutils literal"><span class="pre">None</span></code> will suppress
-monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
-outputState;  thus, it can be used to exclude the outputState for cases in which it would otherwise be monitored
-based on one of the other specification methods below.</li>
-</ul>
-<ul>
-<li><p class="first"><strong>Mechanism</strong>: the outputState of a particular mechanism can be designated to be monitored, by specifying it in the
-<code class="xref any docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code> entry of a parameter specification dictionary in the mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">params</span></code> argument.  The value
-of the entry must be either a list containing the outputState(s) and/or their name(s),
-a <a class="reference internal" href="#controlmechanism-outputstate-tuple"><span class="std std-ref">monitoredOutputState tuple</span></a>, a <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> value, or <code class="xref any docutils literal"><span class="pre">None</span></code>.
-The values of <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> are treated as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code>: only the primary (first) outputState of the mechanism is monitored;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code>:  all of the mechanism&#8217;s outputStates are monitored.</li>
-</ul>
-</div></blockquote>
-<p>This specification takes precedence over any of the other types listed below:  if it is <code class="xref any docutils literal"><span class="pre">None</span></code>, then none of
-that mechanism&#8217;s outputStates will be monitored;   if it specifies outputStates to be monitored, those will be
-monitored even if the mechanism is not a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism (see below).</p>
-</li>
-</ul>
-<ul>
-<li><p class="first"><strong>ControlMechanism</strong> or <strong>System</strong>: outputStates to be monitored can be specified in the ControlMechanism responsible
-for the monitoring, or in the system for which that ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  The specification can be
-in the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument of the ControlMechanism or System&#8217;s constructor, or in the <code class="xref any docutils literal"><span class="pre">MONITOR_FOR_CONTROL</span></code>
-entry of a parameter specification dictionary in the <code class="xref any docutils literal"><span class="pre">params</span></code> argument of the constructor.  In either case, the value
-must be a list, each item of which must be one of the following:</p>
-<ul class="simple">
-<li>an existing <strong>outputState</strong> or the name of one.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li>a <strong>mechanism</strong> or the name of one &#8211; only the mechanism&#8217;s primary (first) outputState will be monitored,
-unless a <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> value is also in the list (see below) or the specification is
-overridden in a params dictionary for the mechanism (see above);</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li>a <a class="reference internal" href="#controlmechanism-outputstate-tuple"><span class="std std-ref">monitoredOutputState tuple</span></a>;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
-<li><p class="first">a value of <code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> &#8211;  this applies to any mechanisms that appear in the list
-(except those that override it with their own <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> specification); if the value of
-<code class="xref any docutils literal"><span class="pre">MonitoredOutputStatesOption</span></code> appears alone in the list, it is treated as follows:</p>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">PRIMARY_OUTPUT_STATES</span></code> &#8211; only the primary (first) outputState of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism(s)
-in the system for which the ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is monitored;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">ALL_OUTPUT_STATES</span></code> &#8211; all of the outputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism(s)
-in the system for which the ControlMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> are monitored;</li>
-</ul>
-</li>
-<li><p class="first"><code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
-</li>
-</ul>
-<p>Specifications in a ControlMechanism take precedence over any in the system; both are superceded by specifications
-in the constructor or params dictionary for an outputState or mechanism.</p>
-</li>
-</ul>
-<p id="controlmechanism-outputstate-tuple"><strong>MonitoredOutputState Tuple</strong></p>
-<p>A tuple can be used wherever an outputState can be specified, to determine how its value is combined with others by
-the ControlMechanism to compute the outcome of processing for the system (e.g., the EVCMechanism&#8217;s
-<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.outcome_function" title="EVC.EVCMechanism.EVCMechanism.outcome_function"><code class="xref any py py-attr docutils literal"><span class="pre">outcome_function</span></code></a>). Each tuple must have the three following items in the
-order listed:</p>
-<blockquote>
-<div><ul class="simple">
-<li>an outputState or mechanism, the name of one, or a specification dictionary for one;</li>
-</ul>
-<ul class="simple">
-<li>a weight (int) - multiplies the value of the outputState.</li>
-</ul>
-<ul class="simple">
-<li>an exponent (int) - exponentiates the value of the outputState;</li>
-</ul>
-</div></blockquote>
-<p>The set of weights and exponents assigned to each outputState is listed in the ControlMechanism&#8217;s
-<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents" title="EVC.EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitor_for_control_weights_and_exponents</span></code></a> attribute, in the same order as the outputStates are listed in its
-<a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute.  Each item in the list is a tuple with the weight and exponent for a given
-outputState.</p>
+<p>When an ControlMechanism is constructed automatically, it creates an <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism</span></code> (specified in its
+<code class="xref any docutils literal"><span class="pre">montioring_mechanism</span></code> attribute) that is used to monitor and evaluate the system&#8217;s performance.  The
+ObjectiveMechanism monitors each mechanism and/or outputState listed in the ControlMechanism&#8217;s
+&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.function" title="EVC.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
+This information is used to set the value of the ControlMechanism&#8217;s ControlProjections.</p>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism that is a system&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the values of the
-outputStates in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitoredOutputStates" title="EVC.EVCMechanism.EVCMechanism.monitoredOutputStates"><code class="xref any py py-attr docutils literal"><span class="pre">monitoredOutputStates</span></code></a> attribute, and uses those to determine the value of its
+outputStates in its <a class="reference internal" href="EVCMechanism.html#EVC.EVCMechanism.EVCMechanism.monitored_output_states" title="EVC.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, and uses those to determine the value of its
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>. In the subsequent round of execution, each ControlProjection&#8217;s value is
 used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects to update the parameter being controlled.</p>
 <div class="admonition note">

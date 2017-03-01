@@ -86,9 +86,11 @@ Mechanism_Base.defaultMechanism = MechanismRegistry[Mechanism_Base.defaultMechan
 # Note: this must be an instantiated object
 DefaultProcessingMechanism = DefaultProcessingMechanism_Base(name=DEFAULT_PROCESSING_MECHANISM)
 
-# Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
-# Note: this must be an instantiated object
-DefaultMonitoringMechanism = ComparatorMechanism(name=DEFAULT_MONITORING_MECHANISM)
+# MODIFIED 2/22/17 OLD:
+# # Use as DefaultPreferenceSetOwner if owner is not specified for ComponentPreferenceSet (in ComponentPreferenceSet)
+# # Note: this must be an instantiated object
+# DefaultMonitoringMechanism = ComparatorMechanism(name=DEFAULT_MONITORING_MECHANISM)
+# MODIFIED 2/22/17 END
 
 # Use as PROJECTION_SENDER (default sender for ControlProjections) if sender is not specified (in ControlProjection)
 

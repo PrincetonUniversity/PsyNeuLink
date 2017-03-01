@@ -364,6 +364,12 @@ class ControlSignal(OutputState):
                  context=None):
 
         # Note index and calculate are not used by ControlSignal, but included here for consistency with OutputState
+        if params:
+            try:
+                if params[ALLOCATION_SAMPLES] is not None:
+                    allocation_samples =  params[ALLOCATION_SAMPLES]
+            except KeyError:
+                pass
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
