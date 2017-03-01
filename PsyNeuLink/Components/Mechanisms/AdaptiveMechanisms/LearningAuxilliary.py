@@ -279,7 +279,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # TARGET inputState should be specified by string, so that it is left free 
         #     to later be assigned a projection from ProcessInputState and/or SystemInputState
-        error_objective_mech_output = lc.error_mech_output or TARGET
+        error_objective_mech_output = TARGET
 
         # Assign derivative of Linear to lc.error_derivative (as default, until TARGET projection is assigned);
         #    this will induce a simple subtraction of target-sample (i.e., implement a comparator)
@@ -298,6 +298,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
     else:
         object_mech_params = None
+        error_objective_mech_output = lc.error_mech_output
 
     # Check that the required error-related learning_components have been assigned
     if not (lc.error_mech and lc.error_mech_output and lc.error_derivative and error_objective_mech_output):
@@ -463,6 +464,7 @@ class learning_components(object):
         def _get_act_proj():
             try:
                 self.activation_projection = self.learning_projection.receiver.owner
+                return self.learning_projection.receiver.owner
             except AttributeError:
                 raise LearningAuxilliaryError("activation_projection not identified: learning_projection ({})"
                                               "not appear to have been assiged a receiver.".
@@ -487,6 +489,7 @@ class learning_components(object):
                 return None
             try:
                 self.activation_input = self.activation_projection.sender
+                return self.activation_projection.sender
             except AttributeError:
                 raise LearningAuxilliaryError("activation_input not identified: activation_projection ({})"
                                               "not appear to have been assiged a sender.".
@@ -511,6 +514,7 @@ class learning_components(object):
                 return None
             try:
                 self.activation_mech = self.activation_projection.receiver.owner
+                return self.activation_projection.receiver.owner
             except AttributeError:
                 raise LearningAuxilliaryError("activation_mech not identified: activation_projection ({})"
                                               "not appear to have been assiged a receiver.".
@@ -535,6 +539,7 @@ class learning_components(object):
                 return None
             try:
                 self.activation_output = self.activation_mech.outputState
+                return self.activation_mech.outputState
             except AttributeError:
                 raise LearningAuxilliaryError("activation_output not identified: activation_mech ({})"
                                               "not appear to have been assiged a primary outputState.".
@@ -559,6 +564,7 @@ class learning_components(object):
                 return None
             try:
                 self.activation_mech_fct = self.activation_mech.function_object
+                return self.activation_mech.function_object
             except AttributeError:
                 raise LearningAuxilliaryError("activation_mech_fct not identified: activation_mech ({})"
                                               "not appear to have been assiged a Function.".
@@ -583,6 +589,7 @@ class learning_components(object):
                 return None
             try:
                 self._activation_derivative = self.activation_mech.function_object.derivative
+                return self.activation_mech.function_object.derivative
             except AttributeError:
                 raise LearningAuxilliaryError("activation_derivative not identified: activation_mech_fct ({})"
                                               "not appear to have a derivative defined.".
@@ -616,7 +623,7 @@ class learning_components(object):
                 #                               format(self.activation_output.name))
                 # Use failure here to identify mechanism for which a TARGET ObjectiveMechanism should be assigned
                 return None
-            self.error_pjection = error_proj
+            self.error_projection = error_proj
             return error_proj
         return self._error_projection or _get_error_proj()
 
@@ -676,6 +683,7 @@ class learning_components(object):
                 raise LearningAuxilliaryError("error_mech found ({}) but it does not "
                                               "appear to be a ProcessingMechanism".
                                               format(self.error_mech.name))
+            return self.error_projection.receiver.owner
         return self._error_mech or _get_err_mech()
 
     @error_mech.setter
@@ -697,6 +705,7 @@ class learning_components(object):
                 return None
             try:
                 self.error_derivative = self.error_mech.function_object.derivative
+                return self.error_mech.function_object.derivative
             except AttributeError:
                 raise LearningAuxilliaryError("error_derivative not identified: the function ({}) "
                                               "for error_mech ({}) does not have a derivative attribute".
@@ -732,6 +741,7 @@ class learning_components(object):
                 raise LearningAuxilliaryError("error_mech_output found ({}) but it does not "
                                               "appear to be an OutputState".
                                               format(self.error_mech_output.name))
+            return self.error_mech.outputState
         return self._error_mech_output or _get_err_mech_out()
 
     @error_mech_output.setter
@@ -761,39 +771,41 @@ class learning_components(object):
                 else:
                     raise LearningAuxilliaryError("error_objective_mech not identified: error_matrix does not have a "
                                                   "LearningProjection and is not for a TARGET ObjectiveMechanism")
-                    return None
-                # MODIFIED 2/27/17 END
             try:
                 learning_mech = learning_proj.sender.owner
             except AttributeError:
                 raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "the LearningProjection to error_matrix does not have a sender")
-            if not isinstance(learning_mech, LearningMechansim):
+            if not isinstance(learning_mech, LearningMechanism):
                 raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "the LearningProjection to error_matrix does not come from a "
                                               "LearningMechanism")
             try:
-                self.error_objective_mech = next((proj.sender.owner
+                error_obj_mech = next((proj.sender.owner
                                                  for proj in learning_mech.inputState.receivesFromProjections
                                                  if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
             except AttributeError:
+                # return None
                 raise LearningAuxilliaryError("error_objective_mech not identified: "
                                               "could not find any projections to the LearningMechanism ({})".
                                               format(learning_mech))
-            if not self.error_objective_mech:
-                raise LearningAuxilliaryError("error_objective_mech not identified: "
-                                              "the LearningMechanism ({}) does not receive a projection "
-                                              "from an ObjectiveMechanism".
-                                              format(learning_mech))
+            # if not error_obj_mech:
+            #     raise LearningAuxilliaryError("error_objective_mech not identified: "
+            #                                   "the LearningMechanism ({}) does not receive a projection "
+            #                                   "from an ObjectiveMechanism".
+            #                                   format(learning_mech))
+            self.error_objective_mech = error_obj_mech
+            return error_obj_mech
+
         return self._error_objective_mech or _get_obj_mech()
 
     @error_objective_mech.setter
     def error_objective_mech(self, assignment):
-        if isinstance(assignment, (ObjectiveMechanism)):
+        if assignment is None or isinstance(assignment, (ObjectiveMechanism)):
             self._error_objective_mech = assignment
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
-                                          "it must be a ObjectiveMechanism.")
+                                          "it must be an ObjectiveMechanism.")
 
     # ---------------------------------------------------------------------------------------------------------------
     # error_objective_mech_output: outputState of ObjectiveMechanism for error_projection (ObjectiveMechanism)
@@ -805,7 +817,6 @@ class learning_components(object):
                 return None
             try:
                 self.error_objective_mech_output = self.error_objective_mech.outputState
-                return self.error_objective_mech.outputState
             except AttributeError:
                 raise LearningAuxilliaryError("error_objective_mech_output not identified: error_objective_mech ({})"
                                               "does not appear to have an outputState".
@@ -814,6 +825,7 @@ class learning_components(object):
                 raise LearningAuxilliaryError("error_objective_mech_output found ({}) but it does not "
                                               "appear to be an OutputState".
                                               format(self.error_objective_mech_output.name))
+            return self.error_objective_mech.outputState
         return self._error_objective_mech_output or _get_err_obj_mech_out()
 
     @error_objective_mech_output.setter

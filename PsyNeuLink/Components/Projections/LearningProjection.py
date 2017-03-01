@@ -439,9 +439,10 @@ class LearningProjection(Projection_Base):
                                          self.receiver.owner.name))
 
         learning_mechanism = self.sender.owner
+        learned_projection = self.receiver.owner
         objective_mechanism = learning_mechanism.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner
-        self.receiver.owner.monitoringMechanism = objective_mechanism
-
+        learned_projection.monitoringMechanism = objective_mechanism
+        learned_projection.has_learning_projection = True
 
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params={}, context=None):
