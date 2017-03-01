@@ -2724,7 +2724,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                 format(self.name, self.variable))
         if len(self.variable[LEARNING_ACTIVATION_ERROR]) != len(self.variable[LEARNING_ACTIVATION_OUTPUT]):
             raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[LEARNING_ACTIVATION_ERROR], self.name, self.variable[LEARNING_ACTIVATION_OUTPUT]))
+                                format(self.variable[LEARNING_ACTIVATION_ERROR],
+                                       self.name,
+                                       self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
     def _instantiate_function(self, context=None):
         """Get derivative of activation function being used

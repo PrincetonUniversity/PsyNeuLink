@@ -366,7 +366,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                       derivative=lc.error_derivative),
                                              role=LEARNING,
                                              params=object_mech_params,
-                                             name=lc.activation_projection.name + " Error_Derivative")
+                                             name=lc.activation_projection.name + " " + OBJECTIVE_MECHANISM)
 
     objective_mechanism.learning_role = not is_target or TARGET
 
@@ -392,7 +392,8 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                      lc.activation_output.value,
                                                      objective_mechanism.outputState.value],
                                            error_matrix=lc.error_matrix,
-                                           function=learning_projection.learning_function)
+                                           function=learning_projection.learning_function,
+                                           name = lc.activation_projection.name + " " +LEARNING_MECHANISM)
 
     # Assign MappingProjection from activation_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_input,
