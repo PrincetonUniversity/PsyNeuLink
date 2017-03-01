@@ -587,14 +587,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Validate that activation_output and error_signal are the same length
         if activity_len != error_len:
-            raise LearningMechanismError("Items {} ({}: {}) and {} ({}: {}) of variable for {} "
-                                          "must be the same length".
-                                          format(ACTIVATION_OUTPUT_INDEX,
-                                                 ACTIVATION_OUTPUT,
-                                                 self.variable[ACTIVATION_OUTPUT_INDEX],
-                                                 ERROR_SIGNAL_INDEX,
+            raise LearningMechanismError("The length of the {} ({}) and {} ({}) for the variable of \'{}\' "
+                                         "must be equal".
+                                          format(ACTIVATION_OUTPUT,
+                                                 len(self.variable[ACTIVATION_OUTPUT_INDEX]),
                                                  ERROR_SIGNAL,
-                                                 self.variable[ERROR_SIGNAL_INDEX],
+                                                 len(self.variable[ERROR_SIGNAL_INDEX]),
                                                  self.name))
 
         if isinstance(self.error_matrix, MappingProjection):
