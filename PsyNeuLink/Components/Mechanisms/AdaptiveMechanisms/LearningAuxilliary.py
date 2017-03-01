@@ -298,7 +298,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
     else:
         object_mech_params = None
-        error_objective_mech_output = lc.error_mech_output
+        error_objective_mech_output = lc.error_objective_mech_output
 
     # Check that the required error-related learning_components have been assigned
     if not (lc.error_mech and lc.error_mech_output and lc.error_derivative and error_objective_mech_output):
