@@ -480,6 +480,7 @@ class learning_components(object):
         self._error_derivative = None
         self._error_mech = None
         self._error_mech_output = None
+        self._error_learning_mech = None
         self._error_objective_mech = None
         self._error_objective_mech_output = None
 

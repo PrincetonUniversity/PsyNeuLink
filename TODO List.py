@@ -40,7 +40,7 @@
 #             - add lc.error_learning_mech_output
 #             - is_target:
 #                 - instantiate ObjectiveMechanism
-#                   - SAMPLE inputState:  activation_mech_output
+#                   - SAMPLE input˚
 #                   - TARGET inputState:  TARGET
 #                   - error_projection MappingProjection: activation_mech -> ObjectiveMech SAMPLE
 #                   - MappingProjectoin from ObjecxtiveMechamism Output to LearningMechanism error_signal input
@@ -61,8 +61,7 @@
 #
 #         PROCESS & SYSTEM:
 #           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
-#           • Use only one ObjectiveMechanism for all levels with the following args:
-#                 default_input_value[[ACTIVITY][ERROR]]
+#           • Use only one ObjectiveMechanism for all levels with the following args:#                 default_input_value[[ACTIVITY][ERROR]]
 #                 monitored_values: [[next_level.OutputState][next_level.objective_mechanism.OutputState]]
 #                 names: [[ACTIVITY][ERROR]]
 #                 function:  ErrorDerivative(variable, derivative)
