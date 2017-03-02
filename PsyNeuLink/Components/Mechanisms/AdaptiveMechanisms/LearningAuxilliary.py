@@ -411,8 +411,9 @@ def _instantiate_learning_components(learning_projection, context=None):
         learning_function = BackPropagation(variable_default=[lc.activation_mech_input.value,
                                                       lc.activation_mech_output.value,
                                                       objective_mechanism.outputState.value],
+                                            activation_derivative_fct=lc.activation_mech_fct.derivative,
+                                            error_derivative_fct=lc.error_mech_fct.derivative,
                                             error_matrix=lc.error_matrix,
-                                            derivative_function=lc.activation_mech_fct.derivative,
                                             learning_rate=learning_rate)
         # learning_fct_error = error_for_obj_fct
 

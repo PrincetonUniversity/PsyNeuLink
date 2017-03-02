@@ -30,11 +30,11 @@
 #             √ variable:
 #                  √ error_output
 #           • BP:
-#             - params:
-#                  - error_matrix param
-#                  - error_derivative
-#             - variable:
-#                  - error_output
+#             √ params:
+#                  √ error_matrix param
+#                  √ error_derivative
+#             √ variable:
+#                  √ error_output
 #           • instantiate_learning_components:
 #             - add lc.error_learning_mech_output
 #             - add lc.error_learning_mech_output
