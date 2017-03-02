@@ -2737,11 +2737,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
         if len(self.variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
                                 format(self.name, self.variable))
-        if len(self.variable[LEARNING_ACTIVATION_ERROR]) != len(self.variable[LEARNING_ACTIVATION_OUTPUT]):
-            raise ComponentError("Length of error term ({}) for {} must match length of the output array ({})".
-                                format(self.variable[LEARNING_ACTIVATION_ERROR],
-                                       self.name,
-                                       self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_matrix param
@@ -2791,7 +2786,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                               format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
 
     def _instantiate_function(self, context=None):
-        """Parse error_matrix specification and insure it is compatible with error_signal and activation_otput
+        """Parse error_matrix specification and insure it is compatible with error_signal and activation_output
 
         Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix
             (since it will be dot-producted to generate the weighted error signal)
@@ -2861,29 +2856,27 @@ class BackPropagation(LearningFunction): # -------------------------------------
         self._check_args(variable, params, context)
 
         # make input a 1D row array
-        input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)
+        activation_input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).\
+            reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)
 
         # make output a 1D column array
-        output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT]))
+        activation_output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).\
+            reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
-        # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
+        # COMPUTE WEIGHTED ERROR SIGNAL (dE/dA):
         weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ACTIVATION_ERROR])
 
-        # make error a 1D column array
-        error = np.array(weighted_error_signal).reshape(1,len(weighted_error_signal))
+        # make weighted_error_signal a 1D column array
+        weighted_error_signal = np.array(weighted_error_signal).reshape(1,len(weighted_error_signal))
 
-        derivative = self.derivative_function(input=input, output=output)
+        # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
+        activation_derivative = self.derivative_function(input=activation_input, output=activation_output)
 
-        weight_change_matrix = self.learning_rate * input * derivative * error
+        # COMPUTE ERROR DERIVATIVE (dEdW):
+        error_derivative = activation_derivative * weighted_error_signal
 
-        # if "BackProp" in self.name:
-        #     print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
-        #     print("- error_matrix shape: {}".format(self.error_matrix.shape))
-        #     print("\n{} ({}): ".format('Backpropagation Function', self.name))
-        #     print("- ACTIVATION_INPUT ({}): {}".format(len(self.variable[ACTIVATION_INPUT]),self.variable[ACTIVATION_INPUT]))
-        #     print("- ACTIVATION_OUTPUT ({}): {}".format(len(self.variable[ACTIVATION_OUTPUT]),self.variable[ACTIVATION_OUTPUT]))
-        #     print("- ACTIVATION_ERROR ({}): {}".format(len(self.variable[ACTIVATION_ERROR]), self.variable[ACTIVATION_ERROR]))
-        #     print("- calculated derivative ({}): {}".format(len(derivative), derivative))
+        # COMPUTER WEIGHT CHANGE MATRIX (dEdW)            ROW            COLUMN
+        weight_change_matrix = self.learning_rate * activation_input * error_derivative
 
         return weight_change_matrix
 
