@@ -86,8 +86,8 @@ COMMENT:
             error_matrix (ParameterState)
             error_derivative (function)
             error_mech (error_source_mech) (ProcessingMechanism)
-            error_learning_mech (LearningMechanism)
-            error_learning_mech_output (OutputState)
+            error_signal_mech (LearningMechanism)
+            error_signal_mech_output (OutputState)
             error_objective_mech (error_source_objective_mech) (ObjectiveMechanism)
 
         Instantiate:
@@ -464,7 +464,14 @@ class learning_components(object):
     * `error_matrix` (`ParameterState`):  parameterState for error_matrix
     * `error_derivative` (function):  deriviative of function of error_mech
     * `error_mech` (ProcessingMechanism):  mechanism to which error_projection projects
-    * `error_objective_mech` (`ObjectiveMechanism`):  objective mechanism for error_projection
+    * `error_mech_output` (OutputState):  outputState of error_mech, that projects either to the next
+                                          ProcessingMechanism in the pathway, or to an ObjectiveMechanism
+    * `error_signal_mech` (LearningMechanism or ObjectiveMechanism):  mechanism from which LearningMechanism
+                                                                      gets its error_signal (ObjectiveMechanism for
+                                                                      the last mechanism in a learning sequence; next
+                                                                      LearningMechanism in the pathwayfor all others
+    * `error_signal_mech_output` (OutputState): outputState of error_signal_mech, that projects to the preceeding
+                                                LearningMechanism in the pathway (or nothing for the first mechanism)
     """
 
     def __init__(self, learning_projection, context=None):
@@ -483,10 +490,10 @@ class learning_components(object):
         self._error_derivative = None
         self._error_mech = None
         self._error_mech_output = None
-        self._error_learning_mech = None
-        self._error_learning_mech_output = None
-        self._error_objective_mech = None
-        self._error_objective_mech_output = None
+        self._error_signal_mech = None
+        self._error_signal_mech_output = None
+        # self._error_objective_mech = None
+        # self._error_objective_mech_output = None
 
         self.activation_mech_projection
         self.activation_mech_input
@@ -499,10 +506,10 @@ class learning_components(object):
         self.error_derivative
         self.error_mech
         self.error_mech_output
-        self.error_learning_mech
-        self.error_learning_mech_output
-        self.error_objective_mech
-        self.error_objective_mech_output
+        self.error_signal_mech
+        self.error_signal_mech_output
+        # self.error_objective_mech
+        # self.error_objective_mech_output
 
 
     def _validate_learning_projection(self, learning_projection):
@@ -806,166 +813,160 @@ class learning_components(object):
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_mech_output; "
                                           "it must be an OutputState.")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     # ---------------------------------------------------------------------------------------------------------------
-    # error_learning_mech:  learning mechanism for error_projection (LearningMechanism)
+    # error_signal_mech:  learning mechanism for error_projection (LearningMechanism)
     @property
-    def error_learning_mech(self):
+    def error_signal_mech(self):
         # Find from error_matrix:
         def _get_obj_mech():
             if not self.error_matrix:
                 return None
+            # search the projections to the error_matrix parameter state for a LearningProjection
             learning_proj = next((proj for proj in self.error_matrix.receivesFromProjections
                                  if isinstance(proj, LearningProjection)),None)
+            # if there are none, the error_matrix might be for an error_projection to an ObjectiveMechanism
+            #   (i.e., the TARGET mechanism)
             if not learning_proj:
-                # error_matrix is for a MappingProjection that projects to the TARGET ObjectiveMechanism, so return None
-                if isinstance(self.error_matrix.owner.receiver.owner, ObjectiveMechanism):
-                    return None
+                # if error_mech is the last in the learning sequence, then its error_matrix does not receive a
+                #    LearningProjection, but its error_projection does project to an ObjectiveMechanism, so return that
+                objective_mechanism = self.error_matrix.owner.receiver.owner
+                if not isinstance(objective_mechanism, ObjectiveMechanism):
+                    raise LearningAuxilliaryError("error_signal_mech not identified: error_matrix does not have "
+                                                  "a LearningProjection and error_projection does not project to a "
+                                                  "TARGET ObjectiveMechanism")
                 else:
-                    raise LearningAuxilliaryError("error_learning_mech not identified: error_matrix does not have a "
-                                                  "LearningProjection and is not to a TARGET ObjectiveMechanism")
+                    self.error_signal_mech = objective_mechanism
+                    return self.error_signal_mech
             try:
                 learning_mech = learning_proj.sender.owner
             except AttributeError:
-                raise LearningAuxilliaryError("error_learning_mech not identified: "
+                raise LearningAuxilliaryError("error_signal_mech not identified: "
                                               "the LearningProjection to error_matrix does not have a sender")
             if not isinstance(learning_mech, LearningMechanism):
-                raise LearningAuxilliaryError("error_learning_mech not identified: "
+                raise LearningAuxilliaryError("error_signal_mech not identified: "
                                               "the LearningProjection to error_matrix does not come from a "
                                               "LearningMechanism")
-            self.error_learning_mech = learning_mech
-            return learning_mech
+            self.error_signal_mech = learning_mech
+            return self.error_signal_mech
 
-        return self._error_learning_mech or _get_obj_mech()
+        return self._error_signal_mech or _get_obj_mech()
 
-    @error_learning_mech.setter
-    def error_learning_mech(self, assignment):
+    @error_signal_mech.setter
+    def error_signal_mech(self, assignment):
         if assignment is None or isinstance(assignment, (LearningMechanism)):
-            self._error_learning_mech = assignment
+            self._error_signal_mech = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_learning_mech; "
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech; "
                                           "it must be a LearningMechanism.")
 
     # ---------------------------------------------------------------------------------------------------------------
-    # error_learning_mech_output: outputState of LearningMechanism for error_projection (OutputState)
+    # error_signal_mech_output: outputState of LearningMechanism for error_projection (OutputState)
     @property
-    def error_learning_mech_output(self):
+    def error_signal_mech_output(self):
         # Find from error_mech
-        def _get_err_learning_mech_out():
-            if not self.error_learning_mech:
+        def _get_err_sig_mech_out():
+            if not self.error_signal_mech:
                 return None
             try:
-                self.error_learning_mech_output = self.error_learning_mech.outputState
+                self.error_signal_mech_output = self.error_signal_mech.outputState
             except AttributeError:
-                raise LearningAuxilliaryError("error_learning_mech_output not identified: error_learning_mech ({})"
+                raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
                                               "does not appear to have an outputState".
-                                              format(self.error_learning_mech_output))
-            if not isinstance(self.error_learning_mech_output, OutputState):
-                raise LearningAuxilliaryError("error_learning_mech_output found ({}) but it does not "
+                                              format(self.error_signal_mech_output))
+            if not isinstance(self.error_signal_mech_output, OutputState):
+                raise LearningAuxilliaryError("error_signal_mech_output found ({}) but it does not "
                                               "appear to be an OutputState".
                                               format(self.error_objective_mech_output.name))
-            return self.error_learning_mech.outputState
-        return self._error_learning_mech_output or _get_err_learning_mech_out()
+            return self.error_signal_mech.outputState
+        return self._error_signal_mech_output or _get_err_sig_mech_out()
 
-    @error_learning_mech_output.setter
-    def error_learning_mech_output(self, assignment):
+    @error_signal_mech_output.setter
+    def error_signal_mech_output(self, assignment):
         if isinstance(assignment, (OutputState)):
-            self._error_learning_mech_output = assignment
+            self._error_signal_mech_output = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_learning_mech_output; "
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech_output; "
                                           "it must be an OutputState.")
 
-    # ---------------------------------------------------------------------------------------------------------------
-    # error_objective_mech:  TARGET objective mechanism for error_mech (ObjectiveMechanism)
-    @property
-    def error_objective_mech(self):
-        # Find from error_matrix:
-        def _get_obj_mech():
-            if not self.error_matrix:
-                return None
-            learning_proj = next((proj for proj in self.error_matrix.receivesFromProjections
-                                 if isinstance(proj, LearningProjection)),None)
-            if not learning_proj:
-                # error_matrix is for a MappingProjection that projects to the TARGET ObjectiveMechanism, so return that
-                if isinstance(self.error_matrix.owner.receiver.owner, ObjectiveMechanism):
-                    self.error_objective_mech = self.error_matrix.owner.receiver.owner
-                    return self.error_matrix.owner.receiver.owner
-                else:
-                    raise LearningAuxilliaryError("error_objective_mech not identified: error_matrix does not have a "
-                                                  "LearningProjection and is not for a TARGET ObjectiveMechanism")
-            try:
-                learning_mech = learning_proj.sender.owner
-            except AttributeError:
-                raise LearningAuxilliaryError("error_objective_mech not identified: "
-                                              "the LearningProjection to error_matrix does not have a sender")
-            if not isinstance(learning_mech, LearningMechanism):
-                raise LearningAuxilliaryError("error_objective_mech not identified: "
-                                              "the LearningProjection to error_matrix does not come from a "
-                                              "LearningMechanism")
-            try:
-                error_obj_mech = next((proj.sender.owner
-                                       for proj in learning_mech.inputStates[ERROR_SIGNAL].receivesFromProjections
-                                       if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
-            except AttributeError:
-                # return None
-                raise LearningAuxilliaryError("error_objective_mech not identified: "
-                                              "could not find any projections to the LearningMechanism ({})".
-                                              format(learning_mech))
-            # if not error_obj_mech:
-            #     raise LearningAuxilliaryError("error_objective_mech not identified: "
-            #                                   "the LearningMechanism ({}) does not receive a projection "
-            #                                   "from an ObjectiveMechanism".
-            #                                   format(learning_mech))
-            self.error_objective_mech = error_obj_mech
-            return error_obj_mech
-
-        return self._error_objective_mech or _get_obj_mech()
-
-    @error_objective_mech.setter
-    def error_objective_mech(self, assignment):
-        if assignment is None or isinstance(assignment, (ObjectiveMechanism)):
-            self._error_objective_mech = assignment
-        else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
-                                          "it must be an ObjectiveMechanism.")
-
-    # ---------------------------------------------------------------------------------------------------------------
-    # error_objective_mech_output: outputState of ObjectiveMechanism for error_projection (ObjectiveMechanism)
-    @property
-    def error_objective_mech_output(self):
-        # Find from error_mech
-        def _get_err_obj_mech_out():
-            if not self.error_objective_mech:
-                return None
-            try:
-                self.error_objective_mech_output = self.error_objective_mech.outputState
-            except AttributeError:
-                raise LearningAuxilliaryError("error_objective_mech_output not identified: error_objective_mech ({})"
-                                              "does not appear to have an outputState".
-                                              format(self.error_objective_mech_output))
-            if not isinstance(self.error_objective_mech_output, OutputState):
-                raise LearningAuxilliaryError("error_objective_mech_output found ({}) but it does not "
-                                              "appear to be an OutputState".
-                                              format(self.error_objective_mech_output.name))
-            return self.error_objective_mech.outputState
-        return self._error_objective_mech_output or _get_err_obj_mech_out()
-
-    @error_objective_mech_output.setter
-    def error_objective_mech_output(self, assignment):
-        if isinstance(assignment, (OutputState)):
-            self._error_objective_mech_output = assignment
-        else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech_output; "
-                                          "it must be an OutputState.")
+    # # ---------------------------------------------------------------------------------------------------------------
+    # # error_objective_mech:  TARGET objective mechanism for error_mech (ObjectiveMechanism)
+    # @property
+    # def error_objective_mech(self):
+    #     # Find from error_matrix:
+    #     def _get_obj_mech():
+    #         if not self.error_matrix:
+    #             return None
+    #         learning_proj = next((proj for proj in self.error_matrix.receivesFromProjections
+    #                              if isinstance(proj, LearningProjection)),None)
+    #         if not learning_proj:
+    #             # error_matrix is for a MappingProjection that projects to the TARGET ObjectiveMechanism, so return that
+    #             if isinstance(self.error_matrix.owner.receiver.owner, ObjectiveMechanism):
+    #                 self.error_objective_mech = self.error_matrix.owner.receiver.owner
+    #                 return self.error_matrix.owner.receiver.owner
+    #             else:
+    #                 raise LearningAuxilliaryError("error_objective_mech not identified: error_matrix does not have a "
+    #                                               "LearningProjection and is not for a TARGET ObjectiveMechanism")
+    #         try:
+    #             learning_mech = learning_proj.sender.owner
+    #         except AttributeError:
+    #             raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #                                           "the LearningProjection to error_matrix does not have a sender")
+    #         if not isinstance(learning_mech, LearningMechanism):
+    #             raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #                                           "the LearningProjection to error_matrix does not come from a "
+    #                                           "LearningMechanism")
+    #         try:
+    #             error_obj_mech = next((proj.sender.owner
+    #                                    for proj in learning_mech.inputStates[ERROR_SIGNAL].receivesFromProjections
+    #                                    if isinstance(proj.sender.owner, ObjectiveMechanism)),None)
+    #         except AttributeError:
+    #             # return None
+    #             raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #                                           "could not find any projections to the LearningMechanism ({})".
+    #                                           format(learning_mech))
+    #         # if not error_obj_mech:
+    #         #     raise LearningAuxilliaryError("error_objective_mech not identified: "
+    #         #                                   "the LearningMechanism ({}) does not receive a projection "
+    #         #                                   "from an ObjectiveMechanism".
+    #         #                                   format(learning_mech))
+    #         self.error_objective_mech = error_obj_mech
+    #         return error_obj_mech
+    # 
+    #     return self._error_objective_mech or _get_obj_mech()
+    # 
+    # @error_objective_mech.setter
+    # def error_objective_mech(self, assignment):
+    #     if assignment is None or isinstance(assignment, (ObjectiveMechanism)):
+    #         self._error_objective_mech = assignment
+    #     else:
+    #         raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
+    #                                       "it must be an ObjectiveMechanism.")
+    # 
+    # # ---------------------------------------------------------------------------------------------------------------
+    # # error_objective_mech_output: outputState of ObjectiveMechanism for error_projection (ObjectiveMechanism)
+    # @property
+    # def error_objective_mech_output(self):
+    #     # Find from error_mech
+    #     def _get_err_obj_mech_out():
+    #         if not self.error_objective_mech:
+    #             return None
+    #         try:
+    #             self.error_objective_mech_output = self.error_objective_mech.outputState
+    #         except AttributeError:
+    #             raise LearningAuxilliaryError("error_objective_mech_output not identified: error_objective_mech ({})"
+    #                                           "does not appear to have an outputState".
+    #                                           format(self.error_objective_mech_output))
+    #         if not isinstance(self.error_objective_mech_output, OutputState):
+    #             raise LearningAuxilliaryError("error_objective_mech_output found ({}) but it does not "
+    #                                           "appear to be an OutputState".
+    #                                           format(self.error_objective_mech_output.name))
+    #         return self.error_objective_mech.outputState
+    #     return self._error_objective_mech_output or _get_err_obj_mech_out()
+    # 
+    # @error_objective_mech_output.setter
+    # def error_objective_mech_output(self, assignment):
+    #     if isinstance(assignment, (OutputState)):
+    #         self._error_objective_mech_output = assignment
+    #     else:
+    #         raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech_output; "
+    #                                       "it must be an OutputState.")

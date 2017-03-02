@@ -36,7 +36,10 @@
 #             √ variable:
 #                  √ error_output
 #           • instantiate_learning_components:
-#             - add lc.error_learning_mech_output
+#             √ add lc.error_signal_mech
+#             √ add lc.error_signal_mech_output
+#             √ delete lc.error_objective_mech
+#             √ delete lc.error_objective_mech_out
 #             - is_target:
 #                 - instantiate ObjectiveMechanism
 #                   - SAMPLE input˚
