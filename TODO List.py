@@ -25,6 +25,18 @@
 
 #
 # IMPLEMENT: LearningMechanism:
+#         TODO:
+#           • add weighted_error output for BP function
+#           • create weighted_error outputState for LearningMechanism
+#           • assign weighted_error output of bp to
+#           • project weighted_error output of LearningMechanism to object_mech_target (for Hidden Units)
+#           • FIX: somehow, for TARGET, get ErrorDerivative mechanism's ordinary behavior:
+#                                               weighted_error [TARGET] * derivative(activity [SAMPLE])
+#                                   to instead do the subtraction:
+#                                               external target input [TARGET]
+#                                               when activation derivative is 1
+#             SOMETHING LIKE: for TARGET, weighted_error = dot((-SAMPLE * IDENTITY_MATRIX, external Target)
+#
 #         PROCESS & SYSTEM:
 #           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
 #           • Use only one ObjectiveMechanism for all levels with the following args:

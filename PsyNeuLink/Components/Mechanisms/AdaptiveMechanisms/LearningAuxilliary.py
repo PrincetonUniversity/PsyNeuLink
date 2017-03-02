@@ -298,7 +298,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                     CALCULATE:lambda x: np.sum(x*x)/len(x)}]}
     else:
 
-        # SAMPLE inputState for ObjectiveMechanism should come from error_mech_output
+        # SAMPLE inputState for ObjectiveMechanism should come from nothing
         # TARGET inputState for ObjectiveMechanism should come from error_obj_mech_output
 
         object_mech_params = None
