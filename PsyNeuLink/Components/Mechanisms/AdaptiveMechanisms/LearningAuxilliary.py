@@ -144,7 +144,7 @@ from PsyNeuLink.Components.Projections.MappingProjection import MappingProjectio
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _add_projection_from, _add_projection_to
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Functions.Function import Function, function_type, method_type
-from PsyNeuLink.Components.Functions.Function import Linear, ErrorDerivative, BackPropagation
+from PsyNeuLink.Components.Functions.Function import Linear, ErrorDerivative, BackPropagation, Reinforcement
 
 TARGET_ERROR = "TARGET_ERROR"
 TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
@@ -307,14 +307,16 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # Assign input, target and error values for ObjectiveMechanism based on learning function:
 
+    learning_function = learning_projection.learning_function
+
     # REINFORCEMENT LEARNING FUNCTION
-    if learning_projection.learning_function.componentName is RL_FUNCTION:
+    if learning_projection.componentName is RL_FUNCTION:
         # Force sample and target inputs to ObjectiveMechanism and error function to be scalars
         objective_mech_sample_input = activity_for_obj_fct = np.array([0])
         objective_mech_target_input = error_for_obj_fct = np.array([0])
 
     # BACKPROPAGATION LEARNING FUNCTION
-    elif learning_projection.learning_function.componentName is BACKPROPAGATION_FUNCTION:
+    elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
         # Format the items for the default_input_value of the ObjectiveMechanism:
         # Note:  if is_target, lc.error_mech was set to lc.activation_mech above
         objective_mech_sample_input = np.zeros_like(lc.error_mech_output.value)
@@ -332,7 +334,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     else:
         raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-                                  format(learning_projection.learning_function.componentName, learning_projection.name))
+                                  format(learning_function.componentName, learning_projection.name))
 
     # Instantiate ObjectiveMechanism
     # Notes:
@@ -346,7 +348,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                              names=['SAMPLE','TARGET'],
                                              function=ErrorDerivative(variable_default=[activity_for_obj_fct,
                                                                                         error_for_obj_fct],
-                                                                      error_derivative_function=lc.error_derivative),
+                                                                      derivative=lc.error_derivative),
                                              role=LEARNING,
                                              params=object_mech_params,
                                              name=lc.activation_projection.name + " " + OBJECTIVE_MECHANISM)
@@ -372,11 +374,18 @@ def _instantiate_learning_components(learning_projection, context=None):
     # INSTANTIATE Learning Function
     # Note: have to wait to do it here, as Backpropagation needs error_matrix,
     #       which depends on projection to ObjectiveMechanism
-    if learning_projection.learning_function.componentName is RL_FUNCTION:
-        learning_fct_error = np.array([0])
-        # FIX: INSTANTIATE RL HERE
 
-    elif learning_projection.learning_function.componentName is BACKPROPAGATION_FUNCTION:
+    # REINFORCEMENT LEARNING FUNCTION
+    if learning_function.componentName is RL_FUNCTION:
+        # learning_fct_error = np.array([0])
+        # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
+        #      ACTIVATION FUNCTION AND/OR LEARNING RATE
+        learning_function = Reinforcement(variable=objective_mechanism.outputState.value,
+                                          activation_function=lc.activation_mech_fct,
+                                          learning_rate=learning_projection.learning_rate)
+
+    # BACKPROPAGATION LEARNING FUNCTION
+    elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
         # Validate that the function for activation_mech has a derivative
         try:
             derivative = lc.activation_mech_fct.derivative
@@ -385,11 +394,15 @@ def _instantiate_learning_components(learning_projection, context=None):
                                           "to be used with {}".
                                           format(self.name, BackPropagation.componentName))
         # Omit variable specification, as that will be done by LearningMechanism??
-        learning_function = BackPropagation(error_matrix=lc.error_matrix,
+        # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
+        #         DERIVATIVE OR LEARNING_RATE
+        learning_function = BackPropagation(variable=[lc.activation_input.value,
+                                                      lc.activation_output.value,
+                                                      objective_mechanism.outputState.value],
+                                            error_matrix=lc.error_matrix,
                                             derivative_function=lc.activation_mech_fct.derivative,
                                             learning_rate=learning_projection.learning_rate)
-
-        learning_fct_error = error_for_obj_fct
+        # learning_fct_error = error_for_obj_fct
 
     # INSTANTIATE LearningMechanism
 

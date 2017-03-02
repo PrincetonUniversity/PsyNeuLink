@@ -2486,7 +2486,7 @@ class ErrorDerivative(LearningFunction):
                  variable_default,
                  # matrix=None,
                  # derivative:is_function_type,
-                 error_derivative_function:tc.any(function_type, method_type),
+                 derivative:tc.optional(tc.any(function_type, method_type))=None,
                  params=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
@@ -2588,7 +2588,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  activation_function:tc.any(SoftMax, tc.enum(SoftMax))=SoftMax, # Allow class or instance
-                 learning_rate:parameter_spec=1.0,
+                 learning_rate:tc.optional(parameter_spec)=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2704,9 +2704,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def __init__(self,
                  # variable_default=variableClassDefault,
                  variable:tc.any(list, np.ndarray),
-                 error_matrix:tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection),
-                 derivative_function:tc.any(function_type, method_type),
-                 learning_rate:parameter_spec=1.0,
+                 error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
+                 derivative_function:tc.optional(tc.any(function_type, method_type))=None,
+                 learning_rate:tc.optional(parameter_spec)=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
@@ -2718,7 +2718,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                                   learning_rate=learning_rate,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(variable_default=variable,
                          params=params,
                          prefs=prefs,
                          context=context)
