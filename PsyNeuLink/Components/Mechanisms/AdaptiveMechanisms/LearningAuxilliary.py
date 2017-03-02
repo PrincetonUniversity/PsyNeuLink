@@ -323,7 +323,11 @@ def _instantiate_learning_components(learning_projection, context=None):
         if is_target:
             # Format ObjectiveMechanism target input to match activation_mech's output
             #    (since it will function as a Comparator)
+            # MODIFIED 3/1/17 OLD:
             objective_mech_target_input = np.zeros_like(lc.error_mech_output.value)
+            # # MODIFIED 3/1/17 NEW:
+            # objective_mech_target_input = np.zeros_like(lc.activation_output.value)
+            # MODIFIED 3/1/17 END
             activity_for_obj_fct = np.zeros_like(lc.error_mech_output.value)
             error_for_obj_fct = activity_for_obj_fct
         else:
