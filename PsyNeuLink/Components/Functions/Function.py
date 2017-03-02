@@ -2625,6 +2625,11 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                     "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
                                     format(self.name, self.variable[LEARNING_ACTIVATION_ERROR]))
 
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+        request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def function(self,
                 variable=None,
@@ -2652,10 +2657,9 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
         output = self.variable[LEARNING_ACTIVATION_OUTPUT]
         error = self.variable[LEARNING_ACTIVATION_ERROR]
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
 
         # Assign error term to chosen item of output array
-        error_array = (np.where(output, learning_rate * error, 0))
+        error_array = (np.where(output, self.learning_rate * error, 0))
 
         # Construct weight change matrix with error term in proper element
         weight_change_matrix = np.diag(error_array)
@@ -2698,12 +2702,13 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
-    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
     from PsyNeuLink.Components.States.ParameterState import ParameterState
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+
     @tc.typecheck
     def __init__(self,
-                 # variable_default=variableClassDefault,
-                 variable:tc.any(list, np.ndarray),
+                 variable_default=variableClassDefault,
+                 # variable_default:tc.any(list, np.ndarray),
                  error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
                  derivative_function:tc.optional(tc.any(function_type, method_type))=None,
                  learning_rate:tc.optional(parameter_spec)=1.0,
@@ -2718,7 +2723,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                                   learning_rate=learning_rate,
                                                   params=params)
 
-        super().__init__(variable_default=variable,
+        super().__init__(variable_default=variable_default,
                          params=params,
                          prefs=prefs,
                          context=context)
@@ -2747,9 +2752,9 @@ class BackPropagation(LearningFunction): # -------------------------------------
             - MappingProjection with a parameterStates[MATRIX] for one of the above
         """
 
-        # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        # from PsyNeuLink.Components.States.ParameterState import ParameterState
 
+        # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
+        request_set[LEARNING_RATE] = request_set[LEARNING_RATE] or 1.0
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -2760,6 +2765,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
             raise LearningMechanismError("PROGRAM ERROR:  No specification for {} in {}".
                                 format(ERROR_MATRIX, self.name))
 
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
             raise LearningMechanismError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                           "MappingProjection".format(ERROR_MATRIX, self.name))
@@ -2798,6 +2805,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
         error_len = len(self.variable[LEARNING_ACTIVATION_ERROR])
 
         # Get and validate error_matrix
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         if isinstance(self.error_matrix, MappingProjection):
             self.error_matrix = self.error_matrix.parameterStates[MATRIX]
         if isinstance(self.error_matrix, ParameterState):
@@ -2861,20 +2870,20 @@ class BackPropagation(LearningFunction): # -------------------------------------
         weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ACTIVATION_ERROR])
 
         # make error a 1D column array
-        error = np.array(weighted_error_signal).reshape(1,weighted_error_signal)
+        error = np.array(weighted_error_signal).reshape(1,len(weighted_error_signal))
 
         derivative = self.derivative_function(input=input, output=output)
 
         weight_change_matrix = self.learning_rate * input * derivative * error
 
-        if "BackProp" in self.name:
-            print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
-            print("- error_matrix shape: {}".format(self.error_matrix.shape))
-            print("\n{} ({}): ".format('Backpropagation Function', self.name))
-            print("- ACTIVATION_INPUT ({}): {}".format(len(self.variable[ACTIVATION_INPUT]),self.variable[ACTIVATION_INPUT]))
-            print("- ACTIVATION_OUTPUT ({}): {}".format(len(self.variable[ACTIVATION_OUTPUT]),self.variable[ACTIVATION_OUTPUT]))
-            print("- ACTIVATION_ERROR ({}): {}".format(len(self.variable[ACTIVATION_ERROR]), self.variable[ACTIVATION_ERROR]))
-            print("- calculated derivative ({}): {}".format(len(derivative), derivative))
+        # if "BackProp" in self.name:
+        #     print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
+        #     print("- error_matrix shape: {}".format(self.error_matrix.shape))
+        #     print("\n{} ({}): ".format('Backpropagation Function', self.name))
+        #     print("- ACTIVATION_INPUT ({}): {}".format(len(self.variable[ACTIVATION_INPUT]),self.variable[ACTIVATION_INPUT]))
+        #     print("- ACTIVATION_OUTPUT ({}): {}".format(len(self.variable[ACTIVATION_OUTPUT]),self.variable[ACTIVATION_OUTPUT]))
+        #     print("- ACTIVATION_ERROR ({}): {}".format(len(self.variable[ACTIVATION_ERROR]), self.variable[ACTIVATION_ERROR]))
+        #     print("- calculated derivative ({}): {}".format(len(derivative), derivative))
 
         return weight_change_matrix
 

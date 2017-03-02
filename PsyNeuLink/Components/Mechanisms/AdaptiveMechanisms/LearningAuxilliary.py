@@ -375,6 +375,8 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Note: have to wait to do it here, as Backpropagation needs error_matrix,
     #       which depends on projection to ObjectiveMechanism
 
+    learning_rate = learning_projection.learning_rate
+
     # REINFORCEMENT LEARNING FUNCTION
     if learning_function.componentName is RL_FUNCTION:
         # learning_fct_error = np.array([0])
@@ -382,7 +384,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         #      ACTIVATION FUNCTION AND/OR LEARNING RATE
         learning_function = Reinforcement(variable=objective_mechanism.outputState.value,
                                           activation_function=lc.activation_mech_fct,
-                                          learning_rate=learning_projection.learning_rate)
+                                          learning_rate=learning_rate)
 
     # BACKPROPAGATION LEARNING FUNCTION
     elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
@@ -396,12 +398,12 @@ def _instantiate_learning_components(learning_projection, context=None):
         # Omit variable specification, as that will be done by LearningMechanism??
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         #         DERIVATIVE OR LEARNING_RATE
-        learning_function = BackPropagation(variable=[lc.activation_input.value,
+        learning_function = BackPropagation(variable_default=[lc.activation_input.value,
                                                       lc.activation_output.value,
                                                       objective_mechanism.outputState.value],
                                             error_matrix=lc.error_matrix,
                                             derivative_function=lc.activation_mech_fct.derivative,
-                                            learning_rate=learning_projection.learning_rate)
+                                            learning_rate=learning_rate)
         # learning_fct_error = error_for_obj_fct
 
     # INSTANTIATE LearningMechanism
