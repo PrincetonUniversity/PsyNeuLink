@@ -2486,7 +2486,7 @@ class ErrorDerivative(LearningFunction):
                  variable_default,
                  # matrix=None,
                  # derivative:is_function_type,
-                 derivative=None,
+                 error_derivative_function:tc.any(function_type, method_type),
                  params=None,
                  prefs:is_pref_set=None,
                  context=componentName+INITIALIZING):
@@ -2663,6 +2663,11 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         return weight_change_matrix
 
 
+# Argument names:
+ERROR_MATRIX = 'error_matrix'
+WT_MATRIX_SENDERS_DIM = 0
+WT_MATRIX_RECEIVERS_DIM = 1
+
 class BackPropagation(LearningFunction): # ---------------------------------------------------------------------------------
     """Calculate matrix of weight changes using the backpropagation (Generalized Delta Rule) learning algorithm
 
@@ -2693,20 +2698,25 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
+    from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+    from PsyNeuLink.Components.States.ParameterState import ParameterState
     @tc.typecheck
-
     def __init__(self,
-                 variable_default=variableClassDefault,
-                 activation_function:tc.any(Logistic, tc.enum(Logistic))=Logistic, # Allow class or instance
+                 # variable_default=variableClassDefault,
+                 variable:tc.any(list, np.ndarray),
+                 error_matrix:tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection),
+                 derivative_function:tc.any(function_type, method_type),
                  learning_rate:parameter_spec=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(activation_function=activation_function,
-                                                 learning_rate=learning_rate,
-                                                 params=params)
+        params = self._assign_args_to_param_dicts(
+                                                  error_matrix=error_matrix,
+                                                  derivative_function=Logistic().derivative,
+                                                  learning_rate=learning_rate,
+                                                  params=params)
 
         super().__init__(variable_default=variable_default,
                          params=params,
@@ -2728,10 +2738,100 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                        self.name,
                                        self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
-    def _instantiate_function(self, context=None):
-        """Get derivative of activation function being used
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate error_matrix param
+
+        `error_matrix` argument must be one of the following
+            - 2d list, np.ndarray or np.matrix
+            - ParameterState for one of the above
+            - MappingProjection with a parameterStates[MATRIX] for one of the above
         """
-        self.derivativeFunction = self.paramsCurrent[LEARNING_ACTIVATION_FUNCTION].derivative
+
+        # from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
+        # from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        # Validate error_matrix specification
+        try:
+            error_matrix = target_set[ERROR_MATRIX]
+        except KeyError:
+            raise LearningMechanismError("PROGRAM ERROR:  No specification for {} in {}".
+                                format(ERROR_MATRIX, self.name))
+
+        if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
+            raise LearningMechanismError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+                                          "MappingProjection".format(ERROR_MATRIX, self.name))
+
+        if isinstance(error_matrix, MappingProjection):
+            try:
+                error_matrix = error_matrix.parameterStates[MATRIX]
+            except KeyError:
+                raise LearningMechanismError("The MappingProjection specified for the {} arg of {} ({})"
+                                              "must have a {} paramaterState".
+                                              format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
+
+        if isinstance(error_matrix, ParameterState):
+            if np.array(error_matrix.value).ndim != 2:
+                raise LearningMechanismError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                                              "is not a 2d array (matrix)".
+                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
+
+        if isinstance(error_matrix, (np.ndarray, np.matrix)):
+            if error_matrix.ndim != 2:
+                raise LearningMechanismError("The numpy array or matrix specified for {} arg of {} ({}) must be a 2d".
+                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
+
+    def _instantiate_function(self, context=None):
+        """Parse error_matrix specification and insure it is compatible with error_signal and activation_otput
+
+        Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix
+            (since it will be dot-producted to generate the weighted error signal)
+
+        Insure that length of activation_output matches the number of rows (sender elements) of error_matrix
+           (since it will be compared against the *result* of the dot product of the error_matrix and error_signal
+
+        """
+
+        activity_output_len = len(self.variable[LEARNING_ACTIVATION_OUTPUT])
+        error_len = len(self.variable[LEARNING_ACTIVATION_ERROR])
+
+        # Get and validate error_matrix
+        if isinstance(self.error_matrix, MappingProjection):
+            self.error_matrix = self.error_matrix.parameterStates[MATRIX]
+        if isinstance(self.error_matrix, ParameterState):
+            self.error_matrix = self.error_matrix.value
+        self.error_matrix = np.array(self.error_matrix)
+        rows = self.error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+        cols = self.error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+
+        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
+        if rows!= activity_output_len:
+            raise FunctionError("Number of rows ({}) of \'{}\' arg for {}"
+                                     " must equal length of {} ({})".
+                                     format(rows, MATRIX, self.name, ACTIVATION_OUTPUT, activity_output_len))
+
+        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+        if  cols != error_len:
+            raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
+                                     " must equal length of {} ({})".
+                                     format(cols, MATRIX, self.name, ERROR_SIGNAL, error_len))
+
+        # FROM LearningProjection_OLD
+        # if self.function.componentName is BACKPROPAGATION_FUNCTION:
+        #     # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
+        #     #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
+        #     # if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
+        #     if len(error_signal) != self.error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]:
+        #         raise LearningMechanismError("Length of error signal ({}) received by {} from {} must match the"
+        #                                   "receiver dimension ({}) of the weight matrix for {}".
+        #                                   format(len(error_signal),
+        #                                          self.name,
+        #                                          self.sender.owner.name,
+        #                                          len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
+        #                                          self.mappingProjection))
+
         super()._instantiate_function(context=context)
 
     def function(self,
@@ -2751,26 +2851,27 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
-        input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)  # make input a 1D row array
-        output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT])) # make output a 1D column array
-        error = np.array(self.variable[LEARNING_ACTIVATION_ERROR]).reshape(1,len(self.variable[LEARNING_ACTIVATION_ERROR]))  # make error a 1D column array
-        learning_rate = self.paramsCurrent[LEARNING_RATE]
-        derivative = self.derivativeFunction(input=input, output=output)
+        # make input a 1D row array
+        input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)
 
+        # make output a 1D column array
+        output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
-        # # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
-        # weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
-        #
-        #
-        # print("\n{} ({}): ".format('LearningMechanism', self.name))
-        # print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
-        # print("- error_matrix shape: {}".format(self.error_matrix.shape))
+        # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
+        weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ACTIVATION_ERROR])
 
-        weight_change_matrix = learning_rate * input * derivative * error
+        # make error a 1D column array
+        error = np.array(weighted_error_signal).reshape(1,weighted_error_signal)
+
+        derivative = self.derivative_function(input=input, output=output)
+
+        weight_change_matrix = self.learning_rate * input * derivative * error
 
         if "BackProp" in self.name:
+            print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
+            print("- error_matrix shape: {}".format(self.error_matrix.shape))
             print("\n{} ({}): ".format('Backpropagation Function', self.name))
-            print("- ACTIVATION_INPUT ({}): {}".format(len(self.variable[MATRIX_INPUT]),self.variable[MATRIX_INPUT]))
+            print("- ACTIVATION_INPUT ({}): {}".format(len(self.variable[ACTIVATION_INPUT]),self.variable[ACTIVATION_INPUT]))
             print("- ACTIVATION_OUTPUT ({}): {}".format(len(self.variable[ACTIVATION_OUTPUT]),self.variable[ACTIVATION_OUTPUT]))
             print("- ACTIVATION_ERROR ({}): {}".format(len(self.variable[ACTIVATION_ERROR]), self.variable[ACTIVATION_ERROR]))
             print("- calculated derivative ({}): {}".format(len(derivative), derivative))
