@@ -37,7 +37,6 @@
 #                  √ error_output
 #           • instantiate_learning_components:
 #             - add lc.error_learning_mech_output
-#             - add lc.error_learning_mech_output
 #             - is_target:
 #                 - instantiate ObjectiveMechanism
 #                   - SAMPLE inputState:  activation_mech_output
