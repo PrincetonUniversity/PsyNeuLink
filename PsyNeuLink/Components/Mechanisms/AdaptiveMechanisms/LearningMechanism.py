@@ -289,16 +289,9 @@ ACTIVATION_OUTPUT = 'activation_output'
 ERROR_SIGNAL = 'error_signal'
 input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 
-# Argument names:
-ERROR_MATRIX = 'error_matrix'
 
 # Name of outputState:
 LEARNING_SIGNAL = 'learning_signal'
-
-WEIGHT_CHANGE_PARAMS = "weight_change_params"
-
-WT_MATRIX_SENDER_DIM = 0
-WT_MATRIX_RECEIVERS_DIM = 1
 
 TARGET_ERROR = "TARGET_ERROR"
 TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
@@ -544,98 +537,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
 
-
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate error_matrix specification
-        """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        # IMPLEMENTATION NOTE:  REDUNDANT WITH typecheck?
-        try:
-            error_matrix = target_set[ERROR_MATRIX]
-        except KeyError:
-            raise LearningMechanismError("PROGRAM ERROR:  No specification for {} in {}".
-                                format(ERROR_MATRIX, self.name))
-
-        if not isinstance(error_matrix, (list, np.ndarray, ParameterState, MappingProjection)):
-            raise LearningMechanismError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
-                                          "MappingProjection".format(ERROR_MATRIX, self.name))
-
-        if isinstance(error_matrix, MappingProjection):
-            try:
-                error_matrix = error_matrix.parameterStates[MATRIX]
-            except KeyError:
-                raise LearningMechanismError("The MappingProjection specified for the {} arg of {} ({})"
-                                              "must have a {} paramaterState".
-                                              format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
-
-        if isinstance(error_matrix, ParameterState):
-            if np.array(error_matrix.value).ndim != 2:
-                raise LearningMechanismError("The value of the {} parameterState specified for the {} arg of {} ({}) "
-                                              "is not a 2d array (matrix)".
-                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
-
-    def _instantiate_attributes_before_function(self, context=None):
-        """Parse error_matrix specification and insure it is compatible with error_signal and actiation_sample
-        """
-        super()._instantiate_attributes_before_function(context=context)
-
-
-        activity_len = len(self.activation_output)
-        error_len = len(self.error_signal)
-
-        # Get and validate error_matrix
-        if isinstance(self.error_matrix, MappingProjection):
-            self.error_matrix = self.error_matrix.parameterStates[MATRIX]
-        if isinstance(self.error_matrix, ParameterState):
-            self.error_matrix = np.array(self.error_matrix.value)
-        if self.error_matrix.ndim != 2:
-            raise LearningMechanismError("\'matrix\' arg for {} must be 2d (it is {})".
-                               format(self.__class__.__name__, matrix.ndim))
-        rows = self.error_matrix.shape[0]
-        cols = self.error_matrix.shape[1]
-
-        # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
-        #    since it is the dot product of the error_signal with the error_matrix [==rows of error_matrix]
-        #    that will be compared with activity_output by the function (learning algorithm) called in _execute()
-        if rows!= activity_len:
-            raise FunctionError("Number of rows ({}) of \'{}\' arg for {}"
-                                     " must equal length of {} ({})".
-                                     format(rows, MATRIX, self.name, ACTIVATION_OUTPUT, activity_len))
-
-        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
-        if  cols != error_len:
-            raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
-                                     " must equal length of {} ({})".
-                                     format(cols, MATRIX, self.name, ERROR_SIGNAL, error_len))
-
-    def _instantiate_input_states(self, context=None):
-        """Insure that inputState values are compatible with derivative functions and error_matrix
-        """
-        super()._instantiate_input_states(context=context)
-
-    def _instantiate_attributes_after_function(self, context=None):
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        # NEED TO CHECK COMPATIBILITY FOR THE FOLLOWING:
-        #     ACTIVATION_INPUT ≌ 1st item of function variable
-        #     ACTIVATION_OUTPUT ≌ 2nd item of function variable
-        #     ERROR_INPUT ≌ 3rd item of function variable (error_signal (= np.dot(error.matrix, error_signal))
-
-
-        #     error_matrix rows:  sender errors;  columns:  receiver errors
-        #     BackPropagation learning algorithm (Generalized Delta Rule - :ref:`<LINK>`):
-        #         weight = weight + (learningRate * error_derivative * activation_derivative * activation_output)
-        #         for sumSquared error function:  error_derivative = (target - sample)
-        #         for logistic activation function: activation_derivative = activation_output * (1-activation_output)
-        #     NEEDS:
-        #     - error_signal (from ObjectiveMechanism or equivalent)
-        #     - errorDerivative:  get from error_source [??get from FUNCTION of ComparatorMechanism??]
-        #     - transferDerivative:  get from function of error_source [??get from FUNCTION of Processing Mechanism]
-        # FIX: Call _validate_error_signal HERE?? (GET FROM LearningProjection):  ?? _validate_error_signal
-
     def _validate_error_signal(self, error_signal):
         """Validate that error_signal (received from ObjectiveMechanism) is compatible with the error_matrix
 
@@ -643,6 +544,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         error_matrix
 
         """
+
+        # MOVE TO RL FUNCTION
 
         if self.function.componentName is RL_FUNCTION:
             # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
@@ -654,28 +557,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                  self.name,
                                                  self.sender.owner.name,
                                                  self.name, RL_FUNCTION))
-        if self.function.componentName is BACKPROPAGATION_FUNCTION:
-            # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
-            #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
-            # if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
-            if len(error_signal) != self.error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]:
-                raise LearningMechanismError("Length of error signal ({}) received by {} from {} must match the"
-                                          "receiver dimension ({}) of the weight matrix for {}".
-                                          format(len(error_signal),
-                                                 self.name,
-                                                 self.sender.owner.name,
-                                                 len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
-                                                 self.mappingProjection))
-        else:
-            raise LearningMechanismError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
-                                      format(self.function.name, self.name))
-
-
-    def _instantiate_output_states(self, context=None):
-        super()._instantiate_output_states(context=context)
-
-        # OVERRIDE TO INSTANTIATE OUTPUTSTATE THAT TAKES FULL OUTPUT OF FUNCTION (MATRIX) AS ITS VALUE
-        #     function output ≌ error_matrix
 
     def _execute(self,
                 variable=None,
@@ -688,23 +569,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # # Pass during initialization (since has not yet been fully initialized
-        # if self.value is DEFERRED_INITIALIZATION:
-        #     return self.value
-
-        # # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
-        # weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
-        #
-        #
-        # print("\n{} ({}): ".format('LearningMechanism', self.name))
-        # print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
-        # print("- error_matrix shape: {}".format(self.error_matrix.shape))
-
         # COMPUTE LEARNING SIGNAL (dE/dW):
-        self.learning_signal = self.function(variable=[self.activation_input,
-                                                       self.activation_output,
-                                                       self.error_signal,
-                                                       self.error_matrix])
+        self.learning_signal = self.function(variable=variable)
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
@@ -714,27 +580,3 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # for each outputState).
         self.value = [self.learning_signal]
         return self.value
-
-    @property
-    def activation_input(self):
-        return self.variable[ACTIVATION_INPUT_INDEX]
-
-    @activation_input.setter
-    def activation_input(self, value):
-        self.variable[ACTIVATION_INPUT_INDEX] = value
-
-    @property
-    def activation_output(self):
-        return self.variable[ACTIVATION_OUTPUT_INDEX]
-
-    @activation_output.setter
-    def activation_output(self, value):
-        self.variable[ACTIVATION_OUTPUT_INDEX] = value
-
-    @property
-    def error_signal(self):
-        return self.variable[ERROR_SIGNAL_INDEX]
-
-    @error_signal.setter
-    def error_signal(self, value):
-        self.variable = value
