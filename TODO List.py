@@ -26,16 +26,38 @@
 #
 # IMPLEMENT: LearningMechanism:
 #         TODO:
-#           • add weighted_error output for BP function
-#           • create weighted_error outputState for LearningMechanism
-#           • assign weighted_error output of bp to
-#           • project weighted_error output of LearningMechanism to object_mech_target (for Hidden Units)
-#           • FIX: somehow, for TARGET, get ErrorDerivative mechanism's ordinary behavior:
-#                                               weighted_error [TARGET] * derivative(activity [SAMPLE])
-#                                   to instead do the subtraction:
-#                                               external target input [TARGET]
-#                                               when activation derivative is 1
-#             SOMETHING LIKE: for TARGET, weighted_error = dot((-SAMPLE * IDENTITY_MATRIX, external Target)
+#           • LearningMechanism:
+#             √ variable:
+#                  √ error_output
+#           • BP:
+#             - params:
+#                  - error_matrix param
+#                  - error_derivative
+#             - variable:
+#                  - error_output
+#           • instantiate_learning_components:
+#             - add lc.error_learning_mech_output
+#             - add lc.error_learning_mech_output
+#             - is_target:
+#                 - instantiate ObjectiveMechanism
+#                   - SAMPLE inputState:  activation_mech_output
+#                   - TARGET inputState:  TARGET
+#                   - error_projection MappingProjection: activation_mech -> ObjectiveMech SAMPLE
+#                   - MappingProjectoin from ObjecxtiveMechamism Output to LearningMechanism error_signal input
+#                 - LearningMechanism
+#                   - error_output inputState: [1...] (size of ??
+#                   - error_signal inputState: Projection from ObjectiveMechanism
+#                   - error_derivative:  Linear (but get from Process or System InputState)
+#                   - error_matrix: get from error_projection
+#              - NOT is_target:
+#                 - NO ObjectiveMechanism
+#                 - LearningMechanism
+#                   - add error_signal output
+#                   - error_output inputState: [1...] (size of ??
+#                   - error_signal inputState: Projection from error_learning_mech
+#                   - error_derivative:  get from error_mech_fct
+#                   - error_matrix: get from error_projection
+#                   - MappingProjection from error_learning_mech_error_signal output
 #
 #         PROCESS & SYSTEM:
 #           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
