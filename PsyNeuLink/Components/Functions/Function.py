@@ -2541,10 +2541,10 @@ class ErrorDerivative(LearningFunction):
         activity = self.variable[0]
         error = self.variable[1]
 
-        activity_derivative = self.derivative(output=activity)
-        #     dE/dW          dE/dA  *       dA/dW
+        activity_derivative = self.derivative(input=None, output=activity)
+        # FIX:  ??CORRECT:
+        #     ??dE/dA         ??E            dA/dW
         error_derivative  =  error  *  activity_derivative
-
 
         if ('WeightedError' in self.name):
             print("\n{} ({}): ".format('WeightedError', self.name))
@@ -2872,10 +2872,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
         activation_derivative = self.derivative_function(input=activation_input, output=activation_output)
 
-        # COMPUTE ERROR DERIVATIVE (dEdW):
+        # COMPUTE ERROR DERIVATIVE
+        #     dE/dW      =         dA/dW        *       dE/dA)
         error_derivative = activation_derivative * weighted_error_signal
 
-        # COMPUTER WEIGHT CHANGE MATRIX (dEdW)            ROW            COLUMN
+        # COMPUTER WEIGHT CHANGE MATRIX                   ROW            COLUMN
         weight_change_matrix = self.learning_rate * activation_input * error_derivative
 
         return weight_change_matrix
