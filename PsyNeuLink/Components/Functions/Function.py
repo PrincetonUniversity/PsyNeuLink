@@ -2757,6 +2757,15 @@ class BackPropagation(LearningFunction): # -------------------------------------
         learning_rate = self.paramsCurrent[LEARNING_RATE]
         derivative = self.derivativeFunction(input=input, output=output)
 
+
+        # # COMPUTE WEIGHTED ERROR SIGNAL (weighted version of dE/dA):
+        # weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
+        #
+        #
+        # print("\n{} ({}): ".format('LearningMechanism', self.name))
+        # print("- error_signal ({}): {}".format(len(self.error_signal), self.error_signal))
+        # print("- error_matrix shape: {}".format(self.error_matrix.shape))
+
         weight_change_matrix = learning_rate * input * derivative * error
 
         if "BackProp" in self.name:
