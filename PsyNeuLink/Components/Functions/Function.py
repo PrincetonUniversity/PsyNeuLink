@@ -2709,17 +2709,18 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def __init__(self,
                  variable_default=variableClassDefault,
                  # variable_default:tc.any(list, np.ndarray),
+                 activation_derivative_fct :tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
+                 error_derivative_fct:tc.option(tc.any(function_type, method_type))=Logistic().derivative,
                  error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
-                 derivative_function:tc.optional(tc.any(function_type, method_type))=None,
                  learning_rate:tc.optional(parameter_spec)=1.0,
                  params=None,
                  prefs:is_pref_set=None,
                  context='Component Init'):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(
+        params = self._assign_args_to_param_dicts(activation_derivative_fct =activation_derivative_fct,
+                                                  error_derivative_fct=error_derivative_fct,
                                                   error_matrix=error_matrix,
-                                                  derivative_function=Logistic().derivative,
                                                   learning_rate=learning_rate,
                                                   params=params)
 
@@ -2757,32 +2758,32 @@ class BackPropagation(LearningFunction): # -------------------------------------
         try:
             error_matrix = target_set[ERROR_MATRIX]
         except KeyError:
-            raise LearningMechanismError("PROGRAM ERROR:  No specification for {} in {}".
+            raise FunctionError("PROGRAM ERROR:  No specification for {} in {}".
                                 format(ERROR_MATRIX, self.name))
 
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
         if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
-            raise LearningMechanismError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
+            raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
                                           "MappingProjection".format(ERROR_MATRIX, self.name))
 
         if isinstance(error_matrix, MappingProjection):
             try:
                 error_matrix = error_matrix.parameterStates[MATRIX]
             except KeyError:
-                raise LearningMechanismError("The MappingProjection specified for the {} arg of {} ({})"
+                raise FunctionError("The MappingProjection specified for the {} arg of {} ({})"
                                               "must have a {} paramaterState".
                                               format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
 
         if isinstance(error_matrix, ParameterState):
             if np.array(error_matrix.value).ndim != 2:
-                raise LearningMechanismError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
                                               "is not a 2d array (matrix)".
                                               format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
 
         if isinstance(error_matrix, (np.ndarray, np.matrix)):
             if error_matrix.ndim != 2:
-                raise LearningMechanismError("The numpy array or matrix specified for {} arg of {} ({}) must be a 2d".
+                raise FunctionError("The numpy array or matrix specified for {} arg of {} ({}) must be a 2d".
                                               format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
 
     def _instantiate_function(self, context=None):
@@ -2828,7 +2829,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         #     #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
         #     # if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
         #     if len(error_signal) != self.error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]:
-        #         raise LearningMechanismError("Length of error signal ({}) received by {} from {} must match the"
+        #         raise FunctionError("Length of error signal ({}) received by {} from {} must match the"
         #                                   "receiver dimension ({}) of the weight matrix for {}".
         #                                   format(len(error_signal),
         #                                          self.name,
@@ -2863,21 +2864,26 @@ class BackPropagation(LearningFunction): # -------------------------------------
         activation_output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).\
             reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
-        # COMPUTE WEIGHTED ERROR SIGNAL (dE/dA):
-        weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ACTIVATION_ERROR])
+
+        # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
+        dE_dA = self.error_derivative_fct(output=self.variable[LEARNING_ACTIVATION_ERROR])
+
+        # COMPUTE WEIGHTED ERROR DERIVATIVE:
+        # weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ACTIVATION_ERROR])
+        weighted_error_derivative = np.dot(self.error_matrix, dE_dA)
 
         # make weighted_error_signal a 1D column array
-        weighted_error_signal = np.array(weighted_error_signal).reshape(1,len(weighted_error_signal))
+        weighted_error_derivative = np.array(weighted_error_derivative).reshape(1,len(weighted_error_derivative))
 
         # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
-        activation_derivative = self.derivative_function(input=activation_input, output=activation_output)
+        dA_dW  = self.activation_derivative_fct (input=activation_input, output=activation_output)
 
-        # COMPUTE ERROR DERIVATIVE
-        #     dE/dW      =         dA/dW        *       dE/dA)
-        error_derivative = activation_derivative * weighted_error_signal
+        # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
+        # dE/dW  = dA/dW *  dE/dA)
+        dE_dW = dA_dW   *  weighted_error_derivative
 
-        # COMPUTER WEIGHT CHANGE MATRIX                   ROW            COLUMN
-        weight_change_matrix = self.learning_rate * activation_input * error_derivative
+        # COMPUTE WEIGHT CHANGE MATRIX                   ROW              COLUMN
+        weight_change_matrix = self.learning_rate  *  activation_input  * dE_dW
 
         return weight_change_matrix
 
