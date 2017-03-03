@@ -1318,7 +1318,18 @@ class Mechanism_Base(Mechanism):
                                                  clock=clock,
                                                  time_scale=time_scale,
                                                  context=context)
-                return np.atleast_2d(return_value)
+
+                # # MODIFIED 3/3/17 OLD:
+                # return np.atleast_2d(return_value)
+                # MODIFIED 3/3/17 NEW:
+                converted_to_2d = np.atleast_2d(return_value)
+                # If return_value is a list of heterogenous elements, return as is
+                if converted_to_2d.dtype == object:
+                    return return_value
+                # Otherwise, return value converted to 2d np.array
+                else:
+                    return converted_to_2d
+                # MODIFIED 3/3/17 END
 
             # Only call mechanism's function method for init
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
