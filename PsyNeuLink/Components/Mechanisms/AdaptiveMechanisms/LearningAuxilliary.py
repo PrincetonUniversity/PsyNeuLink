@@ -237,7 +237,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     # Next, validate that the receiver does not receive any other LearningProjections
     # IMPLEMENTATION NOTE:  this may be overly restrictive in the context of a system --
-    #                       will need to be dealt with in Composition implementatoin (by examining its learning graph??)
+    #                       will need to be dealt with in Composition implementation (by examining its learning graph??)
     if any((isinstance(projection, LearningProjection) and not projection is learning_projection) for projection in
            learning_projection.receiver.receivesFromProjections):
         raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
@@ -252,34 +252,71 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     for projection in lc.activation_mech_output.sendsToProjections:
 
-        # Check for existing LearningMechanism
-        if isinstance(projection.receiver.owner, LearningMechanism):
+        receiver_mech = projection.receiver.owner
 
-            # Projection must be to the ACTIVATION_OUTPUT inputState of the LearningMechanism;
-            # (a projection to the ACTIVATION_INPUT inputState is the one used for learning in the layer above)
-            if projection.receiver.name is ACTIVATION_INPUT:
+        # Check if projection already projects to a LearningMechanism or ObjectiveMechanism
+        if isinstance(receiver_mech, LearningMechanism):
+            # If it projects to a LearningMechanism:
+            #    it must project to the ACTIVATION_OUTPUT inputState of that LearningMechanism;
+            #    the LearningMechanism must be the sender of learning_projection.
+            if not (projection.receiver.name is ACTIVATION_OUTPUT and receiver_mech is learning_projection.sender.owner):
+                if lc.activation_mech_projection.verbosePref:
+                    warnings.warn("{} projects to a LearningMechanism ({}) that is not the sender of its "
+                                  "LearningProjection ({})".
+                                  format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
                 continue
 
-            # activation_mech has a projection to a LearningMechanism, so assign that as sender and return;
-            # This assumes that:
-            #    the LearningMechanism will be validated by learning_projection
-            #        in its call to super()._instantiate_sender()
-            #        (which is the case if this method is called from learning_projection._instantiate_sender()
-            #    the LearningMechanism has an appropriate ObjectiveMechanism,
-            #       which should have been validated when the LearningMechanism was instantiated
-            learning_projection.sender = projection.receiver.owner.outputState
-            return
+        if isinstance(receiver_mech, ObjectiveMechanism):
+            # If it projects to an ObjectiveMechanism:
+            #    it must project to the SAMPLE inputState of that ObjectiveMechanism;
+            #    its role attribute must be set to LEARNING;
+            #    it must also project to a LearningMechanism that is the sender for the learning_projection.
+            if not (projection.receiver.name is SAMPLE and
+                            LEARNING not in receiver_mech.role and
+                            learning_projection.sender.owner is
+                            receiver_mech.outputState.sendsToProjections[0].receiver.owner):
+                if lc.activation_mech_projection.verbosePref:
+                    warnings.warn("{} projects to an invalid ObjectiveMechanism ({})".
+                                  format(lc.activation_mech.name, receiver_mech.name,learning_projection.name))
+                    continue
 
-    # Next, check whether ObjectiveMechanism and LearningMechanism should be assigned as TARGET:
-    #   It SHOULD be a TARGET if it has either no outgoing projections or none that receive a LearningProjection;
-    #   in that case, error_projection returns None
+        # activation_mech has a projection to a valid LearningMechanism or ObjectiveMechanism,
+        #    so assign that as sender and return;
+        # This assumes that:
+        #    the LearningMechanism will be validated by learning_projection
+        #        in its call to super()._instantiate_sender()
+        #        (which is the case if this method is called from learning_projection._instantiate_sender()
+        learning_projection.sender = receiver_mech.outputState
+        return
+
+
+    # DO LEARNING FUNCTION-SPECIFIC ASSIGNMENTS FIRST??
+
+    # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
+    # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
+    #     - it has either no outgoing projections or
+    #     - it has not projections that receive a LearningProjection;
+    #   in either case, lc.error_projection returns None.
     #   Note:  this assumes that LearningProjections are being assigned from the end of the pathway to the beginning.
     is_target = not lc.error_projection
 
-    # INSTANTIATE ObjectiveMechanism:
-    #     (note: must do this first, as instantiation of LearningMechanism requires projection from it)
+
+    # If it is a TARGET, instantiate an ObjectiveMechanism and assign as learning_projection's sender
 
     # Assign TARGET-contingent values that are common for both RL and BP
+
+#                 - instantiate ObjectiveMechanism
+#                   - SAMPLE input˚
+#                   - TARGET inputState:  TARGET
+#                   - error_projection MappingProjection: activation_mech -> ObjectiveMech SAMPLE
+#                   - MappingProjectoin from ObjecxtiveMechamism Output to LearningMechanism error_signal input
+#                 - LearningMechanism
+#                   - error_output inputState: [1...] (size of ??
+#                   - error_signal inputState: Projection from ObjectiveMechanism
+#                   - error_derivative:  Linear (but get from Process or System InputState)
+#                   - error_matrix: get from error_projection
+
+
 
     if is_target:
 
