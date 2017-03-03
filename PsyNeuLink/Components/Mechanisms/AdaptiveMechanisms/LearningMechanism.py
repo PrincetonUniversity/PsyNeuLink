@@ -281,7 +281,8 @@ def _is_learning_spec(spec):
 # Used to index variable:
 ACTIVATION_INPUT_INDEX = 0
 ACTIVATION_OUTPUT_INDEX = 1
-ERROR_SIGNAL_INDEX = 2
+ERROR_OUTPUT_INDEX = 2
+ERROR_SIGNAL_INDEX = 3
 
 # Used to name inputStates:
 ACTIVATION_INPUT = 'activation_input'
@@ -440,9 +441,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         necessarily a `TERMINAL` mechanism), then error_signal comes from an `ObjectiveMechanism` that calculates
         the error from that mechanism's output and a target input to the process being learned.
 
-    error_matrix : List or 2d np.array
-        the matrix for the `MappingProjection` that projects *from* the mechanism that receives the MappingProjection
-        being learned, *to* the next mechanism in the process or system, from which the `error_signal` was generated.
+    COMMENT:
+       MOVE THIS TO Backpropagation
+        error_matrix : List or 2d np.array
+            the matrix for the `MappingProjection` that projects *from* the mechanism that receives the MappingProjection
+            being learned, *to* the next mechanism in the process or system, from which the `error_signal` was generated.
+    COMMENT
 
     function : LearningFunction or function : default BackPropagation
         specifies function used to compute the `learning_signal`.  Must take the following arguments:
@@ -491,13 +495,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         INPUT_STATES:input_state_names,
-        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL}]
+        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,
+                        NAME:ERROR_SIGNAL}]
     })
 
     @tc.typecheck
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
-                 error_matrix:tc.optional(tc.any(list, np.ndarray, ParameterState, MappingProjection))=None,
                  function:is_function_type=BackPropagation,
                  learning_rate:float=1.0,
                  params=None,
@@ -506,8 +510,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(error_matrix=error_matrix,
-                                                  function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                   learning_rate=learning_rate,
                                                   params=params)
 
@@ -532,10 +535,19 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         super()._validate_variable(variable, context)
 
-        # Validate that variable has exactly three items:  activation_input, activation_output, and error_signal
+        # Validate that variable has exactly four items:
+        #    - activation_input,
+        #    - activation_output,
+        #    - error_output
+        #    - error_signal
+
         if len(self.variable) != 4:
-            raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, self.variable, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL))
+            raise LearningMechanismError("Variable for {} ({}) must have four items ({}, {}, {}, and {})".
+                                format(self.name, self.variable,
+                                       ACTIVATION_INPUT,
+                                       ACTIVATION_OUTPUT,
+                                       ERROR_OUTPUT,
+                                       ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(self.variable)):
@@ -548,17 +560,29 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
 
+        # Validate that the length of `activation_input` is the same as `activation_output`
+        if len(self.variable[ACTIVATION_INPUT_INDEX]) != len(self.variable[ACTIVATION_OUTPUT_INDEX]):
+                raise LearningMechanismError("The length of the {} ({}) item of variable for {} ({}) "
+                                             "must be the same as for the {} ({}) item ({})".
+                                              format(ACTIVATION_INPUT,
+                                                     item_num_string[ACTIVATION_INPUT_INDEX],
+                                                     self.name,
+                                                     len(self.variable[ACTIVATION_INPUT_INDEX]),
+                                                     ACTIVATION_OUTPUT,
+                                                     item_num_string[ACTIVATION_OUTPUT_INDEX],
+                                                     len(self.variable[ACTIVATION_OUTPUT_INDEX])))
+
         # Validate that the length of `error_output` is the same as `error_signal`
-        if len(self.variable[ERROR_OUTPUT]) != len(self.variable[ERROR_SIGNAL]):
+        if len(self.variable[ERROR_OUTPUT_INDEX]) != len(self.variable[ERROR_SIGNAL_INDEX]):
                 raise LearningMechanismError("The length of the {} ({}) item of variable for {} ({}) "
                                              "must be the same as for the {} ({}) item ({})".
                                               format(ERROR_INPUT,
-                                                     item_num_string[ERROR_OUTPUT],
+                                                     item_num_string[ERROR_OUTPUT_INDEX],
                                                      self.name,
-                                                     len(self.variable[ERROR_OUTPUT]),
+                                                     len(self.variable[ERROR_OUTPUT_INDEX]),
                                                      ERROR_SIGNAL,
-                                                     item_num_string[ERROR_SIGNAL],
-                                                     len(self.variable[ERROR_SIGNAL]))
+                                                     item_num_string[ERROR_SIGNAL_INDEX],
+                                                     len(self.variable[ERROR_SIGNAL_INDEX])))
 
     def _validate_error_signal(self, error_signal):
         """Validate that error_signal (received from ObjectiveMechanism) is compatible with the error_matrix
