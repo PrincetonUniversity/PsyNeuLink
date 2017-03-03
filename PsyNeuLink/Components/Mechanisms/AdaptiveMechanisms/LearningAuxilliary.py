@@ -431,32 +431,27 @@ def _instantiate_learning_components(learning_projection, context=None):
 
 
     # Check that the required error-related learning_components have been assigned
-    if not (lc.error_mech and lc.error_mech_output and lc.error_derivative and error_objective_mech_output):
+    if not (lc.error_mech and lc.error_mech_output and lc.error_derivative):
         raise LearningAuxilliaryError("PROGRAM ERROR:  not all error-related learning_components "
                                       "have been assigned for {}".format(learning_projection.name))
 
     # INSTANTIATE LearningMechanism
 
-    # - LearningMechanism
-    #   IS TARGET:
-    #   - error_output inputState: [1...] (size of ??
-    #   - error_signal inputState: Projection from ObjectiveMechanism
-    #  NOT TARGET:
-    #     - NO ObjectiveMechanism
-    #     - LearningMechanism
-    #       - add error_signal output
-    #       - error_output inputState: [1...] (size of ??
-    #       - error_signal inputState: Projection from error_learning_mech
-    #       - error_derivative:  get from error_mech_fct
-    #       - error_matrix: get from error_projection
-    #       - MappingProjection from error_learning_mech_error_signal output
-
-
-    # SAMPLE inputState for ObjectiveMechanism should come from nothing
-    # TARGET inputState for ObjectiveMechanism should come from error_obj_mech_output
-
-
-    # INSTANTIATE LearningMechanism
+    # - LearningMechanism incoming projections (by inputState):
+    #    ACTIVATION_INPUT:
+    #        MappingProjection from activation_mech_input
+    #    ACTIVATION_OUTPUT:
+    #        MappingProjection from activation_mech_output
+    #    ERROR_OUTPUT:
+    #        is_target:
+    #            [1...] size of error_output
+    #        NOT is_target:
+    #            MappingProjection from error_mech_output
+    #    ERROR_SIGNAL:
+    #        is_target:
+    #            MappingProjection from error_signal_mech_output (ObjectiveMechanism.outputState)
+    #        NOT is_target:
+    #            MappingProjection from error_signal_mech_output (LearningMechanism.outputStates[ERROR_SIGNAL]
 
     learning_mechanism = LearningMechanism(variable=[activation_input,
                                                      activation_output,
@@ -479,19 +474,19 @@ def _instantiate_learning_components(learning_projection, context=None):
         #    this insures that error signal will remain a simple subtraction of TARGET-SAMPLE
         learning_mechanism.inputState[ERROR_OUTPUT].baseValue = np.ones_like(error_output)
 
-        # Assign MappingProjection from objective_mechanism to LearningMechanism's ERROR_SIGNAL inputState
-        MappingProjection(sender=objective_mechanism.outputState,
-                          receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
-                          matrix=IDENTITY_MATRIX)
     else:
         # Assign MappingProjection from error_mech_output to LearningMechanism's ERROR_OUTPUT inputState
         MappingProjection(sender=lc.error_mech_output,
                           receiver=learning_mechanism.inputStates[ERROR_OUTPUT],
                           matrix=IDENTITY_MATRIX)
-        # Assign MappingProjection from error_signal_mech_output to LearningMechanism's ERROR_SIGNAL inputState
-        MappingProjection(sender=lc.error_signal_mech_output,
-                          receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
-                          matrix=IDENTITY_MATRIX)
+
+    # Assign MappingProjection from source of error_signal to LearningMechanism's ERROR_SIGNAL inputState
+    # Note:  the source of the error signal is set in lc.error_signal_mech:
+    #     if is_target, this comes from the outputState of objective_mechanism;
+    #     otherwise, it comes from outputStates[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
+    MappingProjection(sender=error_signal_mech_output,
+                      receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
+                      matrix=IDENTITY_MATRIX)
 
     # Assign learning_mechanism as sender of learning_projection and return
     # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
