@@ -2876,12 +2876,27 @@ class BackPropagation(LearningFunction): # -------------------------------------
         :return number:
         """
 
+        # OLD:
+        # activity = self.variable[0] <- ERROR_OUTPUT?
+        # error = self.variable[1]    <- ERROR_SIGNAL?
+        # matrix = self.matrix.value  <- ERROR_MATRIX
+        #
+        # activity_derivative = self.derivative(output=activity)
+        # error_derivative = error * activity_derivative
+        #
+        # return np.dot(matrix, error_derivative)
+        #
+        # NEW PSEUDOCODE:
+        #   error_derivative = error_derivative(error_output) * error_signal
+        #   np.dot(error_matrix, error_derivative
+
+
         self._check_args(variable, params, context)
 
-        # make activation_input a 1D row array
-        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
-        # make activation_output a 1D column array
-        activation_output = np.array(self.activation_output).reshape(1,len(self.activation_output))
+        # # make activation_input a 1D row array
+        # activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
+        # # make activation_output a 1D column array
+        # activation_output = np.array(self.activation_output).reshape(1,len(self.activation_output))
 
         # # MODIFIED 3/3/17 OLD:
         # # FIX: ??IS THIS CORRECT:
@@ -2895,39 +2910,41 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # # make weighted_error_signal a 1D column array
         # weighted_error_derivative = np.array(weighted_error_derivative).reshape(1,len(weighted_error_derivative))
 
-        # MODIFIED 3/3/17 NEW:
-        # COMPUTE WEIGHTED ERROR SIGNAL:
-        weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
-
-        # COMPUTE WEIGHTED ERROR DERIVATIVE wrt ACTIVATION
-        dE_dA = self.error_derivative_fct(output=weighted_error_signal) * self.error_output
-
-        # make weighted_error_signal a 1D column array
-        dE_dA = np.array(dE_dA).reshape(1,len(dE_dA))
-
-        # MODIFIED 3/3/17 END
-
-
-        # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
-        dA_dW  = self.activation_derivative_fct (input=activation_input, output=activation_output)
-
-        # # MODIFIED 3/3/17 OLD:
+        # # MODIFIED 3/3/17 NEW:
+        # # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
+        # dE_dA = self.error_derivative_fct(output=self.error_output) * self.error_signal
+        # # make weighted_error_signal a 1D column array
+        # dE_dA = np.array(dE_dA).reshape(1,len(dE_dA))
+        # # COMPUTE WEIGHTED ERROR DERIVATIVE:
+        # weighted_error_signal = np.dot(self.error_matrix, dE_dA)
+        # # MODIFIED 3/3/17 END
+        #
+        #
+        # # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
+        # dA_dW  = self.activation_derivative_fct (input=activation_input, output=activation_output)
+        #
+        # # # MODIFIED 3/3/17 OLD:
+        # # # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
+        # # # dE/dW  = dA/dW *  dE/dA)
+        # # dE_dW = dA_dW   *  weighted_error_derivative
+        # # MODIFIED 3/3/17 NEW:
         # # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
-        # # dE/dW  = dA/dW *  dE/dA)
-        # dE_dW = dA_dW   *  weighted_error_derivative
-        # MODIFIED 3/3/17 NEW:
-        # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
-        dE_dW = dE_dA * dA_dW
-        # MODIFIED 3/3/17 END
+        # dE_dW = dE_dA * dA_dW
+        # # MODIFIED 3/3/17 END
+        #
+        # # COMPUTE WEIGHT CHANGE MATRIX                   ROW              COLUMN
+        # weight_change_matrix = self.learning_rate  *  activation_input  * dE_dW
+        #
+        # # # MODIFIED 3/3/17 OLD:
+        # # return [weight_change_matrix, weighted_error_derivative]
+        # # MODIFIED 3/3/17 NEW:
+        # return [weight_change_matrix, dE_dW]
+        # # MODIFIED 3/3/17 END
 
-        # COMPUTE WEIGHT CHANGE MATRIX                   ROW              COLUMN
-        weight_change_matrix = self.learning_rate  *  activation_input  * dE_dW
+        dE_dA = np.dot(self.error_matrix, self.error_signal)
+        dA_dW  = self.activation_derivative_fct (input=self.activation_input, output=self.activation_output)
+        dE_dW = self.learning_rate * self.activation_output * dE_dA * dA_dW
 
-        # # MODIFIED 3/3/17 OLD:
-        # return [weight_change_matrix, weighted_error_derivative]
-        # MODIFIED 3/3/17 NEW:
-        return [weight_change_matrix, dE_dW]
-        # MODIFIED 3/3/17 END
 
 
 #region *****************************************   OBJECTIVE FUNCTIONS ************************************************
