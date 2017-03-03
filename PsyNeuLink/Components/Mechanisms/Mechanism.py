@@ -1395,7 +1395,17 @@ class Mechanism_Base(Mechanism):
         # context = EXECUTING + ' ' + self.name + ASSIGN_VALUE
         # MODIFIED 1/28/17 END
 
-        self.value = np.atleast_2d(self.value)
+
+        # # MODIFIED 3/3/17 OLD:
+        # self.value = np.atleast_2d(self.value)
+        # MODIFIED 3/3/17 NEW:
+        converted_to_2d = np.atleast_2d(self.value)
+        # If self.value is a list of heterogeneous elements, leave as is;
+        # Otherwise, use converted value (which is a genuine 2d array)
+        if converted_to_2d.dtype != object:
+            self.value = converted_to_2d
+        # MODIFIED 3/3/17 END
+
         # Set status based on whether self.value has changed
         self.status = self.value
 
@@ -1728,7 +1738,6 @@ class Mechanism_Base(Mechanism):
         #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
         # # MODIFIED 1/28/17 END
 
-
     @property
     def status(self):
         return self._status
@@ -1736,11 +1745,14 @@ class Mechanism_Base(Mechanism):
     @status.setter
     def status(self, current_value):
         # if current_value != self._old_value:
-        if np.array_equal(current_value, self._old_value):
-            self._status = UNCHANGED
-        else:
+        try:
+            if np.array_equal(current_value, self._old_value):
+                self._status = UNCHANGED
+            else:
+                self._status = CHANGED
+                self._old_value = current_value
+        except:
             self._status = CHANGED
-            self._old_value = current_value
 
 
     @property
