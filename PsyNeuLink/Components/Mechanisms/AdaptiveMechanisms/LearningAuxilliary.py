@@ -137,7 +137,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism im
     _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import ACTIVATION_INPUT,\
-    ACTIVATION_OUTPUT, ERROR_SIGNAL
+    ACTIVATION_OUTPUT, ERROR_OUTPUT, ERROR_SIGNAL
 
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -472,7 +472,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     if is_target:
         # Assign array of 1's as the fixed value for LearningMechanism's ERROR_OUTPUT;
         #    this insures that error signal will remain a simple subtraction of TARGET-SAMPLE
-        learning_mechanism.inputState[ERROR_OUTPUT].baseValue = np.ones_like(error_output)
+        learning_mechanism.inputStates[ERROR_OUTPUT].baseValue = np.ones_like(error_output)
 
     else:
         # Assign MappingProjection from error_mech_output to LearningMechanism's ERROR_OUTPUT inputState
@@ -484,7 +484,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Note:  the source of the error signal is set in lc.error_signal_mech:
     #     if is_target, this comes from the outputState of objective_mechanism;
     #     otherwise, it comes from outputStates[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
-    MappingProjection(sender=error_signal_mech_output,
+    MappingProjection(sender=lc.error_signal_mech_output,
                       receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
                       matrix=IDENTITY_MATRIX)
 
@@ -896,7 +896,9 @@ class learning_components(object):
 
     @error_signal_mech.setter
     def error_signal_mech(self, assignment):
-        if assignment is None or isinstance(assignment, (LearningMechanism)):
+        if (assignment is None or
+                isinstance(assignment, LearningMechanism) or
+                (isinstance(assignment, ObjectiveMechanism) and assignment.role is LEARNING)):
             self._error_signal_mech = assignment
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_signal_mech; "
