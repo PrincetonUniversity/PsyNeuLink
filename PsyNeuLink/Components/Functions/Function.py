@@ -2453,8 +2453,9 @@ LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0       # a(j)
 # MATRIX = 1             # w
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
-LEARNING_ERROR_OUTPUT = 2   # e
-LEARNING_ERROR_SIGNAL = 3
+# LEARNING_ERROR_OUTPUT = 2   # e
+# LEARNING_ERROR_SIGNAL = 3
+LEARNING_ERROR_SIGNAL = 2
 
 class ErrorDerivative(LearningFunction):
     """Calculate the contribution of each sender to the error signal based on the weight matrix
@@ -2699,7 +2700,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     componentName = BACKPROPAGATION_FUNCTION
 
-    variableClassDefault = [[0],[0],[0],[0]]
+    variableClassDefault = [[0],[0],[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -2737,26 +2738,14 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def _validate_variable(self, variable, context=None):
         super()._validate_variable(variable, context)
 
-        if len(self.variable) != 4:
-            raise ComponentError("Variable for {} ({}) must have four items: "
-                                 "activation_input, activation_output, error_output, and error_signal)".
+        if len(self.variable) != 3:
+            raise ComponentError("Variable for {} ({}) must have three items: "
+                                 "activation_input, activation_output, and error_signal)".
                                 format(self.name, self.variable))
-        
-        # Validate that the length of `activation_output` is the same as length of `error_signal`
-        if len(self.variable[LEARNING_ACTIVATION_OUTPUT]) != len(self.variable[LEARNING_ERROR_SIGNAL]):
-            item_num_string = ['first', 'second', 'third', 'fourth']
-            raise ComponentError("Length of activation_input ({} item: {}) and activation_output ({} item: {}) "
-                                 "of variable for {} must be equal".
-                                format(item_num_string[LEARNING_ACTIVATION_OUTPUT],
-                                       len(self.variable[LEARNING_ACTIVATION_OUTPUT]),
-                                       item_num_string[LEARNING_ERROR_SIGNAL],
-                                       len(self.variable[LEARNING_ERROR_SIGNAL]),
-                                       self.name))
-
 
         self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
         self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
-        self.error_output = self.variable[LEARNING_ERROR_OUTPUT]
+        # self.error_output = self.variable[LEARNING_ERROR_OUTPUT]
         self.error_signal = self.variable[LEARNING_ERROR_SIGNAL]
 
 

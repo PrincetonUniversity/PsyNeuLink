@@ -12,6 +12,8 @@
 #   got rid of special cases for Objective function altogether (since comparator is just special case of derivative = 0)
 #   added attribute to Projections:  has_learning_projection
 
+# FIX:  WHY DOES weights SPECIFICATION FOR LINEARCOMBINATION FUNCTION HAVE TO BE [[-1],[1]] RATHER THAN JUST [-1, 1]
+#
 # FIX:
 #   MAKE SURE THAT WHEREVER variableClassDefaults OR paramClassDefaults ARE CHANGED IT IS LEGIT
 #             I.E., THAT THIS BE OK FOR ALL OTHER INSTANCES OF THAT CLASS
@@ -2202,6 +2204,15 @@
 # FIX: ``value`` should not be used as the name of the variable arg for states
 #              too easily confused with their ``value`` attributes;  should be switched back to ``variable``
 # IMPLEMENT: ``index`` attribute for InputState, paralleling outputState (and document accordingly)
+#
+# IMPLEMENT: OutputStates:
+#               _instantiate_output_states() (~Lines 587-602):
+#                          if the number of states in owner.paramsCurrent[OUTPUT_STATES] matches
+#                          the len of axis 0 of owner_value, then the default should be to increment
+#                          index for each state, assigining each item of owner_value to each outputState
+#                          (seems natural);  if the lengths are not equal, then can use current default
+#                          behavior which is to assign the value of all the outputStates to the first item
+#                          of owner_value
 #
 # IMPLEMENT: OutputStates:
     # COMMENT:
