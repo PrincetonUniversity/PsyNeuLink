@@ -2842,6 +2842,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         if  cols != error_signal_len:
             raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
                                      " must equal length of {} ({})".
+
                                      format(cols, MATRIX, self.name, '\'error_signal\'', error_signal_len))
 
         # FROM LearningProjection_OLD
@@ -2922,7 +2923,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # COMPUTE WEIGHT CHANGE MATRIX                   ROW              COLUMN
         weight_change_matrix = self.learning_rate  *  activation_input  * dE_dW
 
-        return [weight_change_matrix, weighted_error_derivative]
+        # # MODIFIED 3/3/17 OLD:
+        # return [weight_change_matrix, weighted_error_derivative]
+        # MODIFIED 3/3/17 NEW:
+        return [weight_change_matrix, dE_dW]
+        # MODIFIED 3/3/17 END
 
 
 #region *****************************************   OBJECTIVE FUNCTIONS ************************************************
