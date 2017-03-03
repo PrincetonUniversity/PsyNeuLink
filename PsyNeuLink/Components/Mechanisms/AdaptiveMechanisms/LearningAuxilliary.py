@@ -247,12 +247,14 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Note: error-related components may not yet be defined (if LearningProjection is for a TERMINAL mechanism)
     lc = learning_components(learning_projection=learning_projection)
 
-    # Check if activation_mech already has a projection to a LearningMechanism
+    # Check if activation_mech already has a projection to an ObjectiveMechanism or a LearningMechanism
+    #    (i.e., the source of an error_signal for learning_projection)
     # IMPLEMENTATION NOTE: this uses the first projection found (starting with the primary outputState)
 
     for projection in lc.activation_mech_output.sendsToProjections:
 
         receiver_mech = projection.receiver.owner
+        error_signal_source = None
 
         # Check if projection already projects to a LearningMechanism or ObjectiveMechanism
         if isinstance(receiver_mech, LearningMechanism):
@@ -265,8 +267,10 @@ def _instantiate_learning_components(learning_projection, context=None):
                                   "LearningProjection ({})".
                                   format(lc.activation_mech.name,receiver_mech.name,learning_projection.name))
                 continue
+            else:
+                error_signal_source = receiver_mech.outputState
 
-        if isinstance(receiver_mech, ObjectiveMechanism):
+        elif isinstance(receiver_mech, ObjectiveMechanism):
             # If it projects to an ObjectiveMechanism:
             #    it must project to the SAMPLE inputState of that ObjectiveMechanism;
             #    its role attribute must be set to LEARNING;
@@ -279,16 +283,19 @@ def _instantiate_learning_components(learning_projection, context=None):
                     warnings.warn("{} projects to an invalid ObjectiveMechanism ({})".
                                   format(lc.activation_mech.name, receiver_mech.name,learning_projection.name))
                     continue
+            else:
+                error_signal_source = receiver_mech.outputState
 
-        # activation_mech has a projection to a valid LearningMechanism or ObjectiveMechanism,
-        #    so assign that as sender and return;
-        # This assumes that:
-        #    the LearningMechanism will be validated by learning_projection
-        #        in its call to super()._instantiate_sender()
-        #        (which is the case if this method is called from learning_projection._instantiate_sender()
-        learning_projection.sender = receiver_mech.outputState
-        return
-
+        if error_signal_source:
+            # activation_mech has a projection to a valid LearningMechanism or ObjectiveMechanism,
+            #    so assign that as sender and return;
+            # This assumes that:
+            #    the LearningMechanism will be validated by learning_projection
+            #        in its call to super()._instantiate_sender()
+            #        (which is the case if this method is called from learning_projection._instantiate_sender()
+            # learning_projection.sender = receiver_mech.outputState
+            learning_projection.sender = error_signal_source
+            return
 
     # Next, determine whether an ObjectiveMechanism or LearningMechanism should be assigned as the sender
     # It SHOULD be an ObjectiveMechanism (i.e., TARGET) if either:
@@ -348,11 +355,11 @@ def _instantiate_learning_components(learning_projection, context=None):
             error_signal = np.zeros_like(lc.error_signal_mech_output.value)
             error_matrix = lc.error_matrix
             try:
-                error_derivative = lc.error_mech_fct.derivative
+                error_derivative = lc.error_derivative
             except AttributeError:
                 raise LearningAuxilliaryError("Function for error_mech of {} must have a derivative "
                                               "to be used with {}".
-                                              format(self.name, BackPropagation.componentName))
+                                              format(learning_projection.name, BackPropagation.componentName))
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     DERIVATIVE OR LEARNING_RATE
@@ -528,11 +535,11 @@ class learning_components(object):
         self.learning_projection = learning_projection
 
         self._activation_mech_projection = None
-        self._activation_mech_input = None
         self._activation_mech = None
-        self._activation_mech_output = None
+        self._activation_mech_input = None
         self._activation_mech_fct = None
         self._activation_derivative = None
+        self._activation_mech_output = None
         self._error_projection = None
         self._error_matrix = None
         self._error_derivative = None
@@ -544,15 +551,15 @@ class learning_components(object):
         # self._error_objective_mech_output = None
 
         self.activation_mech_projection
-        self.activation_mech_input
         self.activation_mech
-        self.activation_mech_output
+        self.activation_mech_input
         self.activation_mech_fct
         self.activation_derivative
+        self.activation_mech_output
         self.error_projection
         self.error_matrix
-        self.error_derivative
         self.error_mech
+        self.error_derivative
         self.error_mech_output
         self.error_signal_mech
         self.error_signal_mech_output
@@ -590,31 +597,6 @@ class learning_components(object):
 
 
     # ---------------------------------------------------------------------------------------------------------------
-    # activation_mech_input:  input to mechanism to which projection being learned projections (OutputState)
-    @property
-    def activation_mech_input(self):
-        def _get_act_input():
-            if not self.activation_mech_projection:
-                return None
-            try:
-                self.activation_mech_input = self.activation_mech_projection.sender
-                return self.activation_mech_projection.sender
-            except AttributeError:
-                raise LearningAuxilliaryError("activation_mech_input not identified: activation_mech_projection ({})"
-                                              "not appear to have been assiged a sender.".
-                                              format(self.activation_mech_projection))
-        return self._activation_mech_input or _get_act_input()
-
-    @activation_mech_input.setter
-    def activation_mech_input(self, assignment):
-        if isinstance(assignment, (OutputState)):
-            self._activation_mech_input = assignment
-        else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_input; "
-                                          "it must be a OutputState.")
-
-
-    # ---------------------------------------------------------------------------------------------------------------
     # activation_mech:  mechanism to which projection being learned projects (ProcessingMechanism)
     @property
     def activation_mech(self):
@@ -640,27 +622,27 @@ class learning_components(object):
 
 
     # ---------------------------------------------------------------------------------------------------------------
-    # activation_mech_output:  output of activation_mech (OutputState)
+    # activation_mech_input:  input to mechanism to which projection being learned projections (OutputState)
     @property
-    def activation_mech_output(self):
-        def _get_act_sample():
-            if not self.activation_mech:
+    def activation_mech_input(self):
+        def _get_act_input():
+            if not self.activation_mech_projection:
                 return None
             try:
-                self.activation_mech_output = self.activation_mech.outputState
-                return self.activation_mech.outputState
+                self.activation_mech_input = self.activation_mech_projection.sender
+                return self.activation_mech_projection.sender
             except AttributeError:
-                raise LearningAuxilliaryError("activation_mech_output not identified: activation_mech ({})"
-                                              "not appear to have been assiged a primary outputState.".
-                                              format(self.learning_projection))
-        return self._activation_mech_output or _get_act_sample()
+                raise LearningAuxilliaryError("activation_mech_input not identified: activation_mech_projection ({})"
+                                              "not appear to have been assiged a sender.".
+                                              format(self.activation_mech_projection))
+        return self._activation_mech_input or _get_act_input()
 
-    @activation_mech_output.setter
-    def activation_mech_output(self, assignment):
+    @activation_mech_input.setter
+    def activation_mech_input(self, assignment):
         if isinstance(assignment, (OutputState)):
-            self._activation_mech_output =assignment
+            self._activation_mech_input = assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_output; "
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_input; "
                                           "it must be a OutputState.")
 
 
@@ -715,30 +697,28 @@ class learning_components(object):
 
 
     # ---------------------------------------------------------------------------------------------------------------
-    # error_projection:  one that has the error_matrix (MappingProjection)
+    # activation_mech_output:  output of activation_mech (OutputState)
     @property
-    def error_projection(self):
-        # Find from activation_mech:
-        def _get_error_proj():
-            if not self.activation_mech_output:
+    def activation_mech_output(self):
+        def _get_act_sample():
+            if not self.activation_mech:
                 return None
-            projections = self.activation_mech_output.sendsToProjections
-            # error_proj must be a MappingProjection that has a LearningProjection to it
-            error_proj = next((projection for projection in projections if
-                              (isinstance(projection, MappingProjection) and projection.has_learning_projection)),None)
-            if not error_proj:
-                return None
-            self.error_projection = error_proj
-            return error_proj
-        return self._error_projection or _get_error_proj()
+            try:
+                self.activation_mech_output = self.activation_mech.outputState
+                return self.activation_mech.outputState
+            except AttributeError:
+                raise LearningAuxilliaryError("activation_mech_output not identified: activation_mech ({})"
+                                              "not appear to have been assiged a primary outputState.".
+                                              format(self.learning_projection))
+        return self._activation_mech_output or _get_act_sample()
 
-    @error_projection.setter
-    def error_projection(self, assignment):
-        if isinstance(assignment, (MappingProjection)):
-            self._error_projection = assignment
+    @activation_mech_output.setter
+    def activation_mech_output(self, assignment):
+        if isinstance(assignment, (OutputState)):
+            self._activation_mech_output =assignment
         else:
-            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_projection; "
-                                          "it must be a MappingProjection.")
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_mech_output; "
+                                          "it must be a OutputState.")
 
 
     # ---------------------------------------------------------------------------------------------------------------
@@ -767,6 +747,33 @@ class learning_components(object):
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_matrix; "
                                           "it must be a ParameterState.")
+
+
+    # ---------------------------------------------------------------------------------------------------------------
+    # error_projection:  one that has the error_matrix (MappingProjection)
+    @property
+    def error_projection(self):
+        # Find from activation_mech:
+        def _get_error_proj():
+            if not self.activation_mech_output:
+                return None
+            projections = self.activation_mech_output.sendsToProjections
+            # error_proj must be a MappingProjection that has a LearningProjection to it
+            error_proj = next((projection for projection in projections if
+                              (isinstance(projection, MappingProjection) and projection.has_learning_projection)),None)
+            if not error_proj:
+                return None
+            self.error_projection = error_proj
+            return error_proj
+        return self._error_projection or _get_error_proj()
+
+    @error_projection.setter
+    def error_projection(self, assignment):
+        if isinstance(assignment, (MappingProjection)):
+            self._error_projection = assignment
+        else:
+            raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_projection; "
+                                          "it must be a MappingProjection.")
 
 
     # ---------------------------------------------------------------------------------------------------------------
@@ -801,7 +808,7 @@ class learning_components(object):
 
 
     # -----------------------------------------------------------------------------------------------------------
-    # error_derivative:  deriviative of function of error_mech (function)
+    # error_derivative:  derivative of function of error_mech (function)
     @property
     def error_derivative(self):
         # Find from error_mech:
