@@ -461,9 +461,15 @@ class LearningProjection(Projection_Base):
         if self.learning_rate:
             self.learning_signal *= self.learning_rate
 
-        self.weight_change_matrix = self.function(variable=self.learning_signal,
+        # # MODIFIED 3/3/17 OLD:
+        # self.weight_change_matrix = self.function(variable=self.learning_signal,
+        #                                           params=params,
+        #                                           context=context)
+        # MODIFIED 3/3/17 NEW:
+        self.weight_change_matrix = self.function(variable=self.sender.value,
                                                   params=params,
                                                   context=context)
+        # MODIFIED 3/3/17 END
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.weight_change_matrix))

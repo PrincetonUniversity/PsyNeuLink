@@ -1751,6 +1751,7 @@ class Mechanism_Base(Mechanism):
             else:
                 self._status = CHANGED
                 self._old_value = current_value
+        # FIX:  CATCHES ELEMENTWISE COMPARISON DEPRECATION WARNING/ERROR -- NEEDS TO BE FIXED AT SOME POINT
         except:
             self._status = CHANGED
 
