@@ -2742,27 +2742,22 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                  "activation_input, activation_output, error_output, and error_signal)".
                                 format(self.name, self.variable))
         
-        # # Validate that the length of `activation_input` is the same as `activation_output`
-        # if len(self.variable[LEARNING_ACTIVATION_INPUT]) != len(self.variable[LEARNING_ACTIVATION_OUTPUT]):
-        #     item_num_string = ['first', 'second', 'third', 'fourth']
-        #     raise ComponentError("Length of activation_input ({} item: {}) and activation_output ({} item: {}) "
-        #                          "of variable for {} must be equal".
-        #                         format(item_num_string[LEARNING_ACTIVATION_INPUT],
-        #                                len(self.variable[LEARNING_ACTIVATION_INPUT]),
-        #                                item_num_string[LEARNING_ACTIVATION_OUTPUT],
-        #                                len(self.variable[LEARNING_ACTIVATION_OUTPUT]),
-        #                                self.name))
+        # Validate that the length of `activation_output` is the same as length of `error_signal`
+        if len(self.variable[LEARNING_ACTIVATION_OUTPUT]) != len(self.variable[LEARNING_ERROR_SIGNAL]):
+            item_num_string = ['first', 'second', 'third', 'fourth']
+            raise ComponentError("Length of activation_input ({} item: {}) and activation_output ({} item: {}) "
+                                 "of variable for {} must be equal".
+                                format(item_num_string[LEARNING_ACTIVATION_OUTPUT],
+                                       len(self.variable[LEARNING_ACTIVATION_OUTPUT]),
+                                       item_num_string[LEARNING_ERROR_SIGNAL],
+                                       len(self.variable[LEARNING_ERROR_SIGNAL]),
+                                       self.name))
 
-        # # Validate that the length of `error_output` is the same as `error_signal`
-        # if len(self.variable[LEARNING_ERROR_OUTPUT]) != len(self.variable[LEARNING_ERROR_SIGNAL]):
-        #     item_num_string = ['first', 'second', 'third', 'fourth'][i]
-        #     raise ComponentError("Length of activation_input ({} item: {}) and activation_output ({} item: {}) "
-        #                          "of variable for {} must be equal".
-        #                         format(item_num_string[LEARNING_ERROR_OUTPUT],
-        #                                len(self.variable[LEARNING_ERROR_OUTPUT]),
-        #                                item_num_string[LEARNING_ERROR_SIGNAL],
-        #                                len(self.variable[LEARNING_ERROR_SIGNAL]),
-        #                                self.name))
+
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_output = self.variable[LEARNING_ERROR_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_SIGNAL]
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2823,8 +2818,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         """
 
-        activity_output_len = len(self.variable[LEARNING_ACTIVATION_OUTPUT])
-        error_len = len(self.variable[LEARNING_ERROR_SIGNAL])
+        activity_output_len = len(self.activation_output)
+        error_signal_len = len(self.error_signal)
 
         # Get and validate error_matrix
         from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -2844,10 +2839,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                      format(rows, MATRIX, self.name, '\'activation_output\'', activity_output_len))
 
         # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
-        if  cols != error_len:
+        if  cols != error_signal_len:
             raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
                                      " must equal length of {} ({})".
-                                     format(cols, MATRIX, self.name, '\'error_signal\'', error_len))
+                                     format(cols, MATRIX, self.name, '\'error_signal\'', error_signal_len))
 
         # FROM LearningProjection_OLD
         # if self.function.componentName is BACKPROPAGATION_FUNCTION:
@@ -2883,31 +2878,46 @@ class BackPropagation(LearningFunction): # -------------------------------------
         self._check_args(variable, params, context)
 
         # make activation_input a 1D row array
-        activation_input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).\
-            reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)
-
+        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
         # make activation_output a 1D column array
-        activation_output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).\
-            reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT]))
+        activation_output = np.array(self.activation_output).reshape(1,len(self.activation_output))
 
-        # FIX: ??IS THIS CORRECT:
-        # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
-        dE_dA = self.error_derivative_fct(output=self.variable[LEARNING_ERROR_OUTPUT]) * \
-                self.variable[LEARNING_ERROR_SIGNAL]
+        # # MODIFIED 3/3/17 OLD:
+        # # FIX: ??IS THIS CORRECT:
+        # # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
+        # dE_dA = self.error_derivative_fct(output=self.error_output) * self.error_signal
+        #
+        # # COMPUTE WEIGHTED ERROR DERIVATIVE:
+        # # weighted_error_signal = np.dot(self.error_matrix, self.error_output)
+        # weighted_error_derivative = np.dot(self.error_matrix, dE_dA)
+        #
+        # # make weighted_error_signal a 1D column array
+        # weighted_error_derivative = np.array(weighted_error_derivative).reshape(1,len(weighted_error_derivative))
 
-        # COMPUTE WEIGHTED ERROR DERIVATIVE:
-        # weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ERROR_OUTPUT])
-        weighted_error_derivative = np.dot(self.error_matrix, dE_dA)
+        # MODIFIED 3/3/17 NEW:
+        # COMPUTE WEIGHTED ERROR SIGNAL:
+        weighted_error_signal = np.dot(self.error_matrix, self.error_signal)
+
+        # COMPUTE WEIGHTED ERROR DERIVATIVE wrt ACTIVATION
+        dE_dA = self.error_derivative_fct(output=weighted_error_signal) * self.error_output
 
         # make weighted_error_signal a 1D column array
-        weighted_error_derivative = np.array(weighted_error_derivative).reshape(1,len(weighted_error_derivative))
+        dE_dA = np.array(dE_dA).reshape(1,len(dE_dA))
+
+        # MODIFIED 3/3/17 END
+
 
         # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
         dA_dW  = self.activation_derivative_fct (input=activation_input, output=activation_output)
 
+        # # MODIFIED 3/3/17 OLD:
+        # # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
+        # # dE/dW  = dA/dW *  dE/dA)
+        # dE_dW = dA_dW   *  weighted_error_derivative
+        # MODIFIED 3/3/17 NEW:
         # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
-        # dE/dW  = dA/dW *  dE/dA)
-        dE_dW = dA_dW   *  weighted_error_derivative
+        dE_dW = dE_dA * dA_dW
+        # MODIFIED 3/3/17 END
 
         # COMPUTE WEIGHT CHANGE MATRIX                   ROW              COLUMN
         weight_change_matrix = self.learning_rate  *  activation_input  * dE_dW
