@@ -1814,15 +1814,15 @@ class Process_Base(Process):
             try:
                 for parameter_state in projection.parameterStates.values():
                     # Initialize each LearningProjection
-                    for LEARNING_PROJECTION in parameter_state.receivesFromProjections:
-                        LEARNING_PROJECTION._deferred_init(context=context)
+                    for learning_projection in parameter_state.receivesFromProjections:
+                        learning_projection._deferred_init(context=context)
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
                 if 'parameterStates' in e.args[0]:
                     pass
                 else:
                     error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
-                        format(LEARNING_PROJECTION.name, projection.name, e.args[0])
+                        format(learning_projection.name, projection.name, e.args[0])
                     raise ProcessError(error_msg)
 
             # Check if projection has monitoringMechanism attribute

@@ -336,7 +336,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # Get error_mech values
         if is_target:
-            error_output = np.ones_like(lc.activation_mech_input.value)
+            error_output = np.ones_like(lc.activation_mech_output.value)
             error_signal = np.zeros_like(lc.activation_mech_output.value)
             error_matrix = np.identity(len(error_signal))
             # IMPLEMENTATION NOTE: Assign error_derivative to derivative of ProcessingInputState or SystemInputState
@@ -375,21 +375,6 @@ def _instantiate_learning_components(learning_projection, context=None):
     # If it is a TARGET, instantiate an ObjectiveMechanism and assign as learning_projection's sender
     if is_target:
 
-    # - instantiate ObjectiveMechanism
-    #   - SAMPLE input˚
-    #   - TARGET inputState:  TARGET
-    #   - error_projection MappingProjection: activation_mech -> ObjectiveMech SAMPLE
-    #   - MappingProjectoin from ObjecxtiveMechamism Output to LearningMechanism error_signal input
-
-
-        # object_mech_params = None
-        # error_objective_mech_output = lc.error_objective_mech_output
-
-        # Check that the required error-related learning_components have been assigned
-        if not (lc.error_mech and lc.error_mech_output and lc.error_derivative and error_objective_mech_output):
-            raise LearningAuxilliaryError("PROGRAM ERROR:  not all error-related learning_components "
-                                          "have been assigned for {}".format(learning_projection.name))
-
         # Instantiate ObjectiveMechanism
         # Notes:
         # * MappingProjections for ObjectiveMechanism's inputStates will be assigned in its own call to Composition
@@ -421,9 +406,10 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                                    TARGET],
                                                  names=['SAMPLE','TARGET'],
                                                  function=LinearCombination(weights=[-1, 1]),
-                                                 role=TARGET,
+                                                 role=LEARNING,
                                                  params=object_mech_params,
                                                  name=lc.activation_mech_projection.name + " " + OBJECTIVE_MECHANISM)
+        objective_mechanism.learning_role = TARGET
 
         try:
             lc.error_projection = objective_mechanism.inputState.receivesFromProjections[0]
@@ -438,6 +424,16 @@ def _instantiate_learning_components(learning_projection, context=None):
                                               "ObjectiveMechanism for {} when instantiating {}".
                                               format(lc.activation_mech.name, learning_projection.name))
 
+# FIX: RETURN NONE FOR lc.error_mech IF IT IS AN OBJECTIVE MECHANISM
+#      ?? DO TEST BELOWN ON ERROR_SIGNAL_MECH?
+#      PUT CONDITIONAL BELOW ON WHETHER IT IS A TARGET (EXPECT ERROR SIGNAL MECH TO BE AN OBJECTIVE MECHANISM
+#                                                        AND IF NOT A TARGET, THEN EXPECT A LEARNING MECHANISM
+
+
+    # Check that the required error-related learning_components have been assigned
+    if not (lc.error_mech and lc.error_mech_output and lc.error_derivative and error_objective_mech_output):
+        raise LearningAuxilliaryError("PROGRAM ERROR:  not all error-related learning_components "
+                                      "have been assigned for {}".format(learning_projection.name))
 
     # INSTANTIATE LearningMechanism
 
@@ -716,11 +712,11 @@ class learning_components(object):
 
     @activation_derivative.setter
     def activation_derivative(self, assignment):
-        if isinstance(assignment, (function)):
+        if isinstance(assignment, (function_type, method_type)):
             self._activation_derivative = assignment
         else:
             raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to activation_derivative; "
-                                          "it must be a function.")
+                                          "it must be a function or method.")
 
 
     # ---------------------------------------------------------------------------------------------------------------
@@ -732,14 +728,10 @@ class learning_components(object):
             if not self.activation_mech_output:
                 return None
             projections = self.activation_mech_output.sendsToProjections
+            # error_proj must be a MappingProjection that has a LearningProjection to it
             error_proj = next((projection for projection in projections if
                               (isinstance(projection, MappingProjection) and projection.has_learning_projection)),None)
             if not error_proj:
-                # raise LearningAuxilliaryError("error_matrix not identified:  "
-                #                               "no projection was found from activation_mech_output ({}) "
-                #                               "that receives a LearningProjection".
-                #                               format(self.activation_mech_output.name))
-                # Use failure here to identify mechanism for which a TARGET ObjectiveMechanism should be assigned
                 return None
             self.error_projection = error_proj
             return error_proj
@@ -827,8 +819,7 @@ class learning_components(object):
             except AttributeError:
                 raise LearningAuxilliaryError("error_derivative not identified: the function ({}) "
                                               "for error_mech ({}) does not have a derivative attribute".
-                                              format(self.name,
-                                                     self.error_mech.function_object.__class__.__name__,
+                                              format(self.error_mech.function_object.__class__.__name__,
                                                      self.error_mech.name))
         return self._error_derivative or _get_error_deriv()
 
