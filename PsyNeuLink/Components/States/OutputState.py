@@ -584,6 +584,10 @@ def _instantiate_output_states(owner, context=None):
         owner_value = converted_to_2d
     # MODIFIED 3/3/17 END
 
+    # IMPLEMENTATION NOTE:
+    # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
+    #        (that is, there is the same number of items in owner_value as there are outputStates)
+    #        then increment index so as to assign each item of owner_value to each outputState
     if owner.paramsCurrent[OUTPUT_STATES]:
         for output_state in owner.paramsCurrent[OUTPUT_STATES]:
             # Default is PRIMARY_OUTPUT_STATE

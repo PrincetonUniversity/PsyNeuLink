@@ -137,7 +137,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism im
     _objective_mechanism_role
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import ACTIVATION_INPUT,\
-    ACTIVATION_OUTPUT, ERROR_OUTPUT, ERROR_SIGNAL
+    ACTIVATION_OUTPUT, ERROR_SIGNAL
 
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -366,7 +366,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX:     DERIVATIVE OR LEARNING_RATE
         learning_function = BackPropagation(variable_default=[activation_input,
                                                               activation_output,
-                                                              error_output,
+                                                              # error_output,
                                                               error_signal],
                                             activation_derivative_fct=activation_derivative,
                                             error_derivative_fct=error_derivative,
@@ -413,7 +413,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                  monitored_values=[lc.activation_mech_output,
                                                                    TARGET],
                                                  names=['SAMPLE','TARGET'],
-                                                 function=LinearCombination(weights=[-1, 1]),
+                                                 function=LinearCombination(weights=[[-1], [1]]),
                                                  role=LEARNING,
                                                  params=object_mech_params,
                                                  name=lc.activation_mech_projection.name + " " + OBJECTIVE_MECHANISM)
@@ -450,11 +450,6 @@ def _instantiate_learning_components(learning_projection, context=None):
     #        MappingProjection from activation_mech_input
     #    ACTIVATION_OUTPUT:
     #        MappingProjection from activation_mech_output
-    #    ERROR_OUTPUT:
-    #        is_target:
-    #            [1...] size of error_output
-    #        NOT is_target:
-    #            MappingProjection from error_mech_output
     #    ERROR_SIGNAL:
     #        is_target:
     #            MappingProjection from error_signal_mech_output (ObjectiveMechanism.outputState)
@@ -463,7 +458,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     learning_mechanism = LearningMechanism(variable=[activation_input,
                                                      activation_output,
-                                                     error_output,
+                                                     # error_output,
                                                      error_signal],
                                            function=learning_function,
                                            name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM)
@@ -477,16 +472,16 @@ def _instantiate_learning_components(learning_projection, context=None):
                       receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
                       matrix=IDENTITY_MATRIX)
 
-    if is_target:
-        # Assign array of 1's as the fixed value for LearningMechanism's ERROR_OUTPUT;
-        #    this insures that error signal will remain a simple subtraction of TARGET-SAMPLE
-        learning_mechanism.inputStates[ERROR_OUTPUT].baseValue = np.ones_like(error_output)
-
-    else:
-        # Assign MappingProjection from error_mech_output to LearningMechanism's ERROR_OUTPUT inputState
-        MappingProjection(sender=lc.error_mech_output,
-                          receiver=learning_mechanism.inputStates[ERROR_OUTPUT],
-                          matrix=IDENTITY_MATRIX)
+    # if is_target:
+    #     # Assign array of 1's as the fixed value for LearningMechanism's ERROR_OUTPUT;
+    #     #    this insures that error signal will remain a simple subtraction of TARGET-SAMPLE
+    #     learning_mechanism.inputStates[ERROR_OUTPUT].baseValue = np.ones_like(error_output)
+    #
+    # else:
+    #     # Assign MappingProjection from error_mech_output to LearningMechanism's ERROR_OUTPUT inputState
+    #     MappingProjection(sender=lc.error_mech_output,
+    #                       receiver=learning_mechanism.inputStates[ERROR_OUTPUT],
+    #                       matrix=IDENTITY_MATRIX)
 
     # Assign MappingProjection from source of error_signal to LearningMechanism's ERROR_SIGNAL inputState
     # Note:  the source of the error signal is set in lc.error_signal_mech:
