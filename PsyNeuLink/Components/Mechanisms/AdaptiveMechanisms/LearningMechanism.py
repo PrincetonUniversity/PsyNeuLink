@@ -576,7 +576,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if len(self.variable[ERROR_OUTPUT_INDEX]) != len(self.variable[ERROR_SIGNAL_INDEX]):
                 raise LearningMechanismError("The length of the {} ({}) item of variable for {} ({}) "
                                              "must be the same as for the {} ({}) item ({})".
-                                              format(ERROR_INPUT,
+                                              format(ERROR_OUTPUT,
                                                      item_num_string[ERROR_OUTPUT_INDEX],
                                                      self.name,
                                                      len(self.variable[ERROR_OUTPUT_INDEX]),
@@ -617,13 +617,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
-        self.learning_signal = self.function(variable=variable)
+        self.learning_signal, self.error_signal = self.function(variable=variable)
 
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
+        # FIX:  STILL NEEDED??
         # Assign value inside a list so that the result (a matrix represented as a 2d array) is treated as a single
         # item and thereby assigned to a single outputState, rather than as (the usual) 2d array of items (one
         # for each outputState).
-        self.value = [self.learning_signal]
+        self.value = [self.learning_signal, self.error_signal]
         return self.value
