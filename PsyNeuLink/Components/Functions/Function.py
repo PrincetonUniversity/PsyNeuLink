@@ -2453,7 +2453,8 @@ LEARNING_ACTIVATION_FUNCTION = 'activation_function'
 LEARNING_ACTIVATION_INPUT = 0       # a(j)
 # MATRIX = 1             # w
 LEARNING_ACTIVATION_OUTPUT = 1  # a(i)
-LEARNING_ACTIVATION_ERROR = 2   # e
+LEARNING_ERROR_OUTPUT = 2   # e
+LEARNING_ERROR_SIGNAL = 3
 
 class ErrorDerivative(LearningFunction):
     """Calculate the contribution of each sender to the error signal based on the weight matrix
@@ -2567,7 +2568,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
 
     Reinforcement.function:
         variable must be a 1D np.array with three items (standard for learning functions)
-            note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ACTIVATION_ERROR items are used by RL
+            note: only the LEARNING_ACTIVATION_OUTPUT and LEARNING_ERROR_OUTPUT items are used by RL
         assumes matrix to which errors are applied is the identity matrix
             (i.e., set of "parallel" weights from input to output)
         LEARNING_RATE param must be a float
@@ -2620,10 +2621,10 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                     "(if output mechanism being trained uses softmax,"
                                     " its output arg may need to be set to to PROB)".
                                     format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
-            if len(self.variable[LEARNING_ACTIVATION_ERROR]) != 1:
+            if len(self.variable[LEARNING_ERROR_OUTPUT]) != 1:
                 raise ComponentError("Error term ({}) for {} must be an array with a single element or a scalar value "
                                     "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
-                                    format(self.name, self.variable[LEARNING_ACTIVATION_ERROR]))
+                                    format(self.name, self.variable[LEARNING_ERROR_OUTPUT]))
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -2656,7 +2657,7 @@ class Reinforcement(LearningFunction): # ---------------------------------------
         self._check_args(variable=variable, params=params, context=context)
 
         output = self.variable[LEARNING_ACTIVATION_OUTPUT]
-        error = self.variable[LEARNING_ACTIVATION_ERROR]
+        error = self.variable[LEARNING_ERROR_OUTPUT]
 
         # Assign error term to chosen item of output array
         error_array = (np.where(output, self.learning_rate * error, 0))
@@ -2698,7 +2699,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
     componentName = BACKPROPAGATION_FUNCTION
 
-    variableClassDefault = [[0],[0],[0]]
+    variableClassDefault = [[0],[0],[0],[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
@@ -2735,9 +2736,33 @@ class BackPropagation(LearningFunction): # -------------------------------------
     def _validate_variable(self, variable, context=None):
         super()._validate_variable(variable, context)
 
-        if len(self.variable) != 3:
-            raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
+        if len(self.variable) != 4:
+            raise ComponentError("Variable for {} ({}) must have four items: "
+                                 "activation_input, activation_output, error_output, and error_signal)".
                                 format(self.name, self.variable))
+        
+        # Validate that the length of `activation_input` is the same as `activation_output`
+        if len(self.variable[LEARNING_ACTIVATION_INPUT]) != len(self.variable[LEARNING_ACTIVATION_OUTPUT]):
+            item_num_string = ['first', 'second', 'third', 'fourth'][i]
+            raise ComponentError("Length of activation_input ({} item: {}) and activation_output ({} item: {}) "
+                                 "of variable for {} must be equal".
+                                format(item_num_string[LEARNING_ACTIVATION_INPUT],
+                                       len(self.variable[LEARNING_ACTIVATION_INPUT]),
+                                       item_num_string[LEARNING_ACTIVATION_OUTPUT],
+                                       len(self.variable[LEARNING_ACTIVATION_OUTPUT]),
+                                       self.name))
+
+        # Validate that the length of `error_output` is the same as `error_signal`
+        if len(self.variable[LEARNING_ERROR_OUTPUT]) != len(self.variable[LEARNING_ERROR_SIGNAL]):
+            item_num_string = ['first', 'second', 'third', 'fourth'][i]
+            raise ComponentError("Length of activation_input ({} item: {}) and activation_output ({} item: {}) "
+                                 "of variable for {} must be equal".
+                                format(item_num_string[LEARNING_ERROR_OUTPUT],
+                                       len(self.variable[LEARNING_ERROR_OUTPUT]),
+                                       item_num_string[LEARNING_ERROR_SIGNAL],
+                                       len(self.variable[LEARNING_ERROR_SIGNAL]),
+                                       self.name))
+
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_matrix param
@@ -2798,7 +2823,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
         """
 
         activity_output_len = len(self.variable[LEARNING_ACTIVATION_OUTPUT])
-        error_len = len(self.variable[LEARNING_ACTIVATION_ERROR])
+        error_len = len(self.variable[LEARNING_ERROR_OUTPUT])
 
         # Get and validate error_matrix
         from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -2856,20 +2881,21 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
-        # make input a 1D row array
+        # make activation_input a 1D row array
         activation_input = np.array(self.variable[LEARNING_ACTIVATION_INPUT]).\
             reshape(len(self.variable[LEARNING_ACTIVATION_INPUT]),1)
 
-        # make output a 1D column array
+        # make activation_output a 1D column array
         activation_output = np.array(self.variable[LEARNING_ACTIVATION_OUTPUT]).\
             reshape(1,len(self.variable[LEARNING_ACTIVATION_OUTPUT]))
 
-
         # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
-        dE_dA = self.error_derivative_fct(output=self.variable[LEARNING_ACTIVATION_ERROR])
+        dE_dA = self.error_derivative_fct(output=self.variable[LEARNING_ERROR_OUTPUT])
+
+        # FIX:  MULTIPLY dE_dA * ERROR_MECH_OUTPUT??
 
         # COMPUTE WEIGHTED ERROR DERIVATIVE:
-        # weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ACTIVATION_ERROR])
+        # weighted_error_signal = np.dot(self.error_matrix, self.variable[LEARNING_ERROR_OUTPUT])
         weighted_error_derivative = np.dot(self.error_matrix, dE_dA)
 
         # make weighted_error_signal a 1D column array

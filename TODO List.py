@@ -25,6 +25,7 @@
 
 #
 # IMPLEMENT: LearningMechanism:
+#         CONFIRM:  ERROR DERIVATIVE SHOULD BE MULTIPLIED BY ERROR_OUTPUT IN BP
 #         TODO:
 #           • LearningMechanism:
 #             √ variable:
