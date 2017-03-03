@@ -176,9 +176,9 @@ def _is_learning_spec(spec):
 def _instantiate_learning_components(learning_projection, context=None):
     """Instantiate learning components for a LearningProjection
 
-    Instantiate:
-    - a LearningMechanism
-    - its projection from an Objective Mechanism,
+    Instantiate a LearningMechanism or ObjectiveMechanism as the sender for the LearningProjection:
+    - a LearningMechanism for projections that project to a
+
     - the ObjectiveMechanism itself, if necessary
 
     Assumes that learning_projection's variable and parameters have been specified and validated,
