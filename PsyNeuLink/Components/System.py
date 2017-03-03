@@ -2485,7 +2485,7 @@ class System_Base(System):
         """
         return list(mech_tuple[0] for mech_tuple in self.executionGraph)
 
-    def show_graph(self, output_fmt='pdf', direction = 'LR', projections='edges'):
+    def show_graph(self, output_fmt='pdf', direction = 'BT', projections='edges'):
         """Shows a graph of a system's mechanisms and projections.
         Arguments
         output_fmt : output format can be either 'pdf' or 'jupyter'
@@ -2495,8 +2495,10 @@ class System_Base(System):
             possible inputs are BT, TB, LR, and RL
         """
 
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+
         import graphviz as gv
-            
+
         system_graph = self.graph
         # build graph and configure visualisation settings
 
@@ -2515,7 +2517,7 @@ class System_Base(System):
         if projections == 'edges':
             # build list of receivers
             receivers = list(system_graph.keys())
-            
+
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
@@ -2543,7 +2545,7 @@ class System_Base(System):
         elif projections == 'nodes':
                         # build list of receivers
             receivers = list(system_graph.keys())
-            
+
             # loop through each reciever
             for receiver in receivers:
                 # filter out objective mechanism
@@ -2575,20 +2577,21 @@ class System_Base(System):
         G = gv.Digraph(engine = "dot", 
                        node_attr = {'fontsize':'12', 
                                     'fontname': 'arial', 
-                                    'shape':'oval'}, 
-                       edge_attr = {'arrowhead':'halfopen', 
+                                    'shape': 'oval',
+                                    'style':'bold'}, 
+                       edge_attr = {'arrowhead':'normal', 
                                     'fontsize': '10', 
-                                    'fontname': 'arial'},
+                                    'fontname': 'arial',
+                                    'style':'bold'},
                        graph_attr = {"rankdir" : direction})
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
-        
+        # LEARNING GRAPH
         learning_graph = self.learningGraph
-        
+
         rcvrs = list(learning_graph.keys())
-        
+
         # for each rcvr
         for rcvr in rcvrs:
             # if rcvr is projection
@@ -2600,65 +2603,54 @@ class System_Base(System):
                     G.node(rcvr.name, shape='diamond')
                     G.node(sndr.name)
                     G.edge(sndr.name, rcvr.name)
-            # elif rcvr is mechanism
             else:
-                # create two lists..
-                rcvr_projections = []
-                sndr_projections = []
-                # for each input state in rcvr,
-                rcvr_inputstates = list(rcvr.inputStates.values())
-                for rcvr_inputstate in rcvr_inputstates:
-                    # for each projection sending to input state,
-                    projections = rcvr_inputstate.receivesFromProjections
-                    for projection in projections:
-                        # add projection name to list 1
-                        rcvr_projections.append(projection.name)
-                # create list of senders
                 sndrs = learning_graph[rcvr]
-                # for each sender of the given reciever
-                for sndr in sndrs: 
-                    # for each output state in sndr,
-                    sndr_outputstates = list(sndr.outputStates.values())
-                    for sndr_outputstate in sndr_outputstates:
-                        # for each projection being sent to by output state
-                        projections = sndr_outputstate.sendsToProjections
-                        for projection in projections:
-                            # add projection name to list 2
-                            sndr_projections.append(projection.name)
-                    # use list intersection to get correct projection
-                    proj_name = list(set(rcvr_projections).intersection(sndr_projections))[0]
-                    # add nodes and edges
+                for sndr in sndrs:
                     G.node(rcvr.name)
                     G.node(sndr.name)
-                    G.node(proj_name, shape='diamond')
-                    G.edge(sndr.name, proj_name)
-                    G.edge(proj_name, rcvr.name)
-                
+                    G.edge(sndr.name, rcvr.name)
+
+
         if output_fmt == 'pdf':
             G.view(self.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
             return G
 
-    def show_full_graph(self, output_fmt='pdf', direction='BT'):
+    def show_full_graph(self, output_fmt='pdf', 
+                                       direction='TB', 
+                                       proj_shape='diamond', 
+                                       mech_shape='oval',
+                                       learning_color='dodgerblue',
+                                       system_color='crimson',
+                                       label_internal_projections=False
+                                       ):
+        
+        
+        # filter objective mechanisms from system graph
+        filter_objective_mechanisms=True
+        
+        
         # legwork
         import graphviz as gv   
         G = gv.Digraph(engine = "dot", 
                        node_attr = {'fontsize':'12', 
                                     'fontname': 'arial', 
-                                    'shape':'oval'}, 
-                       edge_attr = {'arrowhead':'halfopen', 
+                                    'shape': mech_shape,
+                                    'style':'bold'}, 
+                       edge_attr = {'arrowhead':'normal', 
                                     'fontsize': '10', 
-                                    'fontname': 'arial'},
+                                    'fontname': 'arial',
+                                    'style':'bold'},
                        graph_attr = {"rankdir" : direction})
 
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
         from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
 
-        # add learning graph first
+        # LEARNING GRAPH
         learning_graph = self.learningGraph
-        
+
         rcvrs = list(learning_graph.keys())
-        
+
         # for each rcvr
         for rcvr in rcvrs:
             # if rcvr is projection
@@ -2667,8 +2659,8 @@ class System_Base(System):
                 sndrs = learning_graph[rcvr]
                 for sndr in sndrs:
                     # get rcvr name, sndr name, then add nodes, then add edge
-                    G.node(rcvr.name, shape='diamond')
-                    G.node(sndr.name)
+                    G.node(rcvr.name, shape=proj_shape, color=learning_color)
+                    G.node(sndr.name, color=learning_color)
                     G.edge(sndr.name, rcvr.name)
             # elif rcvr is mechanism
             else:
@@ -2686,7 +2678,7 @@ class System_Base(System):
                 # create list of senders
                 sndrs = learning_graph[rcvr]
                 # for each sender of the given reciever
-                for sndr in sndrs: 
+                for sndr in sndrs:
                     # for each output state in sndr,
                     sndr_outputstates = list(sndr.outputStates.values())
                     for sndr_outputstate in sndr_outputstates:
@@ -2698,26 +2690,29 @@ class System_Base(System):
                     # use list intersection to get correct projection
                     proj_name = list(set(rcvr_projections).intersection(sndr_projections))[0]
                     # add nodes and edges
-                    G.node(rcvr.name)
-                    G.node(sndr.name)
-                    G.node(proj_name, shape='diamond')
-                    G.edge(sndr.name, proj_name)
-                    G.edge(proj_name, rcvr.name)
+                    G.node(rcvr.name, color=learning_color)
+                    G.node(sndr.name, color=learning_color)
                     
-                    
-        # then get sytem graph
-        system_graph = self.graph
+                    if label_internal_projections:
+                        G.edge(rcvr.name, sndr.name, label=proj_name)
+                    else:
+                        G.edge(rcvr.name, sndr.name)
 
-        receivers = list(system_graph.keys())
-                
+
+        # SYSTEM GRAPH       
+        receivers = list(self.graph.keys())
+
         # loop through each reciever
         for receiver in receivers:
             # filter out objective mechanism
-            if isinstance(receiver[0], ObjectiveMechanism):
-                continue
+            #==============================================#
+            if filter_objective_mechanisms:
+                if isinstance(receiver[0], ObjectiveMechanism):
+                    continue
+            #==============================================#
             receiver_name = receiver[0].name
-            G.node(receiver_name)
-            senders = system_graph[receiver]
+            G.node(receiver_name, color=system_color)
+            senders = self.graph[receiver]
             # loop through each sender
             for sender in senders:
                 sender_name = sender[0].name
@@ -2726,12 +2721,13 @@ class System_Base(System):
                     if projection.receiver.owner == receiver[0]:
                         edge_name = projection.name
                 # add the edge
-                G.node(edge_name, shape='diamond')
-                G.edge(sender_name, edge_name)
+                G.node(edge_name, shape=proj_shape, color=system_color)
+
+                G.edge(sender_name, edge_name, arrowhead='none')
                 G.edge(edge_name, receiver_name)
-                
+
         if output_fmt == 'pdf':
-            G.view(self.name.replace(" ", "-"), cleanup=True)
+            G.view(system.name.replace(" ", "-"), cleanup=True)
         elif output_fmt == 'jupyter':
             return G
 
