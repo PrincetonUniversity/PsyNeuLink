@@ -2943,7 +2943,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         dE_dA = np.dot(self.error_matrix, self.error_signal)
         dA_dW  = self.activation_derivative_fct (input=self.activation_input, output=self.activation_output)
-        dE_dW = self.learning_rate * self.activation_output * dE_dA * dA_dW
+        dE_dW = dE_dA * dA_dW
+        weight_change_matrix = self.learning_rate * self.activation_input * dE_dW
+
+        return [weight_change_matrix, dE_dW]
 
 
 
