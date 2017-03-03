@@ -934,7 +934,26 @@ class EVCMechanism(ControlMechanism_Base):
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
         all_specs_extracted_from_tuples = []
         for item in all_specs:
-            # Validate specification
+            # VALIDATE SPECIFICATION
+            # Handle EVCMechanism's tuple format:
+            # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
+            if isinstance(item, tuple):
+                if len(item) != 3:
+                    raise MechanismError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
+                                         "has {2} items;  it should be 3".
+                                         format(item, self.name, len(state_spec)))
+                if not isinstance(item[1], numbers.Number):
+                    raise MechanismError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                         "must be a number".
+                                         format(item, self.name, state_spec[0]))
+                if not isinstance(item[2], numbers.Number):
+                    raise MechanismError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
+                                         "must be a number".
+                                         format(item, self.name, state_spec[0]))
+                # Set state_spec to the output_state item for validation below
+                item = item[0]
+            # MODIFIED 2/22/17 END
+            # Validate by ObjectiveMechanism:
             validate_monitored_value(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
