@@ -176,31 +176,39 @@ def _is_learning_spec(spec):
 def _instantiate_learning_components(learning_projection, context=None):
     """Instantiate learning components for a LearningProjection
 
-    Instantiate a LearningMechanism or ObjectiveMechanism as the sender for the LearningProjection:
-    - a LearningMechanism for projections that project to a
+    Instantiates a LearningMechanism or ObjectiveMechanism as the sender for each learning_projection in a learning
+        sequence.  A learning sequence is defined as a sequence of ProcessingMechanisms, each of which has a
+        projection — that has been specified for learning — to the next mechanism in the sequence.  This method
+        instantiates the components required to support learning for those projections (most importantly,
+        the LearningMechanisms that provide them with the learning_signal required to modify the matrix of the
+        projection, and the ObjectiveMechanism that calculates the error_signal used to generate the learning_signals).
 
-    - the ObjectiveMechanism itself, if necessary
 
-    Assumes that learning_projection's variable and parameters have been specified and validated,
-       which is the case when this method is called from the learning_projection itself in _instantiate_sender().
+    It instantiates a LearningMechanism or ObjectiveMechanism as the sender for the learning_projection:
+    - a LearningMechanism for projections to any Processing mechanism that is not the last in the learning sequence;
+    - an ObjectiveMechanism for projections to a Processing mechanism that is the last in the learning sequence
+
+    Assume that learning_projection's variable and parameters have been specified and validated,
+       (which is the case when this method is called from the learning_projection itself in _instantiate_sender()).
 
     Notes:
 
-    * See learning_components class for names used for components of learning used here.
+    * Once the `receiver` for the learning_projection has been identified, or instantiated:
+        - it is thereafter referred to (by reference to it owner) as the `activation_mech_projection`,
+            and the mechanism to which it projects as the `activation_mech`;
+        - the mechanism to which it projects is referred referred to as the error_mech (the source of the error_signal).
 
-    * Once the `receiver` for the learning_projection has been identified, or instantiated,
-          it is thereafter referred to (by reference to it owner) as the `activation_mech_projection`,
-          and the mechanism to which it projects as the `activation_mech`.
+    * See learning_components class for the names of the components of learning used here.
 
-    * This method only supports a single pathway for learning.  This is consistent with its implementation at the
-      process level (convergent and divergent pathways for learning can be accomplished through compostion in a
-      system).  Accordingly:
+    * This method supports only a single pathway for learning;  that is, the learning sequence must be a linear
+        sequence of ProcessingMechanisms.  This is consistent with its implementation at the process level;
+        convergent and divergent pathways for learning can be accomplished through compostion in a
+        system.  Accordingly:
 
-      - each LearningMechanism can have only one LearningProjection
+            - each LearningMechanism can have only one LearningProjection
+            - each ProcessingMechanism can have only one MappingProjection that is subject to learning
 
-      - each ProcessingMechanism can have only one MappingProjection that is subject to learning
-
-      When searching downstream for projections that are being learned (to identify the next objective mechanism as a
+      When searching downstream for projections that are being learned (to identify the error_mech mechanism as a
       source for the LearningMechanism's error_signal), the method uses the first projection that it finds, beginning
       in `primary outputState <OutputState_Primary>` of the activation_mech_output, and continues similarly
       in the error_mech.  If any conflicting implementations of learning components are encountered,
@@ -235,13 +243,12 @@ def _instantiate_learning_components(learning_projection, context=None):
         raise LearningAuxilliaryError("{} can't be assigned as LearningProjection to {} since that already has one.".
                                       format(learning_projection.name, learning_projection.receiver.owner.name))
 
-
-    # Now that activation_mech_projection has been identified and validated, get its components (lc)
+    # Now that the receiver has been identified, use it to get the components (lc) needed for learning.
     # Note: error-related components may not yet be defined (if LearningProjection is for a TERMINAL mechanism)
     lc = learning_components(learning_projection=learning_projection)
 
     # Check if activation_mech already has a projection to a LearningMechanism
-    # IMPLEMENTATION NOTE: this uses the first projection found (starting with the primary outputState
+    # IMPLEMENTATION NOTE: this uses the first projection found (starting with the primary outputState)
 
     for projection in lc.activation_mech_output.sendsToProjections:
 
