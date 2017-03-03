@@ -430,10 +430,10 @@ def _instantiate_learning_components(learning_projection, context=None):
 #                                                        AND IF NOT A TARGET, THEN EXPECT A LEARNING MECHANISM
 
 
-    # Check that the required error-related learning_components have been assigned
-    if not (lc.error_mech and lc.error_mech_output and lc.error_derivative):
-        raise LearningAuxilliaryError("PROGRAM ERROR:  not all error-related learning_components "
-                                      "have been assigned for {}".format(learning_projection.name))
+    # # Check that the required error-related learning_components have been assigned
+    # if not (lc.error_mech and lc.error_mech_output and lc.error_derivative):
+    #     raise LearningAuxilliaryError("PROGRAM ERROR:  not all error-related learning_components "
+    #                                   "have been assigned for {}".format(learning_projection.name))
 
     # INSTANTIATE LearningMechanism
 
@@ -903,6 +903,8 @@ class learning_components(object):
                                           "it must be a LearningMechanism.")
 
     # ---------------------------------------------------------------------------------------------------------------
+    # FIX: MODIFY TO RETURN EITHER outputState if it is an ObjectiveMechanism or
+    #                              outputStates[ERROR_SIGNAL] if it it a LearningMechanism
     # error_signal_mech_output: outputState of LearningMechanism for error_projection (OutputState)
     @property
     def error_signal_mech_output(self):
@@ -910,16 +912,30 @@ class learning_components(object):
         def _get_err_sig_mech_out():
             if not self.error_signal_mech:
                 return None
-            try:
-                self.error_signal_mech_output = self.error_signal_mech.outputState
-            except AttributeError:
-                raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
-                                              "does not appear to have an outputState".
-                                              format(self.error_signal_mech_output))
-            if not isinstance(self.error_signal_mech_output, OutputState):
-                raise LearningAuxilliaryError("error_signal_mech_output found ({}) but it does not "
-                                              "appear to be an OutputState".
-                                              format(self.error_objective_mech_output.name))
+            if isinstance(self.error_signal_mech, ObjectiveMechanism):
+                try:
+                    self.error_signal_mech_output = self.error_signal_mech.outputState
+                except AttributeError:
+                    raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
+                                                  "does not appear to have an outputState".
+                                                  format(self.error_signal_mech.name))
+                if not isinstance(self.error_signal_mech_output, OutputState):
+                    raise LearningAuxilliaryError("error_signal_mech_output found ({}) for {} but it does not "
+                                                  "appear to be an OutputState".
+                                                  format(self.error_signal_mech.name,
+                                                         self.error_signal_mech_output.name))
+            elif isinstance(self.error_signal_mech, LearningMechanism):
+                try:
+                    self.error_signal_mech_output = self.error_signal_mech.outputStates[ERROR_SIGNAL]
+                except AttributeError:
+                    raise LearningAuxilliaryError("error_signal_mech_output not identified: error_signal_mech ({})"
+                                                  "does not appear to have an ERROR_SIGNAL outputState".
+                                                  format(self.error_signal_mech))
+                if not isinstance(self.error_signal_mech_output, OutputState):
+                    raise LearningAuxilliaryError("error_signal_mech_output found ({}) for {} but it does not "
+                                                  "appear to be an OutputState".
+                                                  format(self.error_signal_mech.name,
+                                                         self.error_signal_mech_output.name))
             return self.error_signal_mech.outputState
         return self._error_signal_mech_output or _get_err_sig_mech_out()
 

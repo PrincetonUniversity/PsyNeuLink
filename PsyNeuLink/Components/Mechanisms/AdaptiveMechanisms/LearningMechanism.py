@@ -560,17 +560,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
 
-        # Validate that the length of `activation_input` is the same as `activation_output`
-        if len(self.variable[ACTIVATION_INPUT_INDEX]) != len(self.variable[ACTIVATION_OUTPUT_INDEX]):
+        # Validate that the length of `activation_output` is the same as `error_output`
+        if len(self.variable[ACTIVATION_OUTPUT_INDEX]) != len(self.variable[ERROR_OUTPUT_INDEX]):
                 raise LearningMechanismError("The length of the {} ({}) item of variable for {} ({}) "
                                              "must be the same as for the {} ({}) item ({})".
-                                              format(ACTIVATION_INPUT,
-                                                     item_num_string[ACTIVATION_INPUT_INDEX],
-                                                     self.name,
-                                                     len(self.variable[ACTIVATION_INPUT_INDEX]),
-                                                     ACTIVATION_OUTPUT,
+                                              format(ACTIVATION_OUTPUT,
                                                      item_num_string[ACTIVATION_OUTPUT_INDEX],
-                                                     len(self.variable[ACTIVATION_OUTPUT_INDEX])))
+                                                     self.name,
+                                                     len(self.variable[ACTIVATION_OUTPUT_INDEX]),
+                                                     ERROR_OUTPUT,
+                                                     item_num_string[ERROR_OUTPUT_INDEX],
+                                                     len(self.variable[ERROR_OUTPUT_INDEX])))
 
         # Validate that the length of `error_output` is the same as `error_signal`
         if len(self.variable[ERROR_OUTPUT_INDEX]) != len(self.variable[ERROR_SIGNAL_INDEX]):
