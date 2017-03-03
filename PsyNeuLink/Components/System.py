@@ -2617,7 +2617,7 @@ class System_Base(System):
             return G
 
     def show_full_graph(self, output_fmt='pdf', 
-                                       direction='TB', 
+                                       direction='BT', 
                                        proj_shape='diamond', 
                                        mech_shape='oval',
                                        learning_color='dodgerblue',
