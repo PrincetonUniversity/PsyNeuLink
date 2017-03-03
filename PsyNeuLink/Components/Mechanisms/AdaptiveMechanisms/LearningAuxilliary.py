@@ -352,7 +352,8 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         else:
             error_output = np.zeros_like(lc.error_mech_output.value)
-            error_signal = np.zeros_like(lc.error_signal_mech_output.value)
+            temp = lc.error_signal_mech
+            error_signal = np.zeros_like(lc.error_signal_mech.outputStates[ERROR_SIGNAL].value)
             error_matrix = lc.error_matrix
             try:
                 error_derivative = lc.error_derivative
