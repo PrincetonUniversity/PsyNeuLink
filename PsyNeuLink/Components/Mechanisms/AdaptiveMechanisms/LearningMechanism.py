@@ -495,8 +495,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         INPUT_STATES:input_state_names,
-        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL,
-                        NAME:ERROR_SIGNAL}]
+        OUTPUT_STATES:[{NAME:LEARNING_SIGNAL},
+                       {NAME:ERROR_SIGNAL}]
     })
 
     @tc.typecheck

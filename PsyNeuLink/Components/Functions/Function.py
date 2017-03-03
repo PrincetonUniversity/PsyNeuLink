@@ -2890,7 +2890,6 @@ class BackPropagation(LearningFunction): # -------------------------------------
         #   error_derivative = error_derivative(error_output) * error_signal
         #   np.dot(error_matrix, error_derivative
 
-
         self._check_args(variable, params, context)
 
         # # make activation_input a 1D row array
@@ -2941,12 +2940,22 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # return [weight_change_matrix, dE_dW]
         # # MODIFIED 3/3/17 END
 
+        # MODIFIED 3/3/17 NEWEST:
+        # make activation_input a 1D row array
+        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
+
+        # Contribution of each output unit to the error above
         dE_dA = np.dot(self.error_matrix, self.error_signal)
+
+        # Derivative of the output activity
         dA_dW  = self.activation_derivative_fct (input=self.activation_input, output=self.activation_output)
+
+        # Chain rule to get the derivative of the error with respect to the weights
         dE_dW = dE_dA * dA_dW
-        weight_change_matrix = self.learning_rate * self.activation_input * dE_dW
+        weight_change_matrix = self.learning_rate * activation_input * dE_dW
 
         return [weight_change_matrix, dE_dW]
+        # MODIFIED 3/3/17 END
 
 
 
