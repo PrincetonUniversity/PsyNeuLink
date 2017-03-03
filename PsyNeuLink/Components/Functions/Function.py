@@ -2711,7 +2711,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                  variable_default=variableClassDefault,
                  # variable_default:tc.any(list, np.ndarray),
                  activation_derivative_fct :tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
-                 error_derivative_fct:tc.option(tc.any(function_type, method_type))=Logistic().derivative,
+                 error_derivative_fct:tc.optional(tc.any(function_type, method_type))=Logistic().derivative,
                  error_matrix:tc.optional(tc.any(list, np.ndarray, np.matrix, ParameterState, MappingProjection))=None,
                  learning_rate:tc.optional(parameter_spec)=1.0,
                  params=None,
