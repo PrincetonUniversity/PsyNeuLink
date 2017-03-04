@@ -285,24 +285,15 @@ ERROR_OUTPUT_INDEX = 2
 ERROR_SIGNAL_INDEX = 3
 
 # Used to name inputStates:
-ACTIVATION_INPUT = 'activation_input'
-ACTIVATION_OUTPUT = 'activation_output'
-# ERROR_OUTPUT = 'error_output'
-ERROR_SIGNAL = 'error_signal'
+ACTIVATION_INPUT = 'activation_input'     # inputState
+ACTIVATION_OUTPUT = 'activation_output'   # inputState
+ERROR_SIGNAL = 'error_signal'             # inputState and outputState
+LEARNING_SIGNAL = 'learning_signal'       #                outputState
+
+input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
+output_state_names = [LEARNING_SIGNAL, ERROR_SIGNAL]
+
 ERROR_SOURCE = 'error_source'
-# input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_OUTPUT, ERROR_SIGNAL]
-input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
-
-
-# Name of outputState:
-LEARNING_SIGNAL = 'learning_signal'
-
-TARGET_ERROR = "TARGET_ERROR"
-TARGET_ERROR_MEAN = "TARGET_ERROR_MEAN"
-TARGET_ERROR_SUM = "TARGET_ERROR_SUM"
-TARGET_SSE = "TARGET_SSE"
-TARGET_MSE = "TARGET_MSE"
-
 
 DefaultTrainingMechanism = ObjectiveMechanism
 
@@ -446,12 +437,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         calculates the error from that mechanism's output and a target input to the process being learned.
 
     error_source : ObjectiveMechanism or LearningMechanism
-        the mechanism from which the LearningMechanism gets its `error_signal`.  If an ObjectiveMechanism is specified,
-        a `MappingProjection` will automatically be generated from the `primary outputState <OutputState_Primary>` of
-        the ObjectiveMechanism specified to the `ERROR_SIGNAL` inputState of the LearningSignal.  If a
-        LearningMechanism is specified, a `MappingProjection` will automatically be generated from the
-        `primary outputState <OutputState_Primary>` of the LearningMechanism specified to the `ERROR_SIGNAL` inputState
-        of the LearningSignal.
+        the mechanism from which the LearningMechanism gets its `error_signal`.  The LearningMechanism receives a
+        projection from the `error_source` to its `ERROR_SIGNAL inputState <LearningMechanism.inputStates>`.
+        If the `error_source` is an ObjectiveMechanism, the projection is from its
+        `primary outputState <OutputState_Primary>`.  If the `error_source` is another LearningMechanism,
+        the projection is from its `ERROR_SIGNAL outputState <LearningMechanism.outputStates>`.  In either case,
+        the MappingProjection uses an `IDENTITY_MATRIX`, and so the value of the outputState used for the
+        `error_source` must be equal in length to the value of the LearningMechanism's `ERROR_SIGNAL` inputstate.
 
     COMMENT:
        MOVE THIS TO Backpropagation
@@ -516,7 +508,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
-                 error_source:tc.any(Mechanism),
+                 error_source:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
                  learning_rate:float=1.0,
                  params=None,
@@ -525,7 +517,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(function=function,
+        params = self._assign_args_to_param_dicts(error_source=error_source,
+                                                  function=function,
                                                   learning_rate=learning_rate,
                                                   params=params)
 
@@ -617,7 +610,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         except KeyError:
             pass
 
-    # def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, context=None):
+
+        super()._instantiate_attributes_before_function(context=context)
+        _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
 
 
     def _validate_error_signal(self, error_signal):
@@ -671,3 +667,40 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         self.value = [self.learning_signal, self.error_signal]
         return self.value
+
+
+def _instantiate_error_signal_projection(sender, receiver):
+    """Instantiate a MappingProjection to carry an error_signal to a LearningMechanism
+
+    Can take as the sender an `ObjectiveMechanism` or a `LearningMechanism`.
+    If the sender is an ObjectiveMechanism, uses its `primary outputState <OutputState_Primary>`.
+    If the sender is a LearningMechanism, uses its `ERROR_SIGNAL outputState <LearningMechanism.outputStates>`.
+    The receiver must be a LearningMechanism; its `ERROR_SIGNAL inputState <LearningMechanism.inputStates>` is used.
+    Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
+    """
+
+    if isinstance(sender, ObjectiveMechanism):
+        sender = sender.outputState
+    elif isinstance(sender, LearningMechanism):
+        sender = sender.outputStates[ERROR_SIGNAL]
+    else:
+        raise LearningMechanismError("Sender of the error signal projection {} must be either "
+                                     "an ObjectiveMechanism or a LearningMechanism".
+                                     format(sender))
+
+    if isinstance(receiver, LearningMechanism):
+        receiver = receiver.inputStates[ERROR_SIGNAL]
+    else:
+        raise LearningMechanismError("Receiver of the error signal projection {} must be a LearningMechanism".
+                                     format(receiver))
+
+    if len(sender.value) != len(receiver.value):
+        raise LearningMechanismError("The length of the outputState ({}) for the sender ({}) of "
+                                     "the error signal projection does not match "
+                                     "the length of the inputState ({}) for the receiver ({})".
+                                     format(len(sender.value), sender.owner.name,
+                                            len(receiver.value),receiver.owner.name))
+
+    return MappingProjection(sender=sender,
+                             receiver=receiver,
+                             matrix=IDENTITY_MATRIX)

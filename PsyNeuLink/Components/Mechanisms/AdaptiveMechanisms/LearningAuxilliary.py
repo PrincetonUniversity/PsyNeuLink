@@ -432,17 +432,6 @@ def _instantiate_learning_components(learning_projection, context=None):
                                               "ObjectiveMechanism for {} when instantiating {}".
                                               format(lc.activation_mech.name, learning_projection.name))
 
-# FIX: RETURN NONE FOR lc.error_mech IF IT IS AN OBJECTIVE MECHANISM
-#      ?? DO TEST BELOWN ON ERROR_SIGNAL_MECH?
-#      PUT CONDITIONAL BELOW ON WHETHER IT IS A TARGET (EXPECT ERROR SIGNAL MECH TO BE AN OBJECTIVE MECHANISM
-#                                                        AND IF NOT A TARGET, THEN EXPECT A LEARNING MECHANISM
-
-
-    # # Check that the required error-related learning_components have been assigned
-    # if not (lc.error_mech and lc.error_mech_output and lc.error_derivative):
-    #     raise LearningAuxilliaryError("PROGRAM ERROR:  not all error-related learning_components "
-    #                                   "have been assigned for {}".format(learning_projection.name))
-
     # INSTANTIATE LearningMechanism
 
     # - LearningMechanism incoming projections (by inputState):
@@ -451,44 +440,30 @@ def _instantiate_learning_components(learning_projection, context=None):
     #    ACTIVATION_OUTPUT:
     #        MappingProjection from activation_mech_output
     #    ERROR_SIGNAL:
-    #        is_target:
-    #            MappingProjection from error_signal_mech_output (ObjectiveMechanism.outputState)
-    #        NOT is_target:
-    #            MappingProjection from error_signal_mech_output (LearningMechanism.outputStates[ERROR_SIGNAL]
+    #        specified in error_source argument:
+    #        Note:  the error_source for LearningMechanism is set in lc.error_signal_mech:
+    #            if is_target, this comes from the primary outputState of objective_mechanism;
+    #            otherwise, it comes from outputStates[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
 
     learning_mechanism = LearningMechanism(variable=[activation_input,
                                                      activation_output,
-                                                     # error_output,
                                                      error_signal],
+                                           error_source=lc.error_signal_mech,
                                            function=learning_function,
                                            name = lc.activation_mech_projection.name + " " +LEARNING_MECHANISM)
+
+    # IMPLEMENTATION NOTE:
+    # ADD activation_input and activation_output ARGUMENTS TO LearningMechanism, AND THEN INSTANTIATE THE
+    # MappingProjections BELOW IN HELPER METHODS (FOLLOWING DESIGN OF _instantiate_error_source() IN LearningMechanism):
 
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
                       matrix=IDENTITY_MATRIX)
+
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
-                      matrix=IDENTITY_MATRIX)
-
-    # if is_target:
-    #     # Assign array of 1's as the fixed value for LearningMechanism's ERROR_OUTPUT;
-    #     #    this insures that error signal will remain a simple subtraction of TARGET-SAMPLE
-    #     learning_mechanism.inputStates[ERROR_OUTPUT].baseValue = np.ones_like(error_output)
-    #
-    # else:
-    #     # Assign MappingProjection from error_mech_output to LearningMechanism's ERROR_OUTPUT inputState
-    #     MappingProjection(sender=lc.error_mech_output,
-    #                       receiver=learning_mechanism.inputStates[ERROR_OUTPUT],
-    #                       matrix=IDENTITY_MATRIX)
-
-    # Assign MappingProjection from source of error_signal to LearningMechanism's ERROR_SIGNAL inputState
-    # Note:  the source of the error signal is set in lc.error_signal_mech:
-    #     if is_target, this comes from the outputState of objective_mechanism;
-    #     otherwise, it comes from outputStates[ERROR_SIGNAL] of the LearningMechanism for lc.error_mech
-    MappingProjection(sender=lc.error_signal_mech_output,
-                      receiver=learning_mechanism.inputStates[ERROR_SIGNAL],
                       matrix=IDENTITY_MATRIX)
 
     # Assign learning_mechanism as sender of learning_projection and return
