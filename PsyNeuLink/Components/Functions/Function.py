@@ -2944,7 +2944,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
         weight_change_matrix = self.learning_rate * activation_input * dE_dW
 
         # TEST PRINT:
-        print("\nBACKPROP:\n-input: {}\n-error: {}\n-derivative: {}".format(activation_input,dE_dA,dA_dW))
+        if context and not 'INIT' in context:
+            print("\nBACKPROP:\n-input: {}\n-error: {}\n-derivative: {}".format(activation_input,dE_dA,dA_dW))
 
 
         return [weight_change_matrix, dE_dW]
