@@ -339,7 +339,6 @@ from PsyNeuLink.Components.Projections.MappingProjection import MappingProjectio
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -1729,7 +1728,6 @@ class Process_Base(Process):
     def _update_input(self):
         for s, i in zip(self.processInputStates, range(len(self.processInputStates))):
             self.input = s.value
-        TEST = True
     # MODIFIED 2/17/17 END
 
     def _instantiate__deferred_inits(self, context=None):
@@ -1809,33 +1807,70 @@ class Process_Base(Process):
         for projection in projection_list:
             projection._deferred_init()
 
-            # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS?
+            # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
             # For each parameter_state of the projection
             try:
                 for parameter_state in projection.parameterStates.values():
-                    # Initialize each LearningProjection
-                    for learning_projection in parameter_state.receivesFromProjections:
-                        learning_projection._deferred_init(context=context)
+                    # Initialize each projection to the parameterState (learning or control)
+                    # IMPLEMENTATION NOTE:  SHOULD ControlProjections BE IGNORED HERE?
+                    for param_projection in parameter_state.receivesFromProjections:
+                        param_projection._deferred_init(context=context)
+                        # MODIFIED 3/3/17 NEW:
+                        if isinstance(param_projection, LearningProjection):
+                            # Get ObjectiveMechanism if there is one, and add to _monitoring_mech_tuples
+                            try:
+                                objective_mechanism = projection.objective_mechanism
+                            except AttributeError:
+                                pass
+                            else:
+                                # If objective_mechanism is not already in _monitoring_mech_tuples,
+                                #     pack in tuple and add it
+                                if objective_mechanism and not any(objective_mechanism is mech_tuple.mechanism for
+                                                                    mech_tuple in self._monitoring_mech_tuples):
+                                    objective_mech_tuple = MechanismTuple(objective_mechanism,
+                                                                           None,
+                                                                           self._phaseSpecMax+1)
+                                    self._monitoring_mech_tuples.append(objective_mech_tuple)
+                            # Get LearningMechanism and add to _monitoring_mech_tuples; raise exception if not found
+                            try:
+                                learning_mechanism = projection.learning_mechanism
+                            except AttributeError:
+                                raise ProcessError("{} is missing a LearningMechanism".format(param_projection.name))
+                            else:
+                                # If learning_mechanism is not already in _monitoring_mech_tuples,
+                                #     pack in tuple and add it
+                                if learning_mechanism and not any(learning_mechanism is mech_tuple.mechanism for
+                                                                    mech_tuple in self._monitoring_mech_tuples):
+                                    learning_mech_tuple = MechanismTuple(learning_mechanism,
+                                                                           None,
+                                                                           self._phaseSpecMax+1)
+                                    self._monitoring_mech_tuples.append(learning_mech_tuple)
+                        # MODIFIED 3/3/17 END
+
             # Not all Projection subclasses instantiate parameterStates
             except AttributeError as e:
                 if 'parameterStates' in e.args[0]:
                     pass
                 else:
                     error_msg = 'Error in attempt to initialize LearningProjection ({}) for {}: \"{}\"'.\
-                        format(learning_projection.name, projection.name, e.args[0])
+                        format(param_projection.name, projection.name, e.args[0])
                     raise ProcessError(error_msg)
 
-            # Check if projection has monitoringMechanism attribute
-            try:
-                monitoring_mechanism = projection.monitoringMechanism
-            except AttributeError:
-                pass
-            else:
-                # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
-                if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
-                                                    mech_tuple in self._monitoring_mech_tuples):
-                    monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
-                    self._monitoring_mech_tuples.append(monitoring_mech_tuple)
+            # # MODIFIED 3/3/17 OLD:
+            # # Check if projection has monitoringMechanism attribute
+            # try:
+            #     monitoring_mechanism = projection.monitoringMechanism
+            # except AttributeError:
+            #     pass
+            # else:
+            #     # If a *new* monitoringMechanism has been assigned, pack in tuple and assign to _monitoring_mech_tuples
+            #     if monitoring_mechanism and not any(monitoring_mechanism is mech_tuple.mechanism for
+            #                                         mech_tuple in self._monitoring_mech_tuples):
+            #         monitoring_mech_tuple = MechanismTuple(monitoring_mechanism, None, self._phaseSpecMax+1)
+            #         self._monitoring_mech_tuples.append(monitoring_mech_tuple)
+            # MODIFIED 3/3/17 END
+
+
 
     def _check_for_target_mechanism(self):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
