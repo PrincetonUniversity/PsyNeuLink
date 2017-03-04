@@ -324,7 +324,7 @@ class MappingProjection(Projection_Base):
                                                  param_modulation_operation=param_modulation_operation,
                                                  params=params)
 
-        self.monitoringMechanism = None
+        self.learning_mechanism = None
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         # if sender is NotImplemented or receiver is NotImplemented:
@@ -460,7 +460,10 @@ class MappingProjection(Projection_Base):
         # if self.monitoringMechanism and self.monitoringMechanism.summed_error_signal:
         # MODIFIED 12/21/16 NEW:
         # Check whether error_signal has changed
-        if self.monitoringMechanism and self.monitoringMechanism.status == CHANGED:
+        # if self.monitoringMechanism and self.monitoringMechanism.status == CHANGED:
+        # MODIFIED 3/3/17 NEWER:
+        # Check whether error_signal has changed
+        if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
         # MODIFIED 12/21/16 END
 
             # Assume that if monitoringMechanism attribute is assigned,
