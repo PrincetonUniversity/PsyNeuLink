@@ -2943,6 +2943,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
         dE_dW = dE_dA * dA_dW
         weight_change_matrix = self.learning_rate * activation_input * dE_dW
 
+        # TEST PRINT:
+        print("\nBACKPROP:\n-input: {}\n-error: {}\n-derivative: {}".format(activation_input,dE_dA,dA_dW))
+
+
         return [weight_change_matrix, dE_dW]
         # MODIFIED 3/3/17 END
 
