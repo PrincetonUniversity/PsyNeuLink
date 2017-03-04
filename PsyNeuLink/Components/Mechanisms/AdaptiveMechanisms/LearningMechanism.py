@@ -289,6 +289,7 @@ ACTIVATION_INPUT = 'activation_input'
 ACTIVATION_OUTPUT = 'activation_output'
 # ERROR_OUTPUT = 'error_output'
 ERROR_SIGNAL = 'error_signal'
+ERROR_SOURCE = 'error_source'
 # input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_OUTPUT, ERROR_SIGNAL]
 input_state_names = [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 
@@ -317,7 +318,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     """
     LearningMechanism(                       \
                  variable,                   \
-                 error_matrix                \
+                 error_source                \
                  function=BackPropagation    \
                  learning_rate=None          \
                  params=None,                \
@@ -380,8 +381,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
             (see `activation_derivative` for details).
     COMMENT
 
-    error_matrix : List, 2d np.array, ParameterState or MappingProjection
-        specifies the matrix used to generate the `error_signal` (see `error_matrix` for details).
+    error_source : ObjectiveMechanism or LearningMechanism
+        specifies the mechanism from which the LearningMechanism gets its `error_signal` (see `error_source` for
+        details).
 
     function : LearningFunction or function
         specifies the function used to compute the `learning_signal` (see `function <LearningMechanism.function>` for
@@ -442,6 +444,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         learned).  If the LearningMechanism is for the last mechanism in a sequence of mechanisms being learned (
         often, but not necessarily a `TERMINAL` mechanism), then error_signal comes from an `ObjectiveMechanism` that
         calculates the error from that mechanism's output and a target input to the process being learned.
+
+    error_source : ObjectiveMechanism or LearningMechanism
+        the mechanism from which the LearningMechanism gets its `error_signal`.  If an ObjectiveMechanism is specified,
+        a `MappingProjection` will automatically be generated from the `primary outputState <OutputState_Primary>` of
+        the ObjectiveMechanism specified to the `ERROR_SIGNAL` inputState of the LearningSignal.  If a
+        LearningMechanism is specified, a `MappingProjection` will automatically be generated from the
+        `primary outputState <OutputState_Primary>` of the LearningMechanism specified to the `ERROR_SIGNAL` inputState
+        of the LearningSignal.
 
     COMMENT:
        MOVE THIS TO Backpropagation
@@ -506,6 +516,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
+                 error_source:tc.any(Mechanism),
                  function:is_function_type=BackPropagation,
                  learning_rate:float=1.0,
                  params=None,
@@ -564,9 +575,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
 
-        # self.activation_input = self.variable[ACTIVATION_INPUT]
-        # self.activation_output = self.variable[ACTIVATION_OUTPUT]
-        # self.error_signal = self.variable[ERROR_SIGNAL]
+        # self.activation_input = self.variable[ACTIVATION_INPUT_INDEX]
+        # self.activation_output = self.variable[ACTIVATION_OUTPUT_INDEX]
+        # self.error_signal = self.variable[ERROR_SIGNAL_INDEX]
 
         # # Validate that the length of `activation_output` is the same as `error_output`
         # if len(self.variable[ACTIVATION_OUTPUT_INDEX]) != len(self.variable[ERROR_OUTPUT_INDEX]):
@@ -591,6 +602,23 @@ class LearningMechanism(AdaptiveMechanism_Base):
         #                                              ERROR_SIGNAL,
         #                                              item_num_string[ERROR_SIGNAL_INDEX],
         #                                              len(self.variable[ERROR_SIGNAL_INDEX])))
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate error_source as an Objective mechanism or another LearningMechanism
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
+
+        try:
+            if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
+                raise LearningMechanismError("{} arg for {} must be an ObjectiveMechanism or another LearningMechanism".
+                                             format(ERROR_SOURCE, self.name))
+
+        except KeyError:
+            pass
+
+    # def _instantiate_attributes_before_function(self, context=None):
+
 
     def _validate_error_signal(self, error_signal):
         """Validate that error_signal (received from ObjectiveMechanism) is compatible with the error_matrix
@@ -626,10 +654,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # MODIFIED 3/4/17 NEW:
         # If error signal is from Objective function, make input = 1 so that when BP multiplies by it nothing happens
-        if self.inputStates[ERROR_SIGNAL].receivesFromProjections:
-            if isinstance(self.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner, ObjectiveMechanism):
-                # self.activation_input = np.ones_like(self.activation_input)
-                self.variable[ACTIVATION_INPUT_INDEX] = np.ones_like(self.variable[ACTIVATION_INPUT_INDEX])
+        # if self.inputStates[ERROR_SIGNAL].receivesFromProjections:
+        if not INITIALIZING in context:
+            if isinstance(self.error_source, ObjectiveMechanism):
+                variable[ACTIVATION_INPUT_INDEX] = np.ones_like(variable[ACTIVATION_INPUT_INDEX])
         # MODIFIED 3/4/17 END
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
