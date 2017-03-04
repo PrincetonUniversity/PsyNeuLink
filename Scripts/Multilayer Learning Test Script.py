@@ -125,15 +125,15 @@ def show_target():
     elif COMPOSITION is SYSTEM:
         i = composition.input
         t = composition.targetInputStates[0].value
-    print ('\n\nInput: {}\nTarget: {}\n'.format(i, t))
-    print ('\nActivity from old weights: \n')
+    print ('\nOLD WEIGHTS: \n')
+    print ('- Input Weights: \n', Input_Weights.matrix)
+    print ('- Middle Weights: \n', Middle_Weights.matrix)
+    print ('- Output Weights: \n', Output_Weights.matrix)
+    print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
+    print ('ACTIVITY FROM OLD WEIGHTS: \n')
     print ('- Middle 1: \n', Hidden_Layer_1.value)
     print ('- Middle 2: \n', Hidden_Layer_2.value)
     print ('- Output:\n', Output_Layer.value)
-    print ('\nNew weights: \n')
-    print ('\n- Input Weights: \n', Input_Weights.matrix)
-    print ('- Middle Weights: \n', Middle_Weights.matrix)
-    print ('- Output Weights: \n', Output_Weights.matrix)
     # print ('MSE: \n', Output_Layer.outputValue[0])
 
 
