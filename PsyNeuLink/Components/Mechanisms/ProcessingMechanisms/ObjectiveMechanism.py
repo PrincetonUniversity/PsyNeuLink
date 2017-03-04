@@ -642,13 +642,23 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         validate_monitored_value(self, states_spec, context=context)
         self._instantiate_monitored_output_states(states_spec, context=context)
 
+    # IMPLEMENTATION NOTE: 3/4/17: ADDED TEMPORARILY TO GENERATE PRINT OUT OF EXECUTION
+    def _execute(self,
+                    variable=None,
+                    runtime_params=None,
+                    clock=CentralClock,
+                    time_scale=None,
+                    context=None):
+        # TEST PRINT:
+        print("\n@@@ EXECUTED: {}".format(self.name))
+        return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
 
 def validate_monitored_value(self, state_spec, context=None):
     """Validate specification for monitored_value arg
 
     Validate the each item of monitored_value arg is an inputState, OutputState, mechanism, string,
     or a MonitoredOutpuStatesOption value.
-    
+
     Called by both self._validate_variable() and self.add_monitored_value()
     """
     state_spec_is_OK = False

@@ -626,5 +626,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
+        # TEST PRINT:
+        print("\n@@@ EXECUTED: {}".format(self.name))
+
         self.value = [self.learning_signal, self.error_signal]
         return self.value

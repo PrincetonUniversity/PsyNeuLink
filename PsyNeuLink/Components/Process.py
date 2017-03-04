@@ -1870,8 +1870,6 @@ class Process_Base(Process):
             #         self._monitoring_mech_tuples.append(monitoring_mech_tuple)
             # MODIFIED 3/3/17 END
 
-
-
     def _check_for_target_mechanism(self):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
 
