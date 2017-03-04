@@ -540,21 +540,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          context=self)
 
     def _validate_variable(self, variable, context=None):
+        """Validate that variable has exactly three items: activation_input, activation_output and error_signal
+        """
 
         super()._validate_variable(variable, context)
 
-        # Validate that variable has exactly four items:
-        #    - activation_input,
-        #    - activation_output,
-        #    - error_output
-        #    - error_signal
-
         if len(self.variable) != 3:
-            raise LearningMechanismError("Variable for {} ({}) must have four items ({}, {}, and {})".
+            raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
                                 format(self.name, self.variable,
                                        ACTIVATION_INPUT,
                                        ACTIVATION_OUTPUT,
-                                       # ERROR_OUTPUT,
                                        ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
@@ -571,30 +566,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # self.activation_input = self.variable[ACTIVATION_INPUT_INDEX]
         # self.activation_output = self.variable[ACTIVATION_OUTPUT_INDEX]
         # self.error_signal = self.variable[ERROR_SIGNAL_INDEX]
-
-        # # Validate that the length of `activation_output` is the same as `error_output`
-        # if len(self.variable[ACTIVATION_OUTPUT_INDEX]) != len(self.variable[ERROR_OUTPUT_INDEX]):
-        #         raise LearningMechanismError("The length of the {} ({}) item of variable for {} ({}) "
-        #                                      "must be the same as for the {} ({}) item ({})".
-        #                                       format(ACTIVATION_OUTPUT,
-        #                                              item_num_string[ACTIVATION_OUTPUT_INDEX],
-        #                                              self.name,
-        #                                              len(self.variable[ACTIVATION_OUTPUT_INDEX]),
-        #                                              ERROR_OUTPUT,
-        #                                              item_num_string[ERROR_OUTPUT_INDEX],
-        #                                              len(self.variable[ERROR_OUTPUT_INDEX])))
-        #
-        # # Validate that the length of `error_output` is the same as `error_signal`
-        # if len(self.variable[ERROR_OUTPUT_INDEX]) != len(self.variable[ERROR_SIGNAL_INDEX]):
-        #         raise LearningMechanismError("The length of the {} ({}) item of variable for {} ({}) "
-        #                                      "must be the same as for the {} ({}) item ({})".
-        #                                       format(ERROR_OUTPUT,
-        #                                              item_num_string[ERROR_OUTPUT_INDEX],
-        #                                              self.name,
-        #                                              len(self.variable[ERROR_OUTPUT_INDEX]),
-        #                                              ERROR_SIGNAL,
-        #                                              item_num_string[ERROR_SIGNAL_INDEX],
-        #                                              len(self.variable[ERROR_SIGNAL_INDEX])))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_source as an Objective mechanism or another LearningMechanism
@@ -613,7 +584,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
     def _instantiate_attributes_before_function(self, context=None):
 
         super()._instantiate_attributes_before_function(context=context)
-        _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
+
+        if self.error_source:
+            _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
 
 
     def _validate_error_signal(self, error_signal):
@@ -669,6 +642,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         return self.value
 
 
+# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _instantiate_error_signal_projection(sender, receiver):
     """Instantiate a MappingProjection to carry an error_signal to a LearningMechanism
 
@@ -677,6 +651,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     If the sender is a LearningMechanism, uses its `ERROR_SIGNAL outputState <LearningMechanism.outputStates>`.
     The receiver must be a LearningMechanism; its `ERROR_SIGNAL inputState <LearningMechanism.inputStates>` is used.
     Uses and IDENTITY_MATRIX for the MappingProjection, so requires that the sender be the same length as the receiver.
+
     """
 
     if isinstance(sender, ObjectiveMechanism):
