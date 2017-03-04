@@ -555,7 +555,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
         for i in range(len(self.variable)):
-            item_num_string = ['first', 'second', 'third', 'fourth'][i]
+            item_num_string = ['first', 'second', 'third'][i]
             item_name = input_state_names[i]
             if not np.array(self.variable[i]).ndim == 1:
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
@@ -563,6 +563,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
             if not (is_numeric(self.variable[i])):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
+
+        # self.activation_input = self.variable[ACTIVATION_INPUT]
+        # self.activation_output = self.variable[ACTIVATION_OUTPUT]
+        # self.error_signal = self.variable[ERROR_SIGNAL]
 
         # # Validate that the length of `activation_output` is the same as `error_output`
         # if len(self.variable[ACTIVATION_OUTPUT_INDEX]) != len(self.variable[ERROR_OUTPUT_INDEX]):
@@ -619,6 +623,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         :return: (2D np.array) self.learning_signal
         """
+
+        # MODIFIED 3/4/17 NEW:
+        # If error signal is from Objective function, make input = 1 so that when BP multiplies by it nothing happens
+        if self.inputStates[ERROR_SIGNAL].receivesFromProjections:
+            if isinstance(self.inputStates[ERROR_SIGNAL].receivesFromProjections[0].sender.owner, ObjectiveMechanism):
+                # self.activation_input = np.ones_like(self.activation_input)
+                self.variable[ACTIVATION_INPUT_INDEX] = np.ones_like(self.variable[ACTIVATION_INPUT_INDEX])
+        # MODIFIED 3/4/17 END
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal, self.error_signal = self.function(variable=variable, context=context)
