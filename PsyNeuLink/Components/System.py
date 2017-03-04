@@ -262,6 +262,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOpti
 from PsyNeuLink.Components.Projections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.MonitoringMechanism import MonitoringMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
 
 # ProcessRegistry ------------------------------------------------------------------------------------------------------
 
@@ -1157,9 +1158,10 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
-            # If sender is an ObjectiveMechanism being used for learning or control,
+            # If sender is an ObjectiveMechanism being used for learning or control, or a LearningMechanism,
             # Assign as MONITORING and move on
-            if isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role:
+            if ((isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role) or
+                    isinstance(sender_mech, LearningMechanism)):
                 sender_mech.systems[self] = MONITORING
                 return
 
@@ -1510,10 +1512,10 @@ class System_Base(System):
                 return
 
             # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
-            elif not (isinstance(sender_mech, MonitoringMechanism_Base) or
+            elif not (isinstance(sender_mech, LearningMechanism) or
                           (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
-                                  "must be a MonitoringMechanism, ObjectiveMechanism, or a MappingProjection".
+                                  "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
@@ -1979,7 +1981,7 @@ class System_Base(System):
         # Then update all MappingProjections
         for component in self.learningExecutionList:
 
-            if isinstance(component, (MonitoringMechanism_Base, ObjectiveMechanism)):
+            if isinstance(component, (LearningMechanism, ObjectiveMechanism)):
                 continue
             # MODIFIED 2/21/17 NEW:
             if not isinstance(component, MappingProjection):
