@@ -2933,15 +2933,34 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # make activation_input a 1D row array
         activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
 
-        # Derivate of error with respect to output activity (contribution of each output unit to the error above)
-        dE_dA = np.dot(self.error_matrix, self.error_signal)
+        # MODIFIED 3/4/17 NEW:  [TEST: REPRODUCE ERROR_CALC IN DEVEL ORIG]:
+        try:
+            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+            if self.owner.inputStates:
+                error_mech = self.owner.inputStates['error_signal'].receivesFromProjections[0].sender.owner
+                error_mech_name = error_mech.name
+                if isinstance(error_mech, ObjectiveMechanism):
+                    error_mech_error = error_mech.outputState.value
+                    dE_dA = error_mech_error
+                elif isinstance(error_mech, LearningMechanism):
+                    error_mech_error = error_mech.error_signal
+                    error_mech_act_out = error_mech.inputStates['activation_output'].value
+                    activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
+                    error_derivative = error_mech_error * activity_derivative
+                    dE_dA = np.dot(self.error_matrix, error_derivative)
+                TEST = True
+        except AttributeError:
+            dE_dA = np.dot(self.error_matrix, self.error_signal)
+        # MODIFIED 3/4/17 END
 
-        # # MODIFIED 3/5/17 NEW:  TEST TO COMPARE WITH DEVEL
-        # self.activation_output = dE_dA * self.activation_derivative_fct(output=self.activation_output)
+        # # MODIFIED 3/5/17 OLD:
+        # # Derivative of error with respect to output activity (contribution of each output unit to the error above)
+        # dE_dA = np.dot(self.error_matrix, self.error_signal)
         # # MODIFIED 3/5/17 END
 
         # Derivative of the output activity
-        dA_dW  = self.activation_derivative_fct (input=self.activation_input, output=self.activation_output)
+        dA_dW  = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
 
         # Chain rule to get the derivative of the error with respect to the weights
         dE_dW = dE_dA * dA_dW
