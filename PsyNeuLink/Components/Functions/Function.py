@@ -2919,11 +2919,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
                                     # error_derivative = error * activity_derivative
 
                 elif isinstance(error_mech, LearningMechanism):
-                    error_mech_error = error_mech.error_signal
+                    error_signal = self.error_signal
                     error_mech_act_out = error_mech.inputStates['activation_output'].value
                     # activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
                     activity_derivative = self.error_derivative_fct(output=error_mech_act_out)
-                    error_derivative = error_mech_error * activity_derivative
+                    error_derivative = error_signal * activity_derivative
                     error_mech_error = np.dot(self.error_matrix, error_derivative)
                     # TEST PRINT:
                     print("\nWEIGHTED_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
@@ -2945,11 +2945,13 @@ class BackPropagation(LearningFunction): # -------------------------------------
                   "-input: {}\n    "
                   "-derivative: {}\n    "
                   "-error_signal: {}\n    "
+                  "-matrix: {}\n     "
                   "-weight_change_matrix {}: \n".
                   format(self.owner.name,
                          self.activation_input,
                          derivative,
                          error_mech_error,
+                         self.error_matrix,
                          weight_change_matrix))
 
         return [weight_change_matrix, error_mech_error]
