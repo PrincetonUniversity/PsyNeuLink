@@ -649,6 +649,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     clock=CentralClock,
                     time_scale=None,
                     context=None):
+
+
         # TEST PRINT:
         print("\n@@@ EXECUTED: {}".format(self.name))
         return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
