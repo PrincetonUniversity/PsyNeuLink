@@ -2865,99 +2865,40 @@ class BackPropagation(LearningFunction): # -------------------------------------
         :return number:
         """
 
-        # OLD:
-        # activity = self.variable[0] <- ERROR_OUTPUT?
-        # error = self.variable[1]    <- ERROR_SIGNAL?
-        # matrix = self.matrix.value  <- ERROR_MATRIX
-        #
-        # activity_derivative = self.derivative(output=activity)
-        # error_derivative = error * activity_derivative
-        #
-        # return np.dot(matrix, error_derivative)
-        #
-        # NEW PSEUDOCODE:
-        #   error_derivative = error_derivative(error_output) * error_signal
-        #   np.dot(error_matrix, error_derivative
-
-        self._check_args(variable, params, context)
-
-        # # make activation_input a 1D row array
-        # activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
-        # # make activation_output a 1D column array
-        # activation_output = np.array(self.activation_output).reshape(1,len(self.activation_output))
-
-        # # MODIFIED 3/3/17 OLD:
-        # # FIX: ??IS THIS CORRECT:
-        # # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
-        # dE_dA = self.error_derivative_fct(output=self.error_output) * self.error_signal
-        #
-        # # COMPUTE WEIGHTED ERROR DERIVATIVE:
-        # # weighted_error_signal = np.dot(self.error_matrix, self.error_output)
-        # weighted_error_derivative = np.dot(self.error_matrix, dE_dA)
-        #
-        # # make weighted_error_signal a 1D column array
-        # weighted_error_derivative = np.array(weighted_error_derivative).reshape(1,len(weighted_error_derivative))
-
-        # # MODIFIED 3/3/17 NEW:
-        # # COMPUTE ERROR DERIVATIVE wrt ACTIVATION
-        # dE_dA = self.error_derivative_fct(output=self.error_output) * self.error_signal
-        # # make weighted_error_signal a 1D column array
-        # dE_dA = np.array(dE_dA).reshape(1,len(dE_dA))
-        # # COMPUTE WEIGHTED ERROR DERIVATIVE:
-        # weighted_error_signal = np.dot(self.error_matrix, dE_dA)
-        # # MODIFIED 3/3/17 END
-        #
-        #
-        # # COMPUTE ACTIVATION DERIVATIVE (dA/dW):
-        # dA_dW  = self.activation_derivative_fct (input=activation_input, output=activation_output)
-        #
-        # # # MODIFIED 3/3/17 OLD:
-        # # # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
-        # # # dE/dW  = dA/dW *  dE/dA)
-        # # dE_dW = dA_dW   *  weighted_error_derivative
-        # # MODIFIED 3/3/17 NEW:
-        # # COMPUTE ERROR DERIVATIVE wrt WEIGHTS (CHAIN RULE)
-        # dE_dW = dE_dA * dA_dW
-        # # MODIFIED 3/3/17 END
-        #
-        # # COMPUTE WEIGHT CHANGE MATRIX                   ROW              COLUMN
-        # weight_change_matrix = self.learning_rate  *  activation_input  * dE_dW
-        #
-        # # # MODIFIED 3/3/17 OLD:
-        # # return [weight_change_matrix, weighted_error_derivative]
-        # # MODIFIED 3/3/17 NEW:
-        # return [weight_change_matrix, dE_dW]
-        # # MODIFIED 3/3/17 END
-
-        # MODIFIED 3/3/17 NEWEST:
         # make activation_input a 1D row array
         activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
 
-        # MODIFIED 3/4/17 NEW:  [TEST: REPRODUCE ERROR_CALC IN DEVEL ORIG]:
-        try:
-            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
-            from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
-            if self.owner.inputStates:
-                error_mech = self.owner.inputStates['error_signal'].receivesFromProjections[0].sender.owner
-                error_mech_name = error_mech.name
-                if isinstance(error_mech, ObjectiveMechanism):
-                    error_mech_error = error_mech.outputState.value
-                    dE_dA = error_mech_error
-                elif isinstance(error_mech, LearningMechanism):
-                    error_mech_error = error_mech.error_signal
-                    error_mech_act_out = error_mech.inputStates['activation_output'].value
-                    activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
-                    error_derivative = error_mech_error * activity_derivative
-                    dE_dA = np.dot(self.error_matrix, error_derivative)
-                TEST = True
-        except AttributeError:
-            dE_dA = np.dot(self.error_matrix, self.error_signal)
-        # MODIFIED 3/4/17 END
+        # MODIFIED 3/5/17 OLD:
+        # Derivative of error with respect to output activity (contribution of each output unit to the error above)
+        dE_dA = np.dot(self.error_matrix, self.error_signal)
 
-        # # MODIFIED 3/5/17 OLD:
-        # # Derivative of error with respect to output activity (contribution of each output unit to the error above)
-        # dE_dA = np.dot(self.error_matrix, self.error_signal)
-        # # MODIFIED 3/5/17 END
+        # # MODIFIED 3/4/17 NEW:  [TEST: REPRODUCE ERROR_CALC IN DEVEL ORIG]:
+        # try:
+        #     from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        #     from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism import LearningMechanism
+        #     if self.owner.inputStates:
+        #         error_mech = self.owner.inputStates['error_signal'].receivesFromProjections[0].sender.owner
+        #         error_mech_name = error_mech.name
+        #         if isinstance(error_mech, ObjectiveMechanism):
+        #             error_mech_error = error_mech.outputState.value
+        #             dE_dA = error_mech_error
+        #             # TEST PRINT:
+        #             print("\nTARGET_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
+        #                   format(self.__self__.owner.name, error_mech.inputStates['SAMPLE'].value, error_mech_error))
+        #         elif isinstance(error_mech, LearningMechanism):
+        #             error_mech_error = error_mech.error_signal
+        #             error_mech_act_out = error_mech.inputStates['activation_output'].value
+        #             activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
+        #             error_derivative = error_mech_error * activity_derivative
+        #             dE_dA = np.dot(self.error_matrix, error_derivative)
+        #             # TEST PRINT:
+        #             print("\nWEIGHTED_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
+        #                   format(self.__self__.owner.name, error_mech_act_out, error_mech_error))
+        #         TEST = True
+        # except AttributeError:
+        #     dE_dA = np.dot(self.error_matrix, self.error_signal)
+
+        # MODIFIED 3/4/17 END
 
         # Derivative of the output activity
         dA_dW  = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
@@ -2970,8 +2911,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         # TEST PRINT:
         if context and not 'INIT' in context:
-            print("\nBACKPROP for {}:\n-input: {}\n-error: {}\n-derivative: {}".
-                  format(self.owner.name, activation_input,dE_dA,dA_dW))
+            print("\nBACKPROP for {}:\n    -input: {}\n    -error: {}\n    -derivative: {}".
+                  format(self.owner.name, self.activation_input, dE_dA, dA_dW))
 
 
         return [weight_change_matrix, dE_dW]
