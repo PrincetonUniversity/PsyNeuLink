@@ -2121,7 +2121,7 @@ class Process_Base(Process):
         # Begin with projection(s) to last Mechanism in _mech_tuples, and work backwards
 
         """
-        # MODIFIED 12/4/16 OLD:
+        # # MODIFIED 12/4/16 OLD:
         # for item in reversed(self._mech_tuples):
         # MODIFIED 12/4/16 NEW:  NO NEED TO REVERSE, AS THIS IS JUST UPDATING PARMAETER STATES, NOT ACTIVITIES
         for item in self._mech_tuples:

@@ -621,13 +621,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
         :return: (2D np.array) self.learning_signal
         """
 
-        # MODIFIED 3/4/17 NEW:
-        # If error signal is from Objective function, make input = 1 so that when BP multiplies by it nothing happens
-        # if self.inputStates[ERROR_SIGNAL].receivesFromProjections:
-        if not INITIALIZING in context:
-            if isinstance(self.error_source, ObjectiveMechanism):
-                variable[ACTIVATION_INPUT_INDEX] = np.ones_like(variable[ACTIVATION_INPUT_INDEX])
-        # MODIFIED 3/4/17 END
+        # # MODIFIED 3/4/17 NEW:
+        # # If error signal is from Objective function, make input = 1 so that when BP multiplies by it nothing happens
+        # # if self.inputStates[ERROR_SIGNAL].receivesFromProjections:
+        # if not INITIALIZING in context:
+        #     if isinstance(self.error_source, ObjectiveMechanism):
+        #         variable[ACTIVATION_INPUT_INDEX] = np.ones_like(variable[ACTIVATION_INPUT_INDEX])
+        # # MODIFIED 3/4/17 END
 
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal, self.error_signal = self.function(variable=variable, context=context)

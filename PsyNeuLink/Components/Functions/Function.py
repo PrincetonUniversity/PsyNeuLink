@@ -2867,10 +2867,11 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
+        # # MODIFIED 3/5/17 OLD:
+        #
         # # make activation_input a 1D row array
         # activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
         #
-        # # MODIFIED 3/5/17 OLD:
         # # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         # dE_dA = np.dot(self.error_matrix, self.error_signal)
         #
@@ -2910,7 +2911,8 @@ class BackPropagation(LearningFunction): # -------------------------------------
                 elif isinstance(error_mech, LearningMechanism):
                     error_mech_error = error_mech.error_signal
                     error_mech_act_out = error_mech.inputStates['activation_output'].value
-                    activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
+                    # activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
+                    activity_derivative = self.error_derivative_fct(output=error_mech_act_out)
                     error_derivative = error_mech_error * activity_derivative
                     error_mech_error = np.dot(self.error_matrix, error_derivative)
                     # TEST PRINT:
