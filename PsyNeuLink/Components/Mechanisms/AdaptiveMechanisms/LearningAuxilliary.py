@@ -348,6 +348,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             error_matrix = np.identity(len(error_signal))
             # IMPLEMENTATION NOTE: Assign error_derivative to derivative of ProcessingInputState or SystemInputState
             #                      function when these are fully implemented as mechanisms
+            activation_derivative = Linear().derivative
             error_derivative = Linear().derivative
 
         else:
