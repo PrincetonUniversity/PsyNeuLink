@@ -2908,6 +2908,13 @@ class BackPropagation(LearningFunction): # -------------------------------------
                     # TEST PRINT:
                     print("\nTARGET_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
                           format(self.owner.name, error_mech.inputStates['SAMPLE'].value, error_mech_error))
+
+
+
+
+
+
+
                 elif isinstance(error_mech, LearningMechanism):
                     error_mech_error = error_mech.error_signal
                     error_mech_act_out = error_mech.inputStates['activation_output'].value
