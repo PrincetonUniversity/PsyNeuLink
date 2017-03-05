@@ -2909,11 +2909,14 @@ class BackPropagation(LearningFunction): # -------------------------------------
                     print("\nTARGET_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
                           format(self.owner.name, error_mech.inputStates['SAMPLE'].value, error_mech_error))
 
-
-
-
-
-
+                                    # DEVEL:
+                                    # activity = self.variable[0]  <- error_mech_output
+                                    # error = self.variable[1]     <- error_signal
+                                    # matrix = self.matrix.value   <- error_matrix
+                                    #
+                                    # # MODIFIED 3/4/17 OLD:
+                                    # activity_derivative = self.derivative(output=activity)
+                                    # error_derivative = error * activity_derivative
 
                 elif isinstance(error_mech, LearningMechanism):
                     error_mech_error = error_mech.error_signal
