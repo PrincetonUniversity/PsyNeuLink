@@ -2936,6 +2936,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
         # Derivate of error with respect to output activity (contribution of each output unit to the error above)
         dE_dA = np.dot(self.error_matrix, self.error_signal)
 
+        # # MODIFIED 3/5/17 NEW:  TEST TO COMPARE WITH DEVEL
+        # self.activation_output = dE_dA * self.activation_derivative_fct(output=self.activation_output)
+        # # MODIFIED 3/5/17 END
+
         # Derivative of the output activity
         dA_dW  = self.activation_derivative_fct (input=self.activation_input, output=self.activation_output)
 
