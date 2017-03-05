@@ -2913,8 +2913,12 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         # TEST PRINT:
         if context and not 'INIT' in context:
-            print("\nBACKPROP for {}:\n    -input: {}\n    -error: {}\n    -derivative: {}".
-                  format(self.owner.name, self.activation_input, dE_dA, dA_dW))
+            print("\nBACKPROP for {}:\n    "
+                  "-input: {}\n    "
+                  "-error_signal (dE_DA): {}\n    "
+                  "-derivative (dA_dW): {}\n    "
+                  "-error_derivative (dE_dW): {}\n".
+                  format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
 
 
         return [weight_change_matrix, dE_dW]
