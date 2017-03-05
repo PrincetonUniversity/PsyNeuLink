@@ -2936,7 +2936,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                   format(self.owner.name,
                          self.activation_input,
                          derivative,
-                         self.error_signal))
+                         error_mech_error))
 
         return [weight_change_matrix, error_mech_error]
 
