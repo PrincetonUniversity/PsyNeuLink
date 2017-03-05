@@ -2932,11 +2932,13 @@ class BackPropagation(LearningFunction): # -------------------------------------
             print("\nBACKPROP for {}:\n    "
                   "-input: {}\n    "
                   "-derivative: {}\n    "
-                  "-error_signal: {}\n    ".
+                  "-error_signal: {}\n    "
+                  "-weight_change_matrix {}: \n".
                   format(self.owner.name,
                          self.activation_input,
                          derivative,
-                         error_mech_error))
+                         error_mech_error,
+                         weight_change_matrix))
 
         return [weight_change_matrix, error_mech_error]
 
