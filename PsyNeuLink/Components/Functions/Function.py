@@ -2867,12 +2867,32 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         self._check_args(variable, params, context)
 
-        # make activation_input a 1D row array
-        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
-
+        # # make activation_input a 1D row array
+        # activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
+        #
         # # MODIFIED 3/5/17 OLD:
         # # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         # dE_dA = np.dot(self.error_matrix, self.error_signal)
+        #
+        # # Derivative of the output activity
+        # dA_dW  = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
+        #
+        # # Chain rule to get the derivative of the error with respect to the weights
+        # dE_dW = dE_dA * dA_dW
+        #
+        # # Weight changes = delta rule (learning rate * activity * error)
+        # weight_change_matrix = self.learning_rate * activation_input * dE_dW
+        #
+        # # TEST PRINT:
+        # if context and not 'INIT' in context:
+        #     print("\nBACKPROP for {}:\n    "
+        #           "-input: {}\n    "
+        #           "-error_signal (dE_DA): {}\n    "
+        #           "-derivative (dA_dW): {}\n    "
+        #           "-error_derivative (dE_dW): {}\n".
+        #           format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+        #
+        # return [weight_change_matrix, dE_dW]
 
         # MODIFIED 3/4/17 NEW:  [TEST: REPRODUCE ERROR_CALC IN DEVEL ORIG]:
         try:
@@ -2892,37 +2912,35 @@ class BackPropagation(LearningFunction): # -------------------------------------
                     error_mech_act_out = error_mech.inputStates['activation_output'].value
                     activity_derivative = self.activation_derivative_fct(output=error_mech_act_out)
                     error_derivative = error_mech_error * activity_derivative
-                    dE_dA = np.dot(self.error_matrix, error_derivative)
+                    error_mech_error = np.dot(self.error_matrix, error_derivative)
                     # TEST PRINT:
                     print("\nWEIGHTED_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n".
                           format(self.owner.name, error_mech_act_out, error_mech_error))
                 TEST = True
         except AttributeError:
-            dE_dA = np.dot(self.error_matrix, self.error_signal)
+            error_mech_error = np.dot(self.error_matrix, self.error_signal)
 
-        # MODIFIED 3/4/17 END
+        # make activation_input a 1D row array
+        activation_input = np.array(self.activation_input).reshape(len(self.activation_input),1)
 
         # Derivative of the output activity
-        dA_dW  = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
+        derivative = self.activation_derivative_fct(input=self.activation_input, output=self.activation_output)
 
-        # Chain rule to get the derivative of the error with respect to the weights
-        dE_dW = dE_dA * dA_dW
+        weight_change_matrix = self.learning_rate * activation_input * derivative * error_mech_error
 
-        # Weight changes = delta rule (learning rate * activity * error)
-        weight_change_matrix = self.learning_rate * activation_input * dE_dW
-
-        # TEST PRINT:
-        if context and not 'INIT' in context:
+        if 'INIT' not in context:
             print("\nBACKPROP for {}:\n    "
                   "-input: {}\n    "
-                  "-error_signal (dE_DA): {}\n    "
-                  "-derivative (dA_dW): {}\n    "
-                  "-error_derivative (dE_dW): {}\n".
-                  format(self.owner.name, self.activation_input, dE_dA, dA_dW ,dE_dW))
+                  "-derivative: {}\n    "
+                  "-error_signal: {}\n    ".
+                  format(self.owner.name,
+                         self.activation_input,
+                         derivative,
+                         self.error_signal))
 
+        return [weight_change_matrix, error_mech_error]
 
-        return [weight_change_matrix, dE_dW]
-        # MODIFIED 3/3/17 END
+        # MODIFIED 3/4/17 END
 
 
 
