@@ -2789,22 +2789,41 @@ class BackPropagation(LearningFunction): # -------------------------------------
 
         if isinstance(error_matrix, MappingProjection):
             try:
-                error_matrix = error_matrix.parameterStates[MATRIX]
+                error_matrix = error_matrix.parameterStates[MATRIX].value
+                param_type_string = "MappingProjection's ParameterState"
             except KeyError:
-                raise FunctionError("The MappingProjection specified for the {} arg of {} ({})"
-                                              "must have a {} paramaterState".
-                                              format(ERROR_MATRIX, self.name, error_matrix, MATRIX))
+                raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
+                                    "paramaterState that has been assigned a 2d array or matrix".
+                                    format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
 
-        if isinstance(error_matrix, ParameterState):
-            if np.array(error_matrix.value).ndim != 2:
+        elif isinstance(error_matrix, ParameterState):
+            try:
+                error_matrix = error_matrix.value
+                param_type_string = "ParameterState"
+            except KeyError:
                 raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
-                                              "is not a 2d array (matrix)".
-                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
+                                              "must be a 2d array or matrix".
+                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
 
-        if isinstance(error_matrix, (np.ndarray, np.matrix)):
-            if error_matrix.ndim != 2:
-                raise FunctionError("The numpy array or matrix specified for {} arg of {} ({}) must be a 2d".
-                                              format(MATRIX, ERROR_MATRIX, self.name, error_matrix))
+        else:
+            param_type_string = "array or matrix"
+
+        error_matrix = np.array(error_matrix)
+
+        if error_matrix.ndim != 2:
+            raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
+                                          format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
+
+        # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
+        #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
+        if error_matrix.shape[WT_MATRIX_RECEIVERS_DIM] != len(self.error_signal):
+            raise FunctionError("The width ({}) of the {} arg ({}) specified for {} must match the length of the"
+                                "error signal ({}) it receives".
+                                format(error_matrix.shape[WT_MATRIX_RECEIVERS_DIM],
+                                       MATRIX,
+                                       error_matrix.shape,
+                                       self.name,
+                                       len(self.error_signal)))
 
     def _instantiate_function(self, context=None):
         """Parse error_matrix specification and insure it is compatible with error_signal and activation_output
