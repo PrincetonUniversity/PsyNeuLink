@@ -563,8 +563,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
                                               format(item_num_string, self.name, item_name, self.variable[i]))
 
-        # XXX
-
         # self.activation_input = self.variable[ACTIVATION_INPUT_INDEX]
         # self.activation_output = self.variable[ACTIVATION_OUTPUT_INDEX]
         # self.error_signal = self.variable[ERROR_SIGNAL_INDEX]
