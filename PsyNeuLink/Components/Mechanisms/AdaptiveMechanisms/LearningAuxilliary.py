@@ -315,7 +315,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     learning_rate = learning_projection.learning_rate
 
     # REINFORCEMENT LEARNING FUNCTION
-    if learning_projection.componentName is RL_FUNCTION:
+    if learning_function.componentName is RL_FUNCTION:
 
         # Force all activity and error arrays to be scalars
         activation_input = activation_output = error_output = error_signal  = np.array([0])
@@ -364,7 +364,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                               format(learning_projection.name, BackPropagation.componentName))
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
-        # FIX:     DERIVATIVE OR LEARNING_RATE
+        # FIX:     DERIVATIVE, LEARNING_RATE, ERROR_MATRIX
         learning_function = BackPropagation(variable_default=[activation_input,
                                                               activation_output,
                                                               # error_output,

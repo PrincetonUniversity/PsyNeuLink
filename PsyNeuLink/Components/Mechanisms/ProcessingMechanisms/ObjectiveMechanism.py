@@ -651,18 +651,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     context=None):
 
 
-        # # MODIFIED 3/5/17 OLD:
-        # # TEST PRINT:
-        # print("\n@@@ EXECUTED: {}".format(self.name))
-        # return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
+        # MODIFIED 3/5/17 OLD:
+        return self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
 
-        # MODIFIED 3/5/17 NEW:
-        # TEST PRINT:
-        error = self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
-        print("\nTARGET_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}".
-              format(self.name, self.inputStates[SAMPLE].value, error))
-        print("\n@@@ EXECUTED: {}".format(self.name))
-        return error
+        # # MODIFIED 3/5/17 NEW:
+        # # TEST PRINT:
+        # error = self.function(variable=variable, params=runtime_params, time_scale=time_scale, context=context)
+        # print("\nTARGET_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}".
+        #       format(self.name, self.inputStates[SAMPLE].value, error))
+        # print("\n@@@ EXECUTED: {}".format(self.name))
+        # return error
 
         # MODIFIED 3/5/17 END
 
