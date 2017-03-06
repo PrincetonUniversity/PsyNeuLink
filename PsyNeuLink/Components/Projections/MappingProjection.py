@@ -485,7 +485,7 @@ class MappingProjection(Projection_Base):
             # MODIFIED 2/21/17 END
 
             # TEST PRINT
-            print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
+            print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
             # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
 
 
