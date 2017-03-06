@@ -2929,9 +2929,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
                     print("\nWEIGHTED_ERROR for {}:\n    "
                           "-error_mech_output: {}\n    "
                           "-error_mech_error: {}\n    "
-                          "-dot_product: {}\n    "
+                          "-dot_product of error derivative: {}\n    "
                           "-matrix: {}\n".
-                          format(self.owner.name, error_mech_act_out, error_mech_error, self.error_matrix))
+                          format(self.owner.name, error_mech_act_out, error_derivative, error_mech_error,
+                                 self.error_matrix))
                 TEST = True
         except AttributeError:
             error_mech_error = np.dot(self.error_matrix, self.error_signal)
