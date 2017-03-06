@@ -323,7 +323,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
         # learning_function = Reinforcement(variable=objective_mechanism.outputState.value,
-        learning_function = Reinforcement(variable=[[activation_input],[activation_output],[error_signal]],
+        learning_function = Reinforcement(variable_default=[[activation_input],[activation_output],[error_signal]],
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
 
@@ -339,7 +339,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         except AttributeError:
             raise LearningAuxilliaryError("Function for activation_mech of {} must have a derivative "
                                           "to be used with {}".
-                                          format(self.name, BackPropagation.componentName))
+                                          format(learning_projection.name, BackPropagation.componentName))
 
         # Get error_mech values
         if is_target:
@@ -464,12 +464,12 @@ def _instantiate_learning_components(learning_projection, context=None):
     # Assign MappingProjection from activation_mech_input to LearningMechanism's ACTIVATION_INPUT inputState
     MappingProjection(sender=lc.activation_mech_input,
                       receiver=learning_mechanism.inputStates[ACTIVATION_INPUT],
-                      matrix=IDENTITY_MATRIX)
+                      matrix=AUTO_ASSIGN_MATRIX)
 
     # Assign MappingProjection from activation_mech_output to LearningMechanism's ACTIVATION_OUTPUT inputState
     MappingProjection(sender=lc.activation_mech_output,
                       receiver=learning_mechanism.inputStates[ACTIVATION_OUTPUT],
-                      matrix=IDENTITY_MATRIX)
+                      matrix=AUTO_ASSIGN_MATRIX)
 
     # Assign learning_mechanism as sender of learning_projection and return
     # Note: learning_projection still has to be assigned to the learning_mechanism's outputState;
