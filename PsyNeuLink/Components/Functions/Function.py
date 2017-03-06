@@ -2926,7 +2926,10 @@ class BackPropagation(LearningFunction): # -------------------------------------
                     error_derivative = error_signal * activity_derivative
                     error_mech_error = np.dot(self.error_matrix, error_derivative)
                     # TEST PRINT:
-                    print("\nWEIGHTED_ERROR for {}:\n    -error_mech_output: {}\n    -error_mech_error: {}\n    "
+                    print("\nWEIGHTED_ERROR for {}:\n    "
+                          "-error_mech_output: {}\n    "
+                          "-error_mech_error: {}\n    "
+                          "-dot_product: {}\n    "
                           "-matrix: {}\n".
                           format(self.owner.name, error_mech_act_out, error_mech_error, self.error_matrix))
                 TEST = True
