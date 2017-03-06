@@ -2625,6 +2625,19 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                     "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
                                     format(self.name, self.variable[LEARNING_ERROR_OUTPUT]))
 
+        # TEMP XXX??
+        # if self.function.componentName is RL_FUNCTION:
+        #     # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
+        #     #     (since error signal is a scalar for RL)
+        #     if len(error_signal) != 1:
+        #         raise LearningMechanismError("Length of error_signal ({}) received by {} from {}"
+        #                                   " must be 1 since {} uses {} as its learning function".
+        #                                   format(len(error_signal),
+        #                                          self.name,
+        #                                          self.sender.owner.name,
+        #                                          self.name, RL_FUNCTION))
+
+
     def _validate_params(self, request_set, target_set=None, context=None):
 
         # This allows callers to specify None as learning_rate (e.g., _instantiate_learning_components)
