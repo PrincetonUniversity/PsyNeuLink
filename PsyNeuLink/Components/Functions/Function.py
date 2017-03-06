@@ -2625,17 +2625,14 @@ class Reinforcement(LearningFunction): # ---------------------------------------
                                     "(variable of ComparatorMechanism mechanism may need to be specified as an array of length 1)".
                                     format(self.name, self.variable[LEARNING_ERROR_OUTPUT]))
 
-        # TEMP XXX??
-        # if self.function.componentName is RL_FUNCTION:
-        #     # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must == 1
-        #     #     (since error signal is a scalar for RL)
-        #     if len(error_signal) != 1:
-        #         raise LearningMechanismError("Length of error_signal ({}) received by {} from {}"
-        #                                   " must be 1 since {} uses {} as its learning function".
-        #                                   format(len(error_signal),
-        #                                          self.name,
-        #                                          self.sender.owner.name,
-        #                                          self.name, RL_FUNCTION))
+            # The length of the error signal must == 1 (since error_signal is a scalar for RL)
+            if len(variable[ERROR_SOURCE]) != 1:
+                raise LearningMechanismError("Length of error_signal ({}) received by {} from {}"
+                                          " must be 1 since {} uses {} as its learning function".
+                                          format(len(error_signal),
+                                                 self.name,
+                                                 self.sender.owner.name,
+                                                 self.name, RL_FUNCTION))
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2766,6 +2763,17 @@ class BackPropagation(LearningFunction): # -------------------------------------
             - 2d list, np.ndarray or np.matrix
             - ParameterState for one of the above
             - MappingProjection with a parameterStates[MATRIX] for one of the above
+
+        Parse error_matrix specification and insure it is compatible with error_signal and activation_output
+
+        Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix
+            (since it will be dot-producted to generate the weighted error signal)
+
+        Insure that length of activation_output matches the number of rows (sender elements) of error_matrix
+           (since it will be compared against the *result* of the dot product of the error_matrix and error_signal
+
+        Note: error_matrix is left in the form in which it was specified so that, if it is a ParameterState
+              or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
 
 
@@ -2809,85 +2817,30 @@ class BackPropagation(LearningFunction): # -------------------------------------
             param_type_string = "array or matrix"
 
         error_matrix = np.array(error_matrix)
+        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
+        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
+        activity_output_len = len(self.activation_output)
+        error_signal_len = len(self.error_signal)
 
         if error_matrix.ndim != 2:
             raise FunctionError("The value of the {} specified for the {} arg of {} ({}) must be a 2d array or matrix".
                                           format(param_type_string, ERROR_MATRIX, self.name, error_matrix))
 
-        # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
+        # The length of the sender outputState.value (the error signal) must be the
         #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
-        if error_matrix.shape[WT_MATRIX_RECEIVERS_DIM] != len(self.error_signal):
-            raise FunctionError("The width ({}) of the {} arg ({}) specified for {} must match the length of the"
-                                "error signal ({}) it receives".
-                                format(error_matrix.shape[WT_MATRIX_RECEIVERS_DIM],
-                                       MATRIX,
-                                       error_matrix.shape,
-                                       self.name,
-                                       len(self.error_signal)))
 
-    def _instantiate_function(self, context=None):
-        """Parse error_matrix specification and insure it is compatible with error_signal and activation_output
-
-        Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix
-            (since it will be dot-producted to generate the weighted error signal)
-
-        Insure that length of activation_output matches the number of rows (sender elements) of error_matrix
-           (since it will be compared against the *result* of the dot product of the error_matrix and error_signal
-
-        """
-
-        activity_output_len = len(self.activation_output)
-        error_signal_len = len(self.error_signal)
-
-        # Get and validate error_matrix
-        error_matrix = self.error_matrix
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        from PsyNeuLink.Components.Projections.MappingProjection import MappingProjection
-        if isinstance(self.error_matrix, MappingProjection):
-            self.error_matrix = self.error_matrix.parameterStates[MATRIX]
-        # # MODIFIED 3/5/17 OLD:
-        # if isinstance(self.error_matrix, ParameterState):
-        #     self.error_matrix = self.error_matrix.value
-        # self.error_matrix = np.array(self.error_matrix)
-        # rows = self.error_matrix.shape[WT_MATRIX_SENDERS_DIM]
-        # cols = self.error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
-        # MODIFIED 3/5/17 NEW:
-        if isinstance(self.error_matrix, ParameterState):
-            error_matrix = self.error_matrix.value
-
-        error_matrix = np.array(error_matrix)
-        rows = error_matrix.shape[WT_MATRIX_SENDERS_DIM]
-        cols = error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]
-        # MODIFIED 3/5/17 END
+        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
+        if cols != error_signal_len:
+            raise FunctionError("The width (number of columns, {}) of the \'{}\' arg ({}) specified for {} "
+                                "must match the length of the error signal ({}) it receives".
+                                format(cols, MATRIX, error_matrix.shape, self.name, cols))
 
         # Validate that rows (number of sender elements) of error_matrix equals length of activity_output,
         if rows!= activity_output_len:
-            raise FunctionError("Number of rows ({}) of \'{}\' arg for {}"
-                                     " must equal length of {} ({})".
-                                     format(rows, MATRIX, self.name, '\'activation_output\'', activity_output_len))
+            raise FunctionError("The height (number of rows, {}) of \'{}\' arg specified for {} must match the "
+                                "length of the output {} of the activity vector being monitored ({})".
+                                format(rows, MATRIX, self.name, activity_output_len))
 
-        # Validate that columns (number of receiver elements) of error_matrix equals length of error_signal
-        if  cols != error_signal_len:
-            raise FunctionError("Number of columns ({}) of \'{}\' arg for {}"
-                                     " must equal length of {} ({})".
-
-                                     format(cols, MATRIX, self.name, '\'error_signal\'', error_signal_len))
-
-        # FROM LearningProjection_OLD
-        # if self.function.componentName is BACKPROPAGATION_FUNCTION:
-        #     # The length of the sender (MonitoringMechanism)'s outputState.value (the error signal) must be the
-        #     #     same as the width (# columns) of the MappingProjection's weight matrix (# of receivers)
-        #     # if len(error_signal) != self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]:
-        #     if len(error_signal) != self.error_matrix.shape[WT_MATRIX_RECEIVERS_DIM]:
-        #         raise FunctionError("Length of error signal ({}) received by {} from {} must match the"
-        #                                   "receiver dimension ({}) of the weight matrix for {}".
-        #                                   format(len(error_signal),
-        #                                          self.name,
-        #                                          self.sender.owner.name,
-        #                                          len(self.mappingWeightMatrix.shape[WT_MATRIX_RECEIVERS_DIM]),
-        #                                          self.mappingProjection))
-
-        super()._instantiate_function(context=context)
 
     def function(self,
                 variable=None,
