@@ -2939,7 +2939,7 @@ class BackPropagation(LearningFunction): # -------------------------------------
                           "-error_mech_error: {}\n    "
                           "-error_derivative: {}\n    "
                           "-dot_product of error derivative: {}\n    "
-                          "-matrix: {}\n".
+                          "-error_matrix: {}\n".
                           format(self.owner.name,
                                  activity,
                                  error,
