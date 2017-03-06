@@ -697,7 +697,7 @@ class LearningProjection(Projection_Base):
             raise LearningProjectionError("Receiver arg ({}) for {} must be a MappingProjection or"
                                       " a MechanismParatemerState of one".format(self.receiver, self.name))
 
-        if kwDeferredDefaultName in self.name:
+        if DEFERRED_DEFAULT_NAME in self.name:
             self.name = self.mappingProjection.name + ' ' + self.componentName
             # self.name = self.mappingProjection.name + \
             #             self.mappingProjection.parameterStates[MATRIX].name + \

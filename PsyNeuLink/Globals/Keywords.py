@@ -226,7 +226,7 @@ INPUTS_DIM = 3
 
 COMPONENT_INIT = 'Function.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
-kwDeferredDefaultName = 'DEFERRED_DEFAULT_NAME'
+DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
 FUNCTION = "function" # Param name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 

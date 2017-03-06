@@ -339,7 +339,11 @@ class Component(object):
         self.variableInstanceDefault = None
         self.paramInstanceDefaults = {}
 
-        self.componentName = self.componentName or self.componentType
+        # self.componentName = self.componentType
+        try:
+            self.componentName = self.componentName or self.componentType
+        except AttributeError:
+            self.componentName = self.componentType
         #endregion
 
         #region ENFORCE REGISRY
@@ -520,7 +524,8 @@ class Component(object):
 
             # If name is None, mark as deferred so that name can be customized
             #    using info that has become available at time of deferred init
-            self.init_args['name'] = self.init_args['name'] or kwDeferredDefaultName
+            self.init_args['name'] = self.init_args['name'] or ('deferred_init_' + self.className) or \
+                                     DEFERRED_DEFAULT_NAME
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
