@@ -693,11 +693,18 @@ class Component(object):
                     from inspect import isfunction
 
                     # It is a PsyNeuLink Function
+                    # IMPLEMENTATION NOTE:  REPLACE THIS WITH "CONTINUE" ONCE _instantiate_function IS REFACTORED TO
+                    #                       TO ALLOW Function SPECIFICATkION (VS. ONLY CLASS)
                     if isinstance(function, Function):
+                        # MODIFIED 3/7/17 OLD:
                         # Set it to the class (for compatibility with current implementation of _instantiate_function()
                         # and put its params in FUNCTION_PARAMS
                         params[FUNCTION] = function.__class__
                         params[FUNCTION_PARAMS] = function.user_params.copy()
+                        self.function_variable = function.variable
+                        # MODIFIED 3/7/17 NEW:
+                        continue
+                        # MODIFIED 3/7/17 END
 
                     # It is a generic function
                     elif isfunction(function):
