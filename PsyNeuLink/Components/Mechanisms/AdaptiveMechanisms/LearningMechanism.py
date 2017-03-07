@@ -590,6 +590,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if self.error_source:
             _instantiate_error_signal_projection(sender=self.error_source, receiver=self)
 
+
+    def _instantiate_function(self, context=None):
+        super()._instantiate_function(context=context)
+
+
     def _execute(self,
                 variable=None,
                 runtime_params=None,
