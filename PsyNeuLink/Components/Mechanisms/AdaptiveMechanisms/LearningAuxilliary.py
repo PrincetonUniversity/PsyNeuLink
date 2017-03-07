@@ -317,8 +317,11 @@ def _instantiate_learning_components(learning_projection, context=None):
     # REINFORCEMENT LEARNING FUNCTION
     if learning_function.componentName is RL_FUNCTION:
 
-        # Force all activity and error arrays to be scalars
-        activation_input = activation_output = error_output = error_signal  = np.array([0])
+        activation_input = np.zeros_like(lc.activation_mech_input.value)
+
+        # Force output activity and error arrays to be scalars
+        activation_output = error_output = error_signal  = np.array([0])
+
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
